@@ -10,15 +10,23 @@ Desktop-first, architected for mobile.
 
 ## Current status
 
-**M0/M1 — specification phase.** This repo is currently **design + engineering
-specs in markdown**, not yet game code. Work is produced by a simulated studio:
-**Project Shepherd** directs specialist agents (Game Designer, Technical Artist,
-Shader Graph Artist, Software Architect, UI Designer, and future hires).
+**M1 — vertical slice, engine in progress.** The repo is design/engineering specs
+in markdown **plus** the first real game code: the deterministic rules core under
+`src/` and `tests/` (solution `Emberfall.slnx`, .NET 10 — note `.slnx` not `.sln`).
+Specs are still the source of truth for un-built behavior; the studio of specialist
+agents (directed by **Project Shepherd**) continues to produce them.
 
-Last completed: shader workstream (10 shaders in `techart/shaders/`) and a
-mana-tray reconciliation across `engineering/interfaces.md §5.3`,
-`ui/design-system.md §4.4`, and `techart/shaders/SG_ManaFill.md`. Natural next
-hire was a Game Audio Engineer.
+**Built (M1 engine steps 1–5, branch `feat/emberfall-core-determinism`):** the
+UnityEngine-free, zero-float `Emberfall.Core.Contracts`/`.Cards`/`.Core` assemblies,
+splitmix64 `DeterministicRandom`, canonical float-free `GameStateHasher`, the **green
+R1 golden-replay gate**, and the 9-stage CI pipeline (`.github/workflows/ci.yml`,
+5 hard-blocking pure-.NET stages). `dotnet test Emberfall.slnx` → 25 green. See
+`src/README.md` for the map.
+
+**Deferred to M1 Phase B:** effect interpreter, combat, the ~20 card behaviors, and
+the `deathrattle_cascade` golden fixture (`CommandProcessor` rejects PlayCard/Attack/
+HeroPower with `NotImplemented` for now). Prior spec milestone: shader workstream
+(10 shaders in `techart/shaders/`) + the mana-tray reconciliation.
 
 ## Repo map
 
