@@ -1,0 +1,17 @@
+{
+  "name": "Emberfall.Core",
+  "rootNamespace": "Emberfall.Core",
+  "references": [
+    "Emberfall.Core.Contracts",
+    "Emberfall.Core.Cards"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

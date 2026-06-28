@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Emberfall.Core.Cards/Emberfall.Core.Cards.csproj" />
+    <Project Path="src/Emberfall.Core.Contracts/Emberfall.Core.Contracts.csproj" />
+    <Project Path="src/Emberfall.Core/Emberfall.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
+  </Folder>
+</Solution>

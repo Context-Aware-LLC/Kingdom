@@ -1,0 +1,105 @@
+name: Emberfall CI — determinism gates
+
+# The 9-stage CI pipeline (testing/ci-gates.md §2). At M1 there is NO paid Unity seat
+# (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
+#
+#   Stage 1  Lint + rebaseline-guard      BLOCKING   (dotnet format + golden rebaseline path-pair)
+#   Stage 2  Core unit tests              BLOCKING   (L1)
+#   Stage 3  Contract / interface tests   BLOCKING   (L2)
+#   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
+#   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
+#   ─────────────────────────────────────────────────────────────────────────────────────────────
+#   Stage 6  Content C-series             informational at M1 (no collectible cards/** yet — Phase B)
+#   Stage 7  Content E-series (Unity)     informational at M1 (no seat — becomes blocking at M2)
+#   Stage 8  Unity PlayMode integration   informational at M1 (no seat — becomes blocking at M2)
+#   Stage 9  On-device perf gate (D8)     manual device job at the milestone boundary (not per-PR)
+#
+# => 5 hard-blocking stages run here. Runs on Linux x64 on purpose: baking the golden fixtures on a
+#    Windows dev box and asserting them on a Linux runner proves the little-endian, platform-independent
+#    canonical hash (golden-replay.md §4.4).
+
+on:
+  push:
+    branches: [ master, "feat/**", "fix/**" ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  determinism-gates:
+    name: Hard gates (pure .NET, license-free)
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # rebaseline-guard needs history to diff against the base
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore Emberfall.slnx
+
+      - name: Build (Release)
+        run: dotnet build Emberfall.slnx -c Release --no-restore
+
+      # ── Stage 1 — Lint + rebaseline-guard (BLOCKING) ────────────────────────────
+      - name: "Stage 1 · Lint (dotnet format)"
+        run: dotnet format Emberfall.slnx --verify-no-changes --no-restore
+
+      - name: "Stage 1 · Rebaseline guard"
+        run: |
+          chmod +x tools/ci/rebaseline-guard.sh
+          base="origin/${{ github.base_ref || 'master' }}"
+          tools/ci/rebaseline-guard.sh "$base"
+
+      # ── Stage 2 — Core unit tests (BLOCKING, L1) ────────────────────────────────
+      - name: "Stage 2 · Core unit tests"
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Unit" --logger "trx;LogFileName=core-unit.trx" --results-directory artifacts
+
+      # ── Stage 3 — Contract / interface tests (BLOCKING, L2) ─────────────────────
+      - name: "Stage 3 · Contract tests"
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Contract" --logger "trx;LogFileName=contract.trx" --results-directory artifacts
+
+      # ── Stage 4 — Assembly firewall + banned-API (BLOCKING, criterion 7) ────────
+      - name: "Stage 4 · Assembly firewall + banned-API"
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Firewall" --logger "trx;LogFileName=firewall.trx" --results-directory artifacts
+
+      # ── Stage 5 — Golden-replay, the R1 gate (BLOCKING, criterion 6) ────────────
+      - name: "Stage 5 · Golden-replay (R1 gate)"
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
+
+      # ── Stage 6 — Content validation, C-series (informational at M1) ────────────
+      - name: "Stage 6 · Content C-series (informational — no cards/** yet)"
+        continue-on-error: true
+        run: |
+          if [ -d cards ]; then
+            echo "cards/ present — run headless C-series here once the validator + rows land (Phase B)."
+          else
+            echo "No cards/ tree yet — collectible card authoring is M1 Phase B. Snapshot under tests/ is the only data."
+          fi
+
+      # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
+      - name: "Stages 7–8 · Unity E-series + PlayMode (informational — no Unity seat at M1)"
+        continue-on-error: true
+        run: echo "No paid Unity seat at M1 (ci-gates.md §7 Q1). These become blocking at M2 with a Unity Pro/Build Server seat."
+
+      # ── Stage 9 — On-device perf gate (manual, milestone boundary) ──────────────
+      - name: "Stage 9 · On-device perf gate D8 (manual device job)"
+        continue-on-error: true
+        run: echo "perf-gate.json is filled by the Performance Benchmarker on the baseline device at the milestone boundary (ci-gates.md §5.2) — not a cloud CI job."
+
+      - name: Upload gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emberfall-gate-evidence
+          path: artifacts/
+          if-no-files-found: ignore

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Core.Tests — the headless determinism base of the test pyramid (test-strategy.md §1).
+    Plain `dotnet test`, NO Unity license. Holds L1 (unit), L2 (contract), L3 (golden-replay, the R1
+    gate), and the assembly-firewall + banned-API scans (ci-gates.md §1).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Core\Emberfall.Core.csproj" />
+  </ItemGroup>
+
+</Project>

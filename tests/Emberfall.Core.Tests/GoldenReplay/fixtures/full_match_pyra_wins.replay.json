@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "name": "full_match_pyra_wins",
+  "engineContractVersion": "interfaces.v2",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0002",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "TIDECALLER",
+  "p0Deck": [
+    "ember_recruit",
+    "ember_zealot",
+    "flame_bolt",
+    "cinder_drake",
+    "ember_recruit",
+    "ember_zealot",
+    "flame_bolt",
+    "cinder_drake",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "p1Deck": [
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "seed": 8675309001122334455,
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "concede",
+      "player": "P1"
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "01687a66917e6aeb43951eb019f706177920dc2dbbb235eb95c1086cd274c6cd",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "onTurnStart",
+        "src": "i0",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "onDraw",
+        "src": "i6",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "onGameOver",
+        "src": null,
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "onGameWin",
+        "src": "i0",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      }
+    ]
+  }
+}

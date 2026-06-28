@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Core — GameState rules, command processor, match-start sequence, turn loop.
+    Plain C#, ZERO UnityEngine references (ARCHITECTURE.md §2). The identical DLL is the authority on
+    the headless server, the predictor on the client, and the system-under-test in CI.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Core</AssemblyName>
+    <RootNamespace>Emberfall.Core</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+  </ItemGroup>
+
+</Project>

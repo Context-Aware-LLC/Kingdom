@@ -4,13 +4,17 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Unity (for when code lands)
+# .NET build output (the Emberfall.Core solution)
+[Bb]in/
+[Oo]bj/
+# CI gate evidence — regenerated every run, never committed
+artifacts/
+
+# Unity (for when the presentation/client code lands)
 [Ll]ibrary/
 [Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
-*.csproj
-*.sln
+
+# NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
+# code under src/ and tests/. Do not blanket-ignore project files anymore.

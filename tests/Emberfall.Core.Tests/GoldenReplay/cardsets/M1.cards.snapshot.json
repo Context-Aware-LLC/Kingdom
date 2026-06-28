@@ -1,0 +1,16 @@
+[
+  { "id": "ember_recruit",   "name": "Ember Recruit",   "type": "MINION", "cost": 1, "attack": 2, "health": 1, "class": "EMBERWARD",  "rarity": "COMMON", "keywords": [],         "setId": "EMBERFALL", "collectible": true,  "artId": "art/ember_recruit" },
+  { "id": "ember_zealot",    "name": "Ember Zealot",    "type": "MINION", "cost": 2, "attack": 3, "health": 2, "class": "EMBERWARD",  "rarity": "COMMON", "keywords": ["CHARGE"], "setId": "EMBERFALL", "collectible": true,  "artId": "art/ember_zealot" },
+  { "id": "flame_bolt",      "name": "Flame Bolt",      "type": "SPELL",  "cost": 1, "class": "EMBERWARD",  "rarity": "COMMON", "setId": "EMBERFALL", "collectible": true, "artId": "art/flame_bolt",
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 3, "target": { "selector": "ANY_CHARACTER" } } ] },
+  { "id": "cinder_drake",    "name": "Cinder Drake",    "type": "MINION", "cost": 4, "attack": 4, "health": 4, "class": "EMBERWARD",  "rarity": "RARE",   "keywords": [],         "tribe": "DRAGON", "setId": "EMBERFALL", "collectible": true, "artId": "art/cinder_drake" },
+  { "id": "tide_initiate",   "name": "Tide Initiate",   "type": "MINION", "cost": 1, "attack": 1, "health": 2, "class": "TIDECALLER", "rarity": "COMMON", "keywords": [],         "setId": "EMBERFALL", "collectible": true,  "artId": "art/tide_initiate" },
+  { "id": "tide_oracle",     "name": "Tide Oracle",     "type": "MINION", "cost": 3, "attack": 2, "health": 4, "class": "TIDECALLER", "rarity": "COMMON", "keywords": ["TAUNT"],  "setId": "EMBERFALL", "collectible": true,  "artId": "art/tide_oracle" },
+  { "id": "frost_ripple",    "name": "Frost Ripple",    "type": "SPELL",  "cost": 2, "class": "TIDECALLER", "rarity": "COMMON", "setId": "EMBERFALL", "collectible": true, "artId": "art/frost_ripple",
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_MINIONS" } } ] },
+  { "id": "wave_caller",     "name": "Wave Caller",     "type": "MINION", "cost": 4, "attack": 3, "health": 5, "class": "TIDECALLER", "rarity": "RARE",   "keywords": [],         "setId": "EMBERFALL", "collectible": true, "artId": "art/wave_caller" },
+  { "id": "stone_sentry",    "name": "Stone Sentry",    "type": "MINION", "cost": 2, "attack": 2, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": ["TAUNT"],  "tribe": "CONSTRUCT", "setId": "EMBERFALL", "collectible": true, "artId": "art/stone_sentry" },
+  { "id": "wandering_scout", "name": "Wandering Scout", "type": "MINION", "cost": 1, "attack": 1, "health": 1, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [],         "tribe": "BEAST", "setId": "EMBERFALL", "collectible": true, "artId": "art/wandering_scout" },
+  { "id": "token_spark_coin","name": "The Spark",       "type": "SPELL",  "cost": 0, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/token_spark_coin",
+    "effects": [ { "trigger": "ON_CAST", "action": "GAIN_MANA", "amount": 1, "target": { "selector": "FRIENDLY_HERO" } } ] }
+]
