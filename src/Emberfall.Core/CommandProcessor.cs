@@ -42,11 +42,12 @@ namespace Emberfall.Core
                     return KnownPlayer(state, c.Player, out reason);
                 case AutoConfirmIntent a:
                     return ValidateAutoConfirm(state, a, out reason);
-                case PlayCardIntent _:
+                case PlayCardIntent p:
+                    return ValidatePlayCard(state, p, out reason);
                 case AttackIntent _:
                 case HeroPowerIntent _:
                 case DiscoverChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // Phase B (effect interpreter)
+                    reason = RejectReason.NotImplemented;   // Attack/HeroPower = steps 2/3; Discover = later
                     return false;
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (interfaces.md §4.6)
@@ -99,6 +100,34 @@ namespace Emberfall.Core
             return false;
         }
 
+        private bool ValidatePlayCard(GameState state, PlayCardIntent p, out RejectReason? reason)
+        {
+            if (!KnownPlayer(state, p.Player, out reason)) return false;
+            if (state.Phase != TurnPhase.Main) { reason = RejectReason.WrongPhase; return false; }
+            if (state.ActivePlayer != p.Player) { reason = RejectReason.NotYourTurn; return false; }
+
+            int seat = state.SeatOf(p.Player);
+            var ps = state.Players[seat];
+
+            int handIdx = IndexOfInstance(ps.Hand, p.Card);
+            if (handIdx < 0) { reason = RejectReason.NotInHand; return false; }
+
+            var def = _db.Get(ps.Hand[handIdx].DefinitionId);
+            if (ps.Mana.Available < def.Cost) { reason = RejectReason.NotEnoughMana; return false; }
+            if (def.Type == CardType.MINION && ps.Board.Count >= MatchEngine.BoardCap)
+            { reason = RejectReason.BoardFull; return false; }
+
+            // Target legality for any targets the intent supplies (M1 targeting model: EffectInterpreter
+            // doc). Each must name a live character; an enemy STEALTH minion can't be singled out by a play.
+            foreach (var tr in p.Targets)
+            {
+                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
+                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
+                { reason = RejectReason.IllegalTarget; return false; }
+            }
+            return true;
+        }
+
         // ── Execute (Validate → Apply → Emit) ────────────────────────────────────
 
         public CommandResult Execute(GameState state, PlayerIntent intent)
@@ -114,6 +143,7 @@ namespace Emberfall.Core
                 case EndTurnIntent e: ApplyEndTurn(state, e, buf); break;
                 case ConcedeIntent c: ApplyConcede(state, c, buf); break;
                 case AutoConfirmIntent a: ApplyAutoConfirm(state, a, buf); break;
+                case PlayCardIntent p: ApplyPlayCard(state, p, buf); break;
                 default: return CommandResult.Rejected(RejectReason.NotImplemented, state.StateVersion);
             }
 
@@ -197,6 +227,65 @@ namespace Emberfall.Core
                 ApplyEndTurn(state, new EndTurnIntent(a.Player), buf);
         }
 
+        private void ApplyPlayCard(GameState state, PlayCardIntent p, EventBuffer buf)
+        {
+            int seat = state.SeatOf(p.Player);
+            var ps = state.Players[seat];
+            int handIdx = IndexOfInstance(ps.Hand, p.Card);
+            var card = ps.Hand[handIdx];
+            var def = _db.Get(card.DefinitionId);
+
+            // Pay mana, leave hand.
+            ps.Mana.Available -= def.Cost;
+            ps.Mana.Spent += def.Cost;
+            ps.Hand.RemoveAt(handIdx);
+
+            var interp = new EffectInterpreter(state, _db, buf);
+            var targets = ResolveTargets(state, p.Targets);
+
+            switch (def.Type)
+            {
+                case CardType.MINION:
+                    RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
+                    buf.Emit(VfxEvent.onPlay, source: card.Id);
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // Battlecry
+                    interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card);
+                    break;
+
+                case CardType.SPELL:
+                    card.Zone = Zone.Graveyard;
+                    ps.Graveyard.Add(card);
+                    buf.Emit(VfxEvent.onPlay, source: card.Id);
+                    interp.RaiseSelf(card, Trigger.ON_CAST, targets);                 // the spell's one-shot effect
+                    break;
+
+                case CardType.WEAPON:
+                    card.Zone = Zone.Graveyard;
+                    ps.Graveyard.Add(card);
+                    ps.Weapon = new WeaponInstance
+                    {
+                        Id = state.NextInstanceId(),
+                        DefinitionId = def.Id,
+                        Attack = def.Attack ?? 0,
+                        Durability = def.Durability ?? 1,
+                    };
+                    buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Battlecry
+                    break;
+            }
+
+            interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+        }
+
+        private static IReadOnlyList<CharacterRef> ResolveTargets(GameState state, IReadOnlyList<TargetRef> refs)
+        {
+            if (refs == null || refs.Count == 0) return System.Array.Empty<CharacterRef>();
+            var list = new List<CharacterRef>(refs.Count);
+            foreach (var r in refs)
+                if (Characters.TryFind(state, r.Instance, out var ch)) list.Add(ch);
+            return list;
+        }
+
         // ── Turn sequence (GDD §1b / ARCHITECTURE §5) ─────────────────────────────
 
         private void StartTurnSequence(GameState state, PlayerId player, EventBuffer buf)
@@ -228,61 +317,11 @@ namespace Emberfall.Core
 
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
 
-            DrawOne(state, seat, buf);
-            CheckWin(state, buf);
+            RulesEngine.DrawOne(state, seat, buf);
+            RulesEngine.CheckWin(state, buf);
 
             if (state.Outcome == MatchOutcome.InProgress)
                 state.Phase = TurnPhase.Main;
-        }
-
-        private void DrawOne(GameState state, int seat, EventBuffer buf)
-        {
-            var ps = state.Players[seat];
-
-            if (ps.Deck.Count == 0)
-            {
-                // Fatigue: escalating, the universal game clock (GDD §1b / guardrails §4).
-                int counter = seat == 0 ? ++state.FatigueCounter0 : ++state.FatigueCounter1;
-                ps.Hero.CurrentHealth -= counter;
-                buf.Emit(VfxEvent.onFatigue, target: ps.Hero.Id, amount: counter, flags: EventFlags.Fatigue);
-                return;
-            }
-
-            var card = ps.Deck[0];
-            ps.Deck.RemoveAt(0);
-
-            if (ps.Hand.Count >= MatchEngine.HandCap)
-            {
-                // Overdraw burn (CapCheck, game-state §4).
-                card.Zone = Zone.Graveyard;
-                ps.Graveyard.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id, flags: EventFlags.Overdraw);
-            }
-            else
-            {
-                card.Zone = Zone.Hand;
-                ps.Hand.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id);
-            }
-        }
-
-        private void CheckWin(GameState state, EventBuffer buf)
-        {
-            bool dead0 = state.Players[0].Hero.CurrentHealth <= 0;
-            bool dead1 = state.Players[1].Hero.CurrentHealth <= 0;
-            if (!dead0 && !dead1) return;
-
-            if (dead0 && dead1) state.Outcome = MatchOutcome.Draw;
-            else if (dead1) state.Outcome = MatchOutcome.Player0Win;
-            else state.Outcome = MatchOutcome.Player1Win;
-
-            state.Phase = TurnPhase.GameOver;
-            buf.Emit(VfxEvent.onGameOver);
-            if (state.Outcome != MatchOutcome.Draw)
-            {
-                int winnerSeat = state.Outcome == MatchOutcome.Player0Win ? 0 : 1;
-                buf.Emit(VfxEvent.onGameWin, source: state.Players[winnerSeat].Hero.Id, flags: EventFlags.Lethal);
-            }
         }
 
         // ── helpers ──────────────────────────────────────────────────────────────

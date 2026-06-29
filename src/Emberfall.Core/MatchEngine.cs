@@ -20,6 +20,13 @@ namespace Emberfall.Core
         public const int MaxMana = 10;
 
         /// <summary>
+        /// Loop backstop for the effect/trigger resolution queue per command (balance-guardrails §4,
+        /// game-state-and-actions.md §4). A drain exceeding this halts the chain rather than hanging —
+        /// a safety net against accidental infinite cascades, never a value any legitimate card reaches.
+        /// </summary>
+        public const int ActionResolutionCap = 100;
+
+        /// <summary>
         /// Build the seeded, ready-to-mulligan <see cref="GameState"/>. RNG call order (fixed):
         /// (1) coin flip → first player; (2) shuffle P0 deck; (3) shuffle P1 deck; (4) deal hands;
         /// (5) insert the Spark into the second player. Then enter <see cref="TurnPhase.Mulligan"/>.

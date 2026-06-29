@@ -12,6 +12,13 @@ namespace Emberfall.Core.Tests.Support
     {
         private readonly Dictionary<string, CardDefinition> _cache = new();
 
+        /// <summary>Register an explicit definition (with effects/keywords) so interpreter tests can author behavior.</summary>
+        public FakeCardDatabase Register(CardDefinition def)
+        {
+            _cache[def.Id] = def;
+            return this;
+        }
+
         public bool TryGet(string cardId, out CardDefinition def)
         {
             def = Get(cardId);
