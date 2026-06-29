@@ -46,7 +46,9 @@ namespace Emberfall.Core.Contracts
     public enum Action
     {
         DEAL_DAMAGE, HEAL, DRAW, SUMMON, BUFF, GIVE_KEYWORD, DESTROY, RETURN_TO_HAND,
-        SILENCE, DISCOVER, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND
+        SILENCE, DISCOVER, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND,
+        FREEZE,   // step 4: sets IsFrozen on the target character (minion or hero)
+        OVERLOAD, // step 4: locks N crystals at the start of the controller's next turn
     }
 
     /// <summary>The closed D7 VFX vocabulary (game-state-and-actions.md §5.2). Purely observational.</summary>

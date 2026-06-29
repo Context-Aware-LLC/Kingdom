@@ -79,7 +79,11 @@ namespace Emberfall.Core.Cards
                 grantedKeyword = TryEnum<Keyword>(payload, "keyword");
             }
 
-            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx);
+            string? selector = null;
+            if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
+                selector = Str(tgt, "selector");
+
+            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector);
         }
 
         // ── primitive readers ────────────────────────────────────────────────────

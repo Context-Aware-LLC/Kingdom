@@ -349,6 +349,7 @@ namespace Emberfall.Core
             if (attacker.IsHero)
             {
                 if (ps.Weapon == null)                         { reason = RejectReason.WeaponMissing; return false; }
+                if (ps.Hero.IsFrozen)                          { reason = RejectReason.AttackerFrozen; return false; }
                 if (ps.HeroAttacksUsedThisTurn >= 1)           { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
@@ -489,6 +490,7 @@ namespace Emberfall.Core
             ps.Mana.Available = System.Math.Max(0, ps.Mana.Max - locked);
 
             // Thaw + reset summoning sickness / attack budget / hero power.
+            ps.Hero.IsFrozen = false;
             foreach (var m in ps.Board)
             {
                 m.IsFrozen = false;

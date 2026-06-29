@@ -72,9 +72,17 @@ namespace Emberfall.Core.Cards
         public string? TokenId { get; }       // payload.tokenId for SUMMON / ADD_TO_HAND / TRANSFORM
         public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
         public VfxEvent? VfxOverride { get; }
+        /// <summary>
+        /// Optional target selector from <c>target.selector</c> in the card JSON (card-schema.md §5.3).
+        /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
+        /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
+        /// auto-targeted battlecries). Player-chosen targets always take precedence.
+        /// </summary>
+        public string? Selector { get; }
 
         public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
-                         string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride)
+                         string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
+                         string? selector = null)
         {
             Trigger = trigger;
             Action = action;
@@ -83,6 +91,7 @@ namespace Emberfall.Core.Cards
             TokenId = tokenId;
             GrantedKeyword = grantedKeyword;
             VfxOverride = vfxOverride;
+            Selector = selector;
         }
     }
 }

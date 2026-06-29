@@ -23,6 +23,7 @@ namespace Emberfall.Core
                 new BuffHandler(), new GiveKeywordHandler(), new DestroyHandler(), new ReturnToHandHandler(),
                 new SilenceHandler(), new GainManaHandler(), new AddToHandHandler(), new TransformHandler(),
                 new EquipHandler(), new DiscoverHandler(),
+                new FreezeHandler(), new OverloadHandler(),
             };
             var map = new Dictionary<Verb, IActionHandler>(handlers.Length);
             foreach (var h in handlers) map[h.Verb] = h;
@@ -328,5 +329,34 @@ namespace Emberfall.Core
         // (game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
         // is a documented no-op and the card validator (card-system.md §5) flags any M1 card that uses it.
         public void Execute(in EffectContext ctx) { }
+    }
+
+    // ── FREEZE ────────────────────────────────────────────────────────────────────
+    internal sealed class FreezeHandler : IActionHandler
+    {
+        public Verb Verb => Verb.FREEZE;
+        public void Execute(in EffectContext ctx)
+        {
+            foreach (var t in ctx.Targets)
+            {
+                if (t.IsMinion) t.Minion!.IsFrozen = true;
+                else            t.Hero!.IsFrozen   = true;
+                ctx.Events.Emit(ctx.Vfx(VfxEvent.onFreeze), source: ctx.Source.Id, target: t.Id);
+            }
+        }
+    }
+
+    // ── OVERLOAD ──────────────────────────────────────────────────────────────────
+    internal sealed class OverloadHandler : IActionHandler
+    {
+        public Verb Verb => Verb.OVERLOAD;
+        public void Execute(in EffectContext ctx)
+        {
+            int amount = ctx.Effect.Amount ?? 0;
+            if (amount <= 0) return;
+            var ps = ctx.State.PlayerOf(ctx.Source.Controller);
+            ps.NextTurnOverloadLock += amount;
+            // Overload is a crystal-lock; no VFX event in M1 (the mana tray handles the visual).
+        }
     }
 }

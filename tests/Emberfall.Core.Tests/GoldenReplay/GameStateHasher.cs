@@ -83,6 +83,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             w.I32(h.MaxHealth);
             w.I32(h.Armor);
             w.Str(h.HeroPowerId);
+            w.Bool(h.IsFrozen); // added step 4 — hero freeze state is determinism-relevant
         }
 
         private static void WalkZone(CanonicalWriter w, List<CardInstance> zone)

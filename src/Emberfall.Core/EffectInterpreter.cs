@@ -181,7 +181,53 @@ namespace Emberfall.Core
         private IReadOnlyList<CharacterRef> ResolveTargets(QueuedEffect qe)
         {
             if (qe.ChosenTargets.Count > 0) return qe.ChosenTargets;
+            if (qe.Effect.Selector != null) return SelectorTargets(qe.Effect, qe.Source);
             return DefaultTargets(qe.Effect, qe.Source);
+        }
+
+        /// <summary>
+        /// Auto-resolve targets from the effect's declared selector (card-schema.md §5.3). Activated only
+        /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS) and
+        /// unconditional auto-targets (ENEMY_HERO). Falls back to DefaultTargets for selectors the engine
+        /// doesn't yet handle (e.g. client-side-only informational selectors like ANY_CHARACTER).
+        /// </summary>
+        private IReadOnlyList<CharacterRef> SelectorTargets(EffectDef eff, CardInstance source)
+        {
+            int seat = _state.SeatOf(source.Controller);
+            int foe  = seat == 0 ? 1 : 0;
+            switch (eff.Selector)
+            {
+                case "ENEMY_MINIONS":
+                {
+                    var board = _state.Players[foe].Board;
+                    var refs = new CharacterRef[board.Count];
+                    for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(foe, board[i]);
+                    return refs;
+                }
+                case "FRIENDLY_MINIONS":
+                {
+                    var board = _state.Players[seat].Board;
+                    var refs = new CharacterRef[board.Count];
+                    for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(seat, board[i]);
+                    return refs;
+                }
+                case "ALL_MINIONS":
+                {
+                    var list = new List<CharacterRef>();
+                    var b0 = _state.Players[seat].Board;
+                    var b1 = _state.Players[foe].Board;
+                    for (int i = 0; i < b0.Count; i++) list.Add(CharacterRef.OfMinion(seat, b0[i]));
+                    for (int i = 0; i < b1.Count; i++) list.Add(CharacterRef.OfMinion(foe, b1[i]));
+                    return list;
+                }
+                case "ENEMY_HERO":
+                    return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
+                case "FRIENDLY_HERO":
+                    return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
+                default:
+                    // Unknown or client-side-only selector — fall back to verb defaults.
+                    return DefaultTargets(eff, source);
+            }
         }
 
         private IReadOnlyList<CharacterRef> DefaultTargets(EffectDef eff, CardInstance source)
