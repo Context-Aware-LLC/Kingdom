@@ -90,8 +90,32 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 case "end_turn": return new EndTurnIntent(player);
                 case "concede": return new ConcedeIntent(player);
                 case "auto_confirm": return new AutoConfirmIntent(player);
+                case "play_card":
+                {
+                    var card = ParseInstance(el.GetProperty("card").GetString()!);
+                    int slot = el.TryGetProperty("slot", out var slotEl) ? slotEl.GetInt32() : 0;
+                    var targets = new List<TargetRef>();
+                    if (el.TryGetProperty("targets", out var tgtsEl) && tgtsEl.ValueKind == JsonValueKind.Array)
+                        foreach (var t in tgtsEl.EnumerateArray())
+                            targets.Add(new TargetRef(ParseInstance(t.GetString()!)));
+                    return new PlayCardIntent(player, card, slot, targets);
+                }
+                case "attack":
+                {
+                    var attacker = ParseInstance(el.GetProperty("attacker").GetString()!);
+                    var defender = new TargetRef(ParseInstance(el.GetProperty("defender").GetString()!));
+                    return new AttackIntent(player, attacker, defender);
+                }
+                case "hero_power":
+                {
+                    var targets = new List<TargetRef>();
+                    if (el.TryGetProperty("targets", out var tgtsEl) && tgtsEl.ValueKind == JsonValueKind.Array)
+                        foreach (var t in tgtsEl.EnumerateArray())
+                            targets.Add(new TargetRef(ParseInstance(t.GetString()!)));
+                    return new HeroPowerIntent(player, targets);
+                }
                 default:
-                    throw new NotSupportedException($"Intent tag '{tag}' not supported by the M1-foundation harness.");
+                    throw new NotSupportedException($"Intent tag '{tag}' not supported by the golden-replay harness.");
             }
         }
 
