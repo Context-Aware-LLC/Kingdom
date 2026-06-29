@@ -15,7 +15,7 @@ namespace Emberfall.Core.Contracts
 
     // ── Card taxonomy (card-schema.md §2–4) ──────────────────────────────────────
 
-    public enum CardType { MINION, SPELL, WEAPON }
+    public enum CardType { MINION, SPELL, WEAPON, HERO_POWER }
 
     /// <summary>Alpha ships 4 classes; last two reserved for M2 but enumerated now (card-schema.md §3).</summary>
     public enum CardClass { NEUTRAL, EMBERWARD, TIDECALLER, GRAVEKEEP, VERDANT }

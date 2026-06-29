@@ -12,5 +12,14 @@
   { "id": "stone_sentry",    "name": "Stone Sentry",    "type": "MINION", "cost": 2, "attack": 2, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": ["TAUNT"],  "tribe": "CONSTRUCT", "setId": "EMBERFALL", "collectible": true, "artId": "art/stone_sentry" },
   { "id": "wandering_scout", "name": "Wandering Scout", "type": "MINION", "cost": 1, "attack": 1, "health": 1, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [],         "tribe": "BEAST", "setId": "EMBERFALL", "collectible": true, "artId": "art/wandering_scout" },
   { "id": "token_spark_coin","name": "The Spark",       "type": "SPELL",  "cost": 0, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/token_spark_coin",
-    "effects": [ { "trigger": "ON_CAST", "action": "GAIN_MANA", "amount": 1, "target": { "selector": "FRIENDLY_HERO" } } ] }
+    "effects": [ { "trigger": "ON_CAST", "action": "GAIN_MANA", "amount": 1, "target": { "selector": "FRIENDLY_HERO" } } ] },
+  { "id": "hero_power_searing_bolt",  "name": "Searing Bolt", "type": "HERO_POWER", "cost": 2, "class": "EMBERWARD",  "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_searing_bolt",
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 1 } ] },
+  { "id": "hero_power_tidal_ward",    "name": "Tidal Ward",   "type": "HERO_POWER", "cost": 2, "class": "TIDECALLER", "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_tidal_ward",
+    "effects": [ { "trigger": "ON_CAST", "action": "SUMMON", "amount": 1, "payload": { "tokenId": "token_tide_wisp" } } ] },
+  { "id": "hero_power_toll_the_bell", "name": "Toll the Bell","type": "HERO_POWER", "cost": 2, "class": "GRAVEKEEP",  "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_toll_the_bell",
+    "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 2 } ] },
+  { "id": "hero_power_quicken",       "name": "Quicken",      "type": "HERO_POWER", "cost": 2, "class": "VERDANT",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_quicken",
+    "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 3 } ] },
+  { "id": "token_tide_wisp",          "name": "Tide Wisp",    "type": "MINION",     "cost": 0, "attack": 0, "health": 2, "class": "TIDECALLER", "rarity": "COMMON", "keywords": ["TAUNT"], "setId": "CORE", "collectible": false, "artId": "art/token_tide_wisp" }
 ]

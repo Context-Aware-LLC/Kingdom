@@ -2,12 +2,14 @@
 
 _Required by golden-replay.md §5.2 — a hash flip is guilty until proven a deliberate rule change._
 
-- **Which rule changed:** N/A — **initial baseline** (first bake against the M1-foundation core:
-  `MatchEngine.BeginMatch` + `CommandProcessor` mulligan handling).
-- **Why the new golden is correct:** Covers the RNG-dense opening (coin flip → deck shuffle → 3/4 deal →
-  `token_spark_coin` insertion → mulligan entry → first player's start-of-turn draw), matching the spec
-  sequence (interfaces.md §2.1) and corroborated by the determinism unit tests (`MatchTests`).
-- **Link to the design/eng change that caused it:** initial commit of the determinism core
-  (branch `feat/emberfall-core-determinism`).
-- **cardSetSnapshot changed?** no — first pin of `M1.cards.snapshot.json`.
+- **Which rule changed:** M1 Phase B step 3 — HeroPower support. `MatchEngine.BeginMatch` now sets
+  `HeroInstance.HeroPowerId` from the class→hero-power-id mapping (`EMBERWARD` → `"hero_power_searing_bolt"`,
+  `TIDECALLER` → `"hero_power_tidal_ward"`). `WalkHero` has always hashed `HeroPowerId`; populating it shifts
+  the state hash. Prior hash used empty-string `HeroPowerId` — an incomplete placeholder.
+- **Why the new golden is correct:** Heroes now correctly carry their hero power IDs. The state is complete.
+  All 12 new `HeroPowerTests` and the 57 pre-existing tests pass against this new hash.
+- **Link to the design/eng change that caused it:** M1 Phase B step 3 commit (HeroPower / Weapon support).
+- **cardSetSnapshot changed?** yes — added hero power definitions (`hero_power_searing_bolt`,
+  `hero_power_tidal_ward`, `hero_power_toll_the_bell`, `hero_power_quicken`) and `token_tide_wisp` token
+  to `M1.cards.snapshot.json`.
 - **engineContractVersion changed?** no — `interfaces.v2`.

@@ -46,9 +46,10 @@ namespace Emberfall.Core
                     return ValidatePlayCard(state, p, out reason);
                 case AttackIntent a:
                     return ValidateAttack(state, a, out reason);
-                case HeroPowerIntent _:
+                case HeroPowerIntent hp:
+                    return ValidateHeroPower(state, hp, out reason);
                 case DiscoverChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // HeroPower = step 3; Discover = later
+                    reason = RejectReason.NotImplemented;   // Discover = later
                     return false;
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (interfaces.md §4.6)
@@ -146,6 +147,7 @@ namespace Emberfall.Core
                 case AutoConfirmIntent a: ApplyAutoConfirm(state, a, buf); break;
                 case PlayCardIntent p: ApplyPlayCard(state, p, buf); break;
                 case AttackIntent ai: ApplyAttack(state, ai, buf); break;
+                case HeroPowerIntent hp: ApplyHeroPower(state, hp, buf); break;
                 default: return CommandResult.Rejected(RejectReason.NotImplemented, state.StateVersion);
             }
 
@@ -278,6 +280,53 @@ namespace Emberfall.Core
             }
 
             interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+        }
+
+        private bool ValidateHeroPower(GameState state, HeroPowerIntent hp, out RejectReason? reason)
+        {
+            reason = null;
+            if (!KnownPlayer(state, hp.Player, out reason)) return false;
+            if (state.Phase != TurnPhase.Main)           { reason = RejectReason.WrongPhase;           return false; }
+            if (state.ActivePlayer != hp.Player)         { reason = RejectReason.NotYourTurn;          return false; }
+
+            int seat = state.SeatOf(hp.Player);
+            var ps = state.Players[seat];
+
+            if (ps.HeroPowerUsedThisTurn)                { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
+            if (ps.Mana.Available < 2)                   { reason = RejectReason.NotEnoughMana;        return false; }
+
+            // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for non-attacks).
+            foreach (var tr in hp.Targets)
+            {
+                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
+                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
+                { reason = RejectReason.IllegalTarget; return false; }
+            }
+            return true;
+        }
+
+        private void ApplyHeroPower(GameState state, HeroPowerIntent hp, EventBuffer buf)
+        {
+            int seat = state.SeatOf(hp.Player);
+            var ps = state.Players[seat];
+
+            ps.Mana.Available -= 2;
+            ps.Mana.Spent += 2;
+            ps.HeroPowerUsedThisTurn = true;
+
+            // Ephemeral source for the interpreter: gives it Controller (seat) and DefinitionId (effects).
+            // Never placed in a zone list; just carries identity for the effect queue.
+            var src = new CardInstance(state.NextInstanceId(), ps.Hero.HeroPowerId, ps.Id)
+            {
+                Zone = Zone.Graveyard
+            };
+
+            buf.Emit(VfxEvent.onHeroPower, source: ps.Hero.Id);
+
+            var interp = new EffectInterpreter(state, _db, buf);
+            var targets = ResolveTargets(state, hp.Targets);
+            interp.RaiseSelf(src, Trigger.ON_CAST, targets);
+            interp.Drain();
         }
 
         private bool ValidateAttack(GameState state, AttackIntent a, out RejectReason? reason)
