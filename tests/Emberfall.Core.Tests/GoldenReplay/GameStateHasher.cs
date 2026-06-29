@@ -70,6 +70,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             WalkZone(w, p.Graveyard);
             WalkMana(w, p.Mana);
             w.Bool(p.HeroPowerUsedThisTurn);
+            w.I32(p.HeroAttacksUsedThisTurn);
             w.I32(p.NextTurnOverloadLock);
         }
 

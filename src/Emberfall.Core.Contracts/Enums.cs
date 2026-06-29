@@ -31,7 +31,8 @@ namespace Emberfall.Core.Contracts
     {
         TAUNT, CHARGE, RUSH, DIVINE_SHIELD, BATTLECRY, DEATHRATTLE, LIFESTEAL,
         WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
-        ECHO, REBORN
+        ECHO, REBORN,
+        OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
     }
 
     /// <summary>When an effect fires (card-schema.md §5.1).</summary>
@@ -68,7 +69,8 @@ namespace Emberfall.Core.Contracts
     {
         NotYourTurn, WrongPhase, NotEnoughMana, IllegalTarget, NotInHand,
         BoardFull, HeroPowerAlreadyUsed, WeaponMissing, UnknownIntent,
-        NotImplemented, AlreadyMulliganed, GameOver
+        NotImplemented, AlreadyMulliganed, GameOver,
+        HasSummoningSickness, NoAttacksLeft, AttackerFrozen,
     }
 
     // ── Validation (interfaces.md §4.1) ──────────────────────────────────────────

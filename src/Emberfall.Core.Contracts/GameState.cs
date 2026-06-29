@@ -65,6 +65,7 @@ namespace Emberfall.Core.Contracts
         public List<CardInstance> Graveyard = new List<CardInstance>(); // for recursion cards
         public ManaPool Mana = new ManaPool();
         public bool HeroPowerUsedThisTurn;
+        public int HeroAttacksUsedThisTurn;
         public int NextTurnOverloadLock; // crystals to lock at next start-of-turn
 
         public PlayerState(PlayerId id, HeroInstance hero)

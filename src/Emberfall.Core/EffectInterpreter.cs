@@ -155,7 +155,10 @@ namespace Emberfall.Core
 
                     // REBORN: the first death resummons a 1-health copy at the same slot (card-schema.md §4).
                     if (minion.Keywords.Contains(Keyword.REBORN) && !minion.HasUsedReborn)
+                    {
+                        minion.HasUsedReborn = true; // mark original consumed; copy gets its own flag in Resummon
                         Resummon(seat, def, idx);
+                    }
                 }
                 // loop: REBORN copies / chained kills may have produced fresh corpses to settle
             }

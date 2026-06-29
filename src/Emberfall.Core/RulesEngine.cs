@@ -84,6 +84,18 @@ namespace Emberfall.Core
         }
 
         /// <summary>
+        /// Destroy the equipped weapon for <paramref name="seat"/>, emitting onDeath. No-op if no weapon.
+        /// Called before equipping a new weapon and by combat when durability reaches zero.
+        /// </summary>
+        public static void BreakWeapon(GameState state, int seat, EventBuffer buf)
+        {
+            var ps = state.Players[seat];
+            if (ps.Weapon is null) return;
+            buf.Emit(VfxEvent.onDeath, source: ps.Weapon.Id);
+            ps.Weapon = null;
+        }
+
+        /// <summary>
         /// WinCheck (game-state-and-actions.md §4): a hero at ≤0 health ends the match; both at once is a Draw.
         /// Idempotent — does nothing once an outcome is set.
         /// </summary>

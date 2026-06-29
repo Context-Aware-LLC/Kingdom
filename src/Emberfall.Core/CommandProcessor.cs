@@ -44,10 +44,11 @@ namespace Emberfall.Core
                     return ValidateAutoConfirm(state, a, out reason);
                 case PlayCardIntent p:
                     return ValidatePlayCard(state, p, out reason);
-                case AttackIntent _:
+                case AttackIntent a:
+                    return ValidateAttack(state, a, out reason);
                 case HeroPowerIntent _:
                 case DiscoverChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // Attack/HeroPower = steps 2/3; Discover = later
+                    reason = RejectReason.NotImplemented;   // HeroPower = step 3; Discover = later
                     return false;
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (interfaces.md §4.6)
@@ -144,6 +145,7 @@ namespace Emberfall.Core
                 case ConcedeIntent c: ApplyConcede(state, c, buf); break;
                 case AutoConfirmIntent a: ApplyAutoConfirm(state, a, buf); break;
                 case PlayCardIntent p: ApplyPlayCard(state, p, buf); break;
+                case AttackIntent ai: ApplyAttack(state, ai, buf); break;
                 default: return CommandResult.Rejected(RejectReason.NotImplemented, state.StateVersion);
             }
 
@@ -262,6 +264,7 @@ namespace Emberfall.Core
                 case CardType.WEAPON:
                     card.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(card);
+                    RulesEngine.BreakWeapon(state, seat, buf); // destroy old weapon before equipping new
                     ps.Weapon = new WeaponInstance
                     {
                         Id = state.NextInstanceId(),
@@ -275,6 +278,136 @@ namespace Emberfall.Core
             }
 
             interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+        }
+
+        private bool ValidateAttack(GameState state, AttackIntent a, out RejectReason? reason)
+        {
+            reason = null;
+            if (!KnownPlayer(state, a.Player, out reason)) return false;
+            if (state.Phase != TurnPhase.Main)     { reason = RejectReason.WrongPhase;   return false; }
+            if (state.ActivePlayer != a.Player)    { reason = RejectReason.NotYourTurn;  return false; }
+
+            int seat = state.SeatOf(a.Player);
+            int foe  = seat == 0 ? 1 : 0;
+            var ps   = state.Players[seat];
+
+            // Attacker must exist and be ours
+            if (!Characters.TryFind(state, a.Attacker, out var attacker))
+            { reason = RejectReason.IllegalTarget; return false; }
+            if (attacker.Seat != seat)
+            { reason = RejectReason.NotYourTurn; return false; }
+
+            if (attacker.IsHero)
+            {
+                if (ps.Weapon == null)                         { reason = RejectReason.WeaponMissing; return false; }
+                if (ps.HeroAttacksUsedThisTurn >= 1)           { reason = RejectReason.NoAttacksLeft; return false; }
+            }
+            else
+            {
+                var m = attacker.Minion!;
+                if (m.IsFrozen)                                { reason = RejectReason.AttackerFrozen;       return false; }
+                if (m.CurrentAttack <= 0)                      { reason = RejectReason.IllegalTarget;        return false; }
+                bool hasCharge = m.Keywords.Contains(Keyword.CHARGE);
+                bool hasRush   = m.Keywords.Contains(Keyword.RUSH);
+                if (m.SummonedThisTurn && !hasCharge && !hasRush)
+                { reason = RejectReason.HasSummoningSickness; return false; }
+                int maxAttacks = m.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
+                if (m.AttacksUsedThisTurn >= maxAttacks)       { reason = RejectReason.NoAttacksLeft; return false; }
+            }
+
+            // Defender must exist and belong to the opponent
+            if (!Characters.TryFind(state, a.Defender.Instance, out var defender))
+            { reason = RejectReason.IllegalTarget; return false; }
+            if (defender.Seat == seat)
+            { reason = RejectReason.IllegalTarget; return false; }
+
+            // RUSH can only target minions during summoning turn
+            if (attacker.IsMinion && attacker.Minion!.SummonedThisTurn
+                && attacker.Minion.Keywords.Contains(Keyword.RUSH) && defender.IsHero)
+            { reason = RejectReason.IllegalTarget; return false; }
+
+            // STEALTH blocks targeting (even a stealthed taunter hides its taunt)
+            if (defender.IsMinion && defender.Minion!.Keywords.Contains(Keyword.STEALTH))
+            { reason = RejectReason.IllegalTarget; return false; }
+
+            // TAUNT enforcement: must attack a non-stealthed taunter if one exists
+            var foeBoard = state.Players[foe].Board;
+            bool anyTaunt = false;
+            for (int i = 0; i < foeBoard.Count; i++)
+            {
+                var fm = foeBoard[i];
+                if (fm.Keywords.Contains(Keyword.TAUNT) && !fm.Keywords.Contains(Keyword.STEALTH))
+                { anyTaunt = true; break; }
+            }
+            if (anyTaunt && (!defender.IsMinion || !defender.Minion!.Keywords.Contains(Keyword.TAUNT)))
+            { reason = RejectReason.IllegalTarget; return false; }
+
+            return true;
+        }
+
+        private void ApplyAttack(GameState state, AttackIntent a, EventBuffer buf)
+        {
+            int seat = state.SeatOf(a.Player);
+            int foe  = seat == 0 ? 1 : 0;
+            var ps   = state.Players[seat];
+
+            Characters.TryFind(state, a.Attacker, out var attacker);
+            Characters.TryFind(state, a.Defender.Instance, out var defender);
+
+            int attackerAtk = attacker.IsMinion
+                ? attacker.Minion!.CurrentAttack
+                : ps.Weapon!.Attack;
+
+            var attackerKws = attacker.IsMinion
+                ? attacker.Minion!.Keywords
+                : new HashSet<Keyword>();
+
+            bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
+            bool vanguard  = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
+
+            // Stealth breaks the moment the attacker declares
+            if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.STEALTH);
+
+            // Increment attack budget (before damage — canonical ordering)
+            if (attacker.IsMinion) attacker.Minion!.AttacksUsedThisTurn++;
+            else ps.HeroAttacksUsedThisTurn++;
+
+            buf.Emit(VfxEvent.onAttack, source: attacker.Id, target: defender.Id);
+
+            // Phase 1: attacker hits defender
+            DamagePipeline.ApplyDamage(state, defender, attackerAtk, attacker.Id, attackerKws, buf);
+
+            // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only)
+            if (overwhelm && defender.IsMinion && defender.Minion!.CurrentHealth < 0)
+            {
+                var enemyHero = CharacterRef.OfHero(foe, state.Players[foe].Hero);
+                DamagePipeline.ApplyDamage(state, enemyHero, -defender.Minion.CurrentHealth, attacker.Id, attackerKws, buf);
+            }
+
+            // Phase 2: retaliation — minion defenders only; heroes never retaliate
+            if (defender.IsMinion)
+            {
+                // VANGUARD: if defender died from the hit, no retaliation
+                bool retaliates = !vanguard || defender.Minion!.CurrentHealth > 0;
+                if (retaliates)
+                    DamagePipeline.ApplyDamage(state, attacker, defender.Minion!.CurrentAttack,
+                        defender.Id, defender.Minion.Keywords, buf);
+            }
+
+            // Weapon durability on hero attack
+            if (attacker.IsHero && ps.Weapon != null)
+            {
+                ps.Weapon.Durability--;
+                if (ps.Weapon.Durability <= 0)
+                    RulesEngine.BreakWeapon(state, seat, buf);
+            }
+
+            // Settle deaths, deathrattles, win-check.
+            // CheckWin is also called here because Drain only invokes it inside the effect-queue loop —
+            // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
+            var interp = new EffectInterpreter(state, _db, buf);
+            interp.Drain();
+            RulesEngine.CheckWin(state, buf);
         }
 
         private static IReadOnlyList<CharacterRef> ResolveTargets(GameState state, IReadOnlyList<TargetRef> refs)
@@ -314,6 +447,7 @@ namespace Emberfall.Core
                 m.AttacksUsedThisTurn = 0;
             }
             ps.HeroPowerUsedThisTurn = false;
+            ps.HeroAttacksUsedThisTurn = 0;
 
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
 

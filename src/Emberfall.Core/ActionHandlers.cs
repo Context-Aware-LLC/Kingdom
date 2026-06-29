@@ -183,16 +183,18 @@ namespace Emberfall.Core
                 RulesEngine.Reindex(ps.Board);
 
                 // Reset to printed form — board-runtime state is dropped on the bounce.
+                var def = ctx.Db.Get(m.DefinitionId);
                 m.Enchantments.Clear();
                 m.Keywords.Clear();
-                m.HasAegisShield = false;
+                foreach (var k in def.Keywords) m.Keywords.Add(k);
+                m.HasAegisShield = m.Keywords.Contains(Keyword.DIVINE_SHIELD);
                 m.IsFrozen = false;
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
                 m.HasUsedReborn = false;
-                m.CurrentAttack = 0;
-                m.CurrentHealth = 0;
-                m.MaxHealth = 0;
+                m.CurrentAttack = def.Attack ?? 0;
+                m.MaxHealth = def.Health ?? 1;
+                m.CurrentHealth = def.Health ?? 1;
 
                 if (ps.Hand.Count >= MatchEngine.HandCap)
                 {
@@ -305,6 +307,8 @@ namespace Emberfall.Core
         {
             if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
+            int seat = ctx.State.SeatOf(ctx.Source.Controller);
+            RulesEngine.BreakWeapon(ctx.State, seat, ctx.Events); // destroy old weapon before equipping new
             ps.Weapon = new WeaponInstance
             {
                 Id = ctx.State.NextInstanceId(),

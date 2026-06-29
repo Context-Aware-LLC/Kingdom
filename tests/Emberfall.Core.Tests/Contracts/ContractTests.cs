@@ -35,9 +35,10 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void Keyword_Enum_Has_The_16_Canonical_D3_Keywords()
+        public void Keyword_Enum_Has_The_18_Canonical_Keywords()
         {
-            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(16)); // card-schema.md §4
+            // card-schema.md §4 v1.1 added OVERWHELM + VANGUARD (GDD §1e, requiresEngineeringPrimitive lifted by step 2)
+            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(18));
         }
 
         [Test]
