@@ -20,8 +20,8 @@ namespace Emberfall.Presentation
     ///   • InputRouter    (assign to enable hot-seat mode; leave null for AI-vs-AI)
     ///   • GameBootstrap  (assign the above in the Inspector)
     ///
-    /// Hot-seat mode: P0 = human (HotSeatInput + InputRouter), P1 = RandomAi.
-    /// AI-only mode:  both players = RandomAi (for automated testing / replay).
+    /// Hot-seat mode: P0 = human (HotSeatInput + InputRouter), P1 = PlayingAi.
+    /// AI-only mode:  both players = PlayingAi (or swap to RandomAi for perf/replay testing).
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
@@ -63,7 +63,8 @@ namespace Emberfall.Presentation
             {
                 p0Source = new RandomAi(p0Id);
             }
-            var p1Ai = new RandomAi(p1Id);
+            // Phase C step 4: use PlayingAi (plays cards + attacks). Swap back to RandomAi for replay/perf testing.
+            var p1Ai = new PlayingAi(p1Id, db);
 
             // ── Board visuals ─────────────────────────────────────────────────────
             if (boardController != null && boardAnchors != null)
