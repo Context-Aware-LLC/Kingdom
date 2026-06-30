@@ -3,6 +3,7 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using Emberfall.Session;
+using TMPro;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -137,7 +138,7 @@ namespace Emberfall.Presentation
         }
 
         // Builds a minimal world-space card visual hierarchy (no external prefab needed).
-        // Phase C step 5 will replace these primitives with the real shader-driven prefab.
+        // Phase C step 5: upgraded to TextMeshPro. Replace primitives with shader-driven prefab when card art lands.
         private CardPresenter CreatePresenter(Transform parent)
         {
             var root = new GameObject("Card");
@@ -159,35 +160,33 @@ namespace Emberfall.Presentation
             col.size = new Vector3(CardW, CardH, 0.1f);
 
             // Name — top strip
-            TextMesh nameLabel = MakeLabel(root.transform, "Name", new Vector3(0f, CardH * 0.39f, -0.01f), 28, Color.white);
+            TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,           CardH * 0.39f, -0.01f), 2.0f, Color.white);
             // Cost — top-left gem
-            TextMesh costLabel = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f, CardH * 0.42f, -0.01f), 36, new Color(0.4f, 0.7f, 1f));
+            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f, CardH * 0.42f, -0.01f), 2.5f, new Color(0.4f, 0.7f, 1f));
             // Attack — bottom-left
-            TextMesh attackLabel = MakeLabel(root.transform, "Atk", new Vector3(-CardW * 0.35f, -CardH * 0.42f, -0.01f), 36, Color.white);
+            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH * 0.42f, -0.01f), 2.5f, Color.white);
             // Health — bottom-right
-            TextMesh healthLabel = MakeLabel(root.transform, "HP",  new Vector3( CardW * 0.35f, -CardH * 0.42f, -0.01f), 36, Color.white);
+            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH * 0.42f, -0.01f), 2.5f, Color.white);
             // Keywords — center strip
-            TextMesh kwLabel = MakeLabel(root.transform, "KW", new Vector3(0f, -CardH * 0.08f, -0.01f), 18, new Color(0.9f, 0.85f, 0.6f));
+            TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,           -CardH * 0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, kwLabel, bg.GetComponent<Renderer>());
             return presenter;
         }
 
-        private static TextMesh MakeLabel(Transform parent, string goName, Vector3 localPos, int fontSize, Color color)
+        private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color)
         {
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
             go.transform.localRotation = Quaternion.identity;
 
-            var tm = go.AddComponent<TextMesh>();
-            tm.fontSize      = fontSize;
-            tm.characterSize = 0.045f;
-            tm.anchor        = TextAnchor.MiddleCenter;
-            tm.alignment     = TextAlignment.Center;
-            tm.color         = color;
-            return tm;
+            var tmp = go.AddComponent<TextMeshPro>();
+            tmp.fontSize  = fontSize;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color     = color;
+            return tmp;
         }
     }
 }

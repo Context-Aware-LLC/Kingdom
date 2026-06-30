@@ -1,6 +1,7 @@
 using System.Text;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
+using TMPro;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -12,11 +13,11 @@ namespace Emberfall.Presentation
     public sealed class CardPresenter : MonoBehaviour, ICardPresenter
     {
         // Populated via Setup() (runtime) or serialized refs in a prefab (editor).
-        [SerializeField] private TextMesh nameLabel;
-        [SerializeField] private TextMesh costLabel;
-        [SerializeField] private TextMesh attackLabel;
-        [SerializeField] private TextMesh healthLabel;
-        [SerializeField] private TextMesh keywordLabel;
+        [SerializeField] private TextMeshPro nameLabel;
+        [SerializeField] private TextMeshPro costLabel;
+        [SerializeField] private TextMeshPro attackLabel;
+        [SerializeField] private TextMeshPro healthLabel;
+        [SerializeField] private TextMeshPro keywordLabel;
         [SerializeField] private Renderer cardBackground;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
@@ -33,8 +34,8 @@ namespace Emberfall.Presentation
         private bool _isSelected;
 
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
-        public void Setup(TextMesh name, TextMesh cost, TextMesh attack, TextMesh health,
-                          TextMesh keywords, Renderer bg)
+        public void Setup(TextMeshPro name, TextMeshPro cost, TextMeshPro attack, TextMeshPro health,
+                          TextMeshPro keywords, Renderer bg)
         {
             nameLabel    = name;
             costLabel    = cost;
