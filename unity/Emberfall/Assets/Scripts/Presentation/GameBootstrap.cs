@@ -35,6 +35,9 @@ namespace Emberfall.Presentation
         [SerializeField] private InputRouter inputRouter;
         [SerializeField] private ProceduralBoardSetup proceduralBoardSetup;
 
+        [Header("VFX (Phase C step 5 — null = VFX disabled)")]
+        [SerializeField] private VfxDirector vfxDirector;
+
         private void Start()
         {
             if (matchRunner == null)
@@ -82,6 +85,13 @@ namespace Emberfall.Presentation
                 // Board slot and hero power clickables — must run after SetPlayers() above.
                 if (proceduralBoardSetup != null)
                     proceduralBoardSetup.SetupClickables(p0Id, p1Id, inputRouter);
+            }
+
+            // ── VFX ───────────────────────────────────────────────────────────────
+            if (vfxDirector != null)
+            {
+                matchRunner.OnMatchEvent   += vfxDirector.OnMatchEvent;
+                matchRunner.OnStateUpdated += vfxDirector.OnStateUpdated;
             }
 
             // ── Debug logging ─────────────────────────────────────────────────────
