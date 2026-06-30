@@ -87,6 +87,13 @@ namespace Emberfall.Presentation
                     proceduralBoardSetup.SetupClickables(p0Id, p1Id, inputRouter);
             }
 
+            // ── Mana trays ────────────────────────────────────────────────────────
+            if (boardAnchors != null)
+            {
+                CreateManaTray(p0Id, 0, boardAnchors);
+                CreateManaTray(p1Id, 1, boardAnchors);
+            }
+
             // ── VFX ───────────────────────────────────────────────────────────────
             if (vfxDirector != null)
             {
@@ -117,6 +124,17 @@ namespace Emberfall.Presentation
                 Debug.Log($"[Match] OVER — {outcome}");
 
             matchRunner.StartMatch(db, setup, p0Source, p1Ai);
+        }
+
+        private void CreateManaTray(PlayerId playerId, int seatIndex, BoardAnchors anchors)
+        {
+            Transform anchor = anchors.ManaTrayAnchor(playerId);
+            if (anchor == null) return;
+
+            var go   = new GameObject($"ManaTray_{playerId}");
+            var view = go.AddComponent<ManaTrayView>();
+            view.Init(seatIndex, anchor);
+            matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 
         private static ICardDatabase LoadCardDatabase()
