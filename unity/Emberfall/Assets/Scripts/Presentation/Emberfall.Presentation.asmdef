@@ -1,0 +1,20 @@
+{
+  "name": "Emberfall.Presentation",
+  "rootNamespace": "Emberfall.Presentation",
+  "references": [
+    "com.emberfall.core.contracts",
+    "com.emberfall.core.cards",
+    "Emberfall.Data",
+    "Emberfall.Session",
+    "Emberfall.AI"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

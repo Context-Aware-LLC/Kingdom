@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "com.emberfall.core.contracts": "file:../../../src/Emberfall.Core.Contracts",
+    "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
+    "com.emberfall.core": "file:../../../src/Emberfall.Core",
+    "com.unity.render-pipelines.universal": "17.0.3",
+    "com.unity.addressables": "2.3.1",
+    "com.unity.ugui": "2.0.0"
+  }
+}

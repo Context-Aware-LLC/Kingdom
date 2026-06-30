@@ -1,0 +1,17 @@
+{
+  "name": "Emberfall.Data",
+  "rootNamespace": "Emberfall.Data",
+  "references": [
+    "com.emberfall.core.contracts",
+    "com.emberfall.core.cards"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
