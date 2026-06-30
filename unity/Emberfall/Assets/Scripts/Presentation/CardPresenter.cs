@@ -19,16 +19,18 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMesh keywordLabel;
         [SerializeField] private Renderer cardBackground;
 
-        private static readonly Color NormalColor = new Color(0.22f, 0.22f, 0.32f);
-        private static readonly Color BuffColor   = new Color(0.20f, 0.80f, 0.25f);
-        private static readonly Color DamageColor = new Color(0.90f, 0.20f, 0.20f);
-        private static readonly Color ShieldColor = new Color(0.95f, 0.88f, 0.15f);
-        private static readonly Color FrozenColor = new Color(0.40f, 0.60f, 0.95f);
-        private static readonly Color TauntColor  = new Color(0.80f, 0.50f, 0.10f);
+        private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
+        private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
+        private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
+        private static readonly Color ShieldColor   = new Color(0.95f, 0.88f, 0.15f);
+        private static readonly Color FrozenColor   = new Color(0.40f, 0.60f, 0.95f);
+        private static readonly Color TauntColor    = new Color(0.80f, 0.50f, 0.10f);
+        private static readonly Color SelectedColor = new Color(1.00f, 0.85f, 0.10f); // gold
 
         private CardDefinition  _def;
         private ICardLiveState  _live;
         private MaterialPropertyBlock _mpb;
+        private bool _isSelected;
 
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
         public void Setup(TextMesh name, TextMesh cost, TextMesh attack, TextMesh health,
@@ -56,6 +58,13 @@ namespace Emberfall.Presentation
             _live.Changed -= OnChanged;
             _live = null;
             _def  = null;
+        }
+
+        // Called by InputRouter to highlight this card as the active selection.
+        public void SetSelectionHighlight(bool selected)
+        {
+            _isSelected = selected;
+            ApplyAuras();
         }
 
         private void OnDestroy() => Unbind();
@@ -118,7 +127,8 @@ namespace Emberfall.Presentation
             if (_mpb == null) _mpb = new MaterialPropertyBlock();
 
             Color c;
-            if      ((_live.Auras & AuraSet.Frozen) != 0) c = FrozenColor;
+            if      (_isSelected)                          c = SelectedColor;
+            else if ((_live.Auras & AuraSet.Frozen) != 0) c = FrozenColor;
             else if ((_live.Auras & AuraSet.Shield) != 0) c = ShieldColor;
             else if ((_live.Auras & AuraSet.Taunt)  != 0) c = TauntColor;
             else                                           c = NormalColor;

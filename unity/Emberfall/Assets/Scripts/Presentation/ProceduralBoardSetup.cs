@@ -1,3 +1,4 @@
+using Emberfall.Core.Contracts;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -54,6 +55,37 @@ namespace Emberfall.Presentation
             seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3( 5.2f, ySign * 2.3f, 0f));
             seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(-5.8f, ySign * 2.0f, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3( 5.8f, ySign * 2.5f, 0f));
+        }
+
+        // Called from GameBootstrap.Start() after SetPlayers() — attaches ClickableBoardSlot
+        // and ClickableHeroPower so the human player can click the board and hero power.
+        // Board slots get slots for own side only; P1's slots are intentionally not clickable
+        // in hot-seat mode (P1 is AI-controlled).
+        public void SetupClickables(PlayerId p0Id, PlayerId p1Id, InputRouter router)
+        {
+            if (router == null) return;
+            var anchors = GetComponent<BoardAnchors>();
+            AttachSlotClickables(anchors.p0, p0Id, router);
+            AttachSlotClickables(anchors.p1, p1Id, router);
+        }
+
+        private static void AttachSlotClickables(SeatAnchors seat, PlayerId ownerId, InputRouter router)
+        {
+            if (seat.BoardSlots != null)
+            {
+                for (int i = 0; i < seat.BoardSlots.Length; i++)
+                {
+                    if (seat.BoardSlots[i] == null) continue;
+                    var slot = seat.BoardSlots[i].gameObject.AddComponent<ClickableBoardSlot>();
+                    slot.Init(ownerId, i, router);
+                }
+            }
+
+            if (seat.HeroPowerAnchor != null)
+            {
+                var hp = seat.HeroPowerAnchor.gameObject.AddComponent<ClickableHeroPower>();
+                hp.Init(ownerId, router);
+            }
         }
 
         private Transform MakeAnchor(string anchorName, Vector3 worldPos)

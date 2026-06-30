@@ -21,6 +21,7 @@ namespace Emberfall.Presentation
         private ICardDatabase _db;
         private PlayerId _p0Id;
         private PlayerId _p1Id;
+        private InputRouter _inputRouter;
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -31,12 +32,14 @@ namespace Emberfall.Presentation
 
         // ── Public API ──────────────────────────────────────────────────────────────
 
-        public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id)
+        public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
+                               InputRouter inputRouter = null)
         {
-            _db         = db;
+            _db          = db;
             boardAnchors = anchors;
-            _p0Id       = p0Id;
-            _p1Id       = p1Id;
+            _p0Id        = p0Id;
+            _p1Id        = p1Id;
+            _inputRouter = inputRouter;
         }
 
         public void OnStateUpdated(GameState state)
@@ -89,7 +92,20 @@ namespace Emberfall.Presentation
                 if (def != null)
                     presenter.Bind(def, live);
 
+                // Attach click handler when InputRouter is present (hot-seat mode).
+                if (_inputRouter != null)
+                {
+                    var clickable = presenter.gameObject.AddComponent<ClickableCard>();
+                    clickable.Init(ci.Id, owner, zone, presenter, _inputRouter);
+                }
+
                 _presenters[ci.Id] = presenter;
+            }
+            else if (_inputRouter != null)
+            {
+                // Keep zone current for hand→board transitions.
+                var clickable = presenter.GetComponent<ClickableCard>();
+                clickable?.UpdateZone(zone);
             }
 
             // Update live state regardless (stats may have changed).
@@ -129,13 +145,18 @@ namespace Emberfall.Presentation
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.identity;
 
-            // Background quad
+            // Background quad — remove its auto-generated MeshCollider; click detection
+            // is handled by the BoxCollider on the root added below.
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             bg.name = "BG";
             bg.transform.SetParent(root.transform, false);
             bg.transform.localScale = new Vector3(CardW, CardH, 1f);
             bg.transform.localPosition = Vector3.zero;
             Destroy(bg.GetComponent<MeshCollider>());
+
+            // BoxCollider on root for OnMouseDown — sized to card face.
+            var col = root.AddComponent<BoxCollider>();
+            col.size = new Vector3(CardW, CardH, 0.1f);
 
             // Name — top strip
             TextMesh nameLabel = MakeLabel(root.transform, "Name", new Vector3(0f, CardH * 0.39f, -0.01f), 28, Color.white);
