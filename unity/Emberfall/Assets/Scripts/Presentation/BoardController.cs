@@ -6,6 +6,7 @@ using Emberfall.Session;
 using TMPro;
 using UnityEngine;
 
+
 namespace Emberfall.Presentation
 {
     // Owns all CardPresenter instances on the board and in hand.
@@ -23,6 +24,7 @@ namespace Emberfall.Presentation
         private PlayerId _p0Id;
         private PlayerId _p1Id;
         private InputRouter _inputRouter;
+        private MatchRunner _matchRunner;
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -34,13 +36,14 @@ namespace Emberfall.Presentation
         // ── Public API ──────────────────────────────────────────────────────────────
 
         public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
-                               InputRouter inputRouter = null)
+                               InputRouter inputRouter = null, MatchRunner matchRunner = null)
         {
             _db          = db;
             boardAnchors = anchors;
             _p0Id        = p0Id;
             _p1Id        = p1Id;
             _inputRouter = inputRouter;
+            _matchRunner = matchRunner;
         }
 
         public void OnStateUpdated(GameState state)
@@ -92,6 +95,8 @@ namespace Emberfall.Presentation
                 CardDefinition def = _db.Get(ci.DefinitionId);
                 if (def != null)
                     presenter.Bind(def, live);
+
+                presenter.GetComponent<CardMaterialBinder>()?.Init(live, _matchRunner);
 
                 // Attach click handler when InputRouter is present (hot-seat mode).
                 if (_inputRouter != null)
@@ -146,32 +151,57 @@ namespace Emberfall.Presentation
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.identity;
 
-            // Background quad — remove its auto-generated MeshCollider; click detection
-            // is handled by the BoxCollider on the root added below.
+            // Background quad (SG_CardComposite body) — remove auto-generated MeshCollider.
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             bg.name = "BG";
             bg.transform.SetParent(root.transform, false);
-            bg.transform.localScale = new Vector3(CardW, CardH, 1f);
+            bg.transform.localScale    = new Vector3(CardW, CardH, 1f);
             bg.transform.localPosition = Vector3.zero;
             Destroy(bg.GetComponent<MeshCollider>());
+            var bodyRenderer = bg.GetComponent<Renderer>();
+
+            // Glow overlay — slightly larger, just in front. SG_Glow material assigned later.
+            var glowGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            glowGo.name = "GlowOverlay";
+            glowGo.transform.SetParent(root.transform, false);
+            glowGo.transform.localScale    = new Vector3(CardW + 0.10f, CardH + 0.10f, 1f);
+            glowGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
+            Destroy(glowGo.GetComponent<MeshCollider>());
+            var glowRenderer = glowGo.GetComponent<Renderer>();
+            glowGo.SetActive(false);
+
+            // Aegis underlay — slightly larger, just behind. SG_Aegis material assigned later.
+            var aegisGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            aegisGo.name = "AegisUnderlay";
+            aegisGo.transform.SetParent(root.transform, false);
+            aegisGo.transform.localScale    = new Vector3(CardW + 0.14f, CardH + 0.14f, 1f);
+            aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
+            Destroy(aegisGo.GetComponent<MeshCollider>());
+            var aegisRenderer = aegisGo.GetComponent<Renderer>();
+            aegisGo.SetActive(false);
 
             // BoxCollider on root for OnMouseDown — sized to card face.
             var col = root.AddComponent<BoxCollider>();
             col.size = new Vector3(CardW, CardH, 0.1f);
 
             // Name — top strip
-            TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,           CardH * 0.39f, -0.01f), 2.0f, Color.white);
+            TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 2.0f, Color.white);
             // Cost — top-left gem
-            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f, CardH * 0.42f, -0.01f), 2.5f, new Color(0.4f, 0.7f, 1f));
+            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 2.5f, new Color(0.4f, 0.7f, 1f));
             // Attack — bottom-left
-            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH * 0.42f, -0.01f), 2.5f, Color.white);
+            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
             // Health — bottom-right
-            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH * 0.42f, -0.01f), 2.5f, Color.white);
+            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
             // Keywords — center strip
-            TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,           -CardH * 0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
+            TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
-            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, kwLabel, bg.GetComponent<Renderer>());
+            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, kwLabel, bodyRenderer);
+
+            // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
+            var binder = root.AddComponent<CardMaterialBinder>();
+            binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer);
+
             return presenter;
         }
 

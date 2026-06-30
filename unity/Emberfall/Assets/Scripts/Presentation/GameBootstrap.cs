@@ -73,7 +73,7 @@ namespace Emberfall.Presentation
             if (boardController != null && boardAnchors != null)
             {
                 boardAnchors.SetPlayers(p0Id, p1Id);
-                boardController.Initialize(db, boardAnchors, p0Id, p1Id, inputRouter);
+                boardController.Initialize(db, boardAnchors, p0Id, p1Id, inputRouter, matchRunner);
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
             }
 
