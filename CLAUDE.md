@@ -10,23 +10,35 @@ Desktop-first, architected for mobile.
 
 ## Current status
 
-**M1 — vertical slice, engine in progress.** The repo is design/engineering specs
-in markdown **plus** the first real game code: the deterministic rules core under
-`src/` and `tests/` (solution `Emberfall.slnx`, .NET 10 — note `.slnx` not `.sln`).
-Specs are still the source of truth for un-built behavior; the studio of specialist
-agents (directed by **Project Shepherd**) continues to produce them.
+**M1 — vertical slice, Phase C (Unity presentation) in progress.** The repo is
+design/engineering specs in markdown **plus** real game code: the deterministic
+rules core under `src/` and `tests/` (solution `Emberfall.slnx`, .NET 10 — note
+`.slnx` not `.sln`), and a Unity project under `unity/Emberfall/`. Specs are
+still the source of truth for un-built behavior; the studio of specialist agents
+(directed by **Project Shepherd**) continues to produce them.
 
-**Built (M1 engine steps 1–5, branch `feat/emberfall-core-determinism`):** the
-UnityEngine-free, zero-float `Emberfall.Core.Contracts`/`.Cards`/`.Core` assemblies,
-splitmix64 `DeterministicRandom`, canonical float-free `GameStateHasher`, the **green
-R1 golden-replay gate**, and the 9-stage CI pipeline (`.github/workflows/ci.yml`,
-5 hard-blocking pure-.NET stages). `dotnet test Emberfall.slnx` → 25 green. See
-`src/README.md` for the map.
+**Built — Phase A (engine steps 1–5):** the UnityEngine-free, zero-float
+`Emberfall.Core.Contracts`/`.Cards`/`.Core` assemblies, splitmix64
+`DeterministicRandom`, canonical float-free `GameStateHasher`, the **green R1
+golden-replay gate**, and the 9-stage CI pipeline (`.github/workflows/ci.yml`,
+5 hard-blocking pure-.NET stages).
 
-**Deferred to M1 Phase B:** effect interpreter, combat, the ~20 card behaviors, and
-the `deathrattle_cascade` golden fixture (`CommandProcessor` rejects PlayCard/Attack/
-HeroPower with `NotImplemented` for now). Prior spec milestone: shader workstream
-(10 shaders in `techart/shaders/`) + the mana-tray reconciliation.
+**Built — Phase B (engine steps 1–5, all complete):** the effect interpreter,
+combat resolution (`DamagePipeline`, keywords: Taunt/Charge/Rush/Windfury/
+Overwhelm/Vanguard/Stealth/Divine Shield/Frozen), hero power, ~20 card
+behaviors + JSON data rows, and the `deathrattle_cascade` golden fixture.
+`CommandProcessor` (`src/Emberfall.Core/CommandProcessor.cs`) now fully
+validates+applies `PlayCard`/`Attack`/`HeroPower`; only `DiscoverChoiceIntent`
+remains `NotImplemented`. `dotnet test Emberfall.slnx` → 88 green.
+
+**Built — Phase C (in progress):** step 1, the Unity project scaffold (UPM
+packages, Session/Data/AI/Presentation layers, `GameBootstrap`, `MatchRunner`
+wired to `LocalMatchHost` + `IIntentSource`s), the C# shader-binding layer
+(`CardMaterialBinder`, `ShaderIds`), `ManaTrayView`, and all 10 Shader Graph
+assets + 3 HLSL sub-graphs in `unity/Emberfall/Assets/Shaders/` (closing the
+shader workstream in `techart/shaders/`).
+
+See `src/README.md` for the engine map.
 
 ## Repo map
 
