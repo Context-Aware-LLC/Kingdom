@@ -58,6 +58,7 @@ namespace Emberfall.Session
                 seed);
 
             _running = true;
+            NotifySources(state);
             OnStateUpdated?.Invoke(state);
             StartCoroutine(MatchLoop());
         }
@@ -86,9 +87,17 @@ namespace Emberfall.Session
                 if (!result.Accepted)
                     source.OnRejected(result.Reason.Value);
 
-                OnStateUpdated?.Invoke(_host.State);
+                var newState = _host.State;
+                NotifySources(newState);
+                OnStateUpdated?.Invoke(newState);
                 yield return null;
             }
+        }
+
+        private void NotifySources(GameState state)
+        {
+            foreach (var s in _sources)
+                s.NotifyStateUpdate(state);
         }
 
         private IIntentSource PickSource(GameState state)
