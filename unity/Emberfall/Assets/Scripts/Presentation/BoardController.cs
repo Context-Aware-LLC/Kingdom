@@ -180,6 +180,15 @@ namespace Emberfall.Presentation
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             aegisGo.SetActive(false);
 
+            // Rarity gem — bottom-center strip, tinted per-rarity by CardPresenter.ApplyFrame (D2).
+            var gemGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            gemGo.name = "Gem";
+            gemGo.transform.SetParent(root.transform, false);
+            gemGo.transform.localScale    = new Vector3(CardW * 0.16f, CardW * 0.16f, 1f);
+            gemGo.transform.localPosition = new Vector3(0f, -CardH * 0.42f, -0.015f);
+            Destroy(gemGo.GetComponent<MeshCollider>());
+            var gemRenderer = gemGo.GetComponent<Renderer>();
+
             // BoxCollider on root for OnMouseDown — sized to card face.
             var col = root.AddComponent<BoxCollider>();
             col.size = new Vector3(CardW, CardH, 0.1f);
@@ -188,15 +197,17 @@ namespace Emberfall.Presentation
             TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 2.0f, Color.white);
             // Cost — top-left gem
             TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 2.5f, new Color(0.4f, 0.7f, 1f));
-            // Attack — bottom-left
+            // Attack — bottom-left (minions + weapons)
             TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
-            // Health — bottom-right
+            // Health — bottom-right (minions only)
             TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
+            // Durability — bottom-right (weapons only; occupies the health slot, mutually exclusive)
+            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
             // Keywords — center strip
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
-            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, kwLabel, bodyRenderer);
+            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, gemRenderer);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();

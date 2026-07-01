@@ -17,8 +17,10 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMeshPro costLabel;
         [SerializeField] private TextMeshPro attackLabel;
         [SerializeField] private TextMeshPro healthLabel;
+        [SerializeField] private TextMeshPro durabilityLabel;
         [SerializeField] private TextMeshPro keywordLabel;
         [SerializeField] private Renderer cardBackground;
+        [SerializeField] private Renderer gemRenderer;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
@@ -31,18 +33,21 @@ namespace Emberfall.Presentation
         private CardDefinition  _def;
         private ICardLiveState  _live;
         private MaterialPropertyBlock _mpb;
+        private MaterialPropertyBlock _gemMpb;
         private bool _isSelected;
 
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
         public void Setup(TextMeshPro name, TextMeshPro cost, TextMeshPro attack, TextMeshPro health,
-                          TextMeshPro keywords, Renderer bg)
+                          TextMeshPro durability, TextMeshPro keywords, Renderer bg, Renderer gem)
         {
-            nameLabel    = name;
-            costLabel    = cost;
-            attackLabel  = attack;
-            healthLabel  = health;
-            keywordLabel = keywords;
+            nameLabel      = name;
+            costLabel      = cost;
+            attackLabel    = attack;
+            healthLabel    = health;
+            durabilityLabel = durability;
+            keywordLabel   = keywords;
             cardBackground = bg;
+            gemRenderer    = gem;
         }
 
         public void Bind(CardDefinition staticDef, ICardLiveState liveState)
@@ -82,14 +87,44 @@ namespace Emberfall.Presentation
             if (_def == null) return;
             if (nameLabel != null) nameLabel.text = _def.Name;
             if (costLabel != null) costLabel.text = _def.Cost.ToString();
+            ApplyFrame();
             RecolorStats();
             RebuildKeywords();
             ApplyAuras();
         }
 
+        // Data-driven frame/rarity assembly (frame-rarity-system.md §3 ApplyFrame) — stat-plate
+        // visibility keyed by type, gem tint keyed by rarity. No per-card branching.
+        private void ApplyFrame()
+        {
+            if (gemRenderer != null)
+            {
+                if (_gemMpb == null) _gemMpb = new MaterialPropertyBlock();
+                gemRenderer.GetPropertyBlock(_gemMpb);
+                _gemMpb.SetColor("_BaseColor", FrameRarityCatalog.GemColor(_def.Rarity));
+                gemRenderer.SetPropertyBlock(_gemMpb);
+            }
+
+            bool showAttack     = FrameRarityCatalog.ShowAttack(_def.Type);
+            bool showHealth     = FrameRarityCatalog.ShowHealth(_def.Type);
+            bool showDurability = FrameRarityCatalog.ShowDurability(_def.Type);
+
+            if (attackLabel != null) attackLabel.gameObject.SetActive(showAttack);
+            if (healthLabel != null) healthLabel.gameObject.SetActive(showHealth);
+            if (durabilityLabel != null)
+            {
+                durabilityLabel.gameObject.SetActive(showDurability);
+                if (showDurability) durabilityLabel.text = (_def.Durability ?? 0).ToString();
+            }
+
+            // Weapon attack is static while in hand (no live minion stats to track); set it directly.
+            if (showAttack && attackLabel != null && _def.Type == CardType.WEAPON)
+                attackLabel.text = (_def.Attack ?? 0).ToString();
+        }
+
         private void RecolorStats()
         {
-            if (_live == null) return;
+            if (_live == null || _def.Type != CardType.MINION) return;
 
             if (attackLabel != null)
             {
