@@ -21,6 +21,7 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMeshPro keywordLabel;
         [SerializeField] private Renderer cardBackground;
         [SerializeField] private Renderer gemRenderer;
+        [SerializeField] private Renderer artRenderer;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
@@ -34,11 +35,13 @@ namespace Emberfall.Presentation
         private ICardLiveState  _live;
         private MaterialPropertyBlock _mpb;
         private MaterialPropertyBlock _gemMpb;
+        private MaterialPropertyBlock _artMpb;
         private bool _isSelected;
 
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
         public void Setup(TextMeshPro name, TextMeshPro cost, TextMeshPro attack, TextMeshPro health,
-                          TextMeshPro durability, TextMeshPro keywords, Renderer bg, Renderer gem)
+                          TextMeshPro durability, TextMeshPro keywords, Renderer bg, Renderer gem,
+                          Renderer art = null)
         {
             nameLabel      = name;
             costLabel      = cost;
@@ -48,6 +51,25 @@ namespace Emberfall.Presentation
             keywordLabel   = keywords;
             cardBackground = bg;
             gemRenderer    = gem;
+            artRenderer    = art;
+        }
+
+        // Called by BoardController once the IArtProvider resolves this card's illustration.
+        // Null sprite (art not generated yet) keeps the art quad hidden — placeholder look.
+        public void SetArt(Sprite sprite)
+        {
+            if (artRenderer == null) return;
+            if (sprite == null)
+            {
+                artRenderer.gameObject.SetActive(false);
+                return;
+            }
+            if (_artMpb == null) _artMpb = new MaterialPropertyBlock();
+            artRenderer.GetPropertyBlock(_artMpb);
+            _artMpb.SetTexture("_BaseMap", sprite.texture);
+            _artMpb.SetColor("_BaseColor", Color.white);
+            artRenderer.SetPropertyBlock(_artMpb);
+            artRenderer.gameObject.SetActive(true);
         }
 
         public void Bind(CardDefinition staticDef, ICardLiveState liveState)

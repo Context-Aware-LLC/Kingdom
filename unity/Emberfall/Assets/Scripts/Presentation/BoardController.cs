@@ -25,6 +25,7 @@ namespace Emberfall.Presentation
         private PlayerId _p1Id;
         private InputRouter _inputRouter;
         private MatchRunner _matchRunner;
+        private IArtProvider _artProvider;
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -36,7 +37,8 @@ namespace Emberfall.Presentation
         // ── Public API ──────────────────────────────────────────────────────────────
 
         public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
-                               InputRouter inputRouter = null, MatchRunner matchRunner = null)
+                               InputRouter inputRouter = null, MatchRunner matchRunner = null,
+                               IArtProvider artProvider = null)
         {
             _db          = db;
             boardAnchors = anchors;
@@ -44,6 +46,12 @@ namespace Emberfall.Presentation
             _p1Id        = p1Id;
             _inputRouter = inputRouter;
             _matchRunner = matchRunner;
+            _artProvider = artProvider;
+#if UNITY_EDITOR
+            // Vertical-slice default: serve art from AssetDatabase until Addressables
+            // groups are configured (pipeline.md §5).
+            _artProvider ??= new EditorArtProvider();
+#endif
         }
 
         public void OnStateUpdated(GameState state)
@@ -94,7 +102,10 @@ namespace Emberfall.Presentation
 
                 CardDefinition def = _db.Get(ci.DefinitionId);
                 if (def != null)
+                {
                     presenter.Bind(def, live);
+                    _artProvider?.LoadArt(def.ArtId, presenter.SetArt);
+                }
 
                 presenter.GetComponent<CardMaterialBinder>()?.Init(live, _matchRunner);
 
@@ -180,6 +191,17 @@ namespace Emberfall.Presentation
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             aegisGo.SetActive(false);
 
+            // Art window — upper card face, in front of BG, behind labels. Texture assigned
+            // via CardPresenter.SetArt when the IArtProvider resolves; hidden until then.
+            var artGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            artGo.name = "Art";
+            artGo.transform.SetParent(root.transform, false);
+            artGo.transform.localScale    = new Vector3(CardW * 0.92f, CardH * 0.52f, 1f);
+            artGo.transform.localPosition = new Vector3(0f, CardH * 0.12f, -0.005f);
+            Destroy(artGo.GetComponent<MeshCollider>());
+            var artRenderer = artGo.GetComponent<Renderer>();
+            artGo.SetActive(false);
+
             // Rarity gem — bottom-center strip, tinted per-rarity by CardPresenter.ApplyFrame (D2).
             var gemGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             gemGo.name = "Gem";
@@ -207,7 +229,7 @@ namespace Emberfall.Presentation
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
-            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, gemRenderer);
+            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, gemRenderer, artRenderer);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
