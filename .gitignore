@@ -7,6 +7,7 @@ Thumbs.db
 # .NET build output (the Emberfall.Core solution)
 [Bb]in/
 [Oo]bj/
+.dotnet-build/
 # CI gate evidence — regenerated every run, never committed
 artifacts/
 

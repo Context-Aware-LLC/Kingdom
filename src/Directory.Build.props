@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    Unity's UPM "file:" package references point straight at these project folders and
+    recursively scan every .cs/.dll under them. Default obj/bin output sitting inside
+    src/ gets picked up by Unity as duplicate source (obj/**/AssemblyInfo.cs) and as
+    colliding precompiled Plugins (bin/**/*.dll), producing CS0579/CS0436 errors in the
+    Unity project. Redirect build output outside src/ so Unity never sees it.
+  -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\.dotnet-build\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)..\.dotnet-build\bin\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

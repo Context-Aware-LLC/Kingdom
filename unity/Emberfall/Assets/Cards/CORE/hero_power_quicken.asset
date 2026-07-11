@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
+  m_Name: hero_power_quicken
+  m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
+  _json: "{ \"id\": \"hero_power_quicken\",       \"name\": \"Quicken\",      \"type\":
+    \"HERO_POWER\", \"cost\": 2, \"class\": \"VERDANT\",    \"rarity\": \"COMMON\",
+    \"setId\": \"CORE\", \"collectible\": false, \"artId\": \"art/hero_power_quicken\",\n   
+    \"effects\": [ { \"trigger\": \"ON_CAST\", \"action\": \"HEAL\", \"amount\":
+    3 } ] }"

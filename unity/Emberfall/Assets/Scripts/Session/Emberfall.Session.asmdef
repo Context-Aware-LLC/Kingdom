@@ -2,9 +2,9 @@
   "name": "Emberfall.Session",
   "rootNamespace": "Emberfall.Session",
   "references": [
-    "com.emberfall.core.contracts",
-    "com.emberfall.core.cards",
-    "com.emberfall.core",
+    "Emberfall.Core.Contracts",
+    "Emberfall.Core.Cards",
+    "Emberfall.Core",
     "Emberfall.Data"
   ],
   "includePlatforms": [],

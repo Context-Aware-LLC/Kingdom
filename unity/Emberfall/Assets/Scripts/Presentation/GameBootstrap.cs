@@ -1,4 +1,5 @@
 using Emberfall.AI;
+using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using Emberfall.Session;

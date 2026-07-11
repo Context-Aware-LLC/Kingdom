@@ -2,11 +2,13 @@
   "name": "Emberfall.Presentation",
   "rootNamespace": "Emberfall.Presentation",
   "references": [
-    "com.emberfall.core.contracts",
-    "com.emberfall.core.cards",
+    "Emberfall.Core.Contracts",
+    "Emberfall.Core.Cards",
+    "Emberfall.Core",
     "Emberfall.Data",
     "Emberfall.Session",
-    "Emberfall.AI"
+    "Emberfall.AI",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

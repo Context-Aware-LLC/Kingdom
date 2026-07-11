@@ -1,10 +1,14 @@
 {
   "dependencies": {
-    "com.emberfall.core.contracts": "file:../../../src/Emberfall.Core.Contracts",
-    "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
+    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.emberfall.core": "file:../../../src/Emberfall.Core",
-    "com.unity.render-pipelines.universal": "17.0.3",
-    "com.unity.addressables": "2.3.1",
-    "com.unity.ugui": "2.0.0"
+    "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
+    "com.emberfall.core.contracts": "file:../../../src/Emberfall.Core.Contracts",
+    "com.unity.addressables": "2.9.1",
+    "com.unity.ai.assistant": "2.13.0-pre.2",
+    "com.unity.ai.inference": "2.6.1",
+    "com.unity.render-pipelines.universal": "17.5.0",
+    "com.unity.ugui": "2.5.0",
+    "com.unity.modules.particlesystem": "1.0.0"
   }
 }
