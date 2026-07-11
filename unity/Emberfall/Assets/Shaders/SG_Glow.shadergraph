@@ -1,4 +1,4 @@
-{
+﻿{
     "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.GraphData",
     "m_ObjectId": "83326d2c84fa429cbdb3c467d283e9d0",
@@ -884,17 +884,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [
-                {
-                    "key": "message",
-                    "value": "Pulse depth. 0 = steady glow."
-                }
-            ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 0.15,
     "m_FloatType": 0,
     "m_LiteralFloatMode": false,
@@ -939,17 +929,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [
-                {
-                    "key": "message",
-                    "value": "Sine pulse speed (Epic rim-pulse)."
-                }
-            ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 2.0,
     "m_FloatType": 0,
     "m_LiteralFloatMode": false,
@@ -1801,17 +1781,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [
-                {
-                    "key": "message",
-                    "value": "Rim color. Set per state: gold=playable, green=buff, rarity=Epic."
-                }
-            ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": {
         "r": 1.6,
         "g": 1.3,
@@ -1847,17 +1817,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [
-                {
-                    "key": "message",
-                    "value": "Rim brightness."
-                }
-            ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 1.2,
     "m_FloatType": 0,
     "m_LiteralFloatMode": false,
@@ -2155,17 +2115,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [
-                {
-                    "key": "message",
-                    "value": "Higher = tighter rim at the very edge."
-                }
-            ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 3.0,
     "m_FloatType": 0,
     "m_LiteralFloatMode": false,

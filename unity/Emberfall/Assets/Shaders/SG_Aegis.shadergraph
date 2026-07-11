@@ -1,4 +1,4 @@
-{
+﻿{
     "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.GraphData",
     "m_ObjectId": "c1c2a6093bbe465c8aac6ff5eb40c9d4",
@@ -358,12 +358,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Bubble color. Gold = Divine Shield, blue = Taunt." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": { "r": 1.6, "g": 1.15, "b": 0.25, "a": 1.0 },
     "isMainColor": false,
     "m_ColorMode": 1
@@ -392,12 +387,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Bubble brightness." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 1.3,
     "m_FloatType": 1,
     "m_LiteralFloatMode": false,
@@ -433,12 +423,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Sphere-edge tightness (Shield default; Taunt uses a lower effective value for a thicker body)." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 2.5,
     "m_FloatType": 1,
     "m_LiteralFloatMode": false,
@@ -474,12 +459,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Breathing pulse speed." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 1.5,
     "m_FloatType": 1,
     "m_LiteralFloatMode": false,
@@ -515,12 +495,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Pulse depth." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 0.2,
     "m_FloatType": 1,
     "m_LiteralFloatMode": false,
@@ -556,12 +531,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Optional low-frequency surface shimmer; omittable on mobile (set Shimmer Amount to 0)." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": {
         "m_SerializedTexture": "{\"texture\":{\"fileID\":0,\"guid\":\"\",\"type\":0}}",
         "m_Guid": ""
@@ -597,12 +567,7 @@
     "hideConnector": false,
     "m_Hidden": false,
     "m_PerRendererData": false,
-    "m_customAttributes": [
-        {
-            "attribute": "Tooltip",
-            "data": [ { "key": "message", "value": "Shimmer strength. 0 = pure fresnel (cheapest, drops the texture sample)." } ]
-        }
-    ],
+    "m_customAttributes": [],
     "m_Value": 0.3,
     "m_FloatType": 0,
     "m_LiteralFloatMode": false,

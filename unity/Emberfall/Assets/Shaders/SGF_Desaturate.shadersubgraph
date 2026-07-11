@@ -121,7 +121,7 @@
                 "m_Node": {
                     "m_Id": "cc9b2debbbd34746abacf4ee947d629c"
                 },
-                "m_SlotId": 0
+                "m_SlotId": 2
             }
         }
     ],
@@ -733,7 +733,7 @@
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "b9440ab3334c4e2ab78f4b7625002cc0",
-    "m_Id": 0,
+    "m_Id": 2,
     "m_DisplayName": "Out",
     "m_SlotType": 0,
     "m_Hidden": false,
