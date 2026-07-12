@@ -16,6 +16,17 @@ namespace Emberfall.Session
     /// </summary>
     public sealed class MatchRunner : MonoBehaviour
     {
+        [Tooltip("Pause after each accepted command so state changes land at a watchable pace. " +
+                 "0 = fastest (replay/perf testing). Mulligan picks always pump at full speed.")]
+        [SerializeField, Range(0f, 3f)] private float commandDelaySeconds = 0.75f;
+
+        /// <summary>Per-command pacing delay in seconds; settable at runtime (e.g. a speed toggle).</summary>
+        public float CommandDelaySeconds
+        {
+            get => commandDelaySeconds;
+            set => commandDelaySeconds = Mathf.Max(0f, value);
+        }
+
         /// <summary>Fires for every accepted command's event batch, in emission order.</summary>
         public event Action<IReadOnlyList<GameEvent>> OnMatchEvent;
 
@@ -90,7 +101,13 @@ namespace Emberfall.Session
                 var newState = _host.State;
                 NotifySources(newState);
                 OnStateUpdated?.Invoke(newState);
-                yield return null;
+
+                // Pace accepted commands only — rejected intents cost nothing, and mulligan
+                // picks resolve simultaneously in fiction so they shouldn't drip one by one.
+                if (result.Accepted && newState.Phase != TurnPhase.Mulligan && commandDelaySeconds > 0f)
+                    yield return new WaitForSeconds(commandDelaySeconds);
+                else
+                    yield return null;
             }
         }
 
