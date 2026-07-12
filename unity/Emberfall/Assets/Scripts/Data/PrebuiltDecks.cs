@@ -24,9 +24,9 @@ namespace Emberfall.Data
             "ember_scorch",          "ember_scorch",
             "cinder_drake",
             "ember_overheat_golem",
+            "ember_cinder_lance",    "ember_cinder_lance",
             // Neutral fill
             "stone_sentry",          "stone_sentry",
-            "wandering_scout",       "wandering_scout",
             "core_emberling",        "core_emberling",
             "core_stoneback",        "core_stoneback",
             "core_hollow_acolyte",

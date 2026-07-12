@@ -11,11 +11,13 @@ namespace Emberfall.Presentation
     // Layout (orthographic camera, world units):
     //   Board rows:  y = ±1.3   (7 slots, x = -2.7..+2.7 at 0.9 spacing)
     //   Hand rows:   y = ±3.8   (10 slots, x = -4.05..+4.05 at 0.9 spacing)
-    //   Hero:        x = +5.2,  y = ±1.3
-    //   Weapon:      x = +4.1,  y = ±1.3
-    //   HeroPower:   x = +5.2,  y = ±2.3
-    //   ManaTray:    x = -5.8,  y = ±2.0
-    //   Deck:        x = +5.8,  y = ±2.5
+    //   Hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
+    //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). xSign: P0=-1, P1=+1.
+    //   Hero:        x = 5.2·xSign,  y = ±1.3
+    //   Weapon:      x = 4.1·xSign,  y = ±1.3
+    //   HeroPower:   x = 5.2·xSign,  y = ±2.3
+    //   ManaTray:    x = -5.8·xSign, y = ±2.0   (opposite side from the hero cluster)
+    //   Deck:        x = -5.8·xSign, y = ±2.5
     [RequireComponent(typeof(BoardAnchors))]
     public sealed class ProceduralBoardSetup : MonoBehaviour
     {
@@ -30,11 +32,11 @@ namespace Emberfall.Presentation
         private void Awake()
         {
             var anchors = GetComponent<BoardAnchors>();
-            BuildSeat(anchors.p0, "P0", P0Sign);
-            BuildSeat(anchors.p1, "P1", P1Sign);
+            BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f);
+            BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f);
         }
 
-        private void BuildSeat(SeatAnchors seat, string prefix, float ySign)
+        private void BuildSeat(SeatAnchors seat, string prefix, float ySign, float xSign)
         {
             seat.BoardSlots = new Transform[BoardSlotCount];
             for (int i = 0; i < BoardSlotCount; i++)
@@ -50,11 +52,11 @@ namespace Emberfall.Presentation
                 seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", new Vector3(x, ySign * 3.8f, 0f));
             }
 
-            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3( 5.2f, ySign * 1.3f, 0f));
-            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3( 4.1f, ySign * 1.3f, 0f));
-            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3( 5.2f, ySign * 2.3f, 0f));
-            seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(-5.8f, ySign * 2.0f, 0f));
-            seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3( 5.8f, ySign * 2.5f, 0f));
+            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  5.2f, ySign * 1.3f, 0f));
+            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  4.1f, ySign * 1.3f, 0f));
+            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  5.2f, ySign * 2.3f, 0f));
+            seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(xSign * -5.8f, ySign * 2.0f, 0f));
+            seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -5.8f, ySign * 2.5f, 0f));
         }
 
         // Called from GameBootstrap.Start() after SetPlayers() — attaches ClickableBoardSlot
@@ -85,6 +87,12 @@ namespace Emberfall.Presentation
             {
                 var hp = seat.HeroPowerAnchor.gameObject.AddComponent<ClickableHeroPower>();
                 hp.Init(ownerId, router);
+            }
+
+            if (seat.HeroAnchor != null)
+            {
+                var hero = seat.HeroAnchor.gameObject.AddComponent<ClickableHero>();
+                hero.Init(ownerId, router);
             }
         }
 

@@ -67,6 +67,7 @@ namespace Emberfall.Presentation
             {
                 SyncZone(ps.Id, ps.Board, Zone.Board);
                 SyncZone(ps.Id, ps.Hand,  Zone.Hand);
+                SyncWeapon(ps.Id, ps.Weapon);
             }
 
             // Destroy presenters for cards that left hand and board.
@@ -143,6 +144,35 @@ namespace Emberfall.Presentation
                     presenter.transform.localRotation = Quaternion.identity;
                 }
             }
+        }
+
+        // Equipped weapon lives on PlayerState.Weapon (a WeaponInstance, not a CardInstance in a
+        // zone list), so it can't ride the SyncZone/CardLiveState path. Its id joins _thisLive,
+        // which makes destruction-on-break fall out of the normal departed-card sweep.
+        private void SyncWeapon(PlayerId owner, WeaponInstance weapon)
+        {
+            if (weapon == null) return;
+            _thisLive.Add(weapon.Id);
+
+            if (!_presenters.TryGetValue(weapon.Id, out CardPresenter presenter))
+            {
+                Transform anchor = boardAnchors != null ? boardAnchors.WeaponAnchor(owner) : transform;
+                presenter = CreatePresenter(anchor != null ? anchor : transform);
+
+                var live = new CardLiveState(weapon.Id);
+                _liveStates[weapon.Id] = live;
+
+                CardDefinition def = _db.Get(weapon.DefinitionId);
+                if (def != null)
+                {
+                    presenter.Bind(def, live);
+                    _artProvider?.LoadArt(def.ArtId, presenter.SetArt);
+                }
+
+                _presenters[weapon.Id] = presenter;
+            }
+
+            presenter.SetWeaponStats(weapon.Attack, weapon.Durability);
         }
 
         private void DestroyPresenter(InstanceId id)

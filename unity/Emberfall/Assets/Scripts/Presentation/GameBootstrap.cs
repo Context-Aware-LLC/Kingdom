@@ -65,7 +65,9 @@ namespace Emberfall.Presentation
             }
             else
             {
-                p0Source = new RandomAi(p0Id);
+                // PlayingAi so AI-only mode shows a real game on both sides.
+                // Swap to RandomAi for replay/perf testing (never plays, drives to fatigue).
+                p0Source = new PlayingAi(p0Id, db);
             }
             // Phase C step 4: use PlayingAi (plays cards + attacks). Swap back to RandomAi for replay/perf testing.
             var p1Ai = new PlayingAi(p1Id, db);
@@ -133,7 +135,10 @@ namespace Emberfall.Presentation
             };
 
             matchRunner.OnMatchEnded += outcome =>
+            {
                 Debug.Log($"[Match] OVER — {outcome}");
+                MatchEndBanner.Show(outcome, localSeat: 0); // P0 is the local seat in both modes
+            };
 
             matchRunner.StartMatch(db, setup, p0Source, p1Ai);
         }

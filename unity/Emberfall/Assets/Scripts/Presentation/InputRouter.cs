@@ -113,6 +113,40 @@ namespace Emberfall.Presentation
             ClearSelection();
         }
 
+        // Heroes are click targets, not selectables: attack the enemy hero with the selected
+        // minion ("going face"), or aim a targeted spell at either hero. Illegal picks
+        // (friendly-fire attacks, Taunt on board) are rejected by the engine, not filtered here.
+        public void OnHeroClicked(PlayerId owner)
+        {
+            if (_currentState == null || _p0Input == null) return;
+
+            switch (_state)
+            {
+                case State.AttackerSelected:
+                    if (owner != _p0Id)
+                    {
+                        _p0Input.Enqueue(new AttackIntent(
+                            _p0Id, _selectedId, new TargetRef(HeroIdOf(owner))));
+                        ClearSelection();
+                    }
+                    break;
+
+                case State.CardSelectedFromHand:
+                    _p0Input.Enqueue(new PlayCardIntent(
+                        _p0Id, _selectedId, 0,
+                        new[] { new TargetRef(HeroIdOf(owner)) }));
+                    ClearSelection();
+                    break;
+            }
+        }
+
+        private InstanceId HeroIdOf(PlayerId owner)
+        {
+            foreach (var ps in _currentState.Players)
+                if (ps.Id == owner) return ps.Hero.Id;
+            return default;
+        }
+
         public void OnHeroPowerClicked(PlayerId owner)
         {
             if (_currentState == null || _p0Input == null) return;

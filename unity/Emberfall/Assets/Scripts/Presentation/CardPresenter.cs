@@ -175,6 +175,26 @@ namespace Emberfall.Presentation
                 attackLabel.text = (_def.Attack ?? 0).ToString();
         }
 
+        // Live equipped-weapon stats. WeaponInstance is not a CardInstance, so BoardController
+        // pushes these directly instead of through ICardLiveState.Changed.
+        public void SetWeaponStats(int attack, int durability)
+        {
+            if (attackLabel != null)
+            {
+                int baseAtk = _def?.Attack ?? attack;
+                attackLabel.text  = attack.ToString();
+                attackLabel.color = attack > baseAtk ? BuffColor
+                                  : attack < baseAtk ? DamageColor
+                                  : Color.white;
+            }
+            if (durabilityLabel != null)
+            {
+                int baseDur = _def?.Durability ?? durability;
+                durabilityLabel.text  = durability.ToString();
+                durabilityLabel.color = durability < baseDur ? DamageColor : Color.white;
+            }
+        }
+
         private void RecolorStats()
         {
             if (_live == null || _def.Type != CardType.MINION) return;
