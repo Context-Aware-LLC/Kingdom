@@ -51,6 +51,16 @@ namespace Emberfall.Editor
         {
             ApplySpriteCommon(importer);
             importer.mipmapEnabled = false;
+
+            // Sliced draw mode (BoardController.MakeSprite sizes frames/gems/icons by
+            // SpriteRenderer.size) requires a Full Rect sprite mesh; the default Tight
+            // mesh misrenders and warns when .size is set. spriteMeshType lives on
+            // TextureImporterSettings, so read-modify-write it back.
+            var spriteSettings = new TextureImporterSettings();
+            importer.ReadTextureSettings(spriteSettings);
+            spriteSettings.spriteMeshType = SpriteMeshType.FullRect;
+            importer.SetTextureSettings(spriteSettings);
+
             SetPlatform(importer, "Standalone", 2048, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 2048, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 2048, TextureImporterFormat.ASTC_6x6);
