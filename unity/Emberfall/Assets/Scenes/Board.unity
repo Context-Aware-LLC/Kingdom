@@ -216,6 +216,8 @@ GameObject:
   - component: {fileID: 558931580}
   - component: {fileID: 558931579}
   - component: {fileID: 558931578}
+  - component: {fileID: 558931585}
+  - component: {fileID: 558931584}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -238,9 +240,9 @@ MonoBehaviour:
   matchRunner: {fileID: 558931582}
   boardAnchors: {fileID: 558931581}
   boardController: {fileID: 558931579}
-  inputRouter: {fileID: 0}
+  inputRouter: {fileID: 558931585}
   proceduralBoardSetup: {fileID: 558931580}
-  vfxDirector: {fileID: 0}
+  vfxDirector: {fileID: 558931584}
 --- !u!114 &558931579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -340,6 +342,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19da0ef5af09150449ed981ecc207892, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Emberfall.Session::Emberfall.Session.MatchRunner
+  commandDelaySeconds: 0.75
 --- !u!4 &558931583
 Transform:
   m_ObjectHideFlags: 0
@@ -355,6 +358,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &558931584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558931577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dbcc9c101369424d8bf0250789003cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.VfxDirector
+  table: []
+  boardAnchors: {fileID: 558931581}
+--- !u!114 &558931585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 558931577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10f2056993b1b974283fa51b22c04d3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.InputRouter
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
