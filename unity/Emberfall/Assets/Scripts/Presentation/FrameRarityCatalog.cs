@@ -33,6 +33,18 @@ namespace Emberfall.Presentation
             _               => new Color(0.22f, 0.22f, 0.32f),
         };
 
+        // §1/§3 atlas sprite keys — the templated data-driven swap. Names match the UI atlas
+        // (frame-rarity-system.md §1/§2/§4) and resolve through IUiSpriteProvider. No per-card branching.
+        public static string FrameSprite(CardType type, Rarity rarity) =>
+            $"frame_{type.ToString().ToLowerInvariant()}_{rarity.ToString().ToLowerInvariant()}";
+
+        public static string GemSprite(Rarity rarity) =>
+            $"gem_{rarity.ToString().ToLowerInvariant()}";
+
+        // §4: SILENCE is an effect, not a card-face keyword — it has no icon.
+        public static string KeywordIcon(Keyword keyword) =>
+            keyword == Keyword.SILENCE ? null : $"icon_kw_{keyword.ToString().ToLowerInvariant()}";
+
         public static bool HasFoil(Rarity rarity) => rarity == Rarity.EPIC || rarity == Rarity.LEGENDARY;
 
         public static GlowTierKind GlowTier(Rarity rarity) => rarity switch

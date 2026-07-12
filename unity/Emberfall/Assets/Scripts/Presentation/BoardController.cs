@@ -26,6 +26,7 @@ namespace Emberfall.Presentation
         private InputRouter _inputRouter;
         private MatchRunner _matchRunner;
         private IArtProvider _artProvider;
+        private IUiSpriteProvider _uiSprites;
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -49,8 +50,10 @@ namespace Emberfall.Presentation
             _artProvider = artProvider;
 #if UNITY_EDITOR
             // Vertical-slice default: serve art from AssetDatabase until Addressables
-            // groups are configured (pipeline.md §5).
+            // groups are configured (pipeline.md §5). UI frame/gem/icon sprites resolve
+            // from the same AssetDatabase until the Sprite Atlas group exists (pipeline.md §2).
             _artProvider ??= new EditorArtProvider();
+            _uiSprites   ??= new EditorUiSpriteProvider();
 #endif
         }
 
@@ -202,14 +205,30 @@ namespace Emberfall.Presentation
             var artRenderer = artGo.GetComponent<Renderer>();
             artGo.SetActive(false);
 
-            // Rarity gem — bottom-center strip, tinted per-rarity by CardPresenter.ApplyFrame (D2).
-            var gemGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            gemGo.name = "Gem";
-            gemGo.transform.SetParent(root.transform, false);
-            gemGo.transform.localScale    = new Vector3(CardW * 0.16f, CardW * 0.16f, 1f);
-            gemGo.transform.localPosition = new Vector3(0f, -CardH * 0.42f, -0.015f);
-            Destroy(gemGo.GetComponent<MeshCollider>());
-            var gemRenderer = gemGo.GetComponent<Renderer>();
+            // Frame border — full card face, in front of the (opaque) art quad so the border ring
+            // overlaps the illustration edges; its transparent window lets the art show through.
+            // Sprite (frame_{type}_{rarity}) assigned by CardPresenter.ApplyFrame (D2).
+            var frameRenderer = MakeSprite(root.transform, "Frame",
+                new Vector3(0f, 0f, -0.006f), new Vector2(CardW, CardH));
+
+            // Rarity gem — bottom-center; sprite (gem_{rarity}) assigned per-rarity by ApplyFrame.
+            var gemRenderer = MakeSprite(root.transform, "Gem",
+                new Vector3(0f, -CardH * 0.42f, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
+
+            // Keyword icon strip — up to 4 icons laid left-to-right just below the art window.
+            // Sprites (icon_kw_*) assigned from live keywords by RebuildKeywords (§4).
+            const int kIconSlots = 4;
+            float iconSize = CardW * 0.15f;
+            float iconGap  = iconSize * 1.05f;
+            float iconY    = -CardH * 0.20f;
+            var keywordIcons = new SpriteRenderer[kIconSlots];
+            for (int i = 0; i < kIconSlots; i++)
+            {
+                float x = (i - (kIconSlots - 1) * 0.5f) * iconGap;
+                keywordIcons[i] = MakeSprite(root.transform, $"Kw{i}",
+                    new Vector3(x, iconY, -0.012f), new Vector2(iconSize, iconSize));
+                keywordIcons[i].gameObject.SetActive(false);
+            }
 
             // BoxCollider on root for OnMouseDown — sized to card face.
             var col = root.AddComponent<BoxCollider>();
@@ -229,13 +248,29 @@ namespace Emberfall.Presentation
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
-            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, gemRenderer, artRenderer);
+            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer);
+            presenter.SetupFrameLayer(frameRenderer, gemRenderer, keywordIcons, _uiSprites);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
             binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer);
 
             return presenter;
+        }
+
+        // Creates a world-space SpriteRenderer child sized to exact world dimensions via Sliced
+        // draw mode (PPU-independent). Sprite is assigned later by CardPresenter; starts empty.
+        private static SpriteRenderer MakeSprite(Transform parent, string goName, Vector3 localPos, Vector2 worldSize)
+        {
+            var go = new GameObject(goName);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
+            go.transform.localRotation = Quaternion.identity;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.drawMode = SpriteDrawMode.Sliced; // lets .size set exact world dimensions regardless of PPU
+            sr.size     = worldSize;
+            return sr;
         }
 
         private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color)

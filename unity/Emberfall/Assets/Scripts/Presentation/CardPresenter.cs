@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
@@ -20,8 +21,13 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMeshPro durabilityLabel;
         [SerializeField] private TextMeshPro keywordLabel;
         [SerializeField] private Renderer cardBackground;
-        [SerializeField] private Renderer gemRenderer;
         [SerializeField] private Renderer artRenderer;
+
+        // Frame/rarity layer (frame-rarity-system.md D2) — sprites resolved by name through _ui.
+        [SerializeField] private SpriteRenderer frameRenderer;
+        [SerializeField] private SpriteRenderer gemRenderer;
+        [SerializeField] private SpriteRenderer[] keywordIcons;
+        private IUiSpriteProvider _ui;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
@@ -34,13 +40,13 @@ namespace Emberfall.Presentation
         private CardDefinition  _def;
         private ICardLiveState  _live;
         private MaterialPropertyBlock _mpb;
-        private MaterialPropertyBlock _gemMpb;
         private MaterialPropertyBlock _artMpb;
         private bool _isSelected;
+        private readonly List<Keyword> _kwScratch = new();
 
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
         public void Setup(TextMeshPro name, TextMeshPro cost, TextMeshPro attack, TextMeshPro health,
-                          TextMeshPro durability, TextMeshPro keywords, Renderer bg, Renderer gem,
+                          TextMeshPro durability, TextMeshPro keywords, Renderer bg,
                           Renderer art = null)
         {
             nameLabel      = name;
@@ -50,8 +56,18 @@ namespace Emberfall.Presentation
             durabilityLabel = durability;
             keywordLabel   = keywords;
             cardBackground = bg;
-            gemRenderer    = gem;
             artRenderer    = art;
+        }
+
+        // Frame/rarity layer wiring (frame-rarity-system.md D2). Separate from Setup() so the
+        // sprite composition is optional — a card still renders (art + labels) without it.
+        public void SetupFrameLayer(SpriteRenderer frame, SpriteRenderer gem,
+                                    SpriteRenderer[] icons, IUiSpriteProvider ui)
+        {
+            frameRenderer = frame;
+            gemRenderer   = gem;
+            keywordIcons  = icons;
+            _ui           = ui;
         }
 
         // Called by BoardController once the IArtProvider resolves this card's illustration.
@@ -119,12 +135,17 @@ namespace Emberfall.Presentation
         // visibility keyed by type, gem tint keyed by rarity. No per-card branching.
         private void ApplyFrame()
         {
+            // Templated frame + gem sprite swap by type+rarity (§3 ApplyFrame). Falls back to a
+            // gem color tint if the atlas sprite is missing (placeholders not generated yet).
+            if (frameRenderer != null && _ui != null)
+                frameRenderer.sprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity));
+
             if (gemRenderer != null)
             {
-                if (_gemMpb == null) _gemMpb = new MaterialPropertyBlock();
-                gemRenderer.GetPropertyBlock(_gemMpb);
-                _gemMpb.SetColor("_BaseColor", FrameRarityCatalog.GemColor(_def.Rarity));
-                gemRenderer.SetPropertyBlock(_gemMpb);
+                Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
+                gemRenderer.sprite = gem;
+                // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
+                gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
             }
 
             bool showAttack     = FrameRarityCatalog.ShowAttack(_def.Type);
@@ -169,9 +190,41 @@ namespace Emberfall.Presentation
 
         private void RebuildKeywords()
         {
-            if (_live == null || keywordLabel == null) return;
+            if (_def == null) return;
+
+            // Printed keywords (static definition) are the base — a card shows its keywords in hand,
+            // where the runtime instance carries none. Live-granted keywords (board) merge on top.
+            _kwScratch.Clear();
+            foreach (Keyword k in _def.Keywords) _kwScratch.Add(k);
+            if (_live != null)
+                foreach (Keyword k in _live.Keywords)
+                    if (!_kwScratch.Contains(k)) _kwScratch.Add(k);
+
+            // Preferred: one atlas icon per keyword (§4), laid out left-to-right, capped at the
+            // strip's slot count. SILENCE is an effect, not a face keyword, so KeywordIcon() skips it.
+            if (keywordIcons != null && keywordIcons.Length > 0 && _ui != null)
+            {
+                if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
+
+                int slot = 0;
+                foreach (Keyword kw in _kwScratch)
+                {
+                    if (slot >= keywordIcons.Length) break;
+                    Sprite icon = _ui.Get(FrameRarityCatalog.KeywordIcon(kw));
+                    if (icon == null) continue;
+                    keywordIcons[slot].sprite = icon;
+                    keywordIcons[slot].gameObject.SetActive(true);
+                    slot++;
+                }
+                for (int i = slot; i < keywordIcons.Length; i++)
+                    keywordIcons[i].gameObject.SetActive(false);
+                return;
+            }
+
+            // Fallback: text keyword strip (icons not wired / atlas absent).
+            if (keywordLabel == null) return;
             var sb = new StringBuilder();
-            foreach (Keyword kw in _live.Keywords)
+            foreach (Keyword kw in _kwScratch)
             {
                 if (sb.Length > 0) sb.Append(' ');
                 sb.Append(kw.ToString());
