@@ -284,6 +284,16 @@ namespace Emberfall.Presentation
             tmp.fontSize  = fontSize;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color     = color;
+
+            // Constrain to the card face: without a sized rect TMP renders at unbounded width,
+            // so long names ("Throneless King") bleed across neighboring cards. Auto-size down
+            // to fit rather than wrap — card names are single-line by design.
+            tmp.rectTransform.sizeDelta = new Vector2(CardW * 0.94f, fontSize * 0.22f);
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.overflowMode     = TextOverflowModes.Ellipsis;
+            tmp.enableAutoSizing = true;
+            tmp.fontSizeMax      = fontSize;
+            tmp.fontSizeMin      = fontSize * 0.45f;
             return tmp;
         }
     }

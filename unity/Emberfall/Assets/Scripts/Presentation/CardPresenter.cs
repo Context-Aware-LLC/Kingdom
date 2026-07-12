@@ -179,6 +179,16 @@ namespace Emberfall.Presentation
         {
             if (_live == null || _def.Type != CardType.MINION) return;
 
+            // In hand the core hasn't materialized instance stats yet (SummonMinion sets them;
+            // MaxHealth ≥ 1 for any live minion) — show the printed definition stats instead of
+            // live zeros, which read as "0/0 damaged" red.
+            if (_live.MaxHealth == 0)
+            {
+                if (attackLabel != null) { attackLabel.text = (_def.Attack ?? 0).ToString(); attackLabel.color = Color.white; }
+                if (healthLabel != null) { healthLabel.text = (_def.Health ?? 0).ToString(); healthLabel.color = Color.white; }
+                return;
+            }
+
             if (attackLabel != null)
             {
                 int baseAtk = _def?.Attack ?? _live.Attack;
