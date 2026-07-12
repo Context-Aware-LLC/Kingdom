@@ -131,6 +131,16 @@ namespace Emberfall.Presentation
             ApplyAuras();
         }
 
+        // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
+        // natural PPU dimensions — clobbering the world-space size BoardController set at build
+        // time (a 1092px frame @ 100 PPU became a 10.9-unit-wide card). Preserve it across the swap.
+        private static void SetSpritePreserveSize(SpriteRenderer sr, Sprite sprite)
+        {
+            Vector2 size = sr.size;
+            sr.sprite = sprite;
+            sr.size = size;
+        }
+
         // Data-driven frame/rarity assembly (frame-rarity-system.md §3 ApplyFrame) — stat-plate
         // visibility keyed by type, gem tint keyed by rarity. No per-card branching.
         private void ApplyFrame()
@@ -138,12 +148,12 @@ namespace Emberfall.Presentation
             // Templated frame + gem sprite swap by type+rarity (§3 ApplyFrame). Falls back to a
             // gem color tint if the atlas sprite is missing (placeholders not generated yet).
             if (frameRenderer != null && _ui != null)
-                frameRenderer.sprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity));
+                SetSpritePreserveSize(frameRenderer, _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity)));
 
             if (gemRenderer != null)
             {
                 Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
-                gemRenderer.sprite = gem;
+                SetSpritePreserveSize(gemRenderer, gem);
                 // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
                 gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
             }
@@ -212,7 +222,7 @@ namespace Emberfall.Presentation
                     if (slot >= keywordIcons.Length) break;
                     Sprite icon = _ui.Get(FrameRarityCatalog.KeywordIcon(kw));
                     if (icon == null) continue;
-                    keywordIcons[slot].sprite = icon;
+                    SetSpritePreserveSize(keywordIcons[slot], icon);
                     keywordIcons[slot].gameObject.SetActive(true);
                     slot++;
                 }
