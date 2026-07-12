@@ -95,6 +95,17 @@ namespace Emberfall.Presentation
                 CreateManaTray(p1Id, 1, boardAnchors);
             }
 
+            // ── Hero plates (portrait + HP + hero-power disc) ─────────────────────
+            if (boardAnchors != null)
+            {
+                IArtProvider heroArt = null;
+#if UNITY_EDITOR
+                heroArt = new EditorArtProvider(); // same vertical-slice default as BoardController
+#endif
+                CreateHeroPlate(p0Id, 0, setup.P0Class, boardAnchors, db, heroArt);
+                CreateHeroPlate(p1Id, 1, setup.P1Class, boardAnchors, db, heroArt);
+            }
+
             // ── VFX ───────────────────────────────────────────────────────────────
             if (vfxDirector != null)
             {
@@ -125,6 +136,18 @@ namespace Emberfall.Presentation
                 Debug.Log($"[Match] OVER — {outcome}");
 
             matchRunner.StartMatch(db, setup, p0Source, p1Ai);
+        }
+
+        private void CreateHeroPlate(PlayerId playerId, int seatIndex, Core.Contracts.CardClass heroClass,
+                                     BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
+        {
+            Transform heroAnchor = anchors.HeroAnchor(playerId);
+            if (heroAnchor == null) return;
+
+            var go   = new GameObject($"HeroPlate_{playerId}");
+            var view = go.AddComponent<HeroPlateView>();
+            view.Init(seatIndex, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
+            matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 
         private void CreateManaTray(PlayerId playerId, int seatIndex, BoardAnchors anchors)
