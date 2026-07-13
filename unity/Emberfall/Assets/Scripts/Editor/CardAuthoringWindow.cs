@@ -43,7 +43,7 @@ namespace Emberfall.Editor
 
         private readonly ICardValidator _validator = new CardValidator();
         private readonly IContentLinter _linter = new ContentLinter();
-        private readonly IAddressableArtCatalog _artCatalog = new StubArtCatalog();
+        private readonly IAddressableArtCatalog _artCatalog = new AddressablesArtCatalog();
         private readonly IBalanceGuardrails _guardrails = new StubBalanceGuardrails();
 
         private void OnEnable() => LoadAll();

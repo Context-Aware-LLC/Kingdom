@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: UI_Core
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: UI_Core
+  m_GUID: 3d766df806eca424e9276c2b8a291061
+  m_SerializeEntries:
+  - m_GUID: 0e86a926c01da934ea079f0c1bdbfa89
+    m_Address: ui/icon_kw_silence
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10c1e2c0756a7f144bd18024d4a5e754
+    m_Address: ui/gem_common
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b5c6747e55f12d45886f3ea23d10570
+    m_Address: ui/icon_kw_windfury
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2243fe625c609874289a6908f18e39b3
+    m_Address: ui/frame_minion_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 338ae0c4d2848b842b87d95def1d936c
+    m_Address: ui/frame_spell_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a23482b6746d41429b75dbd1d31ded1
+    m_Address: ui/icon_kw_poisonous
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b672eb5215660941bc2412e4dcd0601
+    m_Address: ui/icon_kw_overload
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c47c7d1fac192f409e9c983ac658f40
+    m_Address: ui/icon_kw_echo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 417155953be4ca14ea984922f56b21e6
+    m_Address: ui/frame_weapon_common
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4de6ac9c8bfa16941bdc2f87450939e1
+    m_Address: ui/gem_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56e97580955deed40941dd8c1ac003ee
+    m_Address: ui/icon_kw_lifesteal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c3e72eb0d0817b40b16f746e19d7536
+    m_Address: ui/gem_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 647e928725c3e404289ba884022890bd
+    m_Address: ui/gem_rare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 651b448b86cd447418ebe9054159240b
+    m_Address: ui/icon_kw_rush
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75a74ddc629322f43bd6897a20c001fe
+    m_Address: ui/frame_weapon_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 869ecb1278ee8134c96d958849a28aea
+    m_Address: ui/frame_weapon_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9145721cc772b464ea89c651f0688cc7
+    m_Address: ui/frame_spell_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
+    m_Address: ui/icon_kw_divine_shield
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dbbf5508bb0d634394fe39c37a4c4c2
+    m_Address: ui/frame_minion_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a836a9dcb061c4141a928ab1c9bce539
+    m_Address: ui/icon_kw_deathrattle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b12c842c1b7d505418f6f99bf0634ff4
+    m_Address: ui/icon_kw_reborn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8ad200ed8d8d1742ac6def4daf3c58c
+    m_Address: ui/icon_kw_spell_damage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bebea12dec66f984684d62e4461c72d7
+    m_Address: ui/icon_kw_charge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3bead3581cffc8438902a5f9cfc6407
+    m_Address: ui/icon_kw_stealth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c40ed17f4e5b2364ba85328a61cffcd6
+    m_Address: ui/icon_kw_freeze
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9c2333b21be26540ac954bc8c6c8883
+    m_Address: ui/icon_kw_taunt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9e9bf1d02b91e4499179d918ebb600b
+    m_Address: ui/frame_weapon_rare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1dc52688f0c16142a6e765c906d3023
+    m_Address: ui/icon_kw_battlecry
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da50c711df9d1f74c9b9ff0d719a92d8
+    m_Address: ui/frame_spell_common
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e06754a7707122c408bb6e003576b821
+    m_Address: ui/frame_spell_rare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8733e835dc13b04dbaca1738812ff48
+    m_Address: ui/frame_minion_rare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe1c0143efd4415478bfc148b595f98c
+    m_Address: ui/frame_minion_common
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3976456b6e831e54fb8f43bf17f9482c, type: 2}
+    - {fileID: 11400000, guid: ecef6cbb6503f8e47be7c8e1156292ba, type: 2}

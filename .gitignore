@@ -16,6 +16,8 @@ artifacts/
 [Tt]emp/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
+# Player builds (M2 D1) — distributed as zips per decision 16, never committed
+[Bb]uilds/
 
 # NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
 # code under src/ and tests/. Do not blanket-ignore project files anymore.

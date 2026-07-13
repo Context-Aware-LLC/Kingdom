@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: CardArt_EMBERFALL
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: CardArt_EMBERFALL
+  m_GUID: c822dcf5640f1324e8e1a90a7c71000f
+  m_SerializeEntries:
+  - m_GUID: 0451fb6009a369740a88d41176641cb1
+    m_Address: card_art/art_flame_bolt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0e179d8967dcca3459591c8c7cbc171f
+    m_Address: card_art/art_last_rites
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16810a714817aa045b42ea338bcabd91
+    m_Address: card_art/art_mosshide_stag
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17496e1e85dd25a4aa30b30cc5c07675
+    m_Address: card_art/art_stone_sentry
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 18a02120480548e4abb5c45611189a4a
+    m_Address: card_art/art_frost_ripple
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f957af2aa216d5478074a7e0a3237fb
+    m_Address: card_art/art_bell_novice
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2250b8122e1934145aafc9d53ea3c8e3
+    m_Address: card_art/art_thornfang_matron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34d88d4acb4baaa4aa4befd64e000b04
+    m_Address: card_art/art_canopy_guardian
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 40a4a30d7b598ae4fbce4a92597e8cb6
+    m_Address: card_art/art_wild_bloom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 432f2c93ac1175140901b8b69582ed40
+    m_Address: card_art/art_seedling_rite
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5af790d5d86e6624fa7931048d5f9e24
+    m_Address: card_art/art_wave_caller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6cde57061e0d30c41be99246e95789d0
+    m_Address: card_art/art_ember_zealot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77e7519795ff27543a60a4b51a39efe7
+    m_Address: card_art/art_sealed_gate_keeper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a2737773bb58ec45ad10031c7de0f74
+    m_Address: card_art/art_wailing_chorus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9528314bd3dd7c44181cb03bef779f55
+    m_Address: card_art/art_bonewright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0406593d61fc354895b5ffe5a8b8861
+    m_Address: card_art/art_tide_initiate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1cf67aed4bf14748be01e5536878d34
+    m_Address: card_art/art_tide_oracle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a483fc4f067c4024daa5bc90da962f26
+    m_Address: card_art/art_elderwood_colossus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a88fa54dbd403b043a745537d1de33d3
+    m_Address: card_art/art_bell_maul
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d769ac4efbb4fc342aa5c7ebee9d0411
+    m_Address: card_art/art_chained_revenant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbbdc668077f0c145aee67b4a96671b7
+    m_Address: card_art/art_rootweaver
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0b8061f770922443a22ca18cbd8dd8f
+    m_Address: card_art/art_wandering_scout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef8a745fab3f3c44a945cfc23657e455
+    m_Address: card_art/art_sapsurge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f632c9c9dff37ed4d817e54c2e74bafa
+    m_Address: card_art/art_tollkeeper_moth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f70dd1252d484ed459e38edef795c405
+    m_Address: card_art/art_cinder_drake
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7c5dcdede1fc0d47a7ba57436b6928b
+    m_Address: card_art/art_ember_recruit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 64c2c5f3b440d894799aa0e19af6e0d4, type: 2}
+    - {fileID: 11400000, guid: ef35a1896ae509e40a7f622e71a0c4dc, type: 2}

@@ -18,7 +18,9 @@ namespace Emberfall.Editor
     /// </summary>
     public static class CardJsonRowIO
     {
-        public const string DefaultM1JsonPath = "Assets/Resources/cards/M1.cards.json";
+        // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
+        // Addressables group at address "cards/M1.cards".
+        public const string DefaultM1JsonPath = "Assets/CardData/M1.cards.json";
 
         /// <summary>Loads every row as (parsed definition, verbatim source JSON for that row).</summary>
         public static IReadOnlyList<(CardDefinition def, string json)> LoadRows(string path)

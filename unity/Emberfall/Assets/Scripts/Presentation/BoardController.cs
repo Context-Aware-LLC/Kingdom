@@ -49,11 +49,13 @@ namespace Emberfall.Presentation
             _matchRunner = matchRunner;
             _artProvider = artProvider;
 #if UNITY_EDITOR
-            // Vertical-slice default: serve art from AssetDatabase until Addressables
-            // groups are configured (pipeline.md §5). UI frame/gem/icon sprites resolve
-            // from the same AssetDatabase until the Sprite Atlas group exists (pipeline.md §2).
+            // Editor play mode: serve art from AssetDatabase — fast iteration, no content
+            // build required (pipeline.md §5). Player builds resolve through Addressables.
             _artProvider ??= new EditorArtProvider();
             _uiSprites   ??= new EditorUiSpriteProvider();
+#else
+            _artProvider ??= new AddressableArtProvider();
+            _uiSprites   ??= new AddressableUiSpriteProvider();
 #endif
         }
 

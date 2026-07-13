@@ -19,7 +19,7 @@ namespace Emberfall.Editor
             var db = new InMemoryCardDatabase(defs);
             var validator = new CardValidator();
             var linter = new ContentLinter();
-            var art = new StubArtCatalog();
+            var art = new AddressablesArtCatalog();
             var guardrails = new StubBalanceGuardrails();
 
             int clean = 0, warnings = 0, errors = 0, needsPrimitive = 0;

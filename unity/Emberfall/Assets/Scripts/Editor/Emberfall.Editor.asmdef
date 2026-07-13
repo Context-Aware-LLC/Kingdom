@@ -4,7 +4,10 @@
   "references": [
     "Emberfall.Core.Contracts",
     "Emberfall.Core.Cards",
-    "Emberfall.Data"
+    "Emberfall.Data",
+    "Unity.Addressables",
+    "Unity.Addressables.Editor",
+    "Unity.ResourceManager"
   ],
   "includePlatforms": [
     "Editor"

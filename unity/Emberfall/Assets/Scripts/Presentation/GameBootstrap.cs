@@ -12,7 +12,7 @@ namespace Emberfall.Presentation
     /// Wires: JsonCardDatabase → MatchSetup → intent sources → MatchRunner
     ///        → BoardController for visual card tracking.
     ///
-    /// Card data: Assets/Resources/cards/M1.cards.json (loaded as TextAsset).
+    /// Card data: Assets/CardData/M1.cards.json via Addressables address "cards/M1.cards".
     ///
     /// Phase C step 3 scene setup — add all components to one GameObject in a new scene:
     ///   • MatchRunner
@@ -100,9 +100,12 @@ namespace Emberfall.Presentation
             // ── Hero plates (portrait + HP + hero-power disc) ─────────────────────
             if (boardAnchors != null)
             {
-                IArtProvider heroArt = null;
+                // Same provider split as BoardController: AssetDatabase in the editor,
+                // Addressables in player builds.
 #if UNITY_EDITOR
-                heroArt = new EditorArtProvider(); // same vertical-slice default as BoardController
+                IArtProvider heroArt = new EditorArtProvider();
+#else
+                IArtProvider heroArt = new AddressableArtProvider();
 #endif
                 CreateHeroPlate(p0Id, 0, setup.P0Class, boardAnchors, db, heroArt);
                 CreateHeroPlate(p1Id, 1, setup.P1Class, boardAnchors, db, heroArt);
@@ -168,10 +171,13 @@ namespace Emberfall.Presentation
 
         private static ICardDatabase LoadCardDatabase()
         {
-            var asset = Resources.Load<TextAsset>("cards/M1.cards");
+            // CardData Addressables group (M2 D1 — card data no longer lives in Resources/).
+            // Synchronous on purpose: this is the boot path, and Start() has no async context.
+            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<TextAsset>("cards/M1.cards");
+            TextAsset asset = handle.WaitForCompletion();
             if (asset == null)
                 throw new System.Exception(
-                    "M1.cards.json not found — place it at Assets/Resources/cards/M1.cards.json");
+                    "cards/M1.cards not found in Addressables — run Emberfall/Addressables/Setup Groups + Migrate Card Data");
             return new JsonCardDatabase(asset.text);
         }
     }
