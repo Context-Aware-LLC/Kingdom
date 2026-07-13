@@ -21,3 +21,9 @@ artifacts/
 
 # NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
 # code under src/ and tests/. Do not blanket-ignore project files anymore.
+
+# Art generator bake-off scratch output (winners get curated into Assets/ manually)
+art-bakeoff/
+
+# Local secrets (Gemini key etc.) - never commit
+.env
