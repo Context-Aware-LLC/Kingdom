@@ -69,7 +69,7 @@
   { "id": "token_wisp_1_1",  "name": "Wisp",             "type": "MINION", "cost": 0, "attack": 1, "health": 1, "class": "NEUTRAL", "rarity": "COMMON",
     "setId": "CORE", "collectible": false, "artId": "art/token_wisp_1_1" },
   { "id": "hero_power_searing_bolt",  "name": "Searing Bolt", "type": "HERO_POWER", "cost": 2, "class": "EMBERWARD",  "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_searing_bolt",
-    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 1 } ] },
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ANY_CHARACTER" } } ] },
   { "id": "hero_power_tidal_ward",    "name": "Tidal Ward",   "type": "HERO_POWER", "cost": 2, "class": "TIDECALLER", "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_tidal_ward",
     "effects": [ { "trigger": "ON_CAST", "action": "SUMMON", "amount": 1, "payload": { "tokenId": "token_tide_wisp" } } ] },
   { "id": "hero_power_toll_the_bell", "name": "Toll the Bell","type": "HERO_POWER", "cost": 2, "class": "GRAVEKEEP",  "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_toll_the_bell",

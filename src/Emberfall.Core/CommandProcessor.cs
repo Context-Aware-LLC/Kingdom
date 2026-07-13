@@ -295,6 +295,17 @@ namespace Emberfall.Core
             if (ps.HeroPowerUsedThisTurn)                { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
             if (ps.Mana.Available < 2)                   { reason = RejectReason.NotEnoughMana;        return false; }
 
+            // Explicit-choice selectors (ANY_*) require a player-chosen target. Without this gate a
+            // targeted hero power silently falls through to the verb defaults (enemy face for damage,
+            // own face for heal) — mana spent, wrong effect, no rejection the UI could surface.
+            if (hp.Targets.Count == 0)
+            {
+                var hpDef = _db.Get(ps.Hero.HeroPowerId);
+                foreach (var eff in hpDef.Effects)
+                    if (eff.Trigger == Trigger.ON_CAST && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
+                    { reason = RejectReason.IllegalTarget; return false; }
+            }
+
             // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for non-attacks).
             foreach (var tr in hp.Targets)
             {

@@ -16,16 +16,17 @@ namespace Emberfall.Core.Tests.CardValidation
     {
         private static string LoadM1CardsJson()
         {
-            // tests/Emberfall.Core.Tests -> repo root -> unity/Emberfall/Assets/Resources/cards/M1.cards.json
+            // tests/Emberfall.Core.Tests -> repo root -> unity/Emberfall/Assets/CardData/M1.cards.json
+            // (moved out of Resources/ by the M2 D1 Addressables migration)
             string dir = TestContext.CurrentContext.TestDirectory;
             string? path = dir;
             for (int i = 0; i < 8 && path != null; i++)
             {
-                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "Resources", "cards", "M1.cards.json");
+                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData", "M1.cards.json");
                 if (File.Exists(candidate)) return File.ReadAllText(candidate);
                 path = Path.GetDirectoryName(path);
             }
-            Assert.Fail("Could not locate unity/Emberfall/Assets/Resources/cards/M1.cards.json from test directory.");
+            Assert.Fail("Could not locate unity/Emberfall/Assets/CardData/M1.cards.json from test directory.");
             return null!;
         }
 

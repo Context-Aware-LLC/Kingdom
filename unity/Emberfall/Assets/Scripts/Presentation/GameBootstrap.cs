@@ -60,7 +60,7 @@ namespace Emberfall.Presentation
             if (inputRouter != null)
             {
                 var hotSeat = new HotSeatInput(p0Id);
-                inputRouter.Init(p0Id, hotSeat);
+                inputRouter.Init(p0Id, hotSeat, db); // db: lets the router detect target-required hero powers
                 p0Source = hotSeat;
             }
             else

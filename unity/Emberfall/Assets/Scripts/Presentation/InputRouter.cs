@@ -1,3 +1,4 @@
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using UnityEngine;
 
@@ -18,28 +19,32 @@ namespace Emberfall.Presentation
     //     → Idle + AttackIntent(attacker, defender)      : click enemy board card
     //     → Idle (deselect)                              : click same card again or Escape
     //
-    // Hero power : click HeroPowerAnchor → HeroPowerIntent([]) immediately.
-    //   Engine resolves target via DefaultTargets (DEAL_DAMAGE → enemy hero, HEAL → friendly hero,
-    //   SUMMON → no target). Explicit targeting cursor is deferred to Phase C step 5.
+    // Hero power : click HeroPowerAnchor. Untargeted powers (SUMMON, self-heal) fire
+    //   HeroPowerIntent([]) immediately. Powers whose effect declares an explicit-choice
+    //   selector (ANY_*, e.g. Searing Bolt's ANY_CHARACTER) enter HeroPowerTargeting —
+    //   the next click on any minion or hero supplies the target; the engine rejects an
+    //   empty-target intent for these, so firing blind is never an option.
     //
     // End turn : Enter or Space key during Main phase.
     // Cancel   : Escape clears any selection.
     public sealed class InputRouter : MonoBehaviour
     {
-        private enum State { Idle, CardSelectedFromHand, AttackerSelected }
+        private enum State { Idle, CardSelectedFromHand, AttackerSelected, HeroPowerTargeting }
 
         private State        _state = State.Idle;
         private GameState    _currentState;
         private HotSeatInput _p0Input;
         private PlayerId     _p0Id;
+        private ICardDatabase _db;
 
         private InstanceId    _selectedId;
         private CardPresenter _selectedPresenter;
 
-        public void Init(PlayerId p0Id, HotSeatInput p0Input)
+        public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null)
         {
             _p0Id    = p0Id;
             _p0Input = p0Input;
+            _db      = db;
         }
 
         // Subscribed to MatchRunner.OnStateUpdated; clears selection on turn change.
@@ -97,6 +102,16 @@ namespace Emberfall.Presentation
                         ClearSelection();
                     }
                     break;
+
+                case State.HeroPowerTargeting:
+                    // ANY_CHARACTER: any board minion (either side) is a legal pick; hand cards are not.
+                    if (card.Zone == Zone.Board)
+                    {
+                        _p0Input.Enqueue(new HeroPowerIntent(
+                            _p0Id, new[] { new TargetRef(card.CardId) }));
+                        ClearSelection();
+                    }
+                    break;
             }
         }
 
@@ -137,6 +152,12 @@ namespace Emberfall.Presentation
                         new[] { new TargetRef(HeroIdOf(owner)) }));
                     ClearSelection();
                     break;
+
+                case State.HeroPowerTargeting:
+                    _p0Input.Enqueue(new HeroPowerIntent(
+                        _p0Id, new[] { new TargetRef(HeroIdOf(owner)) }));
+                    ClearSelection();
+                    break;
             }
         }
 
@@ -153,9 +174,32 @@ namespace Emberfall.Presentation
             if (owner != _p0Id) return;
             if (_currentState.ActivePlayer != _p0Id) return;
             if (_currentState.Phase != TurnPhase.Main) return;
+            if (_state == State.HeroPowerTargeting) { ClearSelection(); return; } // second click cancels
             if (_state != State.Idle) return;
 
+            if (HeroPowerRequiresTarget())
+            {
+                _state = State.HeroPowerTargeting; // next minion/hero click supplies the target
+                return;
+            }
             _p0Input.Enqueue(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+        }
+
+        // Mirrors the engine's ValidateHeroPower rule: an ON_CAST effect with an explicit-choice
+        // (ANY_*) selector needs a player-chosen target. With no db wired the click falls through
+        // to the immediate fire and the engine's rejection is the backstop.
+        private bool HeroPowerRequiresTarget()
+        {
+            if (_db == null) return false;
+            foreach (var ps in _currentState.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                if (!_db.TryGet(ps.Hero.HeroPowerId, out var def)) return false;
+                foreach (var eff in def.Effects)
+                    if (eff.Trigger == Trigger.ON_CAST && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
+                        return true;
+            }
+            return false;
         }
 
         // ── Keyboard shortcuts ─────────────────────────────────────────────────────

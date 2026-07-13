@@ -167,6 +167,27 @@ namespace Emberfall.Core.Tests.HeroPower
             Assert.That(r.Reason, Is.EqualTo(RejectReason.IllegalTarget));
         }
 
+        [Test]
+        public void Reject_TargetedPower_WithoutTarget()
+        {
+            // Searing Bolt as shipped declares target.selector ANY_CHARACTER — an explicit-choice
+            // selector. Firing it with no chosen target must reject, not fall through to the
+            // DEAL_DAMAGE default (enemy face) with mana spent.
+            var db = new FakeCardDatabase();
+            db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
+                new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+                                      "ANY_CHARACTER") }));
+            var s = MainPhase(db);
+            var proc = new CommandProcessor(db);
+
+            var r = proc.Execute(s, UseHeroPower(s));
+
+            Assert.That(r.Accepted, Is.False);
+            Assert.That(r.Reason, Is.EqualTo(RejectReason.IllegalTarget));
+            Assert.That(s.Players[0].Mana.Available, Is.EqualTo(10), "no mana may be spent on a rejected power");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(30), "no damage may leak to the default target");
+        }
+
         // ── Searing Bolt tests ────────────────────────────────────────────────────
 
         [Test]
