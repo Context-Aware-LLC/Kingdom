@@ -28,7 +28,9 @@ namespace Emberfall.Editor
 
             MigrateCardDataOutOfResources();
 
-            AddFolderSprites(settings, GetGroup(settings, "UI_Core"), "Assets/Art/UI", "ui");
+            var uiCore = GetGroup(settings, "UI_Core");
+            AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
+            AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
             var core = GetGroup(settings, "CardArt_CORE");
             AddFolderSprites(settings, core, "Assets/Art/Cards/CORE", "card_art");
             AddFolderSprites(settings, core, "Assets/Art/Hero", "card_art");
@@ -84,13 +86,17 @@ namespace Emberfall.Editor
 
         private static void AddFolderSprites(AddressableAssetSettings settings, AddressableAssetGroup group,
                                              string folder, string addressPrefix)
+            => AddFolderAssets(settings, group, folder, addressPrefix, "t:Sprite");
+
+        private static void AddFolderAssets(AddressableAssetSettings settings, AddressableAssetGroup group,
+                                            string folder, string addressPrefix, string filter)
         {
             if (!AssetDatabase.IsValidFolder(folder))
             {
                 Debug.LogWarning($"[AddressablesSetup] folder missing, skipped: {folder}");
                 return;
             }
-            foreach (string guid in AssetDatabase.FindAssets("t:Sprite", new[] { folder }))
+            foreach (string guid in AssetDatabase.FindAssets(filter, new[] { folder }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 var entry = settings.CreateOrMoveEntry(guid, group);

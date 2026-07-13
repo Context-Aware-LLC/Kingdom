@@ -50,6 +50,7 @@ namespace Emberfall.Presentation
             quadGo.transform.localPosition = Vector3.zero;
             Destroy(quadGo.GetComponent<MeshCollider>());
             _quad = quadGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(_quad, MaterialCatalog.ManaFill);
             _mpb  = new MaterialPropertyBlock();
 
             // Placeholder tint — dark fill until SG_ManaFill is assigned.

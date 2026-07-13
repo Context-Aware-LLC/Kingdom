@@ -48,12 +48,14 @@ namespace Emberfall.Presentation
 
             // Plate backing quad — the hero's board presence.
             _plate = MakeQuad(transform, "Plate", Vector3.zero, new Vector3(PlateW, PlateH, 1f));
+            MaterialCatalog.Assign(_plate, MaterialCatalog.Plate);
             Tint(_plate, PlateColor);
 
             // Portrait quad — front of the plate; art resolves by class artId
             // ("art/hero_emberward" → art_hero_emberward.png, pipeline.md §7 naming).
             _portrait = MakeQuad(transform, "Portrait",
                 new Vector3(0f, 0.05f, -0.005f), new Vector3(PlateW * 0.90f, PlateH * 0.78f, 1f));
+            MaterialCatalog.Assign(_portrait, MaterialCatalog.CardArt);
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"art/hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
@@ -69,6 +71,7 @@ namespace Emberfall.Presentation
             if (powerAnchor != null)
             {
                 _powerDisc = MakeQuad(powerAnchor, "PowerDisc", Vector3.zero, new Vector3(0.62f, 0.62f, 1f));
+                MaterialCatalog.Assign(_powerDisc, MaterialCatalog.Plate);
                 _powerLabel = MakeLabel(powerAnchor, "PowerLabel", new Vector3(0f, 0f, -0.01f), 0.9f, Color.white);
                 _powerLabel.rectTransform.sizeDelta = new Vector2(0.60f, 0.55f);
             }

@@ -205,6 +205,7 @@ namespace Emberfall.Presentation
             bg.transform.localPosition = Vector3.zero;
             Destroy(bg.GetComponent<MeshCollider>());
             var bodyRenderer = bg.GetComponent<Renderer>();
+            MaterialCatalog.Assign(bodyRenderer, MaterialCatalog.CardBody);
 
             // Glow overlay — slightly larger, just in front. SG_Glow material assigned later.
             var glowGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -214,6 +215,7 @@ namespace Emberfall.Presentation
             glowGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
             Destroy(glowGo.GetComponent<MeshCollider>());
             var glowRenderer = glowGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(glowRenderer, MaterialCatalog.Glow);
             glowGo.SetActive(false);
 
             // Aegis underlay — slightly larger, just behind. SG_Aegis material assigned later.
@@ -224,6 +226,7 @@ namespace Emberfall.Presentation
             aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
             Destroy(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(aegisRenderer, MaterialCatalog.Aegis);
             aegisGo.SetActive(false);
 
             // Art window — upper card face, in front of BG, behind labels. Texture assigned
@@ -235,6 +238,7 @@ namespace Emberfall.Presentation
             artGo.transform.localPosition = new Vector3(0f, CardH * 0.12f, -0.005f);
             Destroy(artGo.GetComponent<MeshCollider>());
             var artRenderer = artGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(artRenderer, MaterialCatalog.CardArt);
             artGo.SetActive(false);
 
             // Frame border — full card face, in front of the (opaque) art quad so the border ring
