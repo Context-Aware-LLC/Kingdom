@@ -9,7 +9,7 @@ name: Emberfall CI — determinism gates
 #   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
 #   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
-#   Stage 6  Content C-series             informational at M1 (no collectible cards/** yet — Phase B)
+#   Stage 6  Content C-series             BLOCKING as of M2 (WS C3 — pure-.NET CardCi over *.cards.json)
 #   Stage 7  Content E-series (Unity)     informational at M1 (no seat — becomes blocking at M2)
 #   Stage 8  Unity PlayMode integration   informational at M1 (no seat — becomes blocking at M2)
 #   Stage 9  On-device perf gate (D8)     manual device job at the milestone boundary (not per-PR)
@@ -76,15 +76,12 @@ jobs:
       - name: "Stage 5 · Golden-replay (R1 gate)"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
 
-      # ── Stage 6 — Content validation, C-series (informational at M1) ────────────
-      - name: "Stage 6 · Content C-series (informational — no cards/** yet)"
-        continue-on-error: true
-        run: |
-          if [ -d cards ]; then
-            echo "cards/ present — run headless C-series here once the validator + rows land (Phase B)."
-          else
-            echo "No cards/ tree yet — collectible card authoring is M1 Phase B. Snapshot under tests/ is the only data."
-          fi
+      # ── Stage 6 — Content validation, C-series (BLOCKING as of M2 WS C3) ────────
+      # Pure-.NET card gate over the flat-file-per-set card JSON: C1-C20 per row via the
+      # shared CardValidator, C2 duplicate-id across the library, artId->file check
+      # (art misses WARN only — placeholder-art policy, M2 decision 18).
+      - name: "Stage 6 · Content C-series card gate (Emberfall.Tools.CardCi)"
+        run: dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
 
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       - name: "Stages 7–8 · Unity E-series + PlayMode (informational — no Unity seat at M1)"
