@@ -14,6 +14,10 @@ namespace Emberfall.Presentation
     //   CardSelectedFromHand
     //     → Idle + PlayCardIntent(slot, [])              : click own board slot
     //     → Idle + PlayCardIntent(0, [target])           : click enemy board card (targeted spell)
+    //     → Idle + PlayCardIntent(0, [target])           : click OWN board card, when the selected
+    //                                                      card's effect declares an ANY_* selector
+    //                                                      (friendly-target battlecries/spells — the
+    //                                                      engine rejects a target-less play of these)
     //     → Idle (deselect)                              : click same card again or Escape
     //   AttackerSelected
     //     → Idle + AttackIntent(attacker, defender)      : click enemy board card
@@ -80,9 +84,13 @@ namespace Emberfall.Presentation
                     {
                         ClearSelection(); // deselect on second click
                     }
-                    else if (card.Zone == Zone.Board && card.OwnerId != _p0Id)
+                    else if (card.Zone == Zone.Board
+                             && (card.OwnerId != _p0Id || SelectedCardRequiresTarget()))
                     {
-                        // Targeted spell: play the selected hand card targeting this enemy minion.
+                        // Targeted play: aim the selected hand card at this board minion. Enemy minions
+                        // are always clickable targets; own minions only when the selected card actually
+                        // wants a chosen target (ANY_* selector), so a stray click on your own board
+                        // doesn't fire a vanilla card at slot 0.
                         _p0Input.Enqueue(new PlayCardIntent(
                             _p0Id, _selectedId, 0,
                             new[] { new TargetRef(card.CardId) }));
@@ -183,6 +191,29 @@ namespace Emberfall.Presentation
                 return;
             }
             _p0Input.Enqueue(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+        }
+
+        // Mirrors the engine's ValidatePlayCard rule: a play-trigger effect with an explicit-choice
+        // (ANY_*) selector needs a player-chosen target. With no db wired this returns false and the
+        // engine's rejection is the backstop.
+        private bool SelectedCardRequiresTarget()
+        {
+            if (_db == null || _currentState == null) return false;
+            foreach (var ps in _currentState.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                foreach (var ci in ps.Hand)
+                {
+                    if (!ci.Id.Equals(_selectedId)) continue;
+                    if (!_db.TryGet(ci.DefinitionId, out var def)) return false;
+                    foreach (var eff in def.Effects)
+                        if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
+                            && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
+                            return true;
+                    return false;
+                }
+            }
+            return false;
         }
 
         // Mirrors the engine's ValidateHeroPower rule: an ON_CAST effect with an explicit-choice

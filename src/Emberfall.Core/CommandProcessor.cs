@@ -119,13 +119,61 @@ namespace Emberfall.Core
             if (def.Type == CardType.MINION && ps.Board.Count >= MatchEngine.BoardCap)
             { reason = RejectReason.BoardFull; return false; }
 
+            // Explicit-choice (ANY_*) selectors require a player-chosen target — mirrors the
+            // ValidateHeroPower gate. Without it a targeted play silently fell through to the verb
+            // defaults (enemy face for damage, own face for heal): mana spent, wrong effect, no
+            // rejection the UI could surface. The interpreter now throws in that case, so this gate
+            // is also what keeps a target-less client submit from faulting the match.
+            if (p.Targets.Count == 0 && RequiresChosenTarget(def))
+            { reason = RejectReason.IllegalTarget; return false; }
+
             // Target legality for any targets the intent supplies (M1 targeting model: EffectInterpreter
-            // doc). Each must name a live character; an enemy STEALTH minion can't be singled out by a play.
+            // doc). Each must name a live character; an enemy STEALTH minion can't be singled out by a
+            // play; and each must satisfy the card's explicit-choice selector shape (a minion-only
+            // selector can't be aimed at a hero, a friendly-only selector at an enemy).
             foreach (var tr in p.Targets)
             {
                 if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
                 if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
                 { reason = RejectReason.IllegalTarget; return false; }
+                if (!TargetsSatisfySelectors(def, ch, seat))
+                { reason = RejectReason.IllegalTarget; return false; }
+            }
+            return true;
+        }
+
+        // ── Explicit-choice (ANY_*) selector legality ────────────────────────────
+
+        private static bool IsExplicitChoice(string? selector)
+            => selector != null && selector.StartsWith("ANY_");
+
+        /// <summary>True when any play-trigger effect declares an explicit-choice (ANY_*) selector.</summary>
+        private static bool RequiresChosenTarget(Cards.CardDefinition def)
+        {
+            foreach (var eff in def.Effects)
+                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST) && IsExplicitChoice(eff.Selector))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A chosen target must fit the shape of every play-trigger ANY_* selector on the card (the M1
+        /// targeting model shares one chosen-target list across all of a card's effects).
+        /// </summary>
+        private static bool TargetsSatisfySelectors(Cards.CardDefinition def, CharacterRef ch, int casterSeat)
+        {
+            foreach (var eff in def.Effects)
+            {
+                if (eff.Trigger != Trigger.ON_PLAY && eff.Trigger != Trigger.ON_CAST) continue;
+                if (!IsExplicitChoice(eff.Selector)) continue;
+                switch (eff.Selector)
+                {
+                    case "ANY_FRIENDLY":        if (ch.Seat != casterSeat) return false; break;
+                    case "ANY_ENEMY":           if (ch.Seat == casterSeat) return false; break;
+                    case "ANY_MINION":          if (!ch.IsMinion) return false; break;
+                    case "ANY_FRIENDLY_MINION": if (!ch.IsMinion || ch.Seat != casterSeat) return false; break;
+                    // ANY_CHARACTER (and any future ANY_*) accepts every live character.
+                }
             }
             return true;
         }
@@ -298,19 +346,18 @@ namespace Emberfall.Core
             // Explicit-choice selectors (ANY_*) require a player-chosen target. Without this gate a
             // targeted hero power silently falls through to the verb defaults (enemy face for damage,
             // own face for heal) — mana spent, wrong effect, no rejection the UI could surface.
-            if (hp.Targets.Count == 0)
-            {
-                var hpDef = _db.Get(ps.Hero.HeroPowerId);
-                foreach (var eff in hpDef.Effects)
-                    if (eff.Trigger == Trigger.ON_CAST && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                    { reason = RejectReason.IllegalTarget; return false; }
-            }
+            var hpDef = _db.Get(ps.Hero.HeroPowerId);
+            if (hp.Targets.Count == 0 && RequiresChosenTarget(hpDef))
+            { reason = RejectReason.IllegalTarget; return false; }
 
-            // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for non-attacks).
+            // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for
+            // non-attacks; chosen targets must fit the power's explicit-choice selector shape).
             foreach (var tr in hp.Targets)
             {
                 if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
                 if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
+                { reason = RejectReason.IllegalTarget; return false; }
+                if (!TargetsSatisfySelectors(hpDef, ch, seat))
                 { reason = RejectReason.IllegalTarget; return false; }
             }
             return true;

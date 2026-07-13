@@ -73,17 +73,22 @@ namespace Emberfall.Core.Cards
 
             string? tokenId = null;
             Keyword? grantedKeyword = null;
+            bool permanent = false;
+            bool empty = false;
             if (e.TryGetProperty("payload", out var payload) && payload.ValueKind == JsonValueKind.Object)
             {
                 tokenId = Str(payload, "tokenId");
                 grantedKeyword = TryEnum<Keyword>(payload, "keyword");
+                permanent = Bool(payload, "permanent") ?? false;
+                empty = Bool(payload, "empty") ?? false;
             }
 
             string? selector = null;
             if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
                 selector = Str(tgt, "selector");
 
-            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector);
+            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector,
+                permanent, empty);
         }
 
         // ── primitive readers ────────────────────────────────────────────────────

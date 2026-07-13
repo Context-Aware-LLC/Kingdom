@@ -26,7 +26,8 @@ namespace Emberfall.Editor
         private static readonly string[] SelectorOptions =
         {
             "(none)", "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ADJACENT", "TRIGGER_SOURCE",
+            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
+            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
         };
 
         [MenuItem("Emberfall/Card Authoring Tool")]
@@ -250,6 +251,13 @@ namespace Emberfall.Editor
 
                 fx.HasKeyword = EditorGUILayout.Toggle("has payload.keyword", fx.HasKeyword);
                 if (fx.HasKeyword) fx.Keyword = (Keyword)EditorGUILayout.EnumPopup("keyword", fx.Keyword);
+
+                if (fx.Action == Emberfall.Core.Contracts.Action.GAIN_MANA)
+                {
+                    fx.Permanent = EditorGUILayout.Toggle("payload.permanent", fx.Permanent);
+                    if (fx.Permanent) fx.Empty = EditorGUILayout.Toggle("payload.empty", fx.Empty);
+                    else fx.Empty = false;
+                }
 
                 fx.HasVfxOverride = EditorGUILayout.Toggle("override vfxEvent", fx.HasVfxOverride);
                 if (fx.HasVfxOverride) fx.VfxOverride = (VfxEvent)EditorGUILayout.EnumPopup("vfxEvent", fx.VfxOverride);

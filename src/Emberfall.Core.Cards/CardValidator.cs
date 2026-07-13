@@ -14,12 +14,23 @@ namespace Emberfall.Core.Cards
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
 
-        // Selector is a closed vocabulary (design/card-schema.md:169) but carried as a plain string
+        // Selector is a closed vocabulary (design/card-schema.md §5.3) but carried as a plain string
         // on EffectDef today rather than a structured TargetSpec/enum — validate against the list.
+        // ANY_MINION / ANY_FRIENDLY_MINION canonized in the M2 Phase 0 grammar freeze (tier a).
         private static readonly HashSet<string> ValidSelectors = new HashSet<string>
         {
             "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ADJACENT", "TRIGGER_SOURCE",
+            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
+            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
+        };
+
+        // Schema-valid selectors the EffectInterpreter cannot resolve yet (no adjacency/trigger-source
+        // plumbing). The interpreter now throws on them instead of silently mistargeting, so a row that
+        // authors one must declare requiresEngineeringPrimitive — the documented gate for grammar the
+        // engine hasn't grown (card-system.md §7). Keep in sync with EffectInterpreter.SelectorTargets.
+        private static readonly HashSet<string> UnimplementedSelectors = new HashSet<string>
+        {
+            "ADJACENT", "TRIGGER_SOURCE",
         };
 
         // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
@@ -133,6 +144,18 @@ namespace Emberfall.Core.Cards
                 // C14
                 if (!string.IsNullOrEmpty(fx.Selector) && !ValidSelectors.Contains(fx.Selector!))
                     Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (card-schema.md §5.3).");
+                else if (!string.IsNullOrEmpty(fx.Selector) && UnimplementedSelectors.Contains(fx.Selector!)
+                         && !def.RequiresEngineeringPrimitive)
+                    Err("C14-SELECTOR-UNIMPLEMENTED", $"{prefix}.target.selector",
+                        $"'{fx.Selector}' is schema-valid but the engine cannot resolve it yet (the interpreter rejects it at runtime) — set requiresEngineeringPrimitive to hold the row for the primitive.");
+
+                // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
+                if (fx.Empty && !fx.Permanent)
+                    Warn("C15-EMPTY-WITHOUT-PERMANENT", $"{prefix}.payload.empty",
+                        "payload.empty has no meaning without payload.permanent — temporary crystals are always filled.");
+                if (fx.Permanent && fx.Action != Action.GAIN_MANA)
+                    Warn("C15-PERMANENT-NON-MANA", $"{prefix}.payload.permanent",
+                        $"payload.permanent is only read by GAIN_MANA; it is inert on {fx.Action}.");
 
                 // C17: VfxOverride is already a typed VfxEvent? — enum parsing enforces the closed
                 // vocabulary at load time, so no further check is representable here.

@@ -187,9 +187,12 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Auto-resolve targets from the effect's declared selector (card-schema.md §5.3). Activated only
-        /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS) and
-        /// unconditional auto-targets (ENEMY_HERO). Falls back to DefaultTargets for selectors the engine
-        /// doesn't yet handle (e.g. client-side-only informational selectors like ANY_CHARACTER).
+        /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS), unconditional
+        /// auto-targets (ENEMY_HERO), and SELF. Explicit-choice (ANY_*) selectors are never auto-resolved:
+        /// CommandProcessor validation rejects a player intent that omits their target, so reaching here
+        /// with one means a fired trigger authored an ANY_* selector — a data bug, and it throws.
+        /// Unimplemented selectors (ADJACENT, TRIGGER_SOURCE) and unknown strings also throw: the M2
+        /// Phase 0 grammar-freeze ruling — silent fallback was silent mistargeting.
         /// </summary>
         private IReadOnlyList<CharacterRef> SelectorTargets(EffectDef eff, CardInstance source)
         {
@@ -197,6 +200,10 @@ namespace Emberfall.Core
             int foe  = seat == 0 ? 1 : 0;
             switch (eff.Selector)
             {
+                case "SELF":
+                    return source.Zone == Zone.Board
+                        ? new[] { CharacterRef.OfMinion(seat, source) }
+                        : (IReadOnlyList<CharacterRef>)System.Array.Empty<CharacterRef>();
                 case "ENEMY_MINIONS":
                 {
                     var board = _state.Players[foe].Board;
@@ -225,8 +232,11 @@ namespace Emberfall.Core
                 case "FRIENDLY_HERO":
                     return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
                 default:
-                    // Unknown or client-side-only selector — fall back to verb defaults.
-                    return DefaultTargets(eff, source);
+                    throw new System.InvalidOperationException(
+                        $"Card '{source.DefinitionId}': effect {eff.Action} declares selector '{eff.Selector}' " +
+                        "which the interpreter cannot auto-resolve (explicit-choice ANY_* selectors require " +
+                        "player-chosen targets; ADJACENT/TRIGGER_SOURCE are unimplemented). Fix the card row " +
+                        "or gate it behind requiresEngineeringPrimitive — silent fallback is mistargeting.");
             }
         }
 

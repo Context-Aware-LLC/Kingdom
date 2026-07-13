@@ -73,6 +73,18 @@ namespace Emberfall.Core.Cards
         public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
         public VfxEvent? VfxOverride { get; }
         /// <summary>
+        /// <c>payload.permanent</c> for GAIN_MANA (card-schema.md §5.2): true = gain permanent
+        /// crystals (raises <c>Mana.Max</c>, capped at 10 — the Quicken / Seedling Rite ramp
+        /// primitive); false/absent = this-turn temporary crystals (the Spark/Coin pattern).
+        /// </summary>
+        public bool Permanent { get; }
+        /// <summary>
+        /// <c>payload.empty</c> for GAIN_MANA with <c>permanent:true</c>: true = the new crystal
+        /// arrives unfilled this turn ("Gain an empty Mana Crystal" — Wild-Growth-style ramp);
+        /// false/absent = the crystal is also spendable immediately. Meaningless without Permanent.
+        /// </summary>
+        public bool Empty { get; }
+        /// <summary>
         /// Optional target selector from <c>target.selector</c> in the card JSON (card-schema.md §5.3).
         /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
         /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
@@ -82,7 +94,7 @@ namespace Emberfall.Core.Cards
 
         public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
                          string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
-                         string? selector = null)
+                         string? selector = null, bool permanent = false, bool empty = false)
         {
             Trigger = trigger;
             Action = action;
@@ -92,6 +104,8 @@ namespace Emberfall.Core.Cards
             GrantedKeyword = grantedKeyword;
             VfxOverride = vfxOverride;
             Selector = selector;
+            Permanent = permanent;
+            Empty = empty;
         }
     }
 }

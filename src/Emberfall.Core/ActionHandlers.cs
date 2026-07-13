@@ -249,9 +249,29 @@ namespace Emberfall.Core
         {
             int amount = ctx.Effect.Amount ?? 0;
             if (amount <= 0) return;
-            // No `permanent` field exists in the committed EffectDef model, so M1 GAIN_MANA is this-turn only
-            // (the Spark/Coin pattern). A permanent-crystal payload is a future schema extension.
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
+
+            if (ctx.Effect.Permanent)
+            {
+                // payload.permanent (card-schema.md §5.2): earn real crystals, capped at 10. Crystals
+                // beyond the cap simply don't exist — a gain that changed nothing emits no event.
+                // payload.empty ("Gain an empty Mana Crystal" — Quicken / Seedling Rite): the new
+                // crystals stay unfilled this turn; without it they are also spendable immediately.
+                int before = ps.Mana.Max;
+                int max = before + amount;
+                ps.Mana.Max = max > MatchEngine.MaxMana ? MatchEngine.MaxMana : max;
+                int gained = ps.Mana.Max - before;
+                if (gained <= 0) return;
+                if (!ctx.Effect.Empty)
+                {
+                    int filled = ps.Mana.Available + gained;
+                    ps.Mana.Available = filled > MatchEngine.MaxMana ? MatchEngine.MaxMana : filled;
+                }
+                ctx.Events.Emit(ctx.Vfx(VfxEvent.onManaGain), source: ctx.Source.Id, amount: gained);
+                return;
+            }
+
+            // Default: this-turn temporary crystals (the Spark/Coin pattern).
             ps.Mana.Temporary += amount;
             int avail = ps.Mana.Available + amount;
             ps.Mana.Available = avail > MatchEngine.MaxMana ? MatchEngine.MaxMana : avail;

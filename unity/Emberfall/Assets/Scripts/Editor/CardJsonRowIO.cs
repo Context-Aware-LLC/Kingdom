@@ -89,11 +89,14 @@ namespace Emberfall.Editor
                         if (fx.Amount is int a) w.WriteNumber("amount", a);
                         if (fx.Amount2 is int a2) w.WriteNumber("amount2", a2);
                         if (fx.VfxOverride is { } vfx) w.WriteString("vfxEvent", vfx.ToString());
-                        if (!string.IsNullOrEmpty(fx.TokenId) || fx.GrantedKeyword is not null)
+                        if (!string.IsNullOrEmpty(fx.TokenId) || fx.GrantedKeyword is not null
+                            || fx.Permanent || fx.Empty)
                         {
                             w.WriteStartObject("payload");
                             if (!string.IsNullOrEmpty(fx.TokenId)) w.WriteString("tokenId", fx.TokenId);
                             if (fx.GrantedKeyword is { } kw) w.WriteString("keyword", kw.ToString());
+                            if (fx.Permanent) w.WriteBoolean("permanent", true);
+                            if (fx.Empty) w.WriteBoolean("empty", true);
                             w.WriteEndObject();
                         }
                         if (!string.IsNullOrEmpty(fx.Selector))

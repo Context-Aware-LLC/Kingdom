@@ -84,6 +84,7 @@ namespace Emberfall.Editor
         public bool HasKeyword; public Keyword Keyword;
         public bool HasVfxOverride; public VfxEvent VfxOverride;
         public bool HasSelector; public string Selector = "";
+        public bool Permanent; public bool Empty; // GAIN_MANA payload flags (card-schema.md §5.2)
 
         public static EditableEffect FromEffectDef(EffectDef fx) => new EditableEffect
         {
@@ -95,6 +96,7 @@ namespace Emberfall.Editor
             HasKeyword = fx.GrantedKeyword.HasValue, Keyword = fx.GrantedKeyword ?? default,
             HasVfxOverride = fx.VfxOverride.HasValue, VfxOverride = fx.VfxOverride ?? default,
             HasSelector = !string.IsNullOrEmpty(fx.Selector), Selector = fx.Selector ?? "",
+            Permanent = fx.Permanent, Empty = fx.Empty,
         };
 
         public EffectDef ToEffectDef() => new EffectDef(
@@ -104,6 +106,7 @@ namespace Emberfall.Editor
             HasTokenId ? TokenId : null,
             HasKeyword ? Keyword : (Keyword?)null,
             HasVfxOverride ? VfxOverride : (VfxEvent?)null,
-            HasSelector ? Selector : null);
+            HasSelector ? Selector : null,
+            Permanent, Empty);
     }
 }
