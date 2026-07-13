@@ -26,12 +26,17 @@ namespace Emberfall.Core.Contracts
 
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
 
-    /// <summary>Canonical keyword enum (D3, card-schema.md §4). Closed set.</summary>
+    /// <summary>
+    /// Canonical keyword enum (D3, card-schema.md §4 v1.3). Closed set — 17 keywords, each
+    /// implemented. ECHO was formally cut by M2 decision 2 (zero implementation, zero cards);
+    /// this is a hash-canonical change (GameStateHasher sorts keyword sets by enum int), executed
+    /// with the golden-replay gate as witness per M2-KICKOFF.md tier b.
+    /// </summary>
     public enum Keyword
     {
         TAUNT, CHARGE, RUSH, DIVINE_SHIELD, BATTLECRY, DEATHRATTLE, LIFESTEAL,
         WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
-        ECHO, REBORN,
+        REBORN,
         OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
     }
 
