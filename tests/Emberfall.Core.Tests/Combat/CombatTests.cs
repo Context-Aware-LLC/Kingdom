@@ -343,5 +343,102 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REBORN copy at 1 hp");
             Assert.That(copy.HasUsedReborn, Is.True, "copy's charge also consumed");
         }
+
+        // ── keyword edge interactions (M2 C2 hardening — pipeline-order behavior) ──
+
+        [Test]
+        public void OVERWHELM_Exact_Lethal_Carries_Nothing()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("crusher", 3, 6, Keyword.OVERWHELM));
+            var def = Board(s, 1, Minion("fodder", 1, 3)); // health lands exactly on 0
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(0), "defender died");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(30), "no overflow on exact lethal");
+        }
+
+        [Test]
+        public void OVERWHELM_Blocked_By_Aegis_No_Overflow()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("crusher", 7, 6, Keyword.OVERWHELM));
+            var def = Board(s, 1, Minion("shielded", 1, 3, Keyword.DIVINE_SHIELD));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(def.HasAegisShield, Is.False, "shield consumed by the hit");
+            Assert.That(def.CurrentHealth, Is.EqualTo(3), "no health lost behind the shield");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(30), "absorbed hit produces no overflow");
+            Assert.That(atk.CurrentHealth, Is.EqualTo(5), "defender survived, so retaliation fired");
+        }
+
+        [Test]
+        public void Aegis_Absorb_Skips_POISONOUS_Rider()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("viper", 1, 4, Keyword.POISONOUS));
+            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.DIVINE_SHIELD));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(def.HasAegisShield, Is.False, "shield consumed");
+            Assert.That(def.CurrentHealth, Is.EqualTo(5), "Venom never applied — absorb returns before riders");
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "defender alive");
+        }
+
+        [Test]
+        public void POISONOUS_Kills_Regardless_Of_Health()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("viper", 1, 1, Keyword.POISONOUS));
+            var def = Board(s, 1, Minion("giant", 10, 10));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(0), "Venom lethality — 1 damage killed a 10-hp minion");
+            Assert.That(s.Players[0].Board, Has.Count.EqualTo(0), "retaliation still killed the fragile attacker");
+        }
+
+        [Test]
+        public void LIFESTEAL_Attack_Heals_Controller_Hero()
+        {
+            var s = MainPhase();
+            s.Players[0].Hero.CurrentHealth = 20;
+            var atk = Board(s, 0, Minion("drainer", 4, 6, Keyword.LIFESTEAL));
+            var def = Board(s, 1, Minion("tank", 1, 10));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(24), "healed for damage dealt");
+        }
+
+        [Test]
+        public void Armor_Soaks_Before_Health()
+        {
+            var s = MainPhase();
+            s.Players[1].Hero.Armor = 3;
+            var atk = Board(s, 0, Minion("basher", 5, 5));
+
+            Proc().Execute(s, Attack(s, atk.Id, s.Players[1].Hero.Id));
+
+            Assert.That(s.Players[1].Hero.Armor, Is.EqualTo(0), "armor consumed first");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28), "only the remainder reached health");
+        }
+
+        [Test]
+        public void Rejected_Attack_Spends_No_Durability_And_No_Attack_Budget()
+        {
+            var s = MainPhase();
+            EquipWeapon(s, 0, atk: 4, durability: 2);
+            var stealthy = Board(s, 1, Minion("ghost", 2, 3, Keyword.STEALTH));
+
+            var r = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, stealthy.Id));
+
+            Assert.That(r.Accepted, Is.False, "stealth target is illegal");
+            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2), "durability untouched");
+            Assert.That(s.Players[0].HeroAttacksUsedThisTurn, Is.EqualTo(0), "attack budget untouched");
+        }
     }
 }
