@@ -42,12 +42,25 @@ namespace Emberfall.Editor
         private string _search = "";
         private Vector2 _listScroll, _editScroll;
 
-        private readonly ICardValidator _validator = new CardValidator();
-        private readonly IContentLinter _linter = new ContentLinter();
-        private readonly IAddressableArtCatalog _artCatalog = new AddressablesArtCatalog();
-        private readonly IBalanceGuardrails _guardrails = new StubBalanceGuardrails();
+        // Assigned in OnEnable, NOT as field initializers: AddressablesArtCatalog's constructor reads
+        // AddressableAssetSettingsDefaultObject.Settings, which calls AssetDatabase.IsValidFolder — and
+        // Unity forbids that from a ScriptableObject constructor / instance field initializer (an
+        // EditorWindow is a ScriptableObject). Doing it in a field initializer threw, left _artCatalog
+        // null, and the per-repaint NRE in Lint collapsed the window to its title bar.
+        private ICardValidator _validator;
+        private IContentLinter _linter;
+        private IAddressableArtCatalog _artCatalog;
+        private IBalanceGuardrails _guardrails;
 
-        private void OnEnable() => LoadAll();
+        private void OnEnable()
+        {
+            minSize = new Vector2(760, 480);   // never collapse to a bare title strip again
+            _validator  = new CardValidator();
+            _linter     = new ContentLinter();
+            _artCatalog = new AddressablesArtCatalog();
+            _guardrails = new StubBalanceGuardrails();
+            LoadAll();
+        }
 
         private void LoadAll()
         {
