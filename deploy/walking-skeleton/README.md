@@ -1,6 +1,10 @@
 # Walking Skeleton — deploy scaffold (condition C-G0-6)
 
-**Status:** SCAFFOLD READY — awaiting provisioning (needs Sam: VPS + domain purchase, gate ruling R-3).
+**Status:** ✅ DEPLOYED 2026-07-15 — live at `wss://emberfall.outofcontext.to/ws` on the DigitalOcean
+droplet (root@24.144.123.177), real Let's Encrypt cert, off-network round-trip verified green. R-3 met
+by repurposing an existing droplet (no new VPS purchase) after migrating its two static sites to
+Cloudflare Pages. **Note:** `EchoServer/` `bin/`,`obj/` are local build artifacts — do not deploy them
+(the box builds inside Docker); only source is copied up.
 **Goal (C-G0-6):** smallest VPS + domain + Caddy TLS + a `wss://` echo, reachable from a Unity
 client **off-network** — the thinnest end-to-end proof that the `decisions/ADR-0005` single-box
 topology works, before any real serializer/protocol code hardens.

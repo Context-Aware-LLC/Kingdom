@@ -1,5 +1,5 @@
 # Walking skeleton: Caddy (auto-TLS) in front of a minimal Kestrel wss echo. One command.
-# Blocked only on: a domain pointed at this box (R-3) + running it on the purchased VPS.
+# DEPLOYED 2026-07-15 at wss://emberfall.outofcontext.to/ws (droplet root@24.144.123.177).
 
 services:
   echo:
@@ -17,6 +17,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    # On hosts running systemd-resolved, containers inherit /etc/resolv.conf pointing at the
+    # 127.0.0.53 stub, which is unreachable from the container netns — Caddy then can't resolve
+    # the ACME endpoints and TLS issuance fails on silent retry. Pin real resolvers so auto-TLS works.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     environment:
       - DOMAIN=${DOMAIN}
       - EMAIL=${EMAIL}
