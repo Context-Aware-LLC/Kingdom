@@ -1,0 +1,31 @@
+# Walking skeleton: Caddy (auto-TLS) in front of a minimal Kestrel wss echo. One command.
+# Blocked only on: a domain pointed at this box (R-3) + running it on the purchased VPS.
+
+services:
+  echo:
+    build: ./EchoServer
+    expose:
+      - "5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    depends_on:
+      - echo
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

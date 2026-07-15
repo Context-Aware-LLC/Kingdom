@@ -1,0 +1,13 @@
+# Caddy auto-TLS reverse proxy for the walking skeleton (C-G0-6).
+# {$DOMAIN} and {$EMAIL} come from the environment (see .env.example).
+# Caddy provisions a Let's Encrypt cert automatically on first request — this is why the
+# domain purchase (R-3) is the one hard blocker: no domain, no publicly-trusted wss:// cert.
+
+{
+	email {$EMAIL}
+}
+
+{$DOMAIN} {
+	# WebSocket upgrade + normal HTTP both proxy to the echo server on :5000.
+	reverse_proxy echo:5000
+}
