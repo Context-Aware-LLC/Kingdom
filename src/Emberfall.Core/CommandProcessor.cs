@@ -485,11 +485,14 @@ namespace Emberfall.Core
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(state, defender, attackerAtk, attacker.Id, attackerKws, buf);
 
-            // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only)
+            // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only).
+            // Riders (LIFESTEAL/POISONOUS) attach to the primary hit only — G0 ruling R-2(c),
+            // Sam 2026-07-14: overflow carries damage, not keywords (matches the Aegis
+            // no-riders precedent; keeps Lifedrain heal ≤ attack value).
             if (overwhelm && defender.IsMinion && defender.Minion!.CurrentHealth < 0)
             {
                 var enemyHero = CharacterRef.OfHero(foe, state.Players[foe].Hero);
-                DamagePipeline.ApplyDamage(state, enemyHero, -defender.Minion.CurrentHealth, attacker.Id, attackerKws, buf);
+                DamagePipeline.ApplyDamage(state, enemyHero, -defender.Minion.CurrentHealth, attacker.Id, null, buf);
             }
 
             // Phase 2: retaliation — minion defenders only; heroes never retaliate

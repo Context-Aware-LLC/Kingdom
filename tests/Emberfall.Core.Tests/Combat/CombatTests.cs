@@ -402,6 +402,21 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
+        public void LIFESTEAL_Plus_OVERWHELM_Heals_Primary_Hit_Only()
+        {
+            // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
+            var s = MainPhase();
+            s.Players[0].Hero.CurrentHealth = 10;
+            var atk = Board(s, 0, Minion("drain-crusher", 7, 6, Keyword.LIFESTEAL, Keyword.OVERWHELM));
+            var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26), "overflow damage still carries");
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(17), "healed 7 (primary hit only), not 11");
+        }
+
+        [Test]
         public void LIFESTEAL_Attack_Heals_Controller_Hero()
         {
             var s = MainPhase();
