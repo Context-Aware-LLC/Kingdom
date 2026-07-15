@@ -168,11 +168,11 @@ namespace Emberfall.Core
                 if (!IsExplicitChoice(eff.Selector)) continue;
                 switch (eff.Selector)
                 {
-                    case "ANY_FRIENDLY":        if (ch.Seat != casterSeat) return false; break;
-                    case "ANY_ENEMY":           if (ch.Seat == casterSeat) return false; break;
-                    case "ANY_MINION":          if (!ch.IsMinion) return false; break;
+                    case "ANY_FRIENDLY": if (ch.Seat != casterSeat) return false; break;
+                    case "ANY_ENEMY": if (ch.Seat == casterSeat) return false; break;
+                    case "ANY_MINION": if (!ch.IsMinion) return false; break;
                     case "ANY_FRIENDLY_MINION": if (!ch.IsMinion || ch.Seat != casterSeat) return false; break;
-                    // ANY_CHARACTER (and any future ANY_*) accepts every live character.
+                        // ANY_CHARACTER (and any future ANY_*) accepts every live character.
                 }
             }
             return true;
@@ -334,14 +334,14 @@ namespace Emberfall.Core
         {
             reason = null;
             if (!KnownPlayer(state, hp.Player, out reason)) return false;
-            if (state.Phase != TurnPhase.Main)           { reason = RejectReason.WrongPhase;           return false; }
-            if (state.ActivePlayer != hp.Player)         { reason = RejectReason.NotYourTurn;          return false; }
+            if (state.Phase != TurnPhase.Main) { reason = RejectReason.WrongPhase; return false; }
+            if (state.ActivePlayer != hp.Player) { reason = RejectReason.NotYourTurn; return false; }
 
             int seat = state.SeatOf(hp.Player);
             var ps = state.Players[seat];
 
-            if (ps.HeroPowerUsedThisTurn)                { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
-            if (ps.Mana.Available < 2)                   { reason = RejectReason.NotEnoughMana;        return false; }
+            if (ps.HeroPowerUsedThisTurn) { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
+            if (ps.Mana.Available < 2) { reason = RejectReason.NotEnoughMana; return false; }
 
             // Explicit-choice selectors (ANY_*) require a player-chosen target. Without this gate a
             // targeted hero power silently falls through to the verb defaults (enemy face for damage,
@@ -391,12 +391,12 @@ namespace Emberfall.Core
         {
             reason = null;
             if (!KnownPlayer(state, a.Player, out reason)) return false;
-            if (state.Phase != TurnPhase.Main)     { reason = RejectReason.WrongPhase;   return false; }
-            if (state.ActivePlayer != a.Player)    { reason = RejectReason.NotYourTurn;  return false; }
+            if (state.Phase != TurnPhase.Main) { reason = RejectReason.WrongPhase; return false; }
+            if (state.ActivePlayer != a.Player) { reason = RejectReason.NotYourTurn; return false; }
 
             int seat = state.SeatOf(a.Player);
-            int foe  = seat == 0 ? 1 : 0;
-            var ps   = state.Players[seat];
+            int foe = seat == 0 ? 1 : 0;
+            var ps = state.Players[seat];
 
             // Attacker must exist and be ours
             if (!Characters.TryFind(state, a.Attacker, out var attacker))
@@ -406,21 +406,21 @@ namespace Emberfall.Core
 
             if (attacker.IsHero)
             {
-                if (ps.Weapon == null)                         { reason = RejectReason.WeaponMissing; return false; }
-                if (ps.Hero.IsFrozen)                          { reason = RejectReason.AttackerFrozen; return false; }
-                if (ps.HeroAttacksUsedThisTurn >= 1)           { reason = RejectReason.NoAttacksLeft; return false; }
+                if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
+                if (ps.Hero.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
+                if (ps.HeroAttacksUsedThisTurn >= 1) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
             {
                 var m = attacker.Minion!;
-                if (m.IsFrozen)                                { reason = RejectReason.AttackerFrozen;       return false; }
-                if (m.CurrentAttack <= 0)                      { reason = RejectReason.IllegalTarget;        return false; }
+                if (m.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
+                if (m.CurrentAttack <= 0) { reason = RejectReason.IllegalTarget; return false; }
                 bool hasCharge = m.Keywords.Contains(Keyword.CHARGE);
-                bool hasRush   = m.Keywords.Contains(Keyword.RUSH);
+                bool hasRush = m.Keywords.Contains(Keyword.RUSH);
                 if (m.SummonedThisTurn && !hasCharge && !hasRush)
                 { reason = RejectReason.HasSummoningSickness; return false; }
                 int maxAttacks = m.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
-                if (m.AttacksUsedThisTurn >= maxAttacks)       { reason = RejectReason.NoAttacksLeft; return false; }
+                if (m.AttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
 
             // Defender must exist and belong to the opponent
@@ -456,8 +456,8 @@ namespace Emberfall.Core
         private void ApplyAttack(GameState state, AttackIntent a, EventBuffer buf)
         {
             int seat = state.SeatOf(a.Player);
-            int foe  = seat == 0 ? 1 : 0;
-            var ps   = state.Players[seat];
+            int foe = seat == 0 ? 1 : 0;
+            var ps = state.Players[seat];
 
             Characters.TryFind(state, a.Attacker, out var attacker);
             Characters.TryFind(state, a.Defender.Instance, out var defender);
@@ -471,7 +471,7 @@ namespace Emberfall.Core
                 : new HashSet<Keyword>();
 
             bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
-            bool vanguard  = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
+            bool vanguard = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
 
             // Stealth breaks the moment the attacker declares
             if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.STEALTH);

@@ -87,7 +87,7 @@ namespace Emberfall.Core.Tests.Combat
         {
             var s = MainPhase();
             var atk = Board(s, 0, Minion("vanilla", 3, 4), summonedThisTurn: true);
-            var def = Board(s, 1, Minion("target",  2, 3));
+            var def = Board(s, 1, Minion("target", 2, 3));
 
             var r = Proc().CanExecute(s, Attack(s, atk.Id, def.Id), out var reason);
 
@@ -100,7 +100,7 @@ namespace Emberfall.Core.Tests.Combat
         {
             var s = MainPhase();
             var atk = Board(s, 0, Minion("charger", 3, 4, Keyword.CHARGE), summonedThisTurn: true);
-            var def = Board(s, 1, Minion("target",  2, 3));
+            var def = Board(s, 1, Minion("target", 2, 3));
 
             var r = Proc().Execute(s, Attack(s, atk.Id, def.Id));
 

@@ -78,11 +78,11 @@ namespace Emberfall.Core
 
         private static string ClassToHeroPowerId(CardClass cls) => cls switch
         {
-            CardClass.EMBERWARD  => "hero_power_searing_bolt",
+            CardClass.EMBERWARD => "hero_power_searing_bolt",
             CardClass.TIDECALLER => "hero_power_tidal_ward",
-            CardClass.GRAVEKEEP  => "hero_power_toll_the_bell",
-            CardClass.VERDANT    => "hero_power_quicken",
-            _                    => "",
+            CardClass.GRAVEKEEP => "hero_power_toll_the_bell",
+            CardClass.VERDANT => "hero_power_quicken",
+            _ => "",
         };
 
         private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<string> deckList)

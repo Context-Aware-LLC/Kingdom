@@ -360,7 +360,7 @@ namespace Emberfall.Core
             foreach (var t in ctx.Targets)
             {
                 if (t.IsMinion) t.Minion!.IsFrozen = true;
-                else            t.Hero!.IsFrozen   = true;
+                else t.Hero!.IsFrozen = true;
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onFreeze), source: ctx.Source.Id, target: t.Id);
             }
         }

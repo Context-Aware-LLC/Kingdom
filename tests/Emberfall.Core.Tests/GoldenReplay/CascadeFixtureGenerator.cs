@@ -51,10 +51,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 recorded.Add(ToJson(intent));
             }
 
-            int firstSeat  = state.SeatOf(state.ActivePlayer);
+            int firstSeat = state.SeatOf(state.ActivePlayer);
             int secondSeat = 1 - firstSeat;
-            var firstId    = state.Players[firstSeat].Id;
-            var secondId   = state.Players[secondSeat].Id;
+            var firstId = state.Players[firstSeat].Id;
+            var secondId = state.Players[secondSeat].Id;
 
             // ── Mulligan: keep all ───────────────────────────────────────────────
             Submit(new MulliganIntent(p0, Array.Empty<InstanceId>()));
@@ -76,7 +76,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Submit(new EndTurnIntent(secondId));
 
             // ── Turn 3: ATTACK — 2/2 trades into 2/2, cascade fires ─────────────
-            Assert.That(state.Players[firstSeat].Board,  Has.Count.EqualTo(1));
+            Assert.That(state.Players[firstSeat].Board, Has.Count.EqualTo(1));
             Assert.That(state.Players[secondSeat].Board, Has.Count.EqualTo(1));
             var attacker = state.Players[firstSeat].Board[0];
             var defender = state.Players[secondSeat].Board[0];
@@ -122,24 +122,24 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
             var root = new JsonObject
             {
-                ["schemaVersion"]        = 1,
-                ["name"]                 = "deathrattle_cascade",
-                ["engineContractVersion"]= "interfaces.v2",
-                ["cardSetSnapshot"]      = "M1.cards.snapshot.json",
-                ["matchId"]              = "GOLD-0003",
-                ["p0"]                   = "P0",
-                ["p1"]                   = "P1",
-                ["p0Class"]              = setup.P0Class.ToString(),
-                ["p1Class"]              = setup.P1Class.ToString(),
-                ["seed"]                 = Seed,
-                ["p0Deck"]               = p0Deck,
-                ["p1Deck"]               = p1Deck,
-                ["intents"]              = intentsArr,
-                ["expected"]             = new JsonObject
+                ["schemaVersion"] = 1,
+                ["name"] = "deathrattle_cascade",
+                ["engineContractVersion"] = "interfaces.v2",
+                ["cardSetSnapshot"] = "M1.cards.snapshot.json",
+                ["matchId"] = "GOLD-0003",
+                ["p0"] = "P0",
+                ["p1"] = "P1",
+                ["p0Class"] = setup.P0Class.ToString(),
+                ["p1Class"] = setup.P1Class.ToString(),
+                ["seed"] = Seed,
+                ["p0Deck"] = p0Deck,
+                ["p1Deck"] = p1Deck,
+                ["intents"] = intentsArr,
+                ["expected"] = new JsonObject
                 {
                     ["stateHashAlgo"] = "sha256",
-                    ["stateHash"]     = "",
-                    ["eventStream"]   = new JsonArray(),
+                    ["stateHash"] = "",
+                    ["eventStream"] = new JsonArray(),
                 },
             };
 
@@ -152,40 +152,40 @@ namespace Emberfall.Core.Tests.GoldenReplay
             switch (intent)
             {
                 case MulliganIntent m:
-                {
-                    var arr = new JsonArray();
-                    foreach (var id in m.ToReplace) arr.Add((JsonNode)id.ToString());
-                    return new JsonObject
                     {
-                        ["$type"]     = "mulligan",
-                        ["player"]    = m.Player.ToString(),
-                        ["toReplace"] = arr,
-                    };
-                }
+                        var arr = new JsonArray();
+                        foreach (var id in m.ToReplace) arr.Add((JsonNode)id.ToString());
+                        return new JsonObject
+                        {
+                            ["$type"] = "mulligan",
+                            ["player"] = m.Player.ToString(),
+                            ["toReplace"] = arr,
+                        };
+                    }
                 case EndTurnIntent e:
                     return new JsonObject
                     {
-                        ["$type"]  = "end_turn",
+                        ["$type"] = "end_turn",
                         ["player"] = e.Player.ToString(),
                     };
                 case PlayCardIntent p:
-                {
-                    var tgts = new JsonArray();
-                    foreach (var t in p.Targets) tgts.Add((JsonNode)t.Instance.ToString());
-                    return new JsonObject
                     {
-                        ["$type"]  = "play_card",
-                        ["player"] = p.Player.ToString(),
-                        ["card"]   = p.Card.ToString(),
-                        ["slot"]   = p.BoardSlot,
-                        ["targets"]= tgts,
-                    };
-                }
+                        var tgts = new JsonArray();
+                        foreach (var t in p.Targets) tgts.Add((JsonNode)t.Instance.ToString());
+                        return new JsonObject
+                        {
+                            ["$type"] = "play_card",
+                            ["player"] = p.Player.ToString(),
+                            ["card"] = p.Card.ToString(),
+                            ["slot"] = p.BoardSlot,
+                            ["targets"] = tgts,
+                        };
+                    }
                 case AttackIntent a:
                     return new JsonObject
                     {
-                        ["$type"]    = "attack",
-                        ["player"]   = a.Player.ToString(),
+                        ["$type"] = "attack",
+                        ["player"] = a.Player.ToString(),
                         ["attacker"] = a.Attacker.ToString(),
                         ["defender"] = a.Defender.Instance.ToString(),
                     };

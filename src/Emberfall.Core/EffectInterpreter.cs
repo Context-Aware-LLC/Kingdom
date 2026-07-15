@@ -197,7 +197,7 @@ namespace Emberfall.Core
         private IReadOnlyList<CharacterRef> SelectorTargets(EffectDef eff, CardInstance source)
         {
             int seat = _state.SeatOf(source.Controller);
-            int foe  = seat == 0 ? 1 : 0;
+            int foe = seat == 0 ? 1 : 0;
             switch (eff.Selector)
             {
                 case "SELF":
@@ -205,28 +205,28 @@ namespace Emberfall.Core
                         ? new[] { CharacterRef.OfMinion(seat, source) }
                         : (IReadOnlyList<CharacterRef>)System.Array.Empty<CharacterRef>();
                 case "ENEMY_MINIONS":
-                {
-                    var board = _state.Players[foe].Board;
-                    var refs = new CharacterRef[board.Count];
-                    for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(foe, board[i]);
-                    return refs;
-                }
+                    {
+                        var board = _state.Players[foe].Board;
+                        var refs = new CharacterRef[board.Count];
+                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(foe, board[i]);
+                        return refs;
+                    }
                 case "FRIENDLY_MINIONS":
-                {
-                    var board = _state.Players[seat].Board;
-                    var refs = new CharacterRef[board.Count];
-                    for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(seat, board[i]);
-                    return refs;
-                }
+                    {
+                        var board = _state.Players[seat].Board;
+                        var refs = new CharacterRef[board.Count];
+                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(seat, board[i]);
+                        return refs;
+                    }
                 case "ALL_MINIONS":
-                {
-                    var list = new List<CharacterRef>();
-                    var b0 = _state.Players[seat].Board;
-                    var b1 = _state.Players[foe].Board;
-                    for (int i = 0; i < b0.Count; i++) list.Add(CharacterRef.OfMinion(seat, b0[i]));
-                    for (int i = 0; i < b1.Count; i++) list.Add(CharacterRef.OfMinion(foe, b1[i]));
-                    return list;
-                }
+                    {
+                        var list = new List<CharacterRef>();
+                        var b0 = _state.Players[seat].Board;
+                        var b1 = _state.Players[foe].Board;
+                        for (int i = 0; i < b0.Count; i++) list.Add(CharacterRef.OfMinion(seat, b0[i]));
+                        for (int i = 0; i < b1.Count; i++) list.Add(CharacterRef.OfMinion(foe, b1[i]));
+                        return list;
+                    }
                 case "ENEMY_HERO":
                     return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
                 case "FRIENDLY_HERO":

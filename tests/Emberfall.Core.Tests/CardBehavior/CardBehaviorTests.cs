@@ -264,7 +264,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             // Give P1 a weapon so they could attack
             s.Players[1].Weapon = new WeaponInstance
             {
-                Id = s.NextInstanceId(), DefinitionId = "ember_cinder_lance", Attack = 1, Durability = 2
+                Id = s.NextInstanceId(),
+                DefinitionId = "ember_cinder_lance",
+                Attack = 1,
+                Durability = 2
             };
             var spell = InHand(s, 0, "tide_frostbind");
 
