@@ -85,7 +85,7 @@ namespace Emberfall.Core.Contracts
     /// <summary>Only <see cref="Error"/> blocks a bake; Warning/Info are advisory.</summary>
     public enum Severity { Error, Warning, Info }
 
-    // ── Aura state queried by presentation (interfaces.md §5) ─────────────────────
-
-    public enum AuraKind { Shield, Stealth, Glow, Taunt, Frozen }
+    // NOTE: the former `AuraKind` enum was deleted here (M2, decisions/ADR-0006, condition C-G0-3).
+    // It was dead code — no source consumer ever bound to it. Persistent aura state is presentation-
+    // side `AuraSet` flags on ICardLiveState (interfaces.md §5.1), which is what shipped.
 }
