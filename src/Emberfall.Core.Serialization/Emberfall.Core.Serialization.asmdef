@@ -1,0 +1,14 @@
+{
+  "name": "Emberfall.Core.Serialization",
+  "rootNamespace": "Emberfall.Core.Serialization",
+  "references": ["Emberfall.Core.Contracts"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

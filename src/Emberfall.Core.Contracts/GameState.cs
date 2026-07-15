@@ -5,8 +5,10 @@ namespace Emberfall.Core.Contracts
     /// <summary>
     /// The single authoritative truth of a match (game-state-and-actions.md §2). A plain serializable
     /// object graph with NO UnityEngine deps and NO floats. It mutates ONLY through
-    /// <see cref="ICommandProcessor.Execute"/>. Field <b>declaration order here is the canonical hash
-    /// order</b> (golden-replay.md §4.1) — do not reorder without rebaselining every fixture.
+    /// <see cref="ICommandProcessor.Execute"/>. Declaration order here <b>should</b> track the
+    /// canonical walk in <c>Emberfall.Core.Serialization.GameStateSerializer</c>, but the serializer
+    /// is AUTHORITATIVE (A2 ruling, engineering/a2-serializer-design.md §2) — adding/removing a field
+    /// is a hash-canonical change: update the walk + manifest, convene §7, rebaseline fixtures.
     /// </summary>
     public sealed class GameState
     {

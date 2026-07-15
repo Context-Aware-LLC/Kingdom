@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
+using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.Support;
 
 namespace Emberfall.Core.Tests.GoldenReplay

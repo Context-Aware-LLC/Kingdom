@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Core.Serialization — the canonical GameState serializer (A2, a2-serializer-design.md).
+    Owns the ONE canonical field order (golden-replay.md §4.1); the hasher is h(serialize(state)).
+    Plain C#, ZERO UnityEngine references, no float code path. Depends on Contracts ONLY —
+    rules don't hash themselves; server (B1) and wire (A5) reference this as a sibling of Core.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Core.Serialization</AssemblyName>
+    <RootNamespace>Emberfall.Core.Serialization</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Firewall, layer 1: no Unity engine refs are even available here. -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

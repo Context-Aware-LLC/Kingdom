@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
+using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.GoldenReplay;
 using Emberfall.Core.Tests.Support;
 using Verb = Emberfall.Core.Contracts.Action;
