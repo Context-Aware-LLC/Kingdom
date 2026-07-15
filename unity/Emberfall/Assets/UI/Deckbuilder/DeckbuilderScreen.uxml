@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DeckbuilderScreen.uxml — S7 split view (ui/collection-deckbuilder.md §2).
+    left:  filtered card list (class ∪ neutral for this hero), virtualized ListView
+    right: the 30-card deck list (curve strip + counts + legality state)
+  Bound at runtime by DeckbuilderController; styled by theme.uss (tokens) + deckbuilder.uss.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="theme.uss" />
+    <Style src="deckbuilder.uss" />
+
+    <ui:VisualElement name="root" class="emb-root deckbuilder">
+
+        <!-- Header -->
+        <ui:VisualElement name="header" class="db-header">
+            <ui:Label text="DECKBUILDER" class="db-title" />
+            <ui:VisualElement class="db-header-spacer" />
+            <ui:Label name="hero-label" text="Emberward" class="db-hero" />
+            <ui:Label name="count-label" text="0 / 30" class="db-count" />
+            <ui:Label name="legality-pill" text="Incomplete" class="db-pill db-pill--invalid" />
+        </ui:VisualElement>
+
+        <!-- Body: split view -->
+        <ui:VisualElement name="body" class="db-body">
+
+            <!-- Left: collection -->
+            <ui:VisualElement name="collection-panel" class="db-panel db-collection">
+                <ui:Label text="COLLECTION" class="db-panel-title" />
+                <ui:VisualElement name="filter-row" class="db-filter-row">
+                    <ui:Button name="filter-all" text="All" class="db-chip db-chip--on" />
+                    <ui:Button name="filter-class" text="Class" class="db-chip" />
+                    <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
+                </ui:VisualElement>
+                <ui:ListView name="collection-list" class="db-list" />
+            </ui:VisualElement>
+
+            <!-- Right: deck -->
+            <ui:VisualElement name="deck-panel" class="db-panel db-deck">
+                <ui:TextField name="deck-name" value="New Deck" class="db-deck-name" />
+                <ui:VisualElement name="curve-strip" class="db-curve" />
+                <ui:ListView name="deck-list" class="db-list" />
+                <ui:VisualElement name="legality-box" class="db-legality" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+        <!-- Footer -->
+        <ui:VisualElement name="footer" class="db-footer">
+            <ui:Button name="done-button" text="Done" class="db-button db-button--ghost" />
+            <ui:VisualElement class="db-header-spacer" />
+            <ui:Button name="save-button" text="Save Deck" class="db-button db-button--cta" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,211 @@
+/*
+ * deckbuilder.uss — S7 screen styles. Consumes tokens from theme.uss only (no literal
+ * colors/sizes that a token already names). design-system.md §6 components, §2 layout.
+ * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
+ */
+
+.deckbuilder {
+    flex-grow: 1;
+    background-color: var(--surface-1);
+    padding: var(--space-4);
+}
+
+/* ---------- Header ---------- */
+.db-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+.db-title {
+    font-size: var(--type-display);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+}
+.db-header-spacer { flex-grow: 1; }
+.db-hero {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--class-emberward);
+    margin-right: var(--space-6);
+}
+.db-count {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    margin-right: var(--space-4);
+    min-width: 96px;
+    -unity-text-align: middle-right;
+}
+.db-pill {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: var(--surface-0);
+    padding: var(--space-1) var(--space-3);
+    border-radius: 999px;
+}
+.db-pill--valid   { background-color: var(--positive); }
+.db-pill--invalid { background-color: var(--warning); }
+
+/* ---------- Body / split ---------- */
+.db-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+.db-panel {
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    padding: var(--space-4);
+}
+.db-collection { flex-grow: 1.4; margin-right: var(--space-4); }
+.db-deck       { flex-grow: 1; min-width: 360px; }
+.db-panel-title {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-2);
+    margin-bottom: var(--space-3);
+}
+
+/* ---------- Filter chips ---------- */
+.db-filter-row { flex-direction: row; margin-bottom: var(--space-3); }
+.db-chip {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: 999px;
+    padding: var(--space-1) var(--space-4);
+    margin-right: var(--space-2);
+    height: 32px;
+}
+.db-chip--on {
+    color: var(--surface-0);
+    background-color: var(--mana);
+    -unity-font-style: bold;
+}
+
+/* ---------- Lists ---------- */
+.db-list {
+    flex-grow: 1;
+    background-color: var(--surface-1);
+    border-radius: var(--space-2);
+}
+
+/* Collection row (§2.3 uses tiles; the spike uses a legible full-width row for L1–L5 proof) */
+.card-row {
+    flex-direction: row;
+    align-items: center;
+    height: 52px;
+    padding: 0 var(--space-3);
+    margin: var(--space-1) var(--space-2);
+    background-color: var(--surface-2);
+    border-radius: var(--space-1);
+    border-left-width: 4px;
+    border-left-color: var(--class-neutral);
+}
+.card-row--disabled { opacity: 0.4; }
+.card-cost {
+    width: 30px;
+    height: 30px;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: var(--type-body);
+    color: var(--surface-0);
+    background-color: var(--mana);
+    border-radius: 999px;
+    margin-right: var(--space-3);
+}
+.card-name {
+    flex-grow: 1;
+    font-size: var(--type-body);
+    color: var(--ink-1);
+}
+.card-rarity-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    margin-right: var(--space-3);
+    background-color: var(--rarity-common);
+}
+.card-copies {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    min-width: 40px;
+    -unity-text-align: middle-right;
+}
+
+/* ---------- Deck side ---------- */
+.db-deck-name {
+    font-size: var(--type-h1);
+    margin-bottom: var(--space-3);
+}
+.db-curve {
+    flex-direction: row;
+    align-items: flex-end;
+    height: 56px;
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-1);
+}
+.curve-col {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 0 1px;
+}
+.curve-bar {
+    width: 60%;
+    min-height: 2px;
+    background-color: var(--mana);
+    border-radius: 2px;
+}
+.curve-label {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-top: 2px;
+}
+
+.db-legality {
+    margin-top: var(--space-3);
+    min-height: 24px;
+}
+.legality-msg {
+    font-size: var(--type-label);
+    color: var(--warning);
+    margin-bottom: var(--space-1);
+}
+
+/* ---------- Rarity / class modifiers (token-driven; set from C# by enum) ---------- */
+.rarity--common    { background-color: var(--rarity-common); }
+.rarity--rare      { background-color: var(--rarity-rare); }
+.rarity--epic      { background-color: var(--rarity-epic); }
+.rarity--legendary { background-color: var(--rarity-legendary); }
+
+.edge--neutral    { border-left-color: var(--class-neutral); }
+.edge--emberward  { border-left-color: var(--class-emberward); }
+.edge--tidecaller { border-left-color: var(--class-tidecaller); }
+.edge--gravekeep  { border-left-color: var(--class-gravekeep); }
+.edge--verdant    { border-left-color: var(--class-verdant); }
+
+/* ---------- Footer / buttons ---------- */
+.db-footer {
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--space-4);
+}
+.db-button {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    height: 48px;
+    min-width: 140px;
+    border-width: 0;
+    border-radius: var(--space-2);
+    padding: 0 var(--space-6);
+}
+.db-button--cta {
+    color: var(--surface-0);
+    background-color: var(--accent);
+}
+.db-button--ghost {
+    color: var(--ink-2);
+    background-color: var(--surface-3);
+}
+.db-button:disabled { opacity: 0.35; }
