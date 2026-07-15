@@ -124,7 +124,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = 1,
                 ["name"] = "deathrattle_cascade",
-                ["engineContractVersion"] = "interfaces.v2",
+                ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0003",
                 ["p0"] = "P0",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "deathrattle_cascade",
-  "engineContractVersion": "interfaces.v2",
+  "engineContractVersion": "interfaces.v3",
   "cardSetSnapshot": "M1.cards.snapshot.json",
   "matchId": "GOLD-0003",
   "p0": "P0",
@@ -83,7 +83,7 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "33617107b7558bf897e53966cdf8cef83d81f8af28e026c4656d4e4361b1362a",
+    "stateHash": "f8e659674fd1eca3ba630e27cade20c9b14c504e33a1dd278b4c1ea26224aea7",
     "eventStream": [
       {
         "seq": 0,

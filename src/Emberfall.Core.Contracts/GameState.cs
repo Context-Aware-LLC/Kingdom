@@ -32,6 +32,15 @@ namespace Emberfall.Core.Contracts
         public bool Mulligan0Done;
         public bool Mulligan1Done;
 
+        /// <summary>
+        /// The pending-choice seam (A2b, decision 3). ALWAYS null in M2 — the shape exists so
+        /// Phase 2 adds interpreter machinery only, never a Contracts change. Carries serializable
+        /// STATE only, never the continuation/delegate. Redaction contract for the future
+        /// GameStateProjector is documented per-field on <see cref="PendingChoice"/> (§7 review
+        /// 2026-07-15, engineering/a2b-scoped-review-2026-07-15.md — OBL-1).
+        /// </summary>
+        public PendingChoice? PendingChoice;
+
         public GameState(MatchId id, DeterministicRandom rng, PlayerState p0, PlayerState p1)
         {
             Id = id;
@@ -130,6 +139,35 @@ namespace Emberfall.Core.Contracts
             DefinitionId = definitionId;
             Controller = controller;
         }
+    }
+
+    /// <summary>
+    /// A choice awaiting a player (A2b seam). M2: never populated. The projection redaction class
+    /// per field below is fixed by the §7 ruling (engineering/a2b-scoped-review-2026-07-15.md)
+    /// and is the BINDING contract for the future GameStateProjector — it is NOT implemented here
+    /// (no projection layer exists in src/ yet). Walk order is fixed as declared.
+    /// </summary>
+    public sealed class PendingChoice
+    {
+        /// <summary>UNREDACTED — the visibility key; both seats see who is choosing.</summary>
+        public PlayerId Chooser;
+        /// <summary>UNREDACTED — opponent sees "opponent is Discovering"; the trigger is already public.</summary>
+        public PendingChoiceKind Kind;
+        /// <summary>REDACTED (default-deny) — the already-minted instance/effect that raised the choice.</summary>
+        public InstanceId Source;
+        /// <summary>REDACTED — the hidden information. CardDefinition ids (candidates are never
+        /// minted as instances). Phase-2 canonical population order = deterministic RNG roll order
+        /// of the Discover pool (OBL-3); no consumer may re-sort.</summary>
+        public List<string> Options = new List<string>();
+        /// <summary>REDACTED (default-deny; OBL-5 revisit). Deterministic resume/timer correlation id.</summary>
+        public ulong ChoiceSequence;
+    }
+
+    /// <summary>Kinds of mid-command pending choice. Hash-canonical — extend only via a §7
+    /// tail-append when a real mechanic lands (Discover-only per the 2026-07-15 ruling, Q1).</summary>
+    public enum PendingChoiceKind
+    {
+        Discover = 0,
     }
 
     /// <summary>A buff/debuff (removed by SILENCE). Integer deltas only.</summary>

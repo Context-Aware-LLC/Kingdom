@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "full_match_pyra_wins",
-  "engineContractVersion": "interfaces.v2",
+  "engineContractVersion": "interfaces.v3",
   "cardSetSnapshot": "M1.cards.snapshot.json",
   "matchId": "GOLD-0002",
   "p0": "P0",
@@ -51,7 +51,7 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "5878f6713439f54f850f51b4c56c98aab5bc93658a2e45afa8d46c232343a7d7",
+    "stateHash": "4f664233c6b30d70b7435ba057a17fdcb2686e288a3dd81cdf472f6ab4e468de",
     "eventStream": [
       {
         "seq": 0,

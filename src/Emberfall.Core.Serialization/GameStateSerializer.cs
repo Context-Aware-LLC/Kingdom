@@ -41,6 +41,7 @@ namespace Emberfall.Core.Serialization
             w.U64(s.NextEventSequence);
             w.Bool(s.Mulligan0Done);
             w.Bool(s.Mulligan1Done);
+            WalkPendingChoice(w, s.PendingChoice);  // A2b tail seam — always null in M2 (§7 2026-07-15)
         }
 
         private static void WalkPlayer(ICanonicalWriter w, PlayerState p)
@@ -119,6 +120,20 @@ namespace Emberfall.Core.Serialization
             w.Str(weapon.DefinitionId);
             w.I32(weapon.Attack);
             w.I32(weapon.Durability);
+        }
+
+        private static void WalkPendingChoice(ICanonicalWriter w, PendingChoice? pc)
+        {
+            if (pc is null) { w.Bool(false); return; }  // M2 path: single 0x00 present-flag byte
+            w.Bool(true);
+            w.Str(pc.Chooser.Value);
+            w.Enum(pc.Kind);
+            w.I32(pc.Source.Value);
+            w.I32(pc.Options.Count);                    // count prefix, then list order (§4.1).
+            // Phase-2 ringfence (OBL-3): list order MUST be the deterministic RNG roll order of
+            // the Discover pool — the walk is order-PRESERVING only, never an ordering source.
+            foreach (var id in pc.Options) w.Str(id);
+            w.U64(pc.ChoiceSequence);
         }
 
         private static void WalkMana(ICanonicalWriter w, ManaPool m)

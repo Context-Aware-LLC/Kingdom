@@ -31,8 +31,8 @@ namespace Emberfall.Core.Tests.Determinism
         /// <summary>
         /// The committed manifest: every public instance field of every state type in the canonical
         /// graph, sorted ordinal. Changing a state type flips this red — update the manifest AND the
-        /// serializer walk together (that is the point). PendingChoice (A2b) will land here via the
-        /// §7-reviewed Contracts change, never silently.
+        /// serializer walk together (that is the point). PendingChoice landed here via the A2b
+        /// §7-reviewed Contracts change (engineering/a2b-scoped-review-2026-07-15.md).
         /// </summary>
         private static readonly Dictionary<Type, string[]> Manifest = new Dictionary<Type, string[]>
         {
@@ -40,7 +40,11 @@ namespace Emberfall.Core.Tests.Determinism
             {
                 "ActionResolutionsThisTurn", "ActivePlayer", "FatigueCounter0", "FatigueCounter1",
                 "Id", "Mulligan0Done", "Mulligan1Done", "NextEventSequence", "NextInstanceCounter",
-                "Outcome", "Phase", "Players", "Rng", "StateVersion", "TurnNumber"
+                "Outcome", "PendingChoice", "Phase", "Players", "Rng", "StateVersion", "TurnNumber"
+            },
+            [typeof(PendingChoice)] = new[]
+            {
+                "ChoiceSequence", "Chooser", "Kind", "Options", "Source"
             },
             [typeof(PlayerState)] = new[]
             {
@@ -102,6 +106,15 @@ namespace Emberfall.Core.Tests.Determinism
             ["GameState.NextEventSequence"] = s => s.NextEventSequence++,
             ["GameState.Mulligan0Done"] = s => s.Mulligan0Done = !s.Mulligan0Done,
             ["GameState.Mulligan1Done"] = s => s.Mulligan1Done = !s.Mulligan1Done,
+            ["GameState.PendingChoice"] = s => s.PendingChoice = null,   // present → absent flips the flag byte
+
+            // PendingChoice (seeded non-null — M2 production never populates it, so the seed is
+            // the ONLY coverage of the non-null walk branch until Phase 2; §7 ruling item 7)
+            ["PendingChoice.Chooser"] = s => s.PendingChoice!.Chooser = s.Players[1].Id,
+            ["PendingChoice.Kind"] = s => s.PendingChoice!.Kind = (PendingChoiceKind)1,   // no second member yet (Q1: Discover-only); the cast perturbs the canonical int
+            ["PendingChoice.Source"] = s => s.PendingChoice!.Source = new InstanceId(70),
+            ["PendingChoice.Options"] = s => s.PendingChoice!.Options.Add("disc_seed_extra"),
+            ["PendingChoice.ChoiceSequence"] = s => s.PendingChoice!.ChoiceSequence++,
 
             // PlayerState (seat 0)
             ["PlayerState.Id"] = s =>
@@ -205,7 +218,9 @@ namespace Emberfall.Core.Tests.Determinism
         /// DID intend one, that is a hash-canonical change (§7 review + full fixture rebaseline) and
         /// this constant is re-pinned in the same reviewed commit.
         /// </summary>
-        private const string PinnedSeedDigest = "abb617ccf5e1c67c7697f4b52b1658c29e63045abda9e990f2561b1bfca439db";
+        // Re-pinned 2026-07-15 (A2b, §7-reviewed): walk gained the PendingChoice tail + the seed
+        // state now exercises it non-null. Old pin: abb617ccf5e1c67c7697f4b52b1658c29e63045abda9e990f2561b1bfca439db
+        private const string PinnedSeedDigest = "23b592020596174461142909891e0b33b412929f98e47b3e7ae6d641c3030009";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()
@@ -305,6 +320,18 @@ namespace Emberfall.Core.Tests.Determinism
                 Mulligan1Done = true,
             };
             s.Rng.NextUInt64();   // advance the cursor so RawState ≠ seed (proves the cursor is hashed)
+
+            // A2b: non-null PendingChoice — M2 production always leaves this null, so this seed is
+            // the only exercise of WalkPendingChoice's non-null branch (≥2 options so the count
+            // prefix + list loop are both real; §7 ruling 2026-07-15 item 7).
+            s.PendingChoice = new PendingChoice
+            {
+                Chooser = p0Id,
+                Kind = PendingChoiceKind.Discover,
+                Source = new InstanceId(5),
+                Options = { "disc_seed_a", "disc_seed_b" },
+                ChoiceSequence = 11,
+            };
             return s;
         }
     }
