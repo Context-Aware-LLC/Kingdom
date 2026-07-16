@@ -1,0 +1,50 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Emberfall.Core.Cards;
+using Emberfall.Core.Contracts;
+
+namespace Emberfall.Net.Server.Data
+{
+    /// <summary>
+    /// Production <see cref="ICardDatabase"/> over `*.cards.json` rows (b1-match-server-design.md §10;
+    /// same headless shape as the golden-replay JsonCardDatabase — card-system.md §1.3). Source of
+    /// truth stays `unity/Emberfall/Assets/CardData/`; the container bakes those files in at build.
+    /// </summary>
+    public sealed class FileCardDatabase : ICardDatabase
+    {
+        private readonly Dictionary<string, CardDefinition> _byId = new Dictionary<string, CardDefinition>(StringComparer.Ordinal);
+
+        public FileCardDatabase(IEnumerable<CardDefinition> defs)
+        {
+            foreach (var d in defs) _byId[d.Id] = d;
+        }
+
+        /// <summary>Load every `*.cards.json` under <paramref name="dir"/> (recursive, ordinal-sorted
+        /// so load order — and therefore last-write-wins on a duplicate id — is deterministic).</summary>
+        public static FileCardDatabase LoadDirectory(string dir)
+        {
+            var files = Directory.GetFiles(dir, "*.cards.json", SearchOption.AllDirectories);
+            Array.Sort(files, StringComparer.Ordinal);
+            if (files.Length == 0)
+                throw new FileNotFoundException($"No *.cards.json under '{dir}' — the server has no cards to deal.");
+
+            var defs = new List<CardDefinition>();
+            foreach (var f in files)
+                defs.AddRange(CardJson.DeserializeArray(File.ReadAllText(f)));
+            return new FileCardDatabase(defs);
+        }
+
+        public bool TryGet(string cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
+
+        public CardDefinition Get(string cardId)
+            => _byId.TryGetValue(cardId, out var d) ? d : throw new KeyNotFoundException($"Card '{cardId}' not in database.");
+
+        public IReadOnlyCollection<CardDefinition> AllCollectible()
+        {
+            var list = new List<CardDefinition>();
+            foreach (var d in _byId.Values) if (d.Collectible) list.Add(d);
+            return list;
+        }
+    }
+}

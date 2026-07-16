@@ -132,6 +132,7 @@ namespace Emberfall.Net.Protocol
                     w.EndObject();
                     w.Name("snapshot");
                     WriteSnapshotBody(w, m.Snapshot);
+                    w.Name("reconnectToken"); w.Str(m.ReconnectToken);
                     w.EndObject();
                     break;
                 case MatchEndMsg m:
@@ -387,8 +388,13 @@ namespace Emberfall.Net.Protocol
             if (!TryReadSnapshotBody(snapVal, out var snapshot, out string detail))
                 return DecodeResult.Fail(ProtocolError.BadField, $"snapshot: {detail}", matchId, seq);
 
+            // B1 additive field (design §6-bis): absent (pre-B1 encoder) → empty, never a decode failure.
+            string token = "";
+            if (body.TryGet("reconnectToken", out var tokVal) && !tokVal.TryStr(out token))
+                return DecodeResult.Fail(ProtocolError.BadField, "bad 'reconnectToken'", matchId, seq);
+
             var msg = new MatchStartMsg(new PlayerId(player), seat, ecv,
-                new OpponentInfo(new PlayerId(oppId), oppName), snapshot);
+                new OpponentInfo(new PlayerId(oppId), oppName), snapshot, token);
             return DecodeResult.Success(msg, matchId, seq);
         }
 

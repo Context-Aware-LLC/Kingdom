@@ -78,6 +78,9 @@ namespace Emberfall.Core.Contracts
         BoardFull, HeroPowerAlreadyUsed, WeaponMissing, UnknownIntent,
         NotImplemented, AlreadyMulliganed, GameOver,
         HasSummoningSickness, NoAttacksLeft, AttackerFrozen,
+        /// <summary>Session-layer only (B1 policy gate, b1-match-server-design.md §6.5):
+        /// the token bucket refused the intent. Never minted by <c>CommandProcessor</c>.</summary>
+        RateLimited,
     }
 
     // ── Validation (interfaces.md §4.1) ──────────────────────────────────────────

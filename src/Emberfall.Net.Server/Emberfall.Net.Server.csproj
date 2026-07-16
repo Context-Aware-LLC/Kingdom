@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Emberfall.Net.Server — the authoritative match server (B1, engineering/b1-match-server-design.md).
+    Kestrel/wss host over the deterministic core: MatchSession composes LocalMatchHost (zero rules
+    surface here), all lifecycle time is session-layer synthetic intents through Submit, every
+    outbound state payload is a projected Snapshot(viewer). NOT a UPM package — this exe targets
+    net10.0 and never compiles inside Unity; the sibling netstandard2.1 assemblies it references do.
+    ZERO UnityEngine references (Firewall category), no float in anything state-adjacent.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Net.Server</AssemblyName>
+    <RootNamespace>Emberfall.Net.Server</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Emberfall.Net.Server.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+    <ProjectReference Include="..\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Emberfall.Core\Emberfall.Core.csproj" />
+    <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -77,13 +77,17 @@ namespace Emberfall.Net.Protocol
     public sealed record TurnTimerMsg(PlayerId ActivePlayer, ulong DeadlineTick) : NetMessage;
 
     /// <summary>Match start: seat assignment, contract version pin, opponent metadata, initial
-    /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).</summary>
+    /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).
+    /// <see cref="ReconnectToken"/> is the B1 additive field (b1-match-server-design.md §6-bis, RC F2):
+    /// the opaque credential the client must present in <see cref="ReconnectMsg"/>. Empty on decode
+    /// when an older encoder omitted it (A5 §8 forward-compat).</summary>
     public sealed record MatchStartMsg(
         PlayerId PlayerId,
         int Seat,
         string EngineContractVersion,
         OpponentInfo Opponent,
-        SnapshotMsg Snapshot) : NetMessage;
+        SnapshotMsg Snapshot,
+        string ReconnectToken = "") : NetMessage;
 
     public readonly struct OpponentInfo
     {

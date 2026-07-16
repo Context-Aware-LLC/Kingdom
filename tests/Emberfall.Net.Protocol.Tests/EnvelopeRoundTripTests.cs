@@ -110,12 +110,30 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var s = CanonicalStateFixtures.BuildSeedState();
             var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v3",
-                new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s));
+                new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
+                ReconnectToken: "tok-3f9a");
             var m = RoundTrip<MatchStartMsg>(msg);
             Assert.That(m.Seat, Is.EqualTo(0));
             Assert.That(m.EngineContractVersion, Is.EqualTo("interfaces.v3"));
             Assert.That(m.Opponent.DisplayName, Is.EqualTo("Rival"));
             Assert.That(m.Snapshot.VerifyIntegrity(), Is.True);
+            Assert.That(m.ReconnectToken, Is.EqualTo("tok-3f9a"),
+                "B1 additive field (b1-match-server-design.md §6-bis) must survive the round trip.");
+        }
+
+        [Test]
+        public void MatchStart_Without_ReconnectToken_Decodes_As_Empty()
+        {
+            // Forward-compat (A5 §8): a pre-B1 encoder omits the field; decode must not fail.
+            var s = CanonicalStateFixtures.BuildSeedState();
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v3",
+                new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
+                ReconnectToken: "tok-strip-me");
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(msg, M, 1))
+                .Replace(",\"reconnectToken\":\"tok-strip-me\"", "");
+            var res = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+            Assert.That(res.Ok, Is.True, $"{res.Error} {res.Detail}");
+            Assert.That(((MatchStartMsg)res.Message!).ReconnectToken, Is.Empty);
         }
 
         [Test]

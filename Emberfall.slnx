@@ -5,10 +5,12 @@
     <Project Path="src/Emberfall.Core.Serialization/Emberfall.Core.Serialization.csproj" />
     <Project Path="src/Emberfall.Core/Emberfall.Core.csproj" />
     <Project Path="src/Emberfall.Net.Protocol/Emberfall.Net.Protocol.csproj" />
+    <Project Path="src/Emberfall.Net.Server/Emberfall.Net.Server.csproj" />
     <Project Path="src/Emberfall.Tools.CardCi/Emberfall.Tools.CardCi.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
     <Project Path="tests/Emberfall.Net.Protocol.Tests/Emberfall.Net.Protocol.Tests.csproj" />
+    <Project Path="tests/Emberfall.Net.Server.Tests/Emberfall.Net.Server.Tests.csproj" />
   </Folder>
 </Solution>
