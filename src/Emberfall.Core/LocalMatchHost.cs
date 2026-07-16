@@ -44,10 +44,11 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// The projected wire payload (ADR-0006, WS A3). NOTE (a3-projector-design.md §9): in this
-        /// in-process host, <see cref="State"/> and <see cref="OnEvents"/> remain RAW, unprojected
-        /// paths until A4/B1 route consumers through IMatchSession/ProjectEvent — local consumers
-        /// binding to them instead of Snapshot(viewer) is the tracked honest-AI gap (§7.1 test 6).
+        /// The projected wire payload (ADR-0006, WS A3). <see cref="State"/> and
+        /// <see cref="OnEvents"/> are AUTHORITY-side surfaces (server, golden-replay harness):
+        /// since WS A4 every in-process consumer binds to <c>IMatchSession</c> via
+        /// <c>LocalMatch.Start</c> and receives only projected state/events (the a3 §9.2
+        /// honest-AI gap is discharged — §7.1 test 6 lives in Session/LocalMatchSessionTests).
         /// </summary>
         public GameState Snapshot(PlayerId viewer)
             => Projection.GameStateProjector.Project(State, viewer);
