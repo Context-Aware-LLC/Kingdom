@@ -127,7 +127,9 @@ namespace Emberfall.Net.Server.Tests.Support
         public FakeConnection Conn(int seat) => seat == 0 ? Conn0 : Conn1;
         public ScriptedClient Client(int seat) => seat == 0 ? Client0 : Client1;
 
-        public void Post(int seat, byte[] frame) => Session.Dispatch(new SessionCommand.Frame(seat, frame));
+        public void Post(int seat, byte[] frame) => Session.Dispatch(new SessionCommand.Frame(Conn(seat), frame));
+        public void Post(IServerConnection conn, byte[] frame) => Session.Dispatch(new SessionCommand.Frame(conn, frame));
+        public void Disconnect(int seat) => Session.Dispatch(new SessionCommand.Disconnected(Conn(seat)));
         public void Tick() => Session.Dispatch(new SessionCommand.ClockTick());
         public void AdvanceAndTick(long ms) { Time.Advance(ms); Tick(); }
 

@@ -19,7 +19,7 @@ namespace Emberfall.Net.Server.Tests
             h.ConfirmMulligans();
             string token = h.Conn0.Last<MatchStartMsg>().ReconnectToken;
 
-            h.Session.Dispatch(new SessionCommand.Disconnected(0));
+            h.Disconnect(0);
 
             var fresh = new FakeConnection();
             h.Session.Dispatch(new SessionCommand.Reconnect(
@@ -29,9 +29,10 @@ namespace Emberfall.Net.Server.Tests
                 "reconnect answers with the current projected snapshot (§8)");
             Assert.That(fresh.Last<TurnTimerMsg>(), Is.Not.Null, "and the live turn deadline");
 
-            // Seq baseline reset (RC F7): a brand-new client legitimately restarts at seq 1.
+            // Seq baseline reset (RC F7): a brand-new client legitimately restarts at seq 1 —
+            // posted via the NEW connection, which is now the seat's identity.
             var reborn = new ScriptedClient(h.P0);
-            h.Post(0, reborn.Frame(new HeartbeatMsg(), h.Id));
+            h.Post(fresh, reborn.Frame(new HeartbeatMsg(), h.Id));
             Assert.That(fresh.Last<HeartbeatMsg>(), Is.Not.Null,
                 "post-reconnect seq 1 must be accepted on the new connection");
         }
@@ -41,7 +42,7 @@ namespace Emberfall.Net.Server.Tests
         {
             var h = new SessionHarness();
             string token0 = h.Conn0.Last<MatchStartMsg>().ReconnectToken;
-            h.Session.Dispatch(new SessionCommand.Disconnected(1));
+            h.Disconnect(1);
 
             // Seat 0's token cannot resume seat 1 (state-sync §7.2).
             var thief = new FakeConnection();
@@ -55,12 +56,33 @@ namespace Emberfall.Net.Server.Tests
         }
 
         [Test]
+        public void An_Unbound_Connection_Can_Neither_Inject_Frames_Nor_Vacate_A_Seat()
+        {
+            // The forged-reconnect regression: a socket that never passed the token check must not
+            // be able to poison a live seat's policy state or disconnect it (SessionCommand doc).
+            var h = new SessionHarness();
+            h.ConfirmMulligans();
+            ulong versionBefore = h.Session.StateVersion;
+            var intruder = new FakeConnection();
+            var forger = new ScriptedClient(h.P0);
+
+            for (int i = 0; i < 5; i++)
+                h.Post(intruder, forger.Intent(new ConcedeIntent(h.P0), h.Id));
+            h.Session.Dispatch(new SessionCommand.Disconnected(intruder));
+            h.AdvanceAndTick(h.Options.DisconnectGraceMs + 1);
+
+            Assert.That(h.Session.Ended, Is.False, "the intruder must not end or vacate anything");
+            Assert.That(h.Session.StateVersion, Is.EqualTo(versionBefore));
+            Assert.That(intruder.Frames, Is.Empty, "an unbound socket gets no answers at all");
+        }
+
+        [Test]
         public void Disconnect_Grace_Expiry_Concedes_The_Absent_Seat()
         {
             var h = new SessionHarness();
             h.ConfirmMulligans();
 
-            h.Session.Dispatch(new SessionCommand.Disconnected(0));
+            h.Disconnect(0);
             h.AdvanceAndTick(h.Options.DisconnectGraceMs + 1);
 
             Assert.That(h.Session.Ended, Is.True);
@@ -76,7 +98,7 @@ namespace Emberfall.Net.Server.Tests
             h.ConfirmMulligans();
             string token = h.Conn0.Last<MatchStartMsg>().ReconnectToken;
 
-            h.Session.Dispatch(new SessionCommand.Disconnected(0));
+            h.Disconnect(0);
             h.AdvanceAndTick(h.Options.DisconnectGraceMs / 2);
             h.Session.Dispatch(new SessionCommand.Reconnect(new ReconnectMsg(h.P0, token, 0), new FakeConnection()));
             h.AdvanceAndTick(h.Options.DisconnectGraceMs);

@@ -1,4 +1,5 @@
-// B1 commit 1 ships the session core only (b1-match-server-design.md §14.1).
-// The Kestrel composition root — /ws upgrade → MatchGate, /healthz, the channel
-// pump around MatchSession.Dispatch, heartbeat driver — lands in commit 2.
-System.Console.WriteLine("Emberfall.Net.Server — transport host arrives in B1 commit 2.");
+// The B1 match server (b1-match-server-design.md). Composition lives in ServerApp.Build so the
+// loopback integration test boots the identical app; this file only reads the environment.
+using Emberfall.Net.Server;
+
+ServerApp.Build(ServerConfig.FromEnvironment()).Run();

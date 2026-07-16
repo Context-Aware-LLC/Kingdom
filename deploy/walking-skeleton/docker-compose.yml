@@ -1,19 +1,26 @@
-# Walking skeleton: Caddy (auto-TLS) in front of a minimal Kestrel wss echo. One command.
-# DEPLOYED 2026-07-15 at wss://emberfall.outofcontext.to/ws (droplet root@24.144.123.177).
+# Walking skeleton, B1 edition: Caddy (auto-TLS) in front of the REAL match server.
+# The wss echo it replaced proved transport+TLS on 2026-07-15 (C-G0-6); Emberfall.Net.Server
+# now serves wss://emberfall.outofcontext.to/ws with the deterministic core behind it
+# (droplet root@24.144.123.177).
 
 services:
-  echo:
-    build: ./EchoServer
+  emberfall-server:
+    build:
+      context: ../..                                # repo root (RC F4): server needs src/ + card data
+      dockerfile: deploy/walking-skeleton/Dockerfile.server
     expose:
-      - "5000"
+      - "8080"
     environment:
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=http://+:8080
+      - EMBERFALL_REPLAYS=/data/replays
+    volumes:
+      - replay_data:/data/replays
     restart: unless-stopped
 
   caddy:
     image: caddy:2
     depends_on:
-      - echo
+      - emberfall-server
     ports:
       - "80:80"
       - "443:443"
@@ -35,3 +42,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  replay_data:

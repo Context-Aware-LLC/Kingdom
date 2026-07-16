@@ -122,18 +122,38 @@ namespace Emberfall.Net.Server
             if (Ended) return;
             switch (cmd)
             {
-                case SessionCommand.Frame f: OnFrame(f.Seat, f.Bytes); break;
+                case SessionCommand.Frame f: OnFrame(f.Origin, f.Bytes); break;
                 case SessionCommand.ClockTick: OnTick(_time.NowMs); break;
-                case SessionCommand.Disconnected d: OnDisconnected(d.Seat); break;
+                case SessionCommand.Disconnected d:
+                    if (SeatOfConnection(d.Origin) is int vacated) OnDisconnected(vacated);
+                    break;
                 case SessionCommand.Reconnect r: OnReconnect(r.Message, r.Connection); break;
                 default: throw new InvalidOperationException($"Unknown session command '{cmd.GetType().Name}'.");
             }
         }
 
+        /// <summary>Seat lookup by PlayerId (stable for the session's life; gate routing surface).</summary>
+        public int SeatOf(PlayerId player)
+        {
+            if (Equals(_seats[0].Player, player)) return 0;
+            if (Equals(_seats[1].Player, player)) return 1;
+            return -1;
+        }
+
+        /// <summary>Reference-identity seat binding: frames/disconnects from a connection that is
+        /// not the seat's CURRENT socket are stale or forged — dropped (SessionCommand doc).</summary>
+        private int? SeatOfConnection(IServerConnection origin)
+        {
+            if (ReferenceEquals(_seats[0].Conn, origin)) return 0;
+            if (ReferenceEquals(_seats[1].Conn, origin)) return 1;
+            return null;
+        }
+
         // ── Inbound frames: the §6 policy pipeline ───────────────────────────────
 
-        private void OnFrame(int seat, byte[] bytes)
+        private void OnFrame(IServerConnection origin, byte[] bytes)
         {
+            if (SeatOfConnection(origin) is not int seat) return;   // unbound socket: drop
             var s = _seats[seat];
             var link = s.Link;
             if (s.Conn is null || link is null) return;   // vacant seat: stale post, drop

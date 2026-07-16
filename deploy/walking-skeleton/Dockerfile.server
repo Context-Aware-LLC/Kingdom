@@ -1,0 +1,20 @@
+# Emberfall.Net.Server image (B1 commit 2, b1-match-server-design.md §11).
+# BUILD CONTEXT IS THE REPO ROOT (RC F4): the server references five sibling src/ projects and
+# bakes in the canonical card data — the echo's self-contained single-project context does not
+# transfer. From deploy/walking-skeleton: docker compose build (context: ../..).
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /repo
+COPY src/ src/
+RUN dotnet publish src/Emberfall.Net.Server/Emberfall.Net.Server.csproj -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+COPY --from=build /app .
+# Card definitions: source of truth stays unity/Emberfall/Assets/CardData (design §10).
+COPY unity/Emberfall/Assets/CardData/ /app/cards/
+ENV EMBERFALL_CARDS=/app/cards \
+    EMBERFALL_REPLAYS=/data/replays \
+    ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "Emberfall.Net.Server.dll"]
