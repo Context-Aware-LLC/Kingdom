@@ -50,6 +50,9 @@ namespace Emberfall.Core.Contracts
             Outcome = MatchOutcome.InProgress;
             ActivePlayer = p0.Id;
             TurnNumber = 0;
+            // D-P1 (state-sync-and-security.md §5.2.1): InstanceId(0) is the reserved redaction
+            // sentinel and is never minted — the counter starts at 1.
+            NextInstanceCounter = 1;
         }
 
         public int SeatOf(PlayerId player)

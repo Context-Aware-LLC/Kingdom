@@ -200,10 +200,14 @@ namespace Emberfall.Core
                 if (ps.Hand.Count >= MatchEngine.HandCap)
                 {
                     m.Zone = Zone.Graveyard;        // hand full → the bounced card is burned
-                    ps.Graveyard.Add(m);
+                    ps.Graveyard.Add(m);            // graveyard is public: the id stays (D-OQ1 scope)
                 }
                 else
                 {
+                    // D-OQ1 (state-sync-and-security.md §5.2.1): a publicly-known id is retired
+                    // when its card enters a hidden zone — re-mint BEFORE the emit so the owner's
+                    // event and snapshot agree. The opponent's projection sentinels it anyway.
+                    m.Id = ctx.State.NextInstanceId();
                     m.Zone = Zone.Hand;
                     ps.Hand.Add(m);
                 }

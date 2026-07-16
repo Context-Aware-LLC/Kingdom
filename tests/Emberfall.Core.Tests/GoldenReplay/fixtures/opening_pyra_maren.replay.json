@@ -47,12 +47,12 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "566033d5907cfd09b9d959a6754600b6a5e8511e415a183a3a74a9bd6e08c976",
+    "stateHash": "38e1d7486d24b4f43f5dfa96c21226b262d63413854495d2e3f191c5b382130c",
     "eventStream": [
       {
         "seq": 0,
         "kind": "onTurnStart",
-        "src": "i0",
+        "src": "i1",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -60,7 +60,7 @@
       {
         "seq": 1,
         "kind": "onDraw",
-        "src": "i25",
+        "src": "i26",
         "tgt": null,
         "amt": null,
         "flags": "None"

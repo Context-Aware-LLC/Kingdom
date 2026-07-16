@@ -33,15 +33,15 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             var p0 = new PlayerId("P0");
             var p1 = new PlayerId("P1");
-            var hero0 = new HeroInstance(new InstanceId(0), p0, CardClass.EMBERWARD, 30);
-            var hero1 = new HeroInstance(new InstanceId(1), p1, CardClass.TIDECALLER, 30);
+            var hero0 = new HeroInstance(new InstanceId(1), p0, CardClass.EMBERWARD, 30);
+            var hero1 = new HeroInstance(new InstanceId(2), p1, CardClass.TIDECALLER, 30);
             hero0.HeroPowerId = "hero_power_searing_bolt";
             hero1.HeroPowerId = "hero_power_tidal_ward";
             var ps0 = new PlayerState(p0, hero0);
             var ps1 = new PlayerState(p1, hero1);
             var s = new GameState(new MatchId("M"), new DeterministicRandom(99UL), ps0, ps1)
             {
-                NextInstanceCounter = 2,
+                NextInstanceCounter = 3,
                 Phase = TurnPhase.Main,
                 TurnNumber = 1,
                 Mulligan0Done = true,

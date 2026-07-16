@@ -2,22 +2,20 @@
 
 _Required by golden-replay.md §5.2 — a hash flip is guilty until proven a deliberate rule change._
 
-- **Which rule changed:** **OBL-7 every-shuffle id re-mint** (`state-sync-and-security.md §5.2.1`,
-  ruled in `engineering/a3-kickoff-review-2026-07-15.md` Q1, ratified by Sam 2026-07-15).
-  `DeckOps.Shuffle` now re-mints deck-resident `InstanceId`s in post-shuffle deck order at every
-  shuffle site, retiring the decklist-ordinal ids `BuildDeck` mints pre-shuffle. No gameplay rule
-  changed: same RNG call order, same turn-loop spine, same `Player0Win` outcome.
-- **Why the new golden is correct:** identical replay behavior; only id *values* moved (the
-  fixture's single draw event moved `src: i6 → i25`; every other event line unchanged), and the
-  state hash follows because `CardInstance.Id` and `NextInstanceCounter` are hash-canonical.
-  Old → new:
-  `4f664233c6b30d70b7435ba057a17fdcb2686e288a3dd81cdf472f6ab4e468de` →
-  `408546a31aa1e3f43c06ad7030821182b492c5e24eb8900f69da7c394f89081b`.
-  (Note: this file's previous A2b entry cited `deathrattle_cascade`'s digests — the two files'
-  old→new pairs were swapped at the A2b episode; corrected as of this entry.)
-- **Link to the design/eng change that caused it:** `multiplayer/state-sync-and-security.md §5.2.1`
-  (OBL-7), §7 convene record `engineering/a3-kickoff-review-2026-07-15.md`, invariant tests
-  `tests/Emberfall.Core.Tests/Determinism/DeckIdReMintTests.cs`.
+- **Which rule changed:** **D-P1 sentinel reservation** (`state-sync-and-security.md §5.2.1`,
+  ruled at the A3 design-pass review `engineering/a3-projector-design.md` §10, ratified by Sam
+  2026-07-15): `InstanceId(0)` is the reserved redaction sentinel and is never minted — the
+  `GameState` mint counter now starts at 1. (The same commit lands D-OQ1 bounce re-mint, which
+  this fixture does not exercise — no RETURN effect in its intent log.) No gameplay rule
+  changed: same turn-loop spine, same `Player0Win` outcome.
+- **Why the new golden is correct:** every `InstanceId` in the replay shifts uniformly by +1;
+  the diff shows only id lines and the hash — insertions equal deletions, event count and
+  kinds identical. Old → new:
+  `408546a31aa1e3f43c06ad7030821182b492c5e24eb8900f69da7c394f89081b` →
+  `6fbb8cd899ca9d27c74dfcc10f861de22e61f6c32b789f2a6a3f85867a9c124c`.
+- **Link to the design/eng change that caused it:** `multiplayer/state-sync-and-security.md
+  §5.2.1` (D-P1/D-OQ1), `engineering/a3-projector-design.md` §4/§10, invariant tests
+  `tests/Emberfall.Core.Tests/Determinism/SentinelReservationTests.cs`.
 - **cardSetSnapshot changed?** no.
-- **engineContractVersion changed?** no — ruled **no bump** (value-not-shape change; Sam,
-  2026-07-15, DECISION block in the A3 kickoff review record). Stays `interfaces.v3`.
+- **engineContractVersion changed?** no — value-not-shape (same ruling class as OBL-7).
+  Stays `interfaces.v3`.
