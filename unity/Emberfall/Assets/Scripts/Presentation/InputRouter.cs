@@ -43,15 +43,21 @@ namespace Emberfall.Presentation
 
         private InstanceId    _selectedId;
         private CardPresenter _selectedPresenter;
+        private ICommandValidator _validator;
 
-        public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null)
+        public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
+                         ICommandValidator validator = null)
         {
-            _p0Id    = p0Id;
-            _p0Input = p0Input;
-            _db      = db;
+            _p0Id      = p0Id;
+            _p0Input   = p0Input;
+            _db        = db;
+            _validator = validator;
         }
 
-        // Subscribed to MatchRunner.OnStateUpdated; clears selection on turn change.
+        // Subscribed to the P0 session's OnSnapshot — the IMMEDIATE truth cadence, NOT the
+        // queue-delayed MatchRunner.OnStateUpdated (a4-session-seam-design.md §7 / §11 finding 7):
+        // turn gating and selection-clearing must not lag behind the authority while the playback
+        // queue drains, or the player is locked out / acts on a stale turn.
         public void OnStateUpdated(GameState state)
         {
             _currentState = state;
@@ -91,7 +97,7 @@ namespace Emberfall.Presentation
                         // are always clickable targets; own minions only when the selected card actually
                         // wants a chosen target (ANY_* selector), so a stray click on your own board
                         // doesn't fire a vanilla card at slot 0.
-                        _p0Input.Enqueue(new PlayCardIntent(
+                        Submit(new PlayCardIntent(
                             _p0Id, _selectedId, 0,
                             new[] { new TargetRef(card.CardId) }));
                         ClearSelection();
@@ -105,7 +111,7 @@ namespace Emberfall.Presentation
                     }
                     else if (card.OwnerId != _p0Id)
                     {
-                        _p0Input.Enqueue(new AttackIntent(
+                        Submit(new AttackIntent(
                             _p0Id, _selectedId, new TargetRef(card.CardId)));
                         ClearSelection();
                     }
@@ -115,7 +121,7 @@ namespace Emberfall.Presentation
                     // ANY_CHARACTER: any board minion (either side) is a legal pick; hand cards are not.
                     if (card.Zone == Zone.Board)
                     {
-                        _p0Input.Enqueue(new HeroPowerIntent(
+                        Submit(new HeroPowerIntent(
                             _p0Id, new[] { new TargetRef(card.CardId) }));
                         ClearSelection();
                     }
@@ -130,7 +136,7 @@ namespace Emberfall.Presentation
             if (slot.OwnerId != _p0Id) return;
             if (_currentState.ActivePlayer != _p0Id) return;
 
-            _p0Input.Enqueue(new PlayCardIntent(
+            Submit(new PlayCardIntent(
                 _p0Id, _selectedId, slot.SlotIndex,
                 System.Array.Empty<TargetRef>()));
             ClearSelection();
@@ -148,21 +154,21 @@ namespace Emberfall.Presentation
                 case State.AttackerSelected:
                     if (owner != _p0Id)
                     {
-                        _p0Input.Enqueue(new AttackIntent(
+                        Submit(new AttackIntent(
                             _p0Id, _selectedId, new TargetRef(HeroIdOf(owner))));
                         ClearSelection();
                     }
                     break;
 
                 case State.CardSelectedFromHand:
-                    _p0Input.Enqueue(new PlayCardIntent(
+                    Submit(new PlayCardIntent(
                         _p0Id, _selectedId, 0,
                         new[] { new TargetRef(HeroIdOf(owner)) }));
                     ClearSelection();
                     break;
 
                 case State.HeroPowerTargeting:
-                    _p0Input.Enqueue(new HeroPowerIntent(
+                    Submit(new HeroPowerIntent(
                         _p0Id, new[] { new TargetRef(HeroIdOf(owner)) }));
                     ClearSelection();
                     break;
@@ -190,7 +196,7 @@ namespace Emberfall.Presentation
                 _state = State.HeroPowerTargeting; // next minion/hero click supplies the target
                 return;
             }
-            _p0Input.Enqueue(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+            Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
         }
 
         // Mirrors the engine's ValidatePlayCard rule: a play-trigger effect with an explicit-choice
@@ -247,11 +253,27 @@ namespace Emberfall.Presentation
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
             {
                 ClearSelection();
-                _p0Input.Enqueue(new EndTurnIntent(_p0Id));
+                Submit(new EndTurnIntent(_p0Id));
             }
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────────
+
+        // Courtesy pre-validation over the PROJECTED truth state (a4 design §7; ADR-0004 — an
+        // affordance, not prediction). The viewer's own hand/mana/board are un-redacted in their
+        // own projection, so verdicts match the authority for everything except hidden-info
+        // rejects, which the authority still catches. A local reject routes to the same
+        // OnRejected path a server reject would take (toast copy + grey-out styling land in E2).
+        private void Submit(PlayerIntent intent)
+        {
+            if (_validator != null && _currentState != null
+                && !_validator.CanExecute(_currentState, intent, out RejectReason? reason))
+            {
+                _p0Input.OnRejected(reason ?? RejectReason.NotImplemented);
+                return;
+            }
+            _p0Input.Enqueue(intent);
+        }
 
         private void SelectCard(ClickableCard card, State newState)
         {

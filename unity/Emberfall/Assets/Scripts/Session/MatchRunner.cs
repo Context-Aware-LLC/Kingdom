@@ -1,131 +1,173 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using UnityEngine;
 
 namespace Emberfall.Session
 {
+    /// <summary>Whose projection the presentation events carry (a4-session-seam-design.md §4).
+    /// ActiveSeat (two-human hot-seat view flip) is reserved — it has no input driver yet
+    /// (design §11 finding 8); GameBootstrap wires FixedSeat0.</summary>
+    public enum PresentationViewer { FixedSeat0, ActiveSeat }
+
     /// <summary>
-    /// Unity-side session owner (ARCHITECTURE §6 LocalMatchHost path). Owns a LocalMatchHost,
-    /// bridges the two IIntentSources to it each frame via a coroutine, and fires presentation
-    /// events on every state change. Swapped out for NetworkedMatchHost in M2 without touching
-    /// any callers — they all speak through the events below.
+    /// Unity-side session pump (M2 WS A4; a4-session-seam-design.md §4). Speaks ONLY
+    /// <see cref="IMatchSession"/> + <see cref="IIntentSource"/> — never a concrete host, never
+    /// raw state — so B3's NetworkedMatchSession slots in without touching this class or any
+    /// subscriber. Async-tolerant: SubmitAsync may resolve this frame (local) or much later
+    /// (networked); the loop just waits.
+    ///
+    /// Two cadences (design §5/§7):
+    ///  • TRUTH — intent sources get NotifyStateUpdate the moment their session's projection
+    ///    lands (AI replans immediately; input gating reasons on truth).
+    ///  • PRESENTATION — OnStateUpdated/OnMatchEvent/OnMatchEnded fire from the playback queue
+    ///    at commandDelaySeconds pace. Signatures unchanged from M1 (presentation events stable),
+    ///    but per entry OnStateUpdated now fires BEFORE OnMatchEvent: snapshots are fresh
+    ///    projected objects, so event handlers resolving ids need the post-command state (the old
+    ///    events-first order only worked because state was mutated in place).
     /// </summary>
     public sealed class MatchRunner : MonoBehaviour
     {
-        [Tooltip("Pause after each accepted command so state changes land at a watchable pace. " +
-                 "0 = fastest (replay/perf testing). Mulligan picks always pump at full speed.")]
+        [Tooltip("Playback pacing: pause between released command entries so state changes land " +
+                 "at a watchable pace. 0 = fastest (replay/perf testing). Mulligan picks always " +
+                 "play at full speed. Pacing no longer throttles the authority — commands resolve " +
+                 "at truth speed and queue here.")]
         [SerializeField, Range(0f, 3f)] private float commandDelaySeconds = 0.75f;
 
-        /// <summary>Per-command pacing delay in seconds; settable at runtime (e.g. a speed toggle).</summary>
+        /// <summary>Per-entry pacing delay in seconds; settable at runtime (e.g. a speed toggle).</summary>
         public float CommandDelaySeconds
         {
             get => commandDelaySeconds;
             set => commandDelaySeconds = Mathf.Max(0f, value);
         }
 
-        /// <summary>Fires for every accepted command's event batch, in emission order.</summary>
+        /// <summary>Fires per released playback entry with that command's projected event batch.</summary>
         public event Action<IReadOnlyList<GameEvent>> OnMatchEvent;
 
-        /// <summary>Fires after every successful state mutation (accepted command or match start).</summary>
+        /// <summary>Fires per released playback entry with the projected snapshot (match start included).</summary>
         public event Action<GameState> OnStateUpdated;
 
-        /// <summary>Fires once when the match reaches a terminal outcome.</summary>
+        /// <summary>Fires once, after the terminal entry has played out (the lethal blow is visible
+        /// before the banner).</summary>
         public event Action<MatchOutcome> OnMatchEnded;
 
-        private LocalMatchHost _host;
-        private IIntentSource[] _sources; // [0]=P0, [1]=P1
+        private IMatchSession[] _sessions;   // [0]=P0, [1]=P1
+        private IIntentSource[] _sources;    // index-parallel to _sessions
+        private readonly PlaybackQueue _playback = new PlaybackQueue();
         private bool _running;
 
-        public GameState State => _host != null ? _host.State : null;
-
         /// <summary>
-        /// Wire and start a local match. Broadcasts the initial state immediately, then pumps
-        /// intents each frame via a coroutine until the match ends.
+        /// Wire and start pumping a match. Sessions come from LocalMatch.Start (hot-seat / vs-AI)
+        /// or, in M2 B3, a NetworkedMatchSession — construction is the caller's business.
         /// </summary>
         public void StartMatch(
-            ICardDatabase db,
-            MatchSetup setup,
-            IIntentSource p0Source,
-            IIntentSource p1Source,
-            ulong seed = 0)
+            IMatchSession p0Session, IIntentSource p0Source,
+            IMatchSession p1Session, IIntentSource p1Source,
+            PresentationViewer viewerMode = PresentationViewer.FixedSeat0)
         {
-            _sources = new IIntentSource[] { p0Source, p1Source };
+            if (viewerMode == PresentationViewer.ActiveSeat)
+                throw new NotSupportedException(
+                    "ActiveSeat is reserved for a future two-human mode (a4 design §11 finding 8).");
 
-            if (seed == 0)
-                seed = (ulong)UnityEngine.Random.Range(1, int.MaxValue);
+            _sessions = new[] { p0Session, p1Session };
+            _sources  = new[] { p0Source, p1Source };
 
-            var processor = new CommandProcessor(db);
-            _host = new LocalMatchHost(processor, db, setup);
-            _host.OnEvents += events => OnMatchEvent?.Invoke(events);
+            // TRUTH cadence: each source rides its own session's projection stream.
+            for (int i = 0; i < 2; i++)
+            {
+                var source = _sources[i];
+                _sessions[i].OnSnapshot += st => source.NotifyStateUpdate(st);
+            }
 
-            var state = _host.BeginMatch(
-                new MatchId(Guid.NewGuid().ToString("N")),
-                new PlayerId("P0"),
-                new PlayerId("P1"),
-                seed);
+            // PRESENTATION cadence: the viewer session feeds the playback queue. OnSnapshot
+            // fires before OnEvents for the same command (IMatchSession contract), so the
+            // entry exists by the time its batch attaches.
+            var view = _sessions[0]; // FixedSeat0 — the local human/AI seat 0 view
+            view.OnSnapshot += st => _playback.Enqueue(st, instant: st.Phase == TurnPhase.Mulligan);
+            view.OnEvents   += batch => _playback.AttachEventsToNewest(batch);
 
             _running = true;
-            NotifySources(state);
-            OnStateUpdated?.Invoke(state);
-            StartCoroutine(MatchLoop());
+
+            // Initial state: sources replan off it, presentation renders it immediately.
+            for (int i = 0; i < 2; i++)
+                _sources[i].NotifyStateUpdate(_sessions[i].Current);
+            _playback.Enqueue(view.Current, instant: true);
+
+            StartCoroutine(SubmitLoop());
+            StartCoroutine(PlaybackLoop());
         }
 
-        private IEnumerator MatchLoop()
+        private IEnumerator SubmitLoop()
         {
             while (_running)
             {
-                var state = _host.State;
+                // Turn/mulligan flags are PUBLIC — identical on every projection, so any
+                // session's Current answers "who acts?" (a4 design §4, confirmed §11).
+                var state = _sessions[0].Current;
 
                 if (state.Outcome != MatchOutcome.InProgress)
                 {
-                    _running = false;
-                    OnMatchEnded?.Invoke(state.Outcome);
+                    _running = false;   // PlaybackLoop fires OnMatchEnded after the drain
                     yield break;
                 }
 
-                var source = PickSource(state);
-                if (source == null || !source.TryGetIntent(out var intent))
+                int seat = PickSeat(state);
+                if (seat < 0 || !_sources[seat].TryGetIntent(out var intent))
                 {
                     yield return null;
                     continue;
                 }
 
-                var result = _host.Submit(intent);
-                if (!result.Accepted)
-                    source.OnRejected(result.Reason.Value);
+                var task = _sessions[seat].SubmitAsync(intent);
+                while (!task.IsCompleted)
+                    yield return null;   // async-tolerant: local resolves now, networked later
 
-                var newState = _host.State;
-                NotifySources(newState);
-                OnStateUpdated?.Invoke(newState);
-
-                // Pace accepted commands only — rejected intents cost nothing, and mulligan
-                // picks resolve simultaneously in fiction so they shouldn't drip one by one.
-                if (result.Accepted && newState.Phase != TurnPhase.Mulligan && commandDelaySeconds > 0f)
-                    yield return new WaitForSeconds(commandDelaySeconds);
-                else
+                if (task.IsFaulted)
+                {
+                    // Sessions resolve rejects normally — a fault is transport/engine breakage.
+                    Debug.LogError($"[MatchRunner] SubmitAsync faulted: {task.Exception?.GetBaseException()}");
                     yield return null;
+                    continue;
+                }
+
+                var result = task.Result;
+                if (!result.Accepted)
+                    _sources[seat].OnRejected(result.Reason.Value);
+
+                yield return null;
             }
         }
 
-        private void NotifySources(GameState state)
+        private IEnumerator PlaybackLoop()
         {
-            foreach (var s in _sources)
-                s.NotifyStateUpdate(state);
+            while (_running || _playback.Count > 0)
+            {
+                if (_playback.TryDequeue(Time.timeAsDouble, commandDelaySeconds, out var entry))
+                {
+                    OnStateUpdated?.Invoke(entry.Snapshot);
+                    if (entry.Events.Count > 0)
+                        OnMatchEvent?.Invoke(entry.Events);
+
+                    if (entry.Snapshot.Outcome != MatchOutcome.InProgress)
+                    {
+                        OnMatchEnded?.Invoke(entry.Snapshot.Outcome);
+                        yield break;
+                    }
+                }
+                yield return null;
+            }
         }
 
-        private IIntentSource PickSource(GameState state)
+        private int PickSeat(GameState state)
         {
             if (state.Phase == TurnPhase.Mulligan)
             {
-                if (!state.Mulligan0Done) return _sources[0];
-                if (!state.Mulligan1Done) return _sources[1];
-                return null;
+                if (!state.Mulligan0Done) return 0;
+                if (!state.Mulligan1Done) return 1;
+                return -1;
             }
-            return _sources[state.SeatOf(state.ActivePlayer)];
+            return state.SeatOf(state.ActivePlayer);
         }
 
         private void OnDestroy()

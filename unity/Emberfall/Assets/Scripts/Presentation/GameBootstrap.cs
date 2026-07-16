@@ -53,14 +53,22 @@ namespace Emberfall.Presentation
             var p0Id = new PlayerId("P0");
             var p1Id = new PlayerId("P1");
 
+            // ── Session pair (WS A4, a4-session-seam-design.md §3) ────────────────
+            // LocalMatch.Start is the only blessed local-match door: everything below —
+            // sources, presentation, input — sees PROJECTED state only. Swapping in a
+            // NetworkedMatchSession (B3) touches only this block.
+            var (p0Session, p1Session) = LocalMatch.Start(db, setup, p0Id, p1Id);
+
             // ── Intent sources ────────────────────────────────────────────────────
             // Hot-seat: P0 is human-controlled via InputRouter; P1 is AI.
-            // AI-only:  both players are RandomAi (leave inputRouter null).
+            // AI-only:  both players are PlayingAi (leave inputRouter null).
             IIntentSource p0Source;
             if (inputRouter != null)
             {
                 var hotSeat = new HotSeatInput(p0Id);
-                inputRouter.Init(p0Id, hotSeat, db); // db: lets the router detect target-required hero powers
+                // db: target-required detection; validator: courtesy CanExecute affordance
+                // over the projected truth state (a4 design §7 — client-side, no authority role).
+                inputRouter.Init(p0Id, hotSeat, db, new CommandProcessor(db));
                 p0Source = hotSeat;
             }
             else
@@ -83,7 +91,11 @@ namespace Emberfall.Presentation
             // ── Input router subscription ─────────────────────────────────────────
             if (inputRouter != null)
             {
-                matchRunner.OnStateUpdated += inputRouter.OnStateUpdated;
+                // TRUTH cadence, not the playback-paced matchRunner.OnStateUpdated (a4 design
+                // §7 / §11 finding 7): input gating must not lag the authority while the
+                // playback queue drains.
+                p0Session.OnSnapshot += inputRouter.OnStateUpdated;
+                inputRouter.OnStateUpdated(p0Session.Current);
 
                 // Board slot and hero power clickables — must run after SetPlayers() above.
                 if (proceduralBoardSetup != null)
@@ -143,7 +155,7 @@ namespace Emberfall.Presentation
                 MatchEndBanner.Show(outcome, localSeat: 0); // P0 is the local seat in both modes
             };
 
-            matchRunner.StartMatch(db, setup, p0Source, p1Ai);
+            matchRunner.StartMatch(p0Session, p0Source, p1Session, p1Ai);
         }
 
         private void CreateHeroPlate(PlayerId playerId, int seatIndex, Core.Contracts.CardClass heroClass,

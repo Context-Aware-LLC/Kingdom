@@ -31,6 +31,11 @@ namespace Emberfall.Presentation
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
 
+        // Card-backs for projected hidden hands (a4-session-seam-design.md §6). Hidden cards all
+        // share InstanceId(0) with an empty DefinitionId, so they can't ride the id-keyed path —
+        // they're tracked positionally per owner instead.
+        private readonly Dictionary<PlayerId, List<CardPresenter>> _cardBacks = new();
+
         // Tracks every InstanceId that was live last tick so we can destroy departed cards.
         private readonly HashSet<InstanceId> _lastLive = new();
         private readonly HashSet<InstanceId> _thisLive = new();
@@ -86,11 +91,55 @@ namespace Emberfall.Presentation
 
         private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone)
         {
+            // Projected hidden hand: every entry is the redaction sentinel (id 0, empty
+            // DefinitionId — a4 design §6). _db.Get("") would THROW and abort the whole tick,
+            // so sentinel hands take the positional card-back path instead.
+            if (zone == Zone.Hand)
+            {
+                bool hidden = cards.Count > 0 && cards[0].Id.Value == 0;
+                SyncHiddenHand(owner, hidden ? cards.Count : 0);
+                if (hidden) return;
+            }
+
             for (int i = 0; i < cards.Count; i++)
             {
                 CardInstance ci = cards[i];
                 _thisLive.Add(ci.Id);
                 GetOrCreate(ci, owner, zone, i);
+            }
+        }
+
+        // Maintains N card-back presenters for a hidden hand: no def bind, no art, no clickable,
+        // no CardMaterialBinder, no CardLiveState — a card-back must never exist with id 0 or
+        // redacted events would light it up (a4 design §6 / §11 finding 3).
+        private void SyncHiddenHand(PlayerId owner, int count)
+        {
+            if (!_cardBacks.TryGetValue(owner, out List<CardPresenter> backs))
+            {
+                if (count == 0) return;
+                backs = new List<CardPresenter>();
+                _cardBacks[owner] = backs;
+            }
+
+            while (backs.Count > count)
+            {
+                CardPresenter p = backs[backs.Count - 1];
+                backs.RemoveAt(backs.Count - 1);
+                if (p != null) Destroy(p.gameObject);
+            }
+
+            while (backs.Count < count)
+            {
+                int slot = backs.Count;
+                Transform anchor = boardAnchors != null
+                    ? boardAnchors.AnchorFor(owner, Zone.Hand, slot)
+                    : transform;
+
+                CardPresenter presenter = CreatePresenter(anchor != null ? anchor : transform);
+                var binder = presenter.GetComponent<CardMaterialBinder>();
+                if (binder != null) Destroy(binder);
+                presenter.SetHidden();
+                backs.Add(presenter);
             }
         }
 

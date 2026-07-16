@@ -60,6 +60,10 @@ namespace Emberfall.Presentation
         private Vector3? ResolvePosition(InstanceId? id)
         {
             if (id == null || boardAnchors == null || _state == null) return null;
+            // Redaction sentinel guard (a4-session-seam-design.md §11 finding 3): id 0 would
+            // otherwise MATCH the first hidden-hand placeholder in the projected state and play
+            // the effect on a random card-back. Hidden actor → no positional anchor; skip.
+            if (id.Value.Value == 0) return null;
             var t = ResolveTransform(id.Value);
             return t != null ? (Vector3?)t.position : null;
         }

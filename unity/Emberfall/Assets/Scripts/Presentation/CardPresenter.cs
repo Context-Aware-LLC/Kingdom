@@ -88,6 +88,39 @@ namespace Emberfall.Presentation
             artRenderer.gameObject.SetActive(true);
         }
 
+        // Card-back mode for projected hidden cards (a4-session-seam-design.md §6): no definition,
+        // no live state — hide everything face-side and show the back sprite if the atlas has one.
+        public void SetHidden()
+        {
+            if (nameLabel != null)       nameLabel.gameObject.SetActive(false);
+            if (costLabel != null)       costLabel.gameObject.SetActive(false);
+            if (attackLabel != null)     attackLabel.gameObject.SetActive(false);
+            if (healthLabel != null)     healthLabel.gameObject.SetActive(false);
+            if (durabilityLabel != null) durabilityLabel.gameObject.SetActive(false);
+            if (keywordLabel != null)    keywordLabel.gameObject.SetActive(false);
+            if (artRenderer != null)     artRenderer.gameObject.SetActive(false);
+            if (gemRenderer != null)     gemRenderer.gameObject.SetActive(false);
+            if (keywordIcons != null)
+                foreach (var icon in keywordIcons)
+                    if (icon != null) icon.gameObject.SetActive(false);
+
+            // Back sprite if authored ("card_back" atlas key); otherwise the frame stays empty
+            // and the dark body quad reads as the back — acceptable until the asset lands.
+            if (frameRenderer != null && _ui != null)
+            {
+                Sprite back = _ui.Get("card_back");
+                if (back != null) SetSpritePreserveSize(frameRenderer, back);
+            }
+
+            if (cardBackground != null)
+            {
+                if (_mpb == null) _mpb = new MaterialPropertyBlock();
+                cardBackground.GetPropertyBlock(_mpb);
+                _mpb.SetColor("_BaseColor", new Color(0.13f, 0.12f, 0.20f));
+                cardBackground.SetPropertyBlock(_mpb);
+            }
+        }
+
         public void Bind(CardDefinition staticDef, ICardLiveState liveState)
         {
             _def  = staticDef;
