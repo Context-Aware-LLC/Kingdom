@@ -55,7 +55,7 @@
     {
       "$type": "play_card",
       "player": "P0",
-      "card": "i8",
+      "card": "i22",
       "slot": 0,
       "targets": []
     },
@@ -66,7 +66,7 @@
     {
       "$type": "play_card",
       "player": "P1",
-      "card": "i18",
+      "card": "i32",
       "slot": 0,
       "targets": []
     },
@@ -77,13 +77,13 @@
     {
       "$type": "attack",
       "player": "P0",
-      "attacker": "i8",
-      "defender": "i18"
+      "attacker": "i22",
+      "defender": "i32"
     }
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "f8e659674fd1eca3ba630e27cade20c9b14c504e33a1dd278b4c1ea26224aea7",
+    "stateHash": "6c538f38509dd9e675dae445e02ebf4373cce8703b418185d084edcc2af7c4da",
     "eventStream": [
       {
         "seq": 0,
@@ -96,7 +96,7 @@
       {
         "seq": 1,
         "kind": "onDraw",
-        "src": "i3",
+        "src": "i25",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -120,7 +120,7 @@
       {
         "seq": 4,
         "kind": "onDraw",
-        "src": "i12",
+        "src": "i36",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -144,7 +144,7 @@
       {
         "seq": 7,
         "kind": "onDraw",
-        "src": "i11",
+        "src": "i26",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -152,7 +152,7 @@
       {
         "seq": 8,
         "kind": "onPlay",
-        "src": "i8",
+        "src": "i22",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -176,7 +176,7 @@
       {
         "seq": 11,
         "kind": "onDraw",
-        "src": "i15",
+        "src": "i37",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -184,7 +184,7 @@
       {
         "seq": 12,
         "kind": "onPlay",
-        "src": "i18",
+        "src": "i32",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -208,7 +208,7 @@
       {
         "seq": 15,
         "kind": "onDraw",
-        "src": "i4",
+        "src": "i27",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -216,31 +216,31 @@
       {
         "seq": 16,
         "kind": "onAttack",
-        "src": "i8",
-        "tgt": "i18",
+        "src": "i22",
+        "tgt": "i32",
         "amt": null,
         "flags": "None"
       },
       {
         "seq": 17,
         "kind": "onDamage",
-        "src": "i8",
-        "tgt": "i18",
+        "src": "i22",
+        "tgt": "i32",
         "amt": 2,
         "flags": "None"
       },
       {
         "seq": 18,
         "kind": "onDamage",
-        "src": "i18",
-        "tgt": "i8",
+        "src": "i32",
+        "tgt": "i22",
         "amt": 2,
         "flags": "None"
       },
       {
         "seq": 19,
         "kind": "onDeath",
-        "src": "i8",
+        "src": "i22",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -248,7 +248,7 @@
       {
         "seq": 20,
         "kind": "onDeath",
-        "src": "i18",
+        "src": "i32",
         "tgt": null,
         "amt": null,
         "flags": "None"
@@ -256,7 +256,7 @@
       {
         "seq": 21,
         "kind": "onSummon",
-        "src": "i23",
+        "src": "i43",
         "tgt": null,
         "amt": null,
         "flags": "IsToken"
@@ -264,7 +264,7 @@
       {
         "seq": 22,
         "kind": "onSummon",
-        "src": "i24",
+        "src": "i44",
         "tgt": null,
         "amt": null,
         "flags": "IsToken"

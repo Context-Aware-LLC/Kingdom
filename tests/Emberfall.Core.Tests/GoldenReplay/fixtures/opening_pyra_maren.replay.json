@@ -47,7 +47,7 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "ee125dbf0804139717a7af3568b3d45254d10e3e7d2dc4ee4b8bef13ddd5f894",
+    "stateHash": "566033d5907cfd09b9d959a6754600b6a5e8511e415a183a3a74a9bd6e08c976",
     "eventStream": [
       {
         "seq": 0,
@@ -60,7 +60,7 @@
       {
         "seq": 1,
         "kind": "onDraw",
-        "src": "i3",
+        "src": "i25",
         "tgt": null,
         "amt": null,
         "flags": "None"

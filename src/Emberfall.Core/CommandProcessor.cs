@@ -239,7 +239,7 @@ namespace Emberfall.Core
                     card.Zone = Zone.Deck;
                     ps.Deck.Add(card);
                 }
-                state.Rng.Shuffle(ps.Deck);
+                DeckOps.Shuffle(state, ps);   // shuffles AND re-mints deck ids (OBL-7)
             }
 
             if (seat == 0) state.Mulligan0Done = true; else state.Mulligan1Done = true;

@@ -58,8 +58,10 @@ namespace Emberfall.Core
             state.ActivePlayer = state.Players[firstSeat].Id;
 
             // (2)(3) shuffle decks, seat order, AFTER the coin flip — a fixed RNG call order.
-            rng.Shuffle(ps0.Deck);
-            rng.Shuffle(ps1.Deck);
+            // DeckOps.Shuffle re-mints deck ids in post-shuffle order (OBL-7): the BuildDeck ids
+            // above are decklist ordinals and must never survive into a dealt/drawn card.
+            DeckOps.Shuffle(state, ps0);
+            DeckOps.Shuffle(state, ps1);
 
             // (4) deal opening hands: first player 3, second player 4 (GDD §1b).
             PlayerState first = state.Players[firstSeat];
