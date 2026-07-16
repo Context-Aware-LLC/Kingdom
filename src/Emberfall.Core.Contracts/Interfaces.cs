@@ -32,5 +32,14 @@ namespace Emberfall.Core.Contracts
         GameState BeginMatch(MatchId id, PlayerId p0, PlayerId p1, ulong seed);
         CommandResult Submit(PlayerIntent intent);
         event GameEventStream OnEvents;
+
+        /// <summary>
+        /// The wire payload (interfaces.md v3 §2, decisions/ADR-0006): the FULL projected snapshot
+        /// for one viewer — a pure GameState→GameState redaction returning the same concrete type,
+        /// stripped of what <paramref name="viewer"/> may not see (opponent hand, deck order, live
+        /// RNG, undisclosed pools). Every state payload that leaves the server is this output
+        /// (state-sync-and-security.md §5.3 — no raw-state path).
+        /// </summary>
+        GameState Snapshot(PlayerId viewer);
     }
 }

@@ -180,10 +180,22 @@ namespace Emberfall.Core
 
         // ── Execute (Validate → Apply → Emit) ────────────────────────────────────
 
+        /// <summary>
+        /// Emit-time visibility sidecar for the events of the LAST accepted Execute call,
+        /// index-parallel to that call's <see cref="CommandResult.Events"/> (a3-projector-design.md
+        /// §6.1). Server-side only — feeds <c>GameStateProjector.ProjectEvent</c>; never serialized.
+        /// Empty after a rejected command (rejects emit nothing).
+        /// </summary>
+        public IReadOnlyList<Projection.EventVisibility> LastEventVisibility { get; private set; }
+            = System.Array.Empty<Projection.EventVisibility>();
+
         public CommandResult Execute(GameState state, PlayerIntent intent)
         {
             if (!CanExecute(state, intent, out var reason))
+            {
+                LastEventVisibility = System.Array.Empty<Projection.EventVisibility>();
                 return CommandResult.Rejected(reason!.Value, state.StateVersion);
+            }
 
             var buf = new EventBuffer(state);
 
@@ -200,6 +212,7 @@ namespace Emberfall.Core
             }
 
             state.StateVersion++;
+            LastEventVisibility = buf.Visibility;
             return CommandResult.Ok(buf.Events, state.StateVersion);
         }
 
@@ -378,6 +391,9 @@ namespace Emberfall.Core
             {
                 Zone = Zone.Graveyard
             };
+            // The ephemeral source never enters a zone, so emit-time zone lookup can't classify
+            // it — mark it public explicitly: the hero power's act is public (design §6.1).
+            buf.MarkPublic(src.Id);
 
             buf.Emit(VfxEvent.onHeroPower, source: ps.Hero.Id);
 

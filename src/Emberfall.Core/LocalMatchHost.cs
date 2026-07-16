@@ -42,5 +42,14 @@ namespace Emberfall.Core
                 OnEvents?.Invoke(result.Events);
             return result;
         }
+
+        /// <summary>
+        /// The projected wire payload (ADR-0006, WS A3). NOTE (a3-projector-design.md §9): in this
+        /// in-process host, <see cref="State"/> and <see cref="OnEvents"/> remain RAW, unprojected
+        /// paths until A4/B1 route consumers through IMatchSession/ProjectEvent — local consumers
+        /// binding to them instead of Snapshot(viewer) is the tracked honest-AI gap (§7.1 test 6).
+        /// </summary>
+        public GameState Snapshot(PlayerId viewer)
+            => Projection.GameStateProjector.Project(State, viewer);
     }
 }
