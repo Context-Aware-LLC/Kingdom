@@ -48,7 +48,7 @@ namespace Emberfall.Presentation
             }
 
             ICardDatabase db    = LoadCardDatabase();
-            MatchSetup    setup = PrebuiltDecks.EmberwardVsTidecaller();
+            MatchSetup    setup = Emberfall.Data.PrebuiltDecks.EmberwardVsTidecaller();
 
             var p0Id = new PlayerId("P0");
             var p1Id = new PlayerId("P1");
