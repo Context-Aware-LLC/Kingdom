@@ -21,7 +21,9 @@ namespace Emberfall.Core.Tests.Determinism
     {
         private static readonly string[] CoreAssemblies =
         {
-            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts"
+            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts",
+            "Emberfall.Core.Serialization",   // pre-existing gap closed alongside A5 enrollment
+            "Emberfall.Net.Protocol"          // A5 §10.8
         };
 
         [Test]

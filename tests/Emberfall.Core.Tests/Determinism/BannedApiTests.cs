@@ -25,12 +25,14 @@ namespace Emberfall.Core.Tests.Determinism
     {
         private static readonly string[] CoreAssemblies =
         {
-            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts", "Emberfall.Core.Serialization"
+            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts", "Emberfall.Core.Serialization",
+            "Emberfall.Net.Protocol"   // A5 §10.8 — the wire is float-free by the same structural guard
         };
 
         private static readonly string[] CoreSourceDirs =
         {
-            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts", "Emberfall.Core.Serialization"
+            "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts", "Emberfall.Core.Serialization",
+            "Emberfall.Net.Protocol"
         };
 
         private static readonly string[] BannedTokens =

@@ -30,8 +30,14 @@ namespace Emberfall.Core.Tests.GoldenReplay
             public ReplayDivergenceReport? Report;
         }
 
-        /// <summary>Run the fixture and capture actual outputs (no assertions — caller decides).</summary>
-        public static ReplayResult Run(ReplayFixture fx)
+        /// <summary>
+        /// Run the fixture and capture actual outputs (no assertions — caller decides).
+        /// <paramref name="onState"/> (A5, a5-wire-protocol-design.md §6): invoked with the live
+        /// authoritative state after <c>BeginMatch</c> and after every accepted command — this is
+        /// how the wire bridge test obtains its per-command reachable-state corpus. The reference
+        /// is to the MUTABLE host state: consume it synchronously inside the callback, never store it.
+        /// </summary>
+        public static ReplayResult Run(ReplayFixture fx, Action<GameState>? onState = null)
         {
             var snapshotPath = Path.Combine(RepoPaths.CardSetsDir, fx.CardSetSnapshot);
             var db = JsonCardDatabase.FromSnapshotFile(snapshotPath);
@@ -40,6 +46,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             var host = new LocalMatchHost(processor, db, setup);
 
             host.BeginMatch(fx.MatchId, fx.P0, fx.P1, fx.Seed);   // core-driven opening (interfaces.md §2.1)
+            onState?.Invoke(host.State);
 
             var stream = new List<GameEvent>();
             foreach (var intent in fx.Intents)
@@ -50,6 +57,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
                         $"Fixture '{fx.Name}' submitted an illegal intent ({intent.GetType().Name}) → {result.Reason}. " +
                         "A golden fixture must contain only legal intents.");
                 stream.AddRange(result.Events);   // Sequence is global, so a flat append preserves order
+                onState?.Invoke(host.State);
             }
 
             var actualHash = GameStateHasher.Hash(host.State);

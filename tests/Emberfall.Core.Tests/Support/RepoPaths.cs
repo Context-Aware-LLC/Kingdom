@@ -11,9 +11,14 @@ namespace Emberfall.Core.Tests.Support
     /// </summary>
     public static class RepoPaths
     {
-        /// <summary>The Emberfall.Core.Tests project directory (contains the GoldenReplay/ tree).</summary>
-        public static string TestProjectDir => _testProjectDir ??= FindUp(
-            d => Directory.Exists(Path.Combine(d, "GoldenReplay", "fixtures")));
+        /// <summary>
+        /// The Emberfall.Core.Tests project directory (contains the GoldenReplay/ tree). The walk-up
+        /// works when running inside this project; sibling test projects (A5's wire tests share the
+        /// fixtures + harness) resolve via the repo root instead.
+        /// </summary>
+        public static string TestProjectDir => _testProjectDir ??= TryFindUp(
+            d => Directory.Exists(Path.Combine(d, "GoldenReplay", "fixtures")))
+            ?? Path.Combine(RepoRoot, "tests", "Emberfall.Core.Tests");
 
         /// <summary>The repository root (contains the .git folder or Emberfall.slnx).</summary>
         public static string RepoRoot => _repoRoot ??= FindUp(
@@ -36,6 +41,10 @@ namespace Emberfall.Core.Tests.Support
         private static string? _repoRoot;
 
         private static string FindUp(Func<string, bool> predicate)
+            => TryFindUp(predicate) ?? throw new DirectoryNotFoundException(
+                $"Could not locate target directory walking up from '{AppContext.BaseDirectory}'.");
+
+        private static string? TryFindUp(Func<string, bool> predicate)
         {
             var dir = AppContext.BaseDirectory;
             while (!string.IsNullOrEmpty(dir))
@@ -45,8 +54,7 @@ namespace Emberfall.Core.Tests.Support
                 if (parent == null) break;
                 dir = parent.FullName;
             }
-            throw new DirectoryNotFoundException(
-                $"Could not locate target directory walking up from '{AppContext.BaseDirectory}'.");
+            return null;
         }
     }
 }

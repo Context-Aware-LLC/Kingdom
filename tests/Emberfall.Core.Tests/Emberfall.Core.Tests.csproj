@@ -27,6 +27,8 @@
     <ProjectReference Include="..\..\src\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core\Emberfall.Core.csproj" />
+    <!-- A5: referenced so the firewall/banned-API scans can Assembly.Load the wire assembly. -->
+    <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
   </ItemGroup>
 
 </Project>

@@ -265,7 +265,11 @@ namespace Emberfall.Core.Tests.Projection
 
             var minion = new CardInstance(s.NextInstanceId(), "vanilla", s.Players[1].Id)
             {
-                Zone = Zone.Board, CurrentAttack = 1, CurrentHealth = 1, MaxHealth = 1, Position = 0,
+                Zone = Zone.Board,
+                CurrentAttack = 1,
+                CurrentHealth = 1,
+                MaxHealth = 1,
+                Position = 0,
             };
             s.Players[1].Board.Add(minion);
             var spell = PutInHand(s, 0, "bounce");
