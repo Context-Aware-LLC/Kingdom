@@ -4,6 +4,8 @@
   "references": [
     "Emberfall.Core.Contracts",
     "Emberfall.Core.Cards",
+    "Emberfall.Core.Serialization",
+    "Emberfall.Net.Protocol",
     "Emberfall.Data",
     "Unity.Addressables",
     "Unity.Addressables.Editor",

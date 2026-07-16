@@ -40,6 +40,18 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.emberfall.core.serialization": {
+      "version": "file:../../../src/Emberfall.Core.Serialization",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.emberfall.net.protocol": {
+      "version": "file:../../../src/Emberfall.Net.Protocol",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 1,
