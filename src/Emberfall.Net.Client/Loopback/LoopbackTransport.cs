@@ -30,6 +30,12 @@ namespace Emberfall.Net.Client.Loopback
 
         public event Action<WireCloseReason>? OnClosed;
 
+        /// <summary>Phase-3 impairment injection point (§8, §10 soak/loss gate): return true to DROP
+        /// a server→client frame. Null (default) delivers everything, which is what keeps commit-1
+        /// determinism intact. Latency/jitter attach here too once the reconnect timer path (commit
+        /// 3+) can recover from the induced loss — until then the soak runs it at zero.</summary>
+        public Func<byte[], bool>? DropInbound { get; set; }
+
         public Task ConnectAsync(Uri uri, CancellationToken ct) => Task.CompletedTask;
 
         public Task SendAsync(ReadOnlyMemory<byte> utf8, CancellationToken ct)
@@ -87,6 +93,7 @@ namespace Emberfall.Net.Client.Loopback
         /// picks it up on its next <see cref="ReceiveAsync"/>.</summary>
         public void EnqueueInbound(byte[] frame)
         {
+            if (DropInbound is not null && DropInbound(frame)) return; // Phase-3 loss injection (§8)
             TaskCompletionSource<byte[]?>? waiter = null;
             lock (_gate)
             {
