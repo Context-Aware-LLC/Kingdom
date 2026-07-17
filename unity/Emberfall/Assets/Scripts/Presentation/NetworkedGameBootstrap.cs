@@ -9,6 +9,7 @@ using Emberfall.Data;
 using Emberfall.Net.Client;
 using Emberfall.Session;
 using UnityEngine;
+using Action = System.Action;
 
 namespace Emberfall.Presentation
 {

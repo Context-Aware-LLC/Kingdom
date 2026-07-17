@@ -54,8 +54,8 @@ namespace Emberfall.Net.Client
     /// <summary>RC-F7 interim record: we resolved a submit <c>Ok</c> off a snapshot that a server
     /// clock produced, and the real intent came back rejected. Belief was wrong; the mirror was
     /// not (b3 §4.4). Logged, never acted on beyond the log.</summary>
-    public readonly record struct Misattribution(string MatchId, int Seat, ulong PendingSeq, string RejectReason, ulong StateVersion);
+    public sealed record Misattribution(string MatchId, int Seat, ulong PendingSeq, string RejectReason, ulong StateVersion);
 
     /// <summary>§6.3 capture: enough to replay the decode locally in a unit test (the playbook input).</summary>
-    public readonly record struct DesyncCapture(string MatchId, int Seat, ulong StateVersion, ulong EnvelopeSeq, string WireHash, string LocalHash, byte[] RawFrame);
+    public sealed record DesyncCapture(string MatchId, int Seat, ulong StateVersion, ulong EnvelopeSeq, string WireHash, string LocalHash, byte[] RawFrame);
 }
