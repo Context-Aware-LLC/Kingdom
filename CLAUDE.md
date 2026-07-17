@@ -53,6 +53,37 @@ See `src/README.md` for the engine map.
 - `tooling/` — card authoring tool, pipeline automation, validation/import
 - `ui/` — design system, UX flows
 
+## Bookkeeping is part of done (Sam + Claude, 2026-07-17)
+
+**HARD RULE. There is no "done" until the record is updated.** If a change discharges a
+condition, closes a workstream row, or supersedes a spec version, **the tracker moves in
+the same change** — not next session, not "when we get to it." Landing work without
+landing its bookkeeping is not a partial success; it is not done.
+
+Trackers that must stay current:
+
+- `M2-KICKOFF.md` §3 register — every row carries a **Status**. **Never overwrite the
+  scope column**: scope is what we asked for, Status is what happened.
+- `M2-G0-REVIEW.md` §5 discharge log — §1–§4 are gate-day minutes, left as written; §5
+  is the live status.
+- `engineering/spec-reconciliation-2026-07.md` — the drift tracker.
+
+The pattern to copy is `engineering/b1-match-server-design.md`, whose landing sequence
+lists the kickoff-row update as an explicit step. Every landing sequence should carry one.
+
+**Why:** an overnight loop (~2026-07-15/16) discharged four G0 conditions correctly and
+updated no tracker. Three days later an orientation pass read the stale docs and concluded
+a spec was missing that was on disk, and that C-G0-5 was one miss from firing E4 when it
+had never been missed. **A stale record is indistinguishable from a miss** — same
+re-derivation cost, plus false alarms. The work was honest; the paper trail lied. This is
+M1's skipped-gate failure mode in a new costume. See gbrain
+`decisions/bookkeeping-is-part-of-done`.
+
+**Autonomous loops:** not banned — this rule is what makes a ban unnecessary. But keep
+loops out of **gate state and change control** (WS A1 / F1), where the artifact *is* the
+record and an unattended error compounds. Spec'd implementation work with a real test is
+fine to loop. Final ruling deferred to the **G1 panel**.
+
 ## Conventions
 
 - Specs are the source of truth until code exists. When specs disagree, the
