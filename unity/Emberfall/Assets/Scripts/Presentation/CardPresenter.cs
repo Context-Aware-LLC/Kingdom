@@ -142,6 +142,9 @@ namespace Emberfall.Presentation
         {
             _isSelected = selected;
             ApplyAuras();
+            // The BG tint alone is invisible under the art/frame layers — the rim glow
+            // (slightly larger than the card face) is the readable selection cue.
+            GetComponent<CardMaterialBinder>()?.SetAffordanceGlow(selected);
         }
 
         private void OnDestroy() => Unbind();

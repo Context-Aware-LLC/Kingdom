@@ -19,6 +19,10 @@ namespace Emberfall.Presentation
             {
                 var col = gameObject.AddComponent<BoxCollider>();
                 col.size = new Vector3(0.85f, 1.05f, 0.1f);
+                // Strictly behind the card root colliders (z ±0.05 at the same anchor): an exact
+                // depth tie is broken arbitrarily per collider, letting the slot steal clicks
+                // from the card sitting on it (attacks silently dead on the losing slots).
+                col.center = new Vector3(0f, 0f, 0.2f);
             }
         }
 

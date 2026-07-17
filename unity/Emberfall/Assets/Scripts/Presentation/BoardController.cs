@@ -265,7 +265,9 @@ namespace Emberfall.Presentation
             Destroy(glowGo.GetComponent<MeshCollider>());
             var glowRenderer = glowGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(glowRenderer, MaterialCatalog.Glow);
-            glowGo.SetActive(false);
+            // GO stays active, renderer starts disabled: CardMaterialBinder toggles
+            // Renderer.enabled, which is inert on an inactive GameObject.
+            glowRenderer.enabled = false;
 
             // Aegis underlay — slightly larger, just behind. SG_Aegis material assigned later.
             var aegisGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -276,7 +278,9 @@ namespace Emberfall.Presentation
             Destroy(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(aegisRenderer, MaterialCatalog.Aegis);
-            aegisGo.SetActive(false);
+            // Same as the glow overlay: active GO, disabled renderer (taunt/shield ring
+            // never displayed before this — the binder's enable was a no-op).
+            aegisRenderer.enabled = false;
 
             // Art window — upper card face, in front of BG, behind labels. Texture assigned
             // via CardPresenter.SetArt when the IArtProvider resolves; hidden until then.

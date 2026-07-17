@@ -102,6 +102,10 @@ namespace Emberfall.Presentation
                             new[] { new TargetRef(card.CardId) }));
                         ClearSelection();
                     }
+                    else if (card.OwnerId == _p0Id)
+                    {
+                        Reselect(card); // clicking another of our cards switches selection, not a dead click
+                    }
                     break;
 
                 case State.AttackerSelected:
@@ -114,6 +118,10 @@ namespace Emberfall.Presentation
                         Submit(new AttackIntent(
                             _p0Id, _selectedId, new TargetRef(card.CardId)));
                         ClearSelection();
+                    }
+                    else
+                    {
+                        Reselect(card); // clicking another of our cards switches selection, not a dead click
                     }
                     break;
 
@@ -151,12 +159,30 @@ namespace Emberfall.Presentation
 
             switch (_state)
             {
+                case State.Idle:
+                    // Our hero is also an attacker when armed (engine: ValidateAttack IsHero +
+                    // weapon). Select it like a board minion; the validator rejects a weaponless
+                    // swing. No CardPresenter on the hero plate, so no highlight yet.
+                    if (owner == _p0Id
+                        && _currentState.ActivePlayer == _p0Id
+                        && _currentState.Phase == TurnPhase.Main)
+                    {
+                        _selectedId        = HeroIdOf(owner);
+                        _selectedPresenter = null;
+                        _state             = State.AttackerSelected;
+                    }
+                    break;
+
                 case State.AttackerSelected:
                     if (owner != _p0Id)
                     {
                         Submit(new AttackIntent(
                             _p0Id, _selectedId, new TargetRef(HeroIdOf(owner))));
                         ClearSelection();
+                    }
+                    else if (_selectedId.Equals(HeroIdOf(owner)))
+                    {
+                        ClearSelection(); // second click on our selected hero deselects
                     }
                     break;
 
@@ -273,6 +299,18 @@ namespace Emberfall.Presentation
                 return;
             }
             _p0Input.Enqueue(intent);
+        }
+
+        // Switch selection to another of our own cards mid-selection, mirroring the Idle-state
+        // entry rules (Main phase, our turn). Hand → CardSelectedFromHand, board → AttackerSelected.
+        private void Reselect(ClickableCard card)
+        {
+            if (_currentState.ActivePlayer != _p0Id) return;
+            if (_currentState.Phase != TurnPhase.Main) return;
+            if (card.Zone == Zone.Hand)
+                SelectCard(card, State.CardSelectedFromHand);
+            else if (card.Zone == Zone.Board)
+                SelectCard(card, State.AttackerSelected);
         }
 
         private void SelectCard(ClickableCard card, State newState)
