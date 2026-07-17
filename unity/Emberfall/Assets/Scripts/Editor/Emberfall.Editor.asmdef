@@ -6,6 +6,7 @@
     "Emberfall.Core.Cards",
     "Emberfall.Core.Serialization",
     "Emberfall.Net.Protocol",
+    "Emberfall.Net.Client",
     "Emberfall.Data",
     "Unity.Addressables",
     "Unity.Addressables.Editor",

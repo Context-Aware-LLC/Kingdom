@@ -8,6 +8,7 @@
     "Emberfall.Data",
     "Emberfall.Session",
     "Emberfall.AI",
+    "Emberfall.Net.Client",
     "Unity.TextMeshPro",
     "Unity.Addressables",
     "Unity.ResourceManager"

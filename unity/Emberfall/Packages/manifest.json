@@ -5,6 +5,7 @@
     "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
     "com.emberfall.core.contracts": "file:../../../src/Emberfall.Core.Contracts",
     "com.emberfall.core.serialization": "file:../../../src/Emberfall.Core.Serialization",
+    "com.emberfall.net.client": "file:../../../src/Emberfall.Net.Client",
     "com.emberfall.net.protocol": "file:../../../src/Emberfall.Net.Protocol",
     "com.unity.addressables": "2.9.1",
     "com.unity.ai.assistant": "2.13.0-pre.2",

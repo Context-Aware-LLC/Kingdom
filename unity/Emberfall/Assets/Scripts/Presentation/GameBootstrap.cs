@@ -55,8 +55,10 @@ namespace Emberfall.Presentation
 
             // ── Session pair (WS A4, a4-session-seam-design.md §3) ────────────────
             // LocalMatch.Start is the only blessed local-match door: everything below —
-            // sources, presentation, input — sees PROJECTED state only. Swapping in a
-            // NetworkedMatchSession (B3) touches only this block.
+            // sources, presentation, input — sees PROJECTED state only. The networked boot is
+            // NOT a swap of this block — it is the sibling NetworkedGameBootstrap (b3 §3.1/F4):
+            // the server deals decks/ids/seat, connect+pair is async, and hero classes ride the
+            // projected snapshot. This local boot stays hot-seat and must remain green (C1 entry).
             var (p0Session, p1Session) = LocalMatch.Start(db, setup, p0Id, p1Id);
 
             // ── Intent sources ────────────────────────────────────────────────────
@@ -152,7 +154,8 @@ namespace Emberfall.Presentation
             matchRunner.OnMatchEnded += outcome =>
             {
                 Debug.Log($"[Match] OVER — {outcome}");
-                MatchEndBanner.Show(outcome, localSeat: 0); // P0 is the local seat in both modes
+                MatchEndBanner.Show(outcome, localSeat: 0); // hot-seat: the local view is always seat 0
+                                                            // (networked uses localSeat: net.Seat — NetworkedGameBootstrap)
             };
 
             matchRunner.StartMatch(p0Session, p0Source, p1Session, p1Ai);
