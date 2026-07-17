@@ -1,0 +1,14 @@
+{
+  "name": "Emberfall.Net.Client",
+  "rootNamespace": "Emberfall.Net.Client",
+  "references": ["Emberfall.Core.Contracts", "Emberfall.Core.Serialization", "Emberfall.Net.Protocol"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

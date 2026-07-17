@@ -1,0 +1,445 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Emberfall.Core.Contracts;
+using Emberfall.Net.Protocol;
+
+namespace Emberfall.Net.Client
+{
+    /// <summary>
+    /// The B3 client seam (b3-networked-session-design.md §3): turns the A5 message stream off an
+    /// <see cref="IWireTransport"/> into exactly the <see cref="IMatchSession"/> events
+    /// <c>MatchRunner</c> and presentation have consumed from <c>LocalMatchSession</c> since A4,
+    /// plus the connection lifecycle a socket makes necessary.
+    ///
+    /// NOT a second authority (ADR-0002/0004/0006): no prediction, no delta apply, no local
+    /// re-simulation. It holds a <b>mirror</b> — a projected <see cref="GameState"/> replaced
+    /// WHOLESALE by each applied snapshot and never mutated by the client.
+    ///
+    /// THREADING: inbound handling runs on one receive-pump task; the public events fire from it.
+    /// <see cref="SubmitAsync"/> is called from the runner's loop. Resolution is idempotent
+    /// (<c>TrySetResult</c>, RC-F7) so a late reject for an already-resolved seq can never throw.
+    /// </summary>
+    public sealed class NetworkedMatchSession : IMatchSession, IDisposable
+    {
+        private readonly IWireTransport _transport;
+        private readonly ClientOptions _opts;
+        private readonly object _lock = new object();
+
+        private ConnectionState _state = ConnectionState.Idle;
+        private DeadReason _deadReason = DeadReason.None;
+
+        private GameState? _current;
+        private MatchId _matchId;
+        private int _seat = -1;
+        private PlayerId _player;
+
+        private ulong _outSeq;
+        private long _lastSendMs;
+        private long _lastRecvMs;
+
+        // Pending submit (single in flight — §7.1). The TCS resolves on reject or version-advance.
+        private TaskCompletionSource<CommandResult>? _pending;
+        private ulong _pendingSeq;
+        // Last seq we resolved Ok by version-advance inference — used to detect the RC-F7 late reject.
+        private ulong _lastOkSeq;
+        private bool _haveLastOkSeq;
+
+        // Event ordering (§5.2): batches whose snapshot has not yet applied, keyed by version.
+        private readonly Dictionary<ulong, IReadOnlyList<GameEvent>> _pendingEvents = new Dictionary<ulong, IReadOnlyList<GameEvent>>();
+        private const int MaxPendingEvents = 8;
+
+        private int _resyncCount;
+        private bool _resyncPending;
+
+        private CancellationTokenSource? _pumpCts;
+        private Task? _pumpTask;
+        private TaskCompletionSource<bool>? _matchStarted;
+
+        // Inbound-processed high-water for deterministic tests (no Task.Delay): each handled frame
+        // bumps the counter and releases waiters at or below it.
+        private int _inboundProcessed;
+        private readonly List<(int threshold, TaskCompletionSource<bool> tcs)> _inboundWaiters = new List<(int, TaskCompletionSource<bool>)>();
+
+        public NetworkedMatchSession(IWireTransport transport, ClientOptions? options = null)
+        {
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _opts = options ?? new ClientOptions();
+            _transport.OnClosed += OnTransportClosed;
+        }
+
+        // ── IMatchSession ─────────────────────────────────────────────────────────
+
+        public ulong StateVersion => _current?.StateVersion ?? 0;
+
+        public GameState Current =>
+            _current ?? throw new InvalidOperationException("No snapshot yet — await ConnectAsync before reading Current.");
+
+        public event Action<GameState>? OnSnapshot;
+        public event GameEventStream? OnEvents;
+
+        public Task<CommandResult> SubmitAsync(PlayerIntent intent)
+        {
+            if (intent is null) throw new ArgumentNullException(nameof(intent));
+            Task<CommandResult> task;
+            lock (_lock)
+            {
+                if (_pending is not null)
+                    throw new InvalidOperationException(
+                        "A submit is already in flight — the seam is single-in-flight (§7.1). " +
+                        "MatchRunner.SubmitLoop enforces this; a second call is programmer error.");
+                if (_state != ConnectionState.Live)
+                    return Task.FromResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
+
+                var tcs = new TaskCompletionSource<CommandResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _pending = tcs;
+                _pendingSeq = ++_outSeq;
+                _pendingLastVersion = _current?.StateVersion ?? 0;
+                SendUnlocked(new IntentMsg(_pendingLastVersion, intent), _pendingSeq);
+                task = tcs.Task;
+            }
+            OnPendingChanged?.Invoke(true);
+            return task;
+        }
+
+        // ── Concrete surface (§7.1 — deliberately not on IMatchSession) ─────────────
+
+        /// <summary>MatchStartMsg.Seat — the local engine seat. Feeds <c>SeatOwnership.Single</c>.</summary>
+        public int Seat => _seat;
+        public PlayerId Player => _player;
+        public ConnectionState State { get { lock (_lock) return _state; } }
+        public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
+        public bool HasPendingSubmit { get { lock (_lock) return _pending is not null; } }
+        /// <summary>True while a resync we sent is awaiting the server's same-version answer (RC-F8).</summary>
+        public bool ResyncPending { get { lock (_lock) return _resyncPending; } }
+        /// <summary>Inbound frames fully handled — a deterministic test-sync surface (§11).</summary>
+        public int InboundProcessed { get { lock (_lock) return _inboundProcessed; } }
+        /// <summary>Resyncs requested this match (§4.5 budget diagnostic).</summary>
+        public int ResyncCount { get { lock (_lock) return _resyncCount; } }
+
+        public event Action<bool>? OnPendingChanged;
+        public event Action<ConnectionState>? OnConnectionStateChanged;
+
+        // ── Lifecycle ───────────────────────────────────────────────────────────────
+
+        /// <summary>Connect, pair, and resolve when the match has started (first snapshot applied)
+        /// — or fault on a terminal <see cref="ConnectionState.Dead"/> (b3 §3, §4).</summary>
+        public async Task ConnectAsync(Uri uri, CancellationToken ct = default)
+        {
+            SetState(ConnectionState.Connecting);
+            _matchStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            await _transport.ConnectAsync(uri, ct).ConfigureAwait(false);
+            SetState(ConnectionState.Pairing);
+            StartPump();
+            await _matchStarted.Task.ConfigureAwait(false);
+        }
+
+        private void StartPump()
+        {
+            _pumpCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None);
+            _pumpTask = Task.Run(() => PumpLoopAsync(_pumpCts.Token));
+        }
+
+        private async Task PumpLoopAsync(CancellationToken ct)
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    byte[]? frame = await _transport.ReceiveAsync(ct).ConfigureAwait(false);
+                    if (frame is null) { OnPeerClosed(); break; }
+                    HandleFrame(frame);
+                }
+            }
+            catch (OperationCanceledException) { /* shutting down */ }
+            catch (Exception) { OnPeerClosed(); }
+        }
+
+        // ── Inbound ───────────────────────────────────────────────────────────────
+
+        /// <summary>Decode + dispatch one frame. NEVER throws on wire input — a decode failure is a
+        /// <c>resync(DecodeError)</c> (§4.5), not an exception.</summary>
+        internal void HandleFrame(byte[] frame)
+        {
+            _lastRecvMs = _opts.Clock.NowMs;
+            var res = ProtocolCodec.Decode(frame);
+            if (!res.Ok)
+            {
+                RequestResync(ResyncReason.DecodeError, StateVersion);
+                BumpInbound();
+                return;
+            }
+
+            switch (res.Message)
+            {
+                case MatchStartMsg ms: OnMatchStart(ms); break;
+                case SnapshotMsg s: ApplySnapshot(s, frame, res.Seq); break;
+                case EventsMsg e: OnEventsMsg(e); break;
+                case RejectMsg r: OnReject(r); break;
+                case MatchEndMsg end: OnMatchEnd(end); break;
+                case TurnTimerMsg: break;      // presentation-only (E3); liveness already recorded
+                case HeartbeatMsg: break;      // liveness echo (b1 §11); recorded above
+                default: break;                // additive server message under a5 §8 unknown-keys — ignore
+            }
+            BumpInbound();
+        }
+
+        private void OnMatchStart(MatchStartMsg ms)
+        {
+            lock (_lock)
+            {
+                _matchId = new MatchId(ms.Snapshot.State.Id.Value);
+                _seat = ms.Seat;
+                _player = ms.PlayerId;
+                _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
+                SetStateUnlocked(ConnectionState.Live);
+            }
+            _matchStarted?.TrySetResult(true);
+        }
+
+        /// <summary>The §5.1 apply — verify-GATED (RC-F8). A snapshot that fails integrity is NEVER
+        /// installed as the mirror; the last good state is held and a resync is requested. A
+        /// resync-pending snapshot is exempt from the <c>&lt;=</c> drop guard (the server answers a
+        /// resync at the SAME version — <c>MatchSession.cs:193</c>).</summary>
+        private void ApplySnapshot(SnapshotMsg s, byte[] rawFrame, ulong envelopeSeq)
+        {
+            GameState? applied = null;
+            List<GameEvent>? flush = null;
+            bool pendingResolved = false;
+            lock (_lock)
+            {
+                ulong currentVersion = _current?.StateVersion ?? 0;
+                bool haveCurrent = _current is not null;
+                if (!_resyncPending && haveCurrent && s.StateVersion <= currentVersion)
+                    return; // superseded/duplicate — drop (but a resync we asked for is exempt)
+
+                if (!s.VerifyIntegrity())
+                {
+                    CaptureDesync(s, rawFrame, envelopeSeq);
+                    RequestResyncUnlocked(ResyncReason.HashMismatch, currentVersion);
+                    return; // mirror UNCHANGED — never install an unverified snapshot
+                }
+
+                _resyncPending = false;
+                _current = s.State;             // WHOLESALE REPLACE — only ever a verified state
+                applied = s.State;
+                pendingResolved = MaybeResolvePendingOkUnlocked(s.StateVersion);
+                if (_pendingEvents.TryGetValue(s.StateVersion, out var batch))
+                {
+                    _pendingEvents.Remove(s.StateVersion);
+                    flush = new List<GameEvent>(batch);
+                }
+            }
+
+            if (applied is not null) OnSnapshot?.Invoke(applied);
+            if (flush is not null) OnEvents?.Invoke(flush);
+            if (pendingResolved) OnPendingChanged?.Invoke(false);
+        }
+
+        private void OnEventsMsg(EventsMsg e)
+        {
+            List<GameEvent>? release = null;
+            lock (_lock)
+            {
+                ulong currentVersion = _current?.StateVersion ?? 0;
+                if (e.StateVersion < currentVersion) return; // superseded — nothing to animate toward a passed state
+                if (e.StateVersion == currentVersion)
+                {
+                    release = new List<GameEvent>(e.Events);
+                }
+                else
+                {
+                    if (_pendingEvents.Count >= MaxPendingEvents)
+                    {
+                        RequestResyncUnlocked(ResyncReason.DecodeError, currentVersion); // overflow = protocol violation (§5.2)
+                        return;
+                    }
+                    _pendingEvents[e.StateVersion] = e.Events;
+                }
+            }
+            if (release is not null) OnEvents?.Invoke(release);
+        }
+
+        private void OnReject(RejectMsg r)
+        {
+            TaskCompletionSource<CommandResult>? resolve = null;
+            Misattribution? misattribution = null;
+            lock (_lock)
+            {
+                if (_pending is not null && r.IntentSeq == _pendingSeq)
+                {
+                    resolve = _pending;
+                    ClearPendingUnlocked();
+                }
+                else if (_haveLastOkSeq && r.IntentSeq == _lastOkSeq)
+                {
+                    // RC-F7 interim: we resolved this seq Ok off a server-clock snapshot; the real
+                    // intent was refused. Belief was wrong, the mirror is NOT (it is a verified
+                    // server snapshot). LOG ONLY — the forced resync is STRUCK (ruling 2): resyncing
+                    // here is a gratuitous board reload near every rope. This log IS the evidence gate.
+                    misattribution = new Misattribution(
+                        _matchId.Value ?? string.Empty, _seat, r.IntentSeq, r.Reason.ToString(), StateVersion);
+                }
+                // else: a reject for an unknown/stale seq — ignore.
+            }
+
+            // TrySetResult (never SetResult) — idempotent by construction (RC-F7).
+            resolve?.TrySetResult(CommandResult.Rejected(r.Reason, StateVersion));
+            if (resolve is not null) OnPendingChanged?.Invoke(false);
+            if (misattribution is Misattribution m) _opts.OnMisattribution?.Invoke(m);
+        }
+
+        private void OnMatchEnd(MatchEndMsg end)
+        {
+            TaskCompletionSource<CommandResult>? resolve;
+            lock (_lock)
+            {
+                resolve = _pending;
+                ClearPendingUnlocked();
+                SetStateUnlocked(ConnectionState.Ended);
+            }
+            resolve?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
+        }
+
+        // ── Submit resolution (§4.4) ────────────────────────────────────────────────
+
+        /// <summary>Accept path: the first snapshot with a version past the submit's baseline
+        /// resolves the pending task Ok. INFERRED, not stated — sound while turn-based, and the
+        /// RC-F7 clock races are contained by the idempotent late-reject handling in
+        /// <see cref="OnReject"/>. Must hold <see cref="_lock"/>. Returns true if it resolved.
+        /// The TCS is RunContinuationsAsynchronously, so <c>TrySetResult</c> under the lock never
+        /// runs a continuation inline.</summary>
+        private bool MaybeResolvePendingOkUnlocked(ulong newVersion)
+        {
+            if (_pending is null) return false;
+            if (newVersion <= _pendingLastVersion) return false;
+            var tcs = _pending;
+            ulong seq = _pendingSeq;
+            IReadOnlyList<GameEvent> events = _pendingEvents.TryGetValue(newVersion, out var b) ? b : Array.Empty<GameEvent>();
+            ClearPendingUnlocked();
+            _lastOkSeq = seq;
+            _haveLastOkSeq = true;
+            tcs.TrySetResult(CommandResult.Ok(events, newVersion));
+            return true;
+        }
+
+        private ulong _pendingLastVersion;
+
+        // ── Resync (§4.5) + capture (§6.3) ──────────────────────────────────────────
+
+        private void RequestResync(ResyncReason reason, ulong lastVersion)
+        {
+            lock (_lock) RequestResyncUnlocked(reason, lastVersion);
+        }
+
+        private void RequestResyncUnlocked(ResyncReason reason, ulong lastVersion)
+        {
+            _resyncCount++;
+            if (_resyncCount > _opts.ResyncBudget)
+            {
+                SetStateUnlocked(ConnectionState.Dead);
+                _deadReason = DeadReason.Desync;
+                return;
+            }
+            _resyncPending = true;
+            SendUnlocked(new ResyncMsg(lastVersion, reason), ++_outSeq);
+        }
+
+        private void CaptureDesync(SnapshotMsg s, byte[] rawFrame, ulong envelopeSeq)
+        {
+            if (_opts.OnDesyncCapture is null) return;
+            _opts.OnDesyncCapture(new DesyncCapture(
+                _matchId.Value ?? string.Empty, _seat, s.StateVersion, envelopeSeq,
+                s.Hash, Emberfall.Core.Serialization.GameStateHasher.Hash(s.State), rawFrame));
+        }
+
+        // ── Outbound + state ────────────────────────────────────────────────────────
+
+        private void SendUnlocked(NetMessage msg, ulong seq)
+        {
+            _lastSendMs = _opts.Clock.NowMs;
+            byte[] frame = ProtocolCodec.Encode(msg, _matchId, seq);
+            _ = _transport.SendAsync(frame, CancellationToken.None);
+        }
+
+        private void ClearPendingUnlocked()
+        {
+            _pending = null;
+            _pendingSeq = 0;
+        }
+
+        private void SetState(ConnectionState s)
+        {
+            lock (_lock) SetStateUnlocked(s);
+        }
+
+        /// <summary>Set state and fire <see cref="OnConnectionStateChanged"/> off the lock (via the
+        /// thread pool) so a subscriber — e.g. <c>NetworkedGameBootstrap</c> calling
+        /// <c>MatchRunner.StopMatch</c> on Dead (RC-F10) — cannot re-enter under the lock.</summary>
+        private bool SetStateUnlocked(ConnectionState s)
+        {
+            if (_state == s) return false;
+            _state = s;
+            ThreadPool.QueueUserWorkItem(_ => OnConnectionStateChanged?.Invoke(s));
+            return true;
+        }
+
+        private void OnPeerClosed()
+        {
+            lock (_lock)
+            {
+                if (_state is ConnectionState.Ended or ConnectionState.Dead) return;
+                // Commit 1: a socket drop with no reconnect wiring is terminal. The reconnect state
+                // machine (§4.3) is commit-2 timer work; the terminal transition + StopMatch signal
+                // (RC-F10) is what commit 1 must get right so the runner stops.
+                SetStateUnlocked(ConnectionState.Dead);
+                _deadReason = DeadReason.Forfeited;
+                _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
+                ClearPendingUnlocked();
+            }
+        }
+
+        private void OnTransportClosed(WireCloseReason reason) => OnPeerClosed();
+
+        // ── Deterministic test synchronization (no Task.Delay — §11) ─────────────────
+
+        private void BumpInbound()
+        {
+            List<TaskCompletionSource<bool>>? release = null;
+            lock (_lock)
+            {
+                _inboundProcessed++;
+                for (int i = _inboundWaiters.Count - 1; i >= 0; i--)
+                {
+                    if (_inboundWaiters[i].threshold <= _inboundProcessed)
+                    {
+                        (release ??= new List<TaskCompletionSource<bool>>()).Add(_inboundWaiters[i].tcs);
+                        _inboundWaiters.RemoveAt(i);
+                    }
+                }
+            }
+            if (release is not null) foreach (var t in release) t.TrySetResult(true);
+        }
+
+        /// <summary>Await until at least <paramref name="count"/> inbound frames have been fully
+        /// handled. Lets a loopback test drive the server, then await the client catching up —
+        /// deterministic, no sleeps.</summary>
+        public Task WaitInboundAsync(int count)
+        {
+            lock (_lock)
+            {
+                if (_inboundProcessed >= count) return Task.CompletedTask;
+                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _inboundWaiters.Add((count, tcs));
+                return tcs.Task;
+            }
+        }
+
+        public void Dispose()
+        {
+            try { _pumpCts?.Cancel(); } catch { /* ignore */ }
+            _transport.OnClosed -= OnTransportClosed;
+        }
+    }
+}

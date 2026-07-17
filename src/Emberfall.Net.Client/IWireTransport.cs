@@ -1,0 +1,40 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Emberfall.Net.Client
+{
+    /// <summary>Why a wire closed — the client maps this to a <see cref="ConnectionState"/> exit
+    /// (b3-networked-session-design.md §4).</summary>
+    public enum WireCloseReason
+    {
+        /// <summary>Clean close initiated locally.</summary>
+        Local,
+        /// <summary>Peer closed the socket.</summary>
+        PeerClosed,
+        /// <summary>Transport fault (socket error, writer death).</summary>
+        Fault,
+    }
+
+    /// <summary>
+    /// The transport seam (b3-networked-session-design.md §2). <see cref="NetworkedMatchSession"/>
+    /// binds to THIS, never to a concrete <c>ClientWebSocket</c>, so the same session drives the
+    /// real socket (<c>WebSocketTransport</c>, commit 2) and the in-memory
+    /// <see cref="Loopback.LoopbackTransport"/> that peers against B1's real <c>MatchSession</c> in
+    /// tests (§8). Frames are whole decoded-length A5 envelopes — the same UTF-8 bytes both
+    /// implementations carry; there is no bypass and no second codec.
+    /// </summary>
+    public interface IWireTransport
+    {
+        Task ConnectAsync(Uri uri, CancellationToken ct);
+
+        Task SendAsync(ReadOnlyMemory<byte> utf8, CancellationToken ct);
+
+        /// <summary>One whole frame, or null when the peer closed.</summary>
+        Task<byte[]?> ReceiveAsync(CancellationToken ct);
+
+        Task CloseAsync(WireCloseReason reason);
+
+        event Action<WireCloseReason> OnClosed;
+    }
+}

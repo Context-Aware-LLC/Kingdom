@@ -1,0 +1,8 @@
+{
+  "name": "com.emberfall.net.client",
+  "version": "0.1.0",
+  "displayName": "Emberfall Net Client",
+  "description": "NetworkedMatchSession : IMatchSession over wss, connection state machine, verify-gated snapshot apply, loopback transport (B3, engineering/b3-networked-session-design.md).",
+  "unity": "6000.0",
+  "type": "library"
+}

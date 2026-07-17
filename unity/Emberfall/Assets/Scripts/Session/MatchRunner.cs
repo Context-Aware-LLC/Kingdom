@@ -57,25 +57,45 @@ namespace Emberfall.Session
         private readonly PlaybackQueue _playback = new PlaybackQueue();
         private bool _running;
 
+        // Ruling 3 (SeatOwnership, b3 §3.1 / a4 §12): how many seats this runner drives and which
+        // it renders from. Retires the emergent "same instance at both indices + inert remote
+        // source" invariant B3's RC pass found load-bearing in three places (mirrored board, not a
+        // crash). Both = hot-seat (default, bit-identical); Single(seat) = networked.
+        private SeatOwnership _owner = SeatOwnership.Both;
+
+        // RC-F10 (b3 §7.1-bis): a networked Dead/Ended must stop the runner from OUTSIDE — the
+        // loop's only truth source is the mirror, which a dead socket freezes forever.
+        private bool _stopRequested;
+        private bool _endedFired;
+        private MatchOutcome _stopOutcome = MatchOutcome.InProgress;
+
         /// <summary>
         /// Wire and start pumping a match. Sessions come from LocalMatch.Start (hot-seat / vs-AI)
         /// or, in M2 B3, a NetworkedMatchSession — construction is the caller's business.
+        /// <paramref name="owner"/> (ruling 3) says how many seats this runner drives: default
+        /// <see cref="SeatOwnership.Both"/> is hot-seat and bit-identical to the pre-ruling
+        /// behaviour; <see cref="SeatOwnership.Single"/> is a networked client that owns one seat.
         /// </summary>
         public void StartMatch(
             IMatchSession p0Session, IIntentSource p0Source,
             IMatchSession p1Session, IIntentSource p1Source,
-            PresentationViewer viewerMode = PresentationViewer.FixedSeat0)
+            PresentationViewer viewerMode = PresentationViewer.FixedSeat0,
+            SeatOwnership owner = null)
         {
             if (viewerMode == PresentationViewer.ActiveSeat)
                 throw new NotSupportedException(
                     "ActiveSeat is reserved for a future two-human mode (a4 design §11 finding 8).");
 
+            _owner = owner ?? SeatOwnership.Both;
             _sessions = new[] { p0Session, p1Session };
             _sources  = new[] { p0Source, p1Source };
 
-            // TRUTH cadence: each source rides its own session's projection stream.
+            // TRUTH cadence: each OWNED source rides its own session's projection stream. Single()
+            // fans only to the seat it owns, so a non-inert remote source can never be fed a stream
+            // for a seat it does not own (the RC-F1 third load-bearing site, now a contract).
             for (int i = 0; i < 2; i++)
             {
+                if (!_owner.Owns(i)) continue;
                 var source = _sources[i];
                 _sessions[i].OnSnapshot += st => source.NotifyStateUpdate(st);
             }
@@ -83,15 +103,16 @@ namespace Emberfall.Session
             // PRESENTATION cadence: the viewer session feeds the playback queue. OnSnapshot
             // fires before OnEvents for the same command (IMatchSession contract), so the
             // entry exists by the time its batch attaches.
-            var view = _sessions[0]; // FixedSeat0 — the local human/AI seat 0 view
+            var view = _sessions[_owner.ViewSeat]; // explicit — no longer the hardcoded _sessions[0]
             view.OnSnapshot += st => _playback.Enqueue(st, instant: st.Phase == TurnPhase.Mulligan);
             view.OnEvents   += batch => _playback.AttachEventsToNewest(batch);
 
             _running = true;
 
-            // Initial state: sources replan off it, presentation renders it immediately.
+            // Initial state: OWNED sources replan off it, presentation renders it immediately.
             for (int i = 0; i < 2; i++)
-                _sources[i].NotifyStateUpdate(_sessions[i].Current);
+                if (_owner.Owns(i))
+                    _sources[i].NotifyStateUpdate(_sessions[i].Current);
             _playback.Enqueue(view.Current, instant: true);
 
             StartCoroutine(SubmitLoop());
@@ -151,22 +172,43 @@ namespace Emberfall.Session
 
                     if (entry.Snapshot.Outcome != MatchOutcome.InProgress)
                     {
+                        _endedFired = true;
                         OnMatchEnded?.Invoke(entry.Snapshot.Outcome);
                         yield break;
                     }
                 }
                 yield return null;
             }
+
+            // RC-F10: StopMatch() broke the loop (Dead/Ended off a frozen mirror whose Outcome never
+            // flips). Fire OnMatchEnded once, AFTER the queue drained, so the last animation still
+            // plays — death stops input, not the story of how it ended.
+            if (_stopRequested && !_endedFired)
+            {
+                _endedFired = true;
+                OnMatchEnded?.Invoke(_stopOutcome);
+            }
+        }
+
+        /// <summary>Stop the runner from OUTSIDE (RC-F10, b3 §7.1-bis). NetworkedGameBootstrap calls
+        /// this from <c>OnConnectionStateChanged</c> on Dead/Ended, because the submit loop's only
+        /// truth source is the mirror, which a dead socket freezes at Outcome=InProgress forever.
+        /// Stops submits immediately; lets PlaybackLoop drain before OnMatchEnded. Hot-seat never
+        /// calls it. <paramref name="finalOutcome"/> is what the banner shows (e.g. a forfeit loss).</summary>
+        public void StopMatch(MatchOutcome finalOutcome = MatchOutcome.InProgress)
+        {
+            if (!_running && _playback.Count == 0 && _endedFired) return;
+            _stopRequested = true;
+            _stopOutcome = finalOutcome;
+            _running = false;
         }
 
         private int PickSeat(GameState state)
         {
             if (state.Phase == TurnPhase.Mulligan)
-            {
-                if (!state.Mulligan0Done) return 0;
-                if (!state.Mulligan1Done) return 1;
-                return -1;
-            }
+                // Both → 0-then-1 (client-serialized, unchanged); Single(s) → s until s is done, then
+                // -1 (each networked client drives ONLY its own confirm — RC-F11 simultaneous mulligan).
+                return _owner.PickMulligan(state);
             return state.SeatOf(state.ActivePlayer);
         }
 
