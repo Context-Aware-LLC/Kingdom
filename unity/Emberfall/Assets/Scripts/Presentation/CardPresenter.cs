@@ -36,6 +36,7 @@ namespace Emberfall.Presentation
         private static readonly Color FrozenColor   = new Color(0.40f, 0.60f, 0.95f);
         private static readonly Color TauntColor    = new Color(0.80f, 0.50f, 0.10f);
         private static readonly Color SelectedColor = new Color(1.00f, 0.85f, 0.10f); // gold
+        private const float ExhaustedDim = 0.55f;
 
         private CardDefinition  _def;
         private ICardLiveState  _live;
@@ -151,9 +152,10 @@ namespace Emberfall.Presentation
 
         private void OnChanged(CardChange what)
         {
-            if ((what & CardChange.Stats)    != 0) RecolorStats();
-            if ((what & CardChange.Keywords) != 0) RebuildKeywords();
-            if ((what & CardChange.Auras)    != 0) ApplyAuras();
+            if ((what & CardChange.Stats)      != 0) RecolorStats();
+            if ((what & CardChange.Keywords)   != 0) RebuildKeywords();
+            if ((what & CardChange.Auras)      != 0) ApplyAuras();
+            if ((what & CardChange.Affordance) != 0) ApplyAuras();
         }
 
         private void ApplyAll()
@@ -320,9 +322,24 @@ namespace Emberfall.Presentation
             else if ((_live.Auras & AuraSet.Taunt)  != 0) c = TauntColor;
             else                                           c = NormalColor;
 
+            // Exhausted dim (attack affordance): spent/sick minions on your own turn read
+            // as "done" — body and art drop to ~55% (selection overrides, so a clicked
+            // exhausted minion still lights up while the toast explains the reject).
+            bool dim = !_isSelected && _live.AttackReadiness == AttackReadiness.Exhausted;
+            if (dim) c *= ExhaustedDim;
+
             cardBackground.GetPropertyBlock(_mpb);
             _mpb.SetColor("_BaseColor", c);
             cardBackground.SetPropertyBlock(_mpb);
+
+            if (artRenderer != null && artRenderer.gameObject.activeSelf)
+            {
+                if (_artMpb == null) _artMpb = new MaterialPropertyBlock();
+                artRenderer.GetPropertyBlock(_artMpb);
+                _artMpb.SetColor("_BaseColor",
+                    dim ? new Color(ExhaustedDim, ExhaustedDim, ExhaustedDim, 1f) : Color.white);
+                artRenderer.SetPropertyBlock(_artMpb);
+            }
         }
     }
 }

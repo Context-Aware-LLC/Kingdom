@@ -78,10 +78,24 @@ namespace Emberfall.Presentation
 
         // ── ICardLiveState.Changed ──────────────────────────────────────────────────
 
+        private bool _selectionGlow;
+
         private void OnChanged(CardChange what)
         {
             if ((what & CardChange.Auras) != 0)
                 ApplyAuras(_live.Auras);
+            if ((what & CardChange.Affordance) != 0)
+                ApplyGlow();
+        }
+
+        // Glow overlay is shared by three signals: Spell Damage aura, selection highlight,
+        // and can-attack readiness. Any one keeps it on.
+        private void ApplyGlow()
+        {
+            if (_glowRenderer == null) return;
+            bool auraGlow  = _live != null && (_live.Auras & AuraSet.Glow) != 0;
+            bool readyGlow = _live != null && _live.AttackReadiness == AttackReadiness.Ready;
+            _glowRenderer.enabled = _selectionGlow || auraGlow || readyGlow;
         }
 
         private void ApplyAuras(AuraSet auras)
@@ -99,10 +113,8 @@ namespace Emberfall.Presentation
                     v => { _stealthCurrent = v; PushFloat(ShaderIds.StealthAmount, v); },
                     _stealthCurrent, stealthTarget, StealthDur));
 
-            // Glow: Spell Damage aura drives the overlay renderer on/off.
-            // Affordance glow (IsPlayable / valid-target) is pushed separately via SetAffordanceGlow().
-            if (_glowRenderer != null)
-                _glowRenderer.enabled = (auras & AuraSet.Glow) != 0;
+            // Glow: combined signal (aura / selection / can-attack) — see ApplyGlow().
+            ApplyGlow();
 
             // Aegis underlay: Divine Shield only. Taunt reads spatially (front row,
             // decision 2026-07-17) — no keyword glow, so the shared gold bubble
@@ -140,14 +152,13 @@ namespace Emberfall.Presentation
         // ── Affordance glow (called by InputRouter or ClickableCard) ────────────────
 
         /// <summary>
-        /// Drive the Glow overlay for playable / valid-target UI affordance.
-        /// Additive with AuraSet.Glow — glow stays on if the minion has Spell Damage.
+        /// Drive the Glow overlay for the selection highlight. Additive with AuraSet.Glow
+        /// and can-attack readiness — glow stays on while any signal holds.
         /// </summary>
         public void SetAffordanceGlow(bool active)
         {
-            if (_glowRenderer == null) return;
-            bool auraGlow = _live != null && (_live.Auras & AuraSet.Glow) != 0;
-            _glowRenderer.enabled = active || auraGlow;
+            _selectionGlow = active;
+            ApplyGlow();
         }
 
         // ── Coroutines ───────────────────────────────────────────────────────────────

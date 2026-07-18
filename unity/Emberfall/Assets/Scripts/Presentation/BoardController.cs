@@ -26,6 +26,7 @@ namespace Emberfall.Presentation
         private ICardDatabase _db;
         private PlayerId _p0Id;
         private PlayerId _p1Id;
+        private PlayerId _localHumanId;
         private InputRouter _inputRouter;
         private MatchRunner _matchRunner;
         private IArtProvider _artProvider;
@@ -47,12 +48,15 @@ namespace Emberfall.Presentation
 
         public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
                                InputRouter inputRouter = null, MatchRunner matchRunner = null,
-                               IArtProvider artProvider = null)
+                               IArtProvider artProvider = null, PlayerId? localHumanId = null)
         {
             _db          = db;
             boardAnchors = anchors;
             _p0Id        = p0Id;
             _p1Id        = p1Id;
+            // Attack affordances key off the human seat. Hot-seat: p0. Networked: the local
+            // player, who may sit at either seat — NetworkedGameBootstrap passes it explicitly.
+            _localHumanId = localHumanId ?? p0Id;
             _inputRouter = inputRouter;
             _matchRunner = matchRunner;
             _artProvider = artProvider;
@@ -75,8 +79,14 @@ namespace Emberfall.Presentation
 
             foreach (PlayerState ps in state.Players)
             {
-                SyncZone(ps.Id, ps.Board, Zone.Board);
-                SyncZone(ps.Id, ps.Hand,  Zone.Hand);
+                // Attack-affordance context (CardLiveState.BuildReadiness): only the local
+                // human's minions, on their own Main turn, show ready-glow / exhausted-dim.
+                bool ownerMayAct = ps.Id == _localHumanId
+                    && state.ActivePlayer == ps.Id
+                    && state.Phase == TurnPhase.Main;
+
+                SyncZone(ps.Id, ps.Board, Zone.Board, ownerMayAct);
+                SyncZone(ps.Id, ps.Hand,  Zone.Hand,  ownerMayAct);
                 SyncWeapon(ps.Id, ps.Weapon);
             }
 
@@ -92,7 +102,7 @@ namespace Emberfall.Presentation
 
         // ── Private helpers ─────────────────────────────────────────────────────────
 
-        private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone)
+        private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone, bool ownerMayAct)
         {
             // Projected hidden hand: every entry is the redaction sentinel (id 0, empty
             // DefinitionId — a4 design §6). _db.Get("") would THROW and abort the whole tick,
@@ -108,7 +118,7 @@ namespace Emberfall.Presentation
             {
                 CardInstance ci = cards[i];
                 _thisLive.Add(ci.Id);
-                GetOrCreate(ci, owner, zone, i);
+                GetOrCreate(ci, owner, zone, i, ownerMayAct);
             }
         }
 
@@ -146,7 +156,7 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void GetOrCreate(CardInstance ci, PlayerId owner, Zone zone, int slotIndex)
+        private void GetOrCreate(CardInstance ci, PlayerId owner, Zone zone, int slotIndex, bool ownerMayAct)
         {
             if (!_presenters.TryGetValue(ci.Id, out CardPresenter presenter))
             {
@@ -185,7 +195,7 @@ namespace Emberfall.Presentation
 
             // Update live state regardless (stats may have changed).
             if (_liveStates.TryGetValue(ci.Id, out CardLiveState liveState))
-                liveState.UpdateFrom(ci);
+                liveState.UpdateFrom(ci, zone == Zone.Board && ownerMayAct);
 
             // Re-parent to the correct anchor if the card moved slots.
             if (boardAnchors != null)

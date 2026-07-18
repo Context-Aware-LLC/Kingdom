@@ -15,6 +15,7 @@ namespace Emberfall.Presentation
         public IReadOnlyCollection<Keyword> Keywords => _keywords;
         public AuraSet Auras   { get; private set; }
         public int BoardSlot   { get; private set; }
+        public AttackReadiness AttackReadiness { get; private set; }
 
         public event Action<CardChange> Changed;
 
@@ -22,7 +23,9 @@ namespace Emberfall.Presentation
 
         public CardLiveState(InstanceId id) => Id = id;
 
-        public void UpdateFrom(CardInstance ci)
+        // ownerMayAct: this card sits on the local human's board, it's that player's turn,
+        // and the phase is Main (BoardController computes it from the snapshot).
+        public void UpdateFrom(CardInstance ci, bool ownerMayAct = false)
         {
             CardChange changed = CardChange.None;
 
@@ -54,8 +57,32 @@ namespace Emberfall.Presentation
                 changed  |= CardChange.Slot;
             }
 
+            AttackReadiness newReadiness = BuildReadiness(ci, ownerMayAct);
+            if (newReadiness != AttackReadiness)
+            {
+                AttackReadiness = newReadiness;
+                changed |= CardChange.Affordance;
+            }
+
             if (changed != CardChange.None)
                 Changed?.Invoke(changed);
+        }
+
+        // Mirrors the attacker-side checks of CommandProcessor.ValidateAttack (defender-
+        // independent half). Presentation-side courtesy only — the validator/authority
+        // still rules; keep in lockstep when the engine's attack rules change.
+        private static AttackReadiness BuildReadiness(CardInstance ci, bool ownerMayAct)
+        {
+            if (!ownerMayAct) return AttackReadiness.None;
+
+            bool eligible = !ci.IsFrozen
+                && ci.CurrentAttack > 0
+                && (!ci.SummonedThisTurn
+                    || ci.Keywords.Contains(Keyword.CHARGE)
+                    || ci.Keywords.Contains(Keyword.RUSH))
+                && ci.AttacksUsedThisTurn < (ci.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1);
+
+            return eligible ? AttackReadiness.Ready : AttackReadiness.Exhausted;
         }
 
         private static AuraSet BuildAuras(CardInstance ci)

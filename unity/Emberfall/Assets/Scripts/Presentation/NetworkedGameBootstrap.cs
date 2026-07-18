@@ -128,7 +128,10 @@ namespace Emberfall.Presentation
             if (boardController != null && boardAnchors != null)
             {
                 boardAnchors.SetPlayers(seat0Id, seat1Id);
-                boardController.Initialize(db, boardAnchors, seat0Id, seat1Id, inputRouter, matchRunner);
+                // localHumanId: the local player may sit at either seat — attack affordances
+                // (ready-glow / exhausted-dim) must track OUR minions, not seat 0's.
+                boardController.Initialize(db, boardAnchors, seat0Id, seat1Id, inputRouter, matchRunner,
+                                           localHumanId: localId);
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
             }
 
