@@ -69,6 +69,25 @@ namespace Emberfall.Presentation
             _artProvider ??= new AddressableArtProvider();
             _uiSprites   ??= new AddressableUiSpriteProvider();
 #endif
+            // Targeting-state visibility: while the router has a targeting state armed,
+            // only valid targets glow (binder suppresses readiness glow for the duration).
+            if (_inputRouter != null)
+                _inputRouter.TargetingChanged += OnTargetingChanged;
+        }
+
+        private void OnDestroy()
+        {
+            if (_inputRouter != null)
+                _inputRouter.TargetingChanged -= OnTargetingChanged;
+        }
+
+        private void OnTargetingChanged(HashSet<InstanceId> targets)
+        {
+            foreach (var kvp in _presenters)
+            {
+                var binder = kvp.Value != null ? kvp.Value.GetComponent<CardMaterialBinder>() : null;
+                binder?.SetTargetOverride(targets == null ? (bool?)null : targets.Contains(kvp.Key));
+            }
         }
 
         public void OnStateUpdated(GameState state)

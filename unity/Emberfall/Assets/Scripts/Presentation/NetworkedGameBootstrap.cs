@@ -159,8 +159,14 @@ namespace Emberfall.Presentation
 #else
                 IArtProvider heroArt = new AddressableArtProvider();
 #endif
-                CreateHeroPlate(seat0Id, 0, s0.Players[0].Hero.Class, boardAnchors, db, heroArt);
-                CreateHeroPlate(seat1Id, 1, s0.Players[1].Hero.Class, boardAnchors, db, heroArt);
+                var plate0 = CreateHeroPlate(seat0Id, 0, s0.Players[0].Hero.Class, boardAnchors, db, heroArt);
+                var plate1 = CreateHeroPlate(seat1Id, 1, s0.Players[1].Hero.Class, boardAnchors, db, heroArt);
+                // Selection/target cues track OUR seat (also closes the missing
+                // hero-as-attacker gold cue in networked mode).
+                if (inputRouter != null)
+                    inputRouter.SetHeroPlates(
+                        _net.Seat == 0 ? plate0 : plate1,
+                        _net.Seat == 0 ? plate1 : plate0);
             }
 
             // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
@@ -194,15 +200,16 @@ namespace Emberfall.Presentation
                 SeatOwnership.Single(_net.Seat));
         }
 
-        private void CreateHeroPlate(PlayerId playerId, int seatIndex, CardClass heroClass,
-                                     BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
+        private HeroPlateView CreateHeroPlate(PlayerId playerId, int seatIndex, CardClass heroClass,
+                                              BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
         {
             Transform heroAnchor = anchors.HeroAnchor(playerId);
-            if (heroAnchor == null) return;
+            if (heroAnchor == null) return null;
             var go   = new GameObject($"HeroPlate_{playerId}");
             var view = go.AddComponent<HeroPlateView>();
             view.Init(seatIndex, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
+            return view;
         }
 
         private void CreateManaTray(PlayerId playerId, int seatIndex, BoardAnchors anchors)

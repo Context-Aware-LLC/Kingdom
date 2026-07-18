@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
+using TMPro;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -43,12 +45,29 @@ namespace Emberfall.Presentation
 
         private InstanceId    _selectedId;
         private CardPresenter _selectedPresenter;
-        private HeroPlateView _p0HeroPlate;   // selection cue for hero-as-attacker
+        private HeroPlateView _p0HeroPlate;      // selection + target cue for our hero
+        private HeroPlateView _enemyHeroPlate;   // target cue for the enemy hero
         private ICommandValidator _validator;
 
-        /// <summary>Wired by GameBootstrap after the hero plates exist — heroes have no
-        /// CardPresenter, so their selection highlight routes through the plate view.</summary>
-        public void SetHeroPlate(HeroPlateView p0Plate) => _p0HeroPlate = p0Plate;
+        // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
+        // While a targeting state is armed: a persistent banner says so, and the set of
+        // legal targets is broadcast so BoardController can glow ONLY those (readiness
+        // glow is suppressed for the duration). Null = targeting cleared.
+        public event System.Action<HashSet<InstanceId>> TargetingChanged;
+        private HashSet<InstanceId> _activeTargets;
+        private GameObject  _bannerGo;
+        private TextMeshPro _bannerLabel;
+
+        private const string AimBanner    = "Choose a target — Esc cancels";
+        private const string AttackBanner = "Choose a target to attack — Esc cancels";
+
+        /// <summary>Wired by the bootstraps after the hero plates exist — heroes have no
+        /// CardPresenter, so their selection/target highlights route through the plate views.</summary>
+        public void SetHeroPlates(HeroPlateView p0Plate, HeroPlateView enemyPlate)
+        {
+            _p0HeroPlate    = p0Plate;
+            _enemyHeroPlate = enemyPlate;
+        }
 
         public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
                          ICommandValidator validator = null)
@@ -67,7 +86,35 @@ namespace Emberfall.Presentation
         {
             _currentState = state;
             if (_state != State.Idle && state != null && state.ActivePlayer != _p0Id)
+            {
                 ClearSelection();
+                return;
+            }
+            // Refresh the armed-target set on every snapshot — board changes (a taunt dying
+            // to a deathrattle, a minion gaining stealth) can alter what's legal mid-aim.
+            RefreshTargeting();
+        }
+
+        private void RefreshTargeting()
+        {
+            switch (_state)
+            {
+                case State.CardSelectedFromHand:
+                    if (SelectedCardRequiresTarget())
+                        SetTargeting(ComputeSpellTargets(), AimBanner);
+                    else
+                        ClearTargeting();
+                    break;
+                case State.AttackerSelected:
+                    SetTargeting(ComputeAttackTargets(_selectedId), AttackBanner);
+                    break;
+                case State.HeroPowerTargeting:
+                    SetTargeting(ComputeHeroPowerTargets(), AimBanner);
+                    break;
+                default:
+                    ClearTargeting();
+                    break;
+            }
         }
 
         // ── Entry points called by ClickableCard / ClickableBoardSlot / ClickableHeroPower ──
@@ -176,6 +223,7 @@ namespace Emberfall.Presentation
                         _selectedPresenter = null;
                         _state             = State.AttackerSelected;
                         _p0HeroPlate?.SetSelected(true);
+                        RefreshTargeting();
                     }
                     break;
 
@@ -226,6 +274,7 @@ namespace Emberfall.Presentation
             if (HeroPowerRequiresTarget())
             {
                 _state = State.HeroPowerTargeting; // next minion/hero click supplies the target
+                RefreshTargeting();
                 return;
             }
             Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
@@ -269,6 +318,188 @@ namespace Emberfall.Presentation
                         return true;
             }
             return false;
+        }
+
+        // ── Targeting-state visibility ─────────────────────────────────────────────
+
+        private void SetTargeting(HashSet<InstanceId> targets, string bannerText)
+        {
+            _activeTargets = targets;
+            ShowBanner(bannerText);
+            TargetingChanged?.Invoke(targets);
+            ApplyHeroTargetCues();
+        }
+
+        private void ClearTargeting()
+        {
+            if (_activeTargets == null) return;
+            _activeTargets = null;
+            HideBanner();
+            TargetingChanged?.Invoke(null);
+            _p0HeroPlate?.SetTargetable(false);
+            _enemyHeroPlate?.SetTargetable(false);
+        }
+
+        private void ApplyHeroTargetCues()
+        {
+            if (_currentState == null) return;
+            _p0HeroPlate?.SetTargetable(
+                _activeTargets != null && _activeTargets.Contains(HeroIdOf(_p0Id)));
+            _enemyHeroPlate?.SetTargetable(
+                _activeTargets != null && _activeTargets.Contains(HeroIdOf(EnemyId())));
+        }
+
+        private PlayerId EnemyId()
+        {
+            foreach (var ps in _currentState.Players)
+                if (ps.Id != _p0Id) return ps.Id;
+            return default;
+        }
+
+        private HashSet<InstanceId> ComputeSpellTargets()
+        {
+            var set = new HashSet<InstanceId>();
+            if (_db == null || _currentState == null) return set;
+            foreach (var ps in _currentState.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                foreach (var ci in ps.Hand)
+                    if (ci.Id.Equals(_selectedId) && _db.TryGet(ci.DefinitionId, out var def))
+                    {
+                        CollectSelectorTargets(def, set);
+                        return set;
+                    }
+            }
+            return set;
+        }
+
+        private HashSet<InstanceId> ComputeHeroPowerTargets()
+        {
+            var set = new HashSet<InstanceId>();
+            if (_db == null || _currentState == null) return set;
+            foreach (var ps in _currentState.Players)
+                if (ps.Id == _p0Id && _db.TryGet(ps.Hero.HeroPowerId, out var def))
+                    CollectSelectorTargets(def, set);
+            return set;
+        }
+
+        // Mirrors CommandProcessor.TargetsSatisfySelectors + the enemy-STEALTH targeting
+        // exclusion (ValidatePlayCard). Courtesy affordance — the validator still rules.
+        private void CollectSelectorTargets(CardDefinition def, HashSet<InstanceId> set)
+        {
+            var selectors = new List<string>();
+            foreach (var eff in def.Effects)
+                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
+                    && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
+                    selectors.Add(eff.Selector);
+            if (selectors.Count == 0) return;
+
+            foreach (var ps in _currentState.Players)
+            {
+                bool friendly = ps.Id == _p0Id;
+                if (SatisfiesSelectors(selectors, isMinion: false, friendly))
+                    set.Add(ps.Hero.Id);
+                foreach (var m in ps.Board)
+                {
+                    if (!friendly && m.Keywords.Contains(Keyword.STEALTH)) continue;
+                    if (SatisfiesSelectors(selectors, isMinion: true, friendly))
+                        set.Add(m.Id);
+                }
+            }
+        }
+
+        private static bool SatisfiesSelectors(List<string> selectors, bool isMinion, bool friendly)
+        {
+            foreach (var s in selectors)
+                switch (s)
+                {
+                    case "ANY_FRIENDLY":        if (!friendly)             return false; break;
+                    case "ANY_ENEMY":           if (friendly)              return false; break;
+                    case "ANY_MINION":          if (!isMinion)             return false; break;
+                    case "ANY_FRIENDLY_MINION": if (!isMinion || !friendly) return false; break;
+                    // ANY_CHARACTER (and future ANY_*) accepts every live character.
+                }
+            return true;
+        }
+
+        // Mirrors the defender-side half of CommandProcessor.ValidateAttack: stealth hides,
+        // a non-stealthed taunt wall restricts to taunts, rush-on-summon-turn can't go face.
+        private HashSet<InstanceId> ComputeAttackTargets(InstanceId attackerId)
+        {
+            var set = new HashSet<InstanceId>();
+            if (_currentState == null) return set;
+
+            bool rushBlocksFace = false;
+            PlayerState enemy = null;
+            foreach (var ps in _currentState.Players)
+            {
+                if (ps.Id == _p0Id)
+                {
+                    foreach (var m in ps.Board)
+                        if (m.Id.Equals(attackerId) && m.SummonedThisTurn
+                            && m.Keywords.Contains(Keyword.RUSH))
+                            rushBlocksFace = true;
+                }
+                else enemy = ps;
+            }
+            if (enemy == null) return set;
+
+            bool anyTaunt = false;
+            foreach (var m in enemy.Board)
+                if (m.Keywords.Contains(Keyword.TAUNT) && !m.Keywords.Contains(Keyword.STEALTH))
+                { anyTaunt = true; break; }
+
+            foreach (var m in enemy.Board)
+            {
+                if (m.Keywords.Contains(Keyword.STEALTH)) continue;
+                if (anyTaunt && !m.Keywords.Contains(Keyword.TAUNT)) continue;
+                set.Add(m.Id);
+            }
+            if (!anyTaunt && !rushBlocksFace)
+                set.Add(enemy.Hero.Id);
+            return set;
+        }
+
+        // ── Armed banner (built lazily; same primitives approach as the reject toast) ──
+
+        private void ShowBanner(string text)
+        {
+            if (_bannerGo == null) BuildBanner();
+            _bannerLabel.text = text;
+            _bannerGo.SetActive(true);
+        }
+
+        private void HideBanner()
+        {
+            if (_bannerGo != null) _bannerGo.SetActive(false);
+        }
+
+        private void BuildBanner()
+        {
+            _bannerGo = new GameObject("TargetingBanner");
+            _bannerGo.transform.position = new Vector3(0f, -2.35f, 0f);
+
+            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            faceGo.name = "Face";
+            faceGo.transform.SetParent(_bannerGo.transform, false);
+            faceGo.transform.localScale = new Vector3(4.6f, 0.42f, 1f);
+            Destroy(faceGo.GetComponent<MeshCollider>());
+            var face = faceGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(face, MaterialCatalog.Plate);
+            var mpb = new MaterialPropertyBlock();
+            face.GetPropertyBlock(mpb);
+            mpb.SetColor("_BaseColor", new Color(0.13f, 0.22f, 0.35f));
+            face.SetPropertyBlock(mpb);
+
+            var labelGo = new GameObject("Label");
+            labelGo.transform.SetParent(_bannerGo.transform, false);
+            labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            _bannerLabel = labelGo.AddComponent<TextMeshPro>();
+            _bannerLabel.fontSize  = 1.1f;
+            _bannerLabel.alignment = TextAlignmentOptions.Center;
+            _bannerLabel.color     = Color.white;
+            _bannerLabel.rectTransform.sizeDelta = new Vector2(4.6f, 0.42f);
+            _bannerLabel.textWrappingMode = TextWrappingModes.NoWrap;
         }
 
         // ── Keyboard shortcuts ─────────────────────────────────────────────────────
@@ -338,6 +569,7 @@ namespace Emberfall.Presentation
             _selectedPresenter = card.Presenter;
             _state             = newState;
             _selectedPresenter?.SetSelectionHighlight(true);
+            RefreshTargeting();
         }
 
         private void ClearSelection()
@@ -347,6 +579,7 @@ namespace Emberfall.Presentation
             _selectedPresenter = null;
             _selectedId        = default;
             _state             = State.Idle;
+            ClearTargeting();
         }
     }
 }

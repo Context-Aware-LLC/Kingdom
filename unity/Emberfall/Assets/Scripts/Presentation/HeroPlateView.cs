@@ -21,6 +21,8 @@ namespace Emberfall.Presentation
         // Matches CardPresenter.SelectedColor so hero-as-attacker selection reads
         // identically to minion selection.
         private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
+        // Valid-target cue while a targeted spell / hero power / attack is armed.
+        private static readonly Color TargetableTint = new Color(0.25f, 0.65f, 0.30f);
         private static readonly Color PowerReady   = new Color(0.30f, 0.55f, 0.85f);
         private static readonly Color PowerSpent   = new Color(0.22f, 0.22f, 0.30f);
 
@@ -30,6 +32,7 @@ namespace Emberfall.Presentation
         private int _seatIndex;
         private ICardDatabase _db;
         private bool _selected;
+        private bool _targetable;
         private bool _frozen;
 
         private Renderer     _plate;
@@ -127,9 +130,20 @@ namespace Emberfall.Presentation
             ApplyPlateTint();
         }
 
+        /// <summary>Valid-target cue while targeting is armed — driven by InputRouter
+        /// (targeting-state visibility). Selection outranks it; it outranks frozen.</summary>
+        public void SetTargetable(bool targetable)
+        {
+            _targetable = targetable;
+            ApplyPlateTint();
+        }
+
         private void ApplyPlateTint()
         {
-            Tint(_plate, _selected ? SelectedTint : _frozen ? FrozenTint : PlateColor);
+            Tint(_plate, _selected   ? SelectedTint
+                       : _targetable ? TargetableTint
+                       : _frozen     ? FrozenTint
+                       : PlateColor);
         }
 
         // ── Build helpers (same primitives-only approach as BoardController) ────────

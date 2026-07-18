@@ -79,6 +79,7 @@ namespace Emberfall.Presentation
         // ── ICardLiveState.Changed ──────────────────────────────────────────────────
 
         private bool _selectionGlow;
+        private bool? _targetOverride; // non-null while targeting is armed: glow = valid-target only
 
         private void OnChanged(CardChange what)
         {
@@ -89,13 +90,29 @@ namespace Emberfall.Presentation
         }
 
         // Glow overlay is shared by three signals: Spell Damage aura, selection highlight,
-        // and can-attack readiness. Any one keeps it on.
+        // and can-attack readiness. Any one keeps it on. While targeting is armed
+        // (_targetOverride set by BoardController from InputRouter.TargetingChanged) the
+        // normal signals are suppressed so ONLY valid targets glow — targeting-state
+        // visibility beats readiness noise for the duration of the aim.
         private void ApplyGlow()
         {
             if (_glowRenderer == null) return;
+            if (_targetOverride.HasValue)
+            {
+                _glowRenderer.enabled = _targetOverride.Value || _selectionGlow;
+                return;
+            }
             bool auraGlow  = _live != null && (_live.Auras & AuraSet.Glow) != 0;
             bool readyGlow = _live != null && _live.AttackReadiness == AttackReadiness.Ready;
             _glowRenderer.enabled = _selectionGlow || auraGlow || readyGlow;
+        }
+
+        /// <summary>Targeting-mode glow override: true/false while armed (valid / not a
+        /// target), null to restore the normal aura|selection|readiness combine.</summary>
+        public void SetTargetOverride(bool? isValidTarget)
+        {
+            _targetOverride = isValidTarget;
+            ApplyGlow();
         }
 
         private void ApplyAuras(AuraSet auras)

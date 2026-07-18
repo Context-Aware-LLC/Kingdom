@@ -123,9 +123,9 @@ namespace Emberfall.Presentation
                 IArtProvider heroArt = new AddressableArtProvider();
 #endif
                 var p0Plate = CreateHeroPlate(p0Id, 0, setup.P0Class, boardAnchors, db, heroArt);
-                CreateHeroPlate(p1Id, 1, setup.P1Class, boardAnchors, db, heroArt);
+                var p1Plate = CreateHeroPlate(p1Id, 1, setup.P1Class, boardAnchors, db, heroArt);
                 if (inputRouter != null && p0Plate != null)
-                    inputRouter.SetHeroPlate(p0Plate);
+                    inputRouter.SetHeroPlates(p0Plate, p1Plate);
             }
 
             // ── End-turn button (hot-seat only; ui/match-hud.md §6 item 1) ────────
