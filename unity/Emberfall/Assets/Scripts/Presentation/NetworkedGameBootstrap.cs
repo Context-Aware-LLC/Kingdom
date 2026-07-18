@@ -109,9 +109,10 @@ namespace Emberfall.Presentation
 
             // ── Intent source for OUR seat; the opponent seat is inert (NullIntentSource). ────────
             IIntentSource mine;
+            HotSeatInput hotSeat = null;
             if (inputRouter != null)
             {
-                var hotSeat = new HotSeatInput(localId);
+                hotSeat = new HotSeatInput(localId);
                 inputRouter.Init(localId, hotSeat, db, new CommandProcessor(db));
                 mine = hotSeat;
             }
@@ -157,6 +158,16 @@ namespace Emberfall.Presentation
 #endif
                 CreateHeroPlate(seat0Id, 0, s0.Players[0].Hero.Class, boardAnchors, db, heroArt);
                 CreateHeroPlate(seat1Id, 1, s0.Players[1].Hero.Class, boardAnchors, db, heroArt);
+            }
+
+            // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
+            // RateLimited from the B1 policy gate) arrive on the same OnRejected path. ─
+            if (hotSeat != null)
+            {
+                var toastGo = new GameObject("RejectToasts");
+                toastGo.transform.position = new Vector3(5.6f, -1.5f, 0f);
+                var toasts = toastGo.AddComponent<RejectToastView>();
+                hotSeat.Rejected += toasts.Show;
             }
 
             // ── VFX ───────────────────────────────────────────────────────────────

@@ -30,8 +30,15 @@ namespace Emberfall.Presentation
             return false;
         }
 
+        /// <summary>Raised on every rejection — local validator and authority both land here
+        /// (InputRouter.Submit and MatchRunner both call OnRejected). Feeds the reject toast.</summary>
+        public event Action<RejectReason> Rejected;
+
         public void OnRejected(RejectReason reason)
-            => Debug.LogWarning($"[HotSeatInput:{_playerId}] intent rejected — {reason}");
+        {
+            Debug.LogWarning($"[HotSeatInput:{_playerId}] intent rejected — {reason}");
+            Rejected?.Invoke(reason);
+        }
 
         public void NotifyStateUpdate(GameState state)
         {

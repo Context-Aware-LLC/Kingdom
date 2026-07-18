@@ -65,9 +65,10 @@ namespace Emberfall.Presentation
             // Hot-seat: P0 is human-controlled via InputRouter; P1 is AI.
             // AI-only:  both players are PlayingAi (leave inputRouter null).
             IIntentSource p0Source;
+            HotSeatInput hotSeat = null;
             if (inputRouter != null)
             {
-                var hotSeat = new HotSeatInput(p0Id);
+                hotSeat = new HotSeatInput(p0Id);
                 // db: target-required detection; validator: courtesy CanExecute affordance
                 // over the projected truth state (a4 design §7 — client-side, no authority role).
                 inputRouter.Init(p0Id, hotSeat, db, new CommandProcessor(db));
@@ -135,6 +136,17 @@ namespace Emberfall.Presentation
                 var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
                 endTurn.Init(p0Id, inputRouter);
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
+            }
+
+            // ── Reject toasts (hot-seat only; design-system.md §6.4/§6.5) ─────────
+            // Single hook: local-validator and authority rejects both funnel through
+            // HotSeatInput.OnRejected, so one subscription covers both paths.
+            if (hotSeat != null)
+            {
+                var toastGo = new GameObject("RejectToasts");
+                toastGo.transform.position = new Vector3(5.6f, -1.5f, 0f);
+                var toasts = toastGo.AddComponent<RejectToastView>();
+                hotSeat.Rejected += toasts.Show;
             }
 
             // ── VFX ───────────────────────────────────────────────────────────────
