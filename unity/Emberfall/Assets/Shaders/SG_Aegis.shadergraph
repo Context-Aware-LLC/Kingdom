@@ -195,7 +195,7 @@
             "m_InputSlot": { "m_Node": { "m_Id": "734a37765ee94f359a4888406959a85f" }, "m_SlotId": 1 }
         },
         {
-            "m_OutputSlot": { "m_Node": { "m_Id": "f4486a3c62954f4da0f56eebba71a33b" }, "m_SlotId": -1229297065 },
+            "m_OutputSlot": { "m_Node": { "m_Id": "f4486a3c62954f4da0f56eebba71a33b" }, "m_SlotId": 1 },
             "m_InputSlot": { "m_Node": { "m_Id": "ce3687c93e2f4eb9b449befaac121ba2" }, "m_SlotId": 0 }
         },
         {
@@ -598,7 +598,7 @@
     "m_CustomSlotLabel": "",
     "m_DismissedVersion": 0,
     "m_KeywordType": 0,
-    "m_KeywordDefinition": 2,
+    "m_KeywordDefinition": 1,
     "m_KeywordScope": 0,
     "m_KeywordStages": 63,
     "m_Entries": [],
@@ -1258,7 +1258,7 @@
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "fe3bba3898654c8a8b905fbc7ce4b828",
-    "m_Id": -1229297065,
+    "m_Id": 1,
     "m_DisplayName": "RimMask",
     "m_SlotType": 1,
     "m_Hidden": false,
