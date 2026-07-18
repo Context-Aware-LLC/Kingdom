@@ -379,8 +379,24 @@ namespace Emberfall.Presentation
             // Keywords — center strip
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.8f, new Color(0.9f, 0.85f, 0.6f));
 
+            // Rules text — band between the keyword icon strip and the stat row. Unlike
+            // MakeLabel's single-line names this wraps; auto-sizes down for long lines.
+            var bodyGo = new GameObject("Body");
+            bodyGo.transform.SetParent(root.transform, false);
+            bodyGo.transform.localPosition = new Vector3(0f, -CardH * 0.30f, -0.01f);
+            var bodyLabel = bodyGo.AddComponent<TextMeshPro>();
+            bodyLabel.fontSize  = 1.0f;
+            bodyLabel.alignment = TextAlignmentOptions.Center;
+            bodyLabel.color     = new Color(0.92f, 0.92f, 0.92f);
+            bodyLabel.rectTransform.sizeDelta = new Vector2(CardW * 0.90f, CardH * 0.22f);
+            bodyLabel.textWrappingMode = TextWrappingModes.Normal;
+            bodyLabel.overflowMode     = TextOverflowModes.Ellipsis;
+            bodyLabel.enableAutoSizing = true;
+            bodyLabel.fontSizeMax      = 1.0f;
+            bodyLabel.fontSizeMin      = 0.5f;
+
             var presenter = root.AddComponent<CardPresenter>();
-            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer);
+            presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, keywordIcons, _uiSprites);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.

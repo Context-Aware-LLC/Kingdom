@@ -20,6 +20,7 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMeshPro healthLabel;
         [SerializeField] private TextMeshPro durabilityLabel;
         [SerializeField] private TextMeshPro keywordLabel;
+        [SerializeField] private TextMeshPro bodyLabel;
         [SerializeField] private Renderer cardBackground;
         [SerializeField] private Renderer artRenderer;
 
@@ -48,7 +49,7 @@ namespace Emberfall.Presentation
         // Called by BoardController.CreatePresenter when building the visual hierarchy at runtime.
         public void Setup(TextMeshPro name, TextMeshPro cost, TextMeshPro attack, TextMeshPro health,
                           TextMeshPro durability, TextMeshPro keywords, Renderer bg,
-                          Renderer art = null)
+                          Renderer art = null, TextMeshPro body = null)
         {
             nameLabel      = name;
             costLabel      = cost;
@@ -58,6 +59,7 @@ namespace Emberfall.Presentation
             keywordLabel   = keywords;
             cardBackground = bg;
             artRenderer    = art;
+            bodyLabel      = body;
         }
 
         // Frame/rarity layer wiring (frame-rarity-system.md D2). Separate from Setup() so the
@@ -99,6 +101,7 @@ namespace Emberfall.Presentation
             if (healthLabel != null)     healthLabel.gameObject.SetActive(false);
             if (durabilityLabel != null) durabilityLabel.gameObject.SetActive(false);
             if (keywordLabel != null)    keywordLabel.gameObject.SetActive(false);
+            if (bodyLabel != null)       bodyLabel.gameObject.SetActive(false);
             if (artRenderer != null)     artRenderer.gameObject.SetActive(false);
             if (gemRenderer != null)     gemRenderer.gameObject.SetActive(false);
             if (keywordIcons != null)
@@ -166,7 +169,50 @@ namespace Emberfall.Presentation
             ApplyFrame();
             RecolorStats();
             RebuildKeywords();
+            ApplyBodyText();
             ApplyAuras();
+        }
+
+        // Rules text band (keyword-visual-language decision 2026-07-17: keywords lead the
+        // card text in bold). Keywords the authored text already spells out (Battlecry:,
+        // Spell Damage +1) are skipped so nothing reads twice.
+        private void ApplyBodyText()
+        {
+            if (bodyLabel == null) return;
+            if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
+
+            var sb = new StringBuilder();
+            foreach (Keyword kw in _def.Keywords)
+            {
+                string display = KeywordDisplayName(kw);
+                if (_def.CardText.IndexOf(display, System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    continue;
+                sb.Append(sb.Length > 0 ? ", " : "<b>").Append(display);
+            }
+            if (sb.Length > 0) sb.Append("</b>");
+            if (!string.IsNullOrEmpty(_def.CardText))
+            {
+                if (sb.Length > 0) sb.Append('\n');
+                sb.Append(_def.CardText);
+            }
+            bodyLabel.text = sb.ToString();
+            bodyLabel.gameObject.SetActive(sb.Length > 0);
+        }
+
+        // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by
+        // design; humanize for the card face until the full display layer lands.
+        private static string KeywordDisplayName(Keyword kw)
+        {
+            string[] parts = kw.ToString().Split('_');
+            var sb = new StringBuilder();
+            foreach (string p in parts)
+            {
+                if (p.Length == 0) continue;
+                if (sb.Length > 0) sb.Append(' ');
+                sb.Append(char.ToUpperInvariant(p[0]));
+                if (p.Length > 1) sb.Append(p.Substring(1).ToLowerInvariant());
+            }
+            return sb.ToString();
         }
 
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
