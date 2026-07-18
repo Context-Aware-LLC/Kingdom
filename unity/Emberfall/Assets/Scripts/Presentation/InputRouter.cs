@@ -517,7 +517,32 @@ namespace Emberfall.Presentation
             {
                 ClearSelection();
                 Submit(new EndTurnIntent(_p0Id));
+                return;
             }
+
+            // Generous play area (Sam, 2026-07-17): with an untargeted hand card selected,
+            // a click on empty space plays it — the precise slot quads were frustrating.
+            // Clicks that hit any collider keep their existing meaning (cards, slots,
+            // heroes, buttons all handle themselves); targeted cards still require an aim.
+            if (_state == State.CardSelectedFromHand
+                && Input.GetMouseButtonDown(0)
+                && !SelectedCardRequiresTarget())
+            {
+                var cam = Camera.main;
+                if (cam != null && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out _, 100f))
+                {
+                    Submit(new PlayCardIntent(_p0Id, _selectedId, OwnBoardCount(),
+                                              System.Array.Empty<TargetRef>()));
+                    ClearSelection();
+                }
+            }
+        }
+
+        private int OwnBoardCount()
+        {
+            foreach (var ps in _currentState.Players)
+                if (ps.Id == _p0Id) return ps.Board.Count;
+            return 0;
         }
 
         // On-screen end-turn button (ui/match-hud.md §6 item 1) — same guards as the
