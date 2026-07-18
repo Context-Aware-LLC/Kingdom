@@ -9,8 +9,8 @@ namespace Emberfall.Presentation
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
     // Layout (orthographic camera, world units):
-    //   Board rows:  y = ±1.3   (7 slots, x = -2.7..+2.7 at 0.9 spacing)
-    //   Hand rows:   y = ±3.8   (10 slots, x = -4.05..+4.05 at 0.9 spacing)
+    //   Board rows:  y = ±1.3   (7 slots, x = -4.05..+4.05 at 1.35 spacing)
+    //   Hand rows:   y = ±3.8   (10 slots, x = -6.08..+6.08 at 1.35 spacing)
     //   Hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
     //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). xSign: P0=-1, P1=+1.
     //   Hero:        x = 5.2·xSign,  y = ±1.3
@@ -23,7 +23,7 @@ namespace Emberfall.Presentation
     {
         private const int   BoardSlotCount = 7;
         private const int   HandSlotCount  = 10;
-        private const float SlotSpacing    = 0.90f;
+        private const float SlotSpacing    = 1.35f;
 
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;
@@ -52,9 +52,9 @@ namespace Emberfall.Presentation
                 seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", new Vector3(x, ySign * 3.8f, 0f));
             }
 
-            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  5.2f, ySign * 1.3f, 0f));
-            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  4.1f, ySign * 1.3f, 0f));
-            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  5.2f, ySign * 2.3f, 0f));
+            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  6.5f, ySign * 1.3f, 0f));
+            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  5.3f, ySign * 1.3f, 0f));
+            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  6.5f, ySign * 2.3f, 0f));
             seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(xSign * -5.8f, ySign * 2.0f, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -5.8f, ySign * 2.5f, 0f));
         }

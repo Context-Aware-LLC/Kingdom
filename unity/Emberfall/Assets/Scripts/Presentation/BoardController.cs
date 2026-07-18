@@ -17,8 +17,11 @@ namespace Emberfall.Presentation
         [SerializeField] private BoardAnchors boardAnchors;
 
         // Runtime card visual dimensions (world units).
-        private const float CardW = 0.78f;
-        private const float CardH = 1.10f;
+        private const float CardW = 1.17f;
+        private const float CardH = 1.65f;
+
+        // How far a taunted minion steps out of its row toward the centerline.
+        private const float TauntRowOffset = 0.40f;
 
         private ICardDatabase _db;
         private PlayerId _p0Id;
@@ -195,6 +198,17 @@ namespace Emberfall.Presentation
                     presenter.transform.localRotation = Quaternion.identity;
                 }
             }
+
+            // Front-row taunt (decision 2026-07-17): taunted board minions step toward
+            // the centerline so blockers read spatially, not by glow color. Re-applied
+            // every sync — taunt can be gained/lost without a slot change.
+            if (zone == Zone.Board)
+            {
+                float toward = (owner == _p0Id) ? 1f : -1f;
+                bool hasTaunt = ci.Keywords.Contains(Keyword.TAUNT);
+                presenter.transform.localPosition =
+                    hasTaunt ? new Vector3(0f, toward * TauntRowOffset, 0f) : Vector3.zero;
+            }
         }
 
         // Equipped weapon lives on PlayerState.Weapon (a WeaponInstance, not a CardInstance in a
@@ -260,7 +274,7 @@ namespace Emberfall.Presentation
             var glowGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             glowGo.name = "GlowOverlay";
             glowGo.transform.SetParent(root.transform, false);
-            glowGo.transform.localScale    = new Vector3(CardW + 0.10f, CardH + 0.10f, 1f);
+            glowGo.transform.localScale    = new Vector3(CardW + 0.15f, CardH + 0.15f, 1f);
             glowGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
             Destroy(glowGo.GetComponent<MeshCollider>());
             var glowRenderer = glowGo.GetComponent<Renderer>();
@@ -273,7 +287,7 @@ namespace Emberfall.Presentation
             var aegisGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             aegisGo.name = "AegisUnderlay";
             aegisGo.transform.SetParent(root.transform, false);
-            aegisGo.transform.localScale    = new Vector3(CardW + 0.14f, CardH + 0.14f, 1f);
+            aegisGo.transform.localScale    = new Vector3(CardW + 0.21f, CardH + 0.21f, 1f);
             aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
             Destroy(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
@@ -324,17 +338,17 @@ namespace Emberfall.Presentation
             col.size = new Vector3(CardW, CardH, 0.1f);
 
             // Name — top strip
-            TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 2.0f, Color.white);
+            TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 3.0f, Color.white);
             // Cost — top-left gem
-            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 2.5f, new Color(0.4f, 0.7f, 1f));
+            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 3.75f, new Color(0.4f, 0.7f, 1f));
             // Attack — bottom-left (minions + weapons)
-            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
+            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
             // Health — bottom-right (minions only)
-            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
+            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
             // Durability — bottom-right (weapons only; occupies the health slot, mutually exclusive)
-            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 2.5f, Color.white);
+            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
             // Keywords — center strip
-            TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.2f, new Color(0.9f, 0.85f, 0.6f));
+            TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.8f, new Color(0.9f, 0.85f, 0.6f));
 
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer);

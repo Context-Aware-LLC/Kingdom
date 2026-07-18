@@ -104,10 +104,11 @@ namespace Emberfall.Presentation
             if (_glowRenderer != null)
                 _glowRenderer.enabled = (auras & AuraSet.Glow) != 0;
 
-            // Aegis underlay: Divine Shield or Taunt — toggled, self-animated in shader.
+            // Aegis underlay: Divine Shield only. Taunt reads spatially (front row,
+            // decision 2026-07-17) — no keyword glow, so the shared gold bubble
+            // unambiguously means Shield.
             if (_aegisRenderer != null)
-                _aegisRenderer.enabled = (auras & AuraSet.Shield) != 0
-                                      || (auras & AuraSet.Taunt)  != 0;
+                _aegisRenderer.enabled = (auras & AuraSet.Shield) != 0;
         }
 
         // ── MatchRunner.OnMatchEvent — one-shot flash + dissolve ────────────────────
