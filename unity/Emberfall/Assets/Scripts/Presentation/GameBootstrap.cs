@@ -121,8 +121,20 @@ namespace Emberfall.Presentation
 #else
                 IArtProvider heroArt = new AddressableArtProvider();
 #endif
-                CreateHeroPlate(p0Id, 0, setup.P0Class, boardAnchors, db, heroArt);
+                var p0Plate = CreateHeroPlate(p0Id, 0, setup.P0Class, boardAnchors, db, heroArt);
                 CreateHeroPlate(p1Id, 1, setup.P1Class, boardAnchors, db, heroArt);
+                if (inputRouter != null && p0Plate != null)
+                    inputRouter.SetHeroPlate(p0Plate);
+            }
+
+            // ── End-turn button (hot-seat only; ui/match-hud.md §6 item 1) ────────
+            if (inputRouter != null)
+            {
+                var endTurnGo = new GameObject("EndTurnButton");
+                endTurnGo.transform.position = new Vector3(6.3f, 0f, 0f);
+                var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
+                endTurn.Init(p0Id, inputRouter);
+                matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
             }
 
             // ── VFX ───────────────────────────────────────────────────────────────
@@ -161,16 +173,17 @@ namespace Emberfall.Presentation
             matchRunner.StartMatch(p0Session, p0Source, p1Session, p1Ai);
         }
 
-        private void CreateHeroPlate(PlayerId playerId, int seatIndex, Core.Contracts.CardClass heroClass,
-                                     BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
+        private HeroPlateView CreateHeroPlate(PlayerId playerId, int seatIndex, Core.Contracts.CardClass heroClass,
+                                              BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
         {
             Transform heroAnchor = anchors.HeroAnchor(playerId);
-            if (heroAnchor == null) return;
+            if (heroAnchor == null) return null;
 
             var go   = new GameObject($"HeroPlate_{playerId}");
             var view = go.AddComponent<HeroPlateView>();
             view.Init(seatIndex, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
+            return view;
         }
 
         private void CreateManaTray(PlayerId playerId, int seatIndex, BoardAnchors anchors)

@@ -43,7 +43,12 @@ namespace Emberfall.Presentation
 
         private InstanceId    _selectedId;
         private CardPresenter _selectedPresenter;
+        private HeroPlateView _p0HeroPlate;   // selection cue for hero-as-attacker
         private ICommandValidator _validator;
+
+        /// <summary>Wired by GameBootstrap after the hero plates exist — heroes have no
+        /// CardPresenter, so their selection highlight routes through the plate view.</summary>
+        public void SetHeroPlate(HeroPlateView p0Plate) => _p0HeroPlate = p0Plate;
 
         public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
                          ICommandValidator validator = null)
@@ -162,7 +167,7 @@ namespace Emberfall.Presentation
                 case State.Idle:
                     // Our hero is also an attacker when armed (engine: ValidateAttack IsHero +
                     // weapon). Select it like a board minion; the validator rejects a weaponless
-                    // swing. No CardPresenter on the hero plate, so no highlight yet.
+                    // swing. Highlight routes through the plate view (no CardPresenter on heroes).
                     if (owner == _p0Id
                         && _currentState.ActivePlayer == _p0Id
                         && _currentState.Phase == TurnPhase.Main)
@@ -170,6 +175,7 @@ namespace Emberfall.Presentation
                         _selectedId        = HeroIdOf(owner);
                         _selectedPresenter = null;
                         _state             = State.AttackerSelected;
+                        _p0HeroPlate?.SetSelected(true);
                     }
                     break;
 
@@ -283,6 +289,18 @@ namespace Emberfall.Presentation
             }
         }
 
+        // On-screen end-turn button (ui/match-hud.md §6 item 1) — same guards as the
+        // keyboard path; keyboard stays.
+        public void OnEndTurnClicked()
+        {
+            if (_currentState == null || _p0Input == null) return;
+            if (_currentState.Phase != TurnPhase.Main) return;
+            if (_currentState.ActivePlayer != _p0Id) return;
+
+            ClearSelection();
+            Submit(new EndTurnIntent(_p0Id));
+        }
+
         // ── Helpers ─────────────────────────────────────────────────────────────────
 
         // Courtesy pre-validation over the PROJECTED truth state (a4 design §7; ADR-0004 — an
@@ -325,6 +343,7 @@ namespace Emberfall.Presentation
         private void ClearSelection()
         {
             _selectedPresenter?.SetSelectionHighlight(false);
+            _p0HeroPlate?.SetSelected(false);
             _selectedPresenter = null;
             _selectedId        = default;
             _state             = State.Idle;

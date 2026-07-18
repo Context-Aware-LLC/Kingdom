@@ -18,6 +18,9 @@ namespace Emberfall.Presentation
         private static readonly Color HpFull       = Color.white;
         private static readonly Color HpDamaged    = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color FrozenTint   = new Color(0.40f, 0.60f, 0.95f);
+        // Matches CardPresenter.SelectedColor so hero-as-attacker selection reads
+        // identically to minion selection.
+        private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
         private static readonly Color PowerReady   = new Color(0.30f, 0.55f, 0.85f);
         private static readonly Color PowerSpent   = new Color(0.22f, 0.22f, 0.30f);
 
@@ -26,6 +29,8 @@ namespace Emberfall.Presentation
 
         private int _seatIndex;
         private ICardDatabase _db;
+        private bool _selected;
+        private bool _frozen;
 
         private Renderer     _plate;
         private Renderer     _portrait;
@@ -97,7 +102,8 @@ namespace Emberfall.Presentation
             _hpLabel.text  = hero.CurrentHealth.ToString();
             _hpLabel.color = hero.CurrentHealth < hero.MaxHealth ? HpDamaged : HpFull;
 
-            Tint(_plate, hero.IsFrozen ? FrozenTint : PlateColor);
+            _frozen = hero.IsFrozen;
+            ApplyPlateTint();
 
             if (_powerDisc != null)
             {
@@ -111,6 +117,19 @@ namespace Emberfall.Presentation
                 if (_powerLabel != null)
                     _powerLabel.text = $"({cost}) {powerDef?.Name ?? "Power"}";
             }
+        }
+
+        /// <summary>Hero-as-attacker selection cue — driven by InputRouter, mirrors
+        /// CardPresenter.SetSelectionHighlight. Selection outranks the frozen tint.</summary>
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            ApplyPlateTint();
+        }
+
+        private void ApplyPlateTint()
+        {
+            Tint(_plate, _selected ? SelectedTint : _frozen ? FrozenTint : PlateColor);
         }
 
         // ── Build helpers (same primitives-only approach as BoardController) ────────
