@@ -106,6 +106,11 @@ namespace Emberfall.Presentation
             PlayerId seat0Id = s0.Players[0].Id;
             PlayerId seat1Id = s0.Players[1].Id;
             PlayerId localId = _net.Player;
+            // THE LOCAL PLAYER RENDERS AT THE BOTTOM (visual index 0) regardless of server
+            // seat — found live at b3 §14 step 4: a seat-1 local otherwise sees the board
+            // upside down (their own un-redacted hand rendered as the "enemy" hand). Seat
+            // indices stay engine-truth for the runner; only presentation is local-first.
+            PlayerId remoteId = localId == seat0Id ? seat1Id : seat0Id;
 
             // ── Intent source for OUR seat; the opponent seat is inert (NullIntentSource). ────────
             IIntentSource mine;
@@ -124,13 +129,11 @@ namespace Emberfall.Presentation
             IIntentSource s0Source = _net.Seat == 0 ? mine : theirs;
             IIntentSource s1Source = _net.Seat == 1 ? mine : theirs;
 
-            // ── Board visuals ─────────────────────────────────────────────────────
+            // ── Board visuals — local player at the bottom ────────────────────────
             if (boardController != null && boardAnchors != null)
             {
-                boardAnchors.SetPlayers(seat0Id, seat1Id);
-                // localHumanId: the local player may sit at either seat — attack affordances
-                // (ready-glow / exhausted-dim) must track OUR minions, not seat 0's.
-                boardController.Initialize(db, boardAnchors, seat0Id, seat1Id, inputRouter, matchRunner,
+                boardAnchors.SetPlayers(localId, remoteId);
+                boardController.Initialize(db, boardAnchors, localId, remoteId, inputRouter, matchRunner,
                                            localHumanId: localId);
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
             }
@@ -138,17 +141,22 @@ namespace Emberfall.Presentation
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
             {
+                // §14 step 4 diagnostic: log every snapshot the MIRROR applies. If these lines
+                // stop while the server/bot advances, the apply path is dropping snapshots.
+                _view.OnSnapshot += s => Debug.Log(
+                    $"[Net] snap v{s.StateVersion} phase={s.Phase} active={s.ActivePlayer} " +
+                    $"mana={s.Players[0].Mana.Available}/{s.Players[1].Mana.Available}");
                 _view.OnSnapshot += inputRouter.OnStateUpdated;
                 inputRouter.OnStateUpdated(_view.Current);
                 if (proceduralBoardSetup != null)
-                    proceduralBoardSetup.SetupClickables(seat0Id, seat1Id, inputRouter);
+                    proceduralBoardSetup.SetupClickables(localId, remoteId, inputRouter);
             }
 
-            // ── Mana trays ────────────────────────────────────────────────────────
+            // ── Mana trays — local at visual index 0 ──────────────────────────────
             if (boardAnchors != null)
             {
-                CreateManaTray(seat0Id, 0, boardAnchors);
-                CreateManaTray(seat1Id, 1, boardAnchors);
+                CreateManaTray(localId, 0, boardAnchors);
+                CreateManaTray(remoteId, 1, boardAnchors);
             }
 
             // ── Hero plates — class rides the projected snapshot (state-sync §5.2 PUBLIC), no MatchSetup. ─
@@ -159,14 +167,24 @@ namespace Emberfall.Presentation
 #else
                 IArtProvider heroArt = new AddressableArtProvider();
 #endif
-                var plate0 = CreateHeroPlate(seat0Id, 0, s0.Players[0].Hero.Class, boardAnchors, db, heroArt);
-                var plate1 = CreateHeroPlate(seat1Id, 1, s0.Players[1].Hero.Class, boardAnchors, db, heroArt);
+                CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
+                CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
+                var localPlate  = CreateHeroPlate(localId, 0, localClass, boardAnchors, db, heroArt);
+                var remotePlate = CreateHeroPlate(remoteId, 1, remoteClass, boardAnchors, db, heroArt);
                 // Selection/target cues track OUR seat (also closes the missing
                 // hero-as-attacker gold cue in networked mode).
                 if (inputRouter != null)
-                    inputRouter.SetHeroPlates(
-                        _net.Seat == 0 ? plate0 : plate1,
-                        _net.Seat == 0 ? plate1 : plate0);
+                    inputRouter.SetHeroPlates(localPlate, remotePlate);
+            }
+
+            // ── End-turn button (was hot-seat-only; found missing at b3 §14 step 4) ──
+            if (inputRouter != null)
+            {
+                var endTurnGo = new GameObject("EndTurnButton");
+                endTurnGo.transform.position = new Vector3(6.3f, 0f, 0f);
+                var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
+                endTurn.Init(localId, inputRouter);
+                matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
             }
 
             // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.

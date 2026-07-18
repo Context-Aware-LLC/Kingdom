@@ -569,6 +569,11 @@ namespace Emberfall.Presentation
             if (_validator != null && _currentState != null
                 && !_validator.CanExecute(_currentState, intent, out RejectReason? reason))
             {
+                // §14 step 4 diagnostic: a local reject names the mirror state it judged
+                // against — stale-version rejects are invisible without this.
+                Debug.LogWarning($"[InputRouter] local reject {reason} judged on mirror " +
+                                 $"v{_currentState.StateVersion} phase={_currentState.Phase} " +
+                                 $"active={_currentState.ActivePlayer} intent={intent.GetType().Name}");
                 _p0Input.OnRejected(reason ?? RejectReason.NotImplemented);
                 return;
             }
