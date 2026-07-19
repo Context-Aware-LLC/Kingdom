@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_ManaFill
-  m_Shader: {fileID: -6465566751694194690, guid: 142d0556bf96e374cbb06a08454fb532, type: 3}
+  m_Shader: {fileID: 4800000, guid: 9f139f62c1769e943b0a51fac3da7ff4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -55,11 +55,19 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CrystalCount: 10
     - _FillLevel: 0
+    - _Gap: 0.12
+    - _LockedLevel: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _SpentLevel: 0
+    - _TempLevel: 0
     m_Colors:
-    - _EmptyColor: {r: 0.6698113, g: 0.6476949, b: 0.6476949, a: 1}
-    - _FilledColor: {r: 0.05606977, g: 0.2480661, b: 0.7924528, a: 1}
+    - _EmptyColor: {r: 0.12, g: 0.12, b: 0.14, a: 1}
+    - _FilledColor: {r: 0.4, g: 0.7, b: 1, a: 1}
+    - _LockedColor: {r: 0.55, g: 0.18, b: 0.2, a: 1}
+    - _SpentColor: {r: 0.25, g: 0.25, b: 0.35, a: 1}
+    - _TempColor: {r: 0.3, g: 0.85, b: 0.45, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
