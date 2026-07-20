@@ -33,3 +33,9 @@ art-bakeoff/
 
 # Scratch match-replay logs from bot/networked smoke tests - disposable
 scratch-replays/
+
+# Unity AI-generation cache (Assistant/asset-gen scratch) - never commit
+unity/Emberfall/GeneratedAssets/
+
+# Loading-screen preview scratch renders (regenerable via offscreen rig)
+/wordmark_preview.png
