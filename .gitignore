@@ -27,3 +27,9 @@ art-bakeoff/
 
 # Local secrets (Gemini key etc.) - never commit
 .env
+
+# Agent Related
+.claude
+
+# Scratch match-replay logs from bot/networked smoke tests - disposable
+scratch-replays/
