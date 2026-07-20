@@ -56,12 +56,21 @@ namespace Emberfall.Presentation
 
         private NetworkedMatchSession _net;
         private MainThreadMatchSession _view;
+        private LoadingOverlay _overlay;
+
+        private void Awake()
+        {
+            // Frame-0 coverage (loading-screen-plate.md §5): the overlay is up before the
+            // async Boot() coroutine does any work behind it.
+            _overlay = LoadingOverlay.Create(Camera.main);
+        }
 
         private void Start()
         {
             if (matchRunner == null)
             {
                 Debug.LogError("[NetworkedGameBootstrap] matchRunner is not assigned.");
+                if (_overlay != null) _overlay.NotifyBootFailed("Scene misconfigured — matchRunner not assigned");
                 return;
             }
             StartCoroutine(Boot());
@@ -71,28 +80,57 @@ namespace Emberfall.Presentation
 
         private IEnumerator Boot()
         {
-            ICardDatabase db = LoadCardDatabase();
+            ICardDatabase db;
+            try
+            {
+                db = LoadCardDatabase();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NetworkedGameBootstrap] card database load failed: {ex.Message}");
+                if (_overlay != null) _overlay.NotifyBootFailed("Card database failed to load");
+                yield break;
+            }
 
             _net = new NetworkedMatchSession(new WebSocketTransport());
             _view = new MainThreadMatchSession(_net);
 
             // RC-F10: marshal terminal transitions to the main thread and stop the runner.
+            // The same handler feeds the loading overlay's status line (ConnectionState already
+            // narrates the boot: Connecting → Pairing → Live); raises come from the background
+            // receive pump, so everything goes through _view.Post.
             _net.OnConnectionStateChanged += st => _view.Post(() =>
             {
+                if (_overlay != null)
+                {
+                    switch (st)
+                    {
+                        case ConnectionState.Connecting: _overlay.SetStatus("Connecting…"); break;
+                        case ConnectionState.Pairing:    _overlay.SetStatus("Waiting for an opponent…"); break;
+                        case ConnectionState.Live:       _overlay.SetStatus("Opponent found"); break;
+                    }
+                }
                 if (st == ConnectionState.Dead || st == ConnectionState.Ended)
                     matchRunner.StopMatch(_net.State == ConnectionState.Ended ? _view.Current.Outcome : MatchOutcome.InProgress);
             });
 
             Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl} …");
+            if (_overlay != null) _overlay.SetStatus("Connecting…");
             Task connect;
             try { connect = _net.ConnectAsync(new Uri(serverUrl)); }
-            catch (Exception ex) { Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}"); yield break; }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");
+                if (_overlay != null) _overlay.NotifyBootFailed($"Couldn't connect — {ex.Message}");
+                yield break;
+            }
 
             while (!connect.IsCompleted) yield return null;
             if (connect.IsFaulted || _net.State != ConnectionState.Live)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
                                $"(state={_net.State}, dead={_net.DeadReason}, fault={connect.Exception?.GetBaseException().Message}).");
+                if (_overlay != null) _overlay.NotifyBootFailed($"Couldn't reach the server ({_net.DeadReason})");
                 yield break;
             }
 
@@ -209,6 +247,11 @@ namespace Emberfall.Presentation
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware, unlike the hot-seat boot
             };
+
+            // ── Loading overlay fade: first released snapshot = the board is drawn. Subscribed
+            // BEFORE StartMatch (the instant initial entry fires synchronously inside it). ──────
+            if (_overlay != null)
+                matchRunner.OnStateUpdated += _ => _overlay.NotifyMatchReady();
 
             // ── Drive the runner: ONE seat owned; the same marshaled session sits at both indices. ─
             matchRunner.StartMatch(

@@ -25,6 +25,7 @@ Shader "Emberfall/SG_LoadingOrb"
         _RimBoost    ("Rim Boost", Range(0, 2)) = 0.5
         _Progress    ("Load Progress", Range(0, 1)) = 1
         _Intensity   ("Overall Intensity", Range(0, 3)) = 1
+        _Fade        ("Overlay Fade", Range(0, 1)) = 1
     }
 
     SubShader
@@ -67,6 +68,7 @@ Shader "Emberfall/SG_LoadingOrb"
                 float  _RimBoost;
                 float  _Progress;
                 float  _Intensity;
+                float  _Fade;
             CBUFFER_END
 
             float hash21(float2 p)
@@ -148,7 +150,7 @@ Shader "Emberfall/SG_LoadingOrb"
                 // Dimmer while loading starts, full presence as progress completes.
                 col *= lerp(0.55, 1.0, saturate(_Progress));
 
-                return half4(col, tex.a);
+                return half4(col, tex.a * _Fade);
             }
             ENDHLSL
         }

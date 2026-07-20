@@ -39,15 +39,35 @@ namespace Emberfall.Presentation
         [Header("VFX (Phase C step 5 — null = VFX disabled)")]
         [SerializeField] private VfxDirector vfxDirector;
 
+        private LoadingOverlay loadingOverlay;
+
+        private void Awake()
+        {
+            // Frame-0 coverage (loading-screen-plate.md §5): the overlay exists before
+            // anything renders; Start()'s synchronous boot happens behind it.
+            loadingOverlay = LoadingOverlay.Create(Camera.main);
+        }
+
         private void Start()
         {
             if (matchRunner == null)
             {
                 Debug.LogError("[GameBootstrap] matchRunner is not assigned.");
+                if (loadingOverlay != null) loadingOverlay.NotifyBootFailed("Scene misconfigured — matchRunner not assigned");
                 return;
             }
 
-            ICardDatabase db    = LoadCardDatabase();
+            ICardDatabase db;
+            try
+            {
+                db = LoadCardDatabase();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[GameBootstrap] card database load failed: {ex.Message}");
+                if (loadingOverlay != null) loadingOverlay.NotifyBootFailed("Card database failed to load");
+                return;
+            }
             MatchSetup    setup = Emberfall.Data.PrebuiltDecks.EmberwardVsTidecaller();
 
             var p0Id = new PlayerId("P0");
@@ -181,6 +201,12 @@ namespace Emberfall.Presentation
                 MatchEndBanner.Show(outcome, localSeat: 0); // hot-seat: the local view is always seat 0
                                                             // (networked uses localSeat: net.Seat — NetworkedGameBootstrap)
             };
+
+            // ── Loading overlay fade: first released snapshot = the board is drawn. Must be
+            // subscribed BEFORE StartMatch — the instant initial entry fires synchronously
+            // inside it. The overlay holds the fade until its reveal choreography finishes.
+            if (loadingOverlay != null)
+                matchRunner.OnStateUpdated += _ => loadingOverlay.NotifyMatchReady();
 
             matchRunner.StartMatch(p0Session, p0Source, p1Session, p1Ai);
         }
