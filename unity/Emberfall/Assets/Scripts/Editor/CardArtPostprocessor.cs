@@ -12,6 +12,7 @@ namespace Emberfall.Editor
     /// Folder contract (pipeline.md §8):
     ///   Assets/Art/Cards/&lt;setId&gt;/&lt;artId&gt;.png  — streamed card illustrations
     ///   Assets/Art/Hero/&lt;heroId&gt;.png            — hero portraits (same treatment)
+    ///   Assets/Art/Backgrounds/...               — full-screen imagery (menus/splash): full res desktop, lighter mobile
     ///   Assets/Art/UI/...                        — frames/gems/icons/plates (atlas, no mips)
     ///   Assets/Art/VFX/Textures/...              — FX masks/flipbooks (linear data)
     /// </summary>
@@ -19,6 +20,7 @@ namespace Emberfall.Editor
     {
         const string CardsRoot = "Assets/Art/Cards/";
         const string HeroRoot = "Assets/Art/Hero/";
+        const string BackgroundsRoot = "Assets/Art/Backgrounds/";
         const string UiRoot = "Assets/Art/UI/";
         const string VfxRoot = "Assets/Art/VFX/Textures/";
 
@@ -29,6 +31,8 @@ namespace Emberfall.Editor
 
             if (path.StartsWith(CardsRoot) || path.StartsWith(HeroRoot))
                 ApplyIllustration(importer);
+            else if (path.StartsWith(BackgroundsRoot))
+                ApplyBackground(importer);
             else if (path.StartsWith(UiRoot))
                 ApplyUiAtlas(importer);
             else if (path.StartsWith(VfxRoot))
@@ -44,6 +48,17 @@ namespace Emberfall.Editor
             SetPlatform(importer, "Standalone", 1024, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 512, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 512, TextureImporterFormat.ASTC_6x6);
+        }
+
+        // Full-screen imagery (menu/splash backdrops): shown near 1:1, no atlas, mips OFF.
+        // Full resolution to desktop; a lighter cap to mobile to bound texture memory / download.
+        static void ApplyBackground(TextureImporter importer)
+        {
+            ApplySpriteCommon(importer);
+            importer.mipmapEnabled = false;
+            SetPlatform(importer, "Standalone", 4096, TextureImporterFormat.BC7);
+            SetPlatform(importer, "Android", 2048, TextureImporterFormat.ASTC_6x6);
+            SetPlatform(importer, "iPhone", 2048, TextureImporterFormat.ASTC_6x6);
         }
 
         // UI atlas sources (frames/gems/icons/plates): fixed pixel size, mips OFF.

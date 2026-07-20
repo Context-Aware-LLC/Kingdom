@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MainMenuScreen.uxml — S1 front door (ui/ux-flows.md).
+  The wordmark, then a single column of destinations. Find Game is the primary CTA;
+  the rest are secondary. Bound at runtime by MainMenuController; styled by theme.uss
+  (shared meta-screen tokens, single source of truth) + mainmenu.uss.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../Deckbuilder/theme.uss" />
+    <Style src="mainmenu.uss" />
+
+    <ui:VisualElement name="root" class="emb-root main-menu">
+
+        <!-- Scrim: darkens the plate behind the content (paints first = furthest back) -->
+        <ui:VisualElement name="scrim" class="mm-scrim" picking-mode="Ignore" />
+
+        <!-- Brand -->
+        <ui:VisualElement name="brand" class="mm-brand">
+            <ui:Label text="EMBERFALL" class="mm-wordmark" />
+            <ui:Label text="A duel of embers" class="mm-tagline" />
+        </ui:VisualElement>
+
+        <!-- Menu -->
+        <ui:VisualElement name="menu" class="mm-menu">
+            <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta" />
+            <ui:Button name="btn-single-player" text="Single Player" class="mm-button" />
+            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button" />
+            <ui:Button name="btn-store" text="Store" class="mm-button" />
+            <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button" />
+        </ui:VisualElement>
+
+        <!-- Footer -->
+        <ui:VisualElement name="footer" class="mm-footer">
+            <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

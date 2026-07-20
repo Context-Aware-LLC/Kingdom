@@ -1,0 +1,95 @@
+/*
+ * mainmenu.uss — S1 front door styles. Consumes tokens from theme.uss only (no literal
+ * colors/sizes a token already names). design-system.md §6 components, §2 layout.
+ * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
+ */
+
+.main-menu {
+    flex-grow: 1;
+    background-color: var(--surface-0);
+    background-image: url("/Assets/Art/Backgrounds/MainMenu_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12);
+}
+
+/* Dark scrim over the plate so the wordmark + buttons stay legible (design-system §4.5). */
+.mm-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(11, 14, 19, 0.42);
+}
+
+/* ---------- Brand ---------- */
+.mm-brand {
+    align-items: center;
+    margin-bottom: var(--space-16);
+}
+.mm-wordmark {
+    font-size: 72px;
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    letter-spacing: 8px;
+}
+.mm-tagline {
+    font-size: var(--type-h2);
+    color: var(--accent);
+    margin-top: var(--space-2);
+    letter-spacing: 2px;
+}
+
+/* ---------- Menu column ----------
+ * One carved control, not five floating buttons. The column is a single slab with a
+ * dimmed-accent frame and rounded corners; the buttons are slats that touch edge-to-edge
+ * and clip to the group's rounded corners (overflow: hidden). A dark hairline between
+ * slats reads as a groove cut into the stone. (Version A — segmented tablet.)
+ */
+.mm-menu {
+    align-items: stretch;
+    min-width: 300px;
+    border-width: 1px;
+    border-color: rgba(11, 14, 19, 0.7);        /* dark inscribed edge — reads as carved, not glowing */
+    border-radius: var(--space-3);
+    overflow: hidden;                            /* slats clip to the rounded group */
+}
+.mm-button {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    background-color: rgba(30, 37, 48, 0);      /* fully transparent — backdrop shows straight through (styling base) */
+    border-width: 0;
+    border-radius: 0;                            /* the group owns the shape, not the slat */
+    border-top-width: 1px;                       /* groove between slats */
+    border-top-color: rgba(11, 14, 19, 0.55);
+    height: 64px;
+    margin-bottom: 0;                            /* slats touch */
+    padding: 0 var(--space-6);
+    letter-spacing: 1px;
+}
+.mm-button:hover {
+    background-color: rgba(42, 51, 64, 0.45);   /* --surface-3, light wash — backdrop still reads through */
+}
+.mm-button:active {
+    background-color: rgba(20, 25, 34, 0.95);   /* --surface-1 */
+}
+/* Find Game — visually identical to the other slats on arrival (no ember fill). The only
+ * override is positional: it's the top of the stack, so it carries no groove hairline under
+ * the frame's top edge. Hover/active fall through to the shared .mm-button states. */
+.mm-button--cta {
+    border-top-width: 0;
+}
+
+/* ---------- Footer ---------- */
+.mm-footer {
+    position: absolute;
+    bottom: var(--space-6);
+    right: var(--space-6);
+}
+.mm-version {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+}
