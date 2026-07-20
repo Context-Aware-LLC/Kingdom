@@ -193,8 +193,8 @@ namespace Emberfall.Presentation
             // ── Mana trays — local at visual index 0 ──────────────────────────────
             if (boardAnchors != null)
             {
-                CreateManaTray(localId, 0, boardAnchors);
-                CreateManaTray(remoteId, 1, boardAnchors);
+                CreateManaTray(localId, boardAnchors);
+                CreateManaTray(remoteId, boardAnchors);
             }
 
             // ── Hero plates — class rides the projected snapshot (state-sync §5.2 PUBLIC), no MatchSetup. ─
@@ -207,8 +207,8 @@ namespace Emberfall.Presentation
 #endif
                 CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
                 CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
-                var localPlate  = CreateHeroPlate(localId, 0, localClass, boardAnchors, db, heroArt);
-                var remotePlate = CreateHeroPlate(remoteId, 1, remoteClass, boardAnchors, db, heroArt);
+                var localPlate  = CreateHeroPlate(localId, localClass, boardAnchors, db, heroArt);
+                var remotePlate = CreateHeroPlate(remoteId, remoteClass, boardAnchors, db, heroArt);
                 // Selection/target cues track OUR seat (also closes the missing
                 // hero-as-attacker gold cue in networked mode).
                 if (inputRouter != null)
@@ -248,6 +248,12 @@ namespace Emberfall.Presentation
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware, unlike the hot-seat boot
             };
 
+            // ── §14 step 4 diagnostic (v9 freeze retest): playback-side twin of the [Net] snap
+            // trail. Diffing the two trails finds where playback falls behind the mirror — a
+            // healthy [Net] trail with no matching [Playback] advance IS the freeze signature. ──
+            matchRunner.OnStateUpdated += s => Debug.Log(
+                $"[Playback] v{s.StateVersion} phase={s.Phase} active={s.ActivePlayer}");
+
             // ── Loading overlay fade: first released snapshot = the board is drawn. Subscribed
             // BEFORE StartMatch (the instant initial entry fires synchronously inside it). ──────
             if (_overlay != null)
@@ -261,25 +267,25 @@ namespace Emberfall.Presentation
                 SeatOwnership.Single(_net.Seat));
         }
 
-        private HeroPlateView CreateHeroPlate(PlayerId playerId, int seatIndex, CardClass heroClass,
+        private HeroPlateView CreateHeroPlate(PlayerId playerId, CardClass heroClass,
                                               BoardAnchors anchors, ICardDatabase db, IArtProvider artProvider)
         {
             Transform heroAnchor = anchors.HeroAnchor(playerId);
             if (heroAnchor == null) return null;
             var go   = new GameObject($"HeroPlate_{playerId}");
             var view = go.AddComponent<HeroPlateView>();
-            view.Init(seatIndex, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
+            view.Init(playerId, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
             return view;
         }
 
-        private void CreateManaTray(PlayerId playerId, int seatIndex, BoardAnchors anchors)
+        private void CreateManaTray(PlayerId playerId, BoardAnchors anchors)
         {
             Transform anchor = anchors.ManaTrayAnchor(playerId);
             if (anchor == null) return;
             var go   = new GameObject($"ManaTray_{playerId}");
             var view = go.AddComponent<ManaTrayView>();
-            view.Init(seatIndex, anchor);
+            view.Init(playerId, anchor);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 

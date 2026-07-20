@@ -27,17 +27,18 @@ namespace Emberfall.Presentation
         private static readonly int LockedLevelId= Shader.PropertyToID("_LockedLevel");
         private static readonly int TempLevelId  = Shader.PropertyToID("_TempLevel");
 
-        private int _seatIndex;
+        private PlayerId _playerId;
         private Renderer _quad;
         private TextMeshPro _label;
         private MaterialPropertyBlock _mpb;
 
         /// <summary>
         /// Attach to a new GameObject and call Init once before first OnStateUpdated.
+        /// Identified by PlayerId, never by seat/visual index (see HeroPlateView.Init).
         /// </summary>
-        public void Init(int seatIndex, Transform anchor)
+        public void Init(PlayerId playerId, Transform anchor)
         {
-            _seatIndex = seatIndex;
+            _playerId = playerId;
             transform.SetParent(anchor, false);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
@@ -74,7 +75,7 @@ namespace Emberfall.Presentation
         {
             if (_quad == null) return;
 
-            var mana = state.Players[_seatIndex].Mana;
+            var mana = state.Players[state.SeatOf(_playerId)].Mana;
             int cap  = Mathf.Max(1, mana.Max);
 
             float fill   = (float)mana.Available / cap;

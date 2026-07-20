@@ -29,7 +29,7 @@ namespace Emberfall.Presentation
         private const float PlateW = 1.15f;
         private const float PlateH = 1.15f;
 
-        private int _seatIndex;
+        private PlayerId _playerId;
         private ICardDatabase _db;
         private bool _selected;
         private bool _targetable;
@@ -42,11 +42,13 @@ namespace Emberfall.Presentation
         private TextMeshPro  _powerLabel;
         private MaterialPropertyBlock _mpb;
 
-        /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.</summary>
-        public void Init(int seatIndex, Transform heroAnchor, Transform powerAnchor,
+        /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.
+        /// Identified by PlayerId, never by seat/visual index — a networked seat-1 local renders
+        /// at visual bottom, so index-based state reads swap the players (found live, 2026-07-19).</summary>
+        public void Init(PlayerId playerId, Transform heroAnchor, Transform powerAnchor,
                          ICardDatabase db, IArtProvider artProvider, CardClass heroClass)
         {
-            _seatIndex = seatIndex;
+            _playerId  = playerId;
             _db        = db;
             _mpb       = new MaterialPropertyBlock();
 
@@ -99,7 +101,7 @@ namespace Emberfall.Presentation
         {
             if (_hpLabel == null) return;
 
-            PlayerState ps   = state.Players[_seatIndex];
+            PlayerState ps   = state.Players[state.SeatOf(_playerId)];
             HeroInstance hero = ps.Hero;
 
             _hpLabel.text  = hero.CurrentHealth.ToString();
