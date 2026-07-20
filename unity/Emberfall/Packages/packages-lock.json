@@ -46,6 +46,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.emberfall.net.client": {
+      "version": "file:../../../src/Emberfall.Net.Client",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.emberfall.net.protocol": {
       "version": "file:../../../src/Emberfall.Net.Protocol",
       "depth": 0,

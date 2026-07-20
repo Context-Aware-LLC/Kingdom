@@ -9,5 +9,10 @@
 {$DOMAIN} {
 	# WebSocket upgrade + normal HTTP both proxy to the match server (service + port move
 	# together with docker-compose.yml — RC F4).
-	reverse_proxy emberfall-server:8080
+	reverse_proxy emberfall-server:8080 {
+		# Immediate streaming, no response buffering — standard hygiene for a wss proxy.
+		# (NB: not the fix for the 2026-07-19 connect-hang; that was a degraded stale server
+		# process on the tiny box, cleared by a fresh redeploy — see gbrain/native memory.)
+		flush_interval -1
+	}
 }
