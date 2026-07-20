@@ -122,9 +122,17 @@ namespace Emberfall.Net.Server.Transport
 
             if (partner is null)
             {
-                // First of the pair: wait to be seated by whoever arrives next (or die waiting —
-                // the socket close will surface in the receive loop immediately after seating).
-                using (ct.Register(() => mySeating.TrySetResult(null)))
+                // First of the pair: wait to be seated by whoever arrives next. If we die waiting,
+                // VACATE the slot — a dead waiter left in _waiting pairs the next arrival with a
+                // corpse and strands it (seen live 2026-07-19 while reproducing the liveness bug).
+                using (ct.Register(() =>
+                {
+                    lock (_lock)
+                    {
+                        if (_waiting is { } w && ReferenceEquals(w.conn, conn)) _waiting = null;
+                    }
+                    mySeating.TrySetResult(null);
+                }))
                     return await mySeating.Task;
             }
 

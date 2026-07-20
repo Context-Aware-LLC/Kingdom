@@ -337,13 +337,19 @@ namespace Emberfall.Net.Server
 
         private void OnTick(long now)
         {
-            // Heartbeat liveness (§11): silence past the timeout is a disconnect.
+            // Heartbeat liveness (§11): silence past the timeout is a disconnect. CLOSE the socket
+            // when policy vacates the seat — the TCP link may be perfectly healthy (2026-07-19
+            // silent-match-death: an alive client left unclosed kept believing Live forever while
+            // its snapshots silently stopped).
             for (int seat = 0; seat < 2; seat++)
             {
                 var link = _seats[seat].Link;
                 if (_seats[seat].Conn is not null && link is not null
                     && now - link.LastHeardMs > _opts.HeartbeatTimeoutMs)
+                {
+                    _seats[seat].Conn!.Close(1001, "liveness timeout");
                     OnDisconnected(seat);
+                }
             }
 
             // Disconnect grace (§8): expiry concedes the absent seat. First-vacated fires first
@@ -470,7 +476,12 @@ namespace Emberfall.Net.Server
             if (s.Conn is null || s.Link is null) return;
             byte[] frame = ProtocolCodec.Encode(msg, _id, ++s.Link.OutSeq);
             if (!s.Conn.TryEnqueue(frame))
-                OnDisconnected(seat);   // dead/overflowed writer stalls only itself
+            {
+                // Dead/overflowed writer stalls only itself — but CLOSE it, so an overflowed-yet-
+                // alive client gets a close frame instead of an eternally quiet socket.
+                s.Conn.Close(1001, "send overflow");
+                OnDisconnected(seat);
+            }
         }
 
         private void Strike(int seat)

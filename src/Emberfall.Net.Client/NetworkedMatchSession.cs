@@ -55,6 +55,7 @@ namespace Emberfall.Net.Client
 
         private CancellationTokenSource? _pumpCts;
         private Task? _pumpTask;
+        private Task? _timerTask;
         private TaskCompletionSource<bool>? _matchStarted;
 
         // Inbound-processed high-water for deterministic tests (no Task.Delay): each handled frame
@@ -139,6 +140,48 @@ namespace Emberfall.Net.Client
         {
             _pumpCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None);
             _pumpTask = Task.Run(() => PumpLoopAsync(_pumpCts.Token));
+            _timerTask = Task.Run(() => TimerLoopAsync(_pumpCts.Token));
+        }
+
+        /// <summary>
+        /// The b3 §4.2 liveness loop — the missing half of the b1 §11 heartbeat contract (root
+        /// cause of the 2026-07-19 silent-match-death blocker: ClientOptions carried the knobs,
+        /// nothing consumed them, so a client thinking for 30s went server-side "dead", was
+        /// vacated without a socket close, and the disconnect grace conceded it).
+        /// Two duties, both Live-only:
+        ///  - send-idle ≥ HeartbeatIdleMs ⇒ send a HeartbeatMsg (the server echoes it, so a
+        ///    healthy link is never inbound-silent for long either);
+        ///  - inbound-silent ≥ InboundSilenceMs despite those echoes ⇒ the link is truly dead.
+        ///    The §4.3 reconnect machine is not built (commit-2), so this is terminal via the
+        ///    same OnPeerClosed path a detected socket drop takes — no more ghost-ship UI.
+        /// </summary>
+        private async Task TimerLoopAsync(CancellationToken ct)
+        {
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    await Task.Delay(1000, ct).ConfigureAwait(false);
+                    long now = _opts.Clock.NowMs;
+                    bool linkDead = false;
+                    lock (_lock)
+                    {
+                        if (_state != ConnectionState.Live) continue;
+                        if (now - _lastRecvMs >= _opts.InboundSilenceMs)
+                            linkDead = true;
+                        else if (now - _lastSendMs >= _opts.HeartbeatIdleMs)
+                            SendUnlocked(new HeartbeatMsg(), ++_outSeq);
+                    }
+                    if (linkDead)
+                    {
+                        // CloseAsync raises the transport's OnClosed, which lands in OnPeerClosed.
+                        await _transport.CloseAsync(WireCloseReason.Fault).ConfigureAwait(false);
+                        OnPeerClosed();   // idempotent — no-op if the event already transitioned us
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException) { /* shutting down */ }
         }
 
         private async Task PumpLoopAsync(CancellationToken ct)
