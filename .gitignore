@@ -39,3 +39,6 @@ unity/Emberfall/GeneratedAssets/
 
 # Loading-screen preview scratch renders (regenerable via offscreen rig)
 /wordmark_preview.png
+
+# Playwright MCP session artifacts
+.playwright-mcp/

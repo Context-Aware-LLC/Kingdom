@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Threading.Tasks;
 using Emberfall.AI;
 using Emberfall.Core;
@@ -56,6 +57,9 @@ namespace Emberfall.Presentation
 
         private NetworkedMatchSession _net;
         private MainThreadMatchSession _view;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — editor/dev builds only
+#endif
         private LoadingOverlay _overlay;
 
         private void Awake()
@@ -76,7 +80,14 @@ namespace Emberfall.Presentation
             StartCoroutine(Boot());
         }
 
-        private void Update() => _view?.Pump();
+        private void Update()
+        {
+            _view?.Pump();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // [DesyncDbg] dev tool — F9 arms a one-shot wire fault (see DesyncFaultInjector).
+            if (Input.GetKeyDown(KeyCode.F9)) _faultInjector?.ArmOneShot();
+#endif
+        }
 
         private IEnumerator Boot()
         {
@@ -92,7 +103,36 @@ namespace Emberfall.Presentation
                 yield break;
             }
 
-            _net = new NetworkedMatchSession(new WebSocketTransport());
+            // ── C-G1-4 (M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
+            // This client was previously constructed with default ClientOptions, so OnDesyncCapture
+            // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
+            // the mirror holds last-good state (NetworkedMatchSession.cs:260-265) — with no log, no
+            // toast and no artifact. On screen that is indistinguishable from "a minion vanished",
+            // which is exactly how the open reborn bug presents, and it is why no offline repro can
+            // ever reach it: offline there is no wire and no verification step.
+            //
+            // NOTE: ClientOptions.DevCapture is declared but read NOWHERE in production code (only
+            // set in SnapshotApplyTests) — the sole gate on capture is OnDesyncCapture being non-null.
+            // It is set here for intent, not effect. Do not assume toggling it changes behaviour.
+            //
+            // These sinks run on the background receive pump, so they must never throw.
+            string captureDir = Path.Combine(Application.persistentDataPath, "desync");
+            var clientOptions = new ClientOptions
+            {
+                DevCapture = Debug.isDebugBuild,
+                OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
+                OnMisattribution = m => Debug.LogWarning(
+                    $"[Desync] MISATTRIBUTION match={m.MatchId} seat={m.Seat} pendingSeq={m.PendingSeq} " +
+                    $"reason={m.RejectReason} v{m.StateVersion}"),
+            };
+
+            IWireTransport transport = new WebSocketTransport();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // [DesyncDbg] dev tool — see DesyncFaultInjector.
+            _faultInjector = new DesyncFaultInjector(transport);
+            transport = _faultInjector;
+#endif
+            _net = new NetworkedMatchSession(transport, clientOptions);
             _view = new MainThreadMatchSession(_net);
 
             // RC-F10: marshal terminal transitions to the main thread and stop the runner.
@@ -298,6 +338,49 @@ namespace Emberfall.Presentation
             if (asset == null)
                 throw new Exception("cards/M1.cards not found in Addressables — run Emberfall/Addressables/Setup Groups + Migrate Card Data");
             return new JsonCardDatabase(asset.text);
+        }
+
+        /// <summary>
+        /// C-G1-4 desync sink. A rejected snapshot leaves an artifact instead of a silence: a loud
+        /// console line (always) plus the raw frame and a readable sidecar on disk (best-effort).
+        /// The wire-vs-local hash pair is the whole diagnosis — they disagree, and the sidecar says
+        /// by how much and at which state version.
+        ///
+        /// Runs on the background receive pump, so it swallows every write failure: failing to
+        /// RECORD a desync must never also break the match that is still playable.
+        /// </summary>
+        private static void WriteDesyncCapture(string dir, DesyncCapture cap)
+        {
+            // Unconditional and first — if the disk write dies, this line is still the evidence.
+            Debug.LogError(
+                $"[Desync] SNAPSHOT REJECTED, mirror held — match={cap.MatchId} seat={cap.Seat} " +
+                $"v{cap.StateVersion} envSeq={cap.EnvelopeSeq} wireHash={cap.WireHash} localHash={cap.LocalHash} " +
+                $"frameBytes={cap.RawFrame?.Length ?? 0}");
+
+            try
+            {
+                Directory.CreateDirectory(dir);
+                string stem = Path.Combine(
+                    dir, $"desync_{cap.MatchId}_s{cap.Seat}_v{cap.StateVersion}_e{cap.EnvelopeSeq}");
+
+                File.WriteAllBytes(stem + ".frame", cap.RawFrame ?? Array.Empty<byte>());
+                File.WriteAllText(stem + ".txt",
+                    $"matchId       = {cap.MatchId}\n" +
+                    $"seat          = {cap.Seat}\n" +
+                    $"stateVersion  = {cap.StateVersion}\n" +
+                    $"envelopeSeq   = {cap.EnvelopeSeq}\n" +
+                    $"wireHash      = {cap.WireHash}\n" +
+                    $"localHash     = {cap.LocalHash}\n" +
+                    $"rawFrameBytes = {cap.RawFrame?.Length ?? 0}\n");
+
+                Debug.LogError($"[Desync] capture written → {stem}.frame / .txt");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(
+                    $"[Desync] capture WRITE FAILED ({ex.GetType().Name}: {ex.Message}) — " +
+                    "the console line above is the only record of this rejection.");
+            }
         }
 
         /// <summary>
