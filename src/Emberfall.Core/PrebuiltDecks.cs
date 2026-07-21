@@ -12,9 +12,14 @@ namespace Emberfall.Core
     /// </summary>
     public static class PrebuiltDecks
     {
+        // Interim balance dial (2026-07-20, live-test feedback): 20 HP instead of the 30 default so
+        // games close out on damage before both decks run dry to fatigue. Set here on the production
+        // slice decks only — the MatchSetup default stays 30 so the golden-replay fixtures keep their
+        // recorded hashes and the R1 determinism gate stays green. Revisit if 20 becomes permanent.
         public static MatchSetup EmberwardVsTidecaller() => new MatchSetup(
             CardClass.EMBERWARD, EmberwardDeck(),
-            CardClass.TIDECALLER, TidecallerDeck());
+            CardClass.TIDECALLER, TidecallerDeck(),
+            heroMaxHealth: 20);
 
         public static IReadOnlyList<string> EmberwardDeck() => new string[]
         {

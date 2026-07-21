@@ -108,6 +108,27 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(def.CurrentHealth, Is.EqualTo(0), "defender took 3 damage");
         }
 
+        // Regression: REBORN must trigger on a COMBAT death, not only on effect/Drain death.
+        // The existing ThronelessKing_Reborn_Returns_At_One_HP kills via effect damage; a live
+        // networked match killed the king in combat and (reported) no 1-HP copy returned. This
+        // exercises the combat path (ApplyAttack → Drain → DeathCheck → Resummon).
+        [Test]
+        public void REBORN_Triggers_On_Combat_Death()
+        {
+            var s = MainPhase();
+            var attacker = Board(s, 0, Minion("bruiser", 6, 8));          // survives retaliation
+            var king = Board(s, 1, Minion("core_throneless_king", 6, 6, Keyword.TAUNT, Keyword.REBORN));
+
+            var r = Proc().Execute(s, Attack(s, attacker.Id, king.Id));
+
+            Assert.That(r.Accepted, Is.True, "attack resolved");
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1),
+                "REBORN copy should remain on the board after a combat death");
+            var copy = s.Players[1].Board[0];
+            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REBORN copy returns at 1 HP");
+            Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), "copy is still a Throneless King");
+        }
+
         [Test]
         public void RUSH_Can_Attack_Enemy_Minion_But_Not_Hero_On_Summon_Turn()
         {

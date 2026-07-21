@@ -13,7 +13,7 @@ namespace Emberfall.Editor
     /// </summary>
     public static class EmberfallBuild
     {
-        private const string ScenePath = "Assets/Scenes/Board.unity";
+        private const string ScenePath = "Assets/Scenes/BoardNetworked.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
 
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]

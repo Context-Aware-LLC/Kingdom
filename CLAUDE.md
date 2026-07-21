@@ -42,16 +42,37 @@ See `src/README.md` for the engine map.
 
 ## Repo map
 
-- `PROJECT-PLAN.md` — charter, scope, engine decision, milestones
-- `M1-KICKOFF.md` — milestone 1 kickoff
-- `STAFFING-PROPOSAL.md`, `BRIEF-*.md` — studio staffing + role briefs
+**Planning docs are NOT in this repo.** They were federated out in `3c77296` and now
+live at `C:\Users\User\Documents\Project Docs\Emberfall\docs\`, which is its own git
+repo registered as the federated `emberfall-docs` gbrain source. This repo keeps code
+and is registered as an unfederated source. Same convention across all three main
+projects (Emberfall, Pocket Secretary, Time Clock): planning docs live under
+`Documents\Project Docs\<Project>\docs\`, code repos keep code.
+
+Docs source (`…\Project Docs\Emberfall\docs\`):
+
+- `project/` — `PROJECT-PLAN.md` (charter, scope, milestones), `M1-KICKOFF.md`,
+  `M1-CLOSEOUT.md`, `M2-KICKOFF.md`, `M2-G0-REVIEW.md`, `STAFFING-PROPOSAL.md`,
+  `BRIEF-*.md`
+- `decisions/` — `ADR-000N-*.md` + M2 decision memos
 - `design/` — GDD, card schema, heroes, sample cards, economy, balance guardrails
-- `engineering/` — ARCHITECTURE, card-system, game-state-and-actions, interfaces
+- `engineering/` — ARCHITECTURE, card-system, game-state-and-actions, interfaces,
+  per-workstream design docs, `spec-reconciliation-2026-07.md`
 - `multiplayer/` — match lifecycle, netcode architecture
 - `techart/` — pipeline, card rendering, board/VFX, frame/rarity, perf budget,
   `shaders/` (per-shader specs, `SG_*` naming)
-- `tooling/` — card authoring tool, pipeline automation, validation/import
 - `ui/` — design system, UX flows
+- `audio/`, `testing/`, `tooling/` — audio direction, test strategy, card authoring
+  tool / pipeline automation / validation+import specs
+
+This repo (code):
+
+- `src/`, `tests/` — the deterministic rules core (.NET 10, `Emberfall.slnx`)
+- `unity/Emberfall/` — the Unity project
+- `art/`, `art-bakeoff/` — source art + bake-off outputs
+- `deploy/` — droplet/server deploy scaffolding
+- `tooling/scripts/`, `tools/ci/` — automation scripts and CI helpers
+- `artifacts/` — generated run outputs (golden-replay results, scans)
 
 ## Bookkeeping is part of done (Sam + Claude, 2026-07-17)
 
