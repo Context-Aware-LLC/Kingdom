@@ -1,0 +1,26 @@
+# Fly.io deploy — Emberfall match server (trial spike, 2026-07-21).
+# Build context is the repo ROOT (RC F4: Dockerfile.server needs src/ + card data),
+# which is exactly where this file sits — so the dockerfile path is all Fly needs.
+
+app = "emberfall"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "deploy/walking-skeleton/Dockerfile.server"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # WebSocket matches are stateful (B1: in-flight matches live in memory) — never
+  # let the proxy scale us to zero mid-match.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# NOTE (trial scope): no volume mounted — /data/replays JSONL logs are ephemeral
+# and lost on machine restart, same as the pre-B2 droplet caveat. Add a [mounts]
+# volume if replay retention starts mattering here.
