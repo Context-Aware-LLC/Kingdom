@@ -29,6 +29,17 @@ primary_region = "sjc"
   auto_start_machines = true
   min_machines_running = 0
 
+# SINGLE MACHINE, DELIBERATELY. Machine count is not expressible here — it is set with
+# `fly scale count 1 -a emberfall`, and `fly launch` defaults to TWO for HA.
+#
+# Two machines is a correctness bug for this server, not redundancy: B1 keeps matches in
+# process memory and matchmaking pairs players inside one process, so two players can land
+# on different machines and sit in separate empty lobbies, each seeing sessions=0. It looks
+# healthy from outside — both machines pass /healthz — which is what makes it nasty.
+#
+# `fly launch` created a second machine on 2026-07-21; destroyed the same day. If you ever
+# see 2 machines again, that is the bug, not capacity. Scaling out needs shared matchmaking
+# state first (D5/B2 work).
 [[vm]]
   size = "shared-cpu-1x"
   memory = "512mb"
