@@ -11,3 +11,8 @@
 *.md    text
 *.asmdef text
 *.slnx  text
+
+# Desync captures under evidence/ are raw wire bytes. These MUST stay byte-exact — the whole
+# point of the file is that its hash is reproducible, and `core.autocrlf=true` on Windows would
+# silently rewrite CR/LF pairs inside the payload and invalidate the evidence.
+*.frame binary

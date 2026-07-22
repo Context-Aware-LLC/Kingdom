@@ -1,0 +1,7 @@
+matchId       = d9ee43cdf52e4a2486d1c03a8d3f092a
+seat          = 1
+stateVersion  = 11
+envelopeSeq   = 31
+wireHash      = acbf6a8487bb7894fe3f304eee8f3fb897d64e5db7cd7993e3a7aac2346086c9
+localHash     = 5cbf6a8487bb7894fe3f304eee8f3fb897d64e5db7cd7993e3a7aac2346086c9
+rawFrameBytes = 13711
