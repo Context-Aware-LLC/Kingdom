@@ -11,11 +11,23 @@ primary_region = "sjc"
 [http_service]
   internal_port = 8080
   force_https = true
-  # WebSocket matches are stateful (B1: in-flight matches live in memory) — never
-  # let the proxy scale us to zero mid-match.
-  auto_stop_machines = "off"
+  # Scale to zero when idle (2026-07-21, Sam): no point paying for an empty lobby.
+  #
+  # Fly's autostop triggers on CONCURRENT CONNECTIONS reaching zero, not on wall-clock
+  # idleness — a live match holds open WebSockets on both sides (kept alive by client
+  # heartbeats, see 07742e2), so the proxy will NOT stop a machine mid-turn.
+  #
+  # "suspend" rather than "stop" on purpose: suspend snapshots RAM, so a B1 match living
+  # in server memory survives the idle window. With "stop" it would not — and since no
+  # volume is mounted, a stopped machine takes any in-flight match with it.
+  #
+  # KNOWN TRADE: if BOTH players blip simultaneously, connections hit zero and the machine
+  # may suspend inside our 30s reconnect grace. Under "suspend" the match should resume;
+  # if we ever fall back to "stop", that blip becomes an unrecoverable loss. Do not switch
+  # to "stop" without persisting match state first.
+  auto_stop_machines = "suspend"
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
 
 [[vm]]
   size = "shared-cpu-1x"
