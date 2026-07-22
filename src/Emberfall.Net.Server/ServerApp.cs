@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Transport;
 
 namespace Emberfall.Net.Server
@@ -19,6 +20,14 @@ namespace Emberfall.Net.Server
         public string? CardsDir { get; init; }
         public string ReplaysDir { get; init; } = "replays";
         public ServerOptions Options { get; init; } = new ServerOptions();
+
+        /// <summary>
+        /// Where `match_complete` / `match_void` go (C-G1-8). Null → <see cref="NullTelemetrySink"/>:
+        /// the emit points still run, nothing is recorded. Step 3 replaces this default with the
+        /// durable sink on the Fly volume — until then the server is honestly, visibly at n = 0
+        /// rather than pretending otherwise.
+        /// </summary>
+        public ITelemetrySink? Telemetry { get; init; }
 
         public static ServerConfig FromEnvironment() => new ServerConfig
         {
@@ -51,7 +60,8 @@ namespace Emberfall.Net.Server
                 new SystemTimeSource(),
                 FileCardDatabase.LoadDirectory(cardsDir),
                 new PrebuiltDeckProvider(),
-                new JsonlReplayStore(cfg.ReplaysDir));
+                new JsonlReplayStore(cfg.ReplaysDir),
+                cfg.Telemetry);
 
             var app = builder.Build();
             app.UseWebSockets();

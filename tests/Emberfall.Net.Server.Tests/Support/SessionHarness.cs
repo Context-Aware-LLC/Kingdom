@@ -6,7 +6,9 @@ using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server;
 using Emberfall.Net.Server.Data;
+using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Telemetry;
 using NUnit.Framework;
 
 namespace Emberfall.Net.Server.Tests.Support
@@ -98,6 +100,12 @@ namespace Emberfall.Net.Server.Tests.Support
         public MatchSession Session { get; }
         public ServerOptions Options { get; }
 
+        /// <summary>Every emitted telemetry event (C-G1-8 step 2). Populated only when the harness
+        /// is constructed <c>attributed: true</c> — an unattributed match emits nothing by design.</summary>
+        public InMemoryTelemetrySink Telemetry { get; } = new InMemoryTelemetrySink();
+
+        public static AccountId AccountFor(int seat) => AccountId.FromDeviceToken($"harness-device-{seat}");
+
         private static FileCardDatabase? _db;
         public static FileCardDatabase Db => _db ??= FileCardDatabase.LoadDirectory(CardDataDir());
 
@@ -113,7 +121,18 @@ namespace Emberfall.Net.Server.Tests.Support
             throw new DirectoryNotFoundException("Could not locate unity/Emberfall/Assets/CardData from test directory.");
         }
 
-        public SessionHarness(ServerOptions? options = null, bool start = true)
+        /// <param name="attributed">
+        /// Give the two seats real account ids, so the telemetry emitter actually writes rows.
+        /// Default false: the pre-existing session tests are about rules and policy, have no
+        /// identity, and must keep emitting nothing — which is itself asserted.
+        /// </param>
+        /// <param name="source">
+        /// Overrides the sample classification. Only the soak-classification test needs this; live
+        /// pairings derive it from the device tokens in <c>MatchGate</c>, never from a caller.
+        /// </param>
+        public SessionHarness(
+            ServerOptions? options = null, bool start = true,
+            bool attributed = false, TelemetrySource source = TelemetrySource.Ladder)
         {
             // Clock tests advance far past the heartbeat timeout on purpose; liveness has its own test.
             // They also jump the clock a whole turn in ONE tick, which the decision-24 stall guard
@@ -129,7 +148,11 @@ namespace Emberfall.Net.Server.Tests.Support
             Client0 = new ScriptedClient(P0);
             Client1 = new ScriptedClient(P1);
             Session = new MatchSession(
-                Id, Seed, Options, Time, Db, PrebuiltDecks.EmberwardVsTidecaller(), Replay, P0, P1);
+                Id, Seed, Options, Time, Db, PrebuiltDecks.EmberwardVsTidecaller(), Replay, P0, P1,
+                Telemetry,
+                attributed
+                    ? new MatchAttribution(AccountFor(0), AccountFor(1), source)
+                    : MatchAttribution.None);
             if (start) Session.Start(Conn0, Conn1);
         }
 

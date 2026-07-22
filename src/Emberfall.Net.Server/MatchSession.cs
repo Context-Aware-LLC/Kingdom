@@ -6,6 +6,7 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Telemetry;
 
 namespace Emberfall.Net.Server
 {
@@ -49,7 +50,17 @@ namespace Emberfall.Net.Server
         private readonly IReplayStore _replay;
         private readonly CommandProcessor _processor;
         private readonly LocalMatchHost _host;
+        private readonly MatchSetup _setup;
+        private readonly ITelemetrySink _telemetry;
+        private readonly MatchAttribution _attribution;
         private readonly Seat[] _seats = new Seat[2];
+
+        /// <summary>
+        /// Card definition ids each seat KEPT at mulligan (telemetry-spec §1 `mulliganKept`).
+        /// Captured at submit time because it is unrecoverable afterwards: the core replaces
+        /// discarded cards in place, so the post-mulligan hand cannot say what was thrown back.
+        /// </summary>
+        private readonly List<string>[] _mulliganKept = { new List<string>(), new List<string>() };
 
         private long? _mulliganDeadlineMs;
         private long? _turnDeadlineMs;
@@ -58,16 +69,26 @@ namespace Emberfall.Net.Server
         private bool _ropeSent;
         private (TurnPhase, PlayerId, int) _turnKey;
 
+        /// <summary>
+        /// <paramref name="telemetry"/> and <paramref name="attribution"/> are optional so that the
+        /// rules-level tests, which have no identity and no interest in it, keep constructing a
+        /// session in one line. The defaults are the honest ones: nothing recorded, nobody
+        /// attributed — see <see cref="MatchAttribution.None"/>.
+        /// </summary>
         public MatchSession(
             MatchId id, ulong seed, ServerOptions opts, ITimeSource time,
             ICardDatabase db, MatchSetup setup, IReplayStore replay,
-            PlayerId p0, PlayerId p1)
+            PlayerId p0, PlayerId p1,
+            ITelemetrySink? telemetry = null, MatchAttribution? attribution = null)
         {
             _id = id;
             _seed = seed;
             _opts = opts;
             _time = time;
             _replay = replay;
+            _setup = setup;
+            _telemetry = telemetry ?? NullTelemetrySink.Instance;
+            _attribution = attribution ?? MatchAttribution.None;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
             _seats[0] = new Seat(p0, MintToken());
@@ -274,8 +295,15 @@ namespace Emberfall.Net.Server
 
         private CommandResult SubmitToCore(PlayerIntent intent, SubmitCause cause, int? originSeat)
         {
+            // Read the mulligan keeps BEFORE the core sees the intent — afterwards the hand has
+            // already been rewritten and the answer is gone (telemetry-spec §1 `mulliganKept`).
+            // Held aside rather than stored, so a REJECTED mulligan records nothing.
+            (int seat, List<string> kept)? keeps = CaptureMulliganKeeps(intent);
+
             var raw = _host.Submit(intent);
             if (!raw.Accepted) return raw;
+
+            if (keeps is { } k) _mulliganKept[k.seat] = k.kept;
 
             _replay.Append(_id, intent);
 
@@ -322,6 +350,30 @@ namespace Emberfall.Net.Server
             }
 
             return raw;
+        }
+
+        /// <summary>
+        /// The card definition ids this intent would KEEP, if it is a mulligan resolution.
+        /// <c>AutoConfirmIntent</c> keeps the whole hand — that is what auto-confirm means, and a
+        /// timed-out mulligan is still a real data point about what the opening hand was.
+        /// </summary>
+        private (int seat, List<string> kept)? CaptureMulliganKeeps(PlayerIntent intent)
+        {
+            if (_host.State.Phase != TurnPhase.Mulligan) return null;
+            if (intent is not MulliganIntent && intent is not AutoConfirmIntent) return null;
+
+            int seat = _host.State.SeatOf(intent.Player);
+            var replaced = intent as MulliganIntent;
+            var kept = new List<string>();
+            foreach (var card in _host.State.Players[seat].Hand)
+            {
+                bool thrown = false;
+                if (replaced is not null)
+                    foreach (var id in replaced.ToReplace)
+                        if (id == card.Id) { thrown = true; break; }
+                if (!thrown) kept.Add(card.DefinitionId);
+            }
+            return (seat, kept);
         }
 
         private (TurnPhase, PlayerId, int) TurnKey()
@@ -470,6 +522,9 @@ namespace Emberfall.Net.Server
             if (_seats[0].Conn is not null || _seats[1].Conn is not null) return;
 
             _replay.Abandon(_id);   // journal keeps the intents; the ladder gets nothing
+            Emit(() => _telemetry.MatchVoid(new MatchVoidEvent(
+                _id, NowUtc(), _host.State.TurnNumber, _attribution.Source,
+                _attribution.P0, _attribution.P1)));
             Ended = true;
         }
 
@@ -486,6 +541,15 @@ namespace Emberfall.Net.Server
             };
             Broadcast(new MatchEndMsg(_host.State.Outcome, reason));
             _replay.Complete(_id, _host.State.Outcome);
+
+            // The balance sample (telemetry-spec §1). Emitted BEFORE the seats are torn down below,
+            // because the per-seat block reads hero class out of live state — and after the wire
+            // messages, because a telemetry problem must never cost a player their match-end screen.
+            var outcome = _host.State.Outcome;
+            Emit(() => _telemetry.MatchComplete(new MatchCompleteEvent(
+                _id, NowUtc(), reason, outcome, _host.State.TurnNumber, _attribution.Source,
+                SeatBlock(0, outcome), SeatBlock(1, outcome))));
+
             Ended = true;
             for (int seat = 0; seat < 2; seat++)
             {
@@ -494,6 +558,50 @@ namespace Emberfall.Net.Server
                 _seats[seat].Link = null;
             }
         }
+
+        // ── Telemetry (C-G1-8 step 2) ────────────────────────────────────────────
+
+        private DateTimeOffset NowUtc() => DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
+
+        /// <summary>
+        /// Two guards around every emit, both load-bearing.
+        ///
+        /// <para><b>Unattributed matches are dropped, not written blank.</b> A row keyed on an empty
+        /// account is worse than a missing row: it silently pollutes the per-class win-rate sample
+        /// the C4 exit bar is judged on, and it looks like real data. <see cref="AccountId"/>'s own
+        /// contract says the emitter refuses these — this is where that promise is kept.</para>
+        ///
+        /// <para><b>A throwing sink never kills a finished match.</b> The match is already over and
+        /// correct by the time we get here; losing a telemetry row costs one sample, while an
+        /// escaping exception would take down the session pump and, with it, whatever else it was
+        /// about to do.</para>
+        /// </summary>
+        private void Emit(System.Action emit)   // qualified: Contracts has its own `Action` (a card verb)
+        {
+            if (!_attribution.IsAttributed) return;
+            try { emit(); }
+            catch (Exception) { /* a dropped sample is not worth a dropped match */ }
+        }
+
+        private SeatOutcome SeatBlock(int seat, MatchOutcome outcome)
+        {
+            var deck = seat == 0 ? _setup.P0Deck : _setup.P1Deck;
+            var @class = _host.State.Players[seat].Hero.Class;
+            return new SeatOutcome(
+                seat == 0 ? _attribution.P0 : _attribution.P1,
+                @class,
+                DeckIdentity.IdFor(@class),
+                DeckIdentity.HashOf(deck),
+                ResultFor(seat, outcome),
+                _mulliganKept[seat]);
+        }
+
+        private static SeatResult ResultFor(int seat, MatchOutcome outcome) => outcome switch
+        {
+            MatchOutcome.Player0Win => seat == 0 ? SeatResult.Win : SeatResult.Loss,
+            MatchOutcome.Player1Win => seat == 1 ? SeatResult.Win : SeatResult.Loss,
+            _ => SeatResult.Draw,
+        };
 
         // ── Outbound (enqueue-only — RC F5) ──────────────────────────────────────
 

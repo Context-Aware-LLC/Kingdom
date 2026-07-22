@@ -10,6 +10,7 @@ using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Telemetry;
 
 namespace Emberfall.Net.Server.Transport
 {
@@ -36,6 +37,7 @@ namespace Emberfall.Net.Server.Transport
         private readonly ICardDatabase _db;
         private readonly IDeckProvider _decks;
         private readonly IReplayStore _replay;
+        private readonly ITelemetrySink _telemetry;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
@@ -48,13 +50,16 @@ namespace Emberfall.Net.Server.Transport
         private (WebSocketConnection conn, WebSocket socket, AccountId account, TaskCompletionSource<Seating?> seated)? _waiting;
         private int _nextGuest;
 
-        public MatchGate(ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks, IReplayStore replay)
+        public MatchGate(
+            ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
+            IReplayStore replay, ITelemetrySink? telemetry = null)
         {
             _opts = opts;
             _time = time;
             _db = db;
             _decks = decks;
             _replay = replay;
+            _telemetry = telemetry ?? NullTelemetrySink.Instance;
         }
 
         public int LiveSessions
@@ -201,12 +206,18 @@ namespace Emberfall.Net.Server.Transport
             var id = new MatchId(Guid.NewGuid().ToString("N"));
             ulong seed = MintSeed();
 
-            var session = new MatchSession(id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1);
+            var attribution = new MatchAttribution(
+                partner.Value.account, account,                                   // seat 0 waited, seat 1 arrived
+                TelemetrySources.Classify(partner.Value.account, account));
+
+            var session = new MatchSession(
+                id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1,
+                _telemetry, attribution);
             var pump = new SessionPump(session);
             lock (_lock)
             {
                 _sessions[id.Value] = pump;
-                _accounts[id.Value] = (partner.Value.account, account);   // seat 0 waited, seat 1 arrived
+                _accounts[id.Value] = (attribution.P0, attribution.P1);
             }
             _ = pump.RunTask.ContinueWith(_ =>
             {

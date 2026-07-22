@@ -44,6 +44,26 @@ primary_region = "sjc"
   size = "shared-cpu-1x"
   memory = "512mb"
 
-# NOTE (trial scope): no volume mounted — /data/replays JSONL logs are ephemeral
-# and lost on machine restart, same as the pre-B2 droplet caveat. Add a [mounts]
-# volume if replay retention starts mattering here.
+# Durable storage for replays + telemetry (C-G1-8, 2026-07-22). Dockerfile.server already
+# sets EMBERFALL_REPLAYS=/data/replays, so /data is the mount point and nothing in the image
+# changes. Volume vol_rkgwj19p5yykeyo4, 1 GB, sjc — created 2026-07-22.
+#
+# WHAT THIS FIXES AND WHAT IT DOES NOT. The volume survives machine stop/suspend/restart and
+# survives `fly deploy`, which is the hole that mattered: without it, telemetry died on every
+# restart and G2 would have read n=0 no matter how many matches were played. It is NOT a
+# backup. A Fly volume is a slice of NVMe on ONE physical host, tied to that hardware, with no
+# replication — Fly's own guidance is to run two volumes per app, and we run one. Lose the
+# host, lose the data. That trade is accepted for telemetry + replays (regenerable, and losing
+# a window of it costs a measurement, not a player). It is exactly why ACCOUNTS go to Supabase
+# and never here. Fly takes daily block-level snapshots, retained 5 days.
+#
+# DEPLOY GOTCHA: adding a mount to an existing machine forces Fly to REPLACE that machine
+# rather than update it in place. Harmless — nothing durable lives there yet — but it means
+# the next `fly deploy` is a machine swap, and any in-memory match at that moment is lost.
+#
+# ONE MACHINE, ONE VOLUME — see the scaling note above. `fly scale count 2` would fork this
+# volume into a second, unsynced copy, which is a worse bug than the matchmaking split it
+# already causes.
+[mounts]
+  source = "emberfall_data"
+  destination = "/data"
