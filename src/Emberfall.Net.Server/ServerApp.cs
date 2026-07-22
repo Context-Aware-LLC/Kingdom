@@ -36,7 +36,11 @@ namespace Emberfall.Net.Server
     /// </summary>
     public static class ServerApp
     {
-        public static WebApplication Build(ServerConfig cfg)
+        public static WebApplication Build(ServerConfig cfg) => BuildWithGate(cfg).App;
+
+        /// <summary>Same app, with the gate handed back so a test can read per-match attribution
+        /// (C-G1-8) without a global.</summary>
+        public static (WebApplication App, MatchGate Gate) BuildWithGate(ServerConfig cfg)
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls(cfg.Urls);
@@ -76,7 +80,7 @@ namespace Emberfall.Net.Server
                     await gate.HandleFreshAsync(socket, context.RequestAborted);
             });
 
-            return app;
+            return (app, gate);
         }
 
         /// <summary>Dev convenience: locate unity/Emberfall/Assets/CardData by walking up from the

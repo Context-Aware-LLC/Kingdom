@@ -19,7 +19,17 @@ namespace Emberfall.Net.Protocol
         /// <summary>Transport-level sanity bound (state-sync §6.2 T-class hardening).</summary>
         public const int MaxMessageBytes = 1024 * 1024;
 
+        /// <summary>
+        /// Envelope <c>matchId</c> for frames that precede the match — today only <see cref="HelloMsg"/>,
+        /// which is sent before pairing, so no match id exists yet. A placeholder is required because
+        /// <c>MatchId</c> is a struct whose default <c>Value</c> is null, and a null envelope matchId
+        /// fails to decode: the hello would be silently refused and the client would hang waiting for
+        /// a match start that never comes.
+        /// </summary>
+        public static readonly MatchId PreMatch = new MatchId("pending");
+
         // Wire type discriminators (design §5).
+        public const string TypeHello = "hello";
         public const string TypeIntent = "intent";
         public const string TypeAck = "ack";
         public const string TypeHeartbeat = "heartbeat";
@@ -50,6 +60,7 @@ namespace Emberfall.Net.Protocol
 
         private static string TypeOf(NetMessage msg) => msg switch
         {
+            HelloMsg _ => TypeHello,
             IntentMsg _ => TypeIntent,
             AckMsg _ => TypeAck,
             HeartbeatMsg _ => TypeHeartbeat,
@@ -68,6 +79,14 @@ namespace Emberfall.Net.Protocol
         {
             switch (msg)
             {
+                case HelloMsg m:
+                    w.BeginObject();
+                    w.Name("deviceToken"); w.Str(m.DeviceToken);
+                    w.Name("clientContractVersion"); w.Str(m.ClientContractVersion);
+                    w.Name("platform"); w.Str(m.Platform);
+                    w.Name("buildId"); w.Str(m.BuildId);
+                    w.EndObject();
+                    break;
                 case IntentMsg m:
                     w.BeginObject();
                     w.Name("lastVersion"); w.U64(m.LastVersion);
@@ -210,6 +229,7 @@ namespace Emberfall.Net.Protocol
 
             switch (type)
             {
+                case TypeHello: return ReadHello(body, matchId, seq);
                 case TypeIntent: return ReadIntent(body, matchId, seq);
                 case TypeAck:
                     return ReadU64(body, "version", matchId, seq, out ulong ackV)
@@ -245,6 +265,26 @@ namespace Emberfall.Net.Protocol
                 return DecodeResult.Fail(err, detail, matchId, seq);
             return DecodeResult.Success(new IntentMsg(lastVersion, intent), matchId, seq);
         }
+
+        /// <summary>
+        /// The device token is REQUIRED and must be non-empty — an identity-less hello is the exact
+        /// hole C-G1-8 closes, so it fails here rather than producing an unattributable match.
+        /// Provenance fields are optional (absent ⇒ empty): they feed the funnel, not identity.
+        /// </summary>
+        private static DecodeResult ReadHello(JVal body, MatchId matchId, ulong seq)
+        {
+            if (!body.TryGet("deviceToken", out var dtVal) || !dtVal.TryStr(out string deviceToken)
+                || deviceToken.Length == 0)
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'deviceToken'", matchId, seq);
+
+            return DecodeResult.Success(
+                new HelloMsg(deviceToken, OptStr(body, "clientContractVersion"),
+                             OptStr(body, "platform"), OptStr(body, "buildId")),
+                matchId, seq);
+        }
+
+        private static string OptStr(JVal body, string name)
+            => body.TryGet(name, out var v) && v.TryStr(out string s) ? s : "";
 
         private static DecodeResult ReadReconnect(JVal body, MatchId matchId, ulong seq)
         {

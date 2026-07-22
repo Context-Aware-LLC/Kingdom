@@ -28,8 +28,13 @@ namespace Emberfall.Editor
         private static async Task RunAsync(string url)
         {
             Debug.Log($"[B3Verify] connecting two ClientWebSockets to {url} …");
-            var c0 = new NetworkedMatchSession(new WebSocketTransport());
-            var c1 = new NetworkedMatchSession(new WebSocketTransport());
+            // Two DISTINCT synthetic tokens (C-G1-8): the gate refuses a hello-less socket, and this
+            // tool deliberately does not use the real device token — a verify run should not land in
+            // the balance sample under this machine's identity.
+            var c0 = new NetworkedMatchSession(new WebSocketTransport(),
+                new ClientOptions { DeviceToken = "b3-verify-seat-0", Platform = "editor", BuildId = "b3-verify" });
+            var c1 = new NetworkedMatchSession(new WebSocketTransport(),
+                new ClientOptions { DeviceToken = "b3-verify-seat-1", Platform = "editor", BuildId = "b3-verify" });
             try
             {
                 var uri = new Uri(url);

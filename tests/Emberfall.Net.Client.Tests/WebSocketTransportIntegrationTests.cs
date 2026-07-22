@@ -40,8 +40,8 @@ namespace Emberfall.Net.Client.Tests
             int misattributions = 0;
             // (a clean, promptly-played match races no clocks — the evidence-gate counter stays zero)
             var c0 = new NetworkedMatchSession(new WebSocketTransport(),
-                new ClientOptions { OnMisattribution = _ => System.Threading.Interlocked.Increment(ref misattributions) });
-            var c1 = new NetworkedMatchSession(new WebSocketTransport());
+                new ClientOptions { DeviceToken = "test-device-0", OnMisattribution = _ => System.Threading.Interlocked.Increment(ref misattributions) });
+            var c1 = new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions { DeviceToken = "test-device-1" });
 
             try
             {

@@ -50,6 +50,12 @@ namespace Emberfall.Net.Server.Tests
                 await c0.ConnectAsync(wsUri, CancellationToken.None);
                 await c1.ConnectAsync(wsUri, CancellationToken.None);
 
+                // A fresh socket opens with a hello (C-G1-8); the connect is no longer the hello.
+                await SendAsync(c0, ProtocolCodec.Encode(
+                    new HelloMsg("loopback-device-0", "interfaces.v3", "test", "loopback"), ProtocolCodec.PreMatch, 0));
+                await SendAsync(c1, ProtocolCodec.Encode(
+                    new HelloMsg("loopback-device-1", "interfaces.v3", "test", "loopback"), ProtocolCodec.PreMatch, 0));
+
                 var start0 = await ExpectAsync<MatchStartMsg>(c0);
                 var start1 = await ExpectAsync<MatchStartMsg>(c1);
                 Assert.That(start0.Snapshot.VerifyIntegrity(), Is.True);

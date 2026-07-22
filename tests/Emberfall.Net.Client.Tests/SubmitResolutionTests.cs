@@ -25,8 +25,8 @@ namespace Emberfall.Net.Client.Tests
         {
             var log = new List<Misattribution>();
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { OnMisattribution = log.Add });
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0", OnMisattribution = log.Add });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
             Assume.That(c0.Current.Phase, Is.EqualTo(TurnPhase.Mulligan));
 

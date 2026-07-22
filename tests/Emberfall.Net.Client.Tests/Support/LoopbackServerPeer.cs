@@ -7,6 +7,7 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Client;
 using Emberfall.Net.Client.Loopback;
+using Emberfall.Net.Protocol;
 using Emberfall.Net.Server;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Replay;
@@ -140,11 +141,29 @@ namespace Emberfall.Net.Client.Tests.Support
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// This peer stands in for BOTH the gate and the session, so it swallows the connect
+        /// <c>HelloMsg</c> exactly as <c>MatchGate</c> does (C-G1-8). Forwarding it would hand the
+        /// session a message it never sees in production — the gate consumes the hello before a
+        /// session exists — and the firewall would (correctly) strike the connection for it.
+        /// </summary>
         private void DrainOutbound(LoopbackTransport t, SeatConnection origin)
         {
             while (t.TryDequeueOutbound(out var bytes))
+            {
+                var decoded = ProtocolCodec.Decode(bytes);
+                if (decoded.Ok && decoded.Message is HelloMsg hello)
+                {
+                    DeviceTokens[origin == _conn0 ? 0 : 1] = hello.DeviceToken;
+                    continue;
+                }
                 Session.Dispatch(new SessionCommand.Frame(origin, bytes));
+            }
         }
+
+        /// <summary>Device tokens seen at the door, seat-indexed — the gate's attribution, mirrored
+        /// so a client-seam test can assert the hello actually left the client.</summary>
+        public string[] DeviceTokens { get; } = { "", "" };
 
         public static string CardDataDir()
         {

@@ -8,16 +8,26 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Decks;
+using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Replay;
 
 namespace Emberfall.Net.Server.Transport
 {
     /// <summary>
-    /// B1's throwaway pairing door (b1-match-server-design.md §5) — replaced by B2 queue + guest
-    /// identity; do not grow. FIFO: the first two fresh sockets form a match (the socket connect IS
-    /// the hello). Reconnects skip the queue via `/ws?reconnect=1` — a transport routing hint only;
-    /// authentication is the ReconnectMsg token, judged by the session (§8). Also owns the RC Q4
-    /// session cap: at capacity, new pairings are refused with close 1013 before queueing.
+    /// B1's throwaway pairing door (b1-match-server-design.md §5) — replaced by B2 queue; do not
+    /// grow. FIFO: the first two fresh sockets that have said hello form a match. Reconnects skip
+    /// the queue via `/ws?reconnect=1` — a transport routing hint only; authentication is the
+    /// ReconnectMsg token, judged by the session (§8). Also owns the RC Q4 session cap: at
+    /// capacity, new pairings are refused with close 1013 before queueing.
+    ///
+    /// <para><b>C-G1-8:</b> the socket connect is no longer the hello. A fresh socket must open
+    /// with a <see cref="HelloMsg"/> carrying a device token, which becomes the seat's
+    /// <see cref="AccountId"/> — stable across restarts, unlike the <c>guest-&lt;counter&gt;</c>
+    /// it replaces. A socket that says nothing is refused rather than queued, which also means a
+    /// dead waiter can no longer occupy the pairing slot.</para>
+    ///
+    /// <para><b>Breaking for clients that predate the hello.</b> Any distributed build must be
+    /// replaced before this deploys.</para>
     /// </summary>
     public sealed class MatchGate
     {
@@ -29,7 +39,13 @@ namespace Emberfall.Net.Server.Transport
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
-        private (WebSocketConnection conn, WebSocket socket, TaskCompletionSource<Seating?> seated)? _waiting;
+
+        /// <summary>Per-match attribution (C-G1-8). Server-side only — never on the wire, never in
+        /// <c>GameState</c>. Cleared with the session; the telemetry emitter reads it at match end.</summary>
+        private readonly Dictionary<string, (AccountId p0, AccountId p1)> _accounts =
+            new Dictionary<string, (AccountId, AccountId)>(StringComparer.Ordinal);
+
+        private (WebSocketConnection conn, WebSocket socket, AccountId account, TaskCompletionSource<Seating?> seated)? _waiting;
         private int _nextGuest;
 
         public MatchGate(ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks, IReplayStore replay)
@@ -50,11 +66,49 @@ namespace Emberfall.Net.Server.Transport
 
         private sealed record Seating(SessionPump Pump, int Seat);
 
-        /// <summary>Drive one fresh socket: pair, then run its receive loop until it dies.</summary>
+        /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
+        /// emitter; exposed for the identity tests.</summary>
+        public (AccountId p0, AccountId p1)? AccountsOf(MatchId id)
+        {
+            lock (_lock)
+                return _accounts.TryGetValue(id.Value, out var a) ? a : ((AccountId, AccountId)?)null;
+        }
+
+        /// <summary>Drive one fresh socket: hello, pair, then run its receive loop until it dies.</summary>
         public async Task HandleFreshAsync(WebSocket socket, CancellationToken ct)
         {
             var conn = new WebSocketConnection(socket);
-            Seating? seating = await PairAsync(conn, socket, ct);
+
+            // The hello comes BEFORE the pairing queue (C-G1-8). Refusing here rather than after
+            // seating is what guarantees no match can exist without attribution — and it keeps a
+            // silent socket from occupying the FIFO slot.
+            //
+            // On a DEADLINE: this read blocks the whole connection, so without one a socket that
+            // connects and says nothing is held open forever with nothing to reap it.
+            byte[]? first;
+            using (var helloCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
+            {
+                helloCts.CancelAfter(TimeSpan.FromMilliseconds(_opts.HelloTimeoutMs));
+                first = await ReceiveOneAsync(socket, helloCts.Token);
+            }
+            if (first is null)
+            {
+                conn.Close(1008, "hello timeout");
+                await conn.PumpTask;
+                return;
+            }
+
+            var res = ProtocolCodec.Decode(first);
+            if (!res.Ok || res.Message is not HelloMsg hello)
+            {
+                conn.Close(1008, "expected hello");
+                await conn.PumpTask;
+                return;
+            }
+
+            var account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
+
+            Seating? seating = await PairAsync(conn, socket, account, ct);
             if (seating is null)
             {
                 conn.Close(1013, "server full");
@@ -97,10 +151,11 @@ namespace Emberfall.Net.Server.Transport
             await ReceiveLoopAsync(socket, pump, conn, ct);
         }
 
-        private async Task<Seating?> PairAsync(WebSocketConnection conn, WebSocket socket, CancellationToken ct)
+        private async Task<Seating?> PairAsync(
+            WebSocketConnection conn, WebSocket socket, AccountId account, CancellationToken ct)
         {
             TaskCompletionSource<Seating?> mySeating;
-            (WebSocketConnection conn, WebSocket socket, TaskCompletionSource<Seating?> seated)? partner = null;
+            (WebSocketConnection conn, WebSocket socket, AccountId account, TaskCompletionSource<Seating?> seated)? partner = null;
 
             lock (_lock)
             {
@@ -110,7 +165,7 @@ namespace Emberfall.Net.Server.Transport
                 if (_waiting is null)
                 {
                     mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                    _waiting = (conn, socket, mySeating);
+                    _waiting = (conn, socket, account, mySeating);
                 }
                 else
                 {
@@ -137,6 +192,10 @@ namespace Emberfall.Net.Server.Transport
             }
 
             // Second of the pair: build the match and seat both.
+            //
+            // PlayerId stays a PER-MATCH handle and is deliberately NOT the identity: it is
+            // broadcast to the opponent in OpponentInfo and it lands in hash-canonical GameState.
+            // Identity rides alongside in _accounts, server-side only (C-G1-8).
             var p0 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
             var p1 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
             var id = new MatchId(Guid.NewGuid().ToString("N"));
@@ -144,10 +203,18 @@ namespace Emberfall.Net.Server.Transport
 
             var session = new MatchSession(id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1);
             var pump = new SessionPump(session);
-            lock (_lock) _sessions[id.Value] = pump;
+            lock (_lock)
+            {
+                _sessions[id.Value] = pump;
+                _accounts[id.Value] = (partner.Value.account, account);   // seat 0 waited, seat 1 arrived
+            }
             _ = pump.RunTask.ContinueWith(_ =>
             {
-                lock (_lock) _sessions.Remove(id.Value);
+                lock (_lock)
+                {
+                    _sessions.Remove(id.Value);
+                    _accounts.Remove(id.Value);
+                }
             }, TaskScheduler.Default);
 
             session.Start(partner.Value.conn, conn);

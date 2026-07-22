@@ -119,6 +119,12 @@ namespace Emberfall.Presentation
             string captureDir = Path.Combine(Application.persistentDataPath, "desync");
             var clientOptions = new ClientOptions
             {
+                // C-G1-8: the server refuses a fresh socket whose hello carries no device token.
+                // DeviceIdentity.Token is minted once and persisted — see that class for why the
+                // persistence, not the generation, is the load-bearing half.
+                DeviceToken = DeviceIdentity.Token,
+                Platform = DeviceIdentity.Platform,
+                BuildId = DeviceIdentity.BuildId,
                 DevCapture = Debug.isDebugBuild,
                 OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
                 OnMisattribution = m => Debug.LogWarning(

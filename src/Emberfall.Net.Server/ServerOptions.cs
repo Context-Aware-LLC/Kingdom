@@ -48,5 +48,14 @@ namespace Emberfall.Net.Server
         /// <summary>Max concurrent matches; new pairings refused at cap (RC Q4 ruling).</summary>
         public int MaxSessions { get; init; } = 64;
         public string EngineContractVersion { get; init; } = "interfaces.v3";
+
+        /// <summary>
+        /// How long a fresh socket may stay silent before its <c>HelloMsg</c> is due (C-G1-8).
+        /// <para>Without a deadline a socket that connects and never speaks is held open forever:
+        /// the gate is blocked reading its first frame, so the connection leaks with no match, no
+        /// timer, and nothing to reap it. Surfaced by the hello-required test, which waited for a
+        /// close that never came.</para>
+        /// </summary>
+        public long HelloTimeoutMs { get; init; } = 10_000;
     }
 }

@@ -42,10 +42,11 @@ namespace Emberfall.Net.Client.Tests
             using var peer = new LoopbackServerPeer();
             using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions
             {
+                DeviceToken = "test-device-0",
                 DevCapture = true,
                 OnDesyncCapture = captures.Add,
             });
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
             await ConfirmMulligansAsync(peer, c0, c1);
 
@@ -85,8 +86,8 @@ namespace Emberfall.Net.Client.Tests
             // The pure RC-F8 livelock: client and server both at V, a resync round-trips at V, and
             // the `<= ` guard would drop the cure. The _resyncPending exemption lets it land.
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
 
             ulong v = c0.StateVersion;
@@ -114,8 +115,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Test4c_A_Genuinely_Undecodable_Stream_Dies_At_The_Budget_Without_Throwing()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { ResyncBudget = 3 });
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0", ResyncBudget = 3 });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
 
             ulong good = c0.StateVersion;

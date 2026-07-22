@@ -13,6 +13,28 @@ namespace Emberfall.Net.Protocol
 
     // ── Client → Server ──────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// The connect handshake — FIRST frame on a fresh socket, before pairing (C-G1-8).
+    /// <para><see cref="DeviceToken"/> is the guest identity from telemetry-spec §0 / accounts
+    /// posture decision 6a: client-generated once, persisted on device, stable across restarts.
+    /// It is the reason an emitted telemetry row can be attributed at all.</para>
+    /// <para><b>The token never leaves the server.</b> It is hashed into an account id on arrival
+    /// and is never placed in <c>PlayerId</c>, which is broadcast to the opponent in
+    /// <c>OpponentInfo</c> — putting identity there would hand every player's stable token to a
+    /// stranger.</para>
+    /// <para><see cref="ClientContractVersion"/> is the first client→server carrier of the
+    /// contract version; the server previously never learned it (<c>EngineContractVersion</c>
+    /// travels only server→client on <see cref="MatchStartMsg"/>). Carried here, enforced
+    /// separately.</para>
+    /// <para><see cref="Platform"/>/<see cref="BuildId"/> are funnel provenance (telemetry-spec
+    /// §4 <c>app_install</c>) and are optional — absent means empty, never a refused connect.</para>
+    /// </summary>
+    public sealed record HelloMsg(
+        string DeviceToken,
+        string ClientContractVersion = "",
+        string Platform = "",
+        string BuildId = "") : NetMessage;
+
     /// <summary>A player intent + the client's last-applied StateVersion (stale-client detection,
     /// netcode §3.2). Which decoded intents a client may SUBMIT is the server's §4.6 allowlist —
     /// a separate policy gate from the codec's tag registry (design §5, two gates).</summary>

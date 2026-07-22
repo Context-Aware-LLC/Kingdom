@@ -34,8 +34,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Unknown_Key_Frame_Fed_To_The_Client_Does_Not_Trip_A_Resync()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
             int baseline = c0.InboundProcessed;
 
@@ -52,8 +52,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Truncated_And_Garbage_Frames_Resync_Never_Throw()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { ResyncBudget = 100 });
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0", ResyncBudget = 100 });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
             int baseline = c0.InboundProcessed;
 

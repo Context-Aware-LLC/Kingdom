@@ -49,8 +49,8 @@ namespace Emberfall.Net.Client.Tests
             await app.StartAsync();
 
             var fault = new FaultInjectingTransport(new WebSocketTransport());
-            var c0 = new NetworkedMatchSession(fault, new ClientOptions { ResyncTimeoutMs = 2_000 });
-            var c1 = new NetworkedMatchSession(new WebSocketTransport());
+            var c0 = new NetworkedMatchSession(fault, new ClientOptions { DeviceToken = "test-device-0", ResyncTimeoutMs = 2_000 });
+            var c1 = new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions { DeviceToken = "test-device-1" });
 
             try
             {

@@ -47,6 +47,25 @@ namespace Emberfall.Net.Client
         /// telemetry. Off by default; the loopback/soak harness turns it on.</summary>
         public bool DevCapture { get; init; }
 
+        /// <summary>
+        /// The guest device token sent in the connect <c>HelloMsg</c> (C-G1-8; telemetry-spec §0,
+        /// accounts posture decision 6a). Generated ONCE per device and persisted by the host app —
+        /// a token regenerated per launch is the counter it replaced, wearing a UUID.
+        /// <para>A UUID by convention, because Supabase (the ADR-0001 destination) keys users on
+        /// UUIDs, so guests convert one-to-one when identity lands.</para>
+        /// <para>Empty means the server refuses the connect. That is deliberate: an unattributable
+        /// match is worse than a failed one, because it silently pollutes the balance sample.</para>
+        /// </summary>
+        public string DeviceToken { get; init; } = "";
+
+        /// <summary>Client build provenance for the funnel (telemetry-spec §4). Optional.</summary>
+        public string Platform { get; init; } = "";
+        public string BuildId { get; init; } = "";
+
+        /// <summary>The contract version this client was built against, sent in the hello so the
+        /// server can compare (it previously never learned the client's).</summary>
+        public string ContractVersion { get; init; } = "interfaces.v3";
+
         public IClientClock Clock { get; init; } = new SystemClientClock();
 
         /// <summary>Sink for the RC-F7 interim mis-attribution log (b3 §4.4): a late <c>RejectMsg</c>

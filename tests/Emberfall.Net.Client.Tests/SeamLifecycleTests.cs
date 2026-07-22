@@ -19,8 +19,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Connects_Pairs_And_Applies_A_Verified_Initial_Snapshot()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
 
             Assert.That(c0.State, Is.EqualTo(ConnectionState.Live));
@@ -34,8 +34,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task OnSnapshot_Fires_Before_OnEvents_And_Version_Is_Monotonic()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
 
             var order = new List<string>();
@@ -61,8 +61,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Concede_Drives_A_Decided_MatchEnd_On_Both_Clients()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
             await ConfirmMulligansAsync(peer, c0, c1);
 
@@ -78,8 +78,8 @@ namespace Emberfall.Net.Client.Tests
         public async Task Peer_Socket_Drop_Signals_Dead_And_Frees_A_Pending_Submit_RC_F10()
         {
             using var peer = new LoopbackServerPeer();
-            using var c0 = new NetworkedMatchSession(peer.Transport0);
-            using var c1 = new NetworkedMatchSession(peer.Transport1);
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
 
             var deadSignal = new TaskCompletionSource<ConnectionState>(TaskCreationOptions.RunContinuationsAsynchronously);

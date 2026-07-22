@@ -133,9 +133,28 @@ namespace Emberfall.Net.Client
         /// — or fault on a terminal <see cref="ConnectionState.Dead"/> (b3 §3, §4).</summary>
         public async Task ConnectAsync(Uri uri, CancellationToken ct = default)
         {
+            if (string.IsNullOrEmpty(_opts.DeviceToken))
+                throw new InvalidOperationException(
+                    "ClientOptions.DeviceToken is required — the server refuses a fresh socket that " +
+                    "does not open with a HelloMsg carrying one (C-G1-8). Generate a UUID once per " +
+                    "device, persist it, and pass it here; a per-launch token is not an identity.");
+
             SetState(ConnectionState.Connecting);
             _matchStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             await _transport.ConnectAsync(uri, ct).ConfigureAwait(false);
+
+            // The hello is the FIRST frame on a fresh socket — before pairing, before the pump.
+            // Sent inline rather than from the pump loop so it cannot be reordered behind a
+            // heartbeat on a slow start.
+            //
+            // PreMatch, not _matchId: there is no match yet, and _matchId's default Value is null,
+            // which does not encode into a decodable envelope.
+            await _transport.SendAsync(
+                ProtocolCodec.Encode(
+                    new HelloMsg(_opts.DeviceToken, _opts.ContractVersion, _opts.Platform, _opts.BuildId),
+                    ProtocolCodec.PreMatch, 0),
+                ct).ConfigureAwait(false);
+
             SetState(ConnectionState.Pairing);
             StartPump();
             await _matchStarted.Task.ConfigureAwait(false);
