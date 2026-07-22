@@ -69,41 +69,29 @@ namespace Emberfall.Net.Server.Tests
             for (int i = 0; i < 5; i++)
                 h.Post(intruder, forger.Intent(new ConcedeIntent(h.P0), h.Id));
             h.Session.Dispatch(new SessionCommand.Disconnected(intruder));
-            h.AdvanceAndTick(h.Options.DisconnectGraceMs + 1);
+            h.AdvanceAndTick(1_000);   // short: this test is about the intruder, not the turn clock
 
             Assert.That(h.Session.Ended, Is.False, "the intruder must not end or vacate anything");
             Assert.That(h.Session.StateVersion, Is.EqualTo(versionBefore));
             Assert.That(intruder.Frames, Is.Empty, "an unbound socket gets no answers at all");
         }
 
-        [Test]
-        public void Disconnect_Grace_Expiry_Concedes_The_Absent_Seat()
-        {
-            var h = new SessionHarness();
-            h.ConfirmMulligans();
-
-            h.Disconnect(0);
-            h.AdvanceAndTick(h.Options.DisconnectGraceMs + 1);
-
-            Assert.That(h.Session.Ended, Is.True);
-            var end = h.Conn1.Last<MatchEndMsg>();
-            Assert.That(end.Outcome, Is.EqualTo(MatchOutcome.Player1Win), "absent seat concedes");
-            Assert.That(end.Reason, Is.EqualTo(MatchEndReason.Disconnect));
-        }
+        // The disconnect-grace concede was DELETED by decision 23 and its double-disconnect half
+        // defined by decision 24. What replaced it lives in DoubleDisconnectVoidTests: absence alone
+        // never ends a match (the idle rule does), and zero seats connected is a void.
 
         [Test]
-        public void Reconnect_Within_Grace_Cancels_The_Concede()
+        public void Reconnect_Restores_The_Seat_Without_Disturbing_The_Match()
         {
             var h = new SessionHarness();
             h.ConfirmMulligans();
             string token = h.Conn0.Last<MatchStartMsg>().ReconnectToken;
 
             h.Disconnect(0);
-            h.AdvanceAndTick(h.Options.DisconnectGraceMs / 2);
+            h.AdvanceAndTick(120_000);
             h.Session.Dispatch(new SessionCommand.Reconnect(new ReconnectMsg(h.P0, token, 0), new FakeConnection()));
-            h.AdvanceAndTick(h.Options.DisconnectGraceMs);
 
-            Assert.That(h.Session.Ended, Is.False, "a reconnected seat must not be conceded");
+            Assert.That(h.Session.Ended, Is.False, "a seat may be away as long as it likes and come back");
         }
 
         // ── Clocks ───────────────────────────────────────────────────────────────
@@ -182,13 +170,22 @@ namespace Emberfall.Net.Server.Tests
         [Test]
         public void Heartbeat_Silence_Vacates_The_Seat()
         {
-            var h = new SessionHarness(new ServerOptions());   // real 30s heartbeat timeout
+            // One silent seat vacates and the OTHER keeps playing — the single-absence case.
+            // (Both silent is a void, covered in DoubleDisconnectVoidTests.) Ticked at ~1 Hz so
+            // the decision-24 stall guard correctly reads this as real elapsed time.
+            var h = new SessionHarness(new ServerOptions());
             h.ConfirmMulligans();
 
-            h.AdvanceAndTick(h.Options.HeartbeatTimeoutMs + 1);
-            // Both seats were silent → both vacated; grace clocks now run. First-vacated concedes.
-            h.AdvanceAndTick(h.Options.DisconnectGraceMs + 1);
-            Assert.That(h.Session.Ended, Is.True, "silent seats fall to disconnect grace → concede");
+            for (long t = 0; t <= h.Options.HeartbeatTimeoutMs + 1_000; t += 1_000)
+            {
+                h.Time.Advance(1_000);
+                h.Post(1, h.Client1.Frame(new HeartbeatMsg(), h.Id));   // seat 1 stays alive
+                h.Tick();
+            }
+
+            Assert.That(h.Conn0.CloseCode, Is.EqualTo(1001),
+                "a silent seat's socket is CLOSED, not left quietly believing it is live");
+            Assert.That(h.Session.Ended, Is.False, "one seat away does not end the match");
         }
 
         private static int CountTimers(FakeConnection c)

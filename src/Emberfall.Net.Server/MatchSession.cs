@@ -24,7 +24,7 @@ namespace Emberfall.Net.Server
     public sealed class MatchSession
     {
         /// <summary>Why a submit happened — maps to the wire's MatchEndReason when it ends the match.</summary>
-        private enum SubmitCause { Client, Clock, IdleForfeit, DisconnectTimeout }
+        private enum SubmitCause { Client, Clock, IdleForfeit }
 
         private sealed class Seat
         {
@@ -38,8 +38,6 @@ namespace Emberfall.Net.Server
             public string ReconnectToken { get; }
             public IServerConnection? Conn;
             public ConnectionPolicyState? Link;
-            /// <summary>Armed while the seat is vacant (design §8); expiry concedes the seat.</summary>
-            public long? DisconnectDeadlineMs;
             /// <summary>Consecutive clock-fired auto-end-turns; resets on any voluntary accepted intent (§7, RC F11).</summary>
             public int ConsecutiveAutoTurns;
         }
@@ -55,6 +53,8 @@ namespace Emberfall.Net.Server
 
         private long? _mulliganDeadlineMs;
         private long? _turnDeadlineMs;
+        /// <summary>When OnTick last ran, for the decision-24 stall guard.</summary>
+        private long _lastTickMs;
         private bool _ropeSent;
         private (TurnPhase, PlayerId, int) _turnKey;
 
@@ -92,6 +92,7 @@ namespace Emberfall.Net.Server
         public void Start(IServerConnection conn0, IServerConnection conn1)
         {
             long now = _time.NowMs;
+            _lastTickMs = now;
             _seats[0].Conn = conn0;
             _seats[1].Conn = conn1;
             _seats[0].Link = new ConnectionPolicyState(_opts, now);
@@ -337,6 +338,28 @@ namespace Emberfall.Net.Server
 
         private void OnTick(long now)
         {
+            // ── Stall guard (decision 24, rule 4) ────────────────────────────────
+            // Ticks are ~1 Hz. A gap far past that means the SERVER was asleep — GC pause, host
+            // hiccup, or Fly's scale-to-zero suspend/resume — and none of that elapsed time is
+            // evidence about the players. Credit the gap back to every clock and every link, then
+            // skip this pass entirely.
+            //
+            // Without this, the first tick after a resume finds BOTH seats past HeartbeatTimeoutMs
+            // in the same loop below, vacates both, and the zero-window void destroys a match in
+            // which both players were sitting there perfectly healthy. Crediting (rather than
+            // merely skipping one pass) is the load-bearing part: a skip would only defer the
+            // verdict to the next tick a second later, where the stale LastHeardMs still damns them.
+            long gap = now - _lastTickMs;
+            _lastTickMs = now;
+            if (gap > _opts.StallGuardMs)
+            {
+                for (int seat = 0; seat < 2; seat++)
+                    if (_seats[seat].Link is ConnectionPolicyState link) link.LastHeardMs += gap;
+                if (_mulliganDeadlineMs is long mstall) _mulliganDeadlineMs = mstall + gap;
+                if (_turnDeadlineMs is long tstall) _turnDeadlineMs = tstall + gap;
+                return;
+            }
+
             // Heartbeat liveness (§11): silence past the timeout is a disconnect. CLOSE the socket
             // when policy vacates the seat — the TCP link may be perfectly healthy (2026-07-19
             // silent-match-death: an alive client left unclosed kept believing Live forever while
@@ -348,22 +371,16 @@ namespace Emberfall.Net.Server
                     && now - link.LastHeardMs > _opts.HeartbeatTimeoutMs)
                 {
                     _seats[seat].Conn!.Close(1001, "liveness timeout");
-                    OnDisconnected(seat);
-                }
-            }
-
-            // Disconnect grace (§8): expiry concedes the absent seat. First-vacated fires first
-            // on double-disconnect by construction (earlier deadline).
-            for (int seat = 0; seat < 2; seat++)
-            {
-                var s = _seats[seat];
-                if (s.Conn is null && s.DisconnectDeadlineMs is long dl && now >= dl)
-                {
-                    s.DisconnectDeadlineMs = null;
-                    SubmitToCore(new ConcedeIntent(s.Player), SubmitCause.DisconnectTimeout, seat);
+                    OnDisconnected(seat);   // vacating the last seat voids in here
                     if (Ended) return;
                 }
             }
+
+            // NO disconnect grace (decisions 23 + 24). A single absent seat is not a special case:
+            // the match keeps running and the idle rule (2 consecutive auto-ended turns, below)
+            // is the ONLY thing that forces a concession. Zero seats connected is the distinct
+            // case, and it is a void handled at the moment the last seat vacates — not on a timer,
+            // because any timer here is the disconnect grace decision 23 deleted on purpose.
 
             // Mulligan clock: auto-confirm every unconfirmed seat.
             if (_mulliganDeadlineMs is long mdl && now >= mdl)
@@ -407,8 +424,9 @@ namespace Emberfall.Net.Server
             if (s.Conn is null) return;
             s.Conn = null;
             s.Link = null;
-            s.DisconnectDeadlineMs = _time.NowMs + _opts.DisconnectGraceMs;
-            // Match keeps running: opponent's timers unaffected (match-lifecycle §7.1).
+            // One seat away: the match keeps running and the opponent's timers are unaffected
+            // (match-lifecycle §7.1). Only the idle rule can force a concession from here.
+            VoidIfEmpty();
         }
 
         private void OnReconnect(ReconnectMsg msg, IServerConnection conn)
@@ -429,12 +447,30 @@ namespace Emberfall.Net.Server
             long now = _time.NowMs;
             s.Conn = conn;
             s.Link = new ConnectionPolicyState(_opts, now);   // fresh link = seq baseline + bucket reset (RC F7)
-            s.DisconnectDeadlineMs = null;
 
             // Snapshot-then-stream (§8; snapshot-only by ruling RC F8), plus the live turn deadline.
             SendSnapshot(seat);
             if (_turnDeadlineMs is long tdl && _host.State.Phase != TurnPhase.Mulligan)
                 Send(seat, new TurnTimerMsg(_host.State.ActivePlayer, (ulong)tdl));
+        }
+
+        /// <summary>
+        /// Decision 24: the instant ZERO seats are connected the match is over, with no result.
+        /// No window — any window here would be the disconnect grace timer decision 23 deleted.
+        ///
+        /// A void deliberately never reaches the rules core: <c>GameState.Outcome</c> is
+        /// hash-canonical surface, so leaving it at <c>InProgress</c> means no new
+        /// <c>MatchOutcome</c> member and no golden-fixture rebaseline. And no <c>MatchEndMsg</c>
+        /// goes out, because there is by definition nobody left to receive one — a returning player
+        /// just gets the ordinary "your previous game cannot be found."
+        /// </summary>
+        private void VoidIfEmpty()
+        {
+            if (Ended) return;
+            if (_seats[0].Conn is not null || _seats[1].Conn is not null) return;
+
+            _replay.Abandon(_id);   // journal keeps the intents; the ladder gets nothing
+            Ended = true;
         }
 
         // ── Match end ────────────────────────────────────────────────────────────
@@ -446,7 +482,6 @@ namespace Emberfall.Net.Server
                 SubmitCause.Client => finalIntent is ConcedeIntent ? MatchEndReason.Concede : MatchEndReason.Win,
                 SubmitCause.Clock => MatchEndReason.Timeout,
                 SubmitCause.IdleForfeit => MatchEndReason.Timeout,
-                SubmitCause.DisconnectTimeout => MatchEndReason.Disconnect,
                 _ => MatchEndReason.Win,
             };
             Broadcast(new MatchEndMsg(_host.State.Outcome, reason));

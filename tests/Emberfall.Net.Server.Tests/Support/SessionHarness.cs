@@ -116,7 +116,16 @@ namespace Emberfall.Net.Server.Tests.Support
         public SessionHarness(ServerOptions? options = null, bool start = true)
         {
             // Clock tests advance far past the heartbeat timeout on purpose; liveness has its own test.
-            Options = options ?? new ServerOptions { HeartbeatTimeoutMs = long.MaxValue / 4 };
+            // They also jump the clock a whole turn in ONE tick, which the decision-24 stall guard
+            // is built to read as "the server was asleep" — correct in production, wrong for a test
+            // that means the time to have really elapsed. Both guards are therefore disabled by
+            // default and opted INTO by the tests that are about them (which pass real ServerOptions
+            // and tick at a realistic ~1 Hz).
+            Options = options ?? new ServerOptions
+            {
+                HeartbeatTimeoutMs = long.MaxValue / 4,
+                StallGuardMs = long.MaxValue / 4,
+            };
             Client0 = new ScriptedClient(P0);
             Client1 = new ScriptedClient(P1);
             Session = new MatchSession(

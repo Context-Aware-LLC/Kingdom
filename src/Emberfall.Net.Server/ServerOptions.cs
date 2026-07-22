@@ -13,9 +13,19 @@ namespace Emberfall.Net.Server
         public long TurnMs { get; init; } = 75_000;
         /// <summary>The rope: a second turn_timer broadcast this long before the turn deadline.</summary>
         public long RopeMs { get; init; } = 15_000;
-        public long DisconnectGraceMs { get; init; } = 60_000;
         /// <summary>Consecutive clock-fired auto-end-turns before the seat idle-forfeits (§7).</summary>
         public int IdleForfeitAutoTurns { get; init; } = 2;
+
+        // ── Stall guard (decision 24) ────────────────────────────────────────────
+        /// <summary>
+        /// A gap between clock ticks longer than this means the SERVER was asleep — GC pause, host
+        /// hiccup, or Fly's scale-to-zero suspend/resume — not that anyone went away. On such a tick
+        /// the session skips liveness evaluation entirely and pushes its deadlines forward by the
+        /// gap, so a suspend cannot vacate two healthy seats in one pass (which a zero-window void
+        /// would then destroy the match over) or burn a player's turn while the process was down.
+        /// Ticks are ~1 Hz, so anything past a few seconds is a stall, not scheduling jitter.
+        /// </summary>
+        public long StallGuardMs { get; init; } = 5_000;
 
         // ── Liveness (design §11) ────────────────────────────────────────────────
         public long HeartbeatTimeoutMs { get; init; } = 30_000;

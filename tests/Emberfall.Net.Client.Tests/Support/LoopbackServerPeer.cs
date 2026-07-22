@@ -82,7 +82,15 @@ namespace Emberfall.Net.Client.Tests.Support
 
         public LoopbackServerPeer(ServerOptions? options = null)
         {
-            var opts = options ?? new ServerOptions { HeartbeatTimeoutMs = long.MaxValue / 4 };
+            // These tests jump the clock a whole mulligan/turn in ONE tick to drive a server clock.
+            // The decision-24 stall guard is built to read exactly that shape as "the server was
+            // asleep" and credit the time back, so it must be disabled here for the same reason the
+            // heartbeat timeout is — the elapsed time is the point of the test, not a suspend.
+            var opts = options ?? new ServerOptions
+            {
+                HeartbeatTimeoutMs = long.MaxValue / 4,
+                StallGuardMs = long.MaxValue / 4,
+            };
             _conn0 = new SeatConnection(Transport0);
             _conn1 = new SeatConnection(Transport1);
             Session = new MatchSession(Id, 0xE17BEEF5EEDUL, opts, Time, Db, PrebuiltDecks.EmberwardVsTidecaller(), Replay, P0, P1);

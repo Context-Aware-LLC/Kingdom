@@ -20,6 +20,8 @@ namespace Emberfall.Net.Server.Replay
             public PlayerId P1 { get; }
             public List<PlayerIntent> Intents { get; } = new List<PlayerIntent>();
             public MatchOutcome? Outcome { get; set; }
+            /// <summary>Voided per decision 24 — <see cref="Outcome"/> stays null by definition.</summary>
+            public bool Abandoned { get; set; }
         }
 
         private readonly Dictionary<string, Record> _matches = new Dictionary<string, Record>();
@@ -34,5 +36,8 @@ namespace Emberfall.Net.Server.Replay
 
         public void Complete(MatchId id, MatchOutcome outcome)
             => _matches[id.Value].Outcome = outcome;
+
+        public void Abandon(MatchId id)
+            => _matches[id.Value].Abandoned = true;
     }
 }

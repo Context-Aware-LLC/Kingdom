@@ -44,5 +44,10 @@ namespace Emberfall.Net.Server.Replay
             string footer = "{\"outcome\":\"" + outcome + "\"}\n";
             File.AppendAllText(PathFor(id), footer, new UTF8Encoding(false));
         }
+
+        /// <summary>Decision 24 void: a footer that carries no outcome, so a reader can tell
+        /// "ended with no result" from "still in flight" (a file with no footer at all).</summary>
+        public void Abandon(MatchId id)
+            => File.AppendAllText(PathFor(id), "{\"void\":true}\n", new UTF8Encoding(false));
     }
 }

@@ -12,5 +12,14 @@ namespace Emberfall.Net.Server.Replay
         void Begin(MatchId id, ulong seed, PlayerId p0, PlayerId p1);
         void Append(MatchId id, PlayerIntent intent);
         void Complete(MatchId id, MatchOutcome outcome);
+
+        /// <summary>
+        /// The match ended with NO result (decision 24 — double-disconnect is a void): zero seats
+        /// were connected, so nobody won, nobody lost, and nothing reaches the ladder. Distinct from
+        /// <see cref="Complete"/> on purpose — a void carries no <see cref="MatchOutcome"/> at all,
+        /// which is why it takes none. The journal keeps the intents (the match still happened and
+        /// is still replayable); it just records no outcome against either player.
+        /// </summary>
+        void Abandon(MatchId id);
     }
 }
