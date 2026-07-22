@@ -52,6 +52,11 @@ namespace Emberfall.Net.Client
 
         private int _resyncCount;
         private bool _resyncPending;
+        // The in-flight resync episode, so the §4.5 deadline can re-send it. Without these the
+        // client sends one fire-and-forget frame and waits forever if it is lost.
+        private long _resyncSentMs;
+        private ResyncReason _resyncReason;
+        private ulong _resyncLastVersion;
 
         private CancellationTokenSource? _pumpCts;
         private Task? _pumpTask;
@@ -169,6 +174,11 @@ namespace Emberfall.Net.Client
                         if (_state != ConnectionState.Live) continue;
                         if (now - _lastRecvMs >= _opts.InboundSilenceMs)
                             linkDead = true;
+                        // A resync nobody answered is re-sent (§4.5). This outranks the heartbeat:
+                        // it is the more urgent frame, and it refreshes _lastSendMs anyway. Retries
+                        // consume the same budget as fresh requests, so the wait is bounded.
+                        else if (_resyncPending && now - _resyncSentMs >= _opts.ResyncTimeoutMs)
+                            RequestResyncUnlocked(_resyncReason, _resyncLastVersion);
                         else if (now - _lastSendMs >= _opts.HeartbeatIdleMs)
                             SendUnlocked(new HeartbeatMsg(), ++_outSeq);
                     }
@@ -386,6 +396,9 @@ namespace Emberfall.Net.Client
                 return;
             }
             _resyncPending = true;
+            _resyncReason = reason;
+            _resyncLastVersion = lastVersion;
+            _resyncSentMs = _opts.Clock.NowMs;
             SendUnlocked(new ResyncMsg(lastVersion, reason), ++_outSeq);
         }
 

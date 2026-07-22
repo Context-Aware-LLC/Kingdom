@@ -36,6 +36,13 @@ namespace Emberfall.Net.Client
         /// (b3 §4.5: 3; the 4th is fatal).</summary>
         public int ResyncBudget { get; init; } = 3;
 
+        /// <summary>A requested resync unanswered for this long is re-sent (b3 §4.5).
+        /// <para>Without this the budget cannot fire in the case it was written for: it counts
+        /// REQUESTS, not unanswered ones, so a client that asks once and is never answered sits at
+        /// 1-of-3 forever. One lost frame — a swallowed <c>SendAsync</c> throw, or a reorder the
+        /// server strikes — wedges the match permanently with heartbeats still flowing.</para></summary>
+        public long ResyncTimeoutMs { get; init; } = 5_000;
+
         /// <summary>Editor/dev builds capture the raw frame on mismatch (b3 §6.3). Release counts +
         /// telemetry. Off by default; the loopback/soak harness turns it on.</summary>
         public bool DevCapture { get; init; }
