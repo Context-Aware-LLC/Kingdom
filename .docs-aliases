@@ -1,0 +1,24 @@
+# Shorthand used in this repo's source comments → the doc it means.
+# Consumed by ~/.claude/tools/docs-touched.sh. Format: <alias> <path under .docs-root>
+a2               engineering/a2-serializer-design.md
+a2b              engineering/a2b-scoped-review-2026-07-15.md
+a3               engineering/a3-projector-design.md
+a4               engineering/a4-session-seam-design.md
+a5               engineering/a5-wire-protocol-design.md
+b1               engineering/b1-match-server-design.md
+b3               engineering/b3-networked-session-design.md
+netcode          multiplayer/netcode-architecture.md
+state-sync       multiplayer/state-sync-and-security.md
+match-lifecycle  multiplayer/match-lifecycle.md
+interfaces       engineering/interfaces.md
+card-system      engineering/card-system.md
+card-schema      design/card-schema.md
+telemetry-spec   design/telemetry-spec.md
+golden-replay    testing/golden-replay.md
+
+# "design §N" in a source comment means THIS assembly's own design doc.
+design@Emberfall.Net.Protocol       engineering/a5-wire-protocol-design.md
+design@Emberfall.Net.Server         engineering/b1-match-server-design.md
+design@Emberfall.Net.Client         engineering/b3-networked-session-design.md
+design@Emberfall.Core.Serialization engineering/a2-serializer-design.md
+design@Emberfall.Core.Projection    engineering/a3-projector-design.md
