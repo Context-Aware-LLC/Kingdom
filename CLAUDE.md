@@ -5,7 +5,8 @@ Blizzard's *Hearthstone*. Fast to learn, deep to master, readable on one screen,
 built for live-service content cadence (card sets, balance patches, cosmetics).
 
 **Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules
-engine that runs headless on the server and on the client for prediction.
+engine that runs headless on the server. **There is no client-side prediction**
+(ADR-0004): the client mirrors server snapshots wholesale and never speculates.
 Desktop-first, architected for mobile.
 
 ## Current status
