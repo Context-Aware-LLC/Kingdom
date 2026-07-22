@@ -23,18 +23,43 @@ namespace Emberfall.Net.Server
 
         /// <summary>
         /// Where `match_complete` / `match_void` go (C-G1-8). Null → <see cref="NullTelemetrySink"/>:
-        /// the emit points still run, nothing is recorded. Step 3 replaces this default with the
-        /// durable sink on the Fly volume — until then the server is honestly, visibly at n = 0
-        /// rather than pretending otherwise.
+        /// the emit points still run, nothing is recorded. Step 3 makes the durable
+        /// <see cref="JsonlTelemetrySink"/> the default under <see cref="FromEnvironment"/>; tests
+        /// still inject their own, and leaving it null remains an honest, visible n = 0.
         /// </summary>
         public ITelemetrySink? Telemetry { get; init; }
 
-        public static ServerConfig FromEnvironment() => new ServerConfig
+        public static ServerConfig FromEnvironment()
         {
-            Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
-            CardsDir = Environment.GetEnvironmentVariable("EMBERFALL_CARDS"),
-            ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
-        };
+            string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
+
+            return new ServerConfig
+            {
+                Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
+                CardsDir = Environment.GetEnvironmentVariable("EMBERFALL_CARDS"),
+                ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
+                Telemetry = new JsonlTelemetrySink(telemetryDir, ResolveEnvLabel()),
+            };
+        }
+
+        /// <summary>
+        /// Provenance for the `env` column, resolved so that the common case cannot be forgotten.
+        ///
+        /// <para>The balance sample is ground locally and the durability proof runs on Fly
+        /// (decision 2026-07-22), so a merged file holds rows from two machines and `source` — which
+        /// only separates ai_soak from ladder — cannot tell them apart. `FLY_APP_NAME` is injected
+        /// by Fly into every machine, so the deployed case self-labels without a deploy-time step
+        /// anyone has to remember. `EMBERFALL_ENV` still wins when set, for the odd third host.</para>
+        /// </summary>
+        private static string ResolveEnvLabel()
+        {
+            string? explicitLabel = Environment.GetEnvironmentVariable("EMBERFALL_ENV");
+            if (!string.IsNullOrWhiteSpace(explicitLabel)) return explicitLabel;
+
+            return string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FLY_APP_NAME"))
+                ? "local"
+                : "fly";
+        }
     }
 
     /// <summary>

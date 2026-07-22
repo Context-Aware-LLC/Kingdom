@@ -13,8 +13,12 @@ WORKDIR /app
 COPY --from=build /app .
 # Card definitions: source of truth stays unity/Emberfall/Assets/CardData (design §10).
 COPY unity/Emberfall/Assets/CardData/ /app/cards/
+# /data is the Fly volume (fly.toml [mounts], vol_rkgwj19p5yykeyo4). Both of these MUST point
+# inside it: the container filesystem is replaced on every deploy, so a relative default would
+# collect telemetry that looks healthy right up until the next machine swap eats it (C-G1-8).
 ENV EMBERFALL_CARDS=/app/cards \
     EMBERFALL_REPLAYS=/data/replays \
+    EMBERFALL_TELEMETRY=/data \
     ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Emberfall.Net.Server.dll"]
