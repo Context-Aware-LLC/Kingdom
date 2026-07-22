@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Emberfall.Core;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Session;
 using UnityEngine;
@@ -7,9 +9,24 @@ using UnityEngine;
 namespace Emberfall.AI
 {
     /// <summary>
-    /// Greedy AI for the M1 vertical slice. Each turn: play the first affordable card, then
-    /// attack with each ready minion (validator enforces taunt), then end turn. Uses
-    /// ICommandValidator to gate every intent before queuing so rejections are nearly impossible.
+    /// Greedy AI for the vertical slice. Each turn: play the first affordable card (aiming it if it
+    /// needs aiming), trade with each ready minion, swing the hero if a weapon is equipped, use the
+    /// hero power, then end the turn. Every intent is gated through <see cref="ICommandValidator"/>
+    /// before it is queued, so rejections are near-impossible.
+    ///
+    /// <para><b>Kept in step with <c>Emberfall.Tools.NetSoak.GreedyAi</c>.</b> That is the driver
+    /// that grinds the `ai_soak` balance sample, and a balance bar only means something if the AI
+    /// being measured is the AI that ships. Fix one, fix the other.</para>
+    ///
+    /// <para><b>2026-07-22 — three holes closed.</b> This could not target, could not swing a weapon,
+    /// and never used the hero power. That reads as mild weakness until you notice it lands
+    /// asymmetrically: EMBERWARD's removal is <c>ANY_CHARACTER</c> (flame_bolt, ember_scorch) and its
+    /// weapon is ember_cinder_lance, while TIDECALLER's frost_ripple auto-resolves and deep_bargain
+    /// just draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were —
+    /// found when the soak reported a 72.5/27.5 split that turned out to be this bug, not the cards.
+    /// In the shipped single-player game it meant the AI played EMBERWARD with a third of its deck
+    /// dead.</para>
+    ///
     /// Replace with a search-based AI in M2.
     /// </summary>
     public sealed class PlayingAi : IIntentSource
@@ -56,51 +73,179 @@ namespace Emberfall.AI
             // Mulligan: keep entire opening hand.
             if (state.Phase == TurnPhase.Mulligan)
             {
-                int seat = state.SeatOf(_playerId);
-                bool done = seat == 0 ? state.Mulligan0Done : state.Mulligan1Done;
+                int mulSeat = state.SeatOf(_playerId);
+                bool done = mulSeat == 0 ? state.Mulligan0Done : state.Mulligan1Done;
                 return done ? null : new MulliganIntent(_playerId, Array.Empty<InstanceId>());
             }
 
             if (state.Phase != TurnPhase.Main || state.ActivePlayer != _playerId)
                 return null;
 
-            int mySeat  = state.SeatOf(_playerId);
-            int foeSeat = mySeat == 0 ? 1 : 0;
-            var ps      = state.Players[mySeat];
+            int seat    = state.SeatOf(_playerId);
+            int foeSeat = seat == 0 ? 1 : 0;
+            var ps      = state.Players[seat];
             var foe     = state.Players[foeSeat];
 
-            // 1. Play the first card in hand we can legally play (no targeting — empty target list).
+            // 1. First card in hand we can legally play, aimed if it needs aiming.
             foreach (var card in ps.Hand)
             {
                 var def = _db.Get(card.DefinitionId);
                 if (ps.Mana.Available < def.Cost) continue;
 
-                // Append to the end of board; validator will reject if board is full.
-                var play = new PlayCardIntent(_playerId, card.Id, ps.Board.Count,
-                                             Array.Empty<TargetRef>());
-                if (_validator.CanExecute(state, play, out _))
-                    return play;
+                var play = TryPlay(state, card, def, ps, foe);
+                if (play != null) return play;
             }
 
-            // 2. Attack with the first ready minion on our board.
+            // 2. Attack. Minions trade first — the validator, not this loop, enforces taunt and
+            //    stealth — then the hero swings if a weapon is equipped.
             foreach (var attacker in ps.Board)
             {
-                // Try every foe minion first (validator enforces taunt and stealth rules).
-                foreach (var defender in foe.Board)
-                {
-                    var atk = new AttackIntent(_playerId, attacker.Id, new TargetRef(defender.Id));
-                    if (_validator.CanExecute(state, atk, out _))
-                        return atk;
-                }
-
-                // Then try the foe hero.
-                var heroAtk = new AttackIntent(_playerId, attacker.Id, new TargetRef(foe.Hero.Id));
-                if (_validator.CanExecute(state, heroAtk, out _))
-                    return heroAtk;
+                var atk = TryAttack(state, attacker.Id, foe, preferFace: false);
+                if (atk != null) return atk;
             }
 
-            // 3. Nothing left to do.
+            if (ps.Weapon != null)
+            {
+                // Face first for the hero: swinging into a minion means taking its attack back, and
+                // the weapon spends durability either way. Taunt still forces the trade.
+                var swing = TryAttack(state, ps.Hero.Id, foe, preferFace: true);
+                if (swing != null) return swing;
+            }
+
+            // 3. Hero power with whatever mana is left.
+            var power = new HeroPowerIntent(_playerId, Array.Empty<TargetRef>());
+            if (_validator.CanExecute(state, power, out _)) return power;
+
+            foreach (var t in HeroPowerCandidates(ps, foe))
+            {
+                var aimed = new HeroPowerIntent(_playerId, new[] { t });
+                if (_validator.CanExecute(state, aimed, out _)) return aimed;
+            }
+
             return new EndTurnIntent(_playerId);
+        }
+
+        // ── Playing a card ────────────────────────────────────────────────────────
+
+        private PlayCardIntent TryPlay(GameState state, CardInstance card, CardDefinition def,
+                                       PlayerState ps, PlayerState foe)
+        {
+            int slot = ps.Board.Count;
+
+            // Untargeted first. Covers minions, weapons, draw, and every effect whose selector the
+            // interpreter auto-resolves (ENEMY_MINIONS, ENEMY_HERO, SELF). Only the explicit-choice
+            // ANY_* selectors fall through — exactly the set that needs a target supplied.
+            var bare = new PlayCardIntent(_playerId, card.Id, slot, Array.Empty<TargetRef>());
+            if (_validator.CanExecute(state, bare, out _)) return bare;
+
+            foreach (var t in PlayCandidates(def, ps, foe))
+            {
+                var aimed = new PlayCardIntent(_playerId, card.Id, slot, new[] { t });
+                if (_validator.CanExecute(state, aimed, out _)) return aimed;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Ordered target candidates for an explicit-choice card. Hostile cards want enemies, the rest
+        /// want friends; either way the tail covers the other side so a legal play is never skipped
+        /// for want of a guess. Within each group the board is walked in slot order — killable-first
+        /// is the whole heuristic, and it is the one that matters.
+        /// </summary>
+        private static List<TargetRef> PlayCandidates(CardDefinition def, PlayerState ps, PlayerState foe)
+        {
+            var list = new List<TargetRef>();
+
+            if (IsHostile(def))
+            {
+                int dmg = DamageAmount(def);
+                foreach (var m in foe.Board)
+                    if (dmg > 0 && m.CurrentHealth <= dmg) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(foe.Hero.Id));
+                foreach (var m in foe.Board) list.Add(new TargetRef(m.Id));
+                foreach (var m in ps.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(ps.Hero.Id));
+            }
+            else
+            {
+                if (ps.Hero.CurrentHealth < ps.Hero.MaxHealth) list.Add(new TargetRef(ps.Hero.Id));
+                foreach (var m in ps.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(ps.Hero.Id));
+                foreach (var m in foe.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(foe.Hero.Id));
+            }
+
+            return list;
+        }
+
+        // ── Attacking ─────────────────────────────────────────────────────────────
+
+        private AttackIntent TryAttack(GameState state, InstanceId attacker, PlayerState foe, bool preferFace)
+        {
+            if (preferFace)
+            {
+                var face = new AttackIntent(_playerId, attacker, new TargetRef(foe.Hero.Id));
+                if (_validator.CanExecute(state, face, out _)) return face;
+            }
+
+            foreach (var defender in foe.Board)
+            {
+                var trade = new AttackIntent(_playerId, attacker, new TargetRef(defender.Id));
+                if (_validator.CanExecute(state, trade, out _)) return trade;
+            }
+
+            if (!preferFace)
+            {
+                var face = new AttackIntent(_playerId, attacker, new TargetRef(foe.Hero.Id));
+                if (_validator.CanExecute(state, face, out _)) return face;
+            }
+
+            return null;
+        }
+
+        // ── Hero power ────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Hero powers are not declared in card data, so their intent cannot be read the way a card's
+        /// can. Enemy hero first (the common damage power), then enemy minions, then friendly — the
+        /// validator rejects whatever the power cannot legally hit.
+        /// </summary>
+        private static List<TargetRef> HeroPowerCandidates(PlayerState ps, PlayerState foe)
+        {
+            var list = new List<TargetRef> { new TargetRef(foe.Hero.Id) };
+            foreach (var m in foe.Board) list.Add(new TargetRef(m.Id));
+            list.Add(new TargetRef(ps.Hero.Id));
+            foreach (var m in ps.Board) list.Add(new TargetRef(m.Id));
+            return list;
+        }
+
+        // ── Reading the card ──────────────────────────────────────────────────────
+
+        private static bool IsHostile(CardDefinition def)
+        {
+            foreach (var e in def.Effects)
+            {
+                switch (e.Action)
+                {
+                    case Emberfall.Core.Contracts.Action.DEAL_DAMAGE:
+                    case Emberfall.Core.Contracts.Action.DESTROY:
+                    case Emberfall.Core.Contracts.Action.FREEZE:
+                    case Emberfall.Core.Contracts.Action.SILENCE:
+                    case Emberfall.Core.Contracts.Action.RETURN_TO_HAND:
+                    case Emberfall.Core.Contracts.Action.TRANSFORM:
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private static int DamageAmount(CardDefinition def)
+        {
+            foreach (var e in def.Effects)
+                if (e.Action == Emberfall.Core.Contracts.Action.DEAL_DAMAGE && e.Amount.HasValue)
+                    return e.Amount.Value;
+            return 0;
         }
     }
 }
