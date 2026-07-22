@@ -122,7 +122,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
             var root = new JsonObject
             {
-                ["schemaVersion"] = 1,
+                ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "deathrattle_cascade",
                 ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
@@ -131,6 +131,9 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 ["p1"] = "P1",
                 ["p0Class"] = setup.P0Class.ToString(),
                 ["p1Class"] = setup.P1Class.ToString(),
+                // Schema v2 (C-G1-7): record every hash-load-bearing setup input, never inherit a C# default.
+                ["heroMaxHealth"] = setup.HeroMaxHealth,
+                ["sparkTokenId"] = setup.SparkTokenId,
                 ["seed"] = Seed,
                 ["p0Deck"] = p0Deck,
                 ["p1Deck"] = p1Deck,

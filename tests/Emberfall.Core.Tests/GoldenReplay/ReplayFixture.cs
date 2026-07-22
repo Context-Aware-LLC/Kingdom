@@ -15,6 +15,17 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// </summary>
     public sealed class ReplayFixture
     {
+        /// <summary>Highest on-disk schema this loader understands (golden-replay.md §3.2).</summary>
+        public const int CurrentSchemaVersion = 2;
+
+        /// <summary>
+        /// The v1 implicit values — the <see cref="MatchSetup"/> C# defaults that v1 fixtures were
+        /// silently baked against. Reads default to these so no existing hash moves (C-G1-7).
+        /// </summary>
+        public const int DefaultHeroMaxHealth = 30;
+        public const string DefaultSparkTokenId = "token_spark_coin";
+
+        public int SchemaVersion = 1;
         public string Name = "";
         public string CardSetSnapshot = "";
         public string EngineContractVersion = "";
@@ -26,6 +37,15 @@ namespace Emberfall.Core.Tests.GoldenReplay
         public List<string> P0Deck = new();
         public List<string> P1Deck = new();
         public ulong Seed;
+
+        /// <summary>
+        /// Hash-load-bearing <see cref="MatchSetup"/> inputs (schema v2). Both reach the digest — hero
+        /// health via <c>GameStateSerializer.WalkHero</c>, the spark id via the second player's hand —
+        /// so a fixture that does not record them cannot honestly claim its inputs reproduce its hash.
+        /// </summary>
+        public int HeroMaxHealth = DefaultHeroMaxHealth;
+        public string SparkTokenId = DefaultSparkTokenId;
+
         public List<PlayerIntent> Intents = new();
 
         public string? ExpectedStateHash;
@@ -37,9 +57,18 @@ namespace Emberfall.Core.Tests.GoldenReplay
         {
             using var doc = JsonDocument.Parse(File.ReadAllText(path));
             var root = doc.RootElement;
+
+            int schemaVersion = root.TryGetProperty("schemaVersion", out var sv) && sv.ValueKind == JsonValueKind.Number
+                ? sv.GetInt32() : 1;
+            if (schemaVersion < 1 || schemaVersion > CurrentSchemaVersion)
+                throw new NotSupportedException(
+                    $"Fixture '{Path.GetFileName(path)}' declares schemaVersion {schemaVersion}; this harness understands " +
+                    $"1..{CurrentSchemaVersion}. Update ReplayFixture before adding a newer fixture.");
+
             var fx = new ReplayFixture
             {
                 SourcePath = path,
+                SchemaVersion = schemaVersion,
                 Name = root.GetProperty("name").GetString() ?? Path.GetFileNameWithoutExtension(path),
                 CardSetSnapshot = root.GetProperty("cardSetSnapshot").GetString() ?? "",
                 EngineContractVersion = Opt(root, "engineContractVersion") ?? "",
@@ -49,6 +78,11 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 P0Class = ParseEnum<CardClass>(root, "p0Class"),
                 P1Class = ParseEnum<CardClass>(root, "p1Class"),
                 Seed = root.GetProperty("seed").GetUInt64(),
+
+                // Default on read (C-G1-7): absent → the v1 implicit value, so v1 hashes are stable.
+                HeroMaxHealth = root.TryGetProperty("heroMaxHealth", out var hp) && hp.ValueKind == JsonValueKind.Number
+                    ? hp.GetInt32() : DefaultHeroMaxHealth,
+                SparkTokenId = Opt(root, "sparkTokenId") ?? DefaultSparkTokenId,
             };
             foreach (var c in root.GetProperty("p0Deck").EnumerateArray()) fx.P0Deck.Add(c.GetString()!);
             foreach (var c in root.GetProperty("p1Deck").EnumerateArray()) fx.P1Deck.Add(c.GetString()!);

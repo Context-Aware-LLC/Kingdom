@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "name": "full_match_pyra_wins",
   "engineContractVersion": "interfaces.v3",
   "cardSetSnapshot": "M1.cards.snapshot.json",
@@ -8,6 +8,8 @@
   "p1": "P1",
   "p0Class": "EMBERWARD",
   "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
   "p0Deck": [
     "ember_recruit",
     "ember_zealot",

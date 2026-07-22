@@ -42,7 +42,11 @@ namespace Emberfall.Core.Tests.GoldenReplay
             var snapshotPath = Path.Combine(RepoPaths.CardSetsDir, fx.CardSetSnapshot);
             var db = JsonCardDatabase.FromSnapshotFile(snapshotPath);
             var processor = new CommandProcessor(db);
-            var setup = new MatchSetup(fx.P0Class, fx.P0Deck, fx.P1Class, fx.P1Deck);
+            // Every hash-load-bearing setup input comes from the fixture, never from a C# default
+            // (C-G1-7): schema v1 files supply the v1 implicit values at load, so no hash moves.
+            var setup = new MatchSetup(
+                fx.P0Class, fx.P0Deck, fx.P1Class, fx.P1Deck,
+                heroMaxHealth: fx.HeroMaxHealth, sparkTokenId: fx.SparkTokenId);
             var host = new LocalMatchHost(processor, db, setup);
 
             host.BeginMatch(fx.MatchId, fx.P0, fx.P1, fx.Seed);   // core-driven opening (interfaces.md §2.1)
