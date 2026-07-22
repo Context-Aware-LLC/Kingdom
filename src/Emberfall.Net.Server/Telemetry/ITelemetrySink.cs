@@ -17,6 +17,14 @@ namespace Emberfall.Net.Server.Telemetry
     {
         void MatchComplete(MatchCompleteEvent e);
         void MatchVoid(MatchVoidEvent e);
+
+        /// <summary>
+        /// The whole match's per-card sample in one call (telemetry-spec §2). Batched rather than
+        /// one call per card precisely because of the "must not block" contract above: ~40–60 rows
+        /// arrive at once, and delivering them singly would multiply this seam's cost by the size of
+        /// two decks at the exact moment a match is tearing down.
+        /// </summary>
+        void CardsSeen(CardSeenEvent e);
     }
 
     /// <summary>The default. Emit points still run and are still tested; nothing is recorded.</summary>
@@ -26,6 +34,7 @@ namespace Emberfall.Net.Server.Telemetry
         private NullTelemetrySink() { }
         public void MatchComplete(MatchCompleteEvent e) { }
         public void MatchVoid(MatchVoidEvent e) { }
+        public void CardsSeen(CardSeenEvent e) { }
     }
 
     /// <summary>Test double: keeps every event in order so a test can assert on the emitted row.</summary>
@@ -33,11 +42,14 @@ namespace Emberfall.Net.Server.Telemetry
     {
         private readonly List<MatchCompleteEvent> _completes = new List<MatchCompleteEvent>();
         private readonly List<MatchVoidEvent> _voids = new List<MatchVoidEvent>();
+        private readonly List<CardSeenEvent> _cardsSeen = new List<CardSeenEvent>();
 
         public IReadOnlyList<MatchCompleteEvent> Completes => _completes;
         public IReadOnlyList<MatchVoidEvent> Voids => _voids;
+        public IReadOnlyList<CardSeenEvent> CardSeenBatches => _cardsSeen;
 
         public void MatchComplete(MatchCompleteEvent e) => _completes.Add(e);
         public void MatchVoid(MatchVoidEvent e) => _voids.Add(e);
+        public void CardsSeen(CardSeenEvent e) => _cardsSeen.Add(e);
     }
 }

@@ -119,6 +119,52 @@ namespace Emberfall.Net.Server.Telemetry
             Append(w);
         }
 
+        /// <summary>
+        /// The §2 per-card sample. <b>One JSON object per LINE per card</b> — the spec's row shape,
+        /// and what every consumer of a `.jsonl` file expects — but <b>one open/append/fsync for the
+        /// whole burst</b>. Doing it per row would mean 40–60 fsyncs per match; doing it as a single
+        /// nested object would force an analyst to unnest before they could group by `cardDefId`,
+        /// which is the only thing anybody does with this event.
+        ///
+        /// <para>An empty batch writes nothing rather than opening the file to write zero bytes —
+        /// and cannot happen for a real match, since both decks are always in the ledger.</para>
+        /// </summary>
+        public void CardsSeen(CardSeenEvent e)
+        {
+            var rows = e.Rows;
+            if (rows.Count == 0) return;
+
+            var lines = new List<byte[]>(rows.Count);
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                // A fresh writer per row rather than a Reset() on the shared one: JsonWriter is the
+                // wire's canonical emitter and this is not a reason to grow its surface.
+                var w = new JsonWriter();
+                w.BeginObject();
+                w.Name("type"); w.Str("card_seen");
+                w.Name("env"); w.Str(_env);
+                w.Name("matchId"); w.Str(e.Match.Value);
+                w.Name("endedAtUtc"); w.Str(Timestamp(e.EndedAtUtc));
+                w.Name("source"); w.Str(Source(e.Source));
+                w.Name("accountId"); w.Str(r.Account.Value);
+                w.Name("classId"); w.Str(r.Class.ToString());
+                w.Name("cardDefId"); w.Str(r.CardDefId);
+                w.Name("inDeck"); w.Bool(r.InDeck);
+                w.Name("drawnThisMatch"); w.Bool(r.DrawnThisMatch);
+                w.Name("matchWon"); w.Bool(r.MatchWon);
+                w.Name("keptInMulligan"); w.Bool(r.KeptInMulligan);
+                // Written as an explicit null, not omitted: "never played" is an ANSWER that the
+                // average-turn-played metric divides by, and a missing key is indistinguishable
+                // from a field this writer forgot.
+                w.Name("firstPlayedTurn");
+                if (r.FirstPlayedTurn is int t) w.I32(t); else w.Null();
+                w.EndObject();
+                lines.Add(w.ToUtf8());
+            }
+            AppendAll(lines);
+        }
+
         private static void WriteSeat(JsonWriter w, SeatOutcome s)
         {
             w.BeginObject();
@@ -140,16 +186,26 @@ namespace Emberfall.Net.Server.Telemetry
         /// failure we are insuring against is the machine going away — a row sitting in the OS page
         /// cache is not on the volume, and `fly deploy` swaps the machine out from under it.
         /// </summary>
-        private void Append(JsonWriter w)
+        private void Append(JsonWriter w) => AppendAll(new[] { w.ToUtf8() });
+
+        /// <summary>
+        /// Append N rows under ONE open and ONE fsync. A partial write — disk full halfway through a
+        /// `card_seen` burst — counts every row in the batch as dropped, including any that reached
+        /// the file: the batch is one match's card sample, and a half-written sample would be worse
+        /// than a missing one, because it looks complete to whoever groups by `cardDefId`.
+        /// </summary>
+        private void AppendAll(IReadOnlyList<byte[]> rows)
         {
             try
             {
-                byte[] row = w.ToUtf8();
                 lock (_gate)
                 {
                     using var s = new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read);
-                    s.Write(row, 0, row.Length);
-                    s.WriteByte((byte)'\n');
+                    for (int i = 0; i < rows.Count; i++)
+                    {
+                        s.Write(rows[i], 0, rows[i].Length);
+                        s.WriteByte((byte)'\n');
+                    }
                     s.Flush(true);
                 }
             }
@@ -159,7 +215,7 @@ namespace Emberfall.Net.Server.Telemetry
                 // is a number somebody can read rather than a silence indistinguishable from n=0.
                 lock (_gate)
                 {
-                    DroppedRows++;
+                    DroppedRows += rows.Count;
                     LastError = ex;
                 }
             }

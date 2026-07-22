@@ -180,6 +180,191 @@ namespace Emberfall.Net.Server.Tests
             Assert.That(e.P0.MulliganKept, Is.EqualTo(hand0));
         }
 
+        // ── card_seen (telemetry-spec §2) ────────────────────────────────────────
+
+        [Test]
+        public void A_Finished_Match_Emits_One_Batched_CardSeen_Covering_Both_Decks()
+        {
+            // Batched on purpose: ~40–60 rows arrive at once, and the sink fsyncs every write. One
+            // call per card would be one fsync per card at match teardown.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            Concede(h, 1);
+
+            Assert.That(h.Telemetry.CardSeenBatches.Count, Is.EqualTo(1), "one match, one burst");
+            var rows = h.Telemetry.CardSeenBatches.Single().Rows;
+
+            var setup = Emberfall.Core.PrebuiltDecks.EmberwardVsTidecaller();
+            var p0Rows = rows.Where(r => r.Account == SessionHarness.AccountFor(0)).ToList();
+            var p1Rows = rows.Where(r => r.Account == SessionHarness.AccountFor(1)).ToList();
+
+            Assert.That(p0Rows.Where(r => r.InDeck).Select(r => r.CardDefId),
+                Is.EquivalentTo(setup.P0Deck.Distinct()),
+                "inclusion rate is per DISTINCT card — two copies are one row, not two");
+            Assert.That(p1Rows.Where(r => r.InDeck).Select(r => r.CardDefId),
+                Is.EquivalentTo(setup.P1Deck.Distinct()));
+            Assert.That(p0Rows.Select(r => r.Class), Is.All.EqualTo(CardClass.EMBERWARD));
+            Assert.That(p1Rows.Select(r => r.Class), Is.All.EqualTo(CardClass.TIDECALLER));
+        }
+
+        [Test]
+        public void The_Opening_Hand_Counts_As_Drawn_And_The_Rest_Of_The_Deck_Does_Not()
+        {
+            // drawnThisMatch is win-when-drawn's DENOMINATOR. If cards that never left the deck
+            // counted, every card's WWD would collapse toward the raw match win rate and §3's 58%
+            // centralization gate would never fire on anything.
+            var h = new SessionHarness(attributed: true);
+            var opening = h.Session.Host.State.Players[0].Hand.Select(c => c.DefinitionId).Distinct().ToList();
+            h.ConfirmMulligans();
+            Concede(h, 1);
+
+            var p0 = h.Telemetry.CardSeenBatches.Single().Rows
+                .Where(r => r.Account == SessionHarness.AccountFor(0)).ToList();
+
+            foreach (string def in opening)
+                Assert.That(p0.Single(r => r.CardDefId == def).DrawnThisMatch, Is.True,
+                    $"'{def}' was in the opening hand");
+            Assert.That(p0.Any(r => !r.DrawnThisMatch), Is.True,
+                "a 30-card deck cannot have been entirely drawn by turn one — some rows must read false");
+        }
+
+        [Test]
+        public void Mulligan_Keeps_Land_On_The_Card_Rows_Too()
+        {
+            // Same fact as match_complete's `mulliganKept`, reprojected per card because §2's
+            // keep-rate metric is per-cardDefId. Asserting it here is what keeps the two consistent.
+            var h = new SessionHarness(attributed: true);
+            var hand0 = h.Session.Host.State.Players[0].Hand.ToList();
+            var thrown = hand0[0];
+
+            h.Post(0, h.Client0.Intent(new MulliganIntent(h.P0, new[] { thrown.Id }), h.Id));
+            h.Post(1, h.Client1.Intent(new MulliganIntent(h.P1, Array.Empty<InstanceId>()), h.Id));
+            Concede(h, 1);
+
+            var p0 = h.Telemetry.CardSeenBatches.Single().Rows
+                .Where(r => r.Account == SessionHarness.AccountFor(0)).ToList();
+            var kept = h.Telemetry.Completes.Single().P0.MulliganKept;
+
+            foreach (var r in p0)
+                Assert.That(r.KeptInMulligan, Is.EqualTo(kept.Contains(r.CardDefId)),
+                    $"'{r.CardDefId}' disagrees with match_complete.mulliganKept");
+
+            Assert.That(p0.Single(r => r.CardDefId == thrown.DefinitionId).DrawnThisMatch, Is.True,
+                "a mulliganed card was still drawn — it was in hand and the player decided about it");
+        }
+
+        [Test]
+        public void A_Played_Card_Records_The_Turn_It_Was_First_Played()
+        {
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+
+            // End turns until whoever is active can actually afford something. Turn 1 is one
+            // crystal and neither prebuilt opening hand is guaranteed to hold a 1-drop.
+            int seat = -1;
+            CardInstance? playable = null;
+            for (int guard = 0; guard < 12 && playable is null; guard++)
+            {
+                var st = h.Session.Host.State;
+                seat = st.SeatOf(st.ActivePlayer);
+                playable = st.Players[seat].Hand
+                    .FirstOrDefault(c => SessionHarness.Db.Get(c.DefinitionId).Cost <= st.Players[seat].Mana.Available);
+                if (playable is null)
+                    h.Post(seat, h.Client(seat).Intent(new EndTurnIntent(seat == 0 ? h.P0 : h.P1), h.Id));
+            }
+            Assert.That(playable, Is.Not.Null, "no affordable card appeared in 12 turns — the test cannot run");
+            int turn = h.Session.Host.State.TurnNumber;
+
+            h.Post(seat, h.Client(seat).Intent(
+                new PlayCardIntent(seat == 0 ? h.P0 : h.P1, playable.Id, 0, Array.Empty<TargetRef>()), h.Id));
+            Assert.That(h.Session.Host.State.Players[seat].Hand.Any(c => c.Id == playable.Id), Is.False,
+                "precondition: the play was accepted");
+
+            Concede(h, 1 - seat);
+
+            var row = h.Telemetry.CardSeenBatches.Single().Rows
+                .Single(r => r.Account == SessionHarness.AccountFor(seat) && r.CardDefId == playable.DefinitionId);
+            Assert.That(row.FirstPlayedTurn, Is.EqualTo(turn));
+            Assert.That(row.DrawnThisMatch, Is.True, "you cannot play what you never drew");
+        }
+
+        [Test]
+        public void An_Unplayed_Card_Has_A_Null_First_Played_Turn_Not_Zero()
+        {
+            // Average-turn-played is undefined for a card nobody played. Zero would drag that
+            // average toward a turn that does not exist.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            Concede(h, 1);
+
+            var rows = h.Telemetry.CardSeenBatches.Single().Rows;
+            Assert.That(rows.Select(r => r.FirstPlayedTurn), Is.All.Null,
+                "nothing was played in this match");
+        }
+
+        [Test]
+        public void A_Rejected_Play_Is_Never_Recorded_As_Played()
+        {
+            // The capture happens before the core sees the intent, so it has to be discarded when
+            // the core refuses. Otherwise a spammed illegal play would invent a firstPlayedTurn.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+
+            // The seat that is NOT active cannot play — the core rejects it out of turn.
+            int idle = 1 - h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer);
+            var card = h.Session.Host.State.Players[idle].Hand[0];
+            h.Post(idle, h.Client(idle).Intent(
+                new PlayCardIntent(idle == 0 ? h.P0 : h.P1, card.Id, 0, Array.Empty<TargetRef>()), h.Id));
+
+            Concede(h, 1);
+
+            var row = h.Telemetry.CardSeenBatches.Single().Rows
+                .Single(r => r.Account == SessionHarness.AccountFor(idle) && r.CardDefId == card.DefinitionId);
+            Assert.That(row.FirstPlayedTurn, Is.Null, "the core refused this play; telemetry must agree");
+        }
+
+        [Test]
+        public void A_Void_Emits_No_Card_Rows()
+        {
+            // matchWon is win-when-drawn's numerator and a void has no winner. Rows carrying a
+            // manufactured `false` would put every card in the match on the losing side of a match
+            // that had no sides.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            h.Disconnect(0);
+            h.Disconnect(1);
+
+            Assert.That(h.Telemetry.CardSeenBatches, Is.Empty);
+        }
+
+        [Test]
+        public void MatchWon_Follows_The_Seat_That_Actually_Won()
+        {
+            // The rule lives in MatchSession.CardRows: ResultFor(seat, outcome) == Win. A Draw
+            // therefore yields false on BOTH seats rather than true on both — crediting a draw to
+            // everyone would inflate every card in it past §3's 58% centralization threshold.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            Concede(h, 1);
+
+            var rows = h.Telemetry.CardSeenBatches.Single().Rows;
+            Assert.That(rows.Where(r => r.Account == SessionHarness.AccountFor(0)).Select(r => r.MatchWon),
+                Is.All.True, "seat 0 won this one");
+            Assert.That(rows.Where(r => r.Account == SessionHarness.AccountFor(1)).Select(r => r.MatchWon),
+                Is.All.False);
+        }
+
+        [Test]
+        public void An_Unattributed_Match_Emits_No_Card_Rows_Either()
+        {
+            var h = new SessionHarness();   // no identity
+            h.ConfirmMulligans();
+            Concede(h, 1);
+
+            Assert.That(h.Telemetry.CardSeenBatches, Is.Empty,
+                "the same guard as match_complete — a row keyed on an empty account looks like data");
+        }
+
         // ── Deck identity ────────────────────────────────────────────────────────
 
         [Test]
@@ -268,6 +453,7 @@ namespace Emberfall.Net.Server.Tests
             public bool WasCalled;
             public void MatchComplete(MatchCompleteEvent e) { WasCalled = true; throw new InvalidOperationException("sink is down"); }
             public void MatchVoid(MatchVoidEvent e) { WasCalled = true; throw new InvalidOperationException("sink is down"); }
+            public void CardsSeen(CardSeenEvent e) { WasCalled = true; throw new InvalidOperationException("sink is down"); }
         }
 
         private static void Concede(SessionHarness h, int seat)

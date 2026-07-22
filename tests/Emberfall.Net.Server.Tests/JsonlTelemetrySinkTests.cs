@@ -142,6 +142,105 @@ namespace Emberfall.Net.Server.Tests
                     "void players are bare account ids, not seat blocks with a result");
         }
 
+        // ── card_seen: telemetry-spec §2 ─────────────────────────────────────────
+
+        [Test]
+        public void A_CardSeen_Batch_Writes_One_Line_Per_Card_Not_One_Nested_Blob()
+        {
+            // Batching is an I/O decision, not a schema one. The burst pays for ONE open+fsync, but
+            // what lands is still the spec's one row per (match, seat, cardDefId) — anything nested
+            // would force every consumer to unnest before it could group by cardDefId, which is the
+            // only thing this event is ever used for.
+            new JsonlTelemetrySink(_dir, "local").CardsSeen(Cards("m1", Row("card_a"), Row("card_b"), Row("card_c")));
+
+            var rows = Rows();
+            Assert.That(rows.Count, Is.EqualTo(3));
+            Assert.That(rows.Select(r => r.GetProperty("cardDefId").GetString()),
+                Is.EqualTo(new[] { "card_a", "card_b", "card_c" }), "and in the order emitted");
+            foreach (var r in rows)
+            {
+                Assert.That(r.GetProperty("type").GetString(), Is.EqualTo("card_seen"));
+                Assert.That(r.GetProperty("matchId").GetString(), Is.EqualTo("m1"));
+                Assert.That(r.GetProperty("env").GetString(), Is.EqualTo("local"));
+            }
+        }
+
+        [Test]
+        public void A_CardSeen_Row_Carries_Every_Field_The_PerCard_Metrics_Need()
+        {
+            new JsonlTelemetrySink(_dir, "local").CardsSeen(Cards("m1",
+                Row("card_a", inDeck: true, drawn: true, kept: true, firstPlayedTurn: 3)));
+            var r = Rows().Single();
+
+            Assert.That(r.GetProperty("accountId").GetString(), Is.EqualTo(AccountId.FromDeviceToken("dev-0").Value));
+            Assert.That(r.GetProperty("classId").GetString(), Is.EqualTo("EMBERWARD"));
+            Assert.That(r.GetProperty("source").GetString(), Is.EqualTo("ladder"));
+            Assert.That(r.GetProperty("inDeck").GetBoolean(), Is.True);
+            Assert.That(r.GetProperty("drawnThisMatch").GetBoolean(), Is.True);
+            Assert.That(r.GetProperty("matchWon").GetBoolean(), Is.True);
+            Assert.That(r.GetProperty("keptInMulligan").GetBoolean(), Is.True);
+            Assert.That(r.GetProperty("firstPlayedTurn").GetInt32(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Never_Played_Is_An_Explicit_Null_Not_A_Missing_Key()
+        {
+            // "Never played" is an ANSWER the average-turn-played metric divides by. A missing key
+            // is indistinguishable from a field the writer forgot, and 0 would be a lie — it reads
+            // as a card played on turn zero.
+            new JsonlTelemetrySink(_dir, "local").CardsSeen(Cards("m1", Row("card_a", firstPlayedTurn: null)));
+            var r = Rows().Single();
+
+            Assert.That(r.TryGetProperty("firstPlayedTurn", out var v), Is.True, "the key is always present");
+            Assert.That(v.ValueKind, Is.EqualTo(JsonValueKind.Null));
+        }
+
+        [Test]
+        public void A_Failed_CardSeen_Batch_Counts_Every_Row_It_Lost()
+        {
+            // DroppedRows is the only signal that a sample is incomplete. Counting a 40-row batch as
+            // one drop would under-report the hole by a factor of forty.
+            var sink = new JsonlTelemetrySink(_dir, "local");
+            File.Delete(sink.Path);
+            Directory.CreateDirectory(sink.Path);
+
+            Assert.DoesNotThrow(() => sink.CardsSeen(Cards("m1", Row("a"), Row("b"), Row("c"), Row("d"))));
+            Assert.That(sink.DroppedRows, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void An_Empty_Batch_Writes_Nothing_At_All()
+        {
+            var sink = new JsonlTelemetrySink(_dir, "local");
+            sink.CardsSeen(Cards("m1"));
+
+            Assert.That(sink.DroppedRows, Is.Zero);
+            Assert.That(File.Exists(sink.Path) && new FileInfo(sink.Path).Length > 0, Is.False,
+                "a zero-row batch must not leave a blank line for a reader to trip over");
+        }
+
+        [Test]
+        public void CardSeen_Batches_From_Different_Matches_Do_Not_Interleave()
+        {
+            // The real concurrency risk this event introduces: one sink, many sessions, and now a
+            // multi-line write. If two bursts interleaved, both matches' card samples would be
+            // unreadable — and a torn line takes its neighbour with it.
+            var sink = new JsonlTelemetrySink(_dir, "local");
+            const int matches = 20, perMatch = 30;
+
+            Parallel.For(0, matches, i => sink.CardsSeen(
+                Cards("m" + i, Enumerable.Range(0, perMatch).Select(c => Row("card_" + c)).ToArray())));
+
+            Assert.That(sink.DroppedRows, Is.Zero);
+            var rows = Rows();
+            Assert.That(rows.Count, Is.EqualTo(matches * perMatch));
+            // Every match's block must be contiguous — a batch is written under one lock or not at all.
+            var ids = rows.Select(r => r.GetProperty("matchId").GetString()).ToList();
+            var blocks = new List<string?>();
+            foreach (var id in ids) if (blocks.Count == 0 || blocks[^1] != id) blocks.Add(id);
+            Assert.That(blocks.Count, Is.EqualTo(matches), "each match wrote one unbroken run of rows");
+        }
+
         // ── Provenance ───────────────────────────────────────────────────────────
 
         [Test]
@@ -220,6 +319,19 @@ namespace Emberfall.Net.Server.Tests
                     "prebuilt-emberward", "hash0", p0Result, new[] { "card_a", "card_b" }),
                 new SeatOutcome(AccountId.FromDeviceToken("dev-1"), CardClass.TIDECALLER,
                     "prebuilt-tidecaller", "hash1", p1Result, Array.Empty<string>()));
+
+        private static CardSeenEvent Cards(string id, params CardSeenRow[] rows)
+            => new CardSeenEvent(
+                new MatchId(id),
+                DateTimeOffset.FromUnixTimeMilliseconds(1_770_000_000_000),
+                TelemetrySource.Ladder, rows);
+
+        private static CardSeenRow Row(
+            string defId, bool inDeck = true, bool drawn = false, bool kept = false,
+            int? firstPlayedTurn = null, bool won = true)
+            => new CardSeenRow(
+                AccountId.FromDeviceToken("dev-0"), CardClass.EMBERWARD, won,
+                defId, inDeck, drawn, kept, firstPlayedTurn);
 
         private static MatchVoidEvent Void(string id)
             => new MatchVoidEvent(

@@ -98,6 +98,49 @@ namespace Emberfall.Net.Server.Telemetry
         SeatOutcome P1);
 
     /// <summary>
+    /// One `card_seen` row (telemetry-spec §2): a single (match, seat, cardDefId) triple with the
+    /// flags observed that match. Duplicates collapse — a deck holding two copies of a card yields
+    /// ONE row, and every flag means "any copy", because §3's per-card centralization metric is
+    /// keyed on the card, not the copy.
+    /// </summary>
+    /// <param name="FirstPlayedTurn">
+    /// Null means never played. Feeds §2's average-turn-played, which is undefined for a card that
+    /// stayed in the deck — writing 0 there would drag that average toward a turn nobody played on.
+    /// </param>
+    public sealed record CardSeenRow(
+        AccountId Account,
+        CardClass Class,
+        bool MatchWon,
+        string CardDefId,
+        bool InDeck,
+        bool DrawnThisMatch,
+        bool KeptInMulligan,
+        int? FirstPlayedTurn);
+
+    /// <summary>
+    /// `card_seen` — the per-card sample behind `balance-guardrails §6.1` (telemetry-spec §2). All
+    /// of a finished match's rows, both seats, in ONE event.
+    ///
+    /// <para><b>Batched on purpose.</b> A match yields ~40–60 of these (two 30-card decks, deduped)
+    /// against `match_complete`'s one. Delivered row-by-row that would be 40–60 sink calls at the
+    /// exact moment a match is tearing down — and for <see cref="JsonlTelemetrySink"/> 40–60
+    /// open/append/fsync cycles, since that sink deliberately fsyncs every write. Batching keeps the
+    /// spec's one-row-per-card SHAPE (the sink still writes one JSON object per line) while paying
+    /// for it once. The burst is the reason this is a separate event and not a field on
+    /// <see cref="MatchCompleteEvent"/>: a consumer computing win rates must not have to parse the
+    /// card sample to get there.</para>
+    ///
+    /// <para><b>Emitted only for a match that ENDED.</b> A void has no winner, so
+    /// <see cref="CardSeenRow.MatchWon"/> has no honest value and every win-when-drawn denominator
+    /// built from it would be wrong — see <see cref="MatchVoidEvent"/>.</para>
+    /// </summary>
+    public sealed record CardSeenEvent(
+        MatchId Match,
+        DateTimeOffset EndedAtUtc,
+        TelemetrySource Source,
+        IReadOnlyList<CardSeenRow> Rows);
+
+    /// <summary>
     /// `match_void` — the decision-24 double-disconnect void. NOT a `match_complete` with a funny
     /// reason: a void has no winner, no loser, and must never enter the win-rate sample. It is
     /// emitted anyway because the *rate* of voids is a health metric (telemetry-spec §4's
