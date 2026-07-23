@@ -271,6 +271,17 @@ namespace Emberfall.Presentation
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
             }
 
+            // ── Visible turn clock (E2 minimal slice; C-G1-2a) ──────────────────────
+            // Binds to the seam's OnTurnTimer (main-thread-marshaled by MainThreadMatchSession).
+            // Networked-only by design: LocalMatchSession raises no timer, so the hot-seat boot has
+            // no clock and this block has no hot-seat sibling. Above the end-turn button.
+            var clockGo = new GameObject("TurnClock");
+            clockGo.transform.position = new Vector3(6.3f, 1.2f, 0f);
+            var turnClock = clockGo.AddComponent<TurnClockView>();
+            turnClock.Init();
+            _view.OnTurnTimer += turnClock.OnTurnTimer;
+            matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
+
             // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
             // RateLimited from the B1 policy gate) arrive on the same OnRejected path. ─
             if (hotSeat != null)
@@ -405,8 +416,9 @@ namespace Emberfall.Presentation
             public MainThreadMatchSession(NetworkedMatchSession inner)
             {
                 _inner = inner;
-                _inner.OnSnapshot += st => _mainThread.Enqueue(() => OnSnapshot?.Invoke(st));
-                _inner.OnEvents   += batch => _mainThread.Enqueue(() => OnEvents?.Invoke(batch));
+                _inner.OnSnapshot  += st => _mainThread.Enqueue(() => OnSnapshot?.Invoke(st));
+                _inner.OnEvents    += batch => _mainThread.Enqueue(() => OnEvents?.Invoke(batch));
+                _inner.OnTurnTimer += t => _mainThread.Enqueue(() => OnTurnTimer?.Invoke(t));
             }
 
             /// <summary>Queue an action to run on the main thread (drained by <see cref="Pump"/>).</summary>
@@ -422,6 +434,7 @@ namespace Emberfall.Presentation
             public Task<CommandResult> SubmitAsync(PlayerIntent intent) => _inner.SubmitAsync(intent);
             public event Action<GameState> OnSnapshot;
             public event GameEventStream OnEvents;
+            public event Action<TurnTimer> OnTurnTimer;
         }
     }
 }

@@ -130,6 +130,11 @@ namespace Emberfall.Core
         public event Action<GameState>? OnSnapshot;
         public event GameEventStream? OnEvents;
 
+        // Hot-seat is the authority in-process with no turn clock: there is no server deadline to
+        // report, so this never fires (IMatchSession.OnTurnTimer contract). The E2 visible clock is
+        // networked-only; its view is exercised against a stub session, not this one.
+        public event Action<TurnTimer>? OnTurnTimer;
+
         public Task<CommandResult> SubmitAsync(PlayerIntent intent)
             => Task.FromResult(_coordinator.Submit(intent, _seat));
 

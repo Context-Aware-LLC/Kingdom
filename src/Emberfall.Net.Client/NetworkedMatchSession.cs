@@ -84,6 +84,7 @@ namespace Emberfall.Net.Client
 
         public event Action<GameState>? OnSnapshot;
         public event GameEventStream? OnEvents;
+        public event Action<TurnTimer>? OnTurnTimer;
 
         public Task<CommandResult> SubmitAsync(PlayerIntent intent)
         {
@@ -250,7 +251,7 @@ namespace Emberfall.Net.Client
                 case EventsMsg e: OnEventsMsg(e); break;
                 case RejectMsg r: OnReject(r); break;
                 case MatchEndMsg end: OnMatchEnd(end); break;
-                case TurnTimerMsg: break;      // presentation-only (E3); liveness already recorded
+                case TurnTimerMsg t: OnTurnTimer?.Invoke(new TurnTimer(t.ActivePlayer, (long)t.DeadlineTick)); break;   // E2 visible clock (C1 entry req); fires off the pump — presentation marshals to main thread
                 case HeartbeatMsg: break;      // liveness echo (b1 §11); recorded above
                 default: break;                // additive server message under a5 §8 unknown-keys — ignore
             }

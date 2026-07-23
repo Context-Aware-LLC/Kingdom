@@ -35,5 +35,32 @@ namespace Emberfall.Core.Contracts
         /// <see cref="Current"/> is already the post-command state when the batch lands, so event
         /// handlers can resolve ids against it (the old in-place-mutation coincidence, made a rule).</summary>
         event GameEventStream OnEvents;
+
+        /// <summary>
+        /// The authority (re)armed the active player's turn clock — on turn start, at rope, and on
+        /// reconnect re-sync (a5 <c>TurnTimerMsg</c>). Presentation binds a visible countdown to
+        /// this; nothing else on the seam carries wall-clock timing.
+        ///
+        /// NEVER fires for <see cref="LocalMatchSession"/>: hot-seat has no server clock, so the
+        /// E2 visible clock is networked-only and its view is verified against a stub session that
+        /// fires this event. Ownership (M2-KICKOFF §E2/§E3, resolving the code-comment migration
+        /// the G1 review flagged): the <b>visible clock is E2</b> — a C1 entry requirement — while
+        /// rope animation, opponent-thinking and reconnect UI are E3.
+        /// </summary>
+        event Action<TurnTimer> OnTurnTimer;
     }
+
+    /// <summary>
+    /// A turn-clock arming as delivered across the client seam. <see cref="DeadlineMs"/> is an
+    /// ABSOLUTE deadline in the shared Unix-epoch millisecond clock both server
+    /// (<c>ITimeSource</c>) and client (<c>IClientClock</c>) use, so presentation counts down with
+    /// <c>remaining = DeadlineMs - clock.Now</c>. Cross-machine clock skew is cosmetic — the
+    /// server is the sole timing authority (decision 23) and enforces the real deadline; skew
+    /// correction is E3 hardening, not this slice.
+    ///
+    /// Reference type (not <c>record struct</c>) deliberately: Unity compiles the shared src as
+    /// C#9 (see 0ceb191). Timer events fire a handful of times per turn, so the allocation is
+    /// immaterial.
+    /// </summary>
+    public sealed record TurnTimer(PlayerId ActivePlayer, long DeadlineMs);
 }
