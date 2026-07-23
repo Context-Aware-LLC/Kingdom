@@ -4,6 +4,7 @@ using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using Emberfall.Session;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Emberfall.Presentation
 {
@@ -172,6 +173,20 @@ namespace Emberfall.Presentation
                 mulligan.Init(p0Id, inputRouter);
                 p0Session.OnSnapshot += mulligan.OnStateUpdated;
                 mulligan.OnStateUpdated(p0Session.Current);
+            }
+
+            // ── Settings overlay + concede (C-G1-3 / decision 23 §5) ──────────────
+            // Same UI Toolkit overlay as the networked boot; here it forfeits P0. Assets load from
+            // Resources (no scene wiring); IsBlockingInput gates board clicks (UITK won't block physics).
+            if (inputRouter != null)
+            {
+                var uiGo = new GameObject("MatchSettingsUI");
+                var doc  = uiGo.AddComponent<UIDocument>();
+                doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+                doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
+                var settings = uiGo.AddComponent<MatchSettingsController>();
+                settings.Init(inputRouter.OnConcedeClicked);
+                inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
             // ── Reject toasts (hot-seat only; design-system.md §6.4/§6.5) ─────────

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MatchSettingsScreen.uxml — in-match settings overlay (C-G1-3 / decision 23 §5).
+  A persistent corner "menu" button that opens a modal panel. In-match, the top (and, for
+  now, only) item is CONCEDE, gated behind a confirm because leaving IS forfeiting. Sound /
+  Video are deferred — they land later as rows in #view-menu without touching this wiring.
+
+  Loaded at runtime by the bootstraps via Resources and bound by MatchSettingsController.
+  Styled by theme.uss (shared meta-screen tokens, single source of truth) + matchsettings.uss.
+
+  The root is picking-mode Ignore so the world-space board keeps its clicks; only the gear
+  (always) and the scrim (while open) are pickable. Board input is ALSO gated in InputRouter
+  while this is open — UI Toolkit does not block Unity physics, so the scrim alone won't.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Deckbuilder/theme.uss" />
+    <Style src="matchsettings.uss" />
+
+    <ui:VisualElement name="root" class="emb-root ms-root" picking-mode="Ignore">
+
+        <!-- Persistent corner button -->
+        <ui:Button name="btn-settings" class="ms-gear">
+            <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
+            <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
+            <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
+        </ui:Button>
+
+        <!-- Modal overlay (display toggled by the controller) -->
+        <ui:VisualElement name="overlay" class="ms-overlay">
+            <ui:VisualElement name="scrim" class="ms-scrim" />
+
+            <ui:VisualElement name="panel" class="ms-panel">
+
+                <!-- Menu view -->
+                <ui:VisualElement name="view-menu" class="ms-view">
+                    <ui:Label text="Menu" class="ms-title" />
+                    <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
+                    <ui:Button name="btn-close" text="Close" class="ms-item" />
+                </ui:VisualElement>
+
+                <!-- Confirm view -->
+                <ui:VisualElement name="view-confirm" class="ms-view ms-hidden">
+                    <ui:Label text="Concede this match?" class="ms-title" />
+                    <ui:Label text="This counts as a loss." class="ms-subtitle" />
+                    <ui:Button name="btn-confirm-concede" text="Concede" class="ms-item ms-item--danger" />
+                    <ui:Button name="btn-cancel" text="Cancel" class="ms-item" />
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
