@@ -61,6 +61,17 @@ namespace Emberfall.Presentation
         private const string AimBanner    = "Choose a target — Esc cancels";
         private const string AttackBanner = "Choose a target to attack — Esc cancels";
 
+        // ── Mulligan picker (C-G1-2b) ──────────────────────────────────────────────
+        // During the Mulligan phase a hand-card click toggles that card into the toss set
+        // (a red X marker) instead of the normal play/select flow; the confirm button then
+        // submits MulliganIntent(toss). Own seat only — the AI/remote seat confirms itself.
+        // Empty toss set = keep all. Fires MulliganSelectionChanged(count) so the confirm
+        // button can label itself "KEEP ALL" vs "MULLIGAN (n)".
+        public event System.Action<int> MulliganSelectionChanged;
+        private readonly HashSet<InstanceId> _mulliganToss = new HashSet<InstanceId>();
+        private readonly Dictionary<InstanceId, CardPresenter> _tossPresenters =
+            new Dictionary<InstanceId, CardPresenter>();
+
         /// <summary>Wired by the bootstraps after the hero plates exist — heroes have no
         /// CardPresenter, so their selection/target highlights route through the plate views.</summary>
         public void SetHeroPlates(HeroPlateView p0Plate, HeroPlateView enemyPlate)
@@ -85,6 +96,11 @@ namespace Emberfall.Presentation
         public void OnStateUpdated(GameState state)
         {
             _currentState = state;
+            // Mulligan toss selection lives only while our seat is still deciding; once the phase
+            // passes or our confirm lands, drop the bookkeeping (the cards are gone/replaced, so
+            // don't touch their now-dead presenters — clearMarks: false).
+            if (!IsMulliganActive() && _mulliganToss.Count > 0)
+                ResetMulliganSelection(clearMarks: false);
             if (_state != State.Idle && state != null && state.ActivePlayer != _p0Id)
             {
                 ClearSelection();
@@ -122,6 +138,16 @@ namespace Emberfall.Presentation
         public void OnCardClicked(ClickableCard card)
         {
             if (_currentState == null || _p0Input == null) return;
+
+            // Mulligan phase: a hand click toggles the toss set; nothing else on the board is
+            // actionable yet, so consume the click and return (the normal switch below gates on
+            // Main phase and would ignore it anyway).
+            if (IsMulliganActive())
+            {
+                if (card.OwnerId == _p0Id && card.Zone == Zone.Hand)
+                    ToggleMulliganCard(card);
+                return;
+            }
 
             switch (_state)
             {
@@ -555,6 +581,56 @@ namespace Emberfall.Presentation
 
             ClearSelection();
             Submit(new EndTurnIntent(_p0Id));
+        }
+
+        // ── Mulligan picker ────────────────────────────────────────────────────────
+
+        private bool IsMulliganActive()
+        {
+            if (_currentState == null || _currentState.Phase != TurnPhase.Mulligan) return false;
+            int seat = _currentState.SeatOf(_p0Id);
+            bool done = seat == 0 ? _currentState.Mulligan0Done : _currentState.Mulligan1Done;
+            return !done;
+        }
+
+        private void ToggleMulliganCard(ClickableCard card)
+        {
+            if (_mulliganToss.Contains(card.CardId))
+            {
+                _mulliganToss.Remove(card.CardId);
+                _tossPresenters.Remove(card.CardId);
+                card.Presenter?.SetMulliganMark(false);
+            }
+            else
+            {
+                _mulliganToss.Add(card.CardId);
+                if (card.Presenter != null) _tossPresenters[card.CardId] = card.Presenter;
+                card.Presenter?.SetMulliganMark(true);
+            }
+            MulliganSelectionChanged?.Invoke(_mulliganToss.Count);
+        }
+
+        // Called by MulliganConfirmButtonView. Empty toss set = keep all. Routed through the same
+        // Submit pipe as every other intent; the authority is the sole mulligan authority (the
+        // local validator passes it, so it reaches the server in networked mode).
+        public void OnMulliganConfirmClicked()
+        {
+            if (!IsMulliganActive()) return;
+            var toss = new List<InstanceId>(_mulliganToss);
+            ResetMulliganSelection(clearMarks: true);
+            Submit(new MulliganIntent(_p0Id, toss));
+        }
+
+        // clearMarks: false when the cards are already gone (phase advanced / our redraw landed) —
+        // touching a destroyed presenter would throw, so just drop the bookkeeping.
+        private void ResetMulliganSelection(bool clearMarks)
+        {
+            if (clearMarks)
+                foreach (var kv in _tossPresenters)
+                    kv.Value?.SetMulliganMark(false);
+            _tossPresenters.Clear();
+            _mulliganToss.Clear();
+            MulliganSelectionChanged?.Invoke(0);
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────────

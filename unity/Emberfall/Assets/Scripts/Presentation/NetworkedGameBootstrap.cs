@@ -282,6 +282,20 @@ namespace Emberfall.Presentation
             _view.OnTurnTimer += turnClock.OnTurnTimer;
             matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
 
+            // ── Mulligan confirm button (E2 minimal slice; C-G1-2b) ─────────────────
+            // Visible only during the Mulligan phase; the human tosses cards via InputRouter
+            // (red X markers) and this commits. Truth cadence (_view.OnSnapshot, like the input
+            // router at :233) so visibility never lags the authority.
+            if (inputRouter != null)
+            {
+                var mulliganGo = new GameObject("MulliganConfirmButton");
+                mulliganGo.transform.position = new Vector3(0f, -3.0f, 0f);
+                var mulligan = mulliganGo.AddComponent<MulliganConfirmButtonView>();
+                mulligan.Init(localId, inputRouter);
+                _view.OnSnapshot += mulligan.OnStateUpdated;
+                mulligan.OnStateUpdated(_view.Current);
+            }
+
             // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
             // RateLimited from the B1 policy gate) arrive on the same OnRejected path. ─
             if (hotSeat != null)

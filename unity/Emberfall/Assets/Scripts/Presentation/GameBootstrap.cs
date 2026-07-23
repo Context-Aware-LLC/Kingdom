@@ -158,6 +158,22 @@ namespace Emberfall.Presentation
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
             }
 
+            // ── Mulligan confirm button (hot-seat; C-G1-2b) ───────────────────────
+            // The silent auto-keep in HotSeatInput is gone; the human now tosses cards via
+            // InputRouter (red X) and commits here. Visible only during the Mulligan phase.
+            // Truth cadence (p0Session.OnSnapshot, like the input router at ~:120) so visibility
+            // never lags the authority. HotSeatInput is only created when inputRouter != null, so
+            // this button is always present wherever a human seat needs to mulligan.
+            if (inputRouter != null)
+            {
+                var mulliganGo = new GameObject("MulliganConfirmButton");
+                mulliganGo.transform.position = new Vector3(0f, -3.0f, 0f);
+                var mulligan = mulliganGo.AddComponent<MulliganConfirmButtonView>();
+                mulligan.Init(p0Id, inputRouter);
+                p0Session.OnSnapshot += mulligan.OnStateUpdated;
+                mulligan.OnStateUpdated(p0Session.Current);
+            }
+
             // ── Reject toasts (hot-seat only; design-system.md §6.4/§6.5) ─────────
             // Single hook: local-validator and authority rejects both funnel through
             // HotSeatInput.OnRejected, so one subscription covers both paths.

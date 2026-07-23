@@ -8,12 +8,14 @@ namespace Emberfall.Presentation
 {
     // Human player intent source for hot-seat local mode (ARCHITECTURE §6).
     // InputRouter pushes intents here; MatchRunner drains them each frame.
-    // Mulligan is auto-confirmed (keep all) so the match starts without a mulligan UI.
+    // Mulligan is driven by the player through the mulligan picker (C-G1-2b) — the old silent
+    // auto-keep here was the "correctness bug online" M2-KICKOFF §E2 called out, now gone. The
+    // AI/remote seat confirms itself (PlayingAi / the other client); only this human seat waits
+    // on the UI, which every bootstrap that creates a HotSeatInput also wires.
     public sealed class HotSeatInput : IIntentSource
     {
         private readonly PlayerId _playerId;
         private readonly Queue<PlayerIntent> _queue = new();
-        private bool _mulliganConfirmed;
 
         public HotSeatInput(PlayerId playerId) => _playerId = playerId;
 
@@ -40,16 +42,9 @@ namespace Emberfall.Presentation
             Rejected?.Invoke(reason);
         }
 
-        public void NotifyStateUpdate(GameState state)
-        {
-            if (state == null || _mulliganConfirmed) return;
-            if (state.Phase != TurnPhase.Mulligan) return;
-            int seat = state.SeatOf(_playerId);
-            bool done = seat == 0 ? state.Mulligan0Done : state.Mulligan1Done;
-            if (done) return;
-            // Keep the entire opening hand (empty replace list).
-            _queue.Enqueue(new MulliganIntent(_playerId, Array.Empty<InstanceId>()));
-            _mulliganConfirmed = true;
-        }
+        // No-op: the human's mulligan is submitted by the mulligan picker via
+        // InputRouter.OnMulliganConfirmClicked, not auto-confirmed here. Kept to satisfy
+        // IIntentSource; the AI sources use their own NotifyStateUpdate to auto-keep.
+        public void NotifyStateUpdate(GameState state) { }
     }
 }

@@ -151,6 +151,33 @@ namespace Emberfall.Presentation
             GetComponent<CardMaterialBinder>()?.SetAffordanceGlow(selected);
         }
 
+        // Toss marker for the mulligan picker (C-G1-2b): a distinct red "X" laid over the card
+        // face while it is selected for replacement. Built lazily and kept SEPARATE from the gold
+        // selection glow above, so "will be tossed" never reads as "selected to play". In front of
+        // the art/frame layers so it stays legible.
+        public void SetMulliganMark(bool marked)
+        {
+            if (marked && _mulliganMark == null) BuildMulliganMark();
+            if (_mulliganMark != null) _mulliganMark.SetActive(marked);
+        }
+
+        private GameObject _mulliganMark;
+
+        private void BuildMulliganMark()
+        {
+            _mulliganMark = new GameObject("MulliganMark");
+            _mulliganMark.transform.SetParent(transform, false);
+            _mulliganMark.transform.localPosition = new Vector3(0f, 0f, -0.1f);
+            var label = _mulliganMark.AddComponent<TextMeshPro>();
+            label.text            = "X";
+            label.fontStyle       = FontStyles.Bold;
+            label.fontSize        = 9f;
+            label.alignment       = TextAlignmentOptions.Center;
+            label.color           = new Color(0.92f, 0.15f, 0.12f);
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.rectTransform.sizeDelta = new Vector2(2.4f, 3f);
+        }
+
         private void OnDestroy() => Unbind();
 
         private void OnChanged(CardChange what)
