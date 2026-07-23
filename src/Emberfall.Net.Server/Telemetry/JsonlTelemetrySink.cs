@@ -9,9 +9,17 @@ using Emberfall.Net.Server.Identity;
 namespace Emberfall.Net.Server.Telemetry
 {
     /// <summary>
-    /// The durable sink (C-G1-8 step 3; telemetry-spec.md §5). Appends one canonical JSON object per
+    /// The telemetry buffer (C-G1-8 step 3; telemetry-spec.md §5). Appends one canonical JSON object per
     /// line to a single file under the data dir — on Fly, the `emberfall_data` volume at `/data`,
     /// the same volume that already holds replays.
+    ///
+    /// <para><b>This is the crash-safe BUFFER, not the durability boundary — corrected 2026-07-22.</b>
+    /// The paragraphs below argue the fsync keeps a row from dying on a machine swap, and that still
+    /// holds — but a Fly volume is single-machine and un-replicated, so it was never the actual
+    /// durability guarantee. <see cref="TelemetryDrain"/> ships every line off-box into durable Postgres
+    /// (hosted Supabase); THAT is where a row's permanence lives. The fsync here only has to keep the
+    /// buffer intact until the drain has shipped it. See the project-memory decision
+    /// `telemetry-durability-supabase-decision`.</para>
     ///
     /// <para><b>One rolling file, not one per match.</b> Replays are per-match because you read
     /// exactly one of them. This event *is* the ≥200-match sample (§1) and every consumer reads all

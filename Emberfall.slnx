@@ -9,6 +9,7 @@
     <Project Path="src/Emberfall.Net.Server/Emberfall.Net.Server.csproj" />
     <Project Path="src/Emberfall.Tools.CardCi/Emberfall.Tools.CardCi.csproj" />
     <Project Path="src/Emberfall.Tools.NetSoak/Emberfall.Tools.NetSoak.csproj" />
+    <Project Path="src/Emberfall.Tools.TelemetryVerify/Emberfall.Tools.TelemetryVerify.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />

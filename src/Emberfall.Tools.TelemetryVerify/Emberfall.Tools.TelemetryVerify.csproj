@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Tools.TelemetryVerify — the C-G1-8 live-durability proof. Runs the REAL TelemetryDrain
+    (via its internal RunOnceAsync) against a sample JSONL and a live EMBERFALL_TELEMETRY_DB (Supabase
+    session pooler), then queries the tables back to prove two things the parse-layer tests cannot:
+    (1) the rows actually land in durable Postgres, and (2) a second drain of the same lines adds
+    nothing — ON CONFLICT idempotency end-to-end. Credential-gated, so it lives here, not in CI.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Tools.TelemetryVerify</AssemblyName>
+    <RootNamespace>Emberfall.Tools.TelemetryVerify</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
+  </ItemGroup>
+
+</Project>

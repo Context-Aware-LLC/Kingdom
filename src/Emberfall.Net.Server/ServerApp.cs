@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Replay;
@@ -29,16 +31,33 @@ namespace Emberfall.Net.Server
         /// </summary>
         public ITelemetrySink? Telemetry { get; init; }
 
+        /// <summary>
+        /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
+        /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
+        /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
+        /// registers a non-null drain as a hosted service so it lives on the host's lifecycle.
+        /// </summary>
+        public TelemetryDrain? TelemetryDrain { get; init; }
+
         public static ServerConfig FromEnvironment()
         {
             string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
+            var sink = new JsonlTelemetrySink(telemetryDir, ResolveEnvLabel());
+
+            // The durability boundary is the DB, not the volume; with no connection string the drain is
+            // simply absent and the buffer accumulates locally (decision 2026-07-22).
+            string? dbConn = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY_DB");
+            TelemetryDrain? drain = string.IsNullOrWhiteSpace(dbConn)
+                ? null
+                : new TelemetryDrain(sink.Path, dbConn!);
 
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
                 CardsDir = Environment.GetEnvironmentVariable("EMBERFALL_CARDS"),
                 ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
-                Telemetry = new JsonlTelemetrySink(telemetryDir, ResolveEnvLabel()),
+                Telemetry = sink,
+                TelemetryDrain = drain,
             };
         }
 
@@ -78,6 +97,11 @@ namespace Emberfall.Net.Server
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls(cfg.Urls);
+
+            // The drain rides the host lifecycle: it starts after the app is up and gets a graceful
+            // StopAsync on shutdown. Absent unless EMBERFALL_TELEMETRY_DB is configured.
+            if (cfg.TelemetryDrain is not null)
+                builder.Services.AddSingleton<IHostedService>(cfg.TelemetryDrain);
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
             var gate = new MatchGate(
