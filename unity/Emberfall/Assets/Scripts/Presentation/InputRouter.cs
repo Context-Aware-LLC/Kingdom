@@ -49,6 +49,13 @@ namespace Emberfall.Presentation
         private HeroPlateView _enemyHeroPlate;   // target cue for the enemy hero
         private ICommandValidator _validator;
 
+        // Set by the bootstrap to the settings overlay's IsBlockingInput. UI Toolkit does NOT
+        // block Unity physics, so while a UI surface owns input we suppress board clicks here —
+        // otherwise a click passes through the scrim to the cards behind it, and a card-selected
+        // click on the (collider-less) corner button plays a card into empty space.
+        public System.Func<bool> UiBlocksInput;
+        private bool UiBlocked => UiBlocksInput != null && UiBlocksInput();
+
         // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
         // While a targeting state is armed: a persistent banner says so, and the set of
         // legal targets is broadcast so BoardController can glow ONLY those (readiness
@@ -121,6 +128,7 @@ namespace Emberfall.Presentation
 
         public void OnCardClicked(ClickableCard card)
         {
+            if (UiBlocked) return;
             if (_currentState == null || _p0Input == null) return;
 
             switch (_state)
@@ -191,6 +199,7 @@ namespace Emberfall.Presentation
 
         public void OnBoardSlotClicked(ClickableBoardSlot slot)
         {
+            if (UiBlocked) return;
             if (_currentState == null || _p0Input == null) return;
             if (_state != State.CardSelectedFromHand) return;
             if (slot.OwnerId != _p0Id) return;
@@ -207,6 +216,7 @@ namespace Emberfall.Presentation
         // (friendly-fire attacks, Taunt on board) are rejected by the engine, not filtered here.
         public void OnHeroClicked(PlayerId owner)
         {
+            if (UiBlocked) return;
             if (_currentState == null || _p0Input == null) return;
 
             switch (_state)
@@ -264,6 +274,7 @@ namespace Emberfall.Presentation
 
         public void OnHeroPowerClicked(PlayerId owner)
         {
+            if (UiBlocked) return;
             if (_currentState == null || _p0Input == null) return;
             if (owner != _p0Id) return;
             if (_currentState.ActivePlayer != _p0Id) return;
@@ -509,6 +520,7 @@ namespace Emberfall.Presentation
             if (Input.GetKeyDown(KeyCode.Escape))
                 ClearSelection();
 
+            if (UiBlocked) return;
             if (_currentState == null || _p0Input == null) return;
             if (_currentState.Phase != TurnPhase.Main) return;
             if (_currentState.ActivePlayer != _p0Id) return;
@@ -555,6 +567,18 @@ namespace Emberfall.Presentation
 
             ClearSelection();
             Submit(new EndTurnIntent(_p0Id));
+        }
+
+        // In-match concede (C-G1-3), invoked by the settings overlay's confirm. Deliberately
+        // UNGUARDED by turn/phase: concede is legal at any time (CommandProcessor: KnownPlayer +
+        // not GameOver), unlike end-turn — so a player can forfeit on the opponent's turn. Routed
+        // through the same Submit pipe; the local validator passes it, so it reaches the authority,
+        // which is the sole forfeit authority (decision 23). Not UiBlocked-gated — the UI is the caller.
+        public void OnConcedeClicked()
+        {
+            if (_p0Input == null) return;
+            ClearSelection();
+            Submit(new ConcedeIntent(_p0Id));
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ using Emberfall.Data;
 using Emberfall.Net.Client;
 using Emberfall.Session;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Action = System.Action;
 
 namespace Emberfall.Presentation
@@ -269,6 +270,21 @@ namespace Emberfall.Presentation
                 var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
                 endTurn.Init(localId, inputRouter);
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
+            }
+
+            // ── Settings overlay + concede (C-G1-3 / decision 23 §5) ──────────────
+            // UI Toolkit meta-surface over the world-space board: a corner button opening a modal
+            // whose confirm forwards to InputRouter.OnConcedeClicked. Assets load from Resources so
+            // there is no scene wiring. IsBlockingInput gates board clicks (UITK won't block physics).
+            if (inputRouter != null)
+            {
+                var uiGo = new GameObject("MatchSettingsUI");
+                var doc  = uiGo.AddComponent<UIDocument>();
+                doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+                doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
+                var settings = uiGo.AddComponent<MatchSettingsController>();
+                settings.Init(inputRouter.OnConcedeClicked);
+                inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
             // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
