@@ -40,6 +40,15 @@ namespace Emberfall.Presentation
         // top of both neighbours, not just the one below it.
         private const int HoverSortBoost = 20;
 
+        // SORTING ORDER ALONE IS NOT ENOUGH. The card body material is opaque, so the depth buffer
+        // overrules draw order: HandFanLayout stages each card 0.03 nearer the camera than the one
+        // before it, and a hovered card drawn last still has its pixels rejected wherever a
+        // physically-nearer neighbour already wrote depth. The symptom is a card that half-reveals
+        // — clear where it overhangs nothing, still buried exactly where it overlaps a neighbour.
+        // So the reveal must also travel FORWARD. 0.40 comfortably clears the deepest stagger a
+        // 10-card hand can produce (9 * 0.03 = 0.27); negative z is toward the camera.
+        private const float HoverZ = 0.40f;
+
         private Transform    _visual;
         private SortingGroup _group;
         private int   _baseOrder;
@@ -87,7 +96,7 @@ namespace Emberfall.Presentation
         {
             if (_visual == null) return;
 
-            _visual.localPosition = new Vector3(0f, Lift * _t, 0f);
+            _visual.localPosition = new Vector3(0f, Lift * _t, -HoverZ * _t);
             _visual.localScale    = Vector3.one * Mathf.Lerp(1f, Scale, _t);
 
             // Straighten as it rises. The card inherits its tilt from the fan anchor, so cancelling
