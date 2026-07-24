@@ -31,9 +31,10 @@ namespace Emberfall.Presentation
         // lift is what reveals the card, so scale is doing emphasis only, not legibility work.
         internal const float Scale = 1.05f;
 
-        // Reveal is non-blocking and quick, per the standing pace rule — the hand must never gate
-        // input behind an animation. ~0.07s each way; fast enough to sweep the fan without lag.
-        private const float Speed = 14f;
+        // Reveal is non-blocking, per the standing pace rule — the hand must never gate input
+        // behind an animation. Speed is 1/duration: ~0.11s each way (Sam asked for it slower than
+        // the first pass at 14 / ~0.07s, which read as a snap rather than a lift).
+        private const float Speed = 9f;
 
         // Clears all ten hand orders (HandSortBase + 0..9) so the hovered card is unambiguously on
         // top of both neighbours, not just the one below it.
@@ -51,11 +52,14 @@ namespace Emberfall.Presentation
             _group  = group;
         }
 
-        /// <summary>The card's resting sort order — its hand index (see BoardController).</summary>
+        /// <summary>The card's resting sort order — its hand index (see BoardController). Called
+        /// every state tick, so it must RE-APPLY the hover boost rather than skip while hovered:
+        /// Apply() only runs while _t is changing, so a tick landing after the lift settled would
+        /// otherwise drop the card back under its neighbours permanently.</summary>
         internal void SetBaseOrder(int order)
         {
             _baseOrder = order;
-            if (_group != null && _t <= 0f) _group.sortingOrder = order;
+            if (_group != null) _group.sortingOrder = _t > 0.01f ? order + HoverSortBoost : order;
         }
 
         // Leaving the hand (played, discarded) must not strand a card lifted and enlarged: the

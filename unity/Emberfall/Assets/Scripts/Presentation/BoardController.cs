@@ -296,13 +296,22 @@ namespace Emberfall.Presentation
             bool inHand = zone == Zone.Hand;
             int  order  = inHand ? HandSortBase + slotIndex : 0;
 
+            // For a hand card the hover component OWNS sortingOrder, because it may be holding a
+            // boost this method knows nothing about. Writing the base order here first would stomp
+            // that boost on every state tick and silently kill the re-sort mid-hover.
+            var hover = presenter.GetComponent<HandCardHover>();
+            if (hover != null)
+            {
+                hover.enabled = inHand;
+                if (inHand)
+                {
+                    hover.SetBaseOrder(order);
+                    return;
+                }
+            }
+
             var group = presenter.GetComponent<UnityEngine.Rendering.SortingGroup>();
             if (group != null) group.sortingOrder = order;
-
-            var hover = presenter.GetComponent<HandCardHover>();
-            if (hover == null) return;
-            hover.enabled = inHand;
-            if (inHand) hover.SetBaseOrder(order);
         }
 
         private void DestroyPresenter(InstanceId id)
