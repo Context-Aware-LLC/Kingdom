@@ -22,7 +22,10 @@ artifacts/
 # NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
 # code under src/ and tests/. Do not blanket-ignore project files anymore.
 
-# Art generator bake-off scratch output (winners get curated into Assets/ manually)
+# Art generation corpus. NOT scratch — keep indefinitely (Sam, 2026-07-23). The frames and
+# templates we build are slots meant to hold a variety of art, so unpicked candidates are not
+# losers; they are seed material for future generations. Ignored because it is large and binary,
+# not because it is disposable. Assets/ holds what a build needs; this holds what we can draw on.
 art-bakeoff/
 
 # Local secrets (Gemini key etc.) - never commit
