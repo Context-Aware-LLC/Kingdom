@@ -83,6 +83,11 @@ namespace Emberfall.Presentation
         private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
         private static readonly int ShaderUtilOutlineColor = Shader.PropertyToID("_OutlineColor");
         private static readonly int ShaderUtilOutlineWidth = Shader.PropertyToID("_OutlineWidth");
+        private static readonly int UnderlayColor    = Shader.PropertyToID("_UnderlayColor");
+        private static readonly int UnderlayOffsetX  = Shader.PropertyToID("_UnderlayOffsetX");
+        private static readonly int UnderlayOffsetY  = Shader.PropertyToID("_UnderlayOffsetY");
+        private static readonly int UnderlayDilate   = Shader.PropertyToID("_UnderlayDilate");
+        private static readonly int UnderlaySoftness = Shader.PropertyToID("_UnderlaySoftness");
 
         private SpriteRenderer _plate;
         private Material _orbMat;                       // instanced — _Fade is per-overlay
@@ -208,8 +213,8 @@ namespace Emberfall.Presentation
             //    layout must still read deliberate with them blank.
             BuildText($"NameLocal",  data.LocalName,  LeftMedallionXFrac * h,  NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
             BuildText($"NameRemote", data.RemoteName, RightMedallionXFrac * h, NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
-            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking);
-            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking);
+            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
+            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
 
             // ── Status / tip — centred, live. Empty until SetStatus; doubles as the failure surface.
             _status = BuildText("StatusLine", "", 0f, StatusYFrac * h, StatusSizeFrac * h, StatusTint, h, tracking: StatusTracking);
@@ -241,7 +246,7 @@ namespace Emberfall.Presentation
         }
 
         private TextMeshPro BuildText(string name, string text, float x, float y, float size, Color tint, float h,
-                                      bool bold = false, float tracking = 0f)
+                                      bool bold = false, float tracking = 0f, bool underlay = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
@@ -259,9 +264,27 @@ namespace Emberfall.Presentation
             // Dark outline so text reads over the busy ruins band (the plate leaves these bands
             // unlit per §8, but the ground is textured). Per-instance material via fontMaterial.
             var mat = tmp.fontMaterial;
-            mat.EnableKeyword("OUTLINE_ON");
-            mat.SetColor(ShaderUtilOutlineColor, new Color(0f, 0f, 0f, 0.9f));
-            mat.SetFloat(ShaderUtilOutlineWidth, 0.18f);
+            if (underlay)
+            {
+                // TMP's SDF outline grows INWARD as well as outward, so on a light 30px face it eats
+                // the stroke — the class band rendered thinner and paler than the design mock, the
+                // outline costing the very weight it was added to protect. An underlay sits wholly
+                // BEHIND the glyph: same separation from the textured ruins, no stroke lost.
+                mat.DisableKeyword("OUTLINE_ON");
+                mat.SetFloat(ShaderUtilOutlineWidth, 0f);
+                mat.EnableKeyword("UNDERLAY_ON");
+                mat.SetColor(UnderlayColor, new Color(0f, 0f, 0f, 0.75f));
+                mat.SetFloat(UnderlayOffsetX, 0f);
+                mat.SetFloat(UnderlayOffsetY, -0.25f);
+                mat.SetFloat(UnderlayDilate, 0.15f);
+                mat.SetFloat(UnderlaySoftness, 0.35f);
+            }
+            else
+            {
+                mat.EnableKeyword("OUTLINE_ON");
+                mat.SetColor(ShaderUtilOutlineColor, new Color(0f, 0f, 0f, 0.9f));
+                mat.SetFloat(ShaderUtilOutlineWidth, 0.18f);
+            }
             _texts.Add(tmp);
             return tmp;
         }
