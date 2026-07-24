@@ -287,11 +287,22 @@ namespace Emberfall.Presentation
         // Hand cards overlap, so their draw order has to be explicit. Board cards never overlap
         // and sit at the group default; the fan's per-index z-stagger (HandFanLayout) keeps
         // opaque materials and the physics hit-test agreeing with this ordering.
+        //
+        // Hover-reveal is hand-only. Disabling the component on the board path is what returns a
+        // played card to its resting pose — HandCardHover.OnDisable snaps the visual back, so a
+        // card can never land on the board still lifted and enlarged.
         private static void SetCardSorting(CardPresenter presenter, Zone zone, int slotIndex)
         {
+            bool inHand = zone == Zone.Hand;
+            int  order  = inHand ? HandSortBase + slotIndex : 0;
+
             var group = presenter.GetComponent<UnityEngine.Rendering.SortingGroup>();
-            if (group == null) return;
-            group.sortingOrder = zone == Zone.Hand ? HandSortBase + slotIndex : 0;
+            if (group != null) group.sortingOrder = order;
+
+            var hover = presenter.GetComponent<HandCardHover>();
+            if (hover == null) return;
+            hover.enabled = inHand;
+            if (inHand) hover.SetBaseOrder(order);
         }
 
         private void DestroyPresenter(InstanceId id)
@@ -424,6 +435,23 @@ namespace Emberfall.Presentation
             bodyLabel.enableAutoSizing = true;
             bodyLabel.fontSizeMax      = 1.0f;
             bodyLabel.fontSizeMin      = 0.5f;
+
+            // Wrap every visual under one child transform. Hover-reveal lifts and scales THIS,
+            // never the root — the BoxCollider above stays on the root and therefore never moves,
+            // which is what makes the reveal flicker-proof (see HandCardHover). Re-parenting after
+            // the fact keeps the construction above untouched; the wrapper sits at identity, so
+            // every local pose already computed is still correct.
+            var visualGo = new GameObject("Visual");
+            visualGo.transform.SetParent(root.transform, false);
+            for (int i = root.transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = root.transform.GetChild(i);
+                if (child != visualGo.transform) child.SetParent(visualGo.transform, true);
+            }
+
+            var hover = root.AddComponent<HandCardHover>();
+            hover.Init(visualGo.transform, root.GetComponent<UnityEngine.Rendering.SortingGroup>());
+            hover.enabled = false;   // hand-only; ConfigureForZone turns it on
 
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);

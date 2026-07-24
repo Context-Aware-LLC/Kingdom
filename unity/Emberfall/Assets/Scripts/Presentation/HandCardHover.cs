@@ -1,0 +1,101 @@
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace Emberfall.Presentation
+{
+    // Hover-reveal for cards in hand (ui/match-hud.md §8, revised by Sam 2026-07-24).
+    //
+    // §8 originally ruled the hovered card "does not move — no lift, no scale", because hand slots
+    // were then a flat row where nothing overlapped and nothing was clipped. The fan invalidated
+    // that premise: 30% of every card is now deliberately below the screen edge, and re-sorting
+    // cannot reveal what is off-screen. So the card rises far enough to clear the edge entirely.
+    //
+    // What stays parked is the EXPENSIVE version — the card flying out of the hand and enlarging.
+    // That one has to overlap the board, sort above everything, animate back, and survive being
+    // interrupted mid-sweep. This card rises in place and never leaves the fan, which keeps all of
+    // that out of scope while still exposing the whole card.
+    //
+    // THE FLICKER HAZARD §8 NAMES IS REAL, and it is why the lift happens on a child transform.
+    // A card that moves under the cursor can move out from under it, un-hover, drop, re-hover, and
+    // oscillate. Here the BoxCollider lives on the card ROOT and never moves; only the "Visual"
+    // child rises. The pointer therefore cannot lose the card it is hovering, so no hysteresis and
+    // no decoupled hover region are needed.
+    internal sealed class HandCardHover : MonoBehaviour
+    {
+        // Enough to clear the screen edge for every card in the fan. The centre card hides 30% of
+        // its height (0.495 units) and the sag puts the outermost near 41% (0.675), so 0.70 fully
+        // exposes the worst case rather than merely improving it.
+        internal const float Lift = 0.70f;
+
+        // "The slightest of scale, just for emphasis" (Sam, 2026-07-24). Deliberately small: the
+        // lift is what reveals the card, so scale is doing emphasis only, not legibility work.
+        internal const float Scale = 1.05f;
+
+        // Reveal is non-blocking and quick, per the standing pace rule — the hand must never gate
+        // input behind an animation. ~0.07s each way; fast enough to sweep the fan without lag.
+        private const float Speed = 14f;
+
+        // Clears all ten hand orders (HandSortBase + 0..9) so the hovered card is unambiguously on
+        // top of both neighbours, not just the one below it.
+        private const int HoverSortBoost = 20;
+
+        private Transform    _visual;
+        private SortingGroup _group;
+        private int   _baseOrder;
+        private bool  _hovered;
+        private float _t;          // 0 = resting, 1 = fully revealed
+
+        internal void Init(Transform visual, SortingGroup group)
+        {
+            _visual = visual;
+            _group  = group;
+        }
+
+        /// <summary>The card's resting sort order — its hand index (see BoardController).</summary>
+        internal void SetBaseOrder(int order)
+        {
+            _baseOrder = order;
+            if (_group != null && _t <= 0f) _group.sortingOrder = order;
+        }
+
+        // Leaving the hand (played, discarded) must not strand a card lifted and enlarged: the
+        // component is disabled on the board path, and that has to snap the visual back itself
+        // because Update stops running.
+        private void OnDisable()
+        {
+            _hovered = false;
+            _t       = 0f;
+            Apply();
+        }
+
+        private void OnMouseEnter() => _hovered = true;
+        private void OnMouseExit()  => _hovered = false;
+
+        private void Update()
+        {
+            float target = _hovered ? 1f : 0f;
+            if (_t == target) return;
+            _t = Mathf.MoveTowards(_t, target, Speed * Time.deltaTime);
+            Apply();
+        }
+
+        private void Apply()
+        {
+            if (_visual == null) return;
+
+            _visual.localPosition = new Vector3(0f, Lift * _t, 0f);
+            _visual.localScale    = Vector3.one * Mathf.Lerp(1f, Scale, _t);
+
+            // Straighten as it rises. The card inherits its tilt from the fan anchor, so cancelling
+            // that rotation on the visual brings the text level at full reveal. DeltaAngle because
+            // eulerAngles reports the anchor's -18 degrees as 342.
+            float tilt = transform.parent != null
+                ? Mathf.DeltaAngle(0f, transform.parent.eulerAngles.z)
+                : 0f;
+            _visual.localRotation = Quaternion.Euler(0f, 0f, -tilt * _t);
+
+            if (_group != null)
+                _group.sortingOrder = _t > 0.01f ? _baseOrder + HoverSortBoost : _baseOrder;
+        }
+    }
+}
