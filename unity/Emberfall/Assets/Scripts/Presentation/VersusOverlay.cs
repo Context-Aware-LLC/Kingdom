@@ -34,13 +34,18 @@ namespace Emberfall.Presentation
         // ── Slot geometry as fractions of screen height, from the 5040×2160 canvas (spec §4/§5).
         //    The plate is centred and height-scaled, so these land on the painted frames at any aspect.
         private const float PlateAspect      = 5040f / 2160f;
-        // MEASURED from the generated plate (Causeway), NOT the spec's nominal geometry: the frames
-        // were painted by the image model, so the real aperture centres — canvas (1383,663) and
-        // (3657,663) — are the truth the overlay must land on. The spec's ±850/+320 never matched
-        // this plate (fixed in the spec, 2026-07-23). Aperture measures Ø~1155; Ø1150 fills it.
-        private const float MedallionDiaFrac = 1150f / 2160f;   // Ø1150 ≈ 53.2% of height
-        private const float MedallionXFrac   = 1137f / 2160f;   // ±1137 ≈ ±52.6% from centre
-        private const float MedallionYFrac   = 417f / 2160f;    // 417 above centre ≈ 19.3%
+        // MEASURED per-frame from the generated plate (Causeway), NOT the spec's nominal geometry:
+        // the frames were painted by the image model, so each aperture centre is read off the plate
+        // and the two are wired INDEPENDENTLY — the plate is asymmetric and the symmetric ±X
+        // assumption misplaced them (Sam measured each in GIMP, 2026-07-24). Canvas centres:
+        // Pyra/left (1480,730), Maren/right (3544,732). Ø1200 overfills the irregular aperture so
+        // the portrait tucks under the frame's inner lip with no gap ring.
+        private const float MedallionDiaFrac  = 1200f / 2160f;           // Ø1200 ≈ 55.6% of height
+        private const float LeftMedallionXFrac  = (1480f - 2520f) / 2160f;  // -1040 (canvas 1480)
+        private const float RightMedallionXFrac = (3544f - 2520f) / 2160f;  // +1024 (canvas 3544)
+        private const float LeftMedallionYFrac  = (1080f - 730f) / 2160f;   // 350 above centre
+        private const float RightMedallionYFrac = (1080f - 732f) / 2160f;   // 348 above centre
+        private const float OrbYFrac            = (1080f - 731f) / 2160f;    // 349, level with the medallions
         private const float OrbDiaFrac       = 400f / 2160f;    // Ø400 ≈ 18.5%
         private const float NameplateYFrac   = -350f / 2160f;   // ≈16.2% below
         private const float ClassYFrac       = -477f / 2160f;   // ≈22.1% below
@@ -157,8 +162,8 @@ namespace Emberfall.Presentation
             // ── Hero medallions — portraits masked to the painted apertures. Local LEFT, remote
             //    RIGHT (this screen's own convention; the board's local-at-bottom rule doesn't apply).
             float medDia = MedallionDiaFrac * h;
-            BuildMedallion(data.LocalClass,  -MedallionXFrac * h, medDia, h, "MedallionLocal");
-            BuildMedallion(data.RemoteClass, +MedallionXFrac * h, medDia, h, "MedallionRemote");
+            BuildMedallion(data.LocalClass,  LeftMedallionXFrac * h,  LeftMedallionYFrac * h,  medDia, h, "MedallionLocal");
+            BuildMedallion(data.RemoteClass, RightMedallionXFrac * h, RightMedallionYFrac * h, medDia, h, "MedallionRemote");
 
             // ── Clash orb — the one live element, level with the medallion centres. Instanced
             //    M_LoadingOrb with the per-match variant swapped onto _MainTex.
@@ -169,7 +174,7 @@ namespace Emberfall.Presentation
                 quad.name = "Orb";
                 Destroy(quad.GetComponent<Collider>());
                 quad.transform.SetParent(transform, false);
-                quad.transform.localPosition = new Vector3(0f, MedallionYFrac * h, -0.01f);
+                quad.transform.localPosition = new Vector3(0f, OrbYFrac * h, -0.01f);
                 float od = OrbDiaFrac * h;
                 quad.transform.localScale = new Vector3(od, od, 1f);
                 _orbMat = new Material(orbShared);
@@ -183,20 +188,20 @@ namespace Emberfall.Presentation
                 quad.GetComponent<MeshRenderer>().sortingOrder = 310;
             }
 
-            // ── Text. Nameplate + class per player, re-centred on the medallions at ±850 (spec §5).
+            // ── Text. Nameplate + class per player, re-centred under each medallion column (spec §5).
             //    Rank is reserved (§4.4) and mode has no system yet (§6) — both render nothing; the
             //    layout must still read deliberate with them blank.
-            BuildText($"NameLocal",  data.LocalName,  -MedallionXFrac * h, NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
-            BuildText($"NameRemote", data.RemoteName, +MedallionXFrac * h, NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
-            BuildText($"ClassLocal",  ClassName(data.LocalClass),  -MedallionXFrac * h, ClassYFrac * h, 0.070f * h, ClassTint, h);
-            BuildText($"ClassRemote", ClassName(data.RemoteClass), +MedallionXFrac * h, ClassYFrac * h, 0.070f * h, ClassTint, h);
+            BuildText($"NameLocal",  data.LocalName,  LeftMedallionXFrac * h,  NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
+            BuildText($"NameRemote", data.RemoteName, RightMedallionXFrac * h, NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
+            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, 0.070f * h, ClassTint, h);
+            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, 0.070f * h, ClassTint, h);
 
             // ── Status / tip — centred, live. Empty until SetStatus; doubles as the failure surface.
             _status = BuildText("StatusLine", "", 0f, StatusYFrac * h, 0.058f * h, StatusTint, h);
             _status.rectTransform.sizeDelta = new Vector2(1.6f * h, 0.16f * h);
         }
 
-        private void BuildMedallion(CardClass heroClass, float x, float dia, float h, string name)
+        private void BuildMedallion(CardClass heroClass, float x, float y, float dia, float h, string name)
         {
             var shader = Shader.Find("Emberfall/SG_MedallionMask");
             var heroTex = LoadAsset<Texture2D>(
@@ -208,7 +213,7 @@ namespace Emberfall.Presentation
             quad.name = name;
             Destroy(quad.GetComponent<Collider>());
             quad.transform.SetParent(transform, false);
-            quad.transform.localPosition = new Vector3(x, MedallionYFrac * h, -0.008f);
+            quad.transform.localPosition = new Vector3(x, y, -0.008f);
             quad.transform.localScale = new Vector3(dia, dia, 1f);
 
             var mat = new Material(shader);
