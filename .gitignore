@@ -42,3 +42,10 @@ unity/Emberfall/GeneratedAssets/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# Vendor-installed agent skills — reinstallable from skills-lock.json
+# (.claude/skills/* are symlinks into here)
+.agents/
+
+# Artifact publish scratch (GUID-named dirs)
+/????????-????-????-????-????????????/
