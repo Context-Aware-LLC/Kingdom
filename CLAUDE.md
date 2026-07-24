@@ -82,6 +82,23 @@ condition, closes a workstream row, or supersedes a spec version, **the tracker 
 the same change** — not next session, not "when we get to it." Landing work without
 landing its bookkeeping is not a partial success; it is not done.
 
+**The rule fires on CONCLUSIONS, not just changes (Sam + Claude, 2026-07-23).** A question
+answered — by a test, by a code read, or by watching it happen — moves the tracker **the
+moment it is answered**, never at end of session. The clause above attaches bookkeeping to a
+*change*, so a conclusion with no diff to ride on slips through it entirely, and the only
+remaining vessel is the handoff — which a frozen session eats, silently and through nobody's
+fault.
+
+**Why:** C-G1-6's "reborn bug" was closed on 2026-07-20 by Sam playing a match live and
+watching the minion behave correctly. Right answer, right method, reached by the only person
+who could reach it — but no commit to hang it on, so it landed nowhere. The row stayed
+`⬜ OPEN` with an empty notes cell, and on 2026-07-23 most of a session went into re-deriving
+it by inspection across four hypotheses. **Note which record survived:** the bisect test is
+still in git, the panel's reasoning is still in the review — the human observation that
+actually settled it is the one that evaporated. Observation is the most perishable record we
+produce and often the most valuable. A green test writes itself into git; watching something
+with your own eyes writes itself nowhere.
+
 Trackers that must stay current:
 
 - `M2-KICKOFF.md` §3 register — every row carries a **Status**. **Never overwrite the
