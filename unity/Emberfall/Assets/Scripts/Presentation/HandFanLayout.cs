@@ -42,7 +42,10 @@ namespace Emberfall.Presentation
         // a pure "how closed is the bottom" dial that leaves the top spread untouched.
         internal const float MaxTiltDeg = 18f;    // outermost card's lean
         internal const float Sag        = 0.18f;  // edge cards' drop below the centre card
-        internal const float CentreY    = 4.35f;  // |y| of the centre card (ortho size 4.6)
+        // |y| of the centre card. Ortho size 4.6, so the screen edge is y -4.6 and the fraction of
+        // the centre card hidden below it is (CentreY - 3.775) / CardH. Sam set 30% (2026-07-24,
+        // down from the 35% first pass) — solve: 0.30 * 1.65 + 3.775 = 4.27.
+        internal const float CentreY    = 4.27f;
         internal const float ZStep      = 0.03f;  // per-index step toward the camera
 
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on
