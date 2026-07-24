@@ -16,12 +16,19 @@ namespace Emberfall.Presentation
     {
         [SerializeField] private BoardAnchors boardAnchors;
 
-        // Runtime card visual dimensions (world units).
-        private const float CardW = 1.17f;
-        private const float CardH = 1.65f;
+        // Runtime card visual dimensions (world units). Internal, not private: HandFanLayout
+        // derives the fan pitch from CardW, and a second copy of this number has already gone
+        // stale once (the §1.1 pitch table was written against an assumed 1.3 × 1.8).
+        internal const float CardW = 1.17f;
+        internal const float CardH = 1.65f;
 
         // How far a taunted minion steps out of its row toward the centerline.
         private const float TauntRowOffset = 0.40f;
+
+        // Hand cards draw above board content and below the match-end banner (sortingOrder 100).
+        // Order within the hand is the slot index, so the fan layers left-to-right and the
+        // right-most card at any point is the topmost — the hit-test rule in match-hud.md §8.
+        private const int HandSortBase = 50;
 
         private ICardDatabase _db;
         private PlayerId _p0Id;
@@ -128,6 +135,11 @@ namespace Emberfall.Presentation
             // so sentinel hands take the positional card-back path instead.
             if (zone == Zone.Hand)
             {
+                // Re-solve the fan BEFORE any hand anchor is resolved this tick: the fan's
+                // pitch is a function of hand count, so every card moves when one is drawn
+                // or played (ui/match-hud.md §8).
+                boardAnchors?.SetHandCount(owner, cards.Count);
+
                 bool hidden = cards.Count > 0 && cards[0].Id.Value == 0;
                 SyncHiddenHand(owner, hidden ? cards.Count : 0);
                 if (hidden) return;
@@ -171,6 +183,7 @@ namespace Emberfall.Presentation
                 var binder = presenter.GetComponent<CardMaterialBinder>();
                 if (binder != null) Destroy(binder);
                 presenter.SetHidden();
+                SetCardSorting(presenter, Zone.Hand, slot);
                 backs.Add(presenter);
             }
         }
@@ -228,6 +241,8 @@ namespace Emberfall.Presentation
                 }
             }
 
+            SetCardSorting(presenter, zone, slotIndex);
+
             // Front-row taunt (decision 2026-07-17): taunted board minions step toward
             // the centerline so blockers read spatially, not by glow color. Re-applied
             // every sync — taunt can be gained/lost without a slot change.
@@ -269,6 +284,16 @@ namespace Emberfall.Presentation
             presenter.SetWeaponStats(weapon.Attack, weapon.Durability);
         }
 
+        // Hand cards overlap, so their draw order has to be explicit. Board cards never overlap
+        // and sit at the group default; the fan's per-index z-stagger (HandFanLayout) keeps
+        // opaque materials and the physics hit-test agreeing with this ordering.
+        private static void SetCardSorting(CardPresenter presenter, Zone zone, int slotIndex)
+        {
+            var group = presenter.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            if (group == null) return;
+            group.sortingOrder = zone == Zone.Hand ? HandSortBase + slotIndex : 0;
+        }
+
         private void DestroyPresenter(InstanceId id)
         {
             if (_presenters.TryGetValue(id, out CardPresenter p))
@@ -288,6 +313,11 @@ namespace Emberfall.Presentation
             root.transform.SetParent(parent, false);
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.identity;
+
+            // One SortingGroup re-layers the whole card — quads, sprites and TMP labels
+            // together — off a single integer, which is what makes the fan's overlap (and
+            // later the hover-reveal in match-hud.md §8) a one-line change.
+            root.AddComponent<UnityEngine.Rendering.SortingGroup>();
 
             // Background quad (SG_CardComposite body) — remove auto-generated MeshCollider.
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);

@@ -26,6 +26,15 @@ namespace Emberfall.Presentation
             _playersSet = true;
         }
 
+        // Re-solves this seat's ten hand anchors for the given hand count. Cheap and idempotent
+        // (ten transform writes), so BoardController calls it every tick rather than tracking
+        // the previous count — a stale fan is a worse failure than a redundant write.
+        public void SetHandCount(PlayerId player, int count)
+        {
+            SeatAnchors seat = ResolveSeat(player);
+            HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored);
+        }
+
         public Transform AnchorFor(PlayerId player, Zone zone, int slotIndex)
         {
             SeatAnchors seat = ResolveSeat(player);

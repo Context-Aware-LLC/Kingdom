@@ -10,7 +10,7 @@ namespace Emberfall.Presentation
     //
     // Layout (orthographic camera, world units):
     //   Board rows:  y = ±1.3   (7 slots, x = -4.05..+4.05 at 1.35 spacing)
-    //   Hand rows:   y = ±3.8   (10 slots, x = -6.08..+6.08 at 1.35 spacing)
+    //   Hand rows:   fanned by HandFanLayout — fixed 5-unit footprint, count-dependent pitch
     //   Hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
     //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). xSign: P0=-1, P1=+1.
     //   Hero:        x = 5.2·xSign,  y = ±1.3
@@ -45,12 +45,14 @@ namespace Emberfall.Presentation
                 seat.BoardSlots[i] = MakeAnchor($"{prefix}_Board{i}", new Vector3(x, ySign * 1.3f, 0f));
             }
 
-            seat.HandSlots = new Transform[HandSlotCount];
+            // Hand slots are placed by HandFanLayout, not by this method's flat pitch: the fan
+            // re-solves all ten every time the hand count changes (ui/match-hud.md §8). Built
+            // here at full count so the anchors are never in a stale row before the first sync.
+            seat.FanMirrored = ySign > 0f;
+            seat.HandSlots   = new Transform[HandSlotCount];
             for (int i = 0; i < HandSlotCount; i++)
-            {
-                float x = (i - (HandSlotCount - 1) * 0.5f) * SlotSpacing;
-                seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", new Vector3(x, ySign * 3.8f, 0f));
-            }
+                seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", Vector3.zero);
+            HandFanLayout.Apply(seat.HandSlots, HandSlotCount, seat.FanMirrored);
 
             seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  6.5f, ySign * 1.3f, 0f));
             seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  5.3f, ySign * 1.3f, 0f));

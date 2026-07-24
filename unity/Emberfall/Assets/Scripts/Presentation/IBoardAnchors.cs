@@ -11,6 +11,10 @@ namespace Emberfall.Presentation
         // Zone.Deck and Zone.Weapon each have one slot (slotIndex=0).
         Transform AnchorFor(PlayerId player, Zone zone, int slotIndex);
 
+        // Hand slots are not fixed transforms: the fan re-solves all ten as a function of hand
+        // count (ui/match-hud.md §8). Call before resolving a Zone.Hand anchor for this tick.
+        void SetHandCount(PlayerId player, int count);
+
         Transform HeroAnchor(PlayerId player);
         Transform HeroPowerAnchor(PlayerId player);
         Transform ManaTrayAnchor(PlayerId player);
