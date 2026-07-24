@@ -62,6 +62,7 @@ namespace Emberfall.Presentation
         private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — editor/dev builds only
 #endif
         private LoadingOverlay _overlay;
+        private VersusOverlay _versus;
 
         private void Awake()
         {
@@ -75,7 +76,7 @@ namespace Emberfall.Presentation
             if (matchRunner == null)
             {
                 Debug.LogError("[NetworkedGameBootstrap] matchRunner is not assigned.");
-                if (_overlay != null) _overlay.NotifyBootFailed("Scene misconfigured — matchRunner not assigned");
+                BootFailed("Scene misconfigured — matchRunner not assigned");
                 return;
             }
             StartCoroutine(Boot());
@@ -100,7 +101,7 @@ namespace Emberfall.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] card database load failed: {ex.Message}");
-                if (_overlay != null) _overlay.NotifyBootFailed("Card database failed to load");
+                BootFailed("Card database failed to load");
                 yield break;
             }
 
@@ -148,27 +149,24 @@ namespace Emberfall.Presentation
             // receive pump, so everything goes through _view.Post.
             _net.OnConnectionStateChanged += st => _view.Post(() =>
             {
-                if (_overlay != null)
+                switch (st)
                 {
-                    switch (st)
-                    {
-                        case ConnectionState.Connecting: _overlay.SetStatus("Connecting…"); break;
-                        case ConnectionState.Pairing:    _overlay.SetStatus("Waiting for an opponent…"); break;
-                        case ConnectionState.Live:       _overlay.SetStatus("Opponent found"); break;
-                    }
+                    case ConnectionState.Connecting: SetStatus("Connecting…"); break;
+                    case ConnectionState.Pairing:    SetStatus("Waiting for an opponent…"); break;
+                    case ConnectionState.Live:       SetStatus("Opponent found"); break;
                 }
                 if (st == ConnectionState.Dead || st == ConnectionState.Ended)
                     matchRunner.StopMatch(_net.State == ConnectionState.Ended ? _view.Current.Outcome : MatchOutcome.InProgress);
             });
 
             Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl} …");
-            if (_overlay != null) _overlay.SetStatus("Connecting…");
+            SetStatus("Connecting…");
             Task connect;
             try { connect = _net.ConnectAsync(new Uri(serverUrl)); }
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");
-                if (_overlay != null) _overlay.NotifyBootFailed($"Couldn't connect — {ex.Message}");
+                BootFailed($"Couldn't connect — {ex.Message}");
                 yield break;
             }
 
@@ -177,7 +175,7 @@ namespace Emberfall.Presentation
             {
                 Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
                                $"(state={_net.State}, dead={_net.DeadReason}, fault={connect.Exception?.GetBaseException().Message}).");
-                if (_overlay != null) _overlay.NotifyBootFailed($"Couldn't reach the server ({_net.DeadReason})");
+                BootFailed($"Couldn't reach the server ({_net.DeadReason})");
                 yield break;
             }
 
@@ -196,6 +194,32 @@ namespace Emberfall.Presentation
             // upside down (their own un-redacted hand rendered as the "enemy" hand). Seat
             // indices stay engine-truth for the runner; only presentation is local-first.
             PlayerId remoteId = localId == seat0Id ? seat1Id : seat0Id;
+
+            // Hero classes ride the projected snapshot (state-sync §5.2 PUBLIC) — never a local
+            // MatchSetup, which this path does not have. Resolved once here and reused by both the
+            // versus screen and the hero plates below.
+            CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
+            CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
+
+            // ── Versus screen (techart/versus-screen.md §1) ───────────────────────
+            // THIS is the moment the screen was specified for: match_start has landed, so the two
+            // classes are known, and the board does not exist yet. Everything before this point is
+            // the unbounded pairing wait, which is the boot plate's job and why that plate cannot
+            // simply be replaced here. The plate is released now and cross-fades out underneath.
+            //
+            // Orb variant keys off the MATCH ID, not a local roll, so both clients see the same one
+            // (spec §4.2) — s0.Id is the server's id, identical on both seats by construction.
+            // Nameplates: ours is PLACEHOLDER until a profile system exists (spec §6, no name
+            // source); theirs is the server-supplied display name — see NetworkedMatchSession.
+            // OpponentName for why that string is trusted today and what changes if it stops being.
+            _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
+                localClass,  "You",
+                remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
+                s0.Id.Value));
+            // Carry the narration across the handover rather than letting the line blink empty —
+            // "Opponent found" was posted to the plate a frame ago and is still the true state.
+            SetStatus("Opponent found");
+            if (_overlay != null) _overlay.NotifyMatchReady();
 
             // ── Intent source for OUR seat; the opponent seat is inert (NullIntentSource). ────────
             IIntentSource mine;
@@ -252,8 +276,6 @@ namespace Emberfall.Presentation
 #else
                 IArtProvider heroArt = new AddressableArtProvider();
 #endif
-                CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
-                CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
                 var localPlate  = CreateHeroPlate(localId, localClass, boardAnchors, db, heroArt);
                 var remotePlate = CreateHeroPlate(remoteId, remoteClass, boardAnchors, db, heroArt);
                 // Selection/target cues track OUR seat (also closes the missing
@@ -345,6 +367,10 @@ namespace Emberfall.Presentation
             // BEFORE StartMatch (the instant initial entry fires synchronously inside it). ──────
             if (_overlay != null)
                 matchRunner.OnStateUpdated += _ => _overlay.NotifyMatchReady();
+            // Same signal for the versus screen, which additionally holds its own minimum dwell —
+            // the board is ready long before a player has read who they are fighting.
+            if (_versus != null)
+                matchRunner.OnStateUpdated += _ => _versus.NotifyMatchReady();
 
             // ── Drive the runner: ONE seat owned; the same marshaled session sits at both indices. ─
             matchRunner.StartMatch(
@@ -374,6 +400,27 @@ namespace Emberfall.Presentation
             var view = go.AddComponent<ManaTrayView>();
             view.Init(playerId, anchor);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
+        }
+
+        /// <summary>
+        /// Boot narration goes to whichever screen is currently in front of the player: the boot
+        /// plate during connect/pair, the versus screen once it exists. Both own a status line in
+        /// the same canvas slot (versus-screen.md §4 takes the loading plate's slot verbatim), so
+        /// the line does not appear to move across the handover. Writing to both would double it
+        /// during the cross-fade, hence the else.
+        /// </summary>
+        private void SetStatus(string text)
+        {
+            if (_versus != null) _versus.SetStatus(text);
+            else if (_overlay != null) _overlay.SetStatus(text);
+        }
+
+        /// <summary>Terminal boot failure. Whichever screen is up stays up and shows the reason —
+        /// neither ever fades on a failure, so the player is never dropped onto an empty board.</summary>
+        private void BootFailed(string reason)
+        {
+            if (_versus != null) _versus.NotifyBootFailed(reason);
+            else if (_overlay != null) _overlay.NotifyBootFailed(reason);
         }
 
         private void OnDestroy() => _net?.Dispose();

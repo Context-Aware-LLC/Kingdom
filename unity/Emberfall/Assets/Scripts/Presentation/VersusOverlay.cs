@@ -7,10 +7,14 @@ namespace Emberfall.Presentation
     /// <summary>
     /// The versus / match-load screen (techart/versus-screen.md). Split from
     /// <see cref="LoadingOverlay"/>: the boot plate is a brand splash for app startup, this is
-    /// the per-match "who am I fighting" card shown between matched-and-board-ready. Today they
-    /// are still the same moment because Board is the entry scene — this component has no live
-    /// trigger yet and is built/verified standalone. It gets a real trigger when a MainMenu →
-    /// queue → match flow exists (spec §4.2 note, §10 item 4).
+    /// the per-match "who am I fighting" card shown between matched-and-board-ready.
+    ///
+    /// LIVE as of 2026-07-24 (spec §10 item 4a-bis): both bootstraps raise it the moment the two
+    /// hero classes are known, and it fades on the first released snapshot. The boot plate is NOT
+    /// replaced — it still covers frame 0, and in the networked boot it must, because the classes
+    /// only arrive with <c>match_start</c> and the pairing wait before that is unbounded. So the
+    /// order is boot plate (→ "Waiting for an opponent…") → THIS → board. When MainMenu becomes the
+    /// entry scene the boot plate stops appearing here and the split in spec §1 is real.
     ///
     /// Three tiers (spec §3): the baked class-neutral landscape (with both medallion frames
     /// painted in) → per-match hero medallions + clash orb → text. The landscape and frames are
@@ -29,7 +33,23 @@ namespace Emberfall.Presentation
             public CardClass LocalClass, RemoteClass;
             public string LocalName, RemoteName;
             public int OrbVariant;   // 0..2, from OrbVariantForMatch(matchId)
+
+            /// <summary>The normal construction: names as given, orb derived from the match id so
+            /// both clients land on the same variant (spec §4.2).</summary>
+            public static Data For(CardClass localClass, string localName,
+                                   CardClass remoteClass, string remoteName, string matchId) => new Data
+            {
+                LocalClass  = localClass,
+                RemoteClass = remoteClass,
+                LocalName   = localName,
+                RemoteName  = remoteName,
+                OrbVariant  = OrbVariantForMatch(matchId),
+            };
         }
+
+        /// <summary>Longest nameplate we render. Past this the string is clipped with an ellipsis —
+        /// the slot is a fixed-width box under a medallion, not a scroller.</summary>
+        private const int MaxNameChars = 20;
 
         // ── Slot geometry as fractions of screen height, from the 5040×2160 canvas (spec §4/§5).
         //    The plate is centred and height-scaled, so these land on the painted frames at any aspect.
@@ -67,9 +87,17 @@ namespace Emberfall.Presentation
         private const float ClassTracking  = 14f;
         private const float StatusTracking = 6f;
 
-        // Reveal/fade pacing.
+        // ── Sorting. Deliberately ABOVE LoadingOverlay's 300/310/320 band: the two overlays are
+        //    both alive during the handover (the boot plate is released as this one is built, and
+        //    cross-fades out underneath it). At equal sortingOrder that overlap is undefined.
+        private const int SortBase = 400;
+
+        // Reveal/fade pacing. MinHold is measured from BUILD, not from reveal-complete, so the
+        // screen is fully up for MinHold − RevealDuration before it may start leaving. The board
+        // is usually ready long before that, which is the point: this is a beat the player reads,
+        // not a progress bar. Total on-screen ≈ MinHold + FadeOutDuration.
         private const float RevealDuration  = 0.5f;
-        private const float MinHold         = 0.4f;
+        private const float MinHold         = 2.0f;
         private const float FadeOutDuration = 0.5f;
 
         private static readonly Color NameTint   = new Color(0.96f, 0.93f, 0.86f);
@@ -176,7 +204,7 @@ namespace Emberfall.Presentation
                 _plate.sprite = Sprite.Create(plateTex,
                     new Rect(0, 0, plateTex.width, plateTex.height),
                     new Vector2(0.5f, 0.5f), pixelsPerUnit: plateTex.height / h);
-                _plate.sortingOrder = 300;
+                _plate.sortingOrder = SortBase;
             }
 
             // ── Hero medallions — portraits masked to the painted apertures. Local LEFT, remote
@@ -205,14 +233,14 @@ namespace Emberfall.Presentation
                 if (orbTex != null) _orbMat.SetTexture(MainTexId, orbTex);
 
                 quad.GetComponent<MeshRenderer>().sharedMaterial = _orbMat;
-                quad.GetComponent<MeshRenderer>().sortingOrder = 310;
+                quad.GetComponent<MeshRenderer>().sortingOrder = SortBase + 10;
             }
 
             // ── Text. Nameplate + class per player, re-centred under each medallion column (spec §5).
             //    Rank is reserved (§4.4) and mode has no system yet (§6) — both render nothing; the
             //    layout must still read deliberate with them blank.
-            BuildText($"NameLocal",  data.LocalName,  LeftMedallionXFrac * h,  NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
-            BuildText($"NameRemote", data.RemoteName, RightMedallionXFrac * h, NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
+            BuildText($"NameLocal",  SanitizeName(data.LocalName),  LeftMedallionXFrac * h,  NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true, plainText: true);
+            BuildText($"NameRemote", SanitizeName(data.RemoteName), RightMedallionXFrac * h, NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true, plainText: true);
             BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
             BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
 
@@ -242,11 +270,39 @@ namespace Emberfall.Presentation
 
             var rend = quad.GetComponent<MeshRenderer>();
             rend.sharedMaterial = mat;
-            rend.sortingOrder = 305;   // above the plate (300), below the orb (310)
+            rend.sortingOrder = SortBase + 5;   // above the plate, below the orb
+        }
+
+        /// <summary>
+        /// The nameplate is the only string on this screen that does NOT originate in our own code —
+        /// it comes off the wire (<c>NetworkedMatchSession.OpponentName</c>). Today the server sets it
+        /// to the opponent's server-assigned <c>PlayerId</c>, so it is trusted (security/README.md §4,
+        /// VULN-001 §2 fact 3); this exists so that the day a player picks their own name, the
+        /// renderer is not the thing that has to be remembered.
+        ///
+        /// Two hazards, both handled here and neither a substitute for validating server-side:
+        /// TMP parses <b>rich-text markup</b> in the string body (an opponent named
+        /// <c>&lt;size=400%&gt;</c> would otherwise redraw the layout on YOUR machine — see
+        /// <paramref name="plainText"/> on <see cref="BuildText"/>, which is what actually disarms
+        /// that), and an unbounded name would run out of its box. Control characters are dropped
+        /// rather than escaped: nothing legitimate contains them.
+        /// </summary>
+        private static string SanitizeName(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return string.Empty;
+            var sb = new System.Text.StringBuilder(raw.Length);
+            foreach (char ch in raw)
+            {
+                if (char.IsControl(ch)) continue;
+                sb.Append(ch);
+                if (sb.Length >= MaxNameChars) { sb.Append('…'); break; }
+            }
+            return sb.ToString();
         }
 
         private TextMeshPro BuildText(string name, string text, float x, float y, float size, Color tint, float h,
-                                      bool bold = false, float tracking = 0f, bool underlay = false)
+                                      bool bold = false, float tracking = 0f, bool underlay = false,
+                                      bool plainText = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
@@ -258,8 +314,11 @@ namespace Emberfall.Presentation
             tmp.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            // richText off for anything not authored here — see SanitizeName. This is the line that
+            // actually neutralises markup in a wire-supplied name; the character filter only trims it.
+            if (plainText) { tmp.richText = false; tmp.parseCtrlCharacters = false; }
             tmp.color = new Color(tint.r, tint.g, tint.b, 0f);   // fades in with the rig
-            tmp.sortingOrder = 320;
+            tmp.sortingOrder = SortBase + 20;
             tmp.text = text;
             // Dark outline so text reads over the busy ruins band (the plate leaves these bands
             // unlit per §8, but the ground is textured). Per-instance material via fontMaterial.

@@ -41,6 +41,7 @@ namespace Emberfall.Presentation
         [SerializeField] private VfxDirector vfxDirector;
 
         private LoadingOverlay loadingOverlay;
+        private VersusOverlay versusOverlay;
 
         private void Awake()
         {
@@ -81,6 +82,24 @@ namespace Emberfall.Presentation
             // the server deals decks/ids/seat, connect+pair is async, and hero classes ride the
             // projected snapshot. This local boot stays hot-seat and must remain green (C1 entry).
             var (p0Session, p1Session) = LocalMatch.Start(db, setup, p0Id, p1Id);
+
+            // ── Versus screen (techart/versus-screen.md §1) ────────────────────────
+            // Raised the instant both hero classes are known, which locally is right here — the
+            // setup is in hand and LocalMatch.Start has minted the match id the orb variant keys
+            // off. The boot plate is released in the same breath and cross-fades out UNDERNEATH
+            // this one (VersusOverlay sorts above it), so there is no gap to the board.
+            //
+            // Left medallion is the local seat, right is the opponent, per the screen's own
+            // convention — NOT the board's local-at-bottom rule.
+            //
+            // Nameplates are PLACEHOLDER: spec §6 wants player display names and no profile/name
+            // system exists yet. P1 is always PlayingAi on this path (see below), so "AI Opponent"
+            // is accurate rather than a stand-in for a name we failed to fetch.
+            versusOverlay = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
+                setup.P0Class, "You",
+                setup.P1Class, "AI Opponent",
+                p0Session.Current.Id.Value));
+            if (loadingOverlay != null) loadingOverlay.NotifyMatchReady();
 
             // ── Intent sources ────────────────────────────────────────────────────
             // Hot-seat: P0 is human-controlled via InputRouter; P1 is AI.
@@ -238,6 +257,10 @@ namespace Emberfall.Presentation
             // inside it. The overlay holds the fade until its reveal choreography finishes.
             if (loadingOverlay != null)
                 matchRunner.OnStateUpdated += _ => loadingOverlay.NotifyMatchReady();
+            // Same signal for the versus screen, which additionally holds its own minimum dwell —
+            // the board is ready long before a player has read who they are fighting.
+            if (versusOverlay != null)
+                matchRunner.OnStateUpdated += _ => versusOverlay.NotifyMatchReady();
 
             matchRunner.StartMatch(p0Session, p0Source, p1Session, p1Ai);
         }

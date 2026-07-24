@@ -34,6 +34,7 @@ namespace Emberfall.Net.Client
         private MatchId _matchId;
         private int _seat = -1;
         private PlayerId _player;
+        private string _opponentName = string.Empty;
 
         private ulong _outSeq;
         private long _lastSendMs;
@@ -115,6 +116,17 @@ namespace Emberfall.Net.Client
         /// <summary>MatchStartMsg.Seat — the local engine seat. Feeds <c>SeatOwnership.Single</c>.</summary>
         public int Seat => _seat;
         public PlayerId Player => _player;
+        /// <summary><c>MatchStartMsg.Opponent.DisplayName</c> — for the versus screen's opposite
+        /// nameplate. Empty until the match starts.
+        ///
+        /// SECURITY (security/README.md §4, VULN-001 §2 fact 3): today the server sets this to the
+        /// opponent's server-assigned <c>PlayerId.Value</c>, so it is NOT peer-authored — that is the
+        /// only reason it can be rendered without a server-side allowlist. <b>The day a client picks
+        /// its own display name (a profile field in <c>HelloMsg</c>, an account name), this string
+        /// becomes attacker-controlled text rendered on the VICTIM's machine</b> — the exact shape of
+        /// VULN-001 — and it must be validated server-side before it is sent. The renderer
+        /// (<c>VersusOverlay.SanitizeName</c>) hardens defensively; that is not the fix.</summary>
+        public string OpponentName { get { lock (_lock) return _opponentName; } }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
         public bool HasPendingSubmit { get { lock (_lock) return _pending is not null; } }
@@ -265,6 +277,7 @@ namespace Emberfall.Net.Client
                 _matchId = new MatchId(ms.Snapshot.State.Id.Value);
                 _seat = ms.Seat;
                 _player = ms.PlayerId;
+                _opponentName = ms.Opponent.DisplayName ?? string.Empty;
                 _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
                 SetStateUnlocked(ConnectionState.Live);
             }
