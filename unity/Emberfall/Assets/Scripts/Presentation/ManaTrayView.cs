@@ -22,6 +22,10 @@ namespace Emberfall.Presentation
         private static readonly Color ManaBlue   = new Color(0.40f, 0.70f, 1.00f);
         private static readonly Color SpentGrey  = new Color(0.25f, 0.25f, 0.35f);
 
+        // board-and-vfx.md §1.1 mana rail: 4.03 wide (x +2.5..+6.53) x 0.32 tall.
+        private const float RailW = 4.03f;
+        private const float RailH = 0.32f;
+
         private static readonly int FillLevelId  = Shader.PropertyToID("_FillLevel");
         private static readonly int SpentLevelId = Shader.PropertyToID("_SpentLevel");
         private static readonly int LockedLevelId= Shader.PropertyToID("_LockedLevel");
@@ -43,11 +47,15 @@ namespace Emberfall.Presentation
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
 
-            // Tray quad — sized to fill the anchor area. SG_ManaFill will drive this renderer.
+            // Tray quad — the full mana rail of board-and-vfx.md §1.1: 4.03 wide, spanning
+            // x +2.5..+6.53. SG_ManaFill derives all ten crystals procedurally from UV.x, so
+            // the rail needs no per-orb GameObjects: at this width the pitch falls out at
+            // 0.403 and each lit crystal at ~0.35 x 0.32, which is §1.1's "0.4 pitch, ~0.32Ø".
+            // Widening this is a shared budget with the hand fan — see §1.1 before changing it.
             var quadGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             quadGo.name = "ManaTrayQuad";
             quadGo.transform.SetParent(transform, false);
-            quadGo.transform.localScale    = new Vector3(1.1f, 0.18f, 1f);
+            quadGo.transform.localScale    = new Vector3(RailW, RailH, 1f);
             quadGo.transform.localPosition = Vector3.zero;
             Destroy(quadGo.GetComponent<MeshCollider>());
             _quad = quadGo.GetComponent<Renderer>();
@@ -59,10 +67,13 @@ namespace Emberfall.Presentation
             _mpb.SetColor("_BaseColor", SpentGrey);
             _quad.SetPropertyBlock(_mpb);
 
-            // TMP label: "X / Y" — M1 visual read-out, sits just in front of the quad.
+            // TMP label: "X / Y" — M1 visual read-out. Clears the rail rather than sitting on
+            // it: the crystals now fill the whole quad, so a centred label would cover the two
+            // middle ones. Offset is -y for both seats (the anchor is never rotated), which
+            // puts it below seat 0's rail and above seat 1's — clear of the crystals either way.
             var labelGo = new GameObject("ManaLabel");
             labelGo.transform.SetParent(transform, false);
-            labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            labelGo.transform.localPosition = new Vector3(0f, -(RailH * 0.5f + 0.14f), -0.01f);
             labelGo.transform.localRotation  = Quaternion.identity;
 
             _label           = labelGo.AddComponent<TextMeshPro>();

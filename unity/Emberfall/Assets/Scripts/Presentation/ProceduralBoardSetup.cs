@@ -8,16 +8,17 @@ namespace Emberfall.Presentation
     // Attach this to the same GameObject as BoardAnchors.
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
-    // Layout (orthographic camera, world units):
-    //   Board rows:  y = ±1.3   (7 slots, x = -4.05..+4.05 at 1.35 spacing)
+    // Every bottom-edge anchor below is the techart/board-and-vfx.md §1.1 budget, pinned
+    // 2026-07-24 (was M1 placeholder coordinates that sat the hero cluster level with the
+    // board row). §1.1 allocates SPANS on x; the element centres here are those spans minus
+    // each element's own width, and the y column is §1.3 — the vertical §1.1 never wrote.
+    //
+    // Layout (orthographic camera size 4.6, so the screen edges are y ±4.6, world units):
+    //   Board rows:  y = ±1.3   (7 slots, x = -4.05..+4.05 at 1.35 spacing) — outside §1.1
     //   Hand rows:   fanned by HandFanLayout — fixed 5-unit footprint, count-dependent pitch
-    //   Hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
-    //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). xSign: P0=-1, P1=+1.
-    //   Hero:        x = 5.2·xSign,  y = ±1.3
-    //   Weapon:      x = 4.1·xSign,  y = ±1.3
-    //   HeroPower:   x = 5.2·xSign,  y = ±2.3
-    //   ManaTray:    x = -5.8·xSign, y = ±2.0   (opposite side from the hero cluster)
-    //   Deck:        x = -5.8·xSign, y = ±2.5
+    //   The hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
+    //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). P0 signs are (-1,-1), so
+    //   seat 1 is seat 0 point-reflected through the origin, exactly as §1.1 specifies.
     [RequireComponent(typeof(BoardAnchors))]
     public sealed class ProceduralBoardSetup : MonoBehaviour
     {
@@ -28,6 +29,32 @@ namespace Emberfall.Presentation
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;
         private const float P1Sign =  1f;
+
+        // ── §1.1 bottom-edge budget, as |coordinates| for seat 0 ────────────────────────
+        // Signs are applied in BuildSeat: x is negated for the hero side, positive for the
+        // rail/deck side, then multiplied by the seat sign.
+        //
+        // Hero cluster owns x -7.88..-4.98 (2.9). Portrait outer against the margin, the
+        // two-disc column inboard toward the hand (Sam, 2026-07-24).
+        private const float HeroX      = 6.98f;  // 1.8-wide plate centred in -7.88..-6.08
+        private const float DiscX      = 5.53f;  // 0.9Ø column centred in -6.08..-4.98
+
+        // Mana rail owns +2.5..+6.53 (4.03); deck pile +6.53..+7.83 (1.3).
+        private const float ManaRailX  = 4.515f;
+        private const float DeckX      = 7.18f;
+
+        // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
+        // §1.1 is an x-budget only. Everything in it rests on one baseline 0.15 above the
+        // screen edge: |y| = 4.45. Each centre below is that baseline plus half the element's
+        // own height, so moving the baseline moves the whole bottom row together.
+        private const float HeroY      = 3.55f;  // 1.8-tall plate on the baseline
+        private const float WeaponY    = 3.10f;  // upper 0.9 disc  — column top = plate top
+        private const float HeroPowerY = 4.00f;  // lower 0.9 disc, sitting on the baseline
+        private const float ManaRailY  = 4.00f;  // aligned to the hero-power disc, not the
+                                                 // baseline: the two read as one bottom line
+        private const float DeckY      = 3.53f;  // a 1.3-wide card-proportioned pile (1.83
+                                                 // tall) on the baseline; nothing renders
+                                                 // here yet — DeckAnchor is the draw source
 
         private void Awake()
         {
@@ -54,11 +81,11 @@ namespace Emberfall.Presentation
                 seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", Vector3.zero);
             HandFanLayout.Apply(seat.HandSlots, HandSlotCount, seat.FanMirrored);
 
-            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  6.5f, ySign * 1.3f, 0f));
-            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  5.3f, ySign * 1.3f, 0f));
-            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  6.5f, ySign * 2.3f, 0f));
-            seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(xSign * -5.8f, ySign * 2.0f, 0f));
-            seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -5.8f, ySign * 2.5f, 0f));
+            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  HeroX,     ySign * HeroY,      0f));
+            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  DiscX,     ySign * WeaponY,    0f));
+            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  DiscX,     ySign * HeroPowerY, 0f));
+            seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(xSign * -ManaRailX, ySign * ManaRailY,  0f));
+            seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
         }
 
         // Called from GameBootstrap.Start() after SetPlayers() — attaches ClickableBoardSlot

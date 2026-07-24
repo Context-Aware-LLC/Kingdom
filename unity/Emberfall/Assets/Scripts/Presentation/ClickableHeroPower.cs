@@ -18,7 +18,10 @@ namespace Emberfall.Presentation
             if (GetComponent<Collider>() == null)
             {
                 var col = gameObject.AddComponent<BoxCollider>();
-                col.size = new Vector3(0.85f, 1.05f, 0.1f);
+                // Matches HeroPlateView.DiscSize — the 0.9Ø disc of §1.1's hero cluster. Was
+                // 0.85 x 1.05, a card-shaped box left over from the placeholder layout, which
+                // now overlaps the weapon disc stacked 0.9 above it.
+                col.size = new Vector3(0.9f, 0.9f, 0.1f);
             }
         }
 

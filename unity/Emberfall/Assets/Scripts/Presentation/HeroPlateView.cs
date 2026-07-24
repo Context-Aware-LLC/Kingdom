@@ -26,8 +26,13 @@ namespace Emberfall.Presentation
         private static readonly Color PowerReady   = new Color(0.30f, 0.55f, 0.85f);
         private static readonly Color PowerSpent   = new Color(0.22f, 0.22f, 0.30f);
 
-        private const float PlateW = 1.15f;
-        private const float PlateH = 1.15f;
+        // board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
+        // ~1.8. Square, because §1.1 also requires the two stacked 0.9Ø discs to match the
+        // portrait's height — 2 × 0.9 = 1.8. Keep PlateW/PlateH, DiscSize and
+        // ClickableHero/ClickableHeroPower's colliders in step; they are one figure.
+        private const float PlateW   = 1.8f;
+        private const float PlateH   = 1.8f;
+        private const float DiscSize = 0.9f;
 
         private PlayerId _playerId;
         private ICardDatabase _db;
@@ -70,20 +75,22 @@ namespace Emberfall.Presentation
             artProvider?.LoadArt($"art/hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
             // Hero name — above the portrait.
-            var nameLabel = MakeLabel(transform, "Name", new Vector3(0f, PlateH * 0.44f, -0.01f), 1.5f, Color.white);
+            // Font sizes track the plate: they were set against the old 1.15 plate, so they
+            // scale by the same 1.565 the plate grew by, or the text reads small on it.
+            var nameLabel = MakeLabel(transform, "Name", new Vector3(0f, PlateH * 0.44f, -0.01f), 2.3f, Color.white);
             nameLabel.text = HeroName(heroClass);
 
             // HP — bottom-right gem position, the number that must be visible all match.
             _hpLabel = MakeLabel(transform, "HP",
-                new Vector3(PlateW * 0.38f, -PlateH * 0.42f, -0.01f), 3.0f, HpFull);
+                new Vector3(PlateW * 0.38f, -PlateH * 0.42f, -0.01f), 4.7f, HpFull);
 
             // Hero-power disc — its own anchor so ClickableHeroPower's collider stays clean.
             if (powerAnchor != null)
             {
-                _powerDisc = MakeQuad(powerAnchor, "PowerDisc", Vector3.zero, new Vector3(0.62f, 0.62f, 1f));
+                _powerDisc = MakeQuad(powerAnchor, "PowerDisc", Vector3.zero, new Vector3(DiscSize, DiscSize, 1f));
                 MaterialCatalog.Assign(_powerDisc, MaterialCatalog.Plate);
-                _powerLabel = MakeLabel(powerAnchor, "PowerLabel", new Vector3(0f, 0f, -0.01f), 0.9f, Color.white);
-                _powerLabel.rectTransform.sizeDelta = new Vector2(0.60f, 0.55f);
+                _powerLabel = MakeLabel(powerAnchor, "PowerLabel", new Vector3(0f, 0f, -0.01f), 1.3f, Color.white);
+                _powerLabel.rectTransform.sizeDelta = new Vector2(DiscSize * 0.94f, DiscSize * 0.86f);
             }
         }
 
