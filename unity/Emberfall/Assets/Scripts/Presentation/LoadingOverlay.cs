@@ -121,8 +121,12 @@ namespace Emberfall.Presentation
 
             // ── Plate — SpriteRenderer so the default sprite material honors alpha
             //    (MatchEndBanner precedent; primitives' Default-Material strips in URP builds).
+            // Lives in Art/Backgrounds/, not Art/Loading/: CardArtPostprocessor keys import
+            // settings off the folder, and only Backgrounds treats a full-screen plate correctly
+            // (4096 desktop / 2048 mobile, mips off). In Art/Loading/ it silently imported at
+            // Unity's 2048 default — a 5040-wide master shown at 2048.
             var plateTex = LoadAsset<Texture2D>(
-                "Assets/Art/Loading/LoadingPlate_Master.png", "loading/LoadingPlate_Master");
+                "Assets/Art/Backgrounds/LoadingPlate_Master.png", "backgrounds/LoadingPlate_Master");
             if (plateTex != null)
             {
                 var go = new GameObject("Plate");
