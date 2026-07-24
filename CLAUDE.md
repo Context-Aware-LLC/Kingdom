@@ -106,6 +106,21 @@ loops out of **gate state and change control** (WS A1 / F1), where the artifact 
 record and an unattended error compounds. Spec'd implementation work with a real test is
 fine to loop. Final ruling deferred to the **G1 panel**.
 
+## Player-facing input consults the vulnerability index (Sam + Claude, 2026-07-23)
+
+**HARD RULE. Before implementing anything that accepts client-authored input, scan the index:**
+`…\Project Docs\Emberfall\docs\security\README.md` §4. It is a trigger-keyed table — a few
+words per row — so the scan is seconds and a matching row is obvious. Match a row, read that
+`VULN-nnn` in full and follow its binding rules.
+
+**Reciprocal:** finding a latent vulnerability isn't done at the entry. A `LATENT` entry MUST
+also leave a pointer comment on the line an implementer is forced to edit to arm it — the entry
+records it, only the comment delivers it. Same sense as *Bookkeeping is part of done*.
+
+**Why:** the person who arms a latent vulnerability is never the person looking for it. VULN-001
+arms whenever Discover gets built, by someone reasoning about game rules, while the damage lands
+in the render layer on the *opponent's* machine.
+
 ## Conventions
 
 - Specs are the source of truth until code exists. When specs disagree, the

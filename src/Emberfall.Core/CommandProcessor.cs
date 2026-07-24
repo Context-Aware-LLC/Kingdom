@@ -48,6 +48,15 @@ namespace Emberfall.Core
                     return ValidateAttack(state, a, out reason);
                 case HeroPowerIntent hp:
                     return ValidateHeroPower(state, hp, out reason);
+                // ┌─ SECURITY TRIPWIRE — VULN-001 (LATENT). READ BEFORE DELETING THIS CASE. ─┐
+                // ChosenCardId is the ONLY client-authored string in the shipping intent set
+                // that becomes a card identity. This rejection is the sole reason VULN-001 is
+                // latent; implementing Discover arms it. An unvalidated id enters authoritative
+                // state, ships to BOTH seats, and throws in the OPPONENT's BoardController —
+                // freezing their client for the rest of the match while the server stays healthy.
+                // Binding rules (TryGet not Get; validate against the OFFERED set, not just the
+                // database) — docs\security\known-vulnerabilities\VULN-001-*.md §4.
+                // └──────────────────────────────────────────────────────────────────────────┘
                 case DiscoverChoiceIntent _:
                     reason = RejectReason.NotImplemented;   // Discover = later
                     return false;
