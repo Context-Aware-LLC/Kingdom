@@ -30,6 +30,9 @@ art-bakeoff/
 
 # Agent Related
 .claude
+# Vendor-installed agent skills — .claude/skills/* are symlinks into here.
+# Content is disposable; skills-lock.json (tracked) pins source + hash to reinstall it.
+.agents
 
 # Scratch match-replay logs from bot/networked smoke tests - disposable
 scratch-replays/
@@ -42,10 +45,6 @@ unity/Emberfall/GeneratedAssets/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
-
-# Vendor-installed agent skills — reinstallable from skills-lock.json
-# (.claude/skills/* are symlinks into here)
-.agents/
 
 # Artifact publish scratch (GUID-named dirs)
 /????????-????-????-????-????????????/
