@@ -34,7 +34,13 @@ namespace Emberfall.Presentation
         // overlapped, and the span shrinks under ~5 cards instead of the cards pulling apart.
         internal const float MaxPitch = 1.05f;    // ≈10% overlap; bites only at 4 cards or fewer
 
-        internal const float MaxTiltDeg = 8f;     // outermost card's lean
+        // The footprint positions the card TOPS, not their centres (Sam, 2026-07-24: "bring the
+        // bottom of the fan together more, leave the top pretty much the way it's laid out").
+        // Rotation is about each card's own centre, so tilting alone would swing the top outward
+        // as far as it draws the bottom in. Solving for the centre from a fixed top edge instead
+        // makes tilt behave like a real held fan — a pivot below the hand — and makes MaxTiltDeg
+        // a pure "how closed is the bottom" dial that leaves the top spread untouched.
+        internal const float MaxTiltDeg = 18f;    // outermost card's lean
         internal const float Sag        = 0.18f;  // edge cards' drop below the centre card
         internal const float CentreY    = 4.35f;  // |y| of the centre card (ortho size 4.6)
         internal const float ZStep      = 0.03f;  // per-index step toward the camera
@@ -62,9 +68,14 @@ namespace Emberfall.Presentation
                 float offset = index - half;                    // -half .. +half
                 float t      = half > 0f ? offset / half : 0f;  // -1 .. +1
 
-                float x   = offset * pitch;
-                float y   = -(CentreY + Sag * t * t);
-                float rot = -MaxTiltDeg * t;                    // left card leans left
+                float rot   = -MaxTiltDeg * t;                  // left card leans left
+                float halfH = BoardController.CardH * 0.5f;
+
+                // topX is the laid-out position; solve back for the centre the rotation needs.
+                // topX = x - halfH*sin(rot)  =>  x = topX + halfH*sin(rot).
+                float topX = offset * pitch;
+                float x    = topX + halfH * Mathf.Sin(rot * Mathf.Deg2Rad);
+                float y    = -(CentreY + Sag * t * t);
 
                 // Anchors are authored in world space (ProceduralBoardSetup.MakeAnchor), so
                 // stay in world space here rather than mixing conventions.
