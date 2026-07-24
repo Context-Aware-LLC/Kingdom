@@ -47,10 +47,25 @@ namespace Emberfall.Presentation
         private const float RightMedallionYFrac = (1080f - 732f) / 2160f;   // 348 above centre
         private const float OrbYFrac            = (1080f - 731f) / 2160f;    // 349, level with the medallions
         private const float OrbDiaFrac       = 400f / 2160f;    // Ø400 ≈ 18.5%
-        private const float NameplateYFrac   = -350f / 2160f;   // ≈16.2% below
-        private const float ClassYFrac       = -477f / 2160f;   // ≈22.1% below
+        private const float NameplateYFrac   = -390f / 2160f;   // canvas 1470 — clears the frame's bottom lip
+        private const float ClassYFrac       = -520f / 2160f;   // canvas 1600
         private const float RankYFrac        = -590f / 2160f;   // ≈27.3% below — reserved, blank
         private const float StatusYFrac      = -(1850f - 1080f) / 2160f; // loading-plate slot verbatim (§4)
+
+        // ── Type scale. TextMeshPro's fontSize on a world-space text is a POINT value: at scale 1
+        //    the em box is fontSize/10 world units, NOT fontSize. These slots were first authored as
+        //    if the coefficient were a height fraction, which shipped every string ~10× under —
+        //    "Emberward" and the status line rendered at 5–7px on a 1080p frame, below legibility.
+        //    Sized in em-as-fraction-of-height and multiplied by 10 (tooling/scripts/versus_text_mock.py
+        //    prints the conversion). Signed off in image-space by Sam, 2026-07-24.
+        private const float NameSizeFrac   = 0.460f;   // em ≈ 4.6% of height (50px @1080)
+        private const float ClassSizeFrac  = 0.280f;   // em ≈ 2.8% (30px @1080)
+        private const float StatusSizeFrac = 0.240f;   // em ≈ 2.4% (26px @1080)
+
+        // Tracking, in TMP's em/100 units. The class band and status are small caps-adjacent labels
+        // and read as deliberate spaced; the nameplate is set solid.
+        private const float ClassTracking  = 14f;
+        private const float StatusTracking = 6f;
 
         // Reveal/fade pacing.
         private const float RevealDuration  = 0.5f;
@@ -191,13 +206,13 @@ namespace Emberfall.Presentation
             // ── Text. Nameplate + class per player, re-centred under each medallion column (spec §5).
             //    Rank is reserved (§4.4) and mode has no system yet (§6) — both render nothing; the
             //    layout must still read deliberate with them blank.
-            BuildText($"NameLocal",  data.LocalName,  LeftMedallionXFrac * h,  NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
-            BuildText($"NameRemote", data.RemoteName, RightMedallionXFrac * h, NameplateYFrac * h, 0.115f * h, NameTint,  h, bold: true);
-            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, 0.070f * h, ClassTint, h);
-            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, 0.070f * h, ClassTint, h);
+            BuildText($"NameLocal",  data.LocalName,  LeftMedallionXFrac * h,  NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
+            BuildText($"NameRemote", data.RemoteName, RightMedallionXFrac * h, NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true);
+            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking);
+            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking);
 
             // ── Status / tip — centred, live. Empty until SetStatus; doubles as the failure surface.
-            _status = BuildText("StatusLine", "", 0f, StatusYFrac * h, 0.058f * h, StatusTint, h);
+            _status = BuildText("StatusLine", "", 0f, StatusYFrac * h, StatusSizeFrac * h, StatusTint, h, tracking: StatusTracking);
             _status.rectTransform.sizeDelta = new Vector2(1.6f * h, 0.16f * h);
         }
 
@@ -225,7 +240,8 @@ namespace Emberfall.Presentation
             rend.sortingOrder = 305;   // above the plate (300), below the orb (310)
         }
 
-        private TextMeshPro BuildText(string name, string text, float x, float y, float size, Color tint, float h, bool bold = false)
+        private TextMeshPro BuildText(string name, string text, float x, float y, float size, Color tint, float h,
+                                      bool bold = false, float tracking = 0f)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
@@ -233,6 +249,7 @@ namespace Emberfall.Presentation
             var tmp = go.AddComponent<TextMeshPro>();
             tmp.rectTransform.sizeDelta = new Vector2(MedallionDiaFrac * h * 0.92f, 0.16f * h); // < box width (§5)
             tmp.fontSize = size;
+            tmp.characterSpacing = tracking;
             tmp.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
