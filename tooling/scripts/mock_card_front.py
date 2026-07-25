@@ -34,7 +34,7 @@ NUDGES = {
     "IronEmber": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
     "DarkGilt": {"cost": (-0.374, 0.313), "attack": (0.0, -3.5), "health": (0.0, -3.5)},
     "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.5, -3.0), "health": (-0.5, -4.5)},
-    "CarvedStone": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
+    "CarvedStone": {"cost": (1.209, 0.709), "attack": (0.0, -3.0), "health": (0.0, -3.0)},
 }
 DIGIT_NUDGE = {k: (x * UNIT, y * UNIT) for k, (x, y) in NUDGES[FRAME].items()}
 
