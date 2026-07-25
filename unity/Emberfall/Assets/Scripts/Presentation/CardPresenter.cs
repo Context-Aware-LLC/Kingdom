@@ -83,12 +83,35 @@ namespace Emberfall.Presentation
                 artRenderer.gameObject.SetActive(false);
                 return;
             }
+            _artTexture = sprite.texture;
             if (_artMpb == null) _artMpb = new MaterialPropertyBlock();
             artRenderer.GetPropertyBlock(_artMpb);
-            _artMpb.SetTexture("_BaseMap", sprite.texture);
+            _artMpb.SetTexture("_BaseMap", _artTexture);
             _artMpb.SetColor("_BaseColor", Color.white);
             artRenderer.SetPropertyBlock(_artMpb);
             artRenderer.gameObject.SetActive(true);
+            ApplyArtFit();
+        }
+
+        private Texture _artTexture;
+
+        // Cover-fit the illustration to the frame's art window (mock_card_front.py ImageOps.fit,
+        // centering (0.5, 0.35)): crop the overflowing texture axis via _BaseMap_ST instead of
+        // letting the quad stretch it. Needs both the texture (SetArt) and the rarity (Bind);
+        // called from whichever arrives second.
+        private void ApplyArtFit()
+        {
+            if (artRenderer == null || _artTexture == null || _def == null || _artMpb == null) return;
+            Vector4 win = FrameRarityCatalog.Sockets(_def.Rarity).ArtWindow;
+            float quadAspect = ((win.z - win.x) * BoardController.CardW)
+                             / ((win.w - win.y) * BoardController.CardH);
+            float texAspect = (float)_artTexture.width / _artTexture.height;
+            float su = 1f, sv = 1f;
+            if (texAspect > quadAspect) su = quadAspect / texAspect;
+            else                        sv = texAspect / quadAspect;
+            // 0.35-from-top vertical centering; V runs bottom-up, so 0.65 of the slack goes below.
+            _artMpb.SetVector("_BaseMap_ST", new Vector4(su, sv, (1f - su) * 0.5f, (1f - sv) * 0.65f));
+            artRenderer.SetPropertyBlock(_artMpb);
         }
 
         // Card-back mode for projected hidden cards (a4-session-seam-design.md §6): no definition,
@@ -208,15 +231,19 @@ namespace Emberfall.Presentation
             if (bodyLabel == null) return;
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
+            // _kwScratch (printed + live-granted, rebuilt by RebuildKeywords before every call
+            // here) rather than _def.Keywords alone — with the icon strip retired on painted
+            // frames, this text lead is where a gained keyword shows up.
             var sb = new StringBuilder();
-            foreach (Keyword kw in _def.Keywords)
+            foreach (Keyword kw in _kwScratch)
             {
                 string display = KeywordDisplayName(kw);
                 if (_def.CardText.IndexOf(display, System.StringComparison.OrdinalIgnoreCase) >= 0)
                     continue;
-                sb.Append(sb.Length > 0 ? ", " : "<b>").Append(display);
+                sb.Append(sb.Length > 0 ? ", " : $"<size={FrameRarityCatalog.KeywordLeadPct}%><b>")
+                  .Append(display);
             }
-            if (sb.Length > 0) sb.Append("</b>");
+            if (sb.Length > 0) sb.Append("</b></size>");
             if (!string.IsNullOrEmpty(_def.CardText))
             {
                 if (sb.Length > 0) sb.Append('\n');
@@ -253,20 +280,32 @@ namespace Emberfall.Presentation
         }
 
         // Data-driven frame/rarity assembly (frame-rarity-system.md §3 ApplyFrame) — stat-plate
-        // visibility keyed by type, gem tint keyed by rarity. No per-card branching.
+        // visibility keyed by type, frame + digit sockets keyed by rarity. No per-card branching.
         private void ApplyFrame()
         {
-            // Templated frame + gem sprite swap by type+rarity (§3 ApplyFrame). Falls back to a
-            // gem color tint if the atlas sprite is missing (placeholders not generated yet).
+            // One painted frame per rarity (§3.1). Falls back to the empty-sprite placeholder
+            // look if the frame asset is missing.
+            Sprite frameSprite = null;
             if (frameRenderer != null && _ui != null)
-                SetSpritePreserveSize(frameRenderer, _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity)));
+            {
+                frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Rarity));
+                SetSpritePreserveSize(frameRenderer, frameSprite);
+            }
+            _hasPaintedFrame = frameSprite != null;
+            if (_hasPaintedFrame) ApplySockets();
 
             if (gemRenderer != null)
             {
-                Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
-                SetSpritePreserveSize(gemRenderer, gem);
-                // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
-                gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
+                // The painted frame carries the rarity read — the gem was the placeholder cue.
+                bool showGem = frameSprite == null;
+                gemRenderer.gameObject.SetActive(showGem);
+                if (showGem)
+                {
+                    Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
+                    SetSpritePreserveSize(gemRenderer, gem);
+                    // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
+                    gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
+                }
             }
 
             bool showAttack     = FrameRarityCatalog.ShowAttack(_def.Type);
@@ -284,6 +323,67 @@ namespace Emberfall.Presentation
             // Weapon attack is static while in hand (no live minion stats to track); set it directly.
             if (showAttack && attackLabel != null && _def.Type == CardType.WEAPON)
                 attackLabel.text = (_def.Attack ?? 0).ToString();
+        }
+
+        // §3.1 socket table (card-rendering.md, Sam-calibrated 2026-07-25): move every card-front
+        // element onto this rarity's frame geometry. Fractions are top-left-origin on the frame;
+        // local space is center-origin with +y up, so x' = (fx-.5)·W, y' = (.5-fy)·H.
+        // TMP world text: fontSize = em height in units × 10.
+        private void ApplySockets()
+        {
+            var s = FrameRarityCatalog.Sockets(_def.Rarity);
+            const float W = BoardController.CardW, H = BoardController.CardH;
+            const float z = -0.01f;
+
+            PlaceDigit(costLabel,       s.Cost,   s.DigitEm, z);
+            PlaceDigit(attackLabel,     s.Attack, s.DigitEm, z);
+            PlaceDigit(healthLabel,     s.Health, s.DigitEm, z);
+            PlaceDigit(durabilityLabel, s.Health, s.DigitEm, z); // weapons: durability owns the health boss
+
+            if (nameLabel != null)
+            {
+                // Fixed size, no auto-fit; hard left clamp keeps long names off the cost boss.
+                nameLabel.enableAutoSizing = false;
+                nameLabel.fontSize = FrameRarityCatalog.NameEm * H * 10f;
+                nameLabel.color    = FrameRarityCatalog.NameParchment;
+                float cx     = FrameRarityCatalog.NameCenterX * W;
+                float clampX = FrameRarityCatalog.NameLeftClamp * W;
+                float textW  = nameLabel.GetPreferredValues(_def.Name).x;
+                if (cx - textW * 0.5f < clampX) cx = clampX + textW * 0.5f;
+                nameLabel.rectTransform.localPosition =
+                    new Vector3(cx - W * 0.5f, (0.5f - FrameRarityCatalog.NameCenterY) * H, z);
+            }
+
+            if (artRenderer != null)
+            {
+                Vector4 win = s.ArtWindow;
+                artRenderer.transform.localPosition = new Vector3(
+                    ((win.x + win.z) * 0.5f - 0.5f) * W,
+                    (0.5f - (win.y + win.w) * 0.5f) * H, -0.005f);
+                artRenderer.transform.localScale = new Vector3(
+                    (win.z - win.x) * W, (win.w - win.y) * H, 1f);
+                ApplyArtFit();
+            }
+
+            if (bodyLabel != null)
+            {
+                // Rules band: dark ink on the frame's parchment.
+                bodyLabel.color = FrameRarityCatalog.BodyInk;
+                bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
+                bodyLabel.rectTransform.localPosition =
+                    new Vector3(0f, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
+            }
+        }
+
+        private static void PlaceDigit(TextMeshPro label, Vector2 frac, float em, float z)
+        {
+            if (label == null) return;
+            label.enableAutoSizing = false;
+            label.fontSize = em * BoardController.CardH * 10f;
+            label.rectTransform.sizeDelta = new Vector2(0.5f, 0.35f);
+            label.rectTransform.localPosition = new Vector3(
+                (frac.x - 0.5f) * BoardController.CardW,
+                (0.5f - frac.y) * BoardController.CardH, z);
         }
 
         // Live equipped-weapon stats. WeaponInstance is not a CardInstance, so BoardController
@@ -339,6 +439,8 @@ namespace Emberfall.Presentation
             }
         }
 
+        private bool _hasPaintedFrame;
+
         private void RebuildKeywords()
         {
             if (_def == null) return;
@@ -350,6 +452,19 @@ namespace Emberfall.Presentation
             if (_live != null)
                 foreach (Keyword k in _live.Keywords)
                     if (!_kwScratch.Contains(k)) _kwScratch.Add(k);
+
+            // On a painted frame the §3.1 face carries keywords as the bold body-text lead
+            // (keyword-visual-language decision) — the icon strip and text strip would sit
+            // on the parchment band twice. Body text is rebuilt on the same change event.
+            if (_hasPaintedFrame)
+            {
+                if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
+                if (keywordIcons != null)
+                    foreach (var icon in keywordIcons)
+                        if (icon != null) icon.gameObject.SetActive(false);
+                ApplyBodyText();
+                return;
+            }
 
             // Preferred: one atlas icon per keyword (§4), laid out left-to-right, capped at the
             // strip's slot count. SILENCE is an effect, not a face keyword, so KeywordIcon() skips it.

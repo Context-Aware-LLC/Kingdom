@@ -418,11 +418,11 @@ namespace Emberfall.Presentation
 
             // Name — top strip
             TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 3.0f, Color.white);
-            // Cost — top-left gem
-            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 3.75f, new Color(0.4f, 0.7f, 1f));
-            // Stat digits are white and the frame art guarantees no dark socket behind them
-            // (health sits on flat opaque grey in frame_minion_common) — the black outline is
-            // what makes them legible on any frame, any rarity.
+            // Cost — top-left boss. White + rim per §3.1; the blue recolor is a pending
+            // nudge-list item, deliberately not applied yet.
+            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
+            // Stat digits are white with a black rim (§3.1) — the rim is what keeps them
+            // legible on any frame's boss art, any rarity.
             // Attack — bottom-left (minions + weapons)
             TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
             // Health — bottom-right (minions only)
@@ -438,6 +438,8 @@ namespace Emberfall.Presentation
             bodyGo.transform.SetParent(root.transform, false);
             bodyGo.transform.localPosition = new Vector3(0f, -CardH * 0.30f, -0.01f);
             var bodyLabel = bodyGo.AddComponent<TextMeshPro>();
+            var bodyFont = CardFont();
+            if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
             bodyLabel.alignment = TextAlignmentOptions.Center;
             bodyLabel.color     = new Color(0.92f, 0.92f, 0.92f);
@@ -495,6 +497,33 @@ namespace Emberfall.Presentation
         // instance a material per digit and break batching across the whole board.
         private static Material s_statLabelMaterial;
 
+        // §3.1: Alfa Slab One for everything on the card front. Loaded once; TMP's default
+        // font stays as the fallback if the asset is missing.
+        private static TMP_FontAsset s_cardFont;
+
+        private static TMP_FontAsset CardFont()
+        {
+            if (s_cardFont == null)
+                s_cardFont = LoadAsset<TMP_FontAsset>(
+                    "Assets/Art/Fonts/AlfaSlabOne-Regular SDF.asset", "fonts/AlfaSlabOne-Regular SDF");
+            return s_cardFont;
+        }
+
+        private static T LoadAsset<T>(string editorPath, string address) where T : Object
+        {
+#if UNITY_EDITOR
+            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(editorPath);
+#else
+            // Build path: needs the asset in an Addressables group at this address
+            // (MaterialCatalog precedent). Group entries are a player-build TODO.
+            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(address);
+            var asset = handle.WaitForCompletion();
+#endif
+            if (asset == null)
+                Debug.LogWarning($"[BoardController] asset '{address}' not found — using default.");
+            return asset;
+        }
+
         private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color, bool statOutline = false)
         {
             var go = new GameObject(goName);
@@ -503,6 +532,8 @@ namespace Emberfall.Presentation
             go.transform.localRotation = Quaternion.identity;
 
             var tmp = go.AddComponent<TextMeshPro>();
+            var font = CardFont();
+            if (font != null) tmp.font = font;
             tmp.fontSize  = fontSize;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color     = color;

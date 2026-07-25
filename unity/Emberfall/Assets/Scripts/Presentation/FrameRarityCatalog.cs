@@ -4,11 +4,11 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Data-driven frame/rarity assembly (techart/frame-rarity-system.md, dependency D2). Placeholder
-    /// colors stand in for the real `frame_{type}_{rarity}` / `gem_{rarity}` atlas sprites — swap
-    /// <see cref="GemColor"/>/<see cref="FrameTint"/> for sprite lookups once card art lands. No
-    /// per-card branching: every card resolves through <see cref="ShowAttack"/>/<see cref="ShowHealth"/>/
-    /// <see cref="ShowDurability"/>/<see cref="HasFoil"/>/<see cref="GlowTier"/> keyed only by type+rarity.
+    /// Data-driven frame/rarity assembly (techart/frame-rarity-system.md D2 + card-rendering.md §3.1).
+    /// The four painted frames are keyed by rarity alone (<see cref="FrameSprite"/>), and
+    /// <see cref="Sockets"/> carries each frame's Sam-calibrated digit centers and art window.
+    /// <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the no-sprite fallback. No
+    /// per-card branching: everything resolves keyed by type+rarity.
     /// </summary>
     public static class FrameRarityCatalog
     {
@@ -33,10 +33,68 @@ namespace Emberfall.Presentation
             _               => new Color(0.22f, 0.22f, 0.32f),
         };
 
-        // §1/§3 atlas sprite keys — the templated data-driven swap. Names match the UI atlas
-        // (frame-rarity-system.md §1/§2/§4) and resolve through IUiSpriteProvider. No per-card branching.
-        public static string FrameSprite(CardType type, Rarity rarity) =>
-            $"frame_{type.ToString().ToLowerInvariant()}_{rarity.ToString().ToLowerInvariant()}";
+        // Frame sprite key — one painted frame per rarity, shared by every card type
+        // (Sam's 2026-07-25 mapping: CarvedStone=common, DarkGilt=rare, IronEmber=epic,
+        // AgedGilt=legendary; supersedes both the frame_{type}_{rarity} placeholder scheme
+        // and the 2026-07-24 one-master ruling). Resolves through IUiSpriteProvider.
+        public static string FrameSprite(Rarity rarity) =>
+            $"frame_{rarity.ToString().ToLowerInvariant()}";
+
+        // ── §3.1 socket table (card-rendering.md, Sam-calibrated 2026-07-25) ──────────────
+        // Fractions of the 1456×2048 master frame, measured from the top-left. Digit centers
+        // are the final resolved values (measured boss center + eyeball nudge); the art
+        // window is the frame's transparent hole (l, t, r, b).
+        public readonly struct FrameSockets
+        {
+            public readonly Vector2 Cost, Attack, Health; // digit centers as (x/w, y/h)
+            public readonly float   DigitEm;              // digit em height / card height
+            public readonly Vector4 ArtWindow;            // l, t, r, b fractions
+
+            public FrameSockets(Vector2 cost, Vector2 attack, Vector2 health,
+                                float digitEm, Vector4 artWindow)
+            {
+                Cost = cost; Attack = attack; Health = health;
+                DigitEm = digitEm; ArtWindow = artWindow;
+            }
+        }
+
+        private const float DigitEmStd = 200f / 2048f;
+
+        private static readonly FrameSockets CarvedStone = new(   // common
+            new Vector2(0.1140f, 0.0770f), new Vector2(0.1162f, 0.9080f), new Vector2(0.8781f, 0.9094f),
+            DigitEmStd, new Vector4(0.0687f, 0.1279f, 0.9334f, 0.5518f));
+
+        private static readonly FrameSockets DarkGilt = new(      // rare
+            new Vector2(0.1050f, 0.0751f), new Vector2(0.1187f, 0.8841f), new Vector2(0.8800f, 0.8846f),
+            DigitEmStd, new Vector4(0.0549f, 0.1230f, 0.9492f, 0.6060f));
+
+        private static readonly FrameSockets IronEmber = new(     // epic (the calibration master)
+            new Vector2(0.1180f, 0.0850f), new Vector2(0.1151f, 0.9068f), new Vector2(0.8762f, 0.9100f),
+            DigitEmStd, new Vector4(0.0783f, 0.1294f, 0.9217f, 0.5996f));
+
+        private static readonly FrameSockets AgedGilt = new(      // legendary — smaller bosses, digits 180
+            new Vector2(0.1175f, 0.0739f), new Vector2(0.1127f, 0.9005f), new Vector2(0.8816f, 0.8970f),
+            180f / 2048f, new Vector4(0.0975f, 0.1201f, 0.9032f, 0.5645f));
+
+        public static FrameSockets Sockets(Rarity rarity) => rarity switch
+        {
+            Rarity.RARE      => DarkGilt,
+            Rarity.EPIC      => IronEmber,
+            Rarity.LEGENDARY => AgedGilt,
+            _                => CarvedStone,
+        };
+
+        // §3.1 type spec — global, frame-independent.
+        public const float NameCenterX   = 0.56f;   // of card width
+        public const float NameCenterY   = 0.068f;  // of card height, from the top
+        public const float NameLeftClamp = 0.232f;  // name's left edge never crosses this
+        public const float NameEm        = 89f / 2048f;
+        public const float BodyCenterY   = 0.70f;   // rules-band center
+        public const float BodyEm        = 68f / 2048f;
+        public const int   KeywordLeadPct = 143;    // keyword lead size, % of body (97/68)
+
+        public static readonly Color NameParchment = new Color32(232, 220, 200, 255);
+        public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);
 
         public static string GemSprite(Rarity rarity) =>
             $"gem_{rarity.ToString().ToLowerInvariant()}";

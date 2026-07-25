@@ -4,7 +4,7 @@ namespace Emberfall.Presentation
 {
     // UI atlas resolution seam (pipeline.md §2 — frames/gems/icons live on a Sprite Atlas,
     // distinct from streamed per-card illustrations served by IArtProvider). The rendering layer
-    // asks for a sprite by its atlas key (frame-rarity-system.md §1/§2/§4, e.g. "frame_minion_common",
+    // asks for a sprite by its atlas key (frame-rarity-system.md §1/§2/§4, e.g. "frame_common",
     // "gem_epic", "icon_kw_taunt") and never knows where it comes from. UI sprites are small and
     // always resident, so resolution is synchronous (unlike the async card-art callback).
     //
