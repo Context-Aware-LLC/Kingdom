@@ -1,12 +1,14 @@
 """Compose a full card-front mockup: frame cut + illustration + name/digits/rules text.
 
-Sam nudges 2026-07-25 (units: 1 unit = 1/10 of the rendered digit height):
-  - attack/health digits up 1.5 units
-  - cost digit right 2 units, down 1.5 units
-  - rules text darker + larger (nudge list item 1)
+Usage: python mock_card_front.py [FrameName]   (default IronEmber)
+
+Type spec + digit nudges are the Sam-approved 2026-07-25 IronEmber calibration
+(docs techart/card-rendering.md §3.1); digits land on the named frame's own
+measured boss centers from its fit JSON.
 """
 import json
 import pathlib
+import sys
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
@@ -15,8 +17,9 @@ FRAMES = REPO / "art-bakeoff" / "frames"
 ALFA = str(REPO / "unity/Emberfall/Assets/Art/Fonts/AlfaSlabOne-Regular.ttf")
 
 DIGIT_SIZE = 200
+FRAME = sys.argv[1] if len(sys.argv) > 1 else "IronEmber"
 
-fit = json.loads((FRAMES / "Frame_IronEmber_fit.json").read_text())
+fit = json.loads((FRAMES / f"Frame_{FRAME}_fit.json").read_text())
 w, h = fit["size"]
 win = fit["art_window"]
 
@@ -25,12 +28,15 @@ _f = ImageFont.truetype(ALFA, DIGIT_SIZE)
 _bb = _f.getbbox("3")
 UNIT = (_bb[3] - _bb[1]) / 10.0
 
-# per-boss pixel offsets (x, y), in units
-DIGIT_NUDGE = {
-    "cost": (2.0 * UNIT, 1.5 * UNIT),
-    "attack": (0.0, -1.5 * UNIT),
-    "health": (0.0, -1.5 * UNIT),
+# per-frame, per-boss offsets (x, y) in units; IronEmber's are Sam-calibrated,
+# the others start from IronEmber's values and get dialed in per frame
+NUDGES = {
+    "IronEmber": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
+    "DarkGilt": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
+    "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
+    "CarvedStone": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
 }
+DIGIT_NUDGE = {k: (x * UNIT, y * UNIT) for k, (x, y) in NUDGES[FRAME].items()}
 
 card = Image.new("RGBA", (w, h), (0, 0, 0, 255))
 
@@ -42,7 +48,7 @@ ww, wh = wr - wl, wb - wt
 fitted = ImageOps.fit(art, (ww, wh), Image.LANCZOS, centering=(0.5, 0.35))
 card.paste(fitted, (wl, wt))
 
-frame = Image.open(FRAMES / "Frame_IronEmber_cut.png").convert("RGBA")
+frame = Image.open(FRAMES / f"Frame_{FRAME}_cut.png").convert("RGBA")
 card.alpha_composite(frame)
 
 d = ImageDraw.Draw(card)
@@ -82,6 +88,6 @@ d.text((w * 0.5, band_cy + 42), "When this survives damage,", font=f_body,
 d.text((w * 0.5, band_cy + 128), "it gains +1 Attack.", font=f_body,
        fill=ink, anchor="mm")
 
-out = FRAMES / "Mock_IronEmber_BronzegateWarden.png"
+out = FRAMES / f"Mock_{FRAME}_BronzegateWarden.png"
 card.save(out)
 print("ok", out, "| unit px =", round(UNIT, 2))
