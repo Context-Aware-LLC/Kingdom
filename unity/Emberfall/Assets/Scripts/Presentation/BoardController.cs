@@ -420,12 +420,15 @@ namespace Emberfall.Presentation
             TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 3.0f, Color.white);
             // Cost — top-left gem
             TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 3.75f, new Color(0.4f, 0.7f, 1f));
+            // Stat digits are white and the frame art guarantees no dark socket behind them
+            // (health sits on flat opaque grey in frame_minion_common) — the black outline is
+            // what makes them legible on any frame, any rarity.
             // Attack — bottom-left (minions + weapons)
-            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
+            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
             // Health — bottom-right (minions only)
-            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
+            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
             // Durability — bottom-right (weapons only; occupies the health slot, mutually exclusive)
-            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white);
+            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
             // Keywords — center strip
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.8f, new Color(0.9f, 0.85f, 0.6f));
 
@@ -488,7 +491,11 @@ namespace Emberfall.Presentation
             return sr;
         }
 
-        private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color)
+        // One shared outlined material for every stat label — per-label .fontMaterial would
+        // instance a material per digit and break batching across the whole board.
+        private static Material s_statLabelMaterial;
+
+        private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color, bool statOutline = false)
         {
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
@@ -499,6 +506,18 @@ namespace Emberfall.Presentation
             tmp.fontSize  = fontSize;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color     = color;
+
+            if (statOutline)
+            {
+                if (s_statLabelMaterial == null)
+                {
+                    s_statLabelMaterial = new Material(tmp.font.material);
+                    s_statLabelMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+                    s_statLabelMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.25f);
+                    s_statLabelMaterial.EnableKeyword(ShaderUtilities.Keyword_Outline);
+                }
+                tmp.fontSharedMaterial = s_statLabelMaterial;
+            }
 
             // Constrain to the card face: without a sized rect TMP renders at unbounded width,
             // so long names ("Throneless King") bleed across neighboring cards. Auto-size down
