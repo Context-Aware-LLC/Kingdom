@@ -368,9 +368,12 @@ namespace Emberfall.Presentation
 
             if (bodyLabel != null)
             {
-                // Rules band: dark ink on the frame's parchment.
+                // Rules band: bold dark ink on the frame's parchment (2026-07-25 mobile-
+                // legibility pass — regular-weight slab strokes didn't read at board scale).
                 bodyLabel.color = FrameRarityCatalog.BodyInk;
+                bodyLabel.fontStyle |= FontStyles.Bold;
                 bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
+                bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
                 bodyLabel.rectTransform.localPosition =
                     new Vector3(0f, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
             }

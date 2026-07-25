@@ -92,8 +92,9 @@ namespace Emberfall.Presentation
         public const float NameLeftClamp = 0.232f;  // name's left edge never crosses this
         public const float NameEm        = 107f / 2048f;
         public const float BodyCenterY   = 0.70f;   // rules-band center
-        public const float BodyEm        = 85f / 2048f;
-        public const int   KeywordLeadPct = 143;    // keyword lead size, % of body
+        public const float BodyEm        = 108f / 2048f;
+        public const float BodyEmFloor   = 78f / 2048f; // auto-shrink floor for long rules text
+        public const int   KeywordLeadPct = 115;    // keyword lead, % of body (~124px — held steady as body grew)
 
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);
         public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);

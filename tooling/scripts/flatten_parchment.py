@@ -10,12 +10,15 @@ bosses), light parchment-like pixels blend toward a heavy gaussian blur of
 themselves — grain vanishes, carved dark ornament stays crisp (excluded by
 the luminance mask).
 
-Usage: python flatten_parchment.py [k]   (k = flatten strength 0..1, default 0.65)
+Usage: python flatten_parchment.py [k] [brighten]
+    k        = flatten strength 0..1 (default 0.85 — Sam-approved 2026-07-25)
+    brighten = parchment brightness multiplier (default 1.12; >1 lifts the paper
+               for more contrast under the dark rules ink — mobile legibility)
 """
 import pathlib
 import sys
 
-from PIL import Image, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter
 
 REPO = pathlib.Path(r"c:\Users\User\Documents\tcg-hearthlike")
 SRC = REPO / "art-bakeoff" / "frames"
@@ -28,7 +31,8 @@ FRAMES = {
     "legendary": "AgedGilt",
 }
 
-K = float(sys.argv[1]) if len(sys.argv) > 1 else 0.65
+K = float(sys.argv[1]) if len(sys.argv) > 1 else 0.85
+BRIGHTEN = float(sys.argv[2]) if len(sys.argv) > 2 else 1.12
 BLUR_RADIUS = 10
 LUMA_FLOOR = 70          # darker pixels = carved ornament/metal, left crisp
 BAND_TOP_GAP = 0.010     # below the art window's bottom rail
@@ -46,9 +50,11 @@ for rarity, frame in FRAMES.items():
 
     band = im.crop((x0, y0, x1, y1))
     flat = Image.blend(band, band.filter(ImageFilter.GaussianBlur(BLUR_RADIUS)), K)
+    if BRIGHTEN != 1.0:
+        flat = ImageEnhance.Brightness(flat).enhance(BRIGHTEN)
     mask = band.convert("L").point(lambda v: 255 if v > LUMA_FLOOR else 0)
     im.paste(Image.composite(flat, band, mask), (x0, y0))
 
     out = DST / f"frame_{rarity}.png"
     im.save(out)
-    print(f"{frame} -> {out.name}: band y {y0}-{y1}, k={K}")
+    print(f"{frame} -> {out.name}: band y {y0}-{y1}, k={K}, brighten={BRIGHTEN}")
