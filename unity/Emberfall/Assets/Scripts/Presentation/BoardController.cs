@@ -438,6 +438,7 @@ namespace Emberfall.Presentation
             bodyGo.transform.SetParent(root.transform, false);
             bodyGo.transform.localPosition = new Vector3(0f, -CardH * 0.30f, -0.01f);
             var bodyLabel = bodyGo.AddComponent<TextMeshPro>();
+            bodyGo.GetComponent<Renderer>().sortingOrder = 10; // over the frame, same as MakeLabel
             var bodyFont = CardFont();
             if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
@@ -532,6 +533,12 @@ namespace Emberfall.Presentation
             go.transform.localRotation = Quaternion.identity;
 
             var tmp = go.AddComponent<TextMeshPro>();
+            // Labels draw after the frame sprite EXPLICITLY. Inside the card's SortingGroup
+            // everything shares order 0 and the tie-break is hierarchy order, which the Visual
+            // reparenting loop reverses — the painted frames are opaque at the bosses/plaque,
+            // so a frame drawn after the text erases it (the old placeholders were transparent
+            // there, which is why this never showed).
+            tmp.GetComponent<Renderer>().sortingOrder = 10;
             var font = CardFont();
             if (font != null) tmp.font = font;
             tmp.fontSize  = fontSize;

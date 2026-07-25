@@ -192,6 +192,7 @@ namespace Emberfall.Presentation
             _mulliganMark.transform.SetParent(transform, false);
             _mulliganMark.transform.localPosition = new Vector3(0f, 0f, -0.1f);
             var label = _mulliganMark.AddComponent<TextMeshPro>();
+            _mulliganMark.GetComponent<Renderer>().sortingOrder = 20; // above frame (0) and labels (10)
             label.text            = "X";
             label.fontStyle       = FontStyles.Bold;
             label.fontSize        = 9f;
