@@ -26,7 +26,13 @@ artifacts/
 # templates we build are slots meant to hold a variety of art, so unpicked candidates are not
 # losers; they are seed material for future generations. Ignored because it is large and binary,
 # not because it is disposable. Assets/ holds what a build needs; this holds what we can draw on.
-art-bakeoff/
+art-bakeoff/*
+# …except the calibrated card-frame finals (cuts + measured geometry), which the
+# mock/render pipeline consumes directly (spec: docs techart/card-rendering.md §3.1)
+!art-bakeoff/frames
+art-bakeoff/frames/*
+!art-bakeoff/frames/Frame_*_cut.png
+!art-bakeoff/frames/Frame_*_fit.json
 
 # Local secrets (Gemini key etc.) - never commit
 .env
