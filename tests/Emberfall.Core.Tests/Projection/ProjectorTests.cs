@@ -227,8 +227,12 @@ namespace Emberfall.Core.Tests.Projection
                 PlayOpening(host, s);
                 return Ser(host.Snapshot(s.Players[viewerSeat].Id));
             }
-            Assert.That(Run(0), Is.EqualTo(Run(0)), "Rebuild via (seed, intents) replay must project identically.");
-            Assert.That(Run(1), Is.EqualTo(Run(1)));
+            var firstBuild = Run(0);
+            var rebuild = Run(0);
+            Assert.That(rebuild, Is.EqualTo(firstBuild), "Rebuild via (seed, intents) replay must project identically.");
+            var firstBuildSeat1 = Run(1);
+            var rebuildSeat1 = Run(1);
+            Assert.That(rebuildSeat1, Is.EqualTo(firstBuildSeat1));
         }
 
         // ── counter normalization (§5.2 / design §5) ─────────────────────────────

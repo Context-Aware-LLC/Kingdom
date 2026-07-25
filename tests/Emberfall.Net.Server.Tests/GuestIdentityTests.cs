@@ -41,7 +41,9 @@ namespace Emberfall.Net.Server.Tests
         {
             // Pure function of the token — no counter, no seed, no process state. This is the
             // whole property `guest-<counter>` lacked.
-            Assert.That(AccountId.FromDeviceToken(TokenA), Is.EqualTo(AccountId.FromDeviceToken(TokenA)));
+            var firstDerivation = AccountId.FromDeviceToken(TokenA);
+            var secondDerivation = AccountId.FromDeviceToken(TokenA);
+            Assert.That(secondDerivation, Is.EqualTo(firstDerivation));
         }
 
         [Test]
