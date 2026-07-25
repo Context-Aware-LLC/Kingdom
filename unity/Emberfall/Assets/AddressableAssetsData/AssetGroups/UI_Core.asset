@@ -35,16 +35,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2243fe625c609874289a6908f18e39b3
-    m_Address: ui/frame_minion_legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 338ae0c4d2848b842b87d95def1d936c
-    m_Address: ui/frame_spell_legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3a23482b6746d41429b75dbd1d31ded1
     m_Address: ui/icon_kw_poisonous
     m_ReadOnly: 0
@@ -57,11 +47,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c47c7d1fac192f409e9c983ac658f40
     m_Address: ui/icon_kw_echo
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 417155953be4ca14ea984922f56b21e6
-    m_Address: ui/frame_weapon_common
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -95,33 +80,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 75a74ddc629322f43bd6897a20c001fe
-    m_Address: ui/frame_weapon_epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83a82d771cb515c4ca6bb923dcf1a92e
     m_Address: materials/M_Aegis
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 869ecb1278ee8134c96d958849a28aea
-    m_Address: ui/frame_weapon_legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9145721cc772b464ea89c651f0688cc7
-    m_Address: ui/frame_spell_epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
     m_Address: ui/icon_kw_divine_shield
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9dbbf5508bb0d634394fe39c37a4c4c2
-    m_Address: ui/frame_minion_epic
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -165,11 +130,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c9e9bf1d02b91e4499179d918ebb600b
-    m_Address: ui/frame_weapon_rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbd67f49f7df9334da1f041fa01afed4
     m_Address: materials/M_CardArt
     m_ReadOnly: 0
@@ -182,26 +142,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d252c8982ccae1f43bf65ea2d9c3de73
     m_Address: materials/M_CardBody
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: da50c711df9d1f74c9b9ff0d719a92d8
-    m_Address: ui/frame_spell_common
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e06754a7707122c408bb6e003576b821
-    m_Address: ui/frame_spell_rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f8733e835dc13b04dbaca1738812ff48
-    m_Address: ui/frame_minion_rare
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fe1c0143efd4415478bfc148b595f98c
-    m_Address: ui/frame_minion_common
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
