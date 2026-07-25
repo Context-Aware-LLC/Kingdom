@@ -33,10 +33,15 @@ UNIT = (_bb[3] - _bb[1]) / 10.0
 NUDGES = {
     "IronEmber": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
     "DarkGilt": {"cost": (-0.374, 0.313), "attack": (0.0, -3.5), "health": (0.0, -3.5)},
-    "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
+    "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -3.0), "health": (0.0, -3.0)},
     "CarvedStone": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
 }
 DIGIT_NUDGE = {k: (x * UNIT, y * UNIT) for k, (x, y) in NUDGES[FRAME].items()}
+
+# per-frame digit font sizes (AgedGilt's bosses are smaller: cost -10%, atk/hp -5%)
+DIGIT_SIZES = {
+    "AgedGilt": {"cost": 180, "attack": 190, "health": 190},
+}
 
 card = Image.new("RGBA", (w, h), (0, 0, 0, 255))
 
@@ -72,8 +77,10 @@ text_c((name_cx, h * 0.068), name, 89, (232, 220, 200, 255))
 for key, val in (("cost", "3"), ("attack", "3"), ("health", "4")):
     b = fit["bosses"][key]
     dx, dy = DIGIT_NUDGE[key]
-    text_c((b["cx"] * w + dx, b["cy"] * h + dy), val, DIGIT_SIZE,
-           (255, 255, 255, 255), stroke=12, stroke_fill=(10, 8, 6, 255))
+    size = DIGIT_SIZES.get(FRAME, {}).get(key, DIGIT_SIZE)
+    text_c((b["cx"] * w + dx, b["cy"] * h + dy), val, size,
+           (255, 255, 255, 255), stroke=round(12 * size / DIGIT_SIZE),
+           stroke_fill=(10, 8, 6, 255))
 
 # rules text on the parchment band (window bottom ~.589 to boss top ~.81)
 band_cy = h * 0.70
