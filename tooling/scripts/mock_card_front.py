@@ -32,7 +32,7 @@ UNIT = (_bb[3] - _bb[1]) / 10.0
 # the others start from IronEmber's values and get dialed in per frame
 NUDGES = {
     "IronEmber": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
-    "DarkGilt": {"cost": (-1.165, 0.313), "attack": (0.0, -3.5), "health": (0.0, -3.5)},
+    "DarkGilt": {"cost": (-0.374, 0.313), "attack": (0.0, -3.5), "health": (0.0, -3.5)},
     "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
     "CarvedStone": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
 }
