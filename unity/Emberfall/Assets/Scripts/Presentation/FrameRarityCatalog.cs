@@ -84,16 +84,18 @@ namespace Emberfall.Presentation
             _                => CarvedStone,
         };
 
-        // §3.1 type spec — global, frame-independent.
+        // §3.1 type spec — global, frame-independent. Name/body sizes are the 2026-07-25
+        // in-engine calibration (Sam, live at board scale): the mock's 89/68 read too small
+        // on screen.
         public const float NameCenterX   = 0.56f;   // of card width
         public const float NameCenterY   = 0.068f;  // of card height, from the top
         public const float NameLeftClamp = 0.232f;  // name's left edge never crosses this
-        public const float NameEm        = 89f / 2048f;
+        public const float NameEm        = 107f / 2048f;
         public const float BodyCenterY   = 0.70f;   // rules-band center
-        public const float BodyEm        = 68f / 2048f;
-        public const int   KeywordLeadPct = 143;    // keyword lead size, % of body (97/68)
+        public const float BodyEm        = 85f / 2048f;
+        public const int   KeywordLeadPct = 143;    // keyword lead size, % of body
 
-        public static readonly Color NameParchment = new Color32(232, 220, 200, 255);
+        public static readonly Color NameParchment = new Color32(245, 238, 225, 255);
         public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);
 
         public static string GemSprite(Rarity rarity) =>
