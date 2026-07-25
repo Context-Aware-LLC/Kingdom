@@ -53,7 +53,14 @@ def text_c(xy, s, size, fill, stroke=0, stroke_fill=None, font_path=ALFA):
            stroke_width=stroke, stroke_fill=stroke_fill)
 
 # name on the plaque (plaque band ~3%..10.5% height)
-text_c((w * 0.53, h * 0.068), "Bronzegate Warden", 89, (232, 220, 200, 255))
+# centered at 0.56w, but the left edge may never cross NAME_LEFT_CLAMP
+# (Sam 2026-07-25: keeps long names off the cost boss)
+NAME_LEFT_CLAMP = 0.232 * w
+name = "Bronzegate Warden"
+f_name = ImageFont.truetype(ALFA, 89)
+name_w = f_name.getbbox(name)[2] - f_name.getbbox(name)[0]
+name_cx = max(w * 0.56, NAME_LEFT_CLAMP + name_w / 2)
+text_c((name_cx, h * 0.068), name, 89, (232, 220, 200, 255))
 
 # digits on the bosses — white with black rim, like the in-game TMP outline
 for key, val in (("cost", "3"), ("attack", "3"), ("health", "4")):
