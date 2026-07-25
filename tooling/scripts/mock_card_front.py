@@ -66,13 +66,13 @@ for key, val in (("cost", "3"), ("attack", "3"), ("health", "4")):
 band_cy = h * 0.70
 ink = (28, 18, 12, 255)
 # single-weight font: same-color stroke fakes a bolder keyword
-f_kw = ImageFont.truetype(ALFA, 84)
-d.text((w * 0.5, band_cy - 82), "Taunt", font=f_kw, fill=ink, anchor="mm",
+f_kw = ImageFont.truetype(ALFA, 97)
+d.text((w * 0.5, band_cy - 88), "Taunt", font=f_kw, fill=ink, anchor="mm",
        stroke_width=2, stroke_fill=ink)
-f_body = ImageFont.truetype(ALFA, 62)
-d.text((w * 0.5, band_cy + 38), "When this survives damage,", font=f_body,
+f_body = ImageFont.truetype(ALFA, 68)
+d.text((w * 0.5, band_cy + 42), "When this survives damage,", font=f_body,
        fill=ink, anchor="mm")
-d.text((w * 0.5, band_cy + 118), "it gains +1 Attack.", font=f_body,
+d.text((w * 0.5, band_cy + 128), "it gains +1 Attack.", font=f_body,
        fill=ink, anchor="mm")
 
 out = FRAMES / "Mock_IronEmber_BronzegateWarden.png"
