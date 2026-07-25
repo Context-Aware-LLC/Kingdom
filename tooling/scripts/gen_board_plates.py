@@ -11,6 +11,11 @@ required decoration lives inside the 16:9 span and the outer flanks are bonus.
 Brief (Sam, 2026-07-24): near-flat neutral centre - gray primary, sandy/tan
 stipple accent. Perimeter: ruined-castle blocks, smoldering boulders, burnt
 tree stumps. Very few graphical elements.
+
+Usage: gen_board_plates.py [variant ...] [WxH]
+  No args: all variants at the default bakeoff size (3696x1664, ~20:9).
+  The chosen template regenerates at 3696x2080 (16:9) so the decorated ring
+  survives the 16:9 crop; build_board_master.py then adds the ultrawide bleed.
 """
 
 import base64
@@ -22,7 +27,7 @@ import time
 import requests
 
 OUT = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "board"
-SIZE = "3696x1664"
+DEFAULT_SIZE = "3696x1664"
 MODEL = "gpt-image-2"
 
 # The centre is a play surface: cards, minions and text render on top of it.
@@ -80,9 +85,9 @@ the edges stay almost empty.
 }
 
 
-def generate(name: str, body: str, key: str) -> bool:
+def generate(name: str, body: str, key: str, size: str) -> bool:
     prompt = (COMMON + "\nSCENE:\n" + body).strip()
-    print(f"[{name}] requesting {SIZE} ...", flush=True)
+    print(f"[{name}] requesting {size} ...", flush=True)
     t0 = time.time()
     try:
         r = requests.post(
@@ -91,7 +96,7 @@ def generate(name: str, body: str, key: str) -> bool:
             json={
                 "model": MODEL,
                 "prompt": prompt,
-                "size": SIZE,
+                "size": size,
                 "quality": "high",
                 "n": 1,
             },
@@ -107,7 +112,7 @@ def generate(name: str, body: str, key: str) -> bool:
 
     data = r.json()["data"][0]
     raw = base64.b64decode(data["b64_json"]) if "b64_json" in data else requests.get(data["url"], timeout=120).content
-    dest = OUT / f"Board_{name}.png"
+    dest = OUT / (f"Board_{name}.png" if size == DEFAULT_SIZE else f"Board_{name}_{size}.png")
     dest.write_bytes(raw)
     print(f"[{name}] -> {dest.name}  ({len(raw)/1e6:.1f} MB, {time.time()-t0:.0f}s)", flush=True)
     return True
@@ -119,13 +124,26 @@ def main() -> int:
         print("OPENAI_API_KEY not set", file=sys.stderr)
         return 2
 
+    size = DEFAULT_SIZE
+    names = []
+    for arg in sys.argv[1:]:
+        if "x" in arg and arg.replace("x", "").isdigit():
+            size = arg
+        elif arg in VARIANTS:
+            names.append(arg)
+        else:
+            print(f"unknown variant '{arg}' (have: {', '.join(VARIANTS)})", file=sys.stderr)
+            return 2
+    if not names:
+        names = list(VARIANTS)
+
     OUT.mkdir(parents=True, exist_ok=True)
     ok = 0
-    for name, body in VARIANTS.items():
-        if generate(name, body, key):
+    for name in names:
+        if generate(name, VARIANTS[name], key, size):
             ok += 1
 
-    print(f"\n{ok}/{len(VARIANTS)} generated -> {OUT}")
+    print(f"\n{ok}/{len(names)} generated -> {OUT}")
     return 0 if ok else 1
 
 

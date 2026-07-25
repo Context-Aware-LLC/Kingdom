@@ -1,0 +1,56 @@
+"""Build the board backdrop master from a 16:9 plate.
+
+The BoardCamera is orthographic size 4.6 (9.2 world units tall, always fully
+visible); width flexes with aspect up to +-10.2 at 20:9 (board-and-vfx.md 1.1).
+The generated plate is 16:9 with its decorated ruin ring at the frame edge, so
+narrower content never loses it. This script extends the plate to the 20:9
+span with horizontally MIRRORED edge strips: pixel-continuous at the seam (a
+block touching the edge continues into its reflection), and only ever visible
+on ultrawide displays.
+
+Usage: build_board_master.py <plate_16x9.png>
+Writes unity/Emberfall/Assets/Art/Backgrounds/BoardPlate_Master.png — a fixed
+name, so swapping the board art is: generate a new 16:9 plate, rerun this.
+"""
+
+import pathlib
+import sys
+
+from PIL import Image
+
+VISIBLE_H = 9.2    # 2 x BoardCamera ortho size 4.6
+MAX_HALF_W = 10.2  # 20:9 span
+
+REPO = pathlib.Path(__file__).resolve().parents[2]
+DEST = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Backgrounds" / "BoardPlate_Master.png"
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print(__doc__, file=sys.stderr)
+        return 2
+
+    src = Image.open(sys.argv[1]).convert("RGB")
+    w, h = src.size
+
+    target_w = round(h * (2 * MAX_HALF_W) / VISIBLE_H)
+    target_w += target_w % 2
+    bleed = (target_w - w) // 2
+    if bleed <= 0:
+        print(f"input already covers 20:9 ({w}x{h})", file=sys.stderr)
+        return 2
+
+    canvas = Image.new("RGB", (target_w, h))
+    canvas.paste(src.crop((0, 0, bleed, h)).transpose(Image.FLIP_LEFT_RIGHT), (0, 0))
+    canvas.paste(src, (bleed, 0))
+    canvas.paste(src.crop((w - bleed, 0, w, h)).transpose(Image.FLIP_LEFT_RIGHT), (bleed + w, 0))
+
+    DEST.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(DEST, optimize=True)
+    print(f"{w}x{h} + {bleed}px mirrored bleed each side -> {DEST.name} "
+          f"({target_w}x{h}, {target_w/h:.3f}:1 vs target {2*MAX_HALF_W/VISIBLE_H:.3f}:1)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

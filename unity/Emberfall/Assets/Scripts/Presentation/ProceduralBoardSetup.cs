@@ -61,6 +61,7 @@ namespace Emberfall.Presentation
             var anchors = GetComponent<BoardAnchors>();
             BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f);
             BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f);
+            BoardBackdrop.Create(transform);
         }
 
         private void BuildSeat(SeatAnchors seat, string prefix, float ySign, float xSign)
