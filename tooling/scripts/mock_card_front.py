@@ -33,14 +33,14 @@ UNIT = (_bb[3] - _bb[1]) / 10.0
 NUDGES = {
     "IronEmber": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
     "DarkGilt": {"cost": (-0.374, 0.313), "attack": (0.0, -3.5), "health": (0.0, -3.5)},
-    "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -3.0), "health": (0.0, -3.0)},
+    "AgedGilt": {"cost": (2.0, 1.5), "attack": (0.0, -3.0), "health": (0.0, -4.0)},
     "CarvedStone": {"cost": (2.0, 1.5), "attack": (0.0, -1.5), "health": (0.0, -1.5)},
 }
 DIGIT_NUDGE = {k: (x * UNIT, y * UNIT) for k, (x, y) in NUDGES[FRAME].items()}
 
 # per-frame digit font sizes (AgedGilt's bosses are smaller: cost -10%, atk/hp -5%)
 DIGIT_SIZES = {
-    "AgedGilt": {"cost": 180, "attack": 190, "health": 190},
+    "AgedGilt": {"cost": 180, "attack": 180, "health": 180},
 }
 
 card = Image.new("RGBA", (w, h), (0, 0, 0, 255))
