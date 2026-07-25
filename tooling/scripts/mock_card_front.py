@@ -45,15 +45,16 @@ DIGIT_SIZES = {
 
 card = Image.new("RGBA", (w, h), (0, 0, 0, 255))
 
-# illustration, cover-fitted to the window
+frame = Image.open(FRAMES / f"Frame_{FRAME}_cut.png").convert("RGBA")
+
+# illustration, cover-fitted to the frame's actual transparent hole (measured
+# from alpha, not the fit JSON — survives Sam's GIMP re-cuts of the window edge)
+alpha = frame.getchannel("A")
+wl, wt, wr, wb = alpha.point(lambda v: 255 if v < 128 else 0).getbbox()
 art = Image.open(REPO / "unity/Emberfall/Assets/Art/Cards/CORE/art_bronzegate_warden.png").convert("RGBA")
-wl, wt = int(win["l"] * w), int(win["t"] * h)
-wr, wb = int(win["r"] * w), int(win["b"] * h)
 ww, wh = wr - wl, wb - wt
 fitted = ImageOps.fit(art, (ww, wh), Image.LANCZOS, centering=(0.5, 0.35))
 card.paste(fitted, (wl, wt))
-
-frame = Image.open(FRAMES / f"Frame_{FRAME}_cut.png").convert("RGBA")
 card.alpha_composite(frame)
 
 d = ImageDraw.Draw(card)
