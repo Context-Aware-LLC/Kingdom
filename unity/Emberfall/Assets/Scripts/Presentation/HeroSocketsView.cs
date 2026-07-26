@@ -52,6 +52,10 @@ namespace Emberfall.Presentation
         private static readonly Color PowerSpent = new Color(0.42f, 0.42f, 0.48f);
         private static readonly Color AttackText = new Color(1.00f, 0.93f, 0.62f);
         private static readonly Color DuraText   = new Color(0.78f, 0.86f, 1.00f);
+        // Same values as CardPresenter's, so a buffed weapon reads identically on the ring and
+        // on the card it was played from.
+        private static readonly Color BuffColor   = new Color(0.20f, 0.80f, 0.25f);
+        private static readonly Color DamageColor = new Color(0.90f, 0.20f, 0.20f);
 
         private PlayerId _playerId;
         private ICardDatabase _db;
@@ -134,8 +138,13 @@ namespace Emberfall.Presentation
             SetPower(cost, usable, powerDef?.ArtId);
 
             WeaponInstance w = ps.Weapon;
-            if (w == null) SetWeapon(false, 0, 0, null);
-            else           SetWeapon(true, w.Attack, w.Durability, _db?.Get(w.DefinitionId)?.ArtId);
+            if (w == null) { SetWeapon(false, 0, 0, null, 0, 0); return; }
+
+            // Base values so a buffed or damaged weapon reads as such — carried over from
+            // CardPresenter.SetWeaponStats, which used to render the equipped weapon as a card.
+            CardDefinition wdef = _db?.Get(w.DefinitionId);
+            SetWeapon(true, w.Attack, w.Durability, wdef?.ArtId,
+                      wdef?.Attack ?? w.Attack, wdef?.Durability ?? w.Durability);
         }
 
         /// <summary>Public so an editor preview can drive the shipping layer directly rather than
@@ -150,14 +159,26 @@ namespace Emberfall.Presentation
             LoadInto(_powerArt, artId, ref _powerArtId);
         }
 
-        public void SetWeapon(bool present, int attack, int durability, string artId)
+        public void SetWeapon(bool present, int attack, int durability, string artId,
+                              int baseAttack, int baseDurability)
         {
             if (_weaponRoot == null) return;
             _weaponRoot.SetActive(present);
             if (!present) return;
 
-            if (_weaponAttack != null)     _weaponAttack.text     = attack.ToString();
-            if (_weaponDurability != null) _weaponDurability.text = durability.ToString();
+            if (_weaponAttack != null)
+            {
+                _weaponAttack.text  = attack.ToString();
+                _weaponAttack.color = attack > baseAttack ? BuffColor
+                                    : attack < baseAttack ? DamageColor
+                                    : AttackText;
+            }
+            if (_weaponDurability != null)
+            {
+                _weaponDurability.text  = durability.ToString();
+                // Durability only ever falls, so under base always means worn, never buffed.
+                _weaponDurability.color = durability < baseDurability ? DamageColor : DuraText;
+            }
             LoadInto(_weaponArt, artId, ref _weaponArtId);
         }
 

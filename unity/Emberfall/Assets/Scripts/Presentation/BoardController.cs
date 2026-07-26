@@ -282,33 +282,21 @@ namespace Emberfall.Presentation
             }
         }
 
-        // Equipped weapon lives on PlayerState.Weapon (a WeaponInstance, not a CardInstance in a
-        // zone list), so it can't ride the SyncZone/CardLiveState path. Its id joins _thisLive,
-        // which makes destruction-on-break fall out of the normal departed-card sweep.
+        /// <summary>
+        /// The equipped weapon is NOT drawn as a card. HeroSocketsView renders it as the forged
+        /// ring docked beside the hero power, with attack and durability on the ring's two stat
+        /// bosses, so a CardPresenter at WeaponAnchor is a second copy of the same weapon sitting
+        /// directly behind the first — which is exactly what it looked like: a whole card showing
+        /// behind the ring (Sam, watching it live, 2026-07-25).
+        ///
+        /// The id still joins _thisLive so that if anything ever does register a presenter for a
+        /// weapon, breaking it still falls out of the normal departed-card sweep rather than
+        /// leaking a view.
+        /// </summary>
         private void SyncWeapon(PlayerId owner, WeaponInstance weapon)
         {
             if (weapon == null) return;
             _thisLive.Add(weapon.Id);
-
-            if (!_presenters.TryGetValue(weapon.Id, out CardPresenter presenter))
-            {
-                Transform anchor = boardAnchors != null ? boardAnchors.WeaponAnchor(owner) : transform;
-                presenter = CreatePresenter(anchor != null ? anchor : transform);
-
-                var live = new CardLiveState(weapon.Id);
-                _liveStates[weapon.Id] = live;
-
-                CardDefinition def = _db.Get(weapon.DefinitionId);
-                if (def != null)
-                {
-                    presenter.Bind(def, live);
-                    _artProvider?.LoadArt(def.ArtId, presenter.SetArt);
-                }
-
-                _presenters[weapon.Id] = presenter;
-            }
-
-            presenter.SetWeaponStats(weapon.Attack, weapon.Durability);
         }
 
         // Hand cards overlap, so their draw order has to be explicit. Board cards never overlap

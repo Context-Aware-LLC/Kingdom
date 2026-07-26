@@ -393,25 +393,10 @@ namespace Emberfall.Presentation
                 (0.5f - frac.y) * BoardController.CardH, z);
         }
 
-        // Live equipped-weapon stats. WeaponInstance is not a CardInstance, so BoardController
-        // pushes these directly instead of through ICardLiveState.Changed.
-        public void SetWeaponStats(int attack, int durability)
-        {
-            if (attackLabel != null)
-            {
-                int baseAtk = _def?.Attack ?? attack;
-                attackLabel.text  = attack.ToString();
-                attackLabel.color = attack > baseAtk ? BuffColor
-                                  : attack < baseAtk ? DamageColor
-                                  : Color.white;
-            }
-            if (durabilityLabel != null)
-            {
-                int baseDur = _def?.Durability ?? durability;
-                durabilityLabel.text  = durability.ToString();
-                durabilityLabel.color = durability < baseDur ? DamageColor : Color.white;
-            }
-        }
+        // The equipped weapon is no longer rendered as a card, so nothing pushes live weapon
+        // stats through here — HeroSocketsView draws them on the weapon ring's stat bosses,
+        // including the buff/damage colouring this used to own. Weapon cards in HAND still get
+        // their attack and durability from _def on the Bind/refresh path above.
 
         private void RecolorStats()
         {
