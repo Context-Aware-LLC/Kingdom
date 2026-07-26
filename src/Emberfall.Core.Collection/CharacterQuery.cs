@@ -61,5 +61,22 @@ namespace Emberfall.Core.Collection
                 if (c != null && c.Id == characterId) return c;
             return null;
         }
+
+        /// <summary>
+        /// The deck a character opens on, or <c>null</c> if <see cref="Character.DefaultDeckId"/> is
+        /// unset or points at a deck that no longer exists.
+        ///
+        /// <para>Null is the reportable state, not a condition to repair. The panel shows "no default
+        /// deck" and lets the player pick one; silently substituting another deck would open the
+        /// character on something they never chose. Same call as an orphaned deck reporting L5 rather
+        /// than being rebound.</para>
+        /// </summary>
+        public static DeckList? DefaultDeckOf(Character character, IEnumerable<DeckList> decks)
+        {
+            if (character == null || decks == null || string.IsNullOrEmpty(character.DefaultDeckId)) return null;
+            foreach (var d in decks)
+                if (d != null && d.Id == character.DefaultDeckId) return d;
+            return null;
+        }
     }
 }

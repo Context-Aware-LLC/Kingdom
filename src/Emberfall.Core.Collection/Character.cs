@@ -21,12 +21,31 @@ namespace Emberfall.Core.Collection
         public CardClass PrimaryClass { get; }
         public CardClass SecondaryClass { get; }
 
-        public Character(string id, string name, CardClass primaryClass, CardClass secondaryClass)
+        /// <summary>
+        /// The deck this character opens on — what S6 shows when you select it in the roster panel
+        /// (ui/collection-deckbuilder.md §2). Set at creation to the generated starter deck
+        /// (<see cref="DefaultDeckGenerator"/>) and changed whenever the player picks a different one.
+        ///
+        /// <para><b>Mutable, unlike the pairing.</b> The pairing is a permanent identity decision with
+        /// no legal repair; a default deck is a preference, and the player is expected to change it.
+        /// That difference is why this is the one property on this type with a setter.</para>
+        ///
+        /// <para><b>A dangling id is surfaced, never repaired.</b> Deleting a deck leaves the
+        /// reference pointing at nothing and <see cref="CharacterQuery.DefaultDeckOf"/> returns null,
+        /// exactly as a deck bound to a deleted character reports L5. Silently re-pointing it at some
+        /// other deck would mean the character opens on a deck the player never chose — the same
+        /// reason a character delete orphans its decks instead of cascading.</para>
+        /// </summary>
+        public string DefaultDeckId { get; set; }
+
+        public Character(string id, string name, CardClass primaryClass, CardClass secondaryClass,
+                         string defaultDeckId = "")
         {
             Id = id;
             Name = name;
             PrimaryClass = primaryClass;
             SecondaryClass = secondaryClass;
+            DefaultDeckId = defaultDeckId ?? "";
         }
 
         /// <summary>True iff a card of <paramref name="cardClass"/> is legal in a deck bound to this character.</summary>

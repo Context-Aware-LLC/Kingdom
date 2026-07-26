@@ -55,6 +55,7 @@ namespace Emberfall.Core.Collection
                     w.WriteString("name", c.Name);
                     w.WriteString("primaryClass", c.PrimaryClass.ToString());
                     w.WriteString("secondaryClass", c.SecondaryClass.ToString());
+                    w.WriteString("defaultDeckId", c.DefaultDeckId);
                     w.WriteEndObject();
                 }
                 w.WriteEndArray();
@@ -74,10 +75,16 @@ namespace Emberfall.Core.Collection
                 string name = Str(el, "name") ?? id;
                 var primary = ReqEnum<CardClass>(el, "primaryClass", CharactersProperty, i);
                 var secondary = ReqEnum<CardClass>(el, "secondaryClass", CharactersProperty, i);
+                // Optional, and additive rather than a schema bump: a roster written before default
+                // decks existed reads back with no default, which is the same state as "the deck it
+                // pointed at was deleted" and is handled identically (CharacterQuery.DefaultDeckOf).
+                // Not validated against the deck store here — the stores are independent files and a
+                // reader that demanded they agree could not open either one alone.
+                string defaultDeckId = Str(el, "defaultDeckId") ?? "";
                 // Deliberately NOT gated on IsValidPairing: a stored character is reported as it was
                 // stored. Rejecting happens on the way in (JsonCharacterStore.Save), where the caller
                 // can still fix it — not on the way out, where the only options are lie or crash.
-                result.Add(new Character(id, name, primary, secondary));
+                result.Add(new Character(id, name, primary, secondary, defaultDeckId));
                 i++;
             }
             return result;
