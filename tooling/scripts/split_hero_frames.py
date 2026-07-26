@@ -248,7 +248,7 @@ def main() -> int:
         meta = {"canvasPad": CANVAS_PAD, "frames": {}}
         for label, (_, bbox) in (("HeroPower", comps[0]), ("Weapon", comps[-1])):
             centre, radius = ring_geometry(piece, bbox)
-            img = emit(piece, centre, radius)
+            img = emit(piece, centre, radius, bbox)
             name = f"{label}_{mat}.png"
             img.save(SRC / name)
             (UNITY / name).write_bytes((SRC / name).read_bytes())
