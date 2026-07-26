@@ -1,0 +1,38 @@
+{
+  "canvasPad": 1.34,
+  "frames": {
+    "HeroPower": {
+      "bosses": [],
+      "ringCentrePx": [
+        514.4,
+        496.3
+      ],
+      "ringDiameterPx": 888.0,
+      "canvasPx": 1190
+    },
+    "Weapon": {
+      "bosses": [
+        {
+          "xy": [
+            0.2314,
+            0.744
+          ],
+          "diameter": 0.1744
+        },
+        {
+          "xy": [
+            0.769,
+            0.7434
+          ],
+          "diameter": 0.1757
+        }
+      ],
+      "ringCentrePx": [
+        1532.5,
+        494.8
+      ],
+      "ringDiameterPx": 891.0,
+      "canvasPx": 1194
+    }
+  }
+}

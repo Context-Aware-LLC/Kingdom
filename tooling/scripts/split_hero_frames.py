@@ -63,6 +63,8 @@ MIN_COMPONENT = 5000  # px; ignore speckle when picking the rings
 MIN_HOLE = 2000       # px; ignore pinholes when looking for the socket
 CANVAS_PAD = 1.34     # canvas side as a multiple of ring diameter (room for bosses)
 RAYS = 360
+BOSS_CUT = 1.02       # a boss is metal beyond this multiple of the median radius
+MIN_BOSS = 3000       # px; ignore rim speckle when picking the medallions
 
 
 def cut(im: Image.Image) -> Image.Image:
@@ -194,6 +196,76 @@ def ring_geometry(im: Image.Image, bbox):
     return (bbox[0] + cx, bbox[1] + cy), radius
 
 
+def bosses(im: Image.Image, centre, radius: float, bbox, side: int, left: int, top: int):
+    """The stat medallions, solved as DISCS, in fractions of the emitted canvas.
+
+    MEASURED, NOT ASSUMED. Where the bosses sit is a suggestion we hand the model,
+    not something it honours, and it may legitimately differ every batch (Sam,
+    2026-07-25) — so the numerals must follow the art rather than the prompt.
+
+    A boss is metal lying outside the ring's median radius. That test finds it
+    without being told where to look, but it keeps only the boss's outer crescent,
+    whose centroid sits ~70 px outside the boss centre. A disc is recoverable from
+    that crescent anyway: its extent PERPENDICULAR to the radial direction is the
+    full diameter (the cut passes outside the disc's centre, so the widest retained
+    chord is near-full), and its farthest pixel is the outer edge. Centre is then
+    the outer edge stepped back inward by one radius.
+    """
+    cx, cy = centre
+    x0, y0, x1, y1 = bbox
+    a = im.getchannel("A").load()
+
+    mask = Image.new("L", im.size, 0)
+    mpx = mask.load()
+    r2 = (radius * BOSS_CUT) ** 2
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if a[x, y] > 0 and (x - cx) ** 2 + (y - cy) ** 2 > r2:
+                mpx[x, y] = 255
+
+    found, ident = [], 1
+    for y in range(y0, y1, 3):
+        for x in range(x0, x1, 3):
+            if mpx[x, y] != 255 or ident > 60:
+                continue
+            ImageDraw.floodfill(mask, (x, y), ident, thresh=0)
+            px = [(xx, yy) for yy in range(y0, y1) for xx in range(x0, x1)
+                  if mpx[xx, yy] == ident]
+            ident += 1
+            if len(px) < MIN_BOSS:
+                continue
+
+            bx = sum(p[0] for p in px) / len(px)
+            by = sum(p[1] for p in px) / len(px)
+            th = math.atan2(by - cy, bx - cx)
+            ux, uy = math.cos(th), math.sin(th)
+            tx, ty = -uy, ux
+
+            outer = max((p[0] - cx) * ux + (p[1] - cy) * uy for p in px)
+            tan   = [(p[0] - cx) * tx + (p[1] - cy) * ty for p in px]
+            diameter = max(tan) - min(tan)
+            dist = outer - diameter / 2.0
+            found.append({
+                "xy": [round((cx + ux * dist - left) / side, 4),
+                       round((cy + uy * dist - top) / side, 4)],
+                "diameter": round(diameter / side, 4),
+            })
+
+    found.sort(key=lambda b: b["xy"][0])
+    return found
+
+
+def canvas_box(centre, radius: float):
+    """The emitted canvas as (side, left, top) in full-image pixels.
+
+    One definition, because emit() draws in this box and bosses() reports into it;
+    two copies of the arithmetic would drift and silently offset every numeral.
+    """
+    side = int(round(radius * 2 * CANVAS_PAD))
+    cx, cy = centre
+    return side, int(round(cx - side / 2)), int(round(cy - side / 2))
+
+
 def emit(im: Image.Image, centre, radius: float, bbox) -> Image.Image:
     """Square canvas of side diameter*CANVAS_PAD, centred on the ring.
 
@@ -202,9 +274,7 @@ def emit(im: Image.Image, centre, radius: float, bbox) -> Image.Image:
     ring into its neighbour and drags a slice of it along — which showed up
     on the board as a dark sliver floating beside the hero-power ring.
     """
-    side = int(round(radius * 2 * CANVAS_PAD))
-    cx, cy = centre
-    left, top = int(round(cx - side / 2)), int(round(cy - side / 2))
+    side, left, top = canvas_box(centre, radius)
 
     # Keep only this component's bounding box; blank everything outside it.
     isolated = Image.new("RGBA", im.size, (0, 0, 0, 0))
@@ -216,22 +286,49 @@ def emit(im: Image.Image, centre, radius: float, bbox) -> Image.Image:
     return canvas
 
 
+def source_for(mat: str):
+    """Prefer the raw generation, fall back to the saved _cut.png beside it.
+
+    The raw HeroFrames_<Material>.png is the real input, but it is 2 MB and gets
+    swept whenever a batch is dropped, while the much smaller _cut.png survives.
+    cut() is the only stage that needs the uncut pixels, so an already-cut
+    composite is a complete substitute — which is what lets a rejected batch be
+    re-split later without paying to regenerate it.
+    """
+    raw = SRC / f"HeroFrames_{mat}.png"
+    if raw.exists():
+        return raw, False
+    pre = SRC / f"HeroFrames_{mat}_cut.png"
+    if pre.exists():
+        return pre, True
+    return None, False
+
+
 def main() -> int:
-    names = sys.argv[1:]
-    files = ([SRC / f"HeroFrames_{n}.png" for n in names] if names
-             else sorted(p for p in SRC.glob("HeroFrames_*.png") if "_cut" not in p.stem))
-    if not files:
+    mats = list(dict.fromkeys(sys.argv[1:] or sorted(
+        p.stem.replace("HeroFrames_", "").replace("_cut", "")
+        for p in SRC.glob("HeroFrames_*.png"))))
+    if not mats:
         print(f"nothing in {SRC} — run gen_hero_frames.py first", file=sys.stderr)
         return 1
 
     UNITY.mkdir(parents=True, exist_ok=True)
     rc = 0
-    for f in files:
-        mat = f.stem.replace("HeroFrames_", "")
+    for mat in mats:
+        f, precut = source_for(mat)
+        if f is None:
+            print(f"missing HeroFrames_{mat}.png, and no _cut.png beside it",
+                  file=sys.stderr)
+            rc = 2
+            continue
         print(f"{f.name}:")
 
-        piece = cut(Image.open(f).convert("RGBA"))
-        piece.save(f.with_name(f.stem + "_cut.png"))
+        piece = Image.open(f).convert("RGBA")
+        if precut:
+            print("    cut: already cut, reused as-is")
+        else:
+            piece = cut(piece)
+            piece.save(SRC / f"HeroFrames_{mat}_cut.png")
 
         comps = components(piece)
         print(f"    components: {comps}")
@@ -248,18 +345,29 @@ def main() -> int:
         meta = {"canvasPad": CANVAS_PAD, "frames": {}}
         for label, (_, bbox) in (("HeroPower", comps[0]), ("Weapon", comps[-1])):
             centre, radius = ring_geometry(piece, bbox)
+            side, left, top = canvas_box(centre, radius)
             img = emit(piece, centre, radius, bbox)
             name = f"{label}_{mat}.png"
             img.save(SRC / name)
             (UNITY / name).write_bytes((SRC / name).read_bytes())
+            found = bosses(piece, centre, radius, bbox, side, left, top)
+            print(f"    {label} bosses: " + (", ".join(
+                f"({b['xy'][0]:.3f},{b['xy'][1]:.3f}) d={b['diameter']:.3f}"
+                for b in found) or "none"))
             meta["frames"][label] = {
+                "bosses": found,
                 "ringCentrePx": [round(centre[0], 1), round(centre[1], 1)],
                 "ringDiameterPx": round(radius * 2, 1),
                 "canvasPx": img.size[0],
             }
             print(f"    {name}  canvas {img.size[0]}px  ring d={radius*2:.0f}px")
 
-        (SRC / f"HeroFrames_{mat}.json").write_text(json.dumps(meta, indent=2))
+        # Beside the PNGs in both trees: the boss fractions are how the view knows
+        # where to draw attack and durability, so the geometry has to travel with
+        # the art it was measured from.
+        blob = json.dumps(meta, indent=2)
+        (SRC / f"HeroFrames_{mat}.json").write_text(blob)
+        (UNITY / f"HeroFrames_{mat}.json").write_text(blob)
 
         d = [v["ringDiameterPx"] for v in meta["frames"].values()]
         print(f"    ring diameters: {d[0]:.0f} vs {d[1]:.0f}  "
