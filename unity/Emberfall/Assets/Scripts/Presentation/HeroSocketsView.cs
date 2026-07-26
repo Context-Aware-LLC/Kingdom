@@ -48,6 +48,13 @@ namespace Emberfall.Presentation
         // still smooth if the frames are ever drawn larger for a bake-off sheet.
         private const int DiscSegments = 64;
 
+        /// <summary>Numeral em height as a fraction of the boss it sits on. 0.61 is not arbitrary:
+        /// a card digit is FrameRarityCatalog's 200/2048 em of CardH 1.65 = 0.161 units, and
+        /// 0.61 x the measured 0.265 boss lands the same 0.161 — so a numeral on a ring is
+        /// physically the same size as one on a card. RAISE THIS to make the stats bolder; it is
+        /// the one number to turn.</summary>
+        private const float DigitEmFrac = 0.61f;
+
         private static readonly Color PowerReady = new Color(1.00f, 1.00f, 1.00f);
         private static readonly Color PowerSpent = new Color(0.42f, 0.42f, 0.48f);
         private static readonly Color AttackText = new Color(1.00f, 0.93f, 0.62f);
@@ -284,12 +291,18 @@ namespace Emberfall.Presentation
             var tmp = go.AddComponent<TextMeshPro>();
             tmp.alignment        = TextAlignmentOptions.Center;
             tmp.color            = color;
-            tmp.fontSize         = d * 3.4f;      // fits a two-digit numeral inside the boss face
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
-            tmp.rectTransform.sizeDelta = new Vector2(d, d);
-            tmp.enableAutoSizing = true;
-            tmp.fontSizeMax      = d * 3.4f;
-            tmp.fontSizeMin      = d * 1.6f;
+
+            // SAME RECIPE AS CardPresenter.PlaceDigit, deliberately: autosizing OFF, a rect
+            // roomier than the glyph, and fontSize as em-height x 10.
+            //
+            // Autosizing plus a rect clamped to the boss was the bug — TMP was free to shrink a
+            // digit to fit a 0.265-unit box, so the numerals rendered between a half and a
+            // quarter of the size of the digits on the cards (Sam spotted it on screen,
+            // 2026-07-25). A numeral is one or two characters; it never needs to reflow.
+            tmp.enableAutoSizing = false;
+            tmp.fontSize         = DigitEmFrac * d * 10f;
+            tmp.rectTransform.sizeDelta = new Vector2(0.5f, 0.35f);
 
             var mr = tmp.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = StatOrder;
