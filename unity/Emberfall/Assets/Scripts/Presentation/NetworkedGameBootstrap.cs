@@ -389,9 +389,26 @@ namespace Emberfall.Presentation
             if (heroAnchor == null) return null;
             var go   = new GameObject($"HeroPlate_{playerId}");
             var view = go.AddComponent<HeroPlateView>();
-            view.Init(playerId, heroAnchor, anchors.HeroPowerAnchor(playerId), db, artProvider, heroClass);
+            view.Init(playerId, heroAnchor, artProvider, heroClass);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
+
+            CreateHeroSockets(playerId, anchors, db, artProvider);
             return view;
+        }
+
+        /// <summary>The forged hero-power and weapon rings inboard of the portrait. Separate
+        /// from the plate because the weapon half comes and goes with the equipped weapon.</summary>
+        private void CreateHeroSockets(PlayerId playerId, BoardAnchors anchors,
+                                       ICardDatabase db, IArtProvider artProvider)
+        {
+            Transform power  = anchors.HeroPowerAnchor(playerId);
+            Transform weapon = anchors.WeaponAnchor(playerId);
+            if (power == null && weapon == null) return;
+
+            var go   = new GameObject($"HeroSockets_{playerId}");
+            var view = go.AddComponent<HeroSocketsView>();
+            view.Init(playerId, power, weapon, db, artProvider);
+            matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 
         private void CreateManaTray(PlayerId playerId, BoardAnchors anchors)

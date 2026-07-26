@@ -23,19 +23,14 @@ namespace Emberfall.Presentation
         private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
         // Valid-target cue while a targeted spell / hero power / attack is armed.
         private static readonly Color TargetableTint = new Color(0.25f, 0.65f, 0.30f);
-        private static readonly Color PowerReady   = new Color(0.30f, 0.55f, 0.85f);
-        private static readonly Color PowerSpent   = new Color(0.22f, 0.22f, 0.30f);
 
         // board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
-        // ~1.8. Square, because §1.1 also requires the two stacked 0.9Ø discs to match the
-        // portrait's height — 2 × 0.9 = 1.8. Keep PlateW/PlateH, DiscSize and
-        // ClickableHero/ClickableHeroPower's colliders in step; they are one figure.
+        // ~1.8. Square. Keep PlateW/PlateH and ClickableHero's collider in step; they are one
+        // figure. The socket column beside it is sized by HeroSocketsView.FrameSize.
         private const float PlateW   = 1.8f;
         private const float PlateH   = 1.8f;
-        private const float DiscSize = 0.9f;
 
         private PlayerId _playerId;
-        private ICardDatabase _db;
         private bool _selected;
         private bool _targetable;
         private bool _frozen;
@@ -43,18 +38,15 @@ namespace Emberfall.Presentation
         private Renderer     _plate;
         private Renderer     _portrait;
         private TextMeshPro  _hpLabel;
-        private Renderer     _powerDisc;
-        private TextMeshPro  _powerLabel;
         private MaterialPropertyBlock _mpb;
 
         /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.
         /// Identified by PlayerId, never by seat/visual index — a networked seat-1 local renders
         /// at visual bottom, so index-based state reads swap the players (found live, 2026-07-19).</summary>
-        public void Init(PlayerId playerId, Transform heroAnchor, Transform powerAnchor,
-                         ICardDatabase db, IArtProvider artProvider, CardClass heroClass)
+        public void Init(PlayerId playerId, Transform heroAnchor,
+                         IArtProvider artProvider, CardClass heroClass)
         {
             _playerId  = playerId;
-            _db        = db;
             _mpb       = new MaterialPropertyBlock();
 
             transform.SetParent(heroAnchor, false);
@@ -84,14 +76,10 @@ namespace Emberfall.Presentation
             _hpLabel = MakeLabel(transform, "HP",
                 new Vector3(PlateW * 0.38f, -PlateH * 0.42f, -0.01f), 4.7f, HpFull);
 
-            // Hero-power disc — its own anchor so ClickableHeroPower's collider stays clean.
-            if (powerAnchor != null)
-            {
-                _powerDisc = MakeQuad(powerAnchor, "PowerDisc", Vector3.zero, new Vector3(DiscSize, DiscSize, 1f));
-                MaterialCatalog.Assign(_powerDisc, MaterialCatalog.Plate);
-                _powerLabel = MakeLabel(powerAnchor, "PowerLabel", new Vector3(0f, 0f, -0.01f), 1.3f, Color.white);
-                _powerLabel.rectTransform.sizeDelta = new Vector2(DiscSize * 0.94f, DiscSize * 0.86f);
-            }
+            // The hero-power disc used to be built here as a flat tinted quad with a
+            // "(2) Quicken" label. HeroSocketsView owns that anchor now and draws a forged
+            // ring with the power's icon in its socket, which is why this no longer needs
+            // the power anchor or the card database.
         }
 
         private void SetPortrait(Sprite sprite)
@@ -116,19 +104,6 @@ namespace Emberfall.Presentation
 
             _frozen = hero.IsFrozen;
             ApplyPlateTint();
-
-            if (_powerDisc != null)
-            {
-                CardDefinition powerDef = _db?.Get(hero.HeroPowerId);
-                int  cost   = powerDef?.Cost ?? 2;
-                bool usable = !ps.HeroPowerUsedThisTurn
-                              && ps.Mana.Available >= cost
-                              && state.ActivePlayer == ps.Id
-                              && state.Phase == TurnPhase.Main;
-                Tint(_powerDisc, usable ? PowerReady : PowerSpent);
-                if (_powerLabel != null)
-                    _powerLabel.text = $"({cost}) {powerDef?.Name ?? "Power"}";
-            }
         }
 
         /// <summary>Hero-as-attacker selection cue — driven by InputRouter, mirrors

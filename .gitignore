@@ -34,6 +34,9 @@ art-bakeoff/frames/*
 !art-bakeoff/frames/Frame_*_cut.png
 !art-bakeoff/frames/Frame_*_fit.json
 
+# Python bytecode from the tooling/scripts generators
+__pycache__/
+
 # Local secrets (Gemini key etc.) - never commit
 .env
 

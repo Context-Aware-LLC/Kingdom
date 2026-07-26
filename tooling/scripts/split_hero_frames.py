@@ -192,8 +192,13 @@ def ring_geometry(im: Image.Image, bbox):
         radii.append(last)
     radius = statistics.median([r for r in radii if r > 0])
 
+    # Socket diameter from the hole's own area, not from the generation contract:
+    # this is the aperture the hero-power icon and weapon art are drawn into, and
+    # the model does not hit the requested 36%-of-width exactly.
+    socket_d = 2.0 * math.sqrt(n / math.pi) if n >= MIN_HOLE else 0.0
+
     # Back to full-image coordinates.
-    return (bbox[0] + cx, bbox[1] + cy), radius
+    return (bbox[0] + cx, bbox[1] + cy), radius, socket_d
 
 
 def bosses(im: Image.Image, centre, radius: float, bbox, side: int, left: int, top: int):
@@ -344,7 +349,7 @@ def main() -> int:
 
         meta = {"canvasPad": CANVAS_PAD, "frames": {}}
         for label, (_, bbox) in (("HeroPower", comps[0]), ("Weapon", comps[-1])):
-            centre, radius = ring_geometry(piece, bbox)
+            centre, radius, socket_d = ring_geometry(piece, bbox)
             side, left, top = canvas_box(centre, radius)
             img = emit(piece, centre, radius, bbox)
             name = f"{label}_{mat}.png"
@@ -356,6 +361,8 @@ def main() -> int:
                 for b in found) or "none"))
             meta["frames"][label] = {
                 "bosses": found,
+                "socketDiameter": round(socket_d / side, 4),
+                "ringDiameter": round(radius * 2 / side, 4),
                 "ringCentrePx": [round(centre[0], 1), round(centre[1], 1)],
                 "ringDiameterPx": round(radius * 2, 1),
                 "canvasPx": img.size[0],

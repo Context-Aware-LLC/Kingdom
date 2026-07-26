@@ -3,6 +3,8 @@
   "frames": {
     "HeroPower": {
       "bosses": [],
+      "socketDiameter": 0.5584,
+      "ringDiameter": 0.7464,
       "ringCentrePx": [
         515.8,
         505.4
@@ -27,6 +29,8 @@
           "diameter": 0.1966
         }
       ],
+      "socketDiameter": 0.5487,
+      "ringDiameter": 0.7464,
       "ringCentrePx": [
         1532.9,
         499.0

@@ -18,10 +18,12 @@ namespace Emberfall.Presentation
             if (GetComponent<Collider>() == null)
             {
                 var col = gameObject.AddComponent<BoxCollider>();
-                // Matches HeroPlateView.DiscSize — the 0.9Ø disc of §1.1's hero cluster. Was
-                // 0.85 x 1.05, a card-shaped box left over from the placeholder layout, which
-                // now overlaps the weapon disc stacked 0.9 above it.
-                col.size = new Vector3(0.9f, 0.9f, 0.1f);
+                // The hero-power RING, not the frame canvas it is drawn on. The canvas carries
+                // 34% transparent margin for the weapon's stat bosses, so sizing this to the
+                // canvas would put a click target on empty air and steal the bottom of the
+                // weapon ring stacked directly above.
+                float d = HeroSocketsView.FrameSize * HeroSocketsView.RingFraction;
+                col.size = new Vector3(d, d, 0.1f);
             }
         }
 
