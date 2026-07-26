@@ -21,7 +21,10 @@ namespace Emberfall.Presentation
     // Seat 1 is this layout point-reflected through the origin, exactly as §1.1 specifies:
     // (x, y, rot) -> (-x, -y, rot). A point reflection is a 180° rotation, so each card's
     // own tilt is unchanged by it.
-    internal static class HandFanLayout
+    // Public, not internal: DeckPilePreview (Emberfall.Editor, across an asmdef boundary) solves
+    // the REAL fan to place the draw flight's destination. A preview that guessed where a hand
+    // slot is would be judging the animation against a made-up target.
+    public static class HandFanLayout
     {
         // §1.1: the fan owns x -2.5 .. +2.5. Fan width and mana-orb size are ONE budget —
         // every unit taken here comes out of the rail. Do not widen without re-checking it.
@@ -51,7 +54,7 @@ namespace Emberfall.Presentation
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on
         // the last live position — nothing resolves them, but leaving them at a stale pitch
         // would strand a card mid-screen if one ever did.
-        internal static void Apply(Transform[] slots, int count, bool mirrored)
+        public static void Apply(Transform[] slots, int count, bool mirrored)
         {
             if (slots == null || slots.Length == 0) return;
 

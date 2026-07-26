@@ -51,6 +51,12 @@ namespace Emberfall.Presentation
         private readonly HashSet<InstanceId> _lastLive = new();
         private readonly HashSet<InstanceId> _thisLive = new();
 
+        // Draw flights spawned during the current tick, so a multi-card tick deals rather than
+        // dumps. The opening hand is the case that makes this worth having: four cards arriving
+        // in one snapshot fly as a sequence instead of a single blur.
+        private const float DrawStagger = 0.06f;
+        private int _drawsThisTick;
+
         // ── Public API ──────────────────────────────────────────────────────────────
 
         public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
@@ -102,6 +108,7 @@ namespace Emberfall.Presentation
             if (_db == null) return;
 
             _thisLive.Clear();
+            _drawsThisTick = 0;
 
             foreach (PlayerState ps in state.Players)
             {
@@ -184,14 +191,28 @@ namespace Emberfall.Presentation
                 if (binder != null) Destroy(binder);
                 presenter.SetHidden();
                 SetCardSorting(presenter, Zone.Hand, slot);
+                LaunchDrawFlight(presenter.transform, owner);
                 backs.Add(presenter);
             }
         }
 
+        // Sends a just-spawned hand card flying in from its owner's deck pile. Silent no-op when
+        // there is no DeckAnchor (a stripped test scene), because a missing decoration must never
+        // cost a card its position.
+        private void LaunchDrawFlight(Transform card, PlayerId owner)
+        {
+            Transform deck = boardAnchors != null ? boardAnchors.AnchorFor(owner, Zone.Deck, 0) : null;
+            if (deck == null) return;
+            CardDrawFlight.Launch(card, deck.position, _drawsThisTick * DrawStagger);
+            _drawsThisTick++;
+        }
+
         private void GetOrCreate(CardInstance ci, PlayerId owner, Zone zone, int slotIndex, bool ownerMayAct)
         {
+            bool spawned = false;
             if (!_presenters.TryGetValue(ci.Id, out CardPresenter presenter))
             {
+                spawned = true;
                 Transform anchor = boardAnchors != null
                     ? boardAnchors.AnchorFor(owner, zone, slotIndex)
                     : transform;
@@ -242,6 +263,12 @@ namespace Emberfall.Presentation
             }
 
             SetCardSorting(presenter, zone, slotIndex);
+
+            // A card that appears in hand having had no presenter last tick was drawn (or
+            // generated straight to hand, which deals the same way). Must run AFTER the
+            // re-parent block above — the flight resolves its origin in the anchor's local
+            // space and zeroes the card into it.
+            if (spawned && zone == Zone.Hand) LaunchDrawFlight(presenter.transform, owner);
 
             // Front-row taunt (decision 2026-07-17): taunted board minions step toward
             // the centerline so blockers read spatially, not by glow color. Re-applied
@@ -502,7 +529,10 @@ namespace Emberfall.Presentation
         // font stays as the fallback if the asset is missing.
         private static TMP_FontAsset s_cardFont;
 
-        private static TMP_FontAsset CardFont()
+        // Internal, not private: DeckPileView's hover count is a card-face digit by any other
+        // name and has to be the same typeface — a second copy of this loader would be a second
+        // thing to forget when §3.1 changes.
+        internal static TMP_FontAsset CardFont()
         {
             if (s_cardFont == null)
                 s_cardFont = LoadAsset<TMP_FontAsset>(

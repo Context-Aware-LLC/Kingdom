@@ -145,11 +145,13 @@ namespace Emberfall.Presentation
                     proceduralBoardSetup.SetupClickables(p0Id, p1Id, inputRouter);
             }
 
-            // ── Mana trays ────────────────────────────────────────────────────────
+            // ── Mana trays + deck piles ───────────────────────────────────────────
             if (boardAnchors != null)
             {
                 CreateManaTray(p0Id, boardAnchors);
                 CreateManaTray(p1Id, boardAnchors);
+                CreateDeckPile(p0Id, boardAnchors);
+                CreateDeckPile(p1Id, boardAnchors);
             }
 
             // ── Hero plates (portrait + HP + hero-power disc) ─────────────────────
@@ -285,6 +287,17 @@ namespace Emberfall.Presentation
 
             var go   = new GameObject($"ManaTray_{playerId}");
             var view = go.AddComponent<ManaTrayView>();
+            view.Init(playerId, anchor);
+            matchRunner.OnStateUpdated += view.OnStateUpdated;
+        }
+
+        private void CreateDeckPile(PlayerId playerId, BoardAnchors anchors)
+        {
+            Transform anchor = anchors.AnchorFor(playerId, Core.Contracts.Zone.Deck, 0);
+            if (anchor == null) return;
+
+            var go   = new GameObject($"DeckPile_{playerId}");
+            var view = go.AddComponent<DeckPileView>();
             view.Init(playerId, anchor);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }

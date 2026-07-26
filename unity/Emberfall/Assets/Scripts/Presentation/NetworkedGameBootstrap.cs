@@ -261,11 +261,13 @@ namespace Emberfall.Presentation
                     proceduralBoardSetup.SetupClickables(localId, remoteId, inputRouter);
             }
 
-            // ── Mana trays — local at visual index 0 ──────────────────────────────
+            // ── Mana trays + deck piles — local at visual index 0 ─────────────────
             if (boardAnchors != null)
             {
                 CreateManaTray(localId, boardAnchors);
                 CreateManaTray(remoteId, boardAnchors);
+                CreateDeckPile(localId, boardAnchors);
+                CreateDeckPile(remoteId, boardAnchors);
             }
 
             // ── Hero plates — class rides the projected snapshot (state-sync §5.2 PUBLIC), no MatchSetup. ─
@@ -398,6 +400,16 @@ namespace Emberfall.Presentation
             if (anchor == null) return;
             var go   = new GameObject($"ManaTray_{playerId}");
             var view = go.AddComponent<ManaTrayView>();
+            view.Init(playerId, anchor);
+            matchRunner.OnStateUpdated += view.OnStateUpdated;
+        }
+
+        private void CreateDeckPile(PlayerId playerId, BoardAnchors anchors)
+        {
+            Transform anchor = anchors.AnchorFor(playerId, Core.Contracts.Zone.Deck, 0);
+            if (anchor == null) return;
+            var go   = new GameObject($"DeckPile_{playerId}");
+            var view = go.AddComponent<DeckPileView>();
             view.Init(playerId, anchor);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
