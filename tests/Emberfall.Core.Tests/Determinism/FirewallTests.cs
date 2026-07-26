@@ -23,7 +23,8 @@ namespace Emberfall.Core.Tests.Determinism
         {
             "Emberfall.Core", "Emberfall.Core.Cards", "Emberfall.Core.Contracts",
             "Emberfall.Core.Serialization",   // pre-existing gap closed alongside A5 enrollment
-            "Emberfall.Net.Protocol"          // A5 §10.8
+            "Emberfall.Net.Protocol",         // A5 §10.8
+            "Emberfall.Core.Collection"       // D4/D9 — the L1-L5 predicate re-runs server-side, so it is core
         };
 
         [Test]

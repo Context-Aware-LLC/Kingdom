@@ -21,4 +21,9 @@
     <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Same version Emberfall.Core.Cards pins — one System.Text.Json in the Unity project. -->
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
 </Project>
