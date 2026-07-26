@@ -17,11 +17,15 @@ WHERE THE PROMPT COMES FROM. Nothing here is invented. Each prompt is composed,
 in this order, from three sources on disk:
 
   1. STYLE   — design/art-brief-m1.md §2 (the mandatory global style prefix,
-               verbatim) plus §1's technical delivery rules, together in the
-               single constant STYLE_BLOCK. §2's negative list follows as an
+               verbatim) plus §1's technical delivery rules. ONE PER PROVIDER:
+               STYLE_BLOCK for gemini (unchanged, silhouette-first, tuned to the
+               board's 137x194 px), STYLE_BLOCK_OPENAI for gpt-image-2, which
+               keeps every §1 delivery rule but releases the silhouette-only /
+               no-background-scene reading, because that path is chosen and paid
+               for to get the painterly detail. §2's negative list follows as an
                "Avoid:" line, because neither image endpoint takes a
-               negative-prompt parameter. READ THE COMMENT ON STYLE_BLOCK
-               before changing any of it — there is an open question there.
+               negative-prompt parameter. READ THE COMMENT ON STYLE_BLOCK_OPENAI
+               before changing any of it.
   2. CLASS   — the house-look paragraph that opens the "Art prompts" section of
                design/card-drafts-<class>.md. Gravekeep = ash and ember,
                explicitly not Azeroth/WoW-adjacent; Verdant = this world's
@@ -29,9 +33,11 @@ in this order, from three sources on disk:
   3. CARD    — the per-card paragraph from that same fenced block, keyed by card
                id and paired with its row in card-drafts-<class>.json.
 
-The prompt is provider-independent: the same string goes to both, so a card
-re-rolled on the other provider is a controlled comparison. The manifest stores
-provider + model + the exact prompt per generated image.
+Sources 2 and 3 are provider-independent — the class house look and the per-card
+subject go to both providers byte-identical — so a card re-rolled on the other
+provider is a controlled comparison of the two LOOKS, source 1 being the only
+thing that moved. The manifest stores provider + model + the exact prompt per
+generated image, so what a given file was actually asked for is always on disk.
 
 SCALE IS THE CONSTRAINT, as everywhere else in this repo. A board card is
 137x194 px at ortho 4.6 on 1080p, and art-brief-m1.md §1 sets the bar at
@@ -118,17 +124,31 @@ EDGE = 1024  # techart/pipeline.md §2
 # steps[].content[] where type == "image". Neither provider has a
 # candidate-count parameter, so N candidates means N requests.
 #
-# `secs` and `cost_units` are ESTIMATES, used only by the spend guard's
-# printout. Gemini's latency is not published; OpenAI's ~5 min and ~20x cost are
-# Sam's measured figures. No dollar price is hardcoded — inventing one would be
-# worse than stating the ratio Sam actually gave.
+# `secs` and `usd_per_image` are ESTIMATES, used only by the spend guard's
+# printout.
+#
+# THE OPENAI PRICE, CORRECTED 2026-07-26. This guard used to print "~20x gemini
+# cost units," a ratio derived from a believed ~$6/image. That $6 was never
+# gpt-image-2's price: it came from a gbrain note about OpenDesign burning
+# tokens through bad context management — a different tool, a different failure.
+# gpt-image-2 bills per token ($8/M image input, $30/M image output, $5/M text
+# input), which lands at roughly $0.005/image at low quality and $0.165-$0.21 at
+# high. This script always asks for `quality: "high"` (see `_post_openai`), so
+# the constant is the top of that band: $0.19/image, deliberately a slight
+# over-estimate so the guard never flatters a run.
+#
+# Gemini's per-image price is NOT hardcoded — nobody has verified it for this
+# model, and inventing one to keep a tidy ratio is exactly the mistake above.
+# `usd_per_image: None` means "unpriced"; the guard says so rather than
+# printing a made-up number. The wall-clock figures are Sam's measured ones and
+# are unchanged.
 PROVIDERS = {
     "gemini": {
         "model": "gemini-3.1-flash-image",
         "env": "GEMINI_API_KEY",
         "candidates": 2,
         "secs": 20,
-        "cost_units": 1,
+        "usd_per_image": None,
         "note": "first pass — fast and cheap, buy breadth",
     },
     "openai": {
@@ -136,8 +156,8 @@ PROVIDERS = {
         "env": "OPENAI_API_KEY",
         "candidates": 1,
         "secs": 300,
-        "cost_units": 20,
-        "note": "fallback one-shot — ~5 min/image, ~20x cost, hand-picked cards only",
+        "usd_per_image": 0.19,
+        "note": "fallback one-shot — ~5 min/image, ~$0.19/image, hand-picked cards only",
     },
 }
 
@@ -154,18 +174,17 @@ CLASSES = {
 # THE ONE PLACE THE HOUSE LOOK IS DEFINED. Everything below is art-brief-m1.md:
 # §2's global style prefix verbatim, then §1's technical delivery rules. That
 # brief produced the 37 illustrations shipped in the game today, so it is the
-# established look and the current default. Change it here or nowhere.
+# established look. Change it here or nowhere.
 #
-# ONE OPEN CONFLICT, WITH SAM, NOT RESOLVED HERE (2026-07-26):
-#   §2 says "background supports but never competes with subject" — a supporting
-#   background. The 22 card drafts say the opposite: "no background scene",
-#   near-black, silhouette-first, one accent point of colour.
-# §2 wins by default until Sam rules. If he rules for the drafts, the fix is to
-# edit the one sentence in GLOBAL_STYLE below and add the scenic terms
-# ("busy background, scenery, landscape, diorama, daylight, bright sky") to
-# NEGATIVE — nothing else in this file needs to move. Do not encode a
-# preference beyond that; the per-card and per-class text already carries the
-# drafts' own wording through untouched, whichever way it goes.
+# §2 AND THE 22 CARD DRAFTS DISAGREE ABOUT BACKGROUNDS, and the ruling is that
+# the provider decides (Sam, 2026-07-26). §2 says "background supports but never
+# competes with subject"; the drafts say "no background scene", near-black,
+# silhouette-first, one accent point of colour. Both are right for the pass they
+# were written for, so the split is per-provider: this STYLE_BLOCK (gemini, the
+# volume pass) leaves the drafts' silhouette-first wording to stand, and
+# STYLE_BLOCK_OPENAI below reinstates §2's supporting background for the pass
+# that is paid for to render detail. GLOBAL_STYLE and TECHNICAL are shared by
+# both — everything that differs is in OPENAI_DETAIL.
 
 # art-brief-m1.md §2, verbatim.
 GLOBAL_STYLE = (
@@ -195,6 +214,54 @@ readable shapes. NOT photoreal, NOT a 3D render, NOT anime or cel-shaded.
 """
 
 STYLE_BLOCK = GLOBAL_STYLE + "\n\n" + TECHNICAL.strip()
+
+# --------------------------------------------------- the openai style block
+#
+# ONE STYLE BLOCK PER PROVIDER, because the two providers are picked for
+# opposite reasons (Sam, 2026-07-26).
+#
+# STYLE_BLOCK above is the Gemini/volume path, and the drafts it composes with
+# are silhouette-first on purpose: gpt-image-2's extra detail was found to turn
+# to mud at the board's real 137x194 px, so the first pass buys shape and value
+# separation and nothing else.
+#
+# But gpt-image-2 is never reached by accident — `require_explicit_selection`
+# makes Sam name the card. He is paying the premium precisely FOR the painterly
+# detail, so constraining that path to the minimalism tuned for the cheap one
+# spends the money and throws away the thing it bought. On this path §2's own
+# sentence stands as written: "background supports but never competes with
+# subject" — a supporting background, not an absent one.
+#
+# WHAT IS UNCHANGED: §1's delivery rules, in full. Square crop, focal point in
+# the centre 70%, bleed to the edge, no text/logo/UI, readable at 220px. Those
+# are hard delivery constraints the frame mask and the board scale impose on any
+# provider — not a style preference, and not negotiable by paying more.
+#
+# WHAT IS DROPPED: only the silhouette-ONLY reading — "no background scene",
+# "no background detail", "everything else in the frame stays near-black". That
+# language lives in the per-class house look and the per-card drafts, which are
+# still passed through verbatim (build_prompt composes them identically for both
+# providers), so the release has to be stated here explicitly or the draft text
+# would simply re-impose it.
+OPENAI_DETAIL = """
+PAINT IT FULLY. You are the expensive pass, chosen for depth: rich saturated
+color, layered rendering, atmosphere, texture, and a background that supports
+the subject. Where the class or subject text below says "no background scene",
+"no background detail", "stark black background", or "minimal detail", read that
+as a floor on CONTRAST, not a ban on painting: give the subject a supporting
+environment that stays subordinate to it in value, detail and saturation, and
+never competes for the eye.
+
+The 220px read is still the bar, and it is met by value contrast and a clean
+overall shape — not by flattening the subject into a silhouette. Keep the
+silhouette legible; render everything inside it.
+"""
+
+STYLE_BLOCK_OPENAI = (
+    GLOBAL_STYLE + "\n\n" + TECHNICAL.strip() + "\n\n" + OPENAI_DETAIL.strip()
+)
+
+STYLE_BLOCKS = {"gemini": STYLE_BLOCK, "openai": STYLE_BLOCK_OPENAI}
 
 # art-brief-m1.md §2's negative prompt. Neither endpoint takes a negative
 # parameter, so it is stated as an instruction instead of dropped.
@@ -291,11 +358,14 @@ def load_cards() -> list[dict]:
     return cards
 
 
-def build_prompt(card: dict) -> str:
-    """Provider-independent by design — the same string goes to both."""
+def build_prompt(card: dict, provider: str) -> str:
+    """Only the STYLE block differs by provider (see STYLE_BLOCK_OPENAI). The
+    class house look and the per-card subject are composed identically for both,
+    so a card re-rolled on the other provider is still a controlled comparison
+    of the two looks."""
     return "\n\n".join(
         [
-            STYLE_BLOCK,
+            STYLE_BLOCKS[provider],
             "CLASS HOUSE LOOK:\n" + card["house"],
             f"SUBJECT — {card['name']}:\n{card['core']}",
             NEGATIVE,
@@ -319,8 +389,33 @@ def existing(card: dict, provider: str) -> list[pathlib.Path]:
     return sorted(card_dir(card).glob(f"cand_{provider}_*.png"))
 
 
+def _to_png(raw: bytes) -> tuple[bytes | None, str]:
+    """JPEG (or anything) in, PNG bytes out. Pass a PNG through untouched."""
+    if raw[:8] == b"\x89PNG\r\n\x1a\n":
+        return raw, ""
+    try:
+        import io
+
+        from PIL import Image
+    except ImportError:
+        return None, "provider returned JPEG and Pillow is not installed to transcode"
+    buf = io.BytesIO()
+    with Image.open(io.BytesIO(raw)) as im:
+        im.convert("RGB").save(buf, format="PNG")
+    return buf.getvalue(), ""
+
+
 def _post_gemini(prompt: str, key: str) -> tuple[bytes | None, str]:
-    """Interactions API. Returns (png_bytes, error_message)."""
+    """Interactions API. Returns (png_bytes, error_message).
+
+    THE ENDPOINT ONLY EMITS JPEG. `response_format.mime_type: "image/png"` is
+    rejected outright — HTTP 400, "Supported values: 'image/jpeg'" — so every
+    call this client made returned nothing (found 2026-07-26; the file
+    extension `.png` had until then been the only evidence anyone had of the
+    format). We ask for jpeg and transcode to PNG here, because
+    techart/pipeline.md §2 and the `CardArtPostprocessor.cs` folder contract
+    both want a real PNG on disk, not a JPEG wearing the extension.
+    """
     r = requests.post(
         "https://generativelanguage.googleapis.com/v1beta/interactions",
         headers={
@@ -333,7 +428,7 @@ def _post_gemini(prompt: str, key: str) -> tuple[bytes | None, str]:
             "input": prompt,
             "response_format": {
                 "type": "image",
-                "mime_type": "image/png",
+                "mime_type": "image/jpeg",
                 "aspect_ratio": "1:1",
                 "image_size": "1K",
             },
@@ -351,7 +446,7 @@ def _post_gemini(prompt: str, key: str) -> tuple[bytes | None, str]:
     for step in data.get("steps") or []:
         for part in step.get("content") or []:
             if part.get("type") == "image" and part.get("data"):
-                return base64.b64decode(part["data"]), ""
+                return _to_png(base64.b64decode(part["data"]))
             if part.get("type") == "text" and part.get("text"):
                 texts.append(part["text"])
     blurb = " ".join(texts)[:300] if texts else json.dumps(data)[:300]
@@ -415,7 +510,7 @@ def generate(card: dict, provider: str, key: str, candidates: int,
               flush=True)
         return []
 
-    prompt = build_prompt(card)
+    prompt = build_prompt(card, provider)
     dest_dir = card_dir(card)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -551,9 +646,11 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
 def estimate(provider: str, images: int) -> str:
     spec = PROVIDERS[provider]
     mins = images * spec["secs"] / 60
+    usd = spec["usd_per_image"]
+    money = (f"~${images * usd:.2f} (~${usd:.2f}/image, high quality)"
+             if usd is not None else "cost not priced here (cheap first pass)")
     return (f"{images} image(s) on {provider} ({spec['model']}) "
-            f"~{mins:.0f} min wall-clock, ~{images * spec['cost_units']} "
-            f"gemini-image cost units (1 unit = one gemini image; openai ~20x)")
+            f"~{mins:.0f} min wall-clock, {money}")
 
 
 def require_explicit_selection(provider: str, cards: list[dict], candidates: int,
@@ -629,7 +726,7 @@ def main() -> int:
             print(f"  cands    {card_dir(card).relative_to(REPO)}/cand_{provider}_N.png")
             print(f"  final    {final_path(card).relative_to(REPO)}")
             print("-" * 78)
-            print(build_prompt(card))
+            print(build_prompt(card, provider))
             print()
         print("=" * 78)
         print(f"{len(cards)} prompt(s) composed, in generation order "
