@@ -3,6 +3,7 @@
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.emberfall.core": "file:../../../src/Emberfall.Core",
     "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
+    "com.emberfall.core.collection": "file:../../../src/Emberfall.Core.Collection",
     "com.emberfall.core.contracts": "file:../../../src/Emberfall.Core.Contracts",
     "com.emberfall.core.serialization": "file:../../../src/Emberfall.Core.Serialization",
     "com.emberfall.net.client": "file:../../../src/Emberfall.Net.Client",
