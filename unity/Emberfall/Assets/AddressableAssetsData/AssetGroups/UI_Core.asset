@@ -30,8 +30,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a890b214e6bef044854c8ea4f0e4521
+    m_Address: materials/M_WordmarkEmberfall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b5c6747e55f12d45886f3ea23d10570
     m_Address: ui/icon_kw_windfury
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20a7ca0fd3b8a9a4781b6229d1a0b5d8
+    m_Address: ui/frame_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3268a7e202c268741874aa7e3f21d022
+    m_Address: ui/frame_legendary
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -47,6 +62,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c47c7d1fac192f409e9c983ac658f40
     m_Address: ui/icon_kw_echo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 477c367a8b2923e49a36fd8c7ef7e89a
+    m_Address: ui/frame_rare
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -80,6 +100,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e1032a6a8b919e489d8370dd510b362
+    m_Address: materials/M_LoadingOrb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83a82d771cb515c4ca6bb923dcf1a92e
     m_Address: materials/M_Aegis
     m_ReadOnly: 0
@@ -87,6 +112,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
     m_Address: ui/icon_kw_divine_shield
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a583df270921f774cb11d34aee2fcdb4
+    m_Address: ui/frame_common
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -122,6 +152,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c40ed17f4e5b2364ba85328a61cffcd6
     m_Address: ui/icon_kw_freeze
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5630a76852906f4c85f5e02f8814b9b
+    m_Address: ui/card_back
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
