@@ -29,8 +29,17 @@ PX_PER_UNIT = 117.4
 CARD_W = round(1.17 * PX_PER_UNIT)   # 137
 CARD_H = round(1.65 * PX_PER_UNIT)   # 194
 
+# MEASURED off a live match, 2026-07-25 (artifacts/cardback_board.png), not guessed.
+# Opponent hand: five backs at x -1.66..1.66, step 0.83 world units, each card
+# scaled to 1.93 units tall (1.17x the 1.65 card quad) so 1.37 wide.
 FAN_COUNT = 5
-FAN_OVERLAP = 0.55                   # each card shows 55% of its width
+FAN_OVERLAP = 0.83 / 1.37            # 0.61 — visible fraction of each card's width
+
+# The half nobody predicted: the opponent's hand sits at y 3.48..5.42 while the
+# camera cuts at 4.60, so the TOP 42% of every opponent card is off-screen. Any
+# fan mock that shows whole cards is flattering the design. Crop it the way the
+# screen does.
+FAN_VISIBLE_HEIGHT = (4.60 - 3.48) / 1.93   # 0.58 — bottom fraction still on screen
 
 # The PRIMARY surface (Sam, 2026-07-25): card backs are browsed in the
 # collection as a grid of six to eight. On a 1080p page with padding that puts
@@ -52,13 +61,17 @@ def _font(size: int):
     return ImageFont.load_default()
 
 
-def fan(card: Image.Image, count: int = FAN_COUNT) -> Image.Image:
-    """Overlapping hand of `count` backs, as the opponent's hand renders."""
+def fan(card: Image.Image, count: int = FAN_COUNT, crop_top: bool = True) -> Image.Image:
+    """Opponent's hand as the screen actually shows it: overlapped, and cut off
+    at the top edge. `crop_top=False` gives the flattering uncropped version."""
     step = round(card.width * FAN_OVERLAP)
     w = step * (count - 1) + card.width
     out = Image.new("RGBA", (w, card.height), (0, 0, 0, 0))
     for i in range(count):
         out.alpha_composite(card, (i * step, 0))
+    if crop_top:
+        keep = round(card.height * FAN_VISIBLE_HEIGHT)
+        out = out.crop((0, card.height - keep, w, card.height))
     return out
 
 
@@ -75,7 +88,7 @@ def build(name: str, img: Image.Image) -> Image.Image:
         (f"collection tile ({GRID_TILE_H}px)", grid),
         ("1.5x", true15.convert("RGBA")),
         ("1x TRUE", true1),
-        (f"hand x{FAN_COUNT}", hand),
+        (f"opponent hand x{FAN_COUNT} (as screened)", hand),
     ]
     w = PAD + sum(c.width + PAD for _, c in cells)
     h = PAD + 26 + max(c.height for _, c in cells) + PAD + 30

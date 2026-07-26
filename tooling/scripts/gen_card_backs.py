@@ -82,6 +82,24 @@ four to six repeats across the width of the card — so it stays legible when th
 card is shrunk to a thumbnail. A thick ornamental border rings the whole card
 and contains the pattern.
 """,
+    # v2, after seeing "Allover" in a live match (Sam, 2026-07-25): alone it was
+    # the better object, but five of them overlapping in the opponent's hand
+    # merged into one busy ribbon. The ironwork was not the problem — the glow
+    # was, spread over the whole card in a dozen hot spots so nothing rested.
+    # This keeps the lattice and cuts the repeat count roughly in half.
+    "AlloverBig": """
+STRUCTURE — ALLOVER PATTERN, LARGE AND CALM. NO central emblem and no focal
+point. One continuous interlocking pattern woven edge to edge, contained by a
+thick ornamental border.
+
+THE MOTIF IS VERY LARGE: only TWO OR THREE repeats across the width of the card
+and three or four down its height. Each single unit of the pattern is therefore
+big and simple — read it as a few massive forged elements, not a fine mesh.
+
+REST IS REQUIRED. Between the pattern's elements leave broad areas of deep,
+almost-black shadow doing nothing at all. Roughly half the card should be quiet
+dark metal. The pattern is heavy and sparse, not dense and even.
+""",
 }
 
 CLASSES = {
@@ -123,6 +141,23 @@ have split a slab of carved stone. Golden honey sap-light glows from the crack.
 THE PATTERN: thick roots and antlered branches interlacing into a repeating
 woven knot-work, broad and heavy like carved cedar, with big simple leaves
 filling the openings. Golden honey sap-light glows from deep inside the weave.
+""",
+    ("Gravekeep", "AlloverBig"): """
+THE PATTERN: massive interlocking chain links and heavy iron gate-bars, only two
+or three across the width of the card, forming a bold sparse lattice. A single
+pale moth rests in each large opening.
+
+THE LIGHT IS THE POINT. Grave-light appears in only THREE OR FOUR small places
+on the whole card — narrow slivers seeping from behind the ironwork — and
+nowhere else. Everywhere else is cold dark iron and deep shadow. Do NOT scatter
+glow evenly across the surface; do NOT light every opening. The card should read
+as a dark iron gate at night with a little sick green light leaking through it.
+""",
+    ("Verdant", "AlloverBig"): """
+THE PATTERN: enormous roots and antlered branches interlacing into a bold sparse
+knot-work, only two or three across the width of the card, with a few big simple
+leaves. Honey sap-light appears in only three or four narrow places; the rest is
+deep green shadow and dark cedar.
 """,
 }
 
