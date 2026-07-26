@@ -45,6 +45,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25a1a9becdcf83542a32813ff9f97a24
+    m_Address: ui/HeroPower_CarvedStone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3268a7e202c268741874aa7e3f21d022
     m_Address: ui/frame_legendary
     m_ReadOnly: 0
@@ -62,6 +67,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c47c7d1fac192f409e9c983ac658f40
     m_Address: ui/icon_kw_echo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4186583d40708844685cdb519ddd911e
+    m_Address: ui/HeroFrames_IronEmber
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -110,6 +120,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d7e43b31985a11458b1fc9cfa16b57e
+    m_Address: ui/Weapon_IronEmber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
     m_Address: ui/icon_kw_divine_shield
     m_ReadOnly: 0
@@ -140,6 +155,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd9a533c10664d44b9ee713715c97722
+    m_Address: ui/Weapon_CarvedStone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bebea12dec66f984684d62e4461c72d7
     m_Address: ui/icon_kw_charge
     m_ReadOnly: 0
@@ -160,6 +180,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8d8d1270b1cfcc49b25d99db19edfd8
+    m_Address: ui/HeroPower_IronEmber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c9c2333b21be26540ac954bc8c6c8883
     m_Address: ui/icon_kw_taunt
     m_ReadOnly: 0
@@ -177,6 +202,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d252c8982ccae1f43bf65ea2d9c3de73
     m_Address: materials/M_CardBody
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db20ebe440881c44492ea9f13b581be5
+    m_Address: ui/HeroFrames_CarvedStone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

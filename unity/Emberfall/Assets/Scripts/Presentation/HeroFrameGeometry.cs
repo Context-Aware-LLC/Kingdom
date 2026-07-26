@@ -38,10 +38,13 @@ namespace Emberfall.Presentation
         public Frame HeroPower = new Frame();
         public Frame Weapon    = new Frame();
 
-        public static HeroFrameGeometry Load(string material)
+        /// <summary>Reads HeroFrames_&lt;material&gt;.json through <paramref name="texts"/>, which
+        /// defaults to the AssetDatabase seam in the editor and the Addressables one in a player —
+        /// the same seam-selection HeroSocketsView.Init does for its sprites.</summary>
+        public static HeroFrameGeometry Load(string material, IUiTextProvider texts = null)
         {
             var result = new HeroFrameGeometry();
-            string json = ReadJson(material);
+            string json = ReadJson(material, texts);
             if (string.IsNullOrEmpty(json)) return result;
 
             Root root;
@@ -80,25 +83,30 @@ namespace Emberfall.Presentation
             if (pts.Length > 0 && dsum > 0f) dst.BossDiameter = dsum / pts.Length;
         }
 
-        private static string ReadJson(string material)
+        private static string ReadJson(string material, IUiTextProvider texts)
         {
+            string key = $"HeroFrames_{material}";
+
+            if (texts == null)
+            {
 #if UNITY_EDITOR
-            string path = $"Assets/Art/UI/HeroColumn/HeroFrames_{material}.json";
-            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(path);
-            if (asset != null) return asset.text;
-            Debug.LogWarning($"[HeroFrameGeometry] {path} not found; sockets fall back to " +
-                             "nominal geometry. Re-run tooling/scripts/split_hero_frames.py.");
-            return null;
+                texts = new EditorUiTextProvider();
 #else
-            // NOT WIRED FOR BUILDS YET. The JSON needs an Addressables entry the way ui/card_back
-            // does — without one this resolves to nothing in a player and the numerals drift off
-            // the bosses, which is exactly the failure d0d8efa had to clean up for the card back.
-            // Loud on purpose: a silent fallback here looks almost right, which is worse.
-            Debug.LogError($"[HeroFrameGeometry] HeroFrames_{material}.json is not addressable, " +
-                           "so stat numerals use nominal positions in this build. " +
-                           "Register it in UI_Core before shipping the hero sockets.");
-            return null;
+                texts = new AddressableUiTextProvider();
 #endif
+            }
+
+            string json = texts.Get(key);
+            if (!string.IsNullOrEmpty(json)) return json;
+
+            // Loud on purpose: a silent fallback to nominal geometry looks almost right, which is
+            // worse than looking broken — the numerals sit off the bosses by a few pixels and
+            // nothing reports it.
+            Debug.LogWarning($"[HeroFrameGeometry] {key}.json did not resolve; sockets fall back " +
+                             "to nominal geometry. In the editor, re-run " +
+                             "tooling/scripts/split_hero_frames.py; in a build, check that " +
+                             $"ui/{key} is registered in the UI_Core Addressables group.");
+            return null;
         }
 
         // ── JSON shapes (field names must match split_hero_frames.py's output exactly) ──
