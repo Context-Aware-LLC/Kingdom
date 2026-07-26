@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
@@ -57,6 +58,24 @@ namespace Emberfall.Presentation
         private const float DrawStagger = 0.06f;
         private int _drawsThisTick;
 
+        // ── Death dissolve (board-and-vfx.md §5) ────────────────────────────────────
+        //
+        // THE ORDERING PROBLEM. MatchRunner.PlaybackLoop fires OnStateUpdated and THEN
+        // OnMatchEvent off the same queue entry, in the same frame. A minion that dies is already
+        // absent from that snapshot's board list, so the departed-card sweep below used to destroy
+        // its presenter before the onDeath event it belongs to had been raised at all — the card
+        // was gone, and nothing could have animated it.
+        //
+        // So the sweep no longer destroys: it PARKS ids, and a WaitForEndOfFrame flush resolves
+        // them once the same frame's events have landed. End of frame is the right boundary
+        // because it is unambiguously after OnMatchEvent and unambiguously before the next
+        // PlaybackLoop iteration (which dequeues at most one entry per frame).
+        private readonly List<InstanceId>    _pendingRemoval = new();
+        private readonly HashSet<InstanceId> _diedThisTick   = new();
+        private Coroutine _removalFlush;
+
+        private const float DeathDissolveDur = 0.40f;
+
         // ── Public API ──────────────────────────────────────────────────────────────
 
         public void Initialize(ICardDatabase db, BoardAnchors anchors, PlayerId p0Id, PlayerId p1Id,
@@ -86,12 +105,34 @@ namespace Emberfall.Presentation
             // only valid targets glow (binder suppresses readiness glow for the duration).
             if (_inputRouter != null)
                 _inputRouter.TargetingChanged += OnTargetingChanged;
+
+            // Deaths are read here, not only in CardMaterialBinder, because the controller is what
+            // owns the presenter's lifetime and therefore the only place that can hold a card
+            // alive long enough to burn.
+            if (_matchRunner != null)
+                _matchRunner.OnMatchEvent += OnMatchEventForDeaths;
         }
 
         private void OnDestroy()
         {
             if (_inputRouter != null)
                 _inputRouter.TargetingChanged -= OnTargetingChanged;
+            if (_matchRunner != null)
+                _matchRunner.OnMatchEvent -= OnMatchEventForDeaths;
+        }
+
+        // EffectInterpreter.cs:148 and RulesEngine.cs:94 both emit onDeath with SOURCE set and no
+        // target — the dying thing is the subject of its own death. Reading both fields keeps this
+        // correct either way, and costs nothing: a weapon's onDeath names an id with no presenter,
+        // which the sweep simply never looks up.
+        private void OnMatchEventForDeaths(IReadOnlyList<GameEvent> batch)
+        {
+            foreach (GameEvent e in batch)
+            {
+                if (e.Kind != VfxEvent.onDeath) continue;
+                if (e.Source.HasValue) _diedThisTick.Add(e.Source.Value);
+                if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
+            }
         }
 
         private void OnTargetingChanged(HashSet<InstanceId> targets)
@@ -106,6 +147,12 @@ namespace Emberfall.Presentation
         public void OnStateUpdated(GameState state)
         {
             if (_db == null) return;
+
+            // Defensive: if the end-of-frame flush could not run (component disabled mid-tick,
+            // coroutine stopped), resolve last tick's parked ids now — while _diedThisTick still
+            // describes THEM — rather than carrying them into this tick's answer.
+            if (_pendingRemoval.Count > 0) FlushRemovals();
+            _diedThisTick.Clear();
 
             _thisLive.Clear();
             _drawsThisTick = 0;
@@ -123,10 +170,19 @@ namespace Emberfall.Presentation
                 SyncWeapon(ps.Id, ps.Weapon);
             }
 
-            // Destroy presenters for cards that left hand and board.
+            // Park presenters for cards that left hand and board — resolved at end of frame, once
+            // this tick's onDeath events have told us WHICH of them died (see _pendingRemoval).
             foreach (InstanceId id in _lastLive)
                 if (!_thisLive.Contains(id))
-                    DestroyPresenter(id);
+                    _pendingRemoval.Add(id);
+
+            if (_pendingRemoval.Count > 0)
+            {
+                if (isActiveAndEnabled && _removalFlush == null)
+                    _removalFlush = StartCoroutine(FlushRemovalsAtEndOfFrame());
+                else if (!isActiveAndEnabled)
+                    FlushRemovals();   // no coroutine possible; take the immediate-destroy path
+            }
 
             // Swap: _lastLive becomes the current live set for the next tick.
             _lastLive.Clear();
@@ -176,7 +232,7 @@ namespace Emberfall.Presentation
             {
                 CardPresenter p = backs[backs.Count - 1];
                 backs.RemoveAt(backs.Count - 1);
-                if (p != null) Destroy(p.gameObject);
+                if (p != null) DestroyObj(p.gameObject);
             }
 
             while (backs.Count < count)
@@ -188,7 +244,7 @@ namespace Emberfall.Presentation
 
                 CardPresenter presenter = CreatePresenter(anchor != null ? anchor : transform);
                 var binder = presenter.GetComponent<CardMaterialBinder>();
-                if (binder != null) Destroy(binder);
+                if (binder != null) DestroyObj(binder);
                 presenter.SetHidden();
                 SetCardSorting(presenter, Zone.Hand, slot);
                 LaunchDrawFlight(presenter.transform, owner);
@@ -329,16 +385,101 @@ namespace Emberfall.Presentation
             if (group != null) group.sortingOrder = order;
         }
 
-        private void DestroyPresenter(InstanceId id)
+        private IEnumerator FlushRemovalsAtEndOfFrame()
+        {
+            yield return new WaitForEndOfFrame();
+            _removalFlush = null;
+            FlushRemovals();
+        }
+
+        // Every parked id is resolved together, so a board wipe burns as one event rather than a
+        // cascade of one-at-a-time destroys — each dying card gets its own snapshot, its own
+        // material instance and its own coroutine, and they overlap.
+        private void FlushRemovals()
+        {
+            for (int i = 0; i < _pendingRemoval.Count; i++)
+            {
+                InstanceId id = _pendingRemoval[i];
+                DestroyPresenter(id, died: _diedThisTick.Contains(id));
+            }
+            _pendingRemoval.Clear();
+        }
+
+        /// <param name="died">
+        /// True when this tick raised onDeath for the id. Cards that merely LEFT the board — played
+        /// from hand, returned to hand, discarded, shuffled back — keep the immediate destroy: a
+        /// burn would read as "this card was killed", which for those is a lie.
+        /// </param>
+        private void DestroyPresenter(InstanceId id, bool died = false)
         {
             if (_presenters.TryGetValue(id, out CardPresenter p))
             {
-                p.Unbind();
-                if (p != null) Destroy(p.gameObject);
-                _presenters.Remove(id);
+                _presenters.Remove(id);   // out of the diff immediately, even while it burns
+                if (p != null)
+                {
+                    if (died && Application.isPlaying && TryStartDissolve(p))
+                    {
+                        _liveStates.Remove(id);
+                        return;
+                    }
+                    p.Unbind();
+                    DestroyObj(p.gameObject);
+                }
             }
             _liveStates.Remove(id);
         }
+
+        // The card root outlives the state that justified it for DeathDissolveDur seconds, so
+        // everything that could still act on it is switched off first: no clicks, no hit-test, no
+        // hover lift, no shader binder chasing a live state that has already been dropped.
+        private bool TryStartDissolve(CardPresenter p)
+        {
+            Transform visual = p.transform.Find("Visual");
+            if (visual == null) return false;
+
+            p.Unbind();
+            // DESTROYED, not disabled. A disabled MonoBehaviour still receives C# delegate
+            // callbacks, so a merely-disabled binder stays subscribed to MatchRunner.OnMatchEvent
+            // and would try to StartCoroutine on itself — which errors. Destroy runs its OnDestroy,
+            // which is the only thing that actually unsubscribes.
+            var binder = p.GetComponent<CardMaterialBinder>();
+            if (binder != null) DestroyObj(binder);
+            var hover = p.GetComponent<HandCardHover>();
+            if (hover != null) hover.enabled = false;
+            var clickable = p.GetComponent<ClickableCard>();
+            if (clickable != null) clickable.enabled = false;
+            var col = p.GetComponent<BoxCollider>();
+            if (col != null) col.enabled = false;
+
+            GameObject root = p.gameObject;
+            return root.AddComponent<CardDeathDissolve>()
+                       .Play(visual, DeathDissolveDur, () => DestroyObj(root));
+        }
+
+        // CreatePresenter runs from the offscreen dissolve preview as well as from play mode, and
+        // edit mode refuses Destroy — without this the harness would build every card with the
+        // primitives' auto-generated MeshColliders still attached, and log an error per quad.
+        private static void DestroyObj(Object o)
+        {
+            if (o == null) return;
+            if (Application.isPlaying) Destroy(o);
+            else DestroyImmediate(o);
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Builds one real card through the shipping <see cref="CreatePresenter"/>/GetOrCreate path
+        /// for Emberfall/Preview Card Dissolve. Editor-only: the preview must burn the actual card
+        /// hierarchy — 13 renderers, real frame art, real TMP labels — because a mock card would
+        /// only ever prove the harness agrees with itself.
+        /// </summary>
+        public CardPresenter EditorBuildCard(CardInstance ci, PlayerId owner, Zone zone)
+        {
+            _thisLive.Add(ci.Id);
+            GetOrCreate(ci, owner, zone, 0, ownerMayAct: false);
+            return _presenters.TryGetValue(ci.Id, out CardPresenter p) ? p : null;
+        }
+#endif
 
         // Builds a minimal world-space card visual hierarchy (no external prefab needed).
         // Phase C step 5: upgraded to TextMeshPro. Replace primitives with shader-driven prefab when card art lands.
@@ -360,7 +501,7 @@ namespace Emberfall.Presentation
             bg.transform.SetParent(root.transform, false);
             bg.transform.localScale    = new Vector3(CardW, CardH, 1f);
             bg.transform.localPosition = Vector3.zero;
-            Destroy(bg.GetComponent<MeshCollider>());
+            DestroyObj(bg.GetComponent<MeshCollider>());
             var bodyRenderer = bg.GetComponent<Renderer>();
             MaterialCatalog.Assign(bodyRenderer, MaterialCatalog.CardBody);
 
@@ -370,7 +511,7 @@ namespace Emberfall.Presentation
             glowGo.transform.SetParent(root.transform, false);
             glowGo.transform.localScale    = new Vector3(CardW + 0.15f, CardH + 0.15f, 1f);
             glowGo.transform.localPosition = new Vector3(0f, 0f, 0.005f);
-            Destroy(glowGo.GetComponent<MeshCollider>());
+            DestroyObj(glowGo.GetComponent<MeshCollider>());
             var glowRenderer = glowGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(glowRenderer, MaterialCatalog.Glow);
             // GO stays active, renderer starts disabled: CardMaterialBinder toggles
@@ -383,7 +524,7 @@ namespace Emberfall.Presentation
             aegisGo.transform.SetParent(root.transform, false);
             aegisGo.transform.localScale    = new Vector3(CardW + 0.21f, CardH + 0.21f, 1f);
             aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
-            Destroy(aegisGo.GetComponent<MeshCollider>());
+            DestroyObj(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(aegisRenderer, MaterialCatalog.Aegis);
             // Same as the glow overlay: active GO, disabled renderer (taunt/shield ring
@@ -397,7 +538,7 @@ namespace Emberfall.Presentation
             artGo.transform.SetParent(root.transform, false);
             artGo.transform.localScale    = new Vector3(CardW * 0.92f, CardH * 0.52f, 1f);
             artGo.transform.localPosition = new Vector3(0f, CardH * 0.12f, -0.005f);
-            Destroy(artGo.GetComponent<MeshCollider>());
+            DestroyObj(artGo.GetComponent<MeshCollider>());
             var artRenderer = artGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(artRenderer, MaterialCatalog.CardArt);
             artGo.SetActive(false);

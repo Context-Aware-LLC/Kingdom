@@ -10,5 +10,10 @@ namespace Emberfall.Presentation
         public static readonly int FlashAmount    = Shader.PropertyToID("_FlashAmount");
         public static readonly int FrostAmount    = Shader.PropertyToID("_FrostAmount");
         public static readonly int StealthAmount  = Shader.PropertyToID("_StealthAmount");
+
+        // Not one of the four MPB floats: CardDeathDissolve pushes the flattened card snapshot
+        // into SG_Dissolve's albedo slot on a per-death material instance.
+        public static readonly int BaseMap        = Shader.PropertyToID("_BaseMap");
+        public static readonly int NoiseOffset    = Shader.PropertyToID("_NoiseOffset");
     }
 }

@@ -8,6 +8,7 @@
     "Emberfall.Net.Protocol",
     "Emberfall.Net.Client",
     "Emberfall.Data",
+    "Emberfall.Session",
     "Emberfall.Presentation",
     "Unity.Addressables",
     "Unity.Addressables.Editor",

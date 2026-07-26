@@ -205,6 +205,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7f26e4d524b0a54792b43bb5cd8678b
+    m_Address: materials/M_Dissolve
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db20ebe440881c44492ea9f13b581be5
     m_Address: ui/HeroFrames_CarvedStone
     m_ReadOnly: 0

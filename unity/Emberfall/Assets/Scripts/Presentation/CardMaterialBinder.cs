@@ -14,11 +14,16 @@ namespace Emberfall.Presentation
     ///
     /// Param ownership (shaders/README.md §3 consolidated table):
     ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on onDamage/onHeal
-    ///   _DissolveAmount → bodyRenderer   SG_Dissolve — tween 0→1 over 0.4s on onDeath
     ///   _StealthAmount  → bodyRenderer   SG_Stealth alpha body — tween to 0.6 (not 1; keeps card readable)
     ///   _FrostAmount    → bodyRenderer   SG_Frost — tween 0↔1 on AuraSet.Frozen change (0.3s)
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow / affordance; self-animated, no float
     ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield|Taunt; self-animated, no float
+    ///
+    /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
+    /// BoardController, because dissolving one renderer out of ~13 dissolves nothing a player can
+    /// see — and this binder's bodyRenderer wears M_CardBody (SG_CardComposite), which has no
+    /// _DissolveAmount at all, so the tween that used to live here wrote to a property that did
+    /// not exist on the material it wrote to.
     /// </summary>
     public sealed class CardMaterialBinder : MonoBehaviour
     {
@@ -32,7 +37,6 @@ namespace Emberfall.Presentation
         private MaterialPropertyBlock _mpb;
 
         private Coroutine _flashRoutine;
-        private Coroutine _dissolveRoutine;
         private Coroutine _frostRoutine;
         private Coroutine _stealthRoutine;
         private float _frostCurrent;
@@ -40,7 +44,6 @@ namespace Emberfall.Presentation
 
         // Durations from board-and-vfx.md §5 and shaders/README.md §3.
         private const float FlashDecay    = 0.25f;
-        private const float DissolveDur   = 0.40f;
         private const float FrostDur      = 0.30f;
         private const float StealthDur    = 0.40f;
         private const float StealthTarget = 0.60f; // spec: not full 1 — keeps minion readable under stealth
@@ -140,27 +143,21 @@ namespace Emberfall.Presentation
                 _aegisRenderer.enabled = (auras & AuraSet.Shield) != 0;
         }
 
-        // ── MatchRunner.OnMatchEvent — one-shot flash + dissolve ────────────────────
+        // ── MatchRunner.OnMatchEvent — one-shot damage/heal flash ─────────────────
 
         private void OnMatchEvent(IReadOnlyList<GameEvent> batch)
         {
             foreach (GameEvent e in batch)
             {
-                bool isTarget = e.Target.HasValue && e.Target.Value.Equals(_id);
-                bool isSource = e.Source.HasValue && e.Source.Value.Equals(_id);
-                if (!isTarget && !isSource) continue;
+                bool concerns = (e.Target.HasValue && e.Target.Value.Equals(_id))
+                             || (e.Source.HasValue && e.Source.Value.Equals(_id));
+                if (!concerns) continue;
 
                 switch (e.Kind)
                 {
                     case VfxEvent.onDamage:
                     case VfxEvent.onHeal:
                         Restart(ref _flashRoutine, FlashDecayRoutine());
-                        break;
-
-                    case VfxEvent.onDeath when isTarget:
-                        Restart(ref _dissolveRoutine, TweenFloat(
-                            v => PushFloat(ShaderIds.DissolveAmount, v),
-                            0f, 1f, DissolveDur));
                         break;
                 }
             }
