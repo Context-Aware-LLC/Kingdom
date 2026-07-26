@@ -487,6 +487,8 @@ namespace Emberfall.Core
             Characters.TryFind(state, a.Attacker, out var attacker);
             Characters.TryFind(state, a.Defender.Instance, out var defender);
 
+            var interp = new EffectInterpreter(state, _db, buf);
+
             int attackerAtk = attacker.IsMinion
                 ? attacker.Minion!.CurrentAttack
                 : ps.Weapon!.Attack;
@@ -506,6 +508,14 @@ namespace Emberfall.Core
             else ps.HeroAttacksUsedThisTurn++;
 
             buf.Emit(VfxEvent.onAttack, source: attacker.Id, target: defender.Id);
+
+            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal). WeaponInstance
+            // carries no CardInstance of its own, so wrap it in a throwaway one purely for effect lookup.
+            if (attacker.IsHero && ps.Weapon != null)
+            {
+                var weaponCard = new CardInstance(ps.Weapon.Id, ps.Weapon.DefinitionId, a.Player);
+                interp.RaiseSelf(weaponCard, Trigger.ON_ATTACK, System.Array.Empty<CharacterRef>());
+            }
 
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(state, defender, attackerAtk, attacker.Id, attackerKws, buf);
@@ -541,7 +551,6 @@ namespace Emberfall.Core
             // Settle deaths, deathrattles, win-check.
             // CheckWin is also called here because Drain only invokes it inside the effect-queue loop —
             // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
-            var interp = new EffectInterpreter(state, _db, buf);
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
         }

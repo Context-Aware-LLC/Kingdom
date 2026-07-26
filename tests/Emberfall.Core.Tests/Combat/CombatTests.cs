@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
+using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -262,6 +263,39 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(28), "hero took 2 retaliation");
             Assert.That(s.Players[0].Weapon, Is.Not.Null, "weapon still alive");
             Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(1), "durability decremented");
+        }
+
+        // Regression: WeaponInstance carries no CardInstance of its own, so a weapon's ON_ATTACK
+        // effect (e.g. Grasping Thornvine — "Whenever this attacks, restore 2 Health to your hero")
+        // was silently dead until ApplyAttack learned to wrap it for RaiseSelf.
+        [Test]
+        public void Weapon_ON_ATTACK_Effect_Fires_On_Hero_Attack()
+        {
+            var weaponDef = new CardDefinition(
+                id: "verdant_grasping_thornvine", name: "Grasping Thornvine", type: CardType.WEAPON, cost: 3,
+                attack: 2, health: null, durability: 3,
+                @class: CardClass.VERDANT, rarity: Rarity.RARE,
+                keywords: System.Array.Empty<Keyword>(),
+                effects: new[] { new EffectDef(Trigger.ON_ATTACK, Verb.HEAL, amount: 2, amount2: null,
+                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "FRIENDLY_HERO") },
+                cardText: "", flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
+            var db = new Support.FakeCardDatabase().Register(weaponDef);
+            var proc = new CommandProcessor(db);
+
+            var s = MainPhase();
+            s.Players[0].Weapon = new WeaponInstance
+            {
+                Id = s.NextInstanceId(), DefinitionId = weaponDef.Id, Attack = 2, Durability = 3,
+            };
+            s.Players[0].Hero.CurrentHealth = 20; // below max so the heal is observable
+            var def = Board(s, 1, Minion("target", 0, 10)); // 0 attack: no retaliation to muddy the heal
+
+            var r = proc.Execute(s, Attack(s, s.Players[0].Hero.Id, def.Id));
+
+            Assert.That(r.Accepted, Is.True);
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(22), "weapon's on-attack heal restored 2");
         }
 
         [Test]
