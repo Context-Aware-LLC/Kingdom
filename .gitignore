@@ -1,3 +1,9 @@
+# Stray gbrain config copies. The canonical file is ~/.gbrain/config.json and it
+# contains the live Supabase connection string, password included. A byte-identical
+# copy appeared at this repo root on 2026-07-24 and was one `git add -A` away from
+# being committed. Never commit this; the credential belongs in KeePassXC.
+/config.json
+
 # OS / editor
 .DS_Store
 Thumbs.db
