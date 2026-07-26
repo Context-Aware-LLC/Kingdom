@@ -7,10 +7,8 @@ Sam's spec (2026-07-25, revising gen_hero_column.py):
   - Each frame is 3/4 of the hero plate: 1.8 * 0.75 = 1.35 world units, square.
   - "The image will be close to that" — the socket nearly fills the frame. Thin
     rim, almost no chrome.
-  - Attack and durability ride the LEFT and RIGHT of the weapon socket, half in
-    and half out of the rim (Sam, revising the top/bottom placement of the first
-    landscape pass).
-  - Generate as ONE piece and split it ourselves (split_hero_frames.py).
+  - Attack and durability tuck into the BOTTOM-LEFT and BOTTOM-RIGHT corners of
+    the weapon ring's bounding square, still half in and half out of the rim
 
 TWO HARD CONSTRAINTS learned from the first pass:
 
@@ -26,18 +24,23 @@ TWO HARD CONSTRAINTS learned from the first pass:
    noise. So: heavy rims, few large shapes, strong value contrast, nothing small.
 
 Geometry is a CONTRACT (fractions of the full 2:1 image, top-left origin):
-  left socket   centre (0.25, 0.50)  diameter 0.36 W  = hero power
-  right socket  centre (0.75, 0.50)  diameter 0.36 W  = weapon
-  attack boss   centre (0.57, 0.50)  diameter 0.11 W  — on the weapon rim, left
-  durability    centre (0.93, 0.50)  diameter 0.11 W  — on the weapon rim, right
-The weapon socket's radius is 0.18 W, so its rim tangents sit at x 0.57 and 0.93 —
-exactly where the bosses are centred, putting each half on the art and half on
-the metal.
+  left socket   centre (0.25, 0.50)   diameter 0.36 W  = hero power
+  right socket  centre (0.75, 0.50)   diameter 0.36 W  = weapon
+  attack boss   centre (0.623, 0.755) diameter 0.11 W  — weapon rim, bottom-left
+  durability    centre (0.877, 0.755) diameter 0.11 W  — weapon rim, bottom-right
+The weapon ring's radius is 0.18 W (= 0.36 H), so its bounding square runs
+x 0.57..0.93, y 0.14..0.86. The boss centres are that rim's two lower diagonal
+points (225 and 315 degrees), which keeps each boss half on the socket and half on
+the metal while tucking it into a corner of the square that was dead space.
 
-BOSS SIZE IS LOAD-BEARING. At 0.13 W the inboard boss would reach x 0.505, ten
-pixels off the x 0.50 split line — one bad generation away from being shaved in
-half by the cut. 0.11 W buys ~30 px of clearance at both the seam and the right
-edge. Do not grow it back without moving the sockets inward first.
+WHY THE CORNERS, AND NOT 3 AND 9 O'CLOCK. Bosses on the horizontal put the
+inboard one straight into the seam where the two rings butt, which crowds the
+hero-power rim and — measured on the first IronEmber pass — welded the two rings
+into ONE connected component that no split could separate. It also made the
+weapon's bounding box wider than tall (1014 x 944 against the hero power's
+948 x 943), so padding each to its own square rendered the weapon ring ~7% small
+and the two would not meet. Corner bosses leave the ring's inboard side clean and
+keep the bounding box square, which removes both faults at the source.
 
 Usage: gen_hero_frames.py [variant ...]
 """
@@ -77,14 +80,20 @@ COMPOSITION IS A CONTRACT — game code draws content into these regions:
   PURE BLACK (#000000), perfectly flat. The rim around it is thick and plain.
 - RIGHT SOCKET: an identical circle centred at 75% width, 50% height. Same
   diameter, same thick plain rim, also SOLID PURE BLACK.
-- LEFT BOSS: a round raised medallion, diameter 11% of the image width, centred at
-  57% width / 50% height — so it sits ON the right ring's rim at its leftmost
-  point (9 o'clock), half over the socket opening and half over the rim metal. It
-  OVERLAPS and occludes the rim. Plain, dark, EMPTY, flat centre.
-- RIGHT BOSS: the same medallion centred at 93% width / 50% height, on the right
-  ring's rim at its rightmost point (3 o'clock). Plain, dark, EMPTY, flat centre.
-  The two bosses face each other across the ring, level with its centre. Neither
-  one touches the left ring or runs off the image edge.
+- ATTACK BOSS: a round raised medallion, diameter 11% of the image width, centred
+  at 62.3% width / 75.5% height — so it sits ON the right ring's rim at its
+  LOWER-LEFT diagonal (the 7-o'clock/8-o'clock position), half over the socket
+  opening and half over the rim metal. It OVERLAPS and occludes the rim. Plain,
+  dark, EMPTY, flat centre.
+- DURABILITY BOSS: the same medallion centred at 87.7% width / 75.5% height, on
+  the right ring's rim at its LOWER-RIGHT diagonal (the 4-o'clock/5-o'clock
+  position). Plain, dark, EMPTY, flat centre.
+  The two bosses sit low on the ring, mirrored about its vertical axis, tucked
+  into the bottom corners. The TOP of the right ring and its INBOARD (left-facing)
+  side are completely clean — no boss, no ornament there.
+- CLEARANCE: leave a clear, unmistakable gap of empty black between the two rings
+  — they must not touch, overlap, or be bridged by anything at all. Nothing from
+  the right ring may reach toward or contact the left ring.
   Big numerals are drawn onto both bosses by the game, so their centres must be
   flat, dark and completely free of ornament. The LEFT ring has NO bosses at all;
   its rim is clean all the way round.
