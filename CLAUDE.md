@@ -198,6 +198,53 @@ known-accepted item rather than re-deriving it. The fix when it happens is most 
 `HEAL 2 → DRAW 1`, which restores the value identity `heroes.md` §3 describes instead of making
 two class powers identical.
 
+## The freeze cue: everything is wired, the shader draws nothing (2026-07-26)
+
+**`SG_Frost` renders no pixels at any `_FrostAmount`, including 1.0.** That is the only thing left
+between a frozen minion and a visible cue. Do not go looking for a wiring bug — the wiring is done
+and verified (`ee4b4bb`):
+
+- `CardLiveState:92` sets `AuraSet.Frozen` from `ci.IsFrozen` ✔
+- `CardMaterialBinder` tweens `_FrostAmount` 0↔1 over 0.30s on that change ✔
+- `CreatePresenter` builds a **`FrostOverlay`** quad wearing `M_Frost`, at z −0.008 — in front of
+  the art and frame, behind every TMP label, so ice never covers the numbers ✔
+- `M_Frost` → `Shader Graphs/SG_Frost`, 13 properties, `_FrostAmount` present ✔
+- Four cards already freeze via the `FREEZE` **action** (`tide_frostbind`, `tide_siren`,
+  `tide_deepfrost_spear`, `tide_hollowshell_warden`) ✔
+
+**What remains is graph authoring.** The material has **no shader keywords enabled** —
+`_FROST_REFRACTION` and `_QUALITY_DESKTOP` are both off — which is the leading suspect for an empty
+output, unconfirmed. Someone has to open `SG_Frost.shadergraph`. The moment it draws anything, the
+cue appears in a match with no further code.
+
+**Verify with `Emberfall/Preview Card Frost (offscreen)`** → `artifacts/frost-preview/`. It sweeps
+0 → 1 over a real card and drives the **real** overlay quad, so it fails loudly if the quad ever
+stops being built. `Keyword.FREEZE` is still never read by `DamagePipeline`; freeze works only as
+the `FREEZE` action (see the rider-gaps rule above).
+
+## Generated art lands in `art-bakeoff/`; the importing session resolves where it belongs (Sam, 2026-07-26)
+
+**Generation never writes into the Unity project.** Every generator drops candidates into
+`art-bakeoff/card-art/<batch>/art_<cardId>/cand_*.png` — some folder or another, by batch, not by
+where the asset will live. **Resolving that into a project path is the job of whoever does the
+import, after the generation step.** Do not expect the generating session to have gotten it right;
+it does not have the information.
+
+**The destination is keyed by the card's `setId`, not by the batch:**
+`Assets/Art/Cards/<setId>/art_<cardId>.png`, where the filename is the row's `artId` with `/`
+flattened to `_`. `CardArtPostprocessor` keys import settings off `Assets/Art/Cards/<setId>/`, so a
+file in the wrong set folder imports with the wrong settings **and nothing complains.** Read the
+row's `setId` before copying — `ember_cinder_lance` is `CORE`, not `EMBERFALL`, despite sitting in
+an EMBERFALL-era batch folder.
+
+**Replacing existing art: overwrite the `.png` in place. Never delete the `.png` + `.meta` pair.**
+The `.meta` carries the guid the Addressables entry points at; deleting it mints a new one and
+silently orphans that entry. Overwriting keeps it. New art still needs its generated `.meta`
+committed — that is a separate, easy-to-forget step.
+
+**Never delete a candidate from `art-bakeoff/`** — it is keep-forever seed material and Sam curates
+it himself.
+
 ## Conventions
 
 - Specs are the source of truth until code exists. When specs disagree, the
