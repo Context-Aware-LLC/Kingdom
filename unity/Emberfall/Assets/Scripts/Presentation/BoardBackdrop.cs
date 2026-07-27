@@ -48,7 +48,7 @@ namespace Emberfall.Presentation
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(editorPath);
 #else
             // Build path: needs the asset in an Addressables group at this address
-            // (MaterialCatalog precedent). Group entries are a player-build TODO.
+            // (MaterialCatalog precedent). Registered in the Backgrounds group 2026-07-26.
             var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(address);
             var asset = handle.WaitForCompletion();
 #endif
