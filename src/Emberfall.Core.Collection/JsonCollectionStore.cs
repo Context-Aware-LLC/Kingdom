@@ -81,9 +81,11 @@ namespace Emberfall.Core.Collection
         /// Remove a character. Deleting one that isn't there is a no-op, not an error — Delete is
         /// idempotent so a retried or double-clicked confirm cannot fail.
         ///
-        /// <para>Decks bound to it are deliberately left alone. They surface as L5-invalid on open
-        /// (§3), which is a repairable state the player can see; cascading the delete would silently
-        /// destroy thirty cards of work to tidy up a dangling id.</para>
+        /// <para>Touches the roster only — this store never reaches into the deck store. Deleting a
+        /// character DOES destroy its decks (§3, Sam 2026-07-26), but that cascade is a composition
+        /// over both stores and lives in <see cref="CharacterDeletion.Delete"/>, which is what a
+        /// caller should be using. Calling this directly leaves the decks orphaned, reportable as
+        /// L5-invalid, and sweepable by a later <see cref="CharacterDeletion.Delete"/> on the same id.</para>
         /// </summary>
         public void Delete(string characterId)
         {
@@ -166,7 +168,77 @@ namespace Emberfall.Core.Collection
         }
     }
 
-    /// <summary>The file plumbing both stores share: read-or-null, and a crash-safe write.</summary>
+    /// <summary>
+    /// JSON-file <see cref="IProfileStore"/> — one object in one file. Same path, caching and
+    /// atomicity story as <see cref="JsonCharacterStore"/>; see that type.
+    /// </summary>
+    public sealed class JsonProfileStore : IProfileStore
+    {
+        private readonly string _filePath;
+
+        public JsonProfileStore(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Profile store needs a file path.", nameof(filePath));
+            _filePath = filePath;
+        }
+
+        public static JsonProfileStore InDirectory(string rootDirectory, string storageKey)
+            => new JsonProfileStore(CollectionPaths.Profile(rootDirectory, storageKey));
+
+        public string FilePath => _filePath;
+
+        /// <summary>
+        /// The stored profile, or an unnamed one on first run. Never null — see
+        /// <see cref="IProfileStore"/> for why that is the contract rather than a convenience.
+        /// An unreadable file still throws <see cref="CollectionFormatException"/>: returning
+        /// "unnamed" from a corrupt file would prompt for a name and then overwrite a recoverable one.
+        /// </summary>
+        public PlayerProfile Load()
+        {
+            string? json = JsonStoreFile.ReadOrNull(_filePath);
+            return json == null ? new PlayerProfile() : CollectionJson.ReadProfile(json);
+        }
+
+        /// <summary>
+        /// Write the profile, refusing a name that <see cref="PlayerName"/> rejects. Clearing the name
+        /// (empty) is allowed and means "ask me again" — it is the one non-name this accepts.
+        ///
+        /// <para>Validating here rather than trusting the caller is the same call
+        /// <see cref="JsonCharacterStore.Save"/> makes about a pairing: this is the last point at
+        /// which the mistake is still fixable. It also means every future writer — a settings screen,
+        /// an import, a migration — is gated by construction instead of by remembering.</para>
+        /// </summary>
+        public void Save(PlayerProfile profile)
+        {
+            if (profile == null) throw new ArgumentNullException(nameof(profile));
+
+            // ── VULN-001-adjacent (security/README.md §4, row "A player display name rendered on the
+            //    opponent's client"). THIS IS THE LINE THAT ARMS IT. Today DisplayName is written and
+            //    read on one device and rendered only in our own nameplate, so the validator below is
+            //    belt-and-braces. The moment a display name is added to HelloMsg and carried into
+            //    MatchStartMsg.Opponent.DisplayName, this string becomes peer-authored input rendered
+            //    on OUR client — and a client that validates its own name proves nothing about the
+            //    one the server hands it. Read VULN-002 before wiring that: the server must validate
+            //    on arrival with these same rules, and the receiving nameplate must clip rather than
+            //    trust a length.
+            var check = PlayerName.Check(profile.DisplayName);
+            if (profile.HasDisplayName && !check.IsValid)
+                throw new ArgumentException(
+                    $"'{profile.DisplayName}' is not a usable display name: {check.Reason}", nameof(profile));
+
+            // Store the normalized form, not what was handed in — otherwise two players who typed the
+            // same name hold different bytes, and a later uniqueness check would call them different.
+            var stored = new PlayerProfile(profile.HasDisplayName ? check.Normalized : "");
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteProfile(stored));
+
+            // The caller's object is the one the UI is still holding; leaving it un-normalized would
+            // show a name that differs from the one on disk until the next load.
+            profile.DisplayName = stored.DisplayName;
+        }
+    }
+
+    /// <summary>The file plumbing the stores share: read-or-null, and a crash-safe write.</summary>
     internal static class JsonStoreFile
     {
         /// <summary>Contents, or null when the file has never been written. UTF-8, no BOM.</summary>

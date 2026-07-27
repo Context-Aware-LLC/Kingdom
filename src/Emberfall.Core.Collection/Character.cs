@@ -33,8 +33,10 @@ namespace Emberfall.Core.Collection
         /// <para><b>A dangling id is surfaced, never repaired.</b> Deleting a deck leaves the
         /// reference pointing at nothing and <see cref="CharacterQuery.DefaultDeckOf"/> returns null,
         /// exactly as a deck bound to a deleted character reports L5. Silently re-pointing it at some
-        /// other deck would mean the character opens on a deck the player never chose — the same
-        /// reason a character delete orphans its decks instead of cascading.</para>
+        /// other deck would mean the character opens on a deck the player never chose. Deleting a
+        /// character, by contrast, DOES destroy its decks (<see cref="CharacterDeletion"/>) — the
+        /// difference is consent: that cascade is authorised by a confirm dialog naming the count,
+        /// whereas a silent re-point is a change nobody asked for.</para>
         /// </summary>
         public string DefaultDeckId { get; set; }
 

@@ -25,4 +25,24 @@ namespace Emberfall.Core.Collection
         void Save(DeckList deck);
         void Delete(string deckId);
     }
+
+    /// <summary>
+    /// The single <see cref="PlayerProfile"/> for an identity scope — the display-name half of guest
+    /// identity (accounts posture decision 6a).
+    ///
+    /// <para><b>Load, not LoadAll, and no Delete.</b> There is exactly one player per scope, so there
+    /// is nothing to enumerate; and a profile has no lifecycle of its own — the scope exists because
+    /// a device minted a token, and it stops existing when that storage is wiped. A Delete would only
+    /// ever be used to clear the name, which is a Save.</para>
+    ///
+    /// <para><b>Load never returns null.</b> A device that has never been asked for a name is not an
+    /// error state, so first run yields a profile with an empty <see cref="PlayerProfile.DisplayName"/>
+    /// rather than nothing. Callers branch on <see cref="PlayerProfile.HasDisplayName"/>, which cannot
+    /// be forgotten the way a null check can.</para>
+    /// </summary>
+    public interface IProfileStore
+    {
+        PlayerProfile Load();
+        void Save(PlayerProfile profile);
+    }
 }

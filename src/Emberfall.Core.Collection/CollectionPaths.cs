@@ -21,6 +21,13 @@ namespace Emberfall.Core.Collection
         public const string CharactersFileName = "characters.json";
         public const string DecksFileName = "decks.json";
 
+        /// <summary>
+        /// The player behind the roster (<see cref="PlayerProfile"/>). A third file rather than a
+        /// header in <c>characters.json</c>: the roster is rewritten on every character save, and a
+        /// name has no reason to be at risk of a roster write.
+        /// </summary>
+        public const string ProfileFileName = "profile.json";
+
         /// <summary>Longest storage key we will turn into a directory name (a UUID is 36).</summary>
         private const int MaxKeyLength = 64;
 
@@ -33,6 +40,9 @@ namespace Emberfall.Core.Collection
 
         public static string Decks(string rootDirectory, string storageKey)
             => Path.Combine(ScopeDirectory(rootDirectory, storageKey), DecksFileName);
+
+        public static string Profile(string rootDirectory, string storageKey)
+            => Path.Combine(ScopeDirectory(rootDirectory, storageKey), ProfileFileName);
 
         /// <summary>
         /// Reduce a storage key to a safe single path segment: <c>[A-Za-z0-9-_]</c> survives,

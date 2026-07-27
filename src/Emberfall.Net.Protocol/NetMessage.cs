@@ -30,6 +30,15 @@ namespace Emberfall.Net.Protocol
     /// §4 <c>app_install</c>) and are optional — absent means empty, never a refused connect.</para>
     /// </summary>
     public sealed record HelloMsg(
+        // VULN-002 (security/known-vulnerabilities, LATENT — trigger rows "A player display name, or
+        // any player-typed text the opponent sees" and "Adding a field to HelloMsg"). ADDING A
+        // DISPLAY NAME HERE ARMS IT. A player profile with a validated DisplayName already exists
+        // on-device (Emberfall.Core.Collection.PlayerName); carrying it here inverts the direction of
+        // trust — the opponent's client renders a string THEY chose, and their client's validator is
+        // advice they can decline. Read VULN-002 §4 first: validate on arrival with the same
+        // PlayerName.Check (that assembly is UnityEngine-free so the server can call it), never echo
+        // an unvalidated name into OpponentInfo, and reserve the strings our own UI authors ("You",
+        // "Opponent", "Unnamed player"). §2 fact 1 of that entry is this record's current shape.
         string DeviceToken,
         string ClientContractVersion = "",
         string Platform = "",

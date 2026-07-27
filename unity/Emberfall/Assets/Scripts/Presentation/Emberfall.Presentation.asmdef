@@ -5,6 +5,7 @@
     "Emberfall.Core.Contracts",
     "Emberfall.Core.Cards",
     "Emberfall.Core",
+    "Emberfall.Core.Collection",
     "Emberfall.Data",
     "Emberfall.Session",
     "Emberfall.AI",

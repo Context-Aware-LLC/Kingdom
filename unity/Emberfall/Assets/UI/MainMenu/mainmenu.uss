@@ -83,6 +83,140 @@
     border-top-width: 0;
 }
 
+/* ---------- Identity plate ----------
+ * Top-left, opposite the version footer: who you are on this device. A Button, not a
+ * VisualElement, so it is keyboard-reachable and gets focus/hover for free — renaming is the
+ * only affordance it has, and an unlabelled clickable div would hide it.
+ */
+.mm-identity {
+    position: absolute;
+    top: var(--space-6);
+    left: var(--space-6);
+    align-items: flex-start;
+    background-color: rgba(20, 25, 34, 0.55);
+    border-width: 1px;
+    border-color: rgba(11, 14, 19, 0.7);
+    border-radius: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+}
+.mm-identity:hover {
+    background-color: rgba(42, 51, 64, 0.7);
+}
+.mm-identity__name {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+}
+.mm-identity__sub {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+}
+
+/* ---------- Modals ----------
+ * Full-screen backdrop + a centred panel. The backdrop is opaque enough to read as modal and
+ * picks up clicks itself (UI Toolkit will not block the menu underneath otherwise).
+ */
+.mm-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 14, 19, 0.78);
+}
+.mm-modal--hidden {
+    display: none;
+}
+.mm-modal__panel {
+    width: 520px;
+    max-width: 90%;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+    padding: var(--space-8);
+}
+.mm-modal__title {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    white-space: normal;
+}
+.mm-modal__help {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    white-space: normal;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+.mm-modal__field {
+    font-size: var(--type-h2);
+    margin-bottom: var(--space-2);
+}
+.mm-modal__field > .unity-base-text-field__input {
+    background-color: var(--surface-0);
+    border-color: var(--surface-3);
+    border-radius: var(--space-1);
+    padding: var(--space-3);
+    color: var(--ink-1);
+}
+.mm-modal__dropdown {
+    margin-bottom: var(--space-2);
+}
+.mm-modal__dropdown .unity-base-field__label {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    min-width: 96px;
+}
+.mm-modal__dropdown .unity-base-popup-field__input {
+    background-color: var(--surface-0);
+    border-color: var(--surface-3);
+    border-radius: var(--space-1);
+    color: var(--ink-1);
+}
+/* Reserves its line whether or not there is an error, so confirming does not shift the buttons. */
+.mm-modal__error {
+    font-size: var(--type-caption);
+    color: var(--negative);
+    white-space: normal;
+    min-height: 18px;
+    margin-bottom: var(--space-4);
+}
+.mm-modal__actions {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+.mm-modal__button {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-1);
+    height: 44px;
+    padding: 0 var(--space-6);
+    margin-left: var(--space-2);
+}
+.mm-modal__button:hover {
+    background-color: var(--surface-3);
+}
+.mm-modal__button--cta {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--surface-0);
+}
+.mm-modal__button--cta:hover {
+    background-color: rgb(250, 186, 90);
+}
+.mm-modal__button--cta:disabled {
+    background-color: var(--surface-2);
+    border-color: var(--surface-3);
+    color: var(--ink-2);
+}
+
 /* ---------- Footer ---------- */
 .mm-footer {
     position: absolute;

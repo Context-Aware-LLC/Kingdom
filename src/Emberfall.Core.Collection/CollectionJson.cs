@@ -13,7 +13,9 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// The on-disk format for a player's characters and decks (ui/collection-deckbuilder.md §3).
+    /// The on-disk format for a player's profile, characters and decks (ui/collection-deckbuilder.md §3).
+    /// One class for all three so the <c>schemaVersion</c> ceiling has one definition and one guard,
+    /// however many files the scope directory grows.
     ///
     /// <para><b>Hand-written, like <c>CardJson</c>.</b> Reflection-based serializers are the obvious
     /// choice and the wrong one here: field order becomes implicit, IL2CPP strips the members it
@@ -37,6 +39,7 @@ namespace Emberfall.Core.Collection
 
         private const string CharactersProperty = "characters";
         private const string DecksProperty = "decks";
+        private const string ProfileProperty = "profile";
 
         // ---- characters ----------------------------------------------------------------
 
@@ -163,9 +166,64 @@ namespace Emberfall.Core.Collection
             return result;
         }
 
+        // ---- profile -------------------------------------------------------------------
+
+        /// <summary>
+        /// The player behind the roster. One object, not an array — there is exactly one player per
+        /// identity scope, and a single-element array would only invite a second.
+        /// </summary>
+        public static string WriteProfile(PlayerProfile profile)
+        {
+            var buffer = new System.IO.MemoryStream();
+            using (var w = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
+            {
+                w.WriteStartObject();
+                w.WriteNumber("schemaVersion", SchemaVersion);
+                w.WriteStartObject(ProfileProperty);
+                w.WriteString("displayName", profile.DisplayName);
+                w.WriteEndObject();
+                w.WriteEndObject();
+            }
+            return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
+        }
+
+        /// <summary>
+        /// Read a profile back. A name that no longer passes <see cref="PlayerName"/> — because the
+        /// rules tightened after it was stored, or because the file was hand-edited — loads intact and
+        /// is reported as stored. Same split as an invalid class pairing: refuse on the way in, where
+        /// the caller can still fix it; never on the way out, where the only options are lie or crash.
+        /// </summary>
+        public static PlayerProfile ReadProfile(string json)
+        {
+            using var doc = ParseRoot(json, ProfileProperty, out var root);
+            if (!root.TryGetProperty(ProfileProperty, out var el) || el.ValueKind != JsonValueKind.Object)
+                throw new CollectionFormatException($"Collection file has no '{ProfileProperty}' object.");
+
+            // Absent is the same as never-named, which is a legitimate state (IProfileStore) — so a
+            // missing displayName is empty rather than fatal, unlike a character's required id.
+            return new PlayerProfile(Str(el, "displayName") ?? "");
+        }
+
         // ---- shared --------------------------------------------------------------------
 
         private static JsonDocument ParseEnvelope(string json, string arrayProperty, out JsonElement rows)
+        {
+            var doc = ParseRoot(json, arrayProperty, out var root);
+
+            if (!root.TryGetProperty(arrayProperty, out rows) || rows.ValueKind != JsonValueKind.Array)
+            {
+                doc.Dispose();
+                throw new CollectionFormatException($"Collection file has no '{arrayProperty}' array.");
+            }
+
+            return doc;
+        }
+
+        /// <summary>
+        /// Parse, confirm the root is an object, and enforce the version ceiling — the part every
+        /// collection file shares regardless of whether its payload is an array or an object.
+        /// </summary>
+        private static JsonDocument ParseRoot(string json, string section, out JsonElement root)
         {
             JsonDocument doc;
             try
@@ -174,14 +232,15 @@ namespace Emberfall.Core.Collection
             }
             catch (JsonException ex)
             {
-                throw new CollectionFormatException($"Collection file is not valid JSON ({arrayProperty}).", ex);
+                throw new CollectionFormatException($"Collection file is not valid JSON ({section}).", ex);
             }
 
-            var root = doc.RootElement;
+            root = doc.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
             {
+                var kind = root.ValueKind;
                 doc.Dispose();
-                throw new CollectionFormatException($"Collection file root must be an object, was {root.ValueKind}.");
+                throw new CollectionFormatException($"Collection file root must be an object, was {kind}.");
             }
 
             if (root.TryGetProperty("schemaVersion", out var ver) && ver.ValueKind == JsonValueKind.Number
@@ -192,12 +251,6 @@ namespace Emberfall.Core.Collection
                 throw new CollectionFormatException(
                     $"Collection file is schemaVersion {found}; this build reads up to {SchemaVersion}. " +
                     "Refusing to read it — a newer build wrote this collection and downgrading would lose data.");
-            }
-
-            if (!root.TryGetProperty(arrayProperty, out rows) || rows.ValueKind != JsonValueKind.Array)
-            {
-                doc.Dispose();
-                throw new CollectionFormatException($"Collection file has no '{arrayProperty}' array.");
             }
 
             return doc;

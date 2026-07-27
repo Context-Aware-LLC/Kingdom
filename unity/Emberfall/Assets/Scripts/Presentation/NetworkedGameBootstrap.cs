@@ -209,11 +209,14 @@ namespace Emberfall.Presentation
             //
             // Orb variant keys off the MATCH ID, not a local roll, so both clients see the same one
             // (spec §4.2) — s0.Id is the server's id, identical on both seats by construction.
-            // Nameplates: ours is PLACEHOLDER until a profile system exists (spec §6, no name
-            // source); theirs is the server-supplied display name — see NetworkedMatchSession.
-            // OpponentName for why that string is trusted today and what changes if it stops being.
+            // Nameplates: OURS is this device's real display name (spec §6) — PlayerAccount reads
+            // the local profile, falling back to "You" when none was ever set. THEIRS is still a
+            // seat id dressed as a name: HelloMsg carries no display name, so the server fills
+            // OpponentInfo.DisplayName from the PlayerId. Making that real is a protocol change
+            // (HelloMsg → MatchStartMsg) plus a server deploy — and the arming point for the
+            // display-name row in the security index. See NetworkedMatchSession.OpponentName.
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
-                localClass,  "You",
+                localClass,  PlayerAccount.LocalDisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
                 s0.Id.Value));
             // Carry the narration across the handover rather than letting the line blink empty —

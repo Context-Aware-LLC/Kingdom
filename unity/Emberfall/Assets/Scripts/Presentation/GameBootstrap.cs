@@ -92,11 +92,12 @@ namespace Emberfall.Presentation
             // Left medallion is the local seat, right is the opponent, per the screen's own
             // convention — NOT the board's local-at-bottom rule.
             //
-            // Nameplates are PLACEHOLDER: spec §6 wants player display names and no profile/name
-            // system exists yet. P1 is always PlayingAi on this path (see below), so "AI Opponent"
-            // is accurate rather than a stand-in for a name we failed to fetch.
+            // OUR nameplate is the real display name (spec §6) — PlayerAccount reads it from this
+            // device's profile, falling back to "You" only when one was never set. P1 is always
+            // PlayingAi on this path (see below), so "AI Opponent" is accurate rather than a
+            // stand-in for a name we failed to fetch.
             versusOverlay = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
-                setup.P0Class, "You",
+                setup.P0Class, PlayerAccount.LocalDisplayNameOr("You"),
                 setup.P1Class, "AI Opponent",
                 p0Session.Current.Id.Value));
             if (loadingOverlay != null) loadingOverlay.NotifyMatchReady();
