@@ -103,10 +103,8 @@ namespace Emberfall.Core.Collection
             bool wantsDefault = !string.IsNullOrEmpty(character.DefaultDeckId);
             int defaultAt = -1;
 
-            foreach (var deck in decks)
+            foreach (var deck in BoundTo(character.Id, decks))
             {
-                if (deck == null || deck.CharacterId != character.Id) continue;
-
                 bool isDefault = wantsDefault && defaultAt < 0 && deck.Id == character.DefaultDeckId;
                 if (isDefault) defaultAt = rows.Count;
                 rows.Add(new DeckSummary(deck, isDefault, QueueEligibility.Check(deck, character, db)));
@@ -124,15 +122,41 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
-        /// Decks whose <see cref="DeckList.CharacterId"/> resolves to no Character on the roster —
-        /// what a character delete leaves behind, since deleting orphans rather than cascades (§3).
+        /// The decks bound to one <see cref="Character.Id"/>, in stored order — the L5 membership test,
+        /// defined once. Card-database free, so callers that only need the set (the delete confirm's
+        /// count, §2.6) do not have to hold one.
+        ///
+        /// <para><see cref="ForCharacter"/> and <see cref="CharacterDeletion"/> both go through here
+        /// on purpose: "which decks are this character's" answered in two places is two answers
+        /// waiting to disagree, and the place it would show up is a confirm dialog under-counting what
+        /// it is about to destroy.</para>
+        /// </summary>
+        public static IReadOnlyList<DeckList> BoundTo(string characterId, IEnumerable<DeckList> decks)
+        {
+            var result = new List<DeckList>();
+            if (decks == null || string.IsNullOrEmpty(characterId)) return result;
+
+            foreach (var deck in decks)
+                if (deck != null && deck.CharacterId == characterId)
+                    result.Add(deck);
+            return result;
+        }
+
+        /// <summary>
+        /// Decks whose <see cref="DeckList.CharacterId"/> resolves to no Character on the roster.
+        ///
+        /// <para><b>An orphan is only ever an accident</b> (§5 O-4). A character delete destroys its
+        /// decks (<see cref="CharacterDeletion"/>), so nothing produces orphans deliberately; what
+        /// reaches here is crash residue — <see cref="CharacterCreation"/> writes the deck first, so a
+        /// death between the two writes strands one — or a damaged <c>decks.json</c>. The store never
+        /// filters, so they survive to be reported instead of vanishing.</para>
         ///
         /// <para><b>Its own query on purpose.</b> An orphan belongs to no Character, so it can appear
         /// in no Character's switcher; folding it into <see cref="ForCharacter"/> would put a deck in
-        /// a list it does not belong to, which is worse than leaving it out. But left only out, it
-        /// would be invisible — the opposite of surfacing. So the fact is queryable here, and the
-        /// surface that shows it is the deck-pick chooser (§2.11), which lists every deck grouped by
-        /// Character and already renders an unresolvable binding as an unselectable L5 row.</para>
+        /// a list it does not belong to. Left only out it would be invisible, so the fact is queryable
+        /// here and the deck-pick chooser (§2.11) is the surface that shows it — as an unselectable
+        /// L5 row offering <b>delete only</b>. Recovering a deck whose Character never existed is
+        /// export's job, not the chooser's.</para>
         ///
         /// <para>Every deck returned here is a draft by construction: no character means the L5
         /// violation, so <see cref="QueueEligibility"/> denies it the queue.</para>

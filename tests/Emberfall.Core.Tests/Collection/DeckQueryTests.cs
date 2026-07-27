@@ -187,8 +187,12 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         [Test]
-        public void Deleting_A_Character_Turns_Its_Decks_Into_Orphans_That_Still_Exist()
+        public void The_Character_Store_Does_Not_Reach_Into_The_Deck_Store()
         {
+            // Deleting a character deletes its decks (Sam, 2026-07-26) — but that cascade is
+            // CharacterDeletion's job, a composition over both stores. ICharacterStore.Delete on its
+            // own still touches only characters, which is what keeps the stores independent and what
+            // makes the crash-order guarantee expressible at all.
             var characters = Characters();
             var decks = Decks();
             var character = Rotbloom();
@@ -197,9 +201,9 @@ namespace Emberfall.Core.Tests.Collection
 
             characters.Delete("chr-1");
 
-            var orphans = DeckQuery.Orphans(decks.LoadAll(), characters.LoadAll());
-            Assert.That(orphans.Count, Is.EqualTo(1), "Orphaned, not cascaded (§3).");
-            Assert.That(orphans[0].TotalCount, Is.EqualTo(DeckValidator.DeckSize), "And intact — a store never filters.");
+            var stranded = DeckQuery.Orphans(decks.LoadAll(), characters.LoadAll());
+            Assert.That(stranded.Count, Is.EqualTo(1), "The store deleted a character, nothing more.");
+            Assert.That(stranded[0].TotalCount, Is.EqualTo(DeckValidator.DeckSize), "And intact — a store never filters.");
         }
 
         [Test]
