@@ -65,7 +65,7 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>Full validation of a decklist against the card database. Order-stable violations.</summary>
-        public static DeckValidation Validate(DeckList deck, Character character, ICardDatabase db)
+        public static DeckValidation Validate(DeckList? deck, Character? character, ICardDatabase db)
         {
             var violations = new List<DeckViolation>();
             if (deck == null)
