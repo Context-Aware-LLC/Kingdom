@@ -16,12 +16,9 @@ namespace Emberfall.Presentation
     /// flattened texture makes the card a single surface for the length of the effect, which is the
     /// only moment it is safe to stop being interactive geometry.
     ///
-    /// LAYER DISCIPLINE. The capture camera sees only the "CardCapture" layer (slot 8). The card's
-    /// subtree is moved onto it, rendered, and moved back inside ONE synchronous call, so the board
-    /// camera — which renders at end of frame, long after this returns — never observes the change.
-    /// That is deliberately different from a persistent capture layer excluded from the main
-    /// camera's culling mask: with a synchronous restore the failure mode of a leaked layer is a
-    /// card that keeps rendering normally, rather than a card that silently disappears.
+    /// The flatten itself lives in <see cref="CardSnapshot"/>, which also carries the LAYER
+    /// DISCIPLINE argument for the synchronous restore — read it there, next to the loops it
+    /// defends. The collection wall bakes its faces through the same call.
     ///
     /// WHERE IT SITS. The quad is planted at the visual's exact world pose — same position, same
     /// rotation, same size — so the swap from real hierarchy to snapshot is invisible on the frame
@@ -33,7 +30,7 @@ namespace Emberfall.Presentation
     public sealed class CardDeathDissolve : MonoBehaviour
     {
         /// <summary>Layer the capture camera renders, and nothing else does. Slot 8 in TagManager.</summary>
-        public const string CaptureLayerName = "CardCapture";
+        public const string CaptureLayerName = CardSnapshot.CaptureLayerName;
 
         // A board card is 137x194 px on screen (ortho 4.6 => ~117 px/world unit). 256 wide is a
         // ~1.9x supersample, which keeps the burn edge from aliasing without paying for a full-res
@@ -41,13 +38,6 @@ namespace Emberfall.Presentation
         // stretched — the camera's aspect is set from the same two numbers.
         private const int RtWidth  = 256;
         private const int RtHeight = 361;
-
-        // Far enough back to clear the card's own z-spread (frame at -0.006, gem/icons at -0.012,
-        // aegis at +0.01) with room for a hovered card's forward offset, close enough that the
-        // ortho near/far window stays tight.
-        private const float CamDistance = 3f;
-
-        private static Camera s_captureCam;
 
         private RenderTexture _rt;
         private Material      _mat;
@@ -95,7 +85,7 @@ namespace Emberfall.Presentation
             // false and the caller destroys the card outright.
             try
             {
-                _rt = Capture(visual);
+                _rt = CardSnapshot.Capture(visual, RtWidth, RtHeight);
             }
             catch (System.Exception ex)
             {
@@ -165,73 +155,6 @@ namespace Emberfall.Presentation
             _tween = null;
             Cleanup();
             onComplete?.Invoke();
-        }
-
-        // ── Capture ─────────────────────────────────────────────────────────────────
-
-        private static RenderTexture Capture(Transform visual)
-        {
-            int layer = LayerMask.NameToLayer(CaptureLayerName);
-            if (layer < 0)
-            {
-                Debug.LogWarning($"[CardDeathDissolve] layer '{CaptureLayerName}' missing from " +
-                                 "TagManager — card cannot be snapshotted, dying cards will blink out.");
-                return null;
-            }
-
-            var rt = new RenderTexture(RtWidth, RtHeight, 24, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
-            rt.Create();
-
-            // Includes inactive children so the restore is total — the art quad is inactive
-            // whenever a card's illustration has not resolved.
-            Transform[] nodes = visual.GetComponentsInChildren<Transform>(true);
-            var saved = new int[nodes.Length];
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                saved[i] = nodes[i].gameObject.layer;
-                nodes[i].gameObject.layer = layer;
-            }
-
-            Camera cam = CaptureCamera(layer);
-            cam.transform.SetPositionAndRotation(visual.position - visual.forward * CamDistance, visual.rotation);
-            cam.orthographicSize = BoardController.CardH * 0.5f;
-            cam.aspect           = BoardController.CardW / BoardController.CardH;
-            cam.targetTexture    = rt;
-            try
-            {
-                cam.Render();
-            }
-            finally
-            {
-                cam.targetTexture = null;
-                // Synchronous restore is the whole safety argument above: nothing else has
-                // rendered between the two loops, so no other camera ever saw the capture layer.
-                for (int i = 0; i < nodes.Length; i++)
-                    if (nodes[i] != null) nodes[i].gameObject.layer = saved[i];
-            }
-            return rt;
-        }
-
-        private static Camera CaptureCamera(int layer)
-        {
-            if (s_captureCam != null)
-            {
-                s_captureCam.cullingMask = 1 << layer;
-                return s_captureCam;
-            }
-
-            var go = new GameObject("__CardDissolveCapture") { hideFlags = HideFlags.HideAndDontSave };
-            s_captureCam = go.AddComponent<Camera>();
-            s_captureCam.enabled         = false;   // rendered on demand only, never in the loop
-            s_captureCam.orthographic    = true;
-            s_captureCam.cullingMask     = 1 << layer;
-            s_captureCam.clearFlags      = CameraClearFlags.SolidColor;
-            s_captureCam.backgroundColor = Color.clear;
-            s_captureCam.nearClipPlane   = 0.05f;
-            s_captureCam.farClipPlane    = CamDistance * 2f;
-            s_captureCam.allowMSAA       = false;
-            s_captureCam.allowHDR        = false;
-            return s_captureCam;
         }
 
         // Edit mode forbids Destroy; the preview harness runs there.

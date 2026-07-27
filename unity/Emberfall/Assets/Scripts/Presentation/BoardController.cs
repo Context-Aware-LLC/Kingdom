@@ -466,6 +466,27 @@ namespace Emberfall.Presentation
             else DestroyImmediate(o);
         }
 
+        /// <summary>
+        /// Builds ONE detached card visual under <paramref name="parent"/> through the shipping
+        /// <see cref="CreatePresenter"/> — the same 13 renderers, the same frame layer, the same
+        /// TMP labels a card in a match gets — and hands back its presenter, unbound.
+        ///
+        /// DETACHED MEANS NOT IN THE MATCH. It is registered in nothing: not _presenters, not
+        /// _liveStates, not _thisLive. The diffing loop therefore cannot see it, cannot re-parent
+        /// it to an anchor, and cannot destroy it. It carries no ClickableCard and its
+        /// CardMaterialBinder is never Init'd, so nothing drives it and it cannot act — the caller
+        /// owns its lifetime and calls Bind/SetArt itself.
+        ///
+        /// It exists so <see cref="CardFaceBaker"/> can photograph the REAL card for the collection
+        /// wall instead of the wall re-implementing the card front in UI Toolkit. Two
+        /// implementations of one card face would drift on the first frame-art change; one
+        /// implementation and a camera cannot.
+        ///
+        /// <see cref="Initialize"/> must have run first: the frame/rarity sprites resolve through
+        /// the IUiSpriteProvider that Initialize picks (Editor vs Addressables).
+        /// </summary>
+        public CardPresenter BuildDetachedCard(Transform parent) => CreatePresenter(parent);
+
 #if UNITY_EDITOR
         /// <summary>
         /// Builds one real card through the shipping <see cref="CreatePresenter"/>/GetOrCreate path
