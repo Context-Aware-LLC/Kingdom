@@ -164,9 +164,30 @@ PROVIDERS = {
 # art-brief-m1.md §7.1 — identity assets first, filler last.
 RARITY_ORDER = {"LEGENDARY": 0, "EPIC": 1, "RARE": 2, "COMMON": 3}
 
+# One entry per DRAFT FILE, not strictly per class. `batch2` carries both
+# EMBERWARD and TIDECALLER because they were designed as one balance pass
+# against each other (card-drafts-emberward-tidecaller.md §1) and share a single
+# house-look paragraph; each card's prompt names its own class palette on its
+# last line, which is what actually keeps the two looks apart.
 CLASSES = {
     "gravekeep": "card-drafts-gravekeep",
     "verdant": "card-drafts-verdant",
+    "batch2": "card-drafts-emberward-tidecaller",
+    "batch3": "card-drafts-emberward-tidecaller-b3",
+}
+
+# WHERE CANDIDATES LAND under art-bakeoff/card-art/ (Sam, 2026-07-26). The
+# original layout was one folder per setId, but every card in the game is
+# setId EMBERFALL, so all 29 cards piled into a single directory. New work goes
+# in its own folder instead: this maps a CLASSES key to its candidate subfolder,
+# falling back to the card's setId for the two batches already on disk under it.
+#
+# This is the BAKE-OFF path only. The promotion target is untouched — a picked
+# candidate still goes to unity/.../Art/Cards/<setId>/art_<cardId>.png, the
+# folder contract CardArtPostprocessor.cs enforces. See final_path().
+OUT_GROUP = {
+    "batch2": "emberward-tidecaller",
+    "batch3": "emberward-tidecaller",
 }
 
 # ------------------------------------------------------------- style block
@@ -342,6 +363,7 @@ def load_cards() -> list[dict]:
                     "artId": row["artId"],
                     "file": art_file(row["artId"]),
                     "setId": row.get("setId", "EMBERFALL"),
+                    "outGroup": OUT_GROUP.get(cls, row.get("setId", "EMBERFALL")),
                     "rarity": row.get("rarity", "COMMON"),
                     "cost": row.get("cost", 0),
                     "class": cls,
@@ -376,7 +398,7 @@ def build_prompt(card: dict, provider: str) -> str:
 # ------------------------------------------------------------- generation
 
 def card_dir(card: dict) -> pathlib.Path:
-    return OUT / card["setId"] / card["file"]
+    return OUT / card["outGroup"] / card["file"]
 
 
 def final_path(card: dict) -> pathlib.Path:
@@ -514,9 +536,20 @@ def generate(card: dict, provider: str, key: str, candidates: int,
     dest_dir = card_dir(card)
     dest_dir.mkdir(parents=True, exist_ok=True)
 
+    # NEVER OVERWRITE A GENERATED IMAGE (Sam, 2026-07-26): "don't delete anything
+    # you generate — if something needs deleting, I'll delete it myself." Numbering
+    # always continues past what is already on disk, so a re-roll ADDS
+    # cand_<provider>_2.png beside _1 and the contact sheet shows them side by side.
+    # Before this, --no-skip-existing restarted the index at 0 and silently
+    # clobbered cand_1 — the one flag in the script that could destroy a candidate.
+    # --skip-existing (default) still means "stop once N exist"; --no-skip-existing
+    # now means "add N more", not "redo the first N".
+    base = len(have)
+    n_new = (candidates - base) if skip else candidates
+
     records: list[dict] = []
-    start = len(have) if skip else 0
-    for i in range(start, candidates):
+    for k in range(n_new):
+        i = base + k
         tag = f"{card['file']} {provider} c{i + 1}"
         print(f"[{tag}] requesting {EDGE}x{EDGE} from {spec['model']} ...", flush=True)
         t0 = time.time()
@@ -635,7 +668,8 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
         d.text((x, top + SMALL + 4), f"@ {SMALL}px (board read)", fill=DIM, font=font(13))
         y += row_h
 
-    dest = OUT / f"SHEET_{cls}.png"
+    # Sheet sits alongside the candidate folders it summarises, not at the root.
+    dest = OUT / rows[0][0]["outGroup"] / f"SHEET_{cls}.png"
     dest.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(dest)
     print(f"{cls}: {len(rows)} card(s) -> {dest.relative_to(REPO)}  ({sheet.width}x{sheet.height})")

@@ -138,6 +138,52 @@ records it, only the comment delivers it. Same sense as *Bookkeeping is part of 
 arms whenever Discover gets built, by someone reasoning about game rules, while the damage lands
 in the render layer on the *opponent's* machine.
 
+## Six card triggers are NO-GO until implemented (Sam, 2026-07-26)
+
+**HARD RULE. Do not author a card using any of these.** They are declared in
+`Enums.cs`'s `Trigger` enum and **raised nowhere in the engine**. A card using one
+parses, validates, loads, and then does nothing — forever, silently, with no error.
+
+> `ON_TURN_START` · `ON_TURN_END` · `ON_DAMAGED` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
+
+**The five that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, and
+`ON_ATTACK`. **`ON_ATTACK` is the trap** — it is raised for **weapons only**
+(`CommandProcessor.cs:512-518`), so it is *valid* on a weapon and *dead* on a minion.
+A membership check alone will not catch that.
+
+No shipped or drafted card currently uses a dead trigger (verified 2026-07-26 across
+all 73 shipped rows + both `card-drafts-emberward-tidecaller*.json`). The risk is
+entirely forward-looking: two batch-3 drafts hit it before being caught by hand.
+
+Lift a name from this list only when its raise site actually exists. `CardValidator`
+has no rule for this (proposed as C21 — reject unraised triggers, and reject
+`ON_ATTACK` on a non-`WEAPON`); until it does, **this list is the only guard.**
+
+### On-damage riders: what a keyword can and cannot ride (Sam + Claude, 2026-07-26)
+
+1. **`Keyword.FREEZE` (Frost) works on MINIONS as of 2026-07-26.** `DamagePipeline`
+   now honours three riders — `LIFESTEAL`, `POISONOUS`, `FREEZE` — in the fixed order
+   *Aegis absorb → health/armor → Lifedrain → Venom → Frost*. Frost freezes **heroes
+   as well as minions** (unlike Venom), does **not** fire behind an Aegis shield, and
+   does **not** ride Overwhelm overflow (G0 R-2(c)). **Caveat: the visual does not
+   exist.** `SG_Frost.shadergraph` is on disk but **`M_Frost.mat` was never authored**,
+   so `CardMaterialBinder`'s `_FrostAmount` writes (`:123-129`) land nowhere. A Frost
+   card is mechanically correct and visually silent until that material exists.
+2. **A hero attacking with a weapon carries NO keywords at all.** `attackerKws` is a
+   literal empty `HashSet` for a hero (`CommandProcessor.cs:495-497`), and
+   `WeaponInstance` (`:340-346`) has no keyword field to read from. **So no weapon can
+   have Lifedrain, Venom, or Frost as an on-hit rider** — not just Freeze, *any* rider.
+   A weapon's only expressive surface today is stats + `ON_PLAY` (equip battlecry) +
+   `ON_ATTACK` with a **static** selector (the trigger fires with an empty target list,
+   so "the minion this hits" is not addressable).
+
+(2) is **still a hard rule — do not author a weapon with any rider keyword.** Sam
+2026-07-26: acknowledged as a ball drop, deliberately **not** today's work. Fixing it
+is a **hash-canonical change** — `WeaponInstance` is game state, so a new `Keywords`
+field must enter the serializer/hasher and the golden replays re-bake with the R1 gate
+as witness (M2-KICKOFF tier b). Not a three-line patch, unlike (1), which needed no
+hash change because `IsFrozen` was already serialized.
+
 ## Conventions
 
 - Specs are the source of truth until code exists. When specs disagree, the

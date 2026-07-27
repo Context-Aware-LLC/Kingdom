@@ -40,6 +40,21 @@ namespace Emberfall.Editor
                 m.SetFloat("_EdgeWidth",  0.08f);
             });
 
+            // Graph-backed like M_Aegis, M_CardBody and M_Glow; verified in-editor 2026-07-26 —
+            // SG_Frost compiles and the material carries all 13 of its properties.
+            //
+            // NEVER HAND-AUTHOR A .mat FOR A SHADER GRAPH. A graph's shader is a generated
+            // SUB-ASSET, so m_Shader needs the sub-asset's fileID, not the 4800000 a plain
+            // .shader uses. Get that number wrong and the guid still resolves, Unity falls back to
+            // Hidden/InternalErrorShader without a word, and every SetFloat below silently misses.
+            // Let this menu item author it — Shader.Find hands Unity the reference to write.
+            Create("M_Frost", "Shader Graphs/SG_Frost", m =>
+            {
+                m.SetFloat("_FrostAmount",     0f);     // CardMaterialBinder tweens this 0<->1
+                m.SetFloat("_FrostOpacity",    0.85f);  // graph defaults, carried deliberately
+                m.SetFloat("_RefractStrength", 0.02f);
+            });
+
             AssetDatabase.SaveAssets();
             Debug.Log("[MaterialSetup] shared materials ready under Assets/Materials");
         }

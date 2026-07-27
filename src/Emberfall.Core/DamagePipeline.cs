@@ -5,7 +5,8 @@ namespace Emberfall.Core
 {
     /// <summary>
     /// The single damage/heal door (game-state-and-actions.md §7 combat, card-system.md §4.1 keyword
-    /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality</b>.
+    /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality
+    /// → Frost freeze</b>.
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
     /// the keyword interactions resolve identically and deterministically. Integer-only. Death is NOT
     /// resolved here — characters dropped to ≤0 are settled as a batch by the interpreter's DeathCheck.
@@ -64,6 +65,26 @@ namespace Emberfall.Core
                 // Venom: any damage to a minion is lethal — mark for the batch DeathCheck.
                 if (sourceKeywords.Contains(Keyword.POISONOUS) && target.IsMinion)
                     target.Minion!.CurrentHealth = 0;
+
+                // Frost: whatever this damaged is frozen (balance-guardrails.md §2.1 "Frost",
+                // ~1 mana — "denies one attack from whatever it damages"). Applies to HEROES as
+                // well as minions, unlike Venom above: freezing a hero denies a weapon swing, and
+                // the FREEZE *action* (FreezeHandler) already treats both the same way, so the
+                // keyword and the action must not disagree. Last in the fixed order because it is
+                // the only rider that cannot change whether the target dies — Venom must have
+                // already run, and freezing a corpse is harmless (RulesEngine clears IsFrozen when
+                // an instance leaves the board).
+                //
+                // Two cases deliberately do NOT freeze, both by existing precedent rather than new
+                // rules: an Aegis-absorbed hit returns above before any rider (G0 ruling R-2(c),
+                // "no on-hit riders"), and Overwhelm overflow reaches here with a null
+                // sourceKeywords (CommandProcessor.cs:530), so it cannot carry Frost to the face.
+                if (sourceKeywords.Contains(Keyword.FREEZE))
+                {
+                    if (target.IsMinion) target.Minion!.IsFrozen = true;
+                    else target.Hero!.IsFrozen = true;
+                    buf.Emit(VfxEvent.onFreeze, source: source, target: target.Id);
+                }
             }
         }
 

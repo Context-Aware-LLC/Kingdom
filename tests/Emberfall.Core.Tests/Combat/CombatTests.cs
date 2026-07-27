@@ -472,6 +472,75 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
+        public void FREEZE_Rider_Freezes_The_Minion_It_Damages()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
+            var def = Board(s, 1, Minion("tank", 1, 10));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(def.CurrentHealth, Is.EqualTo(7), "damage still applied normally");
+            Assert.That(def.IsFrozen, Is.True, "Frost rider froze what it damaged");
+            Assert.That(atk.IsFrozen, Is.False, "the attacker does not freeze itself");
+        }
+
+        [Test]
+        public void FREEZE_Rider_Freezes_A_Hero_Too()
+        {
+            // Unlike Venom (minion-only), Frost applies to heroes — it denies a weapon swing,
+            // and the FREEZE action already treats hero and minion identically.
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
+
+            Proc().Execute(s, Attack(s, atk.Id, s.Players[1].Hero.Id));
+
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(27), "damage still applied");
+            Assert.That(s.Players[1].Hero.IsFrozen, Is.True, "Frost rider froze the hero it damaged");
+        }
+
+        [Test]
+        public void Aegis_Absorb_Skips_FREEZE_Rider()
+        {
+            // Same precedent as Aegis_Absorb_Skips_POISONOUS_Rider — G0 R-2(c), no on-hit riders.
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
+            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.DIVINE_SHIELD));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(def.HasAegisShield, Is.False, "shield consumed");
+            Assert.That(def.CurrentHealth, Is.EqualTo(5), "no health lost behind the shield");
+            Assert.That(def.IsFrozen, Is.False, "Frost never applied — absorb returns before riders");
+        }
+
+        [Test]
+        public void FREEZE_Plus_OVERWHELM_Does_Not_Freeze_The_Face()
+        {
+            // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("rime-crusher", 7, 6, Keyword.FREEZE, Keyword.OVERWHELM));
+            var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26), "overflow damage still carries");
+            Assert.That(s.Players[1].Hero.IsFrozen, Is.False, "overflow must not carry the Frost rider");
+        }
+
+        [Test]
+        public void No_FREEZE_Keyword_Means_No_Freeze()
+        {
+            var s = MainPhase();
+            var atk = Board(s, 0, Minion("plain", 3, 6));
+            var def = Board(s, 1, Minion("tank", 1, 10));
+
+            Proc().Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(def.IsFrozen, Is.False, "ordinary damage does not freeze");
+        }
+
+        [Test]
         public void LIFESTEAL_Attack_Heals_Controller_Hero()
         {
             var s = MainPhase();

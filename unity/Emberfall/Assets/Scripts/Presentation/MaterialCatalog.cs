@@ -21,6 +21,7 @@ namespace Emberfall.Presentation
         public const string ManaFill = "M_ManaFill";  // SG_ManaFill — ManaTrayView pushes _FillLevel
         public const string Plate    = "M_Plate";     // URP Unlit — tinted per-instance via _BaseColor
         public const string Dissolve = "M_Dissolve";  // SG_Dissolve — CardDeathDissolve instances it per death
+        public const string Frost    = "M_Frost";     // SG_Frost — CardMaterialBinder pushes _FrostAmount
 
         private static readonly Dictionary<string, Material> _cache = new();
 
