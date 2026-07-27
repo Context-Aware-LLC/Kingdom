@@ -234,6 +234,16 @@ is dead on the board.
 
 Painterly digital illustration: confident brushwork, saturated accent lighting,
 readable shapes. NOT photoreal, NOT a 3D render, NOT anime or cel-shaded.
+
+SUBJECT AND BACKGROUND MUST OPPOSE EACH OTHER. The class palette governs the
+SUBJECT, not the whole frame. A subject painted in its palette and then dropped
+into a setting painted in that same palette becomes one flat mass, and at board
+size that mass reads as nothing: a molten creature standing in a volcano is a
+single orange blob. Put the subject somewhere its own palette does not belong,
+and oppose it in hue, in value, or in temperature — the molten thing wrecking a
+cold night village, the black slab against a pale dawn, the frozen thing under
+falling embers. Name the subject palette and the background separately and make
+them fight.
 """
 
 STYLE_BLOCK = GLOBAL_STYLE + "\n\n" + TECHNICAL.strip()
