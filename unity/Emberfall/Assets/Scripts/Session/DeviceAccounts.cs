@@ -218,9 +218,17 @@ namespace Emberfall.Session
         }
 
         /// <summary>
-        /// Mint a new account and switch to it. The new account starts with nothing — no profile, no
-        /// roster — so the caller lands in the same first-run flow a fresh install gets, which is the
-        /// point: it is the flow that most needs a second pair of eyes and could not be re-entered.
+        /// Mint a new account. It starts with nothing — no profile, no roster — so whichever process
+        /// signs into it lands in the same first-run flow a fresh install gets.
+        ///
+        /// <para><b>It does NOT switch to it, and that is the whole point.</b> This originally did, on
+        /// the reasoning that someone creating an account wants to be in it. That is wrong for the case
+        /// this feature exists to serve: an account is usually created *for the other seat*, and
+        /// switching moved the creating process instead — then the second process, sharing the same
+        /// prefs store, came up on the new account too. Both seats landed on one account and wrote two
+        /// characters into it before anyone noticed (2026-07-27). Creating a seat must never move the
+        /// seat you are sitting in; use <see cref="SwitchTo"/> deliberately, or pin the other process
+        /// with <c>-emberfallAccount</c>.</para>
         ///
         /// <para>Two ids, minted separately. <see cref="LocalAccount.Id"/> names a directory and is
         /// logged; <see cref="LocalAccount.WireToken"/> is a bearer credential and is not. Only the
@@ -231,7 +239,6 @@ namespace Emberfall.Session
         {
             var account = new LocalAccount(Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D"));
             Store().Save(account);
-            SwitchTo(account.Id);
             return account;
         }
 
