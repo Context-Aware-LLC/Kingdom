@@ -174,6 +174,7 @@ CLASSES = {
     "verdant": "card-drafts-verdant",
     "batch2": "card-drafts-emberward-tidecaller",
     "batch3": "card-drafts-emberward-tidecaller-b3",
+    "weapon-rerolls": "card-drafts-weapon-rerolls",
 }
 
 # WHERE CANDIDATES LAND under art-bakeoff/card-art/ (Sam, 2026-07-26). The
@@ -186,6 +187,7 @@ CLASSES = {
 # candidate still goes to unity/.../Art/Cards/<setId>/art_<cardId>.png, the
 # folder contract CardArtPostprocessor.cs enforces. See final_path().
 OUT_GROUP = {
+    "weapon-rerolls": "weapon-rerolls",
     "batch2": "emberward-tidecaller",
     "batch3": "emberward-tidecaller",
 }
