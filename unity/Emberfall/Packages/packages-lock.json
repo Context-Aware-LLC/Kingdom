@@ -34,6 +34,15 @@
         "com.emberfall.core.contracts": "0.1.0"
       }
     },
+    "com.emberfall.core.collection": {
+      "version": "file:../../../src/Emberfall.Core.Collection",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.emberfall.core.contracts": "0.1.0",
+        "com.emberfall.core.cards": "0.1.0"
+      }
+    },
     "com.emberfall.core.contracts": {
       "version": "file:../../../src/Emberfall.Core.Contracts",
       "depth": 0,
@@ -128,6 +137,13 @@
         "com.unity.test-framework.performance": "3.2.0"
       }
     },
+    "com.unity.dedicated-server": {
+      "version": "2.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.dt.app-ui": {
       "version": "2.1.7",
       "depth": 1,
@@ -151,6 +167,15 @@
       "depth": 1,
       "source": "builtin",
       "dependencies": {}
+    },
+    "com.unity.multiplayer.playmode": {
+      "version": "2.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.2"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.nuget.mono-cecil": {
       "version": "1.11.6",
