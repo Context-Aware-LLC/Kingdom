@@ -188,8 +188,7 @@ hash change because `IsFrozen` was already serialized.
 
 `hero_power_toll_the_bell` (2 mana, Restore 2 to your hero) is strictly dominated by VERDANT's
 `hero_power_quicken` (2 mana, Restore 3) — same cost, same verb, same target, less healing, no
-compensating text. `balance-survey-2026-07-26.md` row 14 called it zero-impact because GRAVEKEEP
-had no collectible cards; **that premise is stale — GRAVEKEEP has 15**, so the defect is live.
+compensating text.
 
 **Not being fixed. Do not re-raise it as a finding.** It is a hero-identity change owned by
 `heroes.md` §3, not a card data patch, and all balance tuning is halted until more classes are
@@ -244,6 +243,27 @@ committed — that is a separate, easy-to-forget step.
 
 **Never delete a candidate from `art-bakeoff/`** — it is keep-forever seed material and Sam curates
 it himself.
+
+## Never commit a changed `productName` (Sam + Claude, 2026-07-27)
+
+**HARD RULE. Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it
+and confirm `productName` is still exactly `Emberfall`.**
+
+`Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`, so that one string
+is what keys the player's **entire collection** — `profile.json`, `characters.json`, `decks.json` and
+`accounts.json`. Rename the product and the game silently boots against a different, empty collection
+root. Committing such a rename **permanently relocates the save location for every build**: the real
+collection becomes unreachable and any existing tester's collection orphans, with no error and no way
+for the player to tell what happened.
+
+**This is not hypothetical, and it is not a typo risk — a tool does it to you.** Running a Unity
+**multiplayer scenario** rewrites `productName` to `Emberfall (Client)` (its role name). On 2026-07-27
+that sent both test clients to `Context Aware/Emberfall (Client)/`, where they minted a fresh account
+and asked a returning player for his name. Expect it to happen again after every scenario run.
+
+**`Emberfall/Build/Restore Product Name` puts it back** (set through `PlayerSettings`, since Unity
+holds project settings in memory and overwrites a file edited underneath it). The rename itself is
+harmless while it stays in the working tree; only the commit is damaging.
 
 ## Conventions
 

@@ -75,6 +75,52 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
+        /// The one true product name. <b>Changing it moves every player's save data.</b>
+        /// <see cref="Application.persistentDataPath"/> is <c>AppData/LocalLow/&lt;company&gt;/&lt;product&gt;</c>,
+        /// so the collection root — profiles, rosters, decks, the account registry — is keyed on this
+        /// string.
+        /// </summary>
+        private const string CanonicalProductName = "Emberfall";
+
+        /// <summary>
+        /// Restore <c>productName</c> after a multiplayer scenario has renamed it.
+        ///
+        /// <para><b>Why this exists.</b> Running a multiplayer scenario rewrites <c>productName</c> to
+        /// <c>"Emberfall (Client)"</c> (the role name). That silently relocates
+        /// <see cref="Application.persistentDataPath"/>, so the game boots against a brand-new empty
+        /// collection and asks a returning player who they are — which is exactly what happened on
+        /// 2026-07-27. The change lands in <c>ProjectSettings.asset</c> as an ordinary working-tree
+        /// edit, and <b>committing it would permanently move the save location for every build</b>:
+        /// the real collection becomes unreachable and any existing tester's collection orphans.</para>
+        ///
+        /// <para>Set through <c>PlayerSettings</c> rather than by editing the asset, because Unity holds
+        /// project settings in memory and would overwrite a file edited underneath it.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Restore Product Name (undo scenario rename)")]
+        public static void RestoreProductName()
+        {
+            string current = PlayerSettings.productName;
+
+            // Set and save UNCONDITIONALLY, even when the in-memory value already looks right.
+            // The scenario writes the rename into ProjectSettings.asset from ITS OWN process, so this
+            // Editor can hold "Emberfall" in memory while the file on disk — the thing git commits —
+            // says "Emberfall (Client)". An early return on `current == canonical` therefore skipped the
+            // one step that mattered and left the file wrong (observed 2026-07-27). The in-memory value
+            // is not evidence about the file.
+            PlayerSettings.productName = CanonicalProductName;
+            AssetDatabase.SaveAssets();
+
+            if (current == CanonicalProductName)
+                Debug.Log($"[EmberfallBuild] productName in memory was already '{CanonicalProductName}'; " +
+                          "re-saved so ProjectSettings.asset on disk agrees. Collection root: " +
+                          $"{Application.persistentDataPath}");
+            else
+                Debug.LogWarning($"[EmberfallBuild] productName was '{current}' — restored to " +
+                                 $"'{CanonicalProductName}'. A renamed product points the game at a " +
+                                 "different collection root; never commit that rename.");
+        }
+
+        /// <summary>
         /// Put the three playable scenes in <c>EditorBuildSettings</c>, menu first.
         ///
         /// <para><b>This is what makes scene navigation work in the EDITOR.</b>
