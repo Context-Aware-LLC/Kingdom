@@ -40,6 +40,7 @@ namespace Emberfall.Core.Collection
         private const string CharactersProperty = "characters";
         private const string DecksProperty = "decks";
         private const string ProfileProperty = "profile";
+        private const string AccountsProperty = "accounts";
 
         // ---- characters ----------------------------------------------------------------
 
@@ -202,6 +203,56 @@ namespace Emberfall.Core.Collection
             // Absent is the same as never-named, which is a legitimate state (IProfileStore) — so a
             // missing displayName is empty rather than fatal, unlike a character's required id.
             return new PlayerProfile(Str(el, "displayName") ?? "");
+        }
+
+        // ---- accounts ------------------------------------------------------------------
+
+        /// <summary>
+        /// The device's account registry (<see cref="LocalAccount"/>). Carries no active-account
+        /// pointer by design — that is machine state and lives in <c>PlayerPrefs</c>; see
+        /// <see cref="ILocalAccountStore"/>.
+        /// </summary>
+        public static string WriteAccounts(IEnumerable<LocalAccount> accounts)
+        {
+            var buffer = new System.IO.MemoryStream();
+            using (var w = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
+            {
+                w.WriteStartObject();
+                w.WriteNumber("schemaVersion", SchemaVersion);
+                w.WriteStartArray(AccountsProperty);
+                foreach (var a in accounts)
+                {
+                    w.WriteStartObject();
+                    w.WriteString("id", a.Id);
+                    w.WriteString("wireToken", a.WireToken);
+                    w.WriteEndObject();
+                }
+                w.WriteEndArray();
+                w.WriteEndObject();
+            }
+            return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
+        }
+
+        /// <summary>
+        /// Read the registry back. Both fields are <b>required</b> — unlike a character's
+        /// <c>defaultDeckId</c>, neither has a meaningful absent state: an account with no id names no
+        /// folder, and one with no wire token cannot join a match. Defaulting a missing wireToken to
+        /// the id would silently hand a minted account the grandfathered account's shape, and the
+        /// symptom would appear much later, on the wire.
+        /// </summary>
+        public static IReadOnlyList<LocalAccount> ReadAccounts(string json)
+        {
+            var result = new List<LocalAccount>();
+            using var doc = ParseEnvelope(json, AccountsProperty, out var rows);
+            int i = 0;
+            foreach (var el in rows.EnumerateArray())
+            {
+                string id = Req(el, "id", AccountsProperty, i);
+                string wireToken = Req(el, "wireToken", AccountsProperty, i);
+                result.Add(new LocalAccount(id, wireToken));
+                i++;
+            }
+            return result;
         }
 
         // ---- shared --------------------------------------------------------------------

@@ -111,6 +111,18 @@ namespace Emberfall.Net.Server.Transport
                 return;
             }
 
+            // ── VULN-003 (security/known-vulnerabilities, LATENT — trigger row "Attaching anything of
+            //    value to an account"). THIS IS THE LINE THAT ARMS IT. hello.DeviceToken is a string
+            //    the client chose, and this is the whole of our identity check: there is none. That is
+            //    adequate while an account holds nothing — the collection is local files on the
+            //    player's own disk and there is no accounts table — so presenting someone else's token
+            //    buys their telemetry attribution and nothing more.
+            //    The moment an account holds an entitlement, a purchase, a rating or a claimed name,
+            //    whoever holds this string IS that player, with no password to change and no session
+            //    to revoke. Read VULN-003 §4 before keying anything of value off the AccountId below:
+            //    value attaches to an authenticated identity, never to a bearer token, and a
+            //    guest→account conversion must be one-way — a token that still resolves after linking
+            //    is a permanent back door into the account it was meant to protect.
             var account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
 
             Seating? seating = await PairAsync(conn, socket, account, ct);

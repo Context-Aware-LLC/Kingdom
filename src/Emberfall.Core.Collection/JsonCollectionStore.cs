@@ -238,6 +238,91 @@ namespace Emberfall.Core.Collection
         }
     }
 
+    /// <summary>
+    /// JSON-file <see cref="ILocalAccountStore"/>. Same caching and atomicity story as
+    /// <see cref="JsonCharacterStore"/>; see that type.
+    ///
+    /// <para><b>The one store built from a root alone</b> — <see cref="InRoot"/> takes no storage key,
+    /// because this file is what the storage keys come from. That asymmetry is the whole reason the
+    /// registry is a separate file at a separate level rather than a header in one of the others.</para>
+    /// </summary>
+    public sealed class JsonLocalAccountStore : ILocalAccountStore
+    {
+        private readonly string _filePath;
+
+        public JsonLocalAccountStore(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Account store needs a file path.", nameof(filePath));
+            _filePath = filePath;
+        }
+
+        /// <summary>The registry for a collection root. Note the missing storage key — see the type remarks.</summary>
+        public static JsonLocalAccountStore InRoot(string rootDirectory)
+            => new JsonLocalAccountStore(CollectionPaths.Accounts(rootDirectory));
+
+        public string FilePath => _filePath;
+
+        /// <summary>
+        /// Every account, in creation order. A missing file is an empty registry — which is every
+        /// device that was played before this existed, not an error, and the case
+        /// <see cref="LocalAccountRoster.EnsureDefault"/> is written for.
+        /// </summary>
+        public IReadOnlyList<LocalAccount> LoadAll()
+        {
+            string? json = JsonStoreFile.ReadOrNull(_filePath);
+            return json == null ? Array.Empty<LocalAccount>() : CollectionJson.ReadAccounts(json);
+        }
+
+        /// <summary>
+        /// Upsert by <see cref="LocalAccount.Id"/>, preserving order — so the grandfathered account
+        /// stays first and the switcher's list does not reshuffle under the player.
+        ///
+        /// <para>Refuses to let a second account claim an existing account's wire token. Nothing in
+        /// this file's format prevents it and the caller mints both values, so this is the last point
+        /// at which the mistake is fixable — the same call <see cref="JsonCharacterStore.Save"/> makes
+        /// about a pairing. Two accounts sharing a token would present as one account to the server
+        /// and defeat the entire point of the second seat, while looking correct on disk.</para>
+        /// </summary>
+        public void Save(LocalAccount account)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+
+            var all = new List<LocalAccount>(LoadAll());
+            int existing = IndexOf(all, account.Id);
+
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (i == existing) continue;
+                if (all[i].WireToken == account.WireToken)
+                    throw new ArgumentException(
+                        $"Account '{all[i].Id}' already holds that wire token; two accounts sharing one " +
+                        "token arrive at the server as the same account.", nameof(account));
+            }
+
+            if (existing >= 0) all[existing] = account; else all.Add(account);
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteAccounts(all));
+        }
+
+        /// <summary>Forget an account, leaving its collection on disk. See <see cref="ILocalAccountStore.Delete"/>.</summary>
+        public void Delete(string accountId)
+        {
+            if (string.IsNullOrEmpty(accountId)) return;
+            var all = new List<LocalAccount>(LoadAll());
+            int existing = IndexOf(all, accountId);
+            if (existing < 0) return;
+            all.RemoveAt(existing);
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteAccounts(all));
+        }
+
+        private static int IndexOf(List<LocalAccount> all, string id)
+        {
+            for (int i = 0; i < all.Count; i++)
+                if (all[i].Id == id) return i;
+            return -1;
+        }
+    }
+
     /// <summary>The file plumbing the stores share: read-or-null, and a crash-safe write.</summary>
     internal static class JsonStoreFile
     {

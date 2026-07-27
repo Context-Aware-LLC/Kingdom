@@ -42,6 +42,7 @@ namespace Emberfall.Editor
 
             var report = new System.Text.StringBuilder();
             report.AppendLine("[PlayerAccount] this device");
+            AppendAccountRegistry(report);
             report.AppendLine($"  scope      : {account.ScopeDirectory}");
             report.AppendLine($"  exists     : {Directory.Exists(account.ScopeDirectory)}");
             report.AppendLine($"  name       : {(account.NeedsDisplayName ? "(never set)" : account.Profile.DisplayName)}");
@@ -59,6 +60,33 @@ namespace Emberfall.Editor
             // The token itself is deliberately NOT printed: it is a bearer identity, and a console log
             // is the easiest thing in the project to paste into a bug report.
             Debug.Log(report.ToString());
+        }
+
+        /// <summary>
+        /// The device's accounts and which one is signed in (<see cref="DeviceAccounts"/>). Prints ids,
+        /// never wire tokens — those are bearer credentials, and a console log is the easiest thing in
+        /// the project to paste into a bug report. "grandfathered" means id and token are the same
+        /// value, which is true of the first account and only of that one.
+        /// </summary>
+        private static void AppendAccountRegistry(System.Text.StringBuilder report)
+        {
+            try
+            {
+                var all = DeviceAccounts.All();
+                string activeId = DeviceAccounts.Active.Id;
+                report.AppendLine($"  accounts   : {all.Count} on this device");
+                for (int i = 0; i < all.Count; i++)
+                {
+                    LocalAccount a = all[i];
+                    report.AppendLine($"    {(a.Id == activeId ? "→" : " ")} {i + 1}. " +
+                                      $"{DeviceAccounts.LabelOf(a, i)}  id={a.Id}" +
+                                      $"{(a.IsGrandfathered ? "  (grandfathered)" : "")}");
+                }
+            }
+            catch (Exception ex)
+            {
+                report.AppendLine($"  accounts   : UNREADABLE — {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         /// <summary>

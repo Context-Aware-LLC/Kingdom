@@ -21,6 +21,12 @@
             <ui:Label name="identity-sub" text="" class="mm-identity__sub" />
         </ui:Button>
 
+        <!-- Testing affordance: more than one account on this machine, so the deckbuilder can be
+             played as two people (Sam 2026-07-27). Styled display:none and shown by
+             MainMenuController ONLY under UNITY_EDITOR || DEVELOPMENT_BUILD — a release build leaves
+             it hidden. Tick "Development Build" in Build Settings or it will not appear. -->
+        <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly" />
+
         <!-- Brand -->
         <ui:VisualElement name="brand" class="mm-brand">
             <ui:Label text="EMBERFALL" class="mm-wordmark" />
@@ -80,6 +86,23 @@
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-character-cancel" text="Later" class="mm-modal__button" />
                     <ui:Button name="btn-character-confirm" text="Create" class="mm-modal__button mm-modal__button--cta" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Accounts: the testing switcher. Rows are built in C# from DeviceAccounts.All(), so the
+             list is whatever is on disk rather than a fixed two. -->
+        <ui:VisualElement name="account-modal" class="mm-modal mm-modal--hidden">
+            <ui:VisualElement name="account-panel" class="mm-modal__panel">
+                <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title" />
+                <ui:Label name="account-help"
+                          text="Local testing only — each account has its own name, characters and decks, and joins matches as its own player. Switching reloads the menu."
+                          class="mm-modal__help" />
+                <ui:VisualElement name="account-list" class="mm-accounts" />
+                <ui:Label name="account-error" text=" " class="mm-modal__error" />
+                <ui:VisualElement class="mm-modal__actions">
+                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button" />
+                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

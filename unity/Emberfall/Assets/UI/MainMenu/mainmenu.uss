@@ -112,6 +112,66 @@
     color: var(--ink-2);
 }
 
+/* ---------- Dev-only affordances ----------
+ * Hidden by default and shown from C# under UNITY_EDITOR || DEVELOPMENT_BUILD. Hiding here rather
+ * than only in code means a release build leaves it invisible even if the show call is ever
+ * reached — the default is the safe one.
+ * Sits directly under the identity plate, deliberately reading as a debug control and not as
+ * chrome: quieter than the menu, and never in the visual language of a shipped button.
+ */
+.mm-devonly {
+    position: absolute;
+    top: 72px;
+    left: var(--space-6);
+    display: none;
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    background-color: rgba(20, 25, 34, 0.4);
+    border-width: 1px;
+    border-color: rgba(11, 14, 19, 0.6);
+    border-radius: var(--space-1);
+    padding: 2px var(--space-2);
+}
+.mm-devonly:hover {
+    color: var(--ink-1);
+    background-color: rgba(42, 51, 64, 0.6);
+}
+
+/* ---------- Account switcher rows ---------- */
+.mm-accounts {
+    flex-direction: column;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+.mm-account-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--space-1);
+    background-color: rgba(20, 25, 34, 0.45);
+    margin-bottom: var(--space-2);
+}
+.mm-account-row--active {
+    background-color: rgba(42, 51, 64, 0.75);
+    border-left-width: 3px;
+    border-left-color: var(--accent);
+}
+.mm-account-row__label {
+    font-size: var(--type-label);
+    color: var(--ink-1);
+    flex-grow: 1;
+}
+.mm-account-row__sub {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+}
+.mm-account-row__button {
+    font-size: var(--type-caption);
+    padding: 2px var(--space-3);
+    margin-left: var(--space-2);
+}
+
 /* ---------- Modals ----------
  * Full-screen backdrop + a centred panel. The backdrop is opaque enough to read as modal and
  * picks up clicks itself (UI Toolkit will not block the menu underneath otherwise).

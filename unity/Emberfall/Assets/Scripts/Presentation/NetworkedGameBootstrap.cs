@@ -122,9 +122,13 @@ namespace Emberfall.Presentation
             var clientOptions = new ClientOptions
             {
                 // C-G1-8: the server refuses a fresh socket whose hello carries no device token.
-                // DeviceIdentity.Token is minted once and persisted — see that class for why the
-                // persistence, not the generation, is the load-bearing half.
-                DeviceToken = DeviceIdentity.Token,
+                // The SIGNED-IN ACCOUNT's token, not the device's — two seats launched from one machine
+                // must arrive as two accounts. MatchGate.PairAsync never compares accounts, so they
+                // already pair; without this they simply both arrive as the same one, indistinguishable
+                // to the server and to telemetry. DeviceIdentity.Token is untouched and is still what
+                // the first account presents (DeviceAccounts) — see that class for why the persistence,
+                // not the generation, is the load-bearing half.
+                DeviceToken = DeviceAccounts.WireToken(),
                 Platform = DeviceIdentity.Platform,
                 BuildId = DeviceIdentity.BuildId,
                 DevCapture = Debug.isDebugBuild,

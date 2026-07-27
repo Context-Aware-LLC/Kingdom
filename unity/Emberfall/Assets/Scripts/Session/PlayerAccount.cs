@@ -33,12 +33,23 @@ namespace Emberfall.Session
         private static PlayerAccount _local;
 
         /// <summary>
-        /// This device's account, composed on first touch from <see cref="Application.persistentDataPath"/>
-        /// and <see cref="DeviceIdentity.Token"/>. Both reads are main-thread-only Unity API, so this
-        /// must not be touched from the network receive pump.
+        /// The signed-in player, composed on first touch from <see cref="DeviceAccounts.Root"/> and the
+        /// active account's storage key. Both reads are main-thread-only Unity API, so this must not be
+        /// touched from the network receive pump.
+        ///
+        /// <para>The key used to be <see cref="DeviceIdentity.Token"/> directly. It now comes from
+        /// <see cref="DeviceAccounts"/>, which grandfathers that token onto the first account — so a
+        /// machine that has been played resolves to the identical folder it always did, and a machine
+        /// with a second account resolves to whichever one is signed in.</para>
         /// </summary>
         public static PlayerAccount Local =>
-            _local ??= new PlayerAccount(Application.persistentDataPath, DeviceIdentity.Token);
+            _local ??= new PlayerAccount(DeviceAccounts.Root, DeviceAccounts.Active.Id);
+
+        /// <summary>
+        /// Drop the cached account. Called by <see cref="DeviceAccounts.SwitchTo"/> — a stale
+        /// <see cref="Local"/> after a switch would write one player's character into another's file.
+        /// </summary>
+        public static void InvalidateLocal() => _local = null;
 
         private readonly ICharacterStore _characters;
         private readonly IDeckStore _decks;

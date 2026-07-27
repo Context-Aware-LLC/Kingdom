@@ -28,6 +28,13 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public const string ProfileFileName = "profile.json";
 
+        /// <summary>
+        /// The accounts on this device (<see cref="LocalAccount"/>). <b>Lives at the root, not in a
+        /// scope</b> — you have to know which account you are before you can open a scope directory,
+        /// so the list of them cannot be inside one.
+        /// </summary>
+        public const string AccountsFileName = "accounts.json";
+
         /// <summary>Longest storage key we will turn into a directory name (a UUID is 36).</summary>
         private const int MaxKeyLength = 64;
 
@@ -43,6 +50,13 @@ namespace Emberfall.Core.Collection
 
         public static string Profile(string rootDirectory, string storageKey)
             => Path.Combine(ScopeDirectory(rootDirectory, storageKey), ProfileFileName);
+
+        /// <summary>
+        /// The device's account registry — the one collection file that takes no storage key, because
+        /// it is what tells you what the storage keys are.
+        /// </summary>
+        public static string Accounts(string rootDirectory)
+            => Path.Combine(rootDirectory, AccountsFileName);
 
         /// <summary>
         /// Reduce a storage key to a safe single path segment: <c>[A-Za-z0-9-_]</c> survives,
