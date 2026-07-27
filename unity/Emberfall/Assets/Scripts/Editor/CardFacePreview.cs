@@ -51,14 +51,39 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Preview Card Faces (offscreen)")]
         public static void Render()
         {
+            ICardDatabase db = CardDatabaseLoader.Load();
+            RenderSpread(db, PickSpread(db), "card_faces");
+        }
+
+        /// <summary>
+        /// The same sheet, restricted to an explicit id list — for looking at one import batch
+        /// rather than a representative spread. Ids that are not in the database are reported
+        /// rather than skipped: a typo'd id and a row that failed to merge look identical
+        /// otherwise, and the second one is the failure this is meant to catch.
+        /// </summary>
+        public static void RenderIds(IEnumerable<string> cardIds, string stem)
+        {
+            ICardDatabase db = CardDatabaseLoader.Load();
+            var spread = new List<CardDefinition>();
+            var missing = new List<string>();
+            foreach (string id in cardIds)
+            {
+                if (db.TryGet(id, out CardDefinition def)) spread.Add(def);
+                else                                       missing.Add(id);
+            }
+            if (missing.Count > 0)
+                Debug.LogError($"[CardFacePreview] not in the database: {string.Join(", ", missing)}");
+            RenderSpread(db, spread, stem);
+        }
+
+        private static void RenderSpread(ICardDatabase db, List<CardDefinition> spread, string stem)
+        {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "card-face-preview");
             Directory.CreateDirectory(outDir);
 
-            ICardDatabase db = CardDatabaseLoader.Load();
-            List<CardDefinition> spread = PickSpread(db);
             if (spread.Count == 0)
             {
-                Debug.LogError("[CardFacePreview] card database has no collectible cards.");
+                Debug.LogError("[CardFacePreview] nothing to render.");
                 return;
             }
 
@@ -106,13 +131,30 @@ namespace Emberfall.Editor
                 return;
             }
 
-            string path = Path.Combine(outDir, $"card_faces_{FaceW}x{FaceH}_{Columns}up.png");
+            string path = Path.Combine(outDir, $"{stem}_{FaceW}x{FaceH}_{Columns}up.png");
             WriteSheet(faces, path);
 
             Debug.Log($"[CardFacePreview] wrote {path}\n" +
                       $"  {faces.Count} faces at {FaceW}x{FaceH}, {Columns} per row, {Gutter}px gutter\n  " +
                       string.Join("\n  ", ids));
         }
+
+        /// <summary>
+        /// The twelve EMBERWARD/TIDECALLER cards imported 2026-07-26
+        /// (tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
+        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFESTEAL on Emberdrinker —
+        /// so their pill has never rendered, and this sheet is where that shows up or doesn't.
+        /// The weapon, Deepfrost Spear, is the highest-risk face in the batch: the engine supports
+        /// weapons fully and Unity has never drawn one.
+        /// </summary>
+        [MenuItem("Emberfall/Preview Card Faces — EMBERWARD/TIDECALLER batch (offscreen)")]
+        public static void RenderEmberwardTidecaller() => RenderIds(new[]
+        {
+            "ember_stoke_the_coals",  "ember_emberdrinker",     "ember_slagshell_bulwark",
+            "ember_kiln_warden",      "ember_forgeheart_colossus", "ember_ashfall_wyrm",
+            "tide_hoarfrost_lash",    "tide_fathom_crush",      "tide_deepfrost_spear",
+            "tide_hollowshell_warden","tide_drowned_titan",     "tide_glacierborn_leviathan",
+        }, "card_faces_emberward_tidecaller");
 
         // ── Spread ──────────────────────────────────────────────────────────────────
 
