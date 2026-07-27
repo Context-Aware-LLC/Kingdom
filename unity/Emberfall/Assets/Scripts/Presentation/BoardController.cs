@@ -570,6 +570,29 @@ namespace Emberfall.Presentation
             var frameRenderer = MakeSprite(root.transform, "Frame",
                 new Vector3(0f, 0f, -0.006f), new Vector2(CardW, CardH));
 
+            // Frost overlay — the freeze cue (SG_Frost), card-sized, driven by CardMaterialBinder's
+            // _FrostAmount. Its own quad because SG_Frost is an overlay shader: it has _FrostOpacity
+            // and _RefractStrength and expects something behind it to frost OVER. The body quad
+            // wears SG_CardComposite, which does not declare _FrostAmount at all, so pushing the
+            // property there wrote it nowhere.
+            //
+            // Z = -0.008 puts it in FRONT of the art (-0.005) and frame (-0.006) but BEHIND every
+            // TMP label (-0.010) and the gem (-0.012). That is deliberate: a frozen minion still
+            // has to be readable, so the ice covers the illustration and never the numbers. At
+            // -0.02 it sat in front of the labels and, writing depth on the transparent queue,
+            // made them vanish entirely while drawing no ice of its own.
+            var frostGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            frostGo.name = "FrostOverlay";
+            frostGo.transform.SetParent(root.transform, false);
+            frostGo.transform.localScale    = new Vector3(CardW, CardH, 1f);
+            frostGo.transform.localPosition = new Vector3(0f, 0f, -0.008f);
+            DestroyObj(frostGo.GetComponent<MeshCollider>());
+            var frostRenderer = frostGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(frostRenderer, MaterialCatalog.Frost);
+            // Same pattern as glow and aegis: active GO, disabled renderer. The binder enables it
+            // when AuraSet.Frozen arrives, so an unfrozen card costs no draw call.
+            frostRenderer.enabled = false;
+
             // Rarity gem — bottom-center; sprite (gem_{rarity}) assigned per-rarity by ApplyFrame.
             var gemRenderer = MakeSprite(root.transform, "Gem",
                 new Vector3(0f, -CardH * 0.42f, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
@@ -651,7 +674,7 @@ namespace Emberfall.Presentation
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
-            binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer);
+            binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer, frostRenderer);
 
             return presenter;
         }

@@ -82,7 +82,12 @@ namespace Emberfall.Editor
                 // is what proves the overlay is inert when it should be, rather than merely faint.
                 written.AddRange(Capture(root.transform, presenter.transform.position, "frost_no_overlay"));
 
-                Renderer overlay = AddFrostOverlay(presenter.transform, mat);
+                Renderer overlay = FindFrostOverlay(presenter.transform);
+                if (overlay == null) return;
+                Debug.Log($"[CardFrostPreview] overlay z={overlay.transform.localPosition.z:0.000} " +
+                          $"material={overlay.sharedMaterial.name} " +
+                          $"shader={overlay.sharedMaterial.shader.name} " +
+                          $"declares _FrostAmount={overlay.sharedMaterial.HasProperty("_FrostAmount")}");
 
                 // One instance, not the project asset: a shared material would make every frozen
                 // minion on the board show the last one's amount.
@@ -107,22 +112,28 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// The quad CreatePresenter does not build yet: card-sized, one step nearer the camera than
-        /// the glow overlay, wearing M_Frost. Sibling in every respect to the GlowOverlay above it.
+        /// The REAL overlay quad, built by BoardController.CreatePresenter — not one this harness
+        /// makes up. That is the whole point: a harness that builds its own quad proves the shader
+        /// draws, and proves nothing about whether a card in a match has anywhere for it to draw.
+        /// Returns null (loudly) if the quad is gone, because that is a regression worth failing on.
         /// </summary>
-        private static Renderer AddFrostOverlay(Transform card, Material mat)
+        private static Renderer FindFrostOverlay(Transform card)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = "FrostOverlay";
-            go.transform.SetParent(card.Find("Visual") ?? card, false);
-            // BoardController.CardW/CardH are internal to the runtime assembly; this harness lives
-            // in the Editor one. Same numbers, and the sweep below is what would catch a drift.
-            go.transform.localScale    = new Vector3(1.17f, 1.65f, 1f);
-            go.transform.localPosition = new Vector3(0f, 0f, -0.02f);
-            Object.DestroyImmediate(go.GetComponent<MeshCollider>());
-
-            var r = go.GetComponent<Renderer>();
-            r.sharedMaterial = mat;
+            // CreatePresenter re-parents every built child under a "Visual" wrapper at the end, so
+            // the quad is never a direct child of the card root. The fallback covers the root case
+            // rather than assuming either shape.
+            Transform t = card.Find("Visual/FrostOverlay") ?? card.Find("FrostOverlay");
+            if (t == null)
+            {
+                Debug.LogError("[CardFrostPreview] the card has no FrostOverlay child — " +
+                               "BoardController.CreatePresenter no longer builds it, so the freeze " +
+                               "cue has nowhere to land.");
+                return null;
+            }
+            var r = t.GetComponent<Renderer>();
+            // The harness drives amount directly, so the renderer must be on regardless of what
+            // the binder would have done with AuraSet.Frozen.
+            if (r != null) r.enabled = true;
             return r;
         }
 

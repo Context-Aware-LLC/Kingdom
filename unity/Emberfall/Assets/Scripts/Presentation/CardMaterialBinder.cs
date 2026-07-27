@@ -15,7 +15,7 @@ namespace Emberfall.Presentation
     /// Param ownership (shaders/README.md §3 consolidated table):
     ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on onDamage/onHeal
     ///   _StealthAmount  → bodyRenderer   SG_Stealth alpha body — tween to 0.6 (not 1; keeps card readable)
-    ///   _FrostAmount    → bodyRenderer   SG_Frost — tween 0↔1 on AuraSet.Frozen change (0.3s)
+    ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frozen change (0.3s)
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow / affordance; self-animated, no float
     ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield|Taunt; self-animated, no float
     ///
@@ -30,6 +30,7 @@ namespace Emberfall.Presentation
         private Renderer _bodyRenderer;
         private Renderer _glowRenderer;   // null until SG_Glow shader asset assigned
         private Renderer _aegisRenderer;  // null until SG_Aegis shader asset assigned
+        private Renderer _frostRenderer;  // wears M_Frost; the ONLY renderer that declares _FrostAmount
 
         private InstanceId _id;
         private ICardLiveState _live;
@@ -50,11 +51,12 @@ namespace Emberfall.Presentation
 
         // ── Setup (called by BoardController before Init) ──────────────────────────
 
-        public void SetupRenderers(Renderer body, Renderer glow, Renderer aegis)
+        public void SetupRenderers(Renderer body, Renderer glow, Renderer aegis, Renderer frost = null)
         {
             _bodyRenderer  = body;
             _glowRenderer  = glow;
             _aegisRenderer = aegis;
+            _frostRenderer = frost;
             _mpb = new MaterialPropertyBlock();
         }
 
@@ -123,10 +125,26 @@ namespace Emberfall.Presentation
             float frostTarget   = (auras & AuraSet.Frozen)  != 0 ? 1f            : 0f;
             float stealthTarget = (auras & AuraSet.Stealth) != 0 ? StealthTarget : 0f;
 
+            // _FrostAmount goes to the FROST renderer, not the body. The body wears M_CardBody
+            // (SG_CardComposite), which does not declare the property — pushing it there set
+            // nothing, silently, which is why the freeze cue never appeared.
+            //
+            // The renderer is enabled for the whole tween including the thaw, and switched off only
+            // once the amount is back to 0; disabling it the moment Frozen clears would pop the ice
+            // away instead of melting it.
             if (!Mathf.Approximately(_frostCurrent, frostTarget))
+            {
+                if (_frostRenderer != null && frostTarget > 0f) _frostRenderer.enabled = true;
                 Restart(ref _frostRoutine, TweenFloat(
-                    v => { _frostCurrent = v; PushFloat(ShaderIds.FrostAmount, v); },
+                    v =>
+                    {
+                        _frostCurrent = v;
+                        PushFloatTo(_frostRenderer, ShaderIds.FrostAmount, v);
+                        if (_frostRenderer != null && Mathf.Approximately(v, 0f))
+                            _frostRenderer.enabled = false;
+                    },
                     _frostCurrent, frostTarget, FrostDur));
+            }
 
             if (!Mathf.Approximately(_stealthCurrent, stealthTarget))
                 Restart(ref _stealthRoutine, TweenFloat(
@@ -210,12 +228,16 @@ namespace Emberfall.Presentation
 
         // ── MPB write ────────────────────────────────────────────────────────────────
 
-        private void PushFloat(int propId, float value)
+        private void PushFloat(int propId, float value) => PushFloatTo(_bodyRenderer, propId, value);
+
+        // Per-instance, via MaterialPropertyBlock: the shared material asset must never be written,
+        // or every card on the board freezes when one does.
+        private void PushFloatTo(Renderer target, int propId, float value)
         {
-            if (_bodyRenderer == null) return;
-            _bodyRenderer.GetPropertyBlock(_mpb);
+            if (target == null) return;
+            target.GetPropertyBlock(_mpb);
             _mpb.SetFloat(propId, value);
-            _bodyRenderer.SetPropertyBlock(_mpb);
+            target.SetPropertyBlock(_mpb);
         }
     }
 }
