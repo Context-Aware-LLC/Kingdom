@@ -184,6 +184,20 @@ field must enter the serializer/hasher and the golden replays re-bake with the R
 as witness (M2-KICKOFF tier b). Not a three-line patch, unlike (1), which needed no
 hash change because `IsFrozen` was already serialized.
 
+## Known and accepted: Gravekeep's hero power is strictly dominated (Sam, 2026-07-26)
+
+`hero_power_toll_the_bell` (2 mana, Restore 2 to your hero) is strictly dominated by VERDANT's
+`hero_power_quicken` (2 mana, Restore 3) — same cost, same verb, same target, less healing, no
+compensating text. `balance-survey-2026-07-26.md` row 14 called it zero-impact because GRAVEKEEP
+had no collectible cards; **that premise is stale — GRAVEKEEP has 15**, so the defect is live.
+
+**Not being fixed. Do not re-raise it as a finding.** It is a hero-identity change owned by
+`heroes.md` §3, not a card data patch, and all balance tuning is halted until more classes are
+deck-legal (`balance-survey-2026-07-26.md` §9d). Recorded so the next pass recognises it as a
+known-accepted item rather than re-deriving it. The fix when it happens is most likely
+`HEAL 2 → DRAW 1`, which restores the value identity `heroes.md` §3 describes instead of making
+two class powers identical.
+
 ## Conventions
 
 - Specs are the source of truth until code exists. When specs disagree, the
