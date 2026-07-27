@@ -44,6 +44,23 @@ namespace Emberfall.Session
         /// </summary>
         private const string ActivePrefsKey = "emberfall.account.active";
 
+        /// <summary>
+        /// Launch argument that pins this process to one account: <c>-emberfallAccount 2</c> (a 1-based
+        /// position) or <c>-emberfallAccount &lt;id&gt;</c>.
+        ///
+        /// <para><b>This is what makes two seats on one machine actually work.</b> PlayerPrefs and
+        /// <see cref="Application.persistentDataPath"/> are both keyed on companyName/productName, so
+        /// two processes of the same product share them. Sharing the data path is the point — one
+        /// <c>accounts.json</c>, visible to both. Sharing the <i>active pointer</i> is not: without an
+        /// override, two instances resolve to the same account, and whichever one switches last wins
+        /// for both. That applies to two copies of a build and, as far as we have verified, to
+        /// Multiplayer Play Mode virtual players too, which share the same product identity.</para>
+        ///
+        /// <para><b>Read-only, and never written back.</b> Persisting it would clobber the other seat's
+        /// pointer through the very prefs store they share, which is the bug this exists to avoid.</para>
+        /// </summary>
+        private const string AccountArgument = "-emberfallAccount";
+
         private static LocalAccount _active;
 
         /// <summary>Where every account's scope folder sits — and where <c>accounts.json</c> sits, one level up.</summary>
@@ -76,6 +93,18 @@ namespace Emberfall.Session
                 if (_active != null) return _active;
 
                 var all = All();
+
+                // A launch argument wins over the stored pointer — see AccountArgument for why the
+                // stored pointer cannot distinguish two processes of the same product.
+                var pinned = FromArgument(all);
+                if (pinned != null)
+                {
+                    _active = pinned;
+                    Debug.Log($"[DeviceAccounts] pinned to '{LabelOf(pinned, PositionOf(all, pinned))}' " +
+                              $"by {AccountArgument}; the stored pointer is ignored for this process.");
+                    return _active;
+                }
+
                 string wanted = PlayerPrefs.GetString(ActivePrefsKey, string.Empty);
                 var found = LocalAccountRoster.Find(all, wanted);
 
@@ -86,6 +115,53 @@ namespace Emberfall.Session
                 _active = found ?? all[0];
                 return _active;
             }
+        }
+
+        /// <summary>
+        /// The account named by <see cref="AccountArgument"/>, or null when it is absent. Accepts a
+        /// 1-based position (easier to type, and what you actually know at launch) or a full account id.
+        /// A value that matches nothing warns and falls through to the stored pointer rather than
+        /// failing the boot — a typo in a launch argument should not look like a broken build.
+        /// </summary>
+        private static LocalAccount FromArgument(IReadOnlyList<LocalAccount> all)
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+            {
+                if (!string.Equals(args[i], AccountArgument, StringComparison.OrdinalIgnoreCase)) continue;
+
+                string value = args[i + 1];
+                if (int.TryParse(value, out int position))
+                {
+                    if (position >= 1 && position <= all.Count) return all[position - 1];
+                    Debug.LogWarning($"[DeviceAccounts] {AccountArgument} {position} — this device has " +
+                                     $"{all.Count} account(s). Ignoring.");
+                    return null;
+                }
+
+                var byId = LocalAccountRoster.Find(all, value);
+                if (byId != null) return byId;
+                Debug.LogWarning($"[DeviceAccounts] {AccountArgument} '{value}' matches no account. Ignoring.");
+                return null;
+            }
+            return null;
+        }
+
+        /// <summary>0-based position in the roster, or 0 when absent — <c>IReadOnlyList</c> has no IndexOf.</summary>
+        private static int PositionOf(IReadOnlyList<LocalAccount> all, LocalAccount account)
+        {
+            for (int i = 0; i < all.Count; i++)
+                if (all[i].Id == account.Id) return i;
+            return 0;
+        }
+
+        /// <summary>True when a launch argument pinned this process; the switcher cannot override it.</summary>
+        public static bool IsPinnedByArgument => FromArgumentSafe() != null;
+
+        private static LocalAccount FromArgumentSafe()
+        {
+            try { return FromArgument(All()); }
+            catch { return null; }
         }
 
         /// <summary>Drop the cached active account so the next read re-resolves it.</summary>
@@ -172,6 +248,14 @@ namespace Emberfall.Session
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentException("Cannot switch to an empty account id.", nameof(accountId));
+
+            // Refuse rather than write. This process's account came from a launch argument, and the
+            // prefs store it would write to is SHARED with the other seat — so switching here would
+            // silently move the other process's account while leaving this one pinned where it was.
+            if (IsPinnedByArgument)
+                throw new InvalidOperationException(
+                    $"This process is pinned by {AccountArgument}; change the launch argument instead. " +
+                    "Writing the stored pointer here would move the other seat's account, not this one.");
 
             PlayerPrefs.SetString(ActivePrefsKey, accountId);
             PlayerPrefs.Save();

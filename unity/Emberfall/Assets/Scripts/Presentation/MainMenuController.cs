@@ -552,10 +552,42 @@ namespace Emberfall.Presentation
 
         // ---- Destinations (stubbed — navigation is a later pass) ----
         // Find Game → BoardNetworked.unity (server matchmaking; the only destination with a backend today).
-        private void OnFindGame() => Debug.Log("[MainMenu] Find Game → matchmaking (BoardNetworked). Not wired yet.");
+        /// <summary>
+        /// Find Game → <c>BoardNetworked</c>.
+        ///
+        /// <para><b>There is no queue screen to build.</b> That scene's <c>NetworkedGameBootstrap</c>
+        /// already connects, sends its hello and waits, and the server's gate pairs whoever is waiting
+        /// with the next arrival (<c>MatchGate.PairAsync</c>) — so this one scene load is the entire
+        /// matchmaking entry point. Two clients that both press this find each other.</para>
+        /// </summary>
+        private void OnFindGame() => Go("BoardNetworked");
 
-        // Single Player → Board.unity (local vs-AI slice via GameBootstrap).
-        private void OnSinglePlayer() => Debug.Log("[MainMenu] Single Player → Board (vs AI). Not wired yet.");
+        /// <summary>Single Player → <c>Board</c>, the local vs-AI slice (<c>GameBootstrap</c>).</summary>
+        private void OnSinglePlayer() => Go("Board");
+
+        /// <summary>
+        /// Load a scene by name, reporting the one failure mode that is otherwise silent.
+        ///
+        /// <para><b>A scene missing from the build list does not throw a useful error</b> — in a player
+        /// it is simply not there, and in the Editor <c>LoadScene</c> needs it in
+        /// <c>EditorBuildSettings</c> or nothing happens. Both present as a dead button. The build list
+        /// is kept in sync by <c>Emberfall/Build/Sync Scene List</c>; this check is what tells you it
+        /// wasn't.</para>
+        /// </summary>
+        private static void Go(string sceneName)
+        {
+            // CanStreamedLevelBeLoaded, not SceneUtility.GetBuildIndexByScenePath — the latter wants a
+            // full asset path and answers -1 for a bare scene name, which would make this guard reject
+            // every load it was written to protect.
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                Debug.LogError($"[MainMenu] Scene '{sceneName}' is not in the build list, so this button " +
+                               "cannot do anything. Run Emberfall/Build/Sync Scene List.");
+                return;
+            }
+            Debug.Log($"[MainMenu] → {sceneName}");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+        }
 
         /// <summary>
         /// Deck Builder → DeckbuilderSpike.unity (exists as a spike). With an empty roster there is

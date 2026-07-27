@@ -16,17 +16,52 @@ namespace Emberfall.Editor
     public static class EmberfallBuild
     {
         private const string ScenePath = "Assets/Scenes/BoardNetworked.unity";
+        private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
+        private const string LocalScenePath = "Assets/Scenes/Board.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
+        private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
+
+        /// <summary>
+        /// A second seat for local testing: boots the main menu, and is a <b>development</b> player so
+        /// <c>DEVELOPMENT_BUILD</c> is defined and the account switcher exists at all
+        /// (<see cref="Emberfall.Session.DeviceAccounts"/>).
+        ///
+        /// <para><b>Separate menu item and separate output directory, deliberately.</b> The shipping
+        /// build above is what goes to testers, and turning it into a development player would hand
+        /// them the account switcher along with everything else the flag unlocks. Two products, two
+        /// folders, no flag to remember.</para>
+        ///
+        /// <para><b>Pair this with the Editor, not with a second copy of itself.</b> A player build and
+        /// the Editor keep PlayerPrefs in different registry keys
+        /// (<c>HKCU\Software\&lt;company&gt;\&lt;product&gt;</c> vs
+        /// <c>HKCU\Software\Unity\UnityEditor\&lt;company&gt;\&lt;product&gt;</c>) while sharing one
+        /// <c>Application.persistentDataPath</c> — so they hold independent active-account pointers over
+        /// one shared <c>accounts.json</c>, which is exactly two seats. Two instances of this exe would
+        /// share one pointer and fight over which account is signed in.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Windows DEV Second Seat (menu + development flag)")]
+        public static void BuildWindowsDevSeat()
+        {
+            SyncSceneList();
+            BuildAddressables();
+
+            Directory.CreateDirectory(Path.GetDirectoryName(DevOutputPath));
+            var options = new BuildPlayerOptions
+            {
+                // Menu first — it is the boot scene and the only screen that can switch accounts.
+                // Both board scenes ride along so Find Game and Single Player actually go somewhere.
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath },
+                locationPathName = DevOutputPath,
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.Development,
+            };
+            Report(BuildPipeline.BuildPlayer(options), DevOutputPath);
+        }
 
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]
         public static void BuildWindows()
         {
-            AddressableAssetSettings.CleanPlayerContent();
-            AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult contentResult);
-            if (!string.IsNullOrEmpty(contentResult.Error))
-                throw new BuildFailedException(
-                    $"[EmberfallBuild] Addressables content build FAILED: {contentResult.Error}");
-            Debug.Log($"[EmberfallBuild] Addressables content built ({contentResult.Duration:F1}s)");
+            BuildAddressables();
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
             var options = new BuildPlayerOptions
@@ -36,7 +71,82 @@ namespace Emberfall.Editor
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
             };
-            var report = BuildPipeline.BuildPlayer(options);
+            Report(BuildPipeline.BuildPlayer(options), OutputPath);
+        }
+
+        /// <summary>
+        /// Put the three playable scenes in <c>EditorBuildSettings</c>, menu first.
+        ///
+        /// <para><b>This is what makes scene navigation work in the EDITOR.</b>
+        /// <c>SceneManager.LoadScene(name)</c> resolves against the build list, so with an empty list —
+        /// which is how this project sat until 2026-07-27 — every menu button that loads a scene is a
+        /// dead button in the Editor, with no exception thrown and nothing logged. The Editor is one of
+        /// the two seats for local two-player testing, so it has to work there, not only in a player.</para>
+        ///
+        /// <para>The <b>shipping</b> build deliberately does not use this list — it passes
+        /// <c>BoardNetworked</c> alone, so a tester build keeps booting straight into a match. Only the
+        /// dev seat build ships the menu.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
+        public static void SyncSceneList()
+        {
+            string[] paths = { MenuScenePath, ScenePath, LocalScenePath };
+            var entries = new EditorBuildSettingsScene[paths.Length];
+            for (int i = 0; i < paths.Length; i++)
+                entries[i] = new EditorBuildSettingsScene(paths[i], enabled: true);
+
+            EditorBuildSettings.scenes = entries;
+
+            // Assigning the property only sets it in memory. Without this, EditorBuildSettings.asset
+            // still reads `m_Scenes: []` on disk — so the change is invisible to git, does not survive
+            // an Editor restart, and cannot be committed. Verified on 2026-07-27 by reading the asset
+            // straight after the assignment.
+            AssetDatabase.SaveAssets();
+
+            Debug.Log($"[EmberfallBuild] Build scene list set: {string.Join(", ", paths)}");
+        }
+
+        /// <summary>
+        /// Refuse the build up front if a scene has unsaved changes.
+        ///
+        /// <para><b>Order is the whole point.</b> Addressables' own <c>BuildPlayerContent</c> makes this
+        /// same check — but only after a full clean-and-rebuild of the content, which cost 8m36s on
+        /// 2026-07-27 before reporting a one-word failure ("Unsaved scenes") that was knowable in
+        /// milliseconds. A precondition belongs before the expensive step, not inside it.</para>
+        ///
+        /// <para>It reports the scene by name and does <b>not</b> save for you: saving writes whatever
+        /// is currently in that scene to disk, and a build script is the wrong thing to be making that
+        /// decision unattended.</para>
+        /// </summary>
+        private static void RequireSavedScenes()
+        {
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (!scene.isDirty) continue;
+
+                throw new BuildFailedException(
+                    $"[EmberfallBuild] Scene '{scene.name}' ({scene.path}) has unsaved changes. " +
+                    "Addressables will not build content over a dirty scene. Save it (Ctrl+S) or " +
+                    "reload it to discard, then build again — this check is here so you find out now " +
+                    "rather than after the content rebuild.");
+            }
+        }
+
+        private static void BuildAddressables()
+        {
+            RequireSavedScenes();
+
+            AddressableAssetSettings.CleanPlayerContent();
+            AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult contentResult);
+            if (!string.IsNullOrEmpty(contentResult.Error))
+                throw new BuildFailedException(
+                    $"[EmberfallBuild] Addressables content build FAILED: {contentResult.Error}");
+            Debug.Log($"[EmberfallBuild] Addressables content built ({contentResult.Duration:F1}s)");
+        }
+
+        private static void Report(BuildReport report, string outputPath)
+        {
             var summary = report.summary;
 
             // MUST throw, not log. A failed player build leaves the PREVIOUS run's Emberfall.exe
@@ -47,10 +157,10 @@ namespace Emberfall.Editor
             if (summary.result != BuildResult.Succeeded)
                 throw new BuildFailedException(
                     $"[EmberfallBuild] Player build {summary.result}: {summary.totalErrors} error(s). " +
-                    $"'{OutputPath}' may still hold a STALE player from a previous build — do not distribute it.");
+                    $"'{outputPath}' may still hold a STALE player from a previous build — do not distribute it.");
 
             Debug.Log($"[EmberfallBuild] Player build {summary.result}: " +
-                      $"{summary.totalErrors} error(s), {summary.totalSize / (1024 * 1024)} MB → {OutputPath}");
+                      $"{summary.totalErrors} error(s), {summary.totalSize / (1024 * 1024)} MB → {outputPath}");
         }
     }
 }
