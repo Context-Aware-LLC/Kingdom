@@ -250,6 +250,12 @@ namespace Emberfall.Presentation
             }
             if (_characterNameField != null)
                 _characterNameField.RegisterValueChangedCallback(_ => SetError(_characterError, ""));
+
+            // Once at bind time, not only on open: until this runs the secondary list is the UXML
+            // default (all four classes, including the primary) with no value selected. OpenCharacter
+            // Modal rebuilds it anyway, so nothing user-visible depended on it — which is exactly why
+            // it would have sat there being wrong.
+            RebuildSecondaryChoices();
         }
 
         private void OpenCharacterModal()

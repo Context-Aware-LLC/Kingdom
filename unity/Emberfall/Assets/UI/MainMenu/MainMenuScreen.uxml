@@ -42,9 +42,14 @@
         </ui:VisualElement>
 
         <!-- ================= Modals =================
-             Both start hidden (mm-modal--hidden) and are shown by MainMenuController. They sit
-             last in the tree so they paint over the menu, and their backdrop swallows clicks —
-             UI Toolkit does not block what is underneath by itself. -->
+             Both start hidden (the "hidden" modifier class below) and are shown by
+             MainMenuController. They sit last in the tree so they paint over the menu, and their
+             backdrop swallows clicks — UI Toolkit does not block what is underneath by itself.
+
+             NOTE: never write a BEM modifier's double dash inside a UXML comment. XML forbids it,
+             the importer fails the WHOLE file, and a failed VisualTreeAsset clones to an empty
+             tree — so every Q<T>() returns null and the screen reads as "nothing is wired" with
+             no error in the console. That cost a debugging pass on 2026-07-27. -->
 
         <!-- Name: first run (no Cancel) and rename (Cancel) are the same modal, re-titled. -->
         <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden">
