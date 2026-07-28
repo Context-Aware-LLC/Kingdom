@@ -35,11 +35,11 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void Keyword_Enum_Has_The_17_Canonical_Keywords()
+        public void Keyword_Enum_Has_The_18_Canonical_Keywords()
         {
-            // card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12) — the
-            // charter criterion is now "17 implemented keywords". (v1.1 had added OVERWHELM + VANGUARD.)
-            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(17));
+            // card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
+            // REKINDLING set (M3) adds REINFORCE — 18 implemented keywords total.
+            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(18));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
         }

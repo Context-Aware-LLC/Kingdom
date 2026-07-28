@@ -80,10 +80,14 @@ namespace Emberfall.Core
 
         private static string ClassToHeroPowerId(CardClass cls) => cls switch
         {
-            CardClass.EMBERWARD => "hero_power_searing_bolt",
-            CardClass.TIDECALLER => "hero_power_tidal_ward",
-            CardClass.GRAVEKEEP => "hero_power_toll_the_bell",
-            CardClass.VERDANT => "hero_power_quicken",
+            CardClass.EMBERWARD    => "hero_power_searing_bolt",
+            CardClass.TIDECALLER   => "hero_power_tidal_ward",
+            CardClass.GRAVEKEEP    => "hero_power_toll_the_bell",
+            CardClass.VERDANT      => "hero_power_quicken",
+            CardClass.CLOCKWRIGHT  => "hero_power_blueprint",
+            CardClass.NIGHTVEIL    => "hero_power_shadow_mark",
+            CardClass.STONEWARDEN  => "hero_power_earthwall",
+            CardClass.TEMPEST      => "hero_power_chain_spark",
             _ => "",
         };
 

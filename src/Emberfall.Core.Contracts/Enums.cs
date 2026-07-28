@@ -17,12 +17,12 @@ namespace Emberfall.Core.Contracts
 
     public enum CardType { MINION, SPELL, WEAPON, HERO_POWER }
 
-    /// <summary>Alpha ships 4 classes; last two reserved for M2 but enumerated now (card-schema.md §3).</summary>
-    public enum CardClass { NEUTRAL, EMBERWARD, TIDECALLER, GRAVEKEEP, VERDANT }
+    /// <summary>Alpha ships 4 classes; M2 adds 4 more (card-schema.md §3).</summary>
+    public enum CardClass { NEUTRAL, EMBERWARD, TIDECALLER, GRAVEKEEP, VERDANT, CLOCKWRIGHT, NIGHTVEIL, STONEWARDEN, TEMPEST }
 
     public enum Rarity { COMMON, RARE, EPIC, LEGENDARY }
 
-    public enum SetId { CORE, EMBERFALL }
+    public enum SetId { CORE, EMBERFALL, REKINDLING }
 
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
 
@@ -38,6 +38,7 @@ namespace Emberfall.Core.Contracts
         WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
         REBORN,
         OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
+        REINFORCE,             // REKINDLING set: Battlecry — Give a friendly minion +1/+1.
     }
 
     /// <summary>When an effect fires (card-schema.md §5.1).</summary>
