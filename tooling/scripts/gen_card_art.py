@@ -175,6 +175,11 @@ CLASSES = {
     "batch2": "card-drafts-emberward-tidecaller",
     "batch3": "card-drafts-emberward-tidecaller-b3",
     "weapon-rerolls": "card-drafts-weapon-rerolls",
+    # M2 expansion classes (art-brief-m3.md)
+    "clockwright": "card-drafts-clockwright",
+    "nightveil":   "card-drafts-nightveil",
+    "stonewarden": "card-drafts-stonewarden",
+    "tempest":     "card-drafts-tempest",
 }
 
 # WHERE CANDIDATES LAND under art-bakeoff/card-art/ (Sam, 2026-07-26). The
@@ -190,6 +195,10 @@ OUT_GROUP = {
     "weapon-rerolls": "weapon-rerolls",
     "batch2": "emberward-tidecaller",
     "batch3": "emberward-tidecaller",
+    "clockwright": "clockwright",
+    "nightveil":   "nightveil",
+    "stonewarden": "stonewarden",
+    "tempest":     "tempest",
 }
 
 # ------------------------------------------------------------- style block
