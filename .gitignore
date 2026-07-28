@@ -9,6 +9,8 @@
 Thumbs.db
 .vscode/
 .idea/
+tcg-hearthlike.code-workspace
+
 
 # .NET build output (the Emberfall.Core solution)
 [Bb]in/

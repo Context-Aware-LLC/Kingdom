@@ -140,6 +140,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
+    m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b12c842c1b7d505418f6f99bf0634ff4
     m_Address: ui/icon_kw_reborn
     m_ReadOnly: 0
