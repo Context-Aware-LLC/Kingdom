@@ -97,7 +97,28 @@ namespace Emberfall.Net.Client.Tests
                 c0.Dispose();
                 c1.Dispose();
                 await app.StopAsync();
-                if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true);
+                await TryDeleteDirectoryAsync(replays);
+            }
+        }
+
+        /// <summary>
+        /// Best-effort temp cleanup. StopAsync can return before the server's async replay writer has
+        /// released its .jsonl handle; on Windows a recursive delete then races that handle and throws
+        /// IOException (Linux allows the unlink, so CI never sees it). Retry briefly, then give up — a
+        /// leaked temp dir is harmless and must never fail a test whose body has passed.
+        /// </summary>
+        private static async Task TryDeleteDirectoryAsync(string dir)
+        {
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                try
+                {
+                    if (Directory.Exists(dir)) Directory.Delete(dir, recursive: true);
+                    return;
+                }
+                catch (IOException) { }
+                catch (UnauthorizedAccessException) { }
+                await Task.Delay(50).ConfigureAwait(false);
             }
         }
 
