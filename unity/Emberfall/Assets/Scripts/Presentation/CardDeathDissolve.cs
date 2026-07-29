@@ -9,7 +9,7 @@ namespace Emberfall.Presentation
     /// by snapshotting the card's visual subtree to a RenderTexture, hiding the real hierarchy, and
     /// running that single image through SG_Dissolve (M_Dissolve).
     ///
-    /// WHY A SNAPSHOT. A card is ~13 renderers across three material families (SG_CardComposite on
+    /// WHY A SNAPSHOT. A card is ~18 renderers across three material families (SG_CardComposite on
     /// the body quad, URP/Unlit on the art quad, sprite-default on four frame sprites, TMP's SDF
     /// shader on six labels). There is no per-renderer material swap that dissolves all of them
     /// coherently — the burn edge has to cross the composite, not each layer independently. One

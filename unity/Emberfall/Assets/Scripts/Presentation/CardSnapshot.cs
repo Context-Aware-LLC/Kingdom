@@ -6,7 +6,7 @@ namespace Emberfall.Presentation
     /// Flattens a card's visual subtree — art, frame, gem, keyword icons and every TMP label at
     /// once — into a single RenderTexture at a caller-chosen resolution.
     ///
-    /// WHY A SNAPSHOT. A card is ~13 renderers across three material families (SG_CardComposite on
+    /// WHY A SNAPSHOT. A card is ~18 renderers across three material families (SG_CardComposite on
     /// the body quad, URP/Unlit on the art quad, sprite-default on four frame sprites, TMP's SDF
     /// shader on six labels). Nothing short of rendering it produces one image of the card, so
     /// every consumer that needs the card AS A SINGLE SURFACE goes through here:
