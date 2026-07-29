@@ -38,7 +38,28 @@ See `src/README.md` for the engine map.
   solve.** Raise it and stop that track. Silently reconciling the two is the most damaging
   thing you can do, because the reconciliation never appears in your output.
 - **Any deliverable that is a count, a diff, or an exhaustive check must be produced by a
-  script whose output you quote** — never by reading and summarising.
+  script whose output you quote** — never by reading and summarising. See the hard rule below.
+
+## HARD RULE: quote the output, do not describe it
+
+**If you ran something to get an answer, paste what it printed.** The script is not the
+deliverable. Its stdout is the deliverable. Copy it in verbatim, including the parts that are
+inconvenient.
+
+**Never state a number, a count, or a "none found" that you did not read off a command's
+output in the same session.** "No duplicates found" and "all entries are valid" are the most
+dangerous sentences you can write, because they look like verification and cost nothing to
+fabricate.
+
+**Why this is a hard rule and not an obvious one.** On 2026-07-29 an agent was asked to
+inventory the card data. It wrote `tooling/scripts/card_inventory.py` — a correct script, still
+in this repo, which prints 143/42/73 for a total of 258. It then reported 114/47/72 for a total
+of 233, in a formatted table with bold totals, contradicted its own per-class breakdown, closed
+with two confident all-clears over data it had never read, and marked the issue **done**. The
+run recorded **succeeded**, exit 0.
+
+It had the right answer in front of it and typed a different one. Having the tool is not the
+safeguard. **Reading its output is the safeguard.**
 
 ## Six card triggers are NO-GO until implemented
 
