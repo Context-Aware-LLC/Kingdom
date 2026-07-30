@@ -273,20 +273,97 @@ harmless while it stays in the working tree; only the commit is damaging.
 - Shaders use the `SG_<Name>` naming convention.
 - Keep cross-references explicit (e.g. "see `interfaces.md §5.3`") when one
   spec depends on another.
+**WEAPONS ARE FAR WEAKER THAN ASSUMED — three engine gaps, all verified in code.** A weapon carries
+**no keywords at all** (`attackerKws` is an empty set for a hero; `WeaponInstance` has no keyword
+field), a weapon's **Deathrattle never fires** (`RulesEngine.BreakWeapon` emits a VFX event and
+raises no trigger), and **armor can be soaked but never granted** (no verb in the `Action` enum; 0
+of 258 rows mention it). A weapon's whole surface is stats + `ON_PLAY` equip battlecry + `ON_ATTACK`
+with a static selector. **Overload on attack DOES work** and is buildable today.
 
-## Skill routing
+**THE LIVE THREAD — Emberfall is driven by a paperclip agent org, and the near work is getting CI
+green.** Claude occupies the **Overlord seat** from a CLI session; the Overlord *agent* stays paused
+permanently. Under it: Ember Lead (300 s pump) → Client Lead → Card Scribe, and Ember Lead → Art
+Lead → {Shader Artist, Tech Artist, Brief Writer}. Leaf agents have no heartbeat and run only when
+assigned. Roster, agent IDs and run-control config live in the paperclip project memory
+(`c--Users-User--paperclip`), not here.
 
-When the user's request matches an available skill, invoke it via the Skill tool.
+**Players, identity, accounts and the deckbuilder are DONE and shipped past.** One machine holds
+multiple local players; character creation, the deck list, both JSON stores and the deckbuilder
+screen are wired into Unity (`DeviceAccounts.cs`, `PlayerAccount.cs`, `MainMenuController.cs`,
+`PlayerAccountTools.cs`, `DeckbuilderScreen.uxml`, `DeckbuilderController.cs`). `VULN-002` is filed
+for the player name travelling on the wire. Card content ran past it: **M2, M3 and REKINDLING — 258
+card entries across `M1/M2/M3.cards.json`**, 128 collectible plus a 72-card expansion adding
+REINFORCE.
 
-- Product ideas/brainstorming → /office-hours
-- Strategy/scope → /plan-ceo-review
-- Architecture → /plan-eng-review
-- Design system/plan review → /design-consultation or /plan-design-review
-- Full review pipeline → /autoplan
-- Bugs/errors → /investigate
-- QA/testing → /qa or /qa-only
-- Code review/diff check → /review
-- Ship/deploy/PR → /ship or /land-and-deploy
-- Save progress → /context-save
-- Resume context → /context-restore
-- Author a backlog-ready spec/issue → /spec
+**THE CARD GATE HAS NEVER SEEN THE CARDS — but the pipeline is NOT broken.**
+`feat/emberfall-core-determinism` runs **all 9 stages green including Stage 6**, the card gate (run
+`30329283555`'s sibling `30329270741`, 2026-07-28). What has never happened is `Emberfall.Tools.CardCi`
+reading the **258 entries**, because those live on `feat/multiple-local-accounts`, where **Stage 1 aborts
+first on pure whitespace** — every `--log-failed` line is `error WHITESPACE`, in `MatchEngine.cs`,
+`CharacterTests.cs`, `DefaultDeckGeneratorTests.cs`, `DefaultDeckIdTests.cs`, `CombatTests.cs`. `master`
+is red for the same reason. The fix is **commit `d84c45a` on `agent/emberfall`** — and CI has never run
+it, because `ci.yml` triggers on `master`/`feat/**`/`fix/**` and **`agent/**` is not watched**, so that
+branch has zero runs. The commit written to satisfy CI sits on the one branch CI ignores.
+
+**GIT — everything is PUSHED as of 2026-07-29.** Worktree
+`Documents/tcg-hearthlike-collection` on `agent/emberfall` @ `008171b` → `origin/agent/emberfall`
+(7 commits: 3 agent-authored and reviewed, 4 mine). `Project Docs/Emberfall/docs` @ `55a7003` →
+`origin/master`. Primary `Documents/tcg-hearthlike` on `feat/multiple-local-accounts` @ `c46b4bb`,
+synced, **12 ahead of `master`** — that branch, not `master`, is where live work lands; local
+`master` @ `5425d69` is itself **behind `origin/master` by 2**. Primary tree still dirty on
+`tooling/scripts/gen_card_art.py` (a 2-line REKINDLING entry, deliberately left for Sam) and
+`Assets/CardData/M3.cards.json` — **both pre-date this session and were never touched.**
+
+**ONLY TWO WORKTREES EXIST — stage every commit by explicit path, never `add -A`**; a broad add
+sweeps up a parallel session's work. `git branch --show-current`, then `git add <explicit paths>`,
+then read `git status` for what you deliberately left alone. **In a two-repo project always
+`git -C <abs path>`** — the Bash tool's cwd persists across calls and once cost a wrong-repo push.
+
+**AGENTS WERE TOLD TO USE A SKILL THEY DID NOT HAVE.** Our seven paperclip agents held **zero**
+skills while their `AGENTS.md` instructed them to use the Paperclip skill's artifact workflow — which
+is why they fumbled `parentId` and `blockedByIssueIds` while Overlord, who had the skill, did not.
+Fixed by attaching, not by rewriting prose. **When an agent behaves stupidly, check what it was
+provisioned with before rewriting its instructions.** The CLI reports this under **`desiredSkills`**;
+reading `skills`/`items` returns nothing and looks like zero.
+
+**HIERARCHY PAYS ON WIDE WORK AND TAXES YOU ON NARROW WORK.** Three-level delegation was proven
+end-to-end and produced correct output, but spent ~6 runs across 3 agents on a one-command
+`dotnet format` fix. Size the tree to the work.
+
+**A RENDER CORRECTED THE SPEC THREE TIMES.** A collection-plate contract asserted "the horizontal
+axis must be featureless"; generating against it showed that was stricter than the geometry — the
+crop is symmetric about the canvas centre, so a centred, mirrored composition survives it. **Write a
+spec with numbers in it → produce one artifact against it before believing it.** Corollary (Sam): a
+synthetic check is enough to **choose between unshipped candidates**, never enough to **condemn
+something already shipped**.
+
+**WHEN A FALLBACK ONLY RUNS IN THE CONFIGURATION YOU NEVER TEST, IT IS NOT A FALLBACK.** Registering
+one plate in Addressables exposed that **no background was registered at all** — four shipped screens
+would render nothing in a player build. `LoadAsset<T>` resolves via `AssetDatabase` under
+`#if UNITY_EDITOR`, so it *cannot* fail in the Editor. Fixed. **Still unregistered: the TMP card font
+and `Art/Loading/Orb_StormGlass.png`.**
+
+**NEXT MOVE, one line each — detail is in each project's memory, not here.**
+
+- **Emberfall:** review the 3 agent commits on `agent/emberfall`, then get CI past Stage 1 so the
+  card gate finally sees 258 entries. Live todos are Sam's own list in
+  `Project Docs/Emberfall/docs/todos.md` — balance pass (Pyra ≫ Merin), targeting, tooltips, hero
+  frames, end-turn control, card text fonts. Loose art ends: a shipped weapon illustration awaiting
+  a live look, one weapon art unexamined, one re-roll not promoted.
+- **Pocket Secretary:** the offline geofence field test, still unrun; a product call waits on Sam,
+  and a release-build device smoke-test is a hard gate before the next Play upload.
+- **tradingView:** port the visible-editor fix into `src/core/pine.js`.
+
+**NEVER OVERWRITE OR DELETE GENERATED OUTPUT (Sam).** "Keep it. If something needs deleting, I'll
+delete it myself." Covers **overwrite**: a re-roll lands *beside* the previous candidate. Moving
+generated files is fine; destroying them is not.
+
+**UNITY IS A SINGLE-WRITER RESOURCE — an SOP.** Designate one terminal as the Unity terminal up
+front. One Editor; a domain reload takes ~45 s, during which others get *"Unity not detected"* —
+reads like a broken relay, not contention. **"Connection revoked" = kill `relay_win.exe`**; it is
+single-instance and extra copies are the usual cause. A menu item does NOT trigger a reimport —
+edit, `AssetDatabase.Refresh()`, wait. `Unity_RunCommand` hard-bans `System.Reflection`; engine types
+go in `Assets/Scripts/Editor/` behind a `[MenuItem]`. `Unity_ReadConsole` with a big `count` blows
+the budget; keep it ≤10. Unity-MCP reports compile errors as Type **"Log"**, not "Error".
+`GetInstanceID()` is a compile error, use `GetEntityId()`. `IsPlaying` can be STALE — trust
+`Application.isPlaying` in a RunCommand.
