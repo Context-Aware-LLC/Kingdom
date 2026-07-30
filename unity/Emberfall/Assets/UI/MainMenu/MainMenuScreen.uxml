@@ -9,7 +9,12 @@
     <Style src="../Deckbuilder/theme.uss" />
     <Style src="mainmenu.uss" />
 
-    <ui:VisualElement name="root" class="emb-root main-menu">
+    <!-- Starts hidden (see the root's "hidden" modifier class in mainmenu.uss) — the boot
+         loading plate covers frame 0 instead (MainMenuController.Awake/RevealMenu), so the
+         unbound menu never flashes through. NEVER write a BEM modifier's double dash inside a
+         UXML comment: XML forbids it, the importer fails the WHOLE file silently (see the
+         Modals note below). -->
+    <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
 
         <!-- Scrim: darkens the plate behind the content (paints first = furthest back) -->
         <ui:VisualElement name="scrim" class="mm-scrim" picking-mode="Ignore" />

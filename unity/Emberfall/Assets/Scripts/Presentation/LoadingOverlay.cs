@@ -5,9 +5,9 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// The boot loading screen (techart/loading-screen-plate.md §4/§5) — a camera-parented
-    /// world-space rig built procedurally by both bootstraps in Awake(), so it covers frame 0
-    /// with no scene surgery. Serves app startup and (later) menu→match equally: today they
-    /// are the same moment.
+    /// world-space rig built procedurally in Awake() by GameBootstrap, NetworkedGameBootstrap
+    /// and MainMenuController alike, so it covers frame 0 with no scene surgery. Serves app
+    /// startup (MainMenu) and menu→match boot (Board/BoardNetworked) with the same rig.
     ///
     /// Reveal choreography (trigger ruling, Sam 2026-07-19):
     ///   frame 0        — plate + orb visible (no trigger; authored into existence in Awake)
@@ -82,7 +82,12 @@ namespace Emberfall.Presentation
 
         /// <summary>The match has real state on the board (first released snapshot). Idempotent;
         /// fade-out still waits for the wordmark entrance to finish.</summary>
-        public void NotifyMatchReady()
+        public void NotifyMatchReady() => NotifyReady();
+
+        /// <summary>Non-match spelling of <see cref="NotifyMatchReady"/> — same gate, for callers
+        /// with no match (MainMenu's app-boot moment: identity/account bootstrap finished).
+        /// Idempotent; fade-out still waits for the wordmark entrance to finish.</summary>
+        public void NotifyReady()
         {
             if (_destroyed) return;
             _matchReady = true;

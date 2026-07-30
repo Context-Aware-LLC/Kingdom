@@ -14,6 +14,13 @@
     padding: var(--space-12);
 }
 
+/* Boot state: hidden until MainMenuController.RevealMenu() runs (LoadingOverlay covers frame 0
+ * instead). display:none here — not just alpha — because the panel's own clear color would
+ * otherwise paint over the loading plate while nothing else on this root is visible. */
+.mm-root--hidden {
+    display: none;
+}
+
 /* Dark scrim over the plate so the wordmark + buttons stay legible (design-system §4.5). */
 .mm-scrim {
     position: absolute;

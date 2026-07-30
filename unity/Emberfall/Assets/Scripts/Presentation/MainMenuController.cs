@@ -42,6 +42,7 @@ namespace Emberfall.Presentation
 
         private VisualElement _root;
         private PlayerAccount _account;
+        private LoadingOverlay _loading;
 
         // Loaded on first use rather than at OnEnable: the card database is only needed to generate a
         // starter deck, and pulling it in makes the front door wait on Addressables for nothing.
@@ -69,10 +70,24 @@ namespace Emberfall.Presentation
         private VisualElement _accountList;
         private Label _accountError;
 
+        /// <summary>Frame-0 coverage, the same rig GameBootstrap/NetworkedGameBootstrap use
+        /// (loading-screen-plate.md §5): the overlay exists before anything renders. The menu's
+        /// own content starts hidden (mm-root--hidden in the UXML) so there is no frame where
+        /// the unbound menu shows through before <see cref="RevealMenu"/> runs.</summary>
+        private void Awake()
+        {
+            _loading = LoadingOverlay.Create(Camera.main);
+        }
+
         private void OnEnable()
         {
             _root = GetComponent<UIDocument>().rootVisualElement;
-            if (_root == null) { Debug.LogError("[MainMenu] No rootVisualElement — is the UXML assigned?"); return; }
+            if (_root == null)
+            {
+                Debug.LogError("[MainMenu] No rootVisualElement — is the UXML assigned?");
+                _loading?.NotifyBootFailed("UI not assigned — see console");
+                return;
+            }
 
             Wire("btn-find-game", OnFindGame);
             Wire("btn-single-player", OnSinglePlayer);
@@ -98,11 +113,22 @@ namespace Emberfall.Presentation
             {
                 Debug.LogError($"[MainMenu] could not open this device's collection: {ex.Message}");
                 SetIdentity("Collection unreadable", "See the console — nothing was overwritten.");
+                RevealMenu();
                 return;
             }
 
             RefreshIdentity();
             if (_account.NeedsDisplayName) OpenNameModal(required: true);
+            RevealMenu();
+        }
+
+        /// <summary>Show the menu (and whatever modal OnEnable decided to open under it) and let
+        /// the boot plate fade out from in front of it. Called from every OnEnable exit path —
+        /// a corrupt collection must still reach the four buttons that don't need one.</summary>
+        private void RevealMenu()
+        {
+            _root.RemoveFromClassList("mm-root--hidden");
+            _loading?.NotifyReady();
         }
 
         // System.Action explicitly: Emberfall.Core.Contracts has an Action type of its own (a card
