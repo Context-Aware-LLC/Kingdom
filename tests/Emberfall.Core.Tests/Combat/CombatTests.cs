@@ -287,7 +287,10 @@ namespace Emberfall.Core.Tests.Combat
             var s = MainPhase();
             s.Players[0].Weapon = new WeaponInstance
             {
-                Id = s.NextInstanceId(), DefinitionId = weaponDef.Id, Attack = 2, Durability = 3,
+                Id = s.NextInstanceId(),
+                DefinitionId = weaponDef.Id,
+                Attack = 2,
+                Durability = 3,
             };
             s.Players[0].Hero.CurrentHealth = 20; // below max so the heal is observable
             var def = Board(s, 1, Minion("target", 0, 10)); // 0 attack: no retaliation to muddy the heal

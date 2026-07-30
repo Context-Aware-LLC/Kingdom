@@ -468,7 +468,7 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Builds ONE detached card visual under <paramref name="parent"/> through the shipping
-        /// <see cref="CreatePresenter"/> — the same 13 renderers, the same frame layer, the same
+        /// <see cref="CreatePresenter"/> — the same renderers, the same frame layer, the same
         /// TMP labels a card in a match gets — and hands back its presenter, unbound.
         ///
         /// DETACHED MEANS NOT IN THE MATCH. It is registered in nothing: not _presenters, not
@@ -491,7 +491,7 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Builds one real card through the shipping <see cref="CreatePresenter"/>/GetOrCreate path
         /// for Emberfall/Preview Card Dissolve. Editor-only: the preview must burn the actual card
-        /// hierarchy — 13 renderers, real frame art, real TMP labels — because a mock card would
+        /// hierarchy — every renderer, real frame art, real TMP labels — because a mock card would
         /// only ever prove the harness agrees with itself.
         /// </summary>
         public CardPresenter EditorBuildCard(CardInstance ci, PlayerId owner, Zone zone)

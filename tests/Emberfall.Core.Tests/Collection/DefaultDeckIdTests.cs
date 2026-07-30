@@ -102,7 +102,7 @@ namespace Emberfall.Core.Tests.Collection
             var deck = new DeckList { Id = "deck-1", CharacterId = "chr-1", Name = "Starter" };
             decks.Save(deck);
             characters.Save(new Character("chr-1", "Rotbloom", CardClass.GRAVEKEEP, CardClass.VERDANT)
-                { DefaultDeckId = "deck-1" });
+            { DefaultDeckId = "deck-1" });
 
             decks.Delete("deck-1");
 

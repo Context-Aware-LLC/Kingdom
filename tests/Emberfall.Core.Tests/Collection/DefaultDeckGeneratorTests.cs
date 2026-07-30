@@ -29,8 +29,8 @@ namespace Emberfall.Core.Tests.Collection
         {
             var classes = Enum.GetValues(typeof(CardClass)).Cast<CardClass>().Where(c => c != CardClass.NEUTRAL);
             foreach (var p in classes)
-            foreach (var s in classes)
-                if (p != s) yield return new Character($"chr-{p}-{s}", $"{p}/{s}", p, s);
+                foreach (var s in classes)
+                    if (p != s) yield return new Character($"chr-{p}-{s}", $"{p}/{s}", p, s);
         }
 
         [Test]
