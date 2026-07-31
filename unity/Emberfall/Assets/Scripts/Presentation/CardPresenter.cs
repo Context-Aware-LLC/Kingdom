@@ -459,7 +459,10 @@ namespace Emberfall.Presentation
             }
 
             // Preferred: one atlas icon per keyword (§4), laid out left-to-right, capped at the
-            // strip's slot count. SILENCE is an effect, not a face keyword, so KeywordIcon() skips it.
+            // strip's slot count. StatusMarkCatalog is the explicit opt-in registry — keywords
+            // not registered there (SILENCE, art-pending OVERWHELM/VANGUARD) return null and
+            // are silently skipped. A registered address that fails to load in the atlas is a
+            // real gap and warrants a warning (plan decision 15, EF-044).
             if (keywordIcons != null && keywordIcons.Length > 0 && _ui != null)
             {
                 if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
@@ -468,8 +471,14 @@ namespace Emberfall.Presentation
                 foreach (Keyword kw in _kwScratch)
                 {
                     if (slot >= keywordIcons.Length) break;
-                    Sprite icon = _ui.Get(FrameRarityCatalog.KeywordIcon(kw));
-                    if (icon == null) continue;
+                    string addr = StatusMarkCatalog.KeywordIconAddress(kw);
+                    if (addr == null) continue;  // not registered — skip silently
+                    Sprite icon = _ui.Get(addr);
+                    if (icon == null)
+                    {
+                        Debug.LogWarning($"[CardPresenter] keyword icon registered but missing from atlas: {addr}");
+                        continue;
+                    }
                     SetSpritePreserveSize(keywordIcons[slot], icon);
                     keywordIcons[slot].gameObject.SetActive(true);
                     slot++;
