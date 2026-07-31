@@ -26,12 +26,12 @@ namespace Emberfall.Core.Tests.Collection
         public void Two_Distinct_Real_Classes_Is_The_Only_Valid_Pairing()
         {
             foreach (var primary in RealClasses)
-            foreach (var secondary in RealClasses)
-            {
-                bool expected = primary != secondary;
-                Assert.That(Character.IsValidPairing(primary, secondary), Is.EqualTo(expected),
-                    $"{primary}/{secondary}");
-            }
+                foreach (var secondary in RealClasses)
+                {
+                    bool expected = primary != secondary;
+                    Assert.That(Character.IsValidPairing(primary, secondary), Is.EqualTo(expected),
+                        $"{primary}/{secondary}");
+                }
         }
 
         [Test]
@@ -61,8 +61,8 @@ namespace Emberfall.Core.Tests.Collection
             // still matters to the character — same pool, different hero power — so a test that
             // conflated the two would be reading the ruling backwards.
             foreach (var a in RealClasses)
-            foreach (var b in RealClasses)
-                Assert.That(Character.IsValidPairing(a, b), Is.EqualTo(Character.IsValidPairing(b, a)));
+                foreach (var b in RealClasses)
+                    Assert.That(Character.IsValidPairing(a, b), Is.EqualTo(Character.IsValidPairing(b, a)));
 
             var pyraMaren = new Character("c1", "Ashtide", CardClass.EMBERWARD, CardClass.TIDECALLER);
             var marenPyra = new Character("c2", "Tideash", CardClass.TIDECALLER, CardClass.EMBERWARD);
