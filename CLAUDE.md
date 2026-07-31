@@ -69,15 +69,16 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Six card triggers are NO-GO until implemented
+## Five card triggers are NO-GO until implemented
 
 **Do not author a card using any of these.** They are declared in `Enums.cs`'s `Trigger` enum
 and **raised nowhere in the engine**. A card using one parses, validates, loads, and then does
 nothing — forever, silently, with no error.
 
-> `ON_TURN_START` · `ON_TURN_END` · `ON_DAMAGED` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
+> `ON_TURN_START` · `ON_TURN_END` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
 
-**The five that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`.
+**The six that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
+`ON_DAMAGED`.
 
 **`ON_ATTACK` is the trap** — it is raised for **weapons only**, so it is *valid* on a weapon
 and *dead* on a minion. A membership check alone will not catch that.
@@ -85,8 +86,13 @@ and *dead* on a minion. A membership check alone will not catch that.
 **`ON_DEATH` is the mirror trap** — `RulesEngine.BreakWeapon` emits a VFX event when a weapon
 breaks and raises no trigger at all. **A Deathrattle on a weapon never fires.**
 
-Lift a name off this list only when its raise site actually exists. `CardValidator` has no rule
-for any of this; until it does, **this list is the only guard.**
+Lift a name from this list only when its raise site actually exists. `CardValidator`
+rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`),
+rejects `ON_ATTACK` on a non-`WEAPON` (`C21-TRIGGER-WEAPON-ONLY`), and rejects `ON_DEATH`
+on a `WEAPON` until EF-020 (`C21-WEAPON-DEATHRATTLE`). The source of truth is
+`CardValidator.TriggerLivenessTable` — **flip a trigger Dead→Live in that table in the same
+commit that lands its raise site** (each Dead row names its EF task). This prose list is no
+longer the only guard, but keep it in sync with the table.
 
 **This list does not live here alone.** Each member of the `Trigger` enum in
 `Emberfall.Core.Contracts/Enums.cs` is marked `LIVE` or `DEAD` on its own line, with the intended

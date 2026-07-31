@@ -77,7 +77,7 @@ jobs:
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
 
       # ── Stage 6 — Content validation, C-series (BLOCKING as of M2 WS C3) ────────
-      # Pure-.NET card gate over the flat-file-per-set card JSON: C1-C20 per row via the
+      # Pure-.NET card gate over the flat-file-per-set card JSON: C1-C21 per row via the
       # shared CardValidator, C2 duplicate-id across the library, artId->file check
       # (art misses WARN only — placeholder-art policy, M2 decision 18).
       - name: "Stage 6 · Content C-series card gate (Emberfall.Tools.CardCi)"

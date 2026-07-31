@@ -160,6 +160,91 @@ namespace Emberfall.Core.Tests.CardValidation
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
             Assert.That(report.RequiresEngineeringPrimitive, Is.True);
         }
+
+        // ── C21 — trigger liveness ───────────────────────────────────────────────────
+        // A dead trigger (declared in the enum but raised nowhere) is silent at runtime; C21 is
+        // the only guard. These lock the table so flipping a trigger live/dead is a deliberate edit.
+
+        private static CardValidator Validator() => new CardValidator();
+        private static JsonCardDatabaseTestDouble Db(CardDefinition d) => new JsonCardDatabaseTestDouble(new[] { d });
+
+        private static CardDefinition WithEffect(CardType type, EffectDef effect)
+            => new CardDefinition(
+                id: "test_c21", name: "Test", type: type, cost: 1,
+                attack: 1, health: type == CardType.MINION ? 1 : (int?)null,
+                durability: type == CardType.WEAPON ? 1 : (int?)null,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
+                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
+        [Test]
+        public void Dead_Trigger_Is_An_Error()
+        {
+            // ON_TURN_START is declared in the Trigger enum but has no raise site (blocked on EF-011).
+            var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
+        }
+
+        [Test]
+        public void OnAttack_Is_Dead_On_A_Minion_But_Live_On_A_Weapon()
+        {
+            EffectDef Attack() => new EffectDef(Trigger.ON_ATTACK, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+
+            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Attack()), Db(WithEffect(CardType.MINION, Attack())));
+            Assert.That(onMinion.Ok, Is.False);
+            Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-WEAPON-ONLY"));
+
+            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Attack()), Db(WithEffect(CardType.WEAPON, Attack())));
+            Assert.That(onWeapon.Ok, Is.True, "ON_ATTACK is raised for weapons — a weapon 'whenever this attacks' effect is legal.");
+        }
+
+        [Test]
+        public void OnDamaged_Is_Live_After_EF013()
+        {
+            var effect = new EffectDef(Trigger.ON_DAMAGED, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            var def = WithEffect(CardType.MINION, effect);
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                "EF-013 raises ON_DAMAGED from DamagePipeline, so C21 must not classify it as dead.");
+        }
+
+        [Test]
+        public void OnDeath_Is_Live_On_A_Minion_But_A_Weapon_Deathrattle_Is_Blocked_On_EF020()
+        {
+            EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+
+            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Death()), Db(WithEffect(CardType.MINION, Death())));
+            Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion deathrattle.");
+
+            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Death()), Db(WithEffect(CardType.WEAPON, Death())));
+            Assert.That(onWeapon.Ok, Is.False);
+            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-DEATHRATTLE"));
+        }
+
+        [Test]
+        public void Every_Trigger_Enum_Member_Is_Tabled()
+        {
+            // Fail-closed only works if the table is exhaustive; a new enum member with no row is a
+            // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
+            var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
+                               Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED };
+            var dead = new[] { Trigger.ON_TURN_START, Trigger.ON_TURN_END,
+                               Trigger.ON_HEAL, Trigger.ON_SPELL_CAST, Trigger.AURA };
+            var accounted = live.Concat(dead).ToHashSet();
+            var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
+            Assert.That(missing, Is.Empty,
+                "Trigger(s) not classified by the C21 test/table — add to TriggerLivenessTable and here: "
+                + string.Join(", ", missing));
+        }
     }
 
     /// <summary>Minimal ICardDatabase test double so these tests don't depend on Emberfall.Data (Unity asmdef).</summary>

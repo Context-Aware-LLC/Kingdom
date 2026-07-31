@@ -70,7 +70,7 @@ namespace Emberfall.Core.Contracts
         // "the minion this hits" is not addressable. On a MINION this trigger is dead.
         ON_ATTACK,
 
-        // DEAD — no raise site. Intended sites: DamagePipeline, both absorb and normal hit.
+        // LIVE — DamagePipeline raises this for minions that actually take damage (not Aegis absorbs).
         ON_DAMAGED,
 
         // DEAD — no raise site. Intended site: the DamagePipeline heal path. Note it would fire

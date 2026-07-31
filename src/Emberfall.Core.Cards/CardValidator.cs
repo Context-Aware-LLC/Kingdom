@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The shared, headless card-legality validator (C1-C20, dev-docs/pipelines/card-authoring-and-import.md:20).
+    /// The shared, headless card-legality validator (C1-C21, dev-docs/pipelines/card-authoring-and-import.md:20).
     /// Runs identically at server/client load and inside the editor (dev-docs/pipelines/card-authoring-and-import.md:20) — this
     /// assembly has zero UnityEngine references, so this type is safe to run on the dedicated server.
     /// Content/art/budget lint (the E-series) is a separate, editor-only IContentLinter — never here.
@@ -39,6 +39,42 @@ namespace Emberfall.Core.Cards
         {
             Action.DEAL_DAMAGE, Action.HEAL, Action.DRAW, Action.SUMMON, Action.BUFF,
             Action.GAIN_MANA, Action.DISCOVER, Action.ADD_TO_HAND, Action.OVERLOAD,
+        };
+
+        /// <summary>Whether a <see cref="Trigger"/> has a raise site in the engine (C21).</summary>
+        private enum TriggerLiveness
+        {
+            /// <summary>Has a raise site in the engine; type-specific exceptions are gated separately.</summary>
+            Live,
+            /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:527-531):
+            /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
+            WeaponOnly,
+            /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
+            /// a card on it parses, validates, loads, and does nothing forever, silently.</summary>
+            Dead,
+        }
+
+        // C21 — trigger liveness. THE authoritative guard against a dead trigger; it replaces the
+        // prose list in CLAUDE.md, which is exactly the kind of guard that rots. Every Trigger enum
+        // member MUST appear here (a member with no row is treated as Dead — fail closed).
+        //
+        // HARD RULE: UPDATE THIS TABLE as each of EF-011..EF-017b lands its raise site — flip that
+        // trigger's value from Dead to Live in the SAME commit that adds the raise site. The `// EF-0nn`
+        // pointer on each Dead row names the task that arms it; that comment is the whole point of the
+        // table (retirement triggers live in the code, not in a doc).
+        private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
+        {
+            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:325,348 (battlecry / weapon equip)
+            [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:333,411 (spell / hero power)
+            [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion deathrattle) — weapon case gated below
+            [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:326, ActionHandlers.cs:108
+            [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:531 (weapons only)
+            [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
+            [Trigger.ON_TURN_START] = TriggerLiveness.Dead, // EF-011
+            [Trigger.ON_TURN_END] = TriggerLiveness.Dead, // EF-012
+            [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
+            [Trigger.ON_SPELL_CAST] = TriggerLiveness.Dead, // EF-016
+            [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
         };
 
         public ValidationReport Validate(CardDefinition def, ICardDatabase db)
@@ -103,19 +139,7 @@ namespace Emberfall.Core.Cards
             if (def.Durability is int dur && (dur < 1 || dur > 8))
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
-            // C9-C11, C13, C14, C17 — per-effect checks
-            //
-            // NOTHING HERE IS KEYED ON fx.Trigger, AND THAT IS THE GAP. A card carrying a declared-
-            // but-never-raised trigger passes every rule below, loads, and then does nothing forever
-            // with no error. Today the only guard is a prose list in CLAUDE.md plus the LIVE/DEAD
-            // markers on the Trigger enum in Emberfall.Core.Contracts/Enums.cs.
-            //
-            // RETIREMENT TRIGGER — you are the person this comment was left for. If you are adding
-            // the trigger-liveness rule (C21), that same change must delete the sentence "this list
-            // is the only guard" from CLAUDE.md's trigger section, because it stops being true the
-            // moment your table exists. Keep the table sourced from the enum markers so the two
-            // cannot drift. C21 must also encode: ON_ATTACK is weapon-only, and ON_DEATH on a weapon
-            // is an error until BreakWeapon actually raises it.
+            // C9-C11, C13, C14, C17, C21 — per-effect checks
             for (int i = 0; i < def.Effects.Count; i++)
             {
                 var fx = def.Effects[i];
@@ -123,6 +147,29 @@ namespace Emberfall.Core.Cards
 
                 // C9: Action is a known verb — guaranteed by the enum type system (CardJson throws on
                 // an unrecognized string), kept as a defensive no-op check for POCOs built by hand.
+
+                // C21 — trigger liveness (see TriggerLivenessTable). A card on a trigger with no raise
+                // site parses, validates, loads and does nothing, forever, with no error at runtime;
+                // this is the only place that catches it.
+                if (!TriggerLivenessTable.TryGetValue(fx.Trigger, out var liveness))
+                    liveness = TriggerLiveness.Dead; // fail closed: a new enum member is dead until tabled live
+                switch (liveness)
+                {
+                    case TriggerLiveness.Dead:
+                        Err("C21-TRIGGER-DEAD", $"{prefix}.trigger",
+                            $"trigger '{fx.Trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
+                        break;
+                    case TriggerLiveness.WeaponOnly when def.Type != CardType.WEAPON:
+                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.trigger",
+                            $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:527-531) — it is dead on a {def.Type}.");
+                        break;
+                }
+                // ON_DEATH is live for minions but a WEAPON deathrattle never fires: RulesEngine.BreakWeapon
+                // (RulesEngine.cs:90-96) emits onDeath VFX and raises no trigger. Error until EF-020 gives it a
+                // raise site — flip this to allow ON_DEATH on a weapon in the SAME commit that lands EF-020.
+                if (fx.Trigger == Trigger.ON_DEATH && def.Type == CardType.WEAPON)
+                    Err("C21-WEAPON-DEATHRATTLE", $"{prefix}.trigger",
+                        "ON_DEATH on a WEAPON never fires — RulesEngine.BreakWeapon raises no trigger (blocked on EF-020).");
 
                 // C10
                 if (AmountRequiredActions.Contains(fx.Action) && fx.Amount is null)

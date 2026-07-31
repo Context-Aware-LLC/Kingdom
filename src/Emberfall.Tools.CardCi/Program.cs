@@ -11,7 +11,7 @@ namespace Emberfall.Tools.CardCi
     /// <summary>
     /// CI Stage 6 — content C-series gate (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md WS C3). Validates every row of every
     /// <c>*.cards.json</c> under the given card-data directory through the shared
-    /// <see cref="CardValidator"/> (C1–C20), checks id uniqueness across the whole library
+    /// <see cref="CardValidator"/> (C1–C21), checks id uniqueness across the whole library
     /// (C2 batch check), and verifies each <c>artId</c> resolves to an art file on disk.
     ///
     /// Exit code 1 on any Error-severity issue (parse failure, C-series error, duplicate id).
@@ -89,7 +89,7 @@ namespace Emberfall.Tools.CardCi
             var db = new InMemoryCardDatabase(allCards);
             var validator = new CardValidator();
 
-            // ── C1–C20 per card ──────────────────────────────────────────────────────
+            // ── C1–C21 per card ──────────────────────────────────────────────────────
             foreach (var def in allCards)
             {
                 var report = validator.Validate(def, db);
