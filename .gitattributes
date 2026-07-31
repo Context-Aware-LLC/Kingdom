@@ -2,9 +2,15 @@
 # (`#!/usr/bin/env bash\r` is not a valid interpreter path).
 *.sh    text eol=lf
 
-# Keep C#/JSON/YAML/Markdown as text (auto line-ending on checkout), so the determinism gate is
-# unaffected (the golden hash is computed from GameState, never from fixture file bytes).
-*.cs    text
+# C# is pinned to LF on checkout (not just normalized in the index). `dotnet format` is a
+# blocking CI stage that runs on the Linux runner where the working tree is LF; without an
+# explicit eol here, `core.autocrlf=true` checks C# out as CRLF on Windows and `dotnet format`
+# (which follows .editorconfig's `end_of_line = lf`) then rewrites every file. Pinning eol=lf
+# makes local and CI agree. The determinism gate is unaffected — the golden hash is computed
+# from GameState, never from source bytes. See EF-003 and `.editorconfig`.
+*.cs    text eol=lf
+
+# JSON/YAML/Markdown stay text with auto line-ending on checkout (deliberately not pinned).
 *.csproj text
 *.json  text
 *.yml   text
