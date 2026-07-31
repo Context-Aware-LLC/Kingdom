@@ -459,10 +459,9 @@ namespace Emberfall.Presentation
             }
 
             // Preferred: one atlas icon per keyword (§4), laid out left-to-right, capped at the
-            // strip's slot count. StatusMarkCatalog is the explicit opt-in registry — keywords
-            // not registered there (SILENCE, art-pending OVERWHELM/VANGUARD) return null and
-            // are silently skipped. A registered address that fails to load in the atlas is a
-            // real gap and warrants a warning (plan decision 15, EF-044).
+            // strip's slot count. StatusMarkCatalog owns the registry (plan decision 15, EF-044):
+            // null means either intentionally absent (s_noIcon — silent) or unknown keyword
+            // (warns in the catalog). A registered address missing from the atlas warns here.
             if (keywordIcons != null && keywordIcons.Length > 0 && _ui != null)
             {
                 if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
@@ -472,7 +471,7 @@ namespace Emberfall.Presentation
                 {
                     if (slot >= keywordIcons.Length) break;
                     string addr = StatusMarkCatalog.KeywordIconAddress(kw);
-                    if (addr == null) continue;  // not registered — skip silently
+                    if (addr == null) continue;  // intentionally absent or unknown (catalog warns)
                     Sprite icon = _ui.Get(addr);
                     if (icon == null)
                     {
