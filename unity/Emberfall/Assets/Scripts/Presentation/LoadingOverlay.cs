@@ -63,6 +63,12 @@ namespace Emberfall.Presentation
         private float _fadeOutT = -1f;            // <0 = not fading yet
         private bool _destroyed;
 
+        /// <summary>Fires once the fade-out finishes, right before this destroys itself. Screen
+        /// Space Overlay UI always paints over this camera-parented rig regardless of its own
+        /// fade state, so a caller revealing overlay content (e.g. MainMenu) must wait for this
+        /// rather than racing it off NotifyReady/NotifyMatchReady alone.</summary>
+        public event System.Action OnFadedOut;
+
         /// <summary>Build the rig under <paramref name="cam"/>. Null camera → null (overlay skipped, boot unaffected).</summary>
         public static LoadingOverlay Create(Camera cam)
         {
@@ -246,7 +252,10 @@ namespace Emberfall.Presentation
             }
 
             if (_fadeOutT >= 0f && fade <= 0f)
+            {
+                OnFadedOut?.Invoke();
                 Destroy(gameObject);
+            }
         }
 
         private void ApplyWordmarkAlpha(float a)

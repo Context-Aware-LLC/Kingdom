@@ -2,6 +2,17 @@
  * mainmenu.uss — S1 front door styles. Consumes tokens from theme.uss only (no literal
  * colors/sizes a token already names). design-system.md §6 components, §2 layout.
  * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
+ *
+ * THIS WARNING LIVES HERE BECAUSE UI BUILDER DELETES UXML COMMENTS. Opening
+ * MainMenuScreen.uxml in Unity's UI Builder rewrites the file and strips every comment in it
+ * — 87 lines of documentation went that way on 2026-07-31, including this warning, which is
+ * why it now sits in the stylesheet instead. Unity does not rewrite .uss.
+ *
+ * NEVER write a BEM modifier's double dash inside a UXML comment. XML forbids that sequence
+ * in a comment, so the importer fails the WHOLE file, CloneTree() returns zero children,
+ * every Q<>() is null, and NOTHING is logged — the screen is simply empty. Refer to modifier
+ * classes in words ("the hidden modifier"), never by writing the literal class name in a
+ * comment. `Emberfall/UI/Check UXML Integrity` catches it if it happens again.
  */
 
 .main-menu {
@@ -15,10 +26,13 @@
 }
 
 /* Boot state: hidden until MainMenuController.RevealMenu() runs (LoadingOverlay covers frame 0
- * instead). display:none here — not just alpha — because the panel's own clear color would
- * otherwise paint over the loading plate while nothing else on this root is visible. */
+ * instead). visibility:hidden, NOT display:none: this root is the panel's only top-level
+ * element, so display:none here means Yoga never runs a single layout pass on it (unlike a
+ * modal, which starts hidden too but sits inside an already-laid-out root) - flipping display
+ * back on later leaves worldBound stuck at NaN and nothing ever draws. visibility keeps it in
+ * the layout tree (bounds always valid) while still suppressing paint and click-through. */
 .mm-root--hidden {
-    display: none;
+    visibility: hidden;
 }
 
 /* Dark scrim over the plate so the wordmark + buttons stay legible (design-system §4.5). */

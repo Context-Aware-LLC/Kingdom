@@ -1,116 +1,64 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  MainMenuScreen.uxml — S1 front door (ui/ux-flows.md).
-  The wordmark, then a single column of destinations. Find Game is the primary CTA;
-  the rest are secondary. Bound at runtime by MainMenuController; styled by theme.uss
-  (shared meta-screen tokens, single source of truth) + mainmenu.uss.
--->
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <Style src="../Deckbuilder/theme.uss" />
-    <Style src="mainmenu.uss" />
-
-    <!-- Starts hidden (see the root's "hidden" modifier class in mainmenu.uss) — the boot
-         loading plate covers frame 0 instead (MainMenuController.Awake/RevealMenu), so the
-         unbound menu never flashes through. NEVER write a BEM modifier's double dash inside a
-         UXML comment: XML forbids it, the importer fails the WHOLE file silently (see the
-         Modals note below). -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
+    <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
-
-        <!-- Scrim: darkens the plate behind the content (paints first = furthest back) -->
-        <ui:VisualElement name="scrim" class="mm-scrim" picking-mode="Ignore" />
-
-        <!-- Identity plate: who you are on this device. Click to rename. Populated at runtime
-             from PlayerAccount.Local — the placeholder text is what shows if that ever fails. -->
+        <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim" style="background-image: none;"/>
         <ui:Button name="identity" class="mm-identity">
-            <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name" />
-            <ui:Label name="identity-sub" text="" class="mm-identity__sub" />
+            <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
+            <ui:Label name="identity-sub" text="" class="mm-identity__sub"/>
         </ui:Button>
-
-        <!-- Testing affordance: more than one account on this machine, so the deckbuilder can be
-             played as two people (Sam 2026-07-27). Styled display:none and shown by
-             MainMenuController ONLY under UNITY_EDITOR || DEVELOPMENT_BUILD — a release build leaves
-             it hidden. Tick "Development Build" in Build Settings or it will not appear. -->
-        <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly" />
-
-        <!-- Brand -->
+        <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly"/>
         <ui:VisualElement name="brand" class="mm-brand">
-            <ui:Label text="EMBERFALL" class="mm-wordmark" />
-            <ui:Label text="A duel of embers" class="mm-tagline" />
+            <ui:Label text="EMBERFALL" class="mm-wordmark"/>
+            <ui:Label text="A duel of embers" class="mm-tagline"/>
         </ui:VisualElement>
-
-        <!-- Menu -->
         <ui:VisualElement name="menu" class="mm-menu">
-            <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta" />
-            <ui:Button name="btn-single-player" text="Single Player" class="mm-button" />
-            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button" />
-            <ui:Button name="btn-store" text="Store" class="mm-button" />
-            <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button" />
+            <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
+            <ui:Button name="btn-single-player" text="Single Player" class="mm-button"/>
+            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button"/>
+            <ui:Button name="btn-store" text="Store" class="mm-button"/>
+            <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
-
-        <!-- Footer -->
         <ui:VisualElement name="footer" class="mm-footer">
-            <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version" />
+            <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version"/>
         </ui:VisualElement>
-
-        <!-- ================= Modals =================
-             Both start hidden (the "hidden" modifier class below) and are shown by
-             MainMenuController. They sit last in the tree so they paint over the menu, and their
-             backdrop swallows clicks — UI Toolkit does not block what is underneath by itself.
-
-             NOTE: never write a BEM modifier's double dash inside a UXML comment. XML forbids it,
-             the importer fails the WHOLE file, and a failed VisualTreeAsset clones to an empty
-             tree — so every Q<T>() returns null and the screen reads as "nothing is wired" with
-             no error in the console. That cost a debugging pass on 2026-07-27. -->
-
-        <!-- Name: first run (no Cancel) and rename (Cancel) are the same modal, re-titled. -->
         <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden">
             <ui:VisualElement name="name-panel" class="mm-modal__panel">
-                <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title" />
-                <ui:Label name="name-help" text="This is the name other players see. You can change it later."
-                          class="mm-modal__help" />
-                <ui:TextField name="name-field" max-length="16" class="mm-modal__field" />
-                <ui:Label name="name-error" text=" " class="mm-modal__error" />
+                <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
+                <ui:Label name="name-help" text="This is the name other players see. You can change it later." class="mm-modal__help"/>
+                <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
+                <ui:Label name="name-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-name-cancel" text="Cancel" class="mm-modal__button" />
-                    <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta" />
+                    <ui:Button name="btn-name-cancel" text="Cancel" class="mm-modal__button"/>
+                    <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <!-- Character: a permanent class pairing (Character in Emberfall.Core.Collection). -->
         <ui:VisualElement name="character-modal" class="mm-modal mm-modal--hidden">
             <ui:VisualElement name="character-panel" class="mm-modal__panel">
-                <ui:Label name="character-title" text="Create your first character" class="mm-modal__title" />
-                <ui:Label name="character-help"
-                          text="A character is a permanent pair of classes — its card pool is both, plus neutrals. The hero power always comes from the primary, and the pairing can never be changed."
-                          class="mm-modal__help" />
-                <ui:TextField name="character-name-field" max-length="16" class="mm-modal__field" />
-                <ui:DropdownField name="character-primary" label="Primary" class="mm-modal__dropdown" />
-                <ui:DropdownField name="character-secondary" label="Secondary" class="mm-modal__dropdown" />
-                <ui:Label name="character-error" text=" " class="mm-modal__error" />
+                <ui:Label name="character-title" text="Create your first character" class="mm-modal__title"/>
+                <ui:Label name="character-help" text="A character is a permanent pair of classes — its card pool is both, plus neutrals. The hero power always comes from the primary, and the pairing can never be changed." class="mm-modal__help"/>
+                <ui:TextField name="character-name-field" max-length="16" class="mm-modal__field"/>
+                <ui:DropdownField name="character-primary" label="Primary" class="mm-modal__dropdown"/>
+                <ui:DropdownField name="character-secondary" label="Secondary" class="mm-modal__dropdown"/>
+                <ui:Label name="character-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-character-cancel" text="Later" class="mm-modal__button" />
-                    <ui:Button name="btn-character-confirm" text="Create" class="mm-modal__button mm-modal__button--cta" />
+                    <ui:Button name="btn-character-cancel" text="Later" class="mm-modal__button"/>
+                    <ui:Button name="btn-character-confirm" text="Create" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <!-- Accounts: the testing switcher. Rows are built in C# from DeviceAccounts.All(), so the
-             list is whatever is on disk rather than a fixed two. -->
         <ui:VisualElement name="account-modal" class="mm-modal mm-modal--hidden">
             <ui:VisualElement name="account-panel" class="mm-modal__panel">
-                <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title" />
-                <ui:Label name="account-help"
-                          text="Local testing only — each account has its own name, characters and decks, and joins matches as its own player. Switching reloads the menu."
-                          class="mm-modal__help" />
-                <ui:VisualElement name="account-list" class="mm-accounts" />
-                <ui:Label name="account-error" text=" " class="mm-modal__error" />
+                <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title"/>
+                <ui:Label name="account-help" text="Local testing only — each account has its own name, characters and decks, and joins matches as its own player. Switching reloads the menu." class="mm-modal__help"/>
+                <ui:VisualElement name="account-list" class="mm-accounts"/>
+                <ui:Label name="account-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button" />
-                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta" />
+                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button"/>
+                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

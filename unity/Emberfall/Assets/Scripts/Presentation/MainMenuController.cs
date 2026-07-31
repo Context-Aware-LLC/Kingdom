@@ -113,22 +113,42 @@ namespace Emberfall.Presentation
             {
                 Debug.LogError($"[MainMenu] could not open this device's collection: {ex.Message}");
                 SetIdentity("Collection unreadable", "See the console — nothing was overwritten.");
-                RevealMenu();
+                FinishBootstrap();
                 return;
             }
 
             RefreshIdentity();
             if (_account.NeedsDisplayName) OpenNameModal(required: true);
-            RevealMenu();
+            FinishBootstrap();
         }
 
-        /// <summary>Show the menu (and whatever modal OnEnable decided to open under it) and let
-        /// the boot plate fade out from in front of it. Called from every OnEnable exit path —
-        /// a corrupt collection must still reach the four buttons that don't need one.</summary>
+        /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
+        /// actually finished fading — not on this signal directly.
+        ///
+        /// <para>Screen Space Overlay always paints over LoadingOverlay's camera-parented rig,
+        /// regardless of the rig's own fade-out timing — revealing on this signal alone would
+        /// race the overlay off the screen the instant identity work finishes, which is close
+        /// enough to instant that the plate would never be seen at all. <see cref="RevealMenu"/>
+        /// only runs once <see cref="LoadingOverlay.OnFadedOut"/> fires.</para></summary>
+        private void FinishBootstrap()
+        {
+            if (_loading != null)
+            {
+                _loading.OnFadedOut += RevealMenu;
+                _loading.NotifyReady();
+            }
+            else
+            {
+                RevealMenu();
+            }
+        }
+
+        /// <summary>Show the menu (and whatever modal OnEnable decided to open under it). Called
+        /// from <see cref="FinishBootstrap"/> — directly when there is no boot plate, otherwise
+        /// once the plate has finished fading.</summary>
         private void RevealMenu()
         {
             _root.RemoveFromClassList("mm-root--hidden");
-            _loading?.NotifyReady();
         }
 
         // System.Action explicitly: Emberfall.Core.Contracts has an Action type of its own (a card
