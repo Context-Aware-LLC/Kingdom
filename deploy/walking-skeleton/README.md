@@ -1,22 +1,29 @@
 # Walking Skeleton — deploy scaffold (C-G0-6 → B1)
 
-**Status:** ✅ B1 — the scaffold now fronts the REAL match server (`Emberfall.Net.Server`,
-`engineering/b1-match-server-design.md`). Live at `wss://emberfall.outofcontext.to/ws` on the
-DigitalOcean droplet (root@24.144.123.177), real Let's Encrypt cert.
+**Status:** ✅ B1 — the scaffold fronts the REAL match server (`Emberfall.Net.Server`,
+`engineering/b1-match-server-design.md`). Live at `wss://emberfall.fly.dev/ws` on **fly.io**
+(app `emberfall`, region `sjc`); Fly terminates TLS with its own `*.fly.dev` cert.
+
+The custom hostname `emberfall.outofcontext.to` was **retired 2026-07-30** — it existed only to
+keep already-distributed tester builds working across a host move, and that is no longer worth a
+DNS record. It also pointed at Fly's **shared** IPv4, which made Cloudflare's scanner attribute a
+neighbouring tenant's open port 3389 to this domain. The client talks to `emberfall.fly.dev`
+directly and Cloudflare is out of this path entirely.
 
 History: the original wss **echo** proved transport + TLS + off-network reachability on
 2026-07-15 (condition C-G0-6, ADR-0005 single-box topology) and was deleted in B1 commit 2 as
 designed — "do not grow the echo; start `Emberfall.Net.Server` fresh."
 
 ## Deploying an update
-1. Sync the build inputs to the box (the image builds FROM THE REPO ROOT — RC F4):
-   `src/`, `unity/Emberfall/Assets/CardData/`, and `deploy/walking-skeleton/`.
-2. On the box, from `deploy/walking-skeleton/`: `docker compose up -d --build`.
-3. Verify from off-network: `curl https://emberfall.<domain>/healthz` →
-   `{"status":"ok","sessions":0,"cap":64,...}`, then connect two WebSocket clients to
-   `wss://emberfall.<domain>/ws` and confirm both receive `match_start`.
 
-`DOMAIN` + `EMAIL` live in `.env` (see `.env.example`); Caddy auto-provisions TLS.
+1. From the **repo root** (that is where `fly.toml` lives, and the image builds FROM THE REPO
+   ROOT — RC F4, since `Dockerfile.server` needs `src/` + the card data): `fly deploy`.
+2. Verify from off-network: `curl https://emberfall.fly.dev/healthz` →
+   `{"status":"ok","sessions":0,"cap":64,...}`, then connect two WebSocket clients to
+   `wss://emberfall.fly.dev/ws` and confirm both receive `match_start`.
+
+No `.env`, no Caddy, no box to sync to — Fly builds from the repo and provisions TLS itself.
+`flyctl` is at `C:\Users\User\.fly\bin\flyctl.exe` (the installer did not set PATH).
 
 ## Files
 - `Caddyfile` — auto-TLS reverse proxy, terminates `wss://`, forwards to `emberfall-server:8080`

@@ -20,10 +20,10 @@ namespace Emberfall.Editor
     /// </summary>
     public static class B3TransportVerify
     {
-        private const string Droplet = "wss://emberfall.outofcontext.to/ws";
+        private const string Live = "wss://emberfall.fly.dev/ws";
 
-        [MenuItem("Emberfall/Verify B3 Transport (droplet)")]
-        public static void VerifyAgainstDroplet() => _ = RunAsync(Droplet);
+        [MenuItem("Emberfall/Verify B3 Transport (live)")]
+        public static void VerifyAgainstLive() => _ = RunAsync(Live);
 
         private static async Task RunAsync(string url)
         {

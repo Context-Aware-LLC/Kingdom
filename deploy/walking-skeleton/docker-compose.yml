@@ -1,7 +1,10 @@
 # Walking skeleton, B1 edition: Caddy (auto-TLS) in front of the REAL match server.
-# The wss echo it replaced proved transport+TLS on 2026-07-15 (C-G0-6); Emberfall.Net.Server
-# now serves wss://emberfall.outofcontext.to/ws with the deterministic core behind it
-# (droplet root@24.144.123.177).
+# The wss echo it replaced proved transport+TLS on 2026-07-15 (C-G0-6).
+#
+# RETIRED 2026-07-30 — this is the DigitalOcean droplet path and the droplet is gone (22/80/443
+# all closed on 24.144.123.177). Production is fly.io, which builds `Dockerfile.server` straight
+# from the repo root and terminates TLS itself, so neither Caddy nor this compose file is in the
+# serving path. Kept for local full-stack runs and as the record of the B1 topology.
 
 services:
   emberfall-server:

@@ -41,9 +41,9 @@ namespace Emberfall.Presentation
         [SerializeField] private MatchRunner matchRunner;
 
         [Header("Server")]
-        [Tooltip("wss endpoint. The live droplet is wss://emberfall.outofcontext.to/ws; a local " +
+        [Tooltip("wss endpoint. The live server is wss://emberfall.fly.dev/ws; a local " +
                  "dev server is ws://localhost:8080/ws (Emberfall/Net/Start Local Server).")]
-        [SerializeField] private string serverUrl = "wss://emberfall.outofcontext.to/ws";
+        [SerializeField] private string serverUrl = "wss://emberfall.fly.dev/ws";
 
         [Header("Board (optional, null = console-only)")]
         [SerializeField] private BoardAnchors boardAnchors;

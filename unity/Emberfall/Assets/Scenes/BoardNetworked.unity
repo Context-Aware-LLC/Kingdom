@@ -379,7 +379,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.NetworkedGameBootstrap
   matchRunner: {fileID: 558931582}
-  serverUrl: wss://emberfall.outofcontext.to/ws
+  serverUrl: wss://emberfall.fly.dev/ws
   boardAnchors: {fileID: 558931581}
   boardController: {fileID: 558931579}
   inputRouter: {fileID: 558931585}
