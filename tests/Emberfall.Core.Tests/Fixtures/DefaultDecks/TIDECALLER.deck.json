@@ -1,0 +1,109 @@
+{
+  "primaryClass": "TIDECALLER",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-TIDECALLER",
+  "deckId": "fixture-deck-TIDECALLER",
+  "seed": 64159285250,
+  "entries": [
+    {
+      "id": "core_choking_vines",
+      "count": 1
+    },
+    {
+      "id": "core_emberling",
+      "count": 2
+    },
+    {
+      "id": "core_grove_mender",
+      "count": 1
+    },
+    {
+      "id": "core_hollow_acolyte",
+      "count": 1
+    },
+    {
+      "id": "core_stoneback",
+      "count": 1
+    },
+    {
+      "id": "core_thistleguard_sprig",
+      "count": 1
+    },
+    {
+      "id": "core_veilstalker",
+      "count": 1
+    },
+    {
+      "id": "ember_ashfall_wyrm",
+      "count": 1
+    },
+    {
+      "id": "ember_cinder_lance",
+      "count": 2
+    },
+    {
+      "id": "ember_overheat_golem",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch",
+      "count": 1
+    },
+    {
+      "id": "ember_slagshell_bulwark",
+      "count": 1
+    },
+    {
+      "id": "ember_stoke_the_coals",
+      "count": 1
+    },
+    {
+      "id": "ember_twin_flame",
+      "count": 2
+    },
+    {
+      "id": "relic_corpse_cart",
+      "count": 1
+    },
+    {
+      "id": "stone_sentry",
+      "count": 1
+    },
+    {
+      "id": "tide_deep_bargain",
+      "count": 2
+    },
+    {
+      "id": "tide_deepfrost_spear",
+      "count": 1
+    },
+    {
+      "id": "tide_fathom_crush",
+      "count": 1
+    },
+    {
+      "id": "tide_frostbind",
+      "count": 1
+    },
+    {
+      "id": "tide_initiate",
+      "count": 1
+    },
+    {
+      "id": "tide_oracle",
+      "count": 1
+    },
+    {
+      "id": "tide_reefguard",
+      "count": 2
+    },
+    {
+      "id": "tide_undertow",
+      "count": 1
+    },
+    {
+      "id": "wandering_scout",
+      "count": 1
+    }
+  ]
+}
