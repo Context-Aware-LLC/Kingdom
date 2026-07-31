@@ -272,9 +272,24 @@ namespace Emberfall.Core
         private void ApplyEndTurn(GameState state, EndTurnIntent e, EventBuffer buf)
         {
             var activeSeat = state.SeatOf(state.ActivePlayer);
-            buf.Emit(VfxEvent.onTurnEnd, source: state.Players[activeSeat].Hero.Id);
+            var interp = new EffectInterpreter(state, _db, buf);
 
+            buf.Emit(VfxEvent.onTurnEnd, source: state.Players[activeSeat].Hero.Id);
             state.Phase = TurnPhase.EndOfTurn;
+
+            // EF-012 seam: raise Trigger.ON_TURN_END here — the active player still owns the turn and the
+            // phase is EndOfTurn. Nothing is raised yet, so the Drain below is a no-op (empty queue, no
+            // corpses at a settled turn boundary) and this whole block is hash-neutral until EF-012 lands.
+
+            // The end-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE the seat
+            // flip and the incoming StartTurnSequence, whose thaw loop resets SummonedThisTurn /
+            // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade. CheckWin
+            // is called explicitly because Drain only win-checks while its queue is non-empty (the same
+            // reason ApplyAttack pairs Drain with an explicit CheckWin).
+            interp.Drain();
+            RulesEngine.CheckWin(state, buf);
+            if (state.Outcome != MatchOutcome.InProgress) return;
+
             var nextSeat = activeSeat == 0 ? 1 : 0;
             state.ActivePlayer = state.Players[nextSeat].Id;
             StartTurnSequence(state, state.ActivePlayer, buf);
@@ -594,7 +609,15 @@ namespace Emberfall.Core
             ps.HeroPowerUsedThisTurn = false;
             ps.HeroAttacksUsedThisTurn = 0;
 
+            var interp = new EffectInterpreter(state, _db, buf);
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
+
+            // EF-011 seam: raise Trigger.ON_TURN_START here — AFTER the thaw/mana reset above and BEFORE the
+            // draw, so a start-of-turn cascade settles before DrawOne (or a corpse would draw fatigue).
+            // Nothing is raised yet, so the Drain is a no-op and this block is hash-neutral until EF-011 lands.
+            interp.Drain();
+            RulesEngine.CheckWin(state, buf);
+            if (state.Outcome != MatchOutcome.InProgress) return;
 
             RulesEngine.DrawOne(state, seat, buf);
             RulesEngine.CheckWin(state, buf);
