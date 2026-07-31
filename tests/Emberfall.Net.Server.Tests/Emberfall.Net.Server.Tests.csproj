@@ -29,6 +29,8 @@
     <ProjectReference Include="..\..\src\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core\Emberfall.Core.csproj" />
+    <!-- EF-071: the deck-submission tests build Character/DeckList/DefaultDeckGenerator directly. -->
+    <ProjectReference Include="..\..\src\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
   </ItemGroup>

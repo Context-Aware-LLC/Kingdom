@@ -99,7 +99,8 @@ namespace Emberfall.Net.Server
 
     /// <summary>
     /// The B1 Kestrel host (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §11): `/ws` (fresh pairing; `?reconnect=1`
-    /// skips the queue and must open with a `reconnect` envelope), `/healthz`, nothing else.
+    /// skips the queue and must open with a `reconnect` envelope; `?deck=1` owes a `submit_deck` frame
+    /// after the hello, revalidated server-side — EF-071), `/healthz`, nothing else.
     /// Split from Program.cs so the loopback integration test can boot the REAL app on an
     /// ephemeral port with test paths.
     /// </summary>
@@ -159,7 +160,11 @@ namespace Emberfall.Net.Server
                 if (reconnect)
                     await gate.HandleReconnectAsync(socket, context.RequestAborted);
                 else
-                    await gate.HandleFreshAsync(socket, context.RequestAborted);
+                    // EF-071: ?deck=1 opts the fresh socket into client-supplied decks — it owes a
+                    // SubmitDeckMsg as its second handshake frame, revalidated server-side. Absent the
+                    // flag the socket is dealt the prebuilt fallback (additive; existing clients unchanged).
+                    await gate.HandleFreshAsync(socket, context.RequestAborted,
+                        expectDeck: context.Request.Query.ContainsKey("deck"));
             });
 
             return (app, gate);

@@ -30,6 +30,7 @@ namespace Emberfall.Net.Protocol
 
         // Wire type discriminators (design §5).
         public const string TypeHello = "hello";
+        public const string TypeSubmitDeck = "submit_deck";
         public const string TypeIntent = "intent";
         public const string TypeAck = "ack";
         public const string TypeHeartbeat = "heartbeat";
@@ -61,6 +62,7 @@ namespace Emberfall.Net.Protocol
         private static string TypeOf(NetMessage msg) => msg switch
         {
             HelloMsg _ => TypeHello,
+            SubmitDeckMsg _ => TypeSubmitDeck,
             IntentMsg _ => TypeIntent,
             AckMsg _ => TypeAck,
             HeartbeatMsg _ => TypeHeartbeat,
@@ -86,6 +88,23 @@ namespace Emberfall.Net.Protocol
                     w.Name("platform"); w.Str(m.Platform);
                     w.Name("buildId"); w.Str(m.BuildId);
                     w.Name("displayName"); w.Str(m.DisplayName);
+                    w.EndObject();
+                    break;
+                case SubmitDeckMsg m:
+                    w.BeginObject();
+                    w.Name("characterId"); w.Str(m.CharacterId);
+                    w.Name("primaryClass"); w.Str(m.PrimaryClass.ToString());
+                    w.Name("secondaryClass"); w.Str(m.SecondaryClass.ToString());
+                    w.Name("cards");
+                    w.BeginArray();
+                    foreach (var line in m.Cards)
+                    {
+                        w.BeginObject();
+                        w.Name("cardId"); w.Str(line.CardId);
+                        w.Name("count"); w.I32(line.Count);
+                        w.EndObject();
+                    }
+                    w.EndArray();
                     w.EndObject();
                     break;
                 case IntentMsg m:
@@ -232,6 +251,7 @@ namespace Emberfall.Net.Protocol
             switch (type)
             {
                 case TypeHello: return ReadHello(body, matchId, seq);
+                case TypeSubmitDeck: return ReadSubmitDeck(body, matchId, seq);
                 case TypeIntent: return ReadIntent(body, matchId, seq);
                 case TypeAck:
                     return ReadU64(body, "version", matchId, seq, out ulong ackV)
@@ -297,6 +317,41 @@ namespace Emberfall.Net.Protocol
 
         private static string OptStr(JVal body, string name)
             => body.TryGet(name, out var v) && v.TryStr(out string s) ? s : "";
+
+        /// <summary>
+        /// EF-071 — the client-supplied decklist. Decode only enforces the wire SHAPE (well-formed
+        /// object, present fields, strict-enum classes, integer counts); it never judges legality.
+        /// Deck LEGALITY — size, copy caps, class membership, and every id resolving in the card DB —
+        /// is the server's business (<c>DeckSubmission.Validate</c> → <c>QueueEligibility.Check</c>),
+        /// because "the codec vetted it" is exactly the trust a client must never be handed (VULN-001).
+        /// An empty or over-large card array is a legal DECODE and a rejected DECK; the frame itself is
+        /// already bounded by <see cref="MaxMessageBytes"/> and the gate's per-frame cap.
+        /// </summary>
+        private static DecodeResult ReadSubmitDeck(JVal body, MatchId matchId, ulong seq)
+        {
+            if (!body.TryGet("characterId", out var cidVal) || !cidVal.TryStr(out string characterId))
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'characterId'", matchId, seq);
+            if (!body.TryGet("primaryClass", out var pcVal) || !pcVal.TryStr(out string pcs)
+                || !WirePrimitives.TryEnum(pcs, out CardClass primary))
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'primaryClass'", matchId, seq);
+            if (!body.TryGet("secondaryClass", out var scVal) || !scVal.TryStr(out string scs)
+                || !WirePrimitives.TryEnum(scs, out CardClass secondary))
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'secondaryClass'", matchId, seq);
+            if (!body.TryGet("cards", out var cardsVal) || cardsVal.Kind != JKind.Array)
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'cards'", matchId, seq);
+
+            var cards = new List<DeckCardLine>(cardsVal.Items!.Count);
+            foreach (var item in cardsVal.Items)
+            {
+                if (item.Kind != JKind.Object
+                    || !item.TryGet("cardId", out var idVal) || !idVal.TryStr(out string cardId)
+                    || !item.TryGet("count", out var cntVal) || !cntVal.TryI32(out int count))
+                    return DecodeResult.Fail(ProtocolError.BadField, "bad deck 'cards' entry", matchId, seq);
+                cards.Add(new DeckCardLine(cardId, count));
+            }
+
+            return DecodeResult.Success(new SubmitDeckMsg(characterId, primary, secondary, cards), matchId, seq);
+        }
 
         private static DecodeResult ReadReconnect(JVal body, MatchId matchId, ulong seq)
         {

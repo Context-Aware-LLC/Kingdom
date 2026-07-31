@@ -58,6 +58,42 @@ namespace Emberfall.Net.Protocol
         //    for itself — a length bound is not a clip. Add it to VULN-002 §4 when you write it.
         string DisplayName = "") : NetMessage;
 
+    /// <summary>One line of a submitted decklist on the wire: a card definition id and a copy count.
+    /// The float-free integer-only shape of <c>Emberfall.Core.Collection.DeckEntry</c>, restated here
+    /// because this assembly deliberately never references Collection (csproj: "never references
+    /// Emberfall.Core"). The server rebuilds a <c>DeckList</c> from these and revalidates it.</summary>
+    public readonly struct DeckCardLine
+    {
+        public readonly string CardId;
+        public readonly int Count;
+        public DeckCardLine(string cardId, int count) { CardId = cardId; Count = count; }
+    }
+
+    /// <summary>
+    /// EF-071 — a client-supplied decklist, submitted at handshake so the match is dealt from the
+    /// player's own deck instead of the fixed <c>PrebuiltDecks</c> pair. Sent as the SECOND fresh-socket
+    /// frame (after <see cref="HelloMsg"/>) by a client that connected to <c>/ws?deck=1</c>; a plain
+    /// <c>/ws</c> client submits nothing and is dealt the prebuilt fallback, so this is purely additive.
+    ///
+    /// <para><b>SECURITY — this carries client-authored card-identity strings, the exact shape
+    /// VULN-001 (security/known-vulnerabilities, LATENT — trigger "Client-supplied deck lists") warns
+    /// about.</b> Nothing here is trusted: the server rebuilds a <c>DeckList</c> + <c>Character</c> from
+    /// these fields and re-runs <c>QueueEligibility.Check</c> / <c>DeckValidator.Validate</c> against its
+    /// own <c>ICardDatabase</c>, which resolves every id through <c>TryGet</c> (never <c>Get</c>) so an
+    /// unknown id is a rejection, never an exception and never a mutation (VULN-001 §4 rule 1). An
+    /// illegal deck is refused at the handshake and no id in it ever reaches match state.</para>
+    ///
+    /// <para><see cref="PrimaryClass"/>/<see cref="SecondaryClass"/> are the character's pairing, needed
+    /// for the L4 class-membership check; the match's hero (and hero power) is the PRIMARY class
+    /// (dual-class ruling — one hero power, from the primary). <see cref="CharacterId"/> is the L5
+    /// binding, echoed for the validator's reason copy; it is not an identity the server trusts.</para>
+    /// </summary>
+    public sealed record SubmitDeckMsg(
+        string CharacterId,
+        CardClass PrimaryClass,
+        CardClass SecondaryClass,
+        IReadOnlyList<DeckCardLine> Cards) : NetMessage;
+
     /// <summary>A player intent + the client's last-applied StateVersion (stale-client detection,
     /// netcode §3.2). Which decoded intents a client may SUBMIT is the server's §4.6 allowlist —
     /// a separate policy gate from the codec's tag registry (design §5, two gates).</summary>
