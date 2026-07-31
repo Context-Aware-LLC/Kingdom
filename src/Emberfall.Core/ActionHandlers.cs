@@ -62,7 +62,7 @@ namespace Emberfall.Core
 
             var keywords = ActionHandlers.SourceKeywords(in ctx);
             foreach (var t in ctx.Targets)
-                DamagePipeline.ApplyDamage(ctx.State, t, amount, ctx.Source.Id, keywords, ctx.Events);
+                DamagePipeline.ApplyDamage(ctx.Interpreter, t, amount, ctx.Source.Id, keywords);
         }
     }
 
@@ -74,7 +74,7 @@ namespace Emberfall.Core
         {
             int amount = ctx.Effect.Amount ?? 0;
             foreach (var t in ctx.Targets)
-                DamagePipeline.ApplyHeal(ctx.State, t, amount, ctx.Source.Id, ctx.Events);
+                DamagePipeline.ApplyHeal(ctx.Interpreter, t, amount, ctx.Source.Id);
         }
     }
 

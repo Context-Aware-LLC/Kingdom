@@ -532,7 +532,7 @@ namespace Emberfall.Core
             }
 
             // Phase 1: attacker hits defender
-            DamagePipeline.ApplyDamage(state, defender, attackerAtk, attacker.Id, attackerKws, buf);
+            DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);
 
             // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only).
             // Riders (LIFESTEAL/POISONOUS) attach to the primary hit only — G0 ruling R-2(c),
@@ -541,7 +541,7 @@ namespace Emberfall.Core
             if (overwhelm && defender.IsMinion && defender.Minion!.CurrentHealth < 0)
             {
                 var enemyHero = CharacterRef.OfHero(foe, state.Players[foe].Hero);
-                DamagePipeline.ApplyDamage(state, enemyHero, -defender.Minion.CurrentHealth, attacker.Id, null, buf);
+                DamagePipeline.ApplyDamage(interp, enemyHero, -defender.Minion.CurrentHealth, attacker.Id, null);
             }
 
             // Phase 2: retaliation — minion defenders only; heroes never retaliate
@@ -550,8 +550,8 @@ namespace Emberfall.Core
                 // VANGUARD: if defender died from the hit, no retaliation
                 bool retaliates = !vanguard || defender.Minion!.CurrentHealth > 0;
                 if (retaliates)
-                    DamagePipeline.ApplyDamage(state, attacker, defender.Minion!.CurrentAttack,
-                        defender.Id, defender.Minion.Keywords, buf);
+                    DamagePipeline.ApplyDamage(interp, attacker, defender.Minion!.CurrentAttack,
+                        defender.Id, defender.Minion.Keywords);
             }
 
             // Weapon durability on hero attack
