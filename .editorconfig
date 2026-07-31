@@ -1,0 +1,39 @@
+# Emberfall — code formatting conventions.
+#
+# EF-003: before this file, `dotnet format` (a blocking CI stage, ci.yml Stage 1) fell
+# back to the PLATFORM newline. On Windows (core.autocrlf=true) it expected CRLF and
+# rewrote LF source; the Linux CI runner expected LF and stayed green — a tool-written
+# LF file failed `dotnet format` locally while `git diff` reported nothing. Pinning
+# `end_of_line = lf` here, together with `*.cs text eol=lf` in .gitattributes, makes
+# local and CI agree. LF is already the canonical form: every tracked .cs is LF in the
+# index. The values below are the conventions already in the tree (Roslyn defaults),
+# recorded explicitly so a future SDK default change cannot silently move them.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+
+# Braces on their own line (Allman) — the convention already in the tree.
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# using directives are placed outside the namespace (the tree's convention). Ordering is
+# left unenforced: the tree does not sort System.* first, and imposing it would rewrite
+# imports across the codebase — out of scope for a formatting-baseline change.
+csharp_using_directive_placement = outside_namespace:silent
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{json,yml,yaml,asmdef}]
+indent_size = 2
