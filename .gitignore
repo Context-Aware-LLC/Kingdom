@@ -30,17 +30,11 @@ artifacts/
 # NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
 # code under src/ and tests/. Do not blanket-ignore project files anymore.
 
-# Art generation corpus. NOT scratch — keep indefinitely (Sam, 2026-07-23). The frames and
-# templates we build are slots meant to hold a variety of art, so unpicked candidates are not
-# losers; they are seed material for future generations. Ignored because it is large and binary,
-# not because it is disposable. Assets/ holds what a build needs; this holds what we can draw on.
-art-bakeoff/*
-# …except the calibrated card-frame finals (cuts + measured geometry), which the
-# mock/render pipeline consumes directly (spec: docs techart/card-rendering.md §3.1)
-!art-bakeoff/frames
-art-bakeoff/frames/*
-!art-bakeoff/frames/Frame_*_cut.png
-!art-bakeoff/frames/Frame_*_fit.json
+# Art generation candidates. Nothing in here is load-bearing (Sam, 2026-07-31): every final
+# version already lives where it belongs under Assets/. The folder is kept only because it is
+# good to look at — the whole thing could be deleted and no build, test or asset would change.
+# Untracked in full, no exceptions.
+art-bakeoff/
 
 # Python bytecode from the tooling/scripts generators
 __pycache__/

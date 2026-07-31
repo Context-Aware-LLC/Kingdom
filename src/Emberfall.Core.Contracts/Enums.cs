@@ -41,11 +41,64 @@ namespace Emberfall.Core.Contracts
         REINFORCE,             // REKINDLING set: Battlecry — Give a friendly minion +1/+1.
     }
 
-    /// <summary>When an effect fires (card-schema.md §5.1).</summary>
+    /// <summary>When an effect fires (card-schema.md §5.1).
+    ///
+    /// <para>DECLARED IS NOT LIVE. Six of these have no raise site anywhere in the engine — a card
+    /// using one parses, validates, loads and then does nothing, forever, silently, with no error.
+    /// The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    ///
+    /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
+    /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
+    /// (1) flip its marker here to LIVE, (2) remove it from the NO-GO list in `CLAUDE.md`, and
+    /// (3) add it to the live-trigger table in `CardValidator` (rule C21). Do all three in the
+    /// commit that adds the raise site — nobody will come back for them later.</para>
+    ///
+    /// <para>Order is load-bearing: these are serialized by name, but do not reorder casually.</para>
+    /// </summary>
     public enum Trigger
     {
-        ON_PLAY, ON_DEATH, ON_ATTACK, ON_DAMAGED, ON_HEAL, ON_TURN_START,
-        ON_TURN_END, ON_FRIENDLY_SUMMON, ON_SPELL_CAST, ON_CAST, AURA
+        // LIVE — CommandProcessor.
+        ON_PLAY,
+
+        // LIVE — EffectInterpreter.
+        // TRAP: RulesEngine.BreakWeapon raises nothing at all, so a Deathrattle on a WEAPON
+        // never fires. That is a separate gap from this trigger being live on minions.
+        ON_DEATH,
+
+        // LIVE, BUT WEAPONS ONLY. CommandProcessor gates the raise on
+        // `attacker.IsHero && ps.Weapon != null`, and fires it with an EMPTY target list — so
+        // "the minion this hits" is not addressable. On a MINION this trigger is dead.
+        ON_ATTACK,
+
+        // DEAD — no raise site. Intended sites: DamagePipeline, both absorb and normal hit.
+        ON_DAMAGED,
+
+        // DEAD — no raise site. Intended site: the DamagePipeline heal path. Note it would fire
+        // reentrantly inside ApplyDamage via LIFESTEAL.
+        ON_HEAL,
+
+        // DEAD — no raise site. Intended site: CommandProcessor.StartTurnSequence, before the draw.
+        ON_TURN_START,
+
+        // DEAD — no raise site. Intended site: CommandProcessor.ApplyEndTurn, before the seat flip.
+        ON_TURN_END,
+
+        // LIVE — ActionHandlers + CommandProcessor.
+        ON_FRIENDLY_SUMMON,
+
+        // DEAD — no raise site.
+        // TRAP when arming: hero powers also raise ON_CAST through an ephemeral HERO_POWER card,
+        // so a generic ON_CAST hook fires on hero powers too. Gate any new raise to the
+        // CardType.SPELL branch only.
+        ON_SPELL_CAST,
+
+        // LIVE — CommandProcessor, for spells AND hero powers.
+        ON_CAST,
+
+        // DEAD, and not an event at all: it needs a derived-stat recompute pass, which does not
+        // exist anywhere in src/. BuffHandler bakes stats destructively and the Enchantment it
+        // writes is never read back, so an aura source leaving the board cannot unapply itself.
+        AURA
     }
 
     /// <summary>The primitive verbs (card-schema.md §5.2). Closed; grows only via the requiresEngineeringPrimitive gate.</summary>

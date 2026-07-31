@@ -6,7 +6,7 @@ content cadence (card sets, balance patches, cosmetics).
 
 **Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules engine that runs
 headless on the server. **There is no client-side prediction** (ADR-0004): the client mirrors
-server snapshots wholesale and never speculates. Desktop-first, architected for mobile.
+server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
 
 ## What this file is
 
@@ -21,10 +21,18 @@ become wrong, and this file is loaded into every session that touches the repo.
 
 ## Where things are
 
-`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx`, .NET 10 —
-note `.slnx`, not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-bakeoff/`
-hold source art and generated candidates. `tooling/scripts/` and `tools/ci/` hold automation.
-See `src/README.md` for the engine map.
+`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`,
+not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-bakeoff/` hold source art and
+generated candidates. `tooling/scripts/` and `tools/ci/` hold automation. See `src/README.md` for
+the engine map.
+
+**The core is `netstandard2.1`, NOT .NET 10.** Every `Emberfall.Core.*` project, plus
+`Emberfall.Net.Client` and `Emberfall.Net.Protocol`, targets `netstandard2.1` because **Unity
+consumes them as local packages** and cannot load a `net10.0` assembly. Only `Emberfall.Net.Server`
+and the `Emberfall.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
+language feature inside the core compiles nowhere and breaks Unity's consumption of it — so check
+the `.csproj` before using anything modern. Confirm with:
+`git grep -h '<TargetFramework>' -- 'src/**/*.csproj' | sort | uniq -c`
 
 ## Source of truth
 
@@ -80,6 +88,11 @@ breaks and raises no trigger at all. **A Deathrattle on a weapon never fires.**
 Lift a name off this list only when its raise site actually exists. `CardValidator` has no rule
 for any of this; until it does, **this list is the only guard.**
 
+**This list does not live here alone.** Each member of the `Trigger` enum in
+`Emberfall.Core.Contracts/Enums.cs` is marked `LIVE` or `DEAD` on its own line, with the intended
+raise site and the retirement trigger. That is the copy an implementer actually meets. If the two
+ever disagree, **the enum markers win** — they sit next to the code and this file does not.
+
 ## What a weapon can and cannot do
 
 A hero attacking with a weapon carries **no keywords at all** — `attackerKws` is a literal empty
@@ -105,6 +118,27 @@ words per row, so the scan takes seconds and a matching row is obvious. Match a 
 forced to edit to arm it. The entry records the vulnerability; only the comment delivers it —
 because the person who arms a latent vulnerability is never the person looking for it.
 
+## Every claim here that can expire carries a RETIREMENT TRIGGER in the code
+
+Generalised from the reciprocal rule above, after a rule in this file outlived its reason and cost
+a session (`art-bakeoff/` was the only copy of the art until the finals were placed; nothing
+prompted anyone to retire the rule once they were).
+
+**A statement about the current state of the world is not documentation — it is a claim with an
+expiry date, and the expiry has to be attached to the work that causes it.** Writing "retire this
+when X lands" *here* does not work: the person who lands X is never the person reading this file.
+
+So: if you write a constraint in this file that some future change will falsify, you must also
+leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touch**, naming what
+to update. Conversely — **if you are editing a line that carries one, discharging it is part of
+your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
+
+Placed so far: the `Trigger` enum (`Enums.cs`), the per-effect loop in `CardValidator`, and
+`WeaponInstance` (`GameState.cs`).
+
+**A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
+that is simply true. Only pin the ones that a known, named change will invalidate.
+
 ## Generated art lands in `art-bakeoff/`
 
 **Generation never writes into the Unity project.** Generators drop candidates into
@@ -123,8 +157,10 @@ pair.** The `.meta` carries the guid the Addressables entry points at; deleting 
 one and silently orphans that entry. Overwriting keeps it. New art still needs its generated
 `.meta` committed — a separate and easy-to-forget step.
 
-**Never delete a candidate from `art-bakeoff/`.** It is keep-forever seed material and the
-operator curates it himself.
+**`art-bakeoff/` is disposable and fully untracked (Sam, 2026-07-31).** Every final version already
+lives under `Assets/`; the folder is kept only because it is good to look at. The whole thing could
+be deleted and no build, test or asset would change. Do not treat a candidate as load-bearing, and
+do not ask before removing one — but equally, nothing in there is a deliverable.
 
 ## Never commit a changed `productName`
 

@@ -104,6 +104,18 @@ namespace Emberfall.Core.Cards
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
             // C9-C11, C13, C14, C17 — per-effect checks
+            //
+            // NOTHING HERE IS KEYED ON fx.Trigger, AND THAT IS THE GAP. A card carrying a declared-
+            // but-never-raised trigger passes every rule below, loads, and then does nothing forever
+            // with no error. Today the only guard is a prose list in CLAUDE.md plus the LIVE/DEAD
+            // markers on the Trigger enum in Emberfall.Core.Contracts/Enums.cs.
+            //
+            // RETIREMENT TRIGGER — you are the person this comment was left for. If you are adding
+            // the trigger-liveness rule (C21), that same change must delete the sentence "this list
+            // is the only guard" from CLAUDE.md's trigger section, because it stops being true the
+            // moment your table exists. Keep the table sourced from the enum markers so the two
+            // cannot drift. C21 must also encode: ON_ATTACK is weapon-only, and ON_DEATH on a weapon
+            // is an error until BreakWeapon actually raises it.
             for (int i = 0; i < def.Effects.Count; i++)
             {
                 var fx = def.Effects[i];
