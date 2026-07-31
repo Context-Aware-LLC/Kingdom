@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
+using Emberfall.Net.Server.Identity;
+using Emberfall.Net.Server.Matchmaking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Transport;
@@ -30,6 +32,20 @@ namespace Emberfall.Net.Server
         /// still inject their own, and leaving it null remains an honest, visible n = 0.
         /// </summary>
         public ITelemetrySink? Telemetry { get; init; }
+
+        /// <summary>
+        /// Matchmaking policy seam. Null composes the launch FIFO/band-widening queue; tests and a
+        /// later durable broker can replace it without moving socket or session ownership.
+        /// </summary>
+        public IMatchmakingQueue? MatchmakingQueue { get; init; }
+
+        /// <summary>
+        /// Trusted server-side rating lookup for queue tickets. Null preserves today's unrated
+        /// guest behavior by using <see cref="MatchmakingQueueOptions.DefaultRating"/>; ratings
+        /// never come from a client hello. Do not attach a persisted rating to the bearer-token
+        /// <see cref="AccountId"/> until VULN-003's authentication requirement is discharged.
+        /// </summary>
+        public Func<AccountId, int>? MatchmakingRatingForAccount { get; init; }
 
         /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
@@ -104,12 +120,19 @@ namespace Emberfall.Net.Server
                 builder.Services.AddSingleton<IHostedService>(cfg.TelemetryDrain);
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
+            var time = new SystemTimeSource();
+            var matchmaking = cfg.MatchmakingQueue ??
+                new BandWideningMatchmakingQueue(time, cfg.Options.Matchmaking);
+            var ratingForAccount = cfg.MatchmakingRatingForAccount ??
+                (_ => cfg.Options.Matchmaking.DefaultRating);
             var gate = new MatchGate(
                 cfg.Options,
-                new SystemTimeSource(),
+                time,
                 FileCardDatabase.LoadDirectory(cardsDir),
                 new PrebuiltDeckProvider(),
                 new JsonlReplayStore(cfg.ReplaysDir),
+                matchmaking,
+                ratingForAccount,
                 cfg.Telemetry);
 
             var app = builder.Build();

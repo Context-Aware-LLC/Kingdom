@@ -9,15 +9,17 @@ using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
+using Emberfall.Net.Server.Matchmaking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
 
 namespace Emberfall.Net.Server.Transport
 {
     /// <summary>
-    /// B1's throwaway pairing door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §5) — replaced by B2 queue; do not
-    /// grow. FIFO: the first two fresh sockets that have said hello form a match. Reconnects skip
-    /// the queue via `/ws?reconnect=1` — a transport routing hint only; authentication is the
+    /// The transport/session gate around the server-owned matchmaking seam (EF-070). Fresh sockets
+    /// say hello, enter <see cref="IMatchmakingQueue"/>, and receive FIFO seats when its rating
+    /// policy pairs them. Reconnects skip the queue via `/ws?reconnect=1` — a transport routing
+    /// hint only; authentication is the
     /// ReconnectMsg token, judged by the session (§8). Also owns the RC Q4 session cap: at
     /// capacity, new pairings are refused with close 1013 before queueing.
     ///
@@ -38,27 +40,49 @@ namespace Emberfall.Net.Server.Transport
         private readonly IDeckProvider _decks;
         private readonly IReplayStore _replay;
         private readonly ITelemetrySink _telemetry;
+        private readonly IMatchmakingQueue _matchmaking;
+        private readonly Func<AccountId, int> _ratingForAccount;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
+        private readonly Dictionary<string, WaitingPlayer> _waiting =
+            new Dictionary<string, WaitingPlayer>(StringComparer.Ordinal);
+        private int _pendingSessions;
 
         /// <summary>Per-match attribution (C-G1-8). Server-side only — never on the wire, never in
         /// <c>GameState</c>. Cleared with the session; the telemetry emitter reads it at match end.</summary>
         private readonly Dictionary<string, (AccountId p0, AccountId p1)> _accounts =
             new Dictionary<string, (AccountId, AccountId)>(StringComparer.Ordinal);
 
-        private (WebSocketConnection conn, WebSocket socket, AccountId account, TaskCompletionSource<Seating?> seated)? _waiting;
         private int _nextGuest;
 
         public MatchGate(
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
             IReplayStore replay, ITelemetrySink? telemetry = null)
+            : this(
+                opts,
+                time,
+                db,
+                decks,
+                replay,
+                new BandWideningMatchmakingQueue(time, opts.Matchmaking),
+                _ => opts.Matchmaking.DefaultRating,
+                telemetry)
+        {
+        }
+
+        public MatchGate(
+            ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
+            IReplayStore replay, IMatchmakingQueue matchmaking,
+            Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null)
         {
             _opts = opts;
             _time = time;
             _db = db;
             _decks = decks;
             _replay = replay;
+            _matchmaking = matchmaking ?? throw new ArgumentNullException(nameof(matchmaking));
+            _ratingForAccount = ratingForAccount ?? throw new ArgumentNullException(nameof(ratingForAccount));
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
         }
 
@@ -70,6 +94,11 @@ namespace Emberfall.Net.Server.Transport
         public int MaxSessions => _opts.MaxSessions;
 
         private sealed record Seating(SessionPump Pump, int Seat);
+        private sealed record WaitingPlayer(
+            MatchmakingTicket Ticket,
+            WebSocketConnection Conn,
+            AccountId Account,
+            TaskCompletionSource<Seating?> Seated);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -125,7 +154,7 @@ namespace Emberfall.Net.Server.Transport
             //    is a permanent back door into the account it was meant to protect.
             var account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
 
-            Seating? seating = await PairAsync(conn, socket, account, ct);
+            Seating? seating = await PairAsync(conn, account, ct);
             if (seating is null)
             {
                 conn.Close(1013, "server full");
@@ -169,80 +198,151 @@ namespace Emberfall.Net.Server.Transport
         }
 
         private async Task<Seating?> PairAsync(
-            WebSocketConnection conn, WebSocket socket, AccountId account, CancellationToken ct)
+            WebSocketConnection conn, AccountId account, CancellationToken ct)
         {
-            TaskCompletionSource<Seating?> mySeating;
-            (WebSocketConnection conn, WebSocket socket, AccountId account, TaskCompletionSource<Seating?> seated)? partner = null;
+            var ticket = new MatchmakingTicket(
+                Guid.NewGuid().ToString("N"),
+                _ratingForAccount(account));
+            var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var waiter = new WaitingPlayer(ticket, conn, account, mySeating);
 
             lock (_lock)
             {
-                if (_sessions.Count >= _opts.MaxSessions && _waiting is null)
+                if (_sessions.Count + _pendingSessions >= _opts.MaxSessions)
                     return null;   // RC Q4: refuse before queueing
-
-                if (_waiting is null)
-                {
-                    mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                    _waiting = (conn, socket, account, mySeating);
-                }
-                else
-                {
-                    partner = _waiting;
-                    _waiting = null;
-                    mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                }
+                _waiting.Add(ticket.Id, waiter);
+                _matchmaking.Enqueue(ticket);
             }
 
-            if (partner is null)
+            StartReadyMatches();
+
+            // Re-run the policy when a band boundary passes so two already-queued ratings can
+            // match because of waiting alone; a third arrival is not required to wake the queue.
+            using (ct.Register(() => CancelWaiting(ticket.Id, mySeating)))
+            using (var wakeCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
             {
-                // First of the pair: wait to be seated by whoever arrives next. If we die waiting,
-                // VACATE the slot — a dead waiter left in _waiting pairs the next arrival with a
-                // corpse and strands it (seen live 2026-07-19 while reproducing the liveness bug).
-                using (ct.Register(() =>
+                try
+                {
+                    while (!mySeating.Task.IsCompleted)
+                    {
+                        Task wake = _matchmaking.WaitForMatchOpportunityAsync(wakeCts.Token);
+                        Task completed = await Task.WhenAny(mySeating.Task, wake);
+                        if (ReferenceEquals(completed, mySeating.Task)) break;
+                        if (!wake.IsCanceled)
+                        {
+                            await wake;
+                            StartReadyMatches();
+                        }
+                    }
+                    return await mySeating.Task;
+                }
+                finally
+                {
+                    wakeCts.Cancel();
+                }
+            }
+        }
+
+        private void CancelWaiting(string ticketId, TaskCompletionSource<Seating?> seating)
+        {
+            lock (_lock)
+            {
+                if (!_waiting.Remove(ticketId)) return;   // already matched
+                _matchmaking.Remove(ticketId);
+            }
+            seating.TrySetResult(null);
+            StartReadyMatches();   // removing the FIFO head may expose a compatible pair
+        }
+
+        /// <summary>
+        /// Drain every compatible pair for which a session slot is available. Reservations make
+        /// the cap atomic even when several fresh socket handlers wake the queue concurrently.
+        /// </summary>
+        private void StartReadyMatches()
+        {
+            while (true)
+            {
+                WaitingPlayer? first;
+                WaitingPlayer? second;
+                lock (_lock)
+                {
+                    if (_sessions.Count + _pendingSessions >= _opts.MaxSessions) return;
+                    var pair = _matchmaking.TryDequeueMatch();
+                    if (pair is null) return;
+                    if (!_waiting.Remove(pair.First.Id, out first) ||
+                        first is null ||
+                        !_waiting.Remove(pair.Second.Id, out second) ||
+                        second is null)
+                        throw new InvalidOperationException("Matchmaking queue and gate waiters diverged.");
+                    _pendingSessions++;
+                }
+
+                StartMatch(first, second);
+            }
+        }
+
+        private void StartMatch(WaitingPlayer first, WaitingPlayer second)
+        {
+            bool committed = false;
+            string? matchKey = null;
+            try
+            {
+                // PlayerId stays a PER-MATCH handle and is deliberately NOT the identity: it is
+                // broadcast to the opponent in OpponentInfo and it lands in hash-canonical GameState.
+                // Identity rides alongside in _accounts, server-side only (C-G1-8).
+                var p0 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
+                var p1 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
+                var id = new MatchId(Guid.NewGuid().ToString("N"));
+                matchKey = id.Value;
+                ulong seed = MintSeed();
+
+                var attribution = new MatchAttribution(
+                    first.Account, second.Account,                                // FIFO seat order
+                    TelemetrySources.Classify(first.Account, second.Account));
+
+                var session = new MatchSession(
+                    id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1,
+                    _telemetry, attribution);
+                var pump = new SessionPump(session);
+                lock (_lock)
+                {
+                    _sessions[id.Value] = pump;
+                    _accounts[id.Value] = (attribution.P0, attribution.P1);
+                    _pendingSessions--;
+                    committed = true;
+                }
+                _ = pump.RunTask.ContinueWith(_ =>
                 {
                     lock (_lock)
                     {
-                        if (_waiting is { } w && ReferenceEquals(w.conn, conn)) _waiting = null;
+                        _sessions.Remove(id.Value);
+                        _accounts.Remove(id.Value);
                     }
-                    mySeating.TrySetResult(null);
-                }))
-                    return await mySeating.Task;
+                    StartReadyMatches();
+                }, TaskScheduler.Default);
+
+                session.Start(first.Conn, second.Conn);
+                first.Seated.TrySetResult(new Seating(pump, 0));
+                second.Seated.TrySetResult(new Seating(pump, 1));
             }
-
-            // Second of the pair: build the match and seat both.
-            //
-            // PlayerId stays a PER-MATCH handle and is deliberately NOT the identity: it is
-            // broadcast to the opponent in OpponentInfo and it lands in hash-canonical GameState.
-            // Identity rides alongside in _accounts, server-side only (C-G1-8).
-            var p0 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
-            var p1 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
-            var id = new MatchId(Guid.NewGuid().ToString("N"));
-            ulong seed = MintSeed();
-
-            var attribution = new MatchAttribution(
-                partner.Value.account, account,                                   // seat 0 waited, seat 1 arrived
-                TelemetrySources.Classify(partner.Value.account, account));
-
-            var session = new MatchSession(
-                id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1,
-                _telemetry, attribution);
-            var pump = new SessionPump(session);
-            lock (_lock)
-            {
-                _sessions[id.Value] = pump;
-                _accounts[id.Value] = (attribution.P0, attribution.P1);
-            }
-            _ = pump.RunTask.ContinueWith(_ =>
+            catch
             {
                 lock (_lock)
                 {
-                    _sessions.Remove(id.Value);
-                    _accounts.Remove(id.Value);
+                    if (committed)
+                    {
+                        _sessions.Remove(matchKey!);
+                        _accounts.Remove(matchKey!);
+                    }
+                    else
+                    {
+                        _pendingSessions--;
+                    }
                 }
-            }, TaskScheduler.Default);
-
-            session.Start(partner.Value.conn, conn);
-            partner.Value.seated.TrySetResult(new Seating(pump, 0));
-            return new Seating(pump, 1);
+                first.Seated.TrySetResult(null);
+                second.Seated.TrySetResult(null);
+                throw;
+            }
         }
 
         private static ulong MintSeed()

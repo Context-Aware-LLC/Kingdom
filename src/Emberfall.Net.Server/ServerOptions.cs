@@ -49,6 +49,10 @@ namespace Emberfall.Net.Server
         public int MaxSessions { get; init; } = 64;
         public string EngineContractVersion { get; init; } = "interfaces.v3";
 
+        /// <summary>Server-owned FIFO/MMR queue policy (EF-070).</summary>
+        public Matchmaking.MatchmakingQueueOptions Matchmaking { get; init; } =
+            new Matchmaking.MatchmakingQueueOptions();
+
         /// <summary>
         /// How long a fresh socket may stay silent before its <c>HelloMsg</c> is due (C-G1-8).
         /// <para>Without a deadline a socket that connects and never speaks is held open forever:
