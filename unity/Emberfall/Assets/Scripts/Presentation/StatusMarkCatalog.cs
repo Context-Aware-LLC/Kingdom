@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
+using UnityEngine;
 
 namespace Emberfall.Presentation
 {
@@ -10,9 +11,8 @@ namespace Emberfall.Presentation
     // into the caller.
     public static class StatusMarkCatalog
     {
-        // Explicitly registered keyword → UI-atlas address. Opt-in: a keyword
-        // not present here silently shows no icon (not a warning — intentional
-        // for SILENCE, OVERWHELM, VANGUARD, REINFORCE until art is authored).
+        // Explicitly registered keyword → UI-atlas address.
+        // To add an icon: drop an entry here (art must exist in UI_Core first).
         private static readonly Dictionary<Keyword, string> s_keywordIcons = new()
         {
             { Keyword.TAUNT,        "icon_kw_taunt"       },
@@ -29,17 +29,27 @@ namespace Emberfall.Presentation
             { Keyword.FREEZE,       "icon_kw_freeze"      },
             { Keyword.OVERLOAD,     "icon_kw_overload"    },
             { Keyword.REBORN,       "icon_kw_reborn"      },
-            // SILENCE   — an effect verb, not a card-face mark: intentionally absent
-            // OVERWHELM — art deferred (EF-051 art track): intentionally absent
-            // VANGUARD  — art deferred (EF-051 art track): intentionally absent
-            // REINFORCE — art deferred: intentionally absent
         };
 
-        // Returns the UI-atlas address for a keyword's icon mark, or null if none
-        // is registered. A null return is intentional (art pending / not a face mark)
-        // and suppresses no warning — the caller only warns when the atlas load fails
-        // for an address that IS registered.
-        public static string KeywordIconAddress(Keyword keyword) =>
-            s_keywordIcons.TryGetValue(keyword, out string addr) ? addr : null;
+        // Keywords with no icon by design or with art pending — silently skip, no warning.
+        // To activate: move the entry to s_keywordIcons once its art is in UI_Core.
+        private static readonly HashSet<Keyword> s_noIcon = new()
+        {
+            Keyword.SILENCE,    // effect verb, not a card-face mark
+            Keyword.OVERWHELM,  // art deferred — EF-051 art track
+            Keyword.VANGUARD,   // art deferred — EF-051 art track
+        };
+
+        // Returns the UI-atlas address for a keyword's icon mark, or null if none applies.
+        // Null for a keyword in s_noIcon is intentional and produces no warning.
+        // Null for a keyword absent from both tables means the engine grew a new keyword
+        // without a catalog entry — a warning fires so the gap is immediately visible.
+        public static string KeywordIconAddress(Keyword keyword)
+        {
+            if (s_keywordIcons.TryGetValue(keyword, out string addr)) return addr;
+            if (s_noIcon.Contains(keyword)) return null;
+            Debug.LogWarning($"[StatusMarkCatalog] {keyword} has no icon entry — add to s_keywordIcons or s_noIcon (EF-044)");
+            return null;
+        }
     }
 }
