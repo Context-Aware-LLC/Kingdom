@@ -639,7 +639,7 @@ namespace Emberfall.Presentation
             bodyGo.transform.localPosition = new Vector3(0f, -CardH * 0.30f, -0.01f);
             var bodyLabel = bodyGo.AddComponent<TextMeshPro>();
             bodyGo.GetComponent<Renderer>().sortingOrder = 10; // over the frame, same as MakeLabel
-            var bodyFont = CardFont();
+            var bodyFont = BodyFont();   // plan decision 17: clean text face for the rules box
             if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
             bodyLabel.alignment = TextAlignmentOptions.Center;
@@ -698,19 +698,32 @@ namespace Emberfall.Presentation
         // instance a material per digit and break batching across the whole board.
         private static Material s_statLabelMaterial;
 
-        // §3.1: Alfa Slab One for everything on the card front. Loaded once; TMP's default
-        // font stays as the fallback if the asset is missing.
+        // §3.1 two-typeface split (plan decision 17, EF-050): display face for name/stats/digits,
+        // clean text face for the rules box. Loaded once each; TMP's default font is the fallback.
+        // To complete EF-050: open Unity Editor, run Font Asset Creator on NotoSans-Regular.ttf
+        // (already in Assets/Art/Fonts/), then register both SDFs in EF-041's Addressables group.
         private static TMP_FontAsset s_cardFont;
+        private static TMP_FontAsset s_bodyFont;
 
         // Internal, not private: DeckPileView's hover count is a card-face digit by any other
         // name and has to be the same typeface — a second copy of this loader would be a second
-        // thing to forget when §3.1 changes.
+        // thing to forget when the display face changes.
         internal static TMP_FontAsset CardFont()
         {
             if (s_cardFont == null)
                 s_cardFont = LoadAsset<TMP_FontAsset>(
                     "Assets/Art/Fonts/AlfaSlabOne-Regular SDF.asset", "fonts/AlfaSlabOne-Regular SDF");
             return s_cardFont;
+        }
+
+        // Clean text face for the rules box (plan decision 17). Falls back to TMP's default
+        // if the SDF asset has not yet been generated (needs Unity Editor + Font Asset Creator).
+        internal static TMP_FontAsset BodyFont()
+        {
+            if (s_bodyFont == null)
+                s_bodyFont = LoadAsset<TMP_FontAsset>(
+                    "Assets/Art/Fonts/NotoSans-Regular SDF.asset", "fonts/NotoSans-Regular SDF");
+            return s_bodyFont;
         }
 
         private static T LoadAsset<T>(string editorPath, string address) where T : Object
