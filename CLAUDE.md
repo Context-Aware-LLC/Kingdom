@@ -157,10 +157,16 @@ pair.** The `.meta` carries the guid the Addressables entry points at; deleting 
 one and silently orphans that entry. Overwriting keeps it. New art still needs its generated
 `.meta` committed — a separate and easy-to-forget step.
 
-**`art-bakeoff/` is disposable and fully untracked (Sam, 2026-07-31).** Every final version already
-lives under `Assets/`; the folder is kept only because it is good to look at. The whole thing could
-be deleted and no build, test or asset would change. Do not treat a candidate as load-bearing, and
-do not ask before removing one — but equally, nothing in there is a deliverable.
+**`art-bakeoff/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31).** Every final
+version already lives under `Assets/`, so the whole folder could vanish and no build, test or asset
+would change. It is kept because it is good to look at.
+
+**What that changes: nothing there is a deliverable, and losing a candidate is not an incident** —
+do not treat it as recoverable state, do not audit it, do not raise a deletion as a finding.
+**What it does not change: still don't delete it.** "Not precious" is not "please remove." It is
+Sam's to clear when he wants the space. Deleting on his behalf remains outside your scope, and a
+re-roll still lands *beside* the previous candidate rather than on top of it — overwriting a set
+nobody has looked at yet is a different thing from clearing one he has.
 
 ## Never commit a changed `productName`
 
