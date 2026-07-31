@@ -10,21 +10,53 @@ namespace Emberfall.Core
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
     /// the keyword interactions resolve identically and deterministically. Integer-only. Death is NOT
     /// resolved here — characters dropped to ≤0 are settled as a batch by the interpreter's DeathCheck.
+    ///
+    /// <para><b>EF-013 — the queue, and why on-damage triggers ENQUEUE rather than resolve here.</b>
+    /// Both entry points now take the live <see cref="EffectInterpreter"/> instead of a bare
+    /// <c>(GameState, EventBuffer)</c>, so a hit can raise a follow-on trigger (ON_DAMAGED, and ON_HEAL
+    /// once EF-015 lands) by <b>enqueuing</b> it onto the interpreter's shared queue. It never drains that
+    /// queue itself.</para>
+    ///
+    /// <para><b>Decision: observers do NOT drain between hits (enqueue-only).</b> A single command can fire
+    /// several <see cref="ApplyDamage"/> calls before anything drains — <see cref="CommandProcessor"/>'s
+    /// <c>ApplyAttack</c> lands up to three (attacker→defender, Overwhelm overflow→hero, retaliation→attacker)
+    /// ahead of one <c>interp.Drain()</c>, and a <c>DEAL_DAMAGE</c> AoE sweeps every target in
+    /// <c>DealDamageHandler</c> before control returns to the drain loop. In both cases every hit lands first;
+    /// the queued on-damage triggers resolve afterwards, together, at the existing command boundary. The
+    /// rejected alternative — draining after each hit — would let an on-damage Divine Shield gained from hit #1
+    /// retroactively absorb hit #2 of the same volley. Three reasons it loses:
+    /// <list type="number">
+    /// <item>It matches neither today's ordering nor standard TCG semantics (an AoE volley strikes every
+    ///   target "simultaneously"; a shield conjured mid-volley protects nobody already in the volley).</item>
+    /// <item>Draining after hit #1 settles deaths mid-<c>ApplyAttack</c>, so the defender could leave the board
+    ///   before retaliation reads <c>defender.Minion.CurrentAttack</c> at <c>CommandProcessor.cs</c> — silently
+    ///   reordering combat.</item>
+    /// <item><b>Termination.</b> The only recursion bound in the engine is
+    ///   <see cref="MatchEngine.ActionResolutionCap"/>, enforced once, inside <see cref="EffectInterpreter.Drain"/>.
+    ///   Routing every triggered effect through that single loop keeps a counter-damage cycle (A damaged → hits
+    ///   B → B damaged → hits A → …) under the cap and guaranteed to terminate. An inline drain here would need
+    ///   its own bound and would put the cap in two places.</item>
+    /// </list></para>
     /// </summary>
     internal static class DamagePipeline
     {
         /// <summary>
-        /// Deal <paramref name="amount"/> damage to <paramref name="target"/>. <paramref name="sourceKeywords"/>
-        /// is the keyword set of the dealing character (drives LIFESTEAL/POISONOUS); pass null for sourceless
-        /// damage (e.g. fatigue is handled elsewhere). Emits <c>onDamage</c> (with AegisAbsorbed when a shield
-        /// eats the hit). No-op for non-positive amounts.
+        /// Deal <paramref name="amount"/> damage to <paramref name="target"/>, using <paramref name="interp"/>
+        /// for state/events and to enqueue any on-damage trigger. <paramref name="sourceKeywords"/> is the
+        /// keyword set of the dealing character (drives LIFESTEAL/POISONOUS); pass null for sourceless damage
+        /// (e.g. fatigue is handled elsewhere). Emits <c>onDamage</c> (with AegisAbsorbed when a shield eats the
+        /// hit) and raises the damaged minion's ON_DAMAGED onto the queue. No-op for non-positive amounts.
         /// </summary>
-        public static void ApplyDamage(GameState state, CharacterRef target, int amount,
-            InstanceId? source, HashSet<Keyword>? sourceKeywords, EventBuffer buf)
+        public static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
+            InstanceId? source, HashSet<Keyword>? sourceKeywords)
         {
             if (amount <= 0) return;
 
-            // Aegis (DIVINE_SHIELD) absorbs the whole hit, then clears — no health lost, no on-hit riders.
+            var state = interp.State;
+            var buf = interp.Events;
+
+            // Aegis (DIVINE_SHIELD) absorbs the whole hit, then clears — no health lost, no on-hit riders,
+            // and (returning here) no ON_DAMAGED: an absorbed hit is not "damaged" (R-2(c) no-riders precedent).
             if (target.IsMinion && target.Minion!.HasAegisShield)
             {
                 target.Minion.HasAegisShield = false;
@@ -58,8 +90,8 @@ namespace Emberfall.Core
                     Characters.TryFind(state, source.Value, out var src))
                 {
                     int healerSeat = src.Seat;
-                    ApplyHeal(state, CharacterRef.OfHero(healerSeat, state.Players[healerSeat].Hero),
-                        amount, source, buf);
+                    ApplyHeal(interp, CharacterRef.OfHero(healerSeat, state.Players[healerSeat].Hero),
+                        amount, source);
                 }
 
                 // Venom: any damage to a minion is lethal — mark for the batch DeathCheck.
@@ -86,13 +118,22 @@ namespace Emberfall.Core
                     buf.Emit(VfxEvent.onFreeze, source: source, target: target.Id);
                 }
             }
+
+            // ON_DAMAGED (self-trigger): a minion that actually took the hit fires its own on-damaged effects.
+            // ENQUEUED only — resolution is deferred to the interpreter's bounded Drain (see class remarks:
+            // no drain between hits, cap lives once in EffectInterpreter.Drain). Heroes carry no card effects,
+            // so only minions raise; the Aegis-absorbed path returned above, so absorbed ≠ damaged. Poisoned
+            // targets still raise here — they were damaged this instant; DeathCheck settles them next drain.
+            if (target.IsMinion)
+                interp.RaiseSelf(target.Minion!, Trigger.ON_DAMAGED, System.Array.Empty<CharacterRef>());
         }
 
         /// <summary>
-        /// Restore up to <paramref name="amount"/> health to <paramref name="target"/>, clamped to its max.
+        /// Restore up to <paramref name="amount"/> health to <paramref name="target"/>, clamped to its max,
+        /// using <paramref name="interp"/> for events (and the queue, once EF-015 raises ON_HEAL here).
         /// Emits <c>onHeal</c> with the effective amount healed. Returns the amount actually restored.
         /// </summary>
-        public static int ApplyHeal(GameState state, CharacterRef target, int amount, InstanceId? source, EventBuffer buf)
+        public static int ApplyHeal(EffectInterpreter interp, CharacterRef target, int amount, InstanceId? source)
         {
             if (amount <= 0) return 0;
 
@@ -108,7 +149,7 @@ namespace Emberfall.Core
             if (target.IsHero) target.Hero!.CurrentHealth = after;
             else target.Minion!.CurrentHealth = after;
 
-            buf.Emit(VfxEvent.onHeal, source: source, target: target.Id, amount: healed);
+            interp.Events.Emit(VfxEvent.onHeal, source: source, target: target.Id, amount: healed);
             return healed;
         }
     }
