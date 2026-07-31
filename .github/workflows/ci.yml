@@ -20,7 +20,7 @@ name: Emberfall CI — determinism gates
 
 on:
   push:
-    branches: [ master, "feat/**", "fix/**" ]
+    branches: [ master, "feat/**", "fix/**", "agent/**" ]
   pull_request:
     branches: [ master ]
 
