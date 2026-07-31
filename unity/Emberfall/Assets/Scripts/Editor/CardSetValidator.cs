@@ -47,7 +47,7 @@ namespace Emberfall.Editor
             bool gateOk = errors == 0 && needsPrimitive == 0 && dupIssues.Count == 0;
             string summary = $"[CardValidate] Total={defs.Count} Clean={clean} Warnings={warnings} Errors={errors} NeedsPrimitive={needsPrimitive} Duplicates={dupIssues.Count} GateOk={gateOk}";
             if (gateOk) Debug.Log(summary);
-            else Debug.LogWarning(summary);
+            else Debug.LogError(summary);
         }
     }
 }
