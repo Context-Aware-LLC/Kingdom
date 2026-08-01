@@ -21,7 +21,18 @@ name: Emberfall CI — determinism gates
 
 on:
   push:
-    branches: [ master, "feat/**", "fix/**", "agent/**" ]
+    # `agent/**` IS DELIBERATELY ABSENT — do not re-add it. EF-002 put it here and was right
+    # to: while agents were told "leave commits local, do not push", a pushed agent branch was
+    # the only artifact CI could ever see. That stopped being true on 2026-08-01, when the
+    # operator checkpoint moved from push to MERGE and agents began opening a PR on every
+    # branch. `pull_request` below already re-fires on every push to a branch with an open PR,
+    # so listing `agent/**` here bought nothing and ran the whole pipeline twice on the same
+    # commit — measured, 2 runs vs 1. A branch pushed and never PR'd is now a rule violation,
+    # and "no CI ran" surfaces that better than silently spending the minute budget on it.
+    # `feat/**` and `fix/**` stay: those are hand-pushes that may not have a PR yet.
+    # RETIREMENT TRIGGER: if agents ever stop opening PRs, put `agent/**` back in the same
+    # commit that changes their AGENTS.md briefs.
+    branches: [ master, "feat/**", "fix/**" ]
   pull_request:
     branches: [ master ]
 
