@@ -1,0 +1,93 @@
+{
+  "primaryClass": "TEMPEST",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-TEMPEST",
+  "deckId": "fixture-deck-TEMPEST",
+  "seed": 64159285256,
+  "entries": [
+    {
+      "id": "core_arclight_adept",
+      "count": 2
+    },
+    {
+      "id": "core_choking_vines",
+      "count": 1
+    },
+    {
+      "id": "core_grove_mender",
+      "count": 1
+    },
+    {
+      "id": "core_hollow_acolyte",
+      "count": 1
+    },
+    {
+      "id": "core_thistleguard_sprig",
+      "count": 1
+    },
+    {
+      "id": "core_veilstalker",
+      "count": 1
+    },
+    {
+      "id": "ember_ashfall_wyrm",
+      "count": 1
+    },
+    {
+      "id": "ember_emberdrinker",
+      "count": 1
+    },
+    {
+      "id": "ember_overheat_golem",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch",
+      "count": 2
+    },
+    {
+      "id": "ember_zealot",
+      "count": 2
+    },
+    {
+      "id": "flame_bolt",
+      "count": 2
+    },
+    {
+      "id": "stone_sentry",
+      "count": 2
+    },
+    {
+      "id": "storm_chain_lightning",
+      "count": 1
+    },
+    {
+      "id": "storm_gust_sprite",
+      "count": 2
+    },
+    {
+      "id": "storm_hurricane",
+      "count": 1
+    },
+    {
+      "id": "storm_lightning_bolt",
+      "count": 1
+    },
+    {
+      "id": "storm_spark_imp",
+      "count": 2
+    },
+    {
+      "id": "storm_static_discharge",
+      "count": 2
+    },
+    {
+      "id": "storm_wind_rider",
+      "count": 2
+    },
+    {
+      "id": "wandering_scout",
+      "count": 1
+    }
+  ]
+}
