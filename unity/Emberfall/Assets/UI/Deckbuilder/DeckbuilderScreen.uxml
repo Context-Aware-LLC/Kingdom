@@ -31,7 +31,9 @@
                     <ui:Button name="filter-class" text="Class" class="db-chip" />
                     <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
                 </ui:VisualElement>
-                <ui:ListView name="collection-list" class="db-list" />
+                <ui:ScrollView name="collection-scroll" class="db-list">
+                    <ui:VisualElement name="collection-grid" class="db-grid" />
+                </ui:ScrollView>
             </ui:VisualElement>
 
             <!-- Right: deck -->

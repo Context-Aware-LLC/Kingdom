@@ -35,10 +35,12 @@ namespace Emberfall.Presentation
         private ICardDatabase _db;
         private DeckList _deck;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
+        private CardFaceBaker _faceBaker;
 
         // Cached elements.
         private VisualElement _root;
-        private ListView _collectionList;
+        private VisualElement _collectionGrid;
+        private readonly Dictionary<string, VisualElement> _collectionTiles = new Dictionary<string, VisualElement>();
         private ListView _deckList;
         private VisualElement _curve;
         private VisualElement _legalityBox;
@@ -81,10 +83,22 @@ namespace Emberfall.Presentation
 
             BuildPool();
             CacheElements();
-            WireCollectionList();
+            InitFaceBaker();
+            BuildCollectionGrid();
             WireDeckList();
             WireChrome();
             Refresh();
+        }
+
+        // The real card, baked to a texture (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9) — one
+        // card front implementation (BoardController.CreatePresenter), photographed, never a
+        // second UI Toolkit re-implementation of the card face drifting from it.
+        private void InitFaceBaker()
+        {
+            var bakerGo = new GameObject("CardFaceBaker");
+            bakerGo.transform.SetParent(transform, false);
+            _faceBaker = bakerGo.AddComponent<CardFaceBaker>();
+            _faceBaker.Initialize(_db);
         }
 
         private Character FindPending(IReadOnlyList<Character> roster)
@@ -128,7 +142,7 @@ namespace Emberfall.Presentation
 
         private void CacheElements()
         {
-            _collectionList = _root.Q<ListView>("collection-list");
+            _collectionGrid = _root.Q<VisualElement>("collection-grid");
             _deckList       = _root.Q<ListView>("deck-list");
             _curve          = _root.Q<VisualElement>("curve-strip");
             _legalityBox    = _root.Q<VisualElement>("legality-box");
@@ -144,32 +158,51 @@ namespace Emberfall.Presentation
             }
         }
 
-        // ---- Collection ListView (virtualized) ----
-        private void WireCollectionList()
+        // ---- Collection wall (§2.9): one persistent tile per pool card, built once. Not
+        // virtualized — ~90 cards of baked (cached) textures is cheap next to the 13-renderer
+        // hierarchy a virtualized ListView of live cards would need instead. ----
+        private void BuildCollectionGrid()
         {
-            _collectionList.fixedItemHeight = 54;
-            _collectionList.selectionType = SelectionType.None;
-            _collectionList.itemsSource = _pool;
-            _collectionList.makeItem = MakeCardRow;
-            _collectionList.bindItem = BindCollectionRow;
-            _collectionList.RegisterCallback<ClickEvent>(OnCollectionClick);
+            _collectionGrid.Clear();
+            _collectionTiles.Clear();
+
+            foreach (var def in _pool)
+            {
+                var tile = new VisualElement();
+                tile.AddToClassList("card-tile");
+                tile.userData = def;
+
+                var copies = new Label { name = "copies" };
+                copies.AddToClassList("tile-copies");
+                tile.Add(copies);
+
+                tile.RegisterCallback<ClickEvent>(_ => AddCopy(def));
+
+                string defId = def.Id;
+                _faceBaker.Bake(def, tex =>
+                {
+                    if (tex == null) return;
+                    tile.style.backgroundImage = new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
+                });
+
+                _collectionGrid.Add(tile);
+                _collectionTiles[def.Id] = tile;
+            }
         }
 
-        private void BindCollectionRow(VisualElement row, int index)
+        private void RefreshCollectionTiles()
         {
-            var def = _pool[index];
-            row.userData = def;
-            SetCardRow(row, def, _deck.CountOf(def.Id), DeckValidator.MaxCopies(def.Rarity));
-            row.EnableInClassList("card-row--disabled", !DeckValidator.CanAdd(_deck, _character, def));
-        }
+            foreach (var def in _pool)
+            {
+                if (!_collectionTiles.TryGetValue(def.Id, out VisualElement tile)) continue;
 
-        private void OnCollectionClick(ClickEvent evt)
-        {
-            // Walk up to the .card-row that carries the CardDefinition (ListView recycles rows).
-            var e = evt.target as VisualElement;
-            while (e != null && !(e.userData is CardDefinition)) e = e.parent;
-            if (!(e?.userData is CardDefinition def)) return;
-            AddCopy(def);
+                int count = _deck.CountOf(def.Id);
+                int max = DeckValidator.MaxCopies(def.Rarity);
+                var copies = tile.Q<Label>("copies");
+                if (copies != null) copies.text = count > 0 ? $"{count}/{max}" : $"·/{max}";
+
+                tile.EnableInClassList("card-tile--disabled", !DeckValidator.CanAdd(_deck, _character, def));
+            }
         }
 
         // ---- Deck ListView ----
@@ -298,7 +331,7 @@ namespace Emberfall.Presentation
         // ---- The live legality loop: single source, runs on every mutation ----
         private void Refresh()
         {
-            _collectionList.RefreshItems();
+            RefreshCollectionTiles();
             _deckList.itemsSource = _deck.Entries;
             _deckList.RefreshItems();
             RebuildCurve();
