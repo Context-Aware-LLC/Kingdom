@@ -7,8 +7,8 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Net.Server.Data
 {
     /// <summary>
-    /// Production <see cref="ICardDatabase"/> over `*.cards.json` rows (b1-match-server-design.md §10;
-    /// same headless shape as the golden-replay JsonCardDatabase — card-system.md §1.3). Source of
+    /// Production <see cref="ICardDatabase"/> over `*.cards.json` rows (dev-docs/specs/card-schema.md:5;
+    /// same headless shape as the golden-replay JsonCardDatabase — dev-docs/specs/card-schema.md:5). Source of
     /// truth stays `unity/Emberfall/Assets/CardData/`; the container bakes those files in at build.
     /// </summary>
     public sealed class FileCardDatabase : ICardDatabase

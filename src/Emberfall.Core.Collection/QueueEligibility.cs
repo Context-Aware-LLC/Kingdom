@@ -7,7 +7,7 @@ namespace Emberfall.Core.Collection
     /// The queue gate's answer for one deck: eligible, or a <b>draft</b> with a reason.
     ///
     /// <para>"Draft" is deliberately the word the spec and the UI use
-    /// (ui/collection-deckbuilder.md §1) — a draft is a legitimate saved state, not a failure, and
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1) — a draft is a legitimate saved state, not a failure, and
     /// the only thing it is denied is the queue.</para>
     /// </summary>
     public readonly struct QueueCheck
@@ -36,7 +36,7 @@ namespace Emberfall.Core.Collection
 
     /// <summary>
     /// <b>The</b> predicate that gates queueing. Legality gates queue-eligibility, not saving
-    /// (ui/collection-deckbuilder.md §1) — <see cref="IDeckStore.Save"/> takes any deck, and this is
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1) — <see cref="IDeckStore.Save"/> takes any deck, and this is
     /// the single place that decides whether a saved deck may be played.
     ///
     /// <para><b>Why a name of its own rather than <c>Validate().IsValid</c> at each call site.</b>

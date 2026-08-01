@@ -7,11 +7,11 @@ namespace Emberfall.Core
     /// <summary>
     /// Accumulates the ordered D7 event stream for one command, assigning each event a global,
     /// monotonic <see cref="GameEvent.Sequence"/> from the match-wide cursor on the state
-    /// (game-state-and-actions.md §5.2). The sequence is deterministic and is part of what the
+    /// (dev-docs/architecture/determinism-and-projection.md:5). The sequence is deterministic and is part of what the
     /// golden-replay test asserts.
     ///
     /// Also captures the per-event <see cref="EventVisibility"/> sidecar AT EMIT TIME
-    /// (a3-projector-design.md §6.1): post-command state cannot classify a broken weapon (nulled)
+    /// (dev-docs/architecture/determinism-and-projection.md:24): post-command state cannot classify a broken weapon (nulled)
     /// or the ephemeral hero-power source (never zoned), so the verdict is taken while it is
     /// still true. The sidecar is server-side only — never serialized, never hashed.
     /// </summary>

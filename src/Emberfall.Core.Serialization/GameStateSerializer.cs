@@ -5,10 +5,10 @@ namespace Emberfall.Core.Serialization
 {
     /// <summary>
     /// THE canonical GameState walk — the single normative statement of canonical field order
-    /// (A2 ruling, engineering/a2-serializer-design.md §2). Promoted verbatim from the test-layer
+    /// (A2 ruling, dev-docs/architecture/determinism-and-projection.md:13). Promoted verbatim from the test-layer
     /// GameStateHasher; byte-for-byte identical output is the A2a go/no-go.
     ///
-    /// Ordering rules (golden-replay.md §4.1):
+    /// Ordering rules (dev-docs/architecture/determinism-and-projection.md:13):
     ///  • FIXED, hand-specified field order — never reflection. GameState declaration order is
     ///    advisory; THIS walk is authoritative.
     ///  • ordered lists serialize in list order; the one unordered collection (keywords) gets a

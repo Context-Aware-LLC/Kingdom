@@ -6,7 +6,7 @@ namespace Emberfall.Core.Serialization
 {
     /// <summary>
     /// Canonical state fingerprint, promoted out of the test layer (A2a). The definition is now
-    /// literally <c>hash = h(serialize(state))</c> (M2-KICKOFF.md §2 A2): the serializer owns the
+    /// literally <c>hash = h(serialize(state))</c> (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md §2 A2): the serializer owns the
     /// one canonical field order; this type only picks the algorithm and the hex spelling.
     /// Consumed by the R1 golden gate today; by the wire protocol's per-message post-command state
     /// hash (A5) and the server's desync detection (B1) next.

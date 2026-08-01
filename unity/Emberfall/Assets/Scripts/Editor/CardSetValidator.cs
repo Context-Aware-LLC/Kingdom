@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Batch "validate entire card set" (tooling/validation-and-import.md §6), scoped down for M1:
+    /// Batch "validate entire card set" (dev-docs/pipelines/card-authoring-and-import.md:21), scoped down for M1:
     /// logs a grouped console report rather than emitting CSV/JUnit artifacts (no CI runner wired
     /// to this yet — that's the not-yet-built headless CardCI entry point from §7).
     /// </summary>

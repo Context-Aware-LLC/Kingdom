@@ -8,7 +8,7 @@ namespace Emberfall.Presentation
     // Attach this to the same GameObject as BoardAnchors.
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
-    // Every bottom-edge anchor below is the techart/board-and-vfx.md §1.1 budget, pinned
+    // Every bottom-edge anchor below is the hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 budget, pinned
     // 2026-07-24 (was M1 placeholder coordinates that sat the hero cluster level with the
     // board row). §1.1 allocates SPANS on x; the element centres here are those spans minus
     // each element's own width, and the y column is §1.3 — the vertical §1.1 never wrote.
@@ -89,7 +89,7 @@ namespace Emberfall.Presentation
             }
 
             // Hand slots are placed by HandFanLayout, not by this method's flat pitch: the fan
-            // re-solves all ten every time the hand count changes (ui/match-hud.md §8). Built
+            // re-solves all ten every time the hand count changes (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8). Built
             // here at full count so the anchors are never in a stale row before the first sync.
             seat.FanMirrored = ySign > 0f;
             seat.HandSlots   = new Transform[HandSlotCount];

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Emberfall.Data
 {
     /// <summary>
-    /// Baked Addressable artifact for one card row (interfaces.md §4.2, card-authoring-tool.md §7).
+    /// Baked Addressable artifact for one card row (dev-docs/pipelines/card-authoring-and-import.md:10).
     /// The canonical source is always the JSON row — this asset stores it verbatim and lazily
     /// deserializes through the single shared <see cref="CardJson"/> parser so the SO and the
     /// server can never drift (R1). Read-only at runtime: there is no public field-level setter,
@@ -26,7 +26,7 @@ namespace Emberfall.Data
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Editor-only bake door (interfaces.md §4.2). Callable only from assemblies granted
+        /// Editor-only bake door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.2). Callable only from assemblies granted
         /// InternalsVisibleTo on Emberfall.Data (Emberfall.Editor) — never compiled into a player
         /// build or reachable from the server, so a card can only be written by the import pipeline.
         /// </summary>

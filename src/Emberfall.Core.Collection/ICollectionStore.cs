@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// CRUD for a player's character roster (ui/collection-deckbuilder.md §3 persistence model:
+    /// CRUD for a player's character roster (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3 persistence model:
     /// local on-device, keyed by the guest device token until identity lands). Signatures only —
     /// the concrete store (JSON file, PlayerPrefs, whatever) is the backend session's implementation.
     /// </summary>
@@ -15,7 +15,7 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// CRUD for saved decks (ui/collection-deckbuilder.md §3). A deck that references a deleted or
+    /// CRUD for saved decks (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3). A deck that references a deleted or
     /// unknown CharacterId, or a card that vanished from the pool after a balance patch, must
     /// surface as invalid on load — never silently drop or auto-repair it (§3).
     /// </summary>

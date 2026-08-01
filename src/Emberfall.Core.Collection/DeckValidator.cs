@@ -4,7 +4,7 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Collection
 {
-    /// <summary>Which legality rule a violation maps to (ui/collection-deckbuilder.md §1, LOCKED).</summary>
+    /// <summary>Which legality rule a violation maps to (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1, LOCKED).</summary>
     public enum DeckRule { L1_Size, L2_CopyCap, L3_LegendaryCap, L4_ClassMembership, L5_CharacterBound }
 
     public readonly struct DeckViolation
@@ -26,7 +26,7 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// Deck-legality predicate (ui/collection-deckbuilder.md §1 — the LOCKED unblocking deliverable).
+    /// Deck-legality predicate (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1 — the LOCKED unblocking deliverable).
     /// The deckbuilder enforces these live to gate Save; the identical predicate re-runs server-side at
     /// match-join (never trust the client). Pure and UnityEngine-free by design.
     ///

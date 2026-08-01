@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
 
         // Hand cards draw above board content and below the match-end banner (sortingOrder 100).
         // Order within the hand is the slot index, so the fan layers left-to-right and the
-        // right-most card at any point is the topmost — the hit-test rule in match-hud.md §8.
+        // right-most card at any point is the topmost — the hit-test rule in hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8.
         private const int HandSortBase = 50;
 
         private ICardDatabase _db;
@@ -43,7 +43,7 @@ namespace Emberfall.Presentation
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
 
-        // Card-backs for projected hidden hands (a4-session-seam-design.md §6). Hidden cards all
+        // Card-backs for projected hidden hands (dev-docs/architecture/determinism-and-projection.md:23). Hidden cards all
         // share InstanceId(0) with an empty DefinitionId, so they can't ride the id-keyed path —
         // they're tracked positionally per owner instead.
         private readonly Dictionary<PlayerId, List<CardPresenter>> _cardBacks = new();
@@ -58,7 +58,7 @@ namespace Emberfall.Presentation
         private const float DrawStagger = 0.06f;
         private int _drawsThisTick;
 
-        // ── Death dissolve (board-and-vfx.md §5) ────────────────────────────────────
+        // ── Death dissolve (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §5) ────────────────────────────────────
         //
         // THE ORDERING PROBLEM. MatchRunner.PlaybackLoop fires OnStateUpdated and THEN
         // OnMatchEvent off the same queue entry, in the same frame. A minion that dies is already
@@ -94,7 +94,7 @@ namespace Emberfall.Presentation
             _artProvider = artProvider;
 #if UNITY_EDITOR
             // Editor play mode: serve art from AssetDatabase — fast iteration, no content
-            // build required (pipeline.md §5). Player builds resolve through Addressables.
+            // build required (dev-docs/pipelines/art-and-rendering.md:13). Player builds resolve through Addressables.
             _artProvider ??= new EditorArtProvider();
             _uiSprites   ??= new EditorUiSpriteProvider();
 #else
@@ -200,7 +200,7 @@ namespace Emberfall.Presentation
             {
                 // Re-solve the fan BEFORE any hand anchor is resolved this tick: the fan's
                 // pitch is a function of hand count, so every card moves when one is drawn
-                // or played (ui/match-hud.md §8).
+                // or played (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8).
                 boardAnchors?.SetHandCount(owner, cards.Count);
 
                 bool hidden = cards.Count > 0 && cards[0].Id.Value == 0;
@@ -513,7 +513,7 @@ namespace Emberfall.Presentation
 
             // One SortingGroup re-layers the whole card — quads, sprites and TMP labels
             // together — off a single integer, which is what makes the fan's overlap (and
-            // later the hover-reveal in match-hud.md §8) a one-line change.
+            // later the hover-reveal in hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8) a one-line change.
             root.AddComponent<UnityEngine.Rendering.SortingGroup>();
 
             // Background quad (SG_CardComposite body) — remove auto-generated MeshCollider.
@@ -639,7 +639,7 @@ namespace Emberfall.Presentation
             bodyGo.transform.localPosition = new Vector3(0f, -CardH * 0.30f, -0.01f);
             var bodyLabel = bodyGo.AddComponent<TextMeshPro>();
             bodyGo.GetComponent<Renderer>().sortingOrder = 10; // over the frame, same as MakeLabel
-            var bodyFont = CardFont();
+            var bodyFont = BodyFont();   // EF-050: text face here, display face everywhere else
             if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
             bodyLabel.alignment = TextAlignmentOptions.Center;
@@ -711,6 +711,28 @@ namespace Emberfall.Presentation
                 s_cardFont = LoadAsset<TMP_FontAsset>(
                     "Assets/Art/Fonts/AlfaSlabOne-Regular SDF.asset", "fonts/AlfaSlabOne-Regular SDF");
             return s_cardFont;
+        }
+
+        // EF-050: two typefaces, two roles. CardFont() above is the DISPLAY face and owns the
+        // card name and the stat digits; this is the TEXT face and owns the rules box only.
+        //
+        // Why the split is not taste: at 265 px card width (the true size on the smallest
+        // supported phone) body text runs at roughly 1.6x the letter-recognition acuity
+        // threshold. There is no margin at that ratio, and a display face spends all of it —
+        // slab strokes thicken and counters close first at small sizes, which is exactly the
+        // failure mode you cannot see on a monitor.
+        //
+        // The bed-margin overrun that used to affect this label was a separate bug in the bed
+        // and font-window size calculation, already fixed. Do not re-diagnose it as a wrapping
+        // or font-width problem.
+        private static TMP_FontAsset s_bodyFont;
+
+        internal static TMP_FontAsset BodyFont()
+        {
+            if (s_bodyFont == null)
+                s_bodyFont = LoadAsset<TMP_FontAsset>(
+                    "Assets/Art/Fonts/GoogleSans-Regular SDF.asset", "fonts/GoogleSans-Regular SDF");
+            return s_bodyFont ?? CardFont();   // missing asset must not blank the rules box
         }
 
         private static T LoadAsset<T>(string editorPath, string address) where T : Object

@@ -97,7 +97,7 @@ namespace Emberfall.Presentation
         }
 
         // Subscribed to the P0 session's OnSnapshot — the IMMEDIATE truth cadence, NOT the
-        // queue-delayed MatchRunner.OnStateUpdated (a4-session-seam-design.md §7 / §11 finding 7):
+        // queue-delayed MatchRunner.OnStateUpdated (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a4-session-seam-design.md §7 / §11 finding 7):
         // turn gating and selection-clearing must not lag behind the authority while the playback
         // queue drains, or the player is locked out / acts on a stale turn.
         public void OnStateUpdated(GameState state)
@@ -583,7 +583,7 @@ namespace Emberfall.Presentation
             return 0;
         }
 
-        // On-screen end-turn button (ui/match-hud.md §6 item 1) — same guards as the
+        // On-screen end-turn button (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §6 item 1) — same guards as the
         // keyboard path; keyboard stays.
         public void OnEndTurnClicked()
         {

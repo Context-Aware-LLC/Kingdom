@@ -9,7 +9,7 @@ namespace Emberfall.Core.Tests.CardBehavior
 {
     /// <summary>
     /// L2 — end-to-end behavior tests for every distinct mechanic in the D4 20-card set
-    /// (design/sample-cards.md). Uses the real <see cref="JsonCardDatabase"/> loaded from the pinned
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/sample-cards.md). Uses the real <see cref="JsonCardDatabase"/> loaded from the pinned
     /// M1 snapshot so the cards under test are identical to what the golden-replay fixtures see.
     /// One test per non-trivial mechanic. Keyword-only cards (TAUNT, RUSH, etc.) are covered by the
     /// existing CombatTests; these tests focus on effect verbs.

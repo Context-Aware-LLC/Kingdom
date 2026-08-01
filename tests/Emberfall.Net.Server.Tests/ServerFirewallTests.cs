@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Emberfall.Net.Server.Tests
 {
     /// <summary>
-    /// B1's enrollment in the determinism firewall (b1-match-server-design.md §2, mirroring a5
+    /// B1's enrollment in the determinism firewall (dev-docs/quality/testing-and-ci.md:10, mirroring a5
     /// §10.8). Lives here rather than in Core.Tests' hardcoded list because Core.Tests must not
     /// reference a web exe; the Category("Firewall") stage picks it up across the slnx either way.
     /// The SESSION layer may read the wall clock (through ITimeSource only) — unlike the core —

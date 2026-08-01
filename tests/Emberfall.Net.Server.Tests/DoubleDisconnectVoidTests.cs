@@ -7,7 +7,7 @@ namespace Emberfall.Net.Server.Tests
 {
     /// <summary>
     /// Decision 24 — double-disconnect is a void, plus the stall guard that decision depends on
-    /// (`decisions/m2-decision-24-double-disconnect-void-memo.md`).
+    /// (`dev-docs/contracts/gameplay-and-session.md:40`).
     ///
     /// The void is defined as **zero seats connected, any instant, no window**: nobody wins, nobody
     /// loses, no ranking change, no `MatchEndMsg`, and it is deliberately NOT a `MatchOutcome` — so

@@ -1,6 +1,6 @@
 // SG_MedallionMask — circular alpha for a versus-screen hero medallion.
 //
-// The versus plate (techart/versus-screen.md §4.3) paints the medallion FRAME into
+// The versus plate (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §4.3) paints the medallion FRAME into
 // the landscape, leaving a circular aperture at Ø1150. The hero art itself is a
 // rectangular 1024² portrait; dropped on the plate as a quad its corners would cover
 // the painted frame. This unlit shader masks the portrait to a feathered disc that

@@ -5,7 +5,7 @@ namespace Emberfall.Core.Projection
 {
     /// <summary>
     /// The hidden-information line (M2 WS A3; <c>decisions/ADR-0006</c>,
-    /// <c>multiplayer/state-sync-and-security.md</c> §5, <c>engineering/a3-projector-design.md</c>).
+    /// <c>dev-docs/architecture/determinism-and-projection.md:20</c>).
     /// One redaction module, two entry points: <see cref="Project"/> for snapshots,
     /// <see cref="ProjectEvent"/> for the D7 stream. Pure — the authoritative graph is never
     /// touched; every projected object is freshly allocated, and redacted values are constructed

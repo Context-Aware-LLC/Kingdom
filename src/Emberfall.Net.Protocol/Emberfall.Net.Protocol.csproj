@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Net.Protocol — the wire vocabulary + codec (A5, engineering/a5-wire-protocol-design.md).
+    Emberfall.Net.Protocol — the wire vocabulary + codec (A5, dev-docs/contracts/wire-protocol.md:7).
     JSON envelope v=1, ratified message set, hash-per-message (ADR-0003: hash over the canonical
     serialized form, never the transport bytes). Hand-rolled dependency-free JSON — this assembly
     also compiles inside Unity (UPM package), where System.Text.Json does not exist; one codec,
     both ends, no parallel parser surfaces. ZERO UnityEngine references, no float code path.
-    References Contracts + Serialization directly as a sibling of Core (a2-serializer-design.md §Q3);
+    References Contracts + Serialization directly as a sibling of Core (dev-docs/architecture/system-overview.md:13);
     it never references Emberfall.Core — the protocol never touches rules, projection, or hosts.
   -->
   <PropertyGroup>

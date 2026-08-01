@@ -5,11 +5,11 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Enforces import settings for all card/hero/UI/VFX art by folder path,
-    /// per techart/pipeline.md §3–4. Artists (human or agent) drop PNGs into
+    /// per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §3–4. Artists (human or agent) drop PNGs into
     /// Assets/Art/... and never touch the importer — settings are applied here,
     /// deterministically, on every (re)import.
     ///
-    /// Folder contract (pipeline.md §8):
+    /// Folder contract (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8):
     ///   Assets/Art/Cards/&lt;setId&gt;/&lt;artId&gt;.png  — streamed card illustrations
     ///   Assets/Art/Hero/&lt;heroId&gt;.png            — hero portraits (same treatment)
     ///   Assets/Art/Backgrounds/...               — full-screen imagery (menus/splash): full res desktop, lighter mobile

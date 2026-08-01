@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.TurnLoop
 {
     /// <summary>
     /// L1 — match-start sequence + turn loop through the real <c>Submit → Execute</c> door
-    /// (game-state-and-actions.md §4). These are the headless siblings of the golden fixtures.
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4). These are the headless siblings of the golden fixtures.
     /// </summary>
     [TestFixture]
     [Category("Unit")]

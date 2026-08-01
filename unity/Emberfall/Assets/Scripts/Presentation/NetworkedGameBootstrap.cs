@@ -16,7 +16,7 @@ using Action = System.Action;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The NETWORKED scene entry point (b3-networked-session-design.md §3.1 / F4). Sibling to
+    /// The NETWORKED scene entry point (dev-docs/architecture/system-overview.md:17). Sibling to
     /// <see cref="GameBootstrap"/>; the hot-seat boot is left untouched and green (the kickoff's C1
     /// entry requirement — hot-seat-green before any networked playtest — depends on that).
     ///
@@ -66,7 +66,7 @@ namespace Emberfall.Presentation
 
         private void Awake()
         {
-            // Frame-0 coverage (loading-screen-plate.md §5): the overlay is up before the
+            // Frame-0 coverage (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay is up before the
             // async Boot() coroutine does any work behind it.
             _overlay = LoadingOverlay.Create(Camera.main);
         }
@@ -105,7 +105,7 @@ namespace Emberfall.Presentation
                 yield break;
             }
 
-            // ── C-G1-4 (M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
+            // ── C-G1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
             // This client was previously constructed with default ClientOptions, so OnDesyncCapture
             // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
             // the mirror holds last-good state (NetworkedMatchSession.cs:260-265) — with no log, no
@@ -205,7 +205,7 @@ namespace Emberfall.Presentation
             CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
             CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
 
-            // ── Versus screen (techart/versus-screen.md §1) ───────────────────────
+            // ── Versus screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §1) ───────────────────────
             // THIS is the moment the screen was specified for: match_start has landed, so the two
             // classes are known, and the board does not exist yet. Everything before this point is
             // the unbounded pairing wait, which is the boot plate's job and why that plate cannot
@@ -343,7 +343,7 @@ namespace Emberfall.Presentation
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
-            // ── Reject toasts (design-system.md §6.4/§6.5) — server rejects (incl.
+            // ── Reject toasts (dev-docs/ui/client-surfaces.md:15) — server rejects (incl.
             // RateLimited from the B1 policy gate) arrive on the same OnRejected path. ─
             if (hotSeat != null)
             {
@@ -441,7 +441,7 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Boot narration goes to whichever screen is currently in front of the player: the boot
         /// plate during connect/pair, the versus screen once it exists. Both own a status line in
-        /// the same canvas slot (versus-screen.md §4 takes the loading plate's slot verbatim), so
+        /// the same canvas slot (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §4 takes the loading plate's slot verbatim), so
         /// the line does not appear to move across the handover. Writing to both would double it
         /// during the cross-fade, hence the else.
         /// </summary>

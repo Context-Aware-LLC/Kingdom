@@ -7,7 +7,7 @@ namespace Emberfall.Editor
     /// <summary>
     /// ICardDatabase over the authoring window's current in-memory (possibly unsaved) rows, so
     /// live validation resolves token/cross-references against what's on screen right now rather
-    /// than stale on-disk state (card-authoring-tool.md §2: "so validation can resolve token ids
+    /// than stale on-disk state (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §2: "so validation can resolve token ids
     /// exactly as the server will").
     /// </summary>
     public sealed class InMemoryCardDatabase : ICardDatabase

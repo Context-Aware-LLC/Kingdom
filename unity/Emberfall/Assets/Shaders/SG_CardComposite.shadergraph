@@ -733,7 +733,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "Damage-flash intensity, driven per card on onDamage. MaterialPropertyBlock-bound (interfaces.md §5.2) — do not rename."
+    "tooltip": "Damage-flash intensity, driven per card on onDamage. MaterialPropertyBlock-bound (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.2) — do not rename."
 }
 
 {

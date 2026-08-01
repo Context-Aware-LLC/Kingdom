@@ -527,7 +527,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "0 = normal, 1 = fully stealthed (faded+grey). Tweened on stealth gain/loss. Driven by AuraSet.Stealth via MaterialPropertyBlock (interfaces.md sec 5.2); the binder tweens toward a target of ~0.6-1.0, not necessarily full 1, so the minion stays readable to its owner."
+    "tooltip": "0 = normal, 1 = fully stealthed (faded+grey). Tweened on stealth gain/loss. Driven by AuraSet.Stealth via MaterialPropertyBlock (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md sec 5.2); the binder tweens toward a target of ~0.6-1.0, not necessarily full 1, so the minion stays readable to its owner."
 }
 
 {

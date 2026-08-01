@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    // Art resolution seam (pipeline.md §5, interfaces.md seam): CardView/presenter code asks
+    // Art resolution seam (dev-docs/pipelines/art-and-rendering.md:13): CardView/presenter code asks
     // for art by artId and never knows where it comes from. The shipping implementation is
     // AddressableArtProvider (key "card_art/<artId>"); EditorArtProvider serves the vertical
     // slice from AssetDatabase until Addressables groups are configured.
@@ -17,7 +17,7 @@ namespace Emberfall.Presentation
     public static class ArtIds
     {
         // Card data uses "art/<cardId>" ids; asset filenames use the flat "art_<cardId>"
-        // form (pipeline.md §7 — filenames never contain path separators).
+        // form (dev-docs/specs/card-generation-prompt.md:18 — filenames never contain path separators).
         public static string ToFileName(string artId) =>
             string.IsNullOrEmpty(artId) ? "" : artId.Replace('/', '_');
     }

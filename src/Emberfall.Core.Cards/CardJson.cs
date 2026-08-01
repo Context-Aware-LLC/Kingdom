@@ -6,7 +6,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The single shared parser for the canonical card-row JSON (card-system.md §1, §2). The Unity SO
+    /// The single shared parser for the canonical card-row JSON (dev-docs/specs/card-schema.md:5). The Unity SO
     /// and the headless server both deserialize through THIS method, so they can never drift (R1).
     /// Tolerant of missing optional fields; strict enums (an unknown enum string throws, surfacing a
     /// bad row rather than silently mis-parsing it).
@@ -19,7 +19,7 @@ namespace Emberfall.Core.Cards
             return FromElement(doc.RootElement);
         }
 
-        /// <summary>Parse a flat array of rows (used by the pinned cardset snapshot, golden-replay.md §3.3).</summary>
+        /// <summary>Parse a flat array of rows (used by the pinned cardset snapshot, dev-docs/pipelines/card-authoring-and-import.md:5).</summary>
         public static IReadOnlyList<CardDefinition> DeserializeArray(string json)
         {
             using var doc = JsonDocument.Parse(json);

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Emberfall.Net.Client
 {
     /// <summary>Why a wire closed — the client maps this to a <see cref="ConnectionState"/> exit
-    /// (b3-networked-session-design.md §4).</summary>
+    /// (dev-docs/architecture/system-overview.md:17).</summary>
     public enum WireCloseReason
     {
         /// <summary>Clean close initiated locally.</summary>
@@ -17,7 +17,7 @@ namespace Emberfall.Net.Client
     }
 
     /// <summary>
-    /// The transport seam (b3-networked-session-design.md §2). <see cref="NetworkedMatchSession"/>
+    /// The transport seam (dev-docs/architecture/system-overview.md:17). <see cref="NetworkedMatchSession"/>
     /// binds to THIS, never to a concrete <c>ClientWebSocket</c>, so the same session drives the
     /// real socket (<c>WebSocketTransport</c>, commit 2) and the in-memory
     /// <see cref="Loopback.LoopbackTransport"/> that peers against B1's real <c>MatchSession</c> in

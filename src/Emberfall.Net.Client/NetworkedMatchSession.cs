@@ -8,7 +8,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Client
 {
     /// <summary>
-    /// The B3 client seam (b3-networked-session-design.md §3): turns the A5 message stream off an
+    /// The B3 client seam (dev-docs/architecture/system-overview.md:17): turns the A5 message stream off an
     /// <see cref="IWireTransport"/> into exactly the <see cref="IMatchSession"/> events
     /// <c>MatchRunner</c> and presentation have consumed from <c>LocalMatchSession</c> since A4,
     /// plus the connection lifecycle a socket makes necessary.
@@ -119,7 +119,7 @@ namespace Emberfall.Net.Client
         /// <summary><c>MatchStartMsg.Opponent.DisplayName</c> — for the versus screen's opposite
         /// nameplate. Empty until the match starts.
         ///
-        /// SECURITY (security/README.md §4, VULN-001 §2 fact 3): today the server sets this to the
+        /// SECURITY (dev-docs/quality/security.md:24): today the server sets this to the
         /// opponent's server-assigned <c>PlayerId.Value</c>, so it is NOT peer-authored — that is the
         /// only reason it can be rendered without a server-side allowlist. <b>The day a client picks
         /// its own display name (a profile field in <c>HelloMsg</c>, an account name), this string

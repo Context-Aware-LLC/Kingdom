@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Core.Contracts — the integration surface (interfaces.md).
-    Plain C#, ZERO UnityEngine references (ARCHITECTURE.md §2/§3).
+    Emberfall.Core.Contracts — the integration surface (dev-docs/architecture/system-overview.md:11).
+    Plain C#, ZERO UnityEngine references (dev-docs/architecture/system-overview.md:9).
     Targets netstandard2.1 so the identical DLL loads in Unity (LTS), the
-    headless dedicated server, and plain `dotnet test` CI (test-strategy.md §1.1).
+    headless dedicated server, and plain `dotnet test` CI (dev-docs/quality/testing-and-ci.md:20).
   -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Net.Client — the B3 client seam (engineering/b3-networked-session-design.md).
+    Emberfall.Net.Client — the B3 client seam (dev-docs/architecture/system-overview.md:17).
     NetworkedMatchSession : IMatchSession over an IWireTransport, the connection state machine,
     verify-GATED wholesale snapshot apply (RC-F8), the RC-F7 TrySetResult+log interim, and the
     in-memory LoopbackTransport that peers against B1's REAL MatchSession (§8). netstandard2.1 so

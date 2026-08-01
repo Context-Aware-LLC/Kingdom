@@ -4,7 +4,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The two fixed prebuilt decks + hero classes for an M1 slice match (M1-KICKOFF.md §3 Phase D:
+    /// The two fixed prebuilt decks + hero classes for an M1 slice match (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md §3 Phase D:
     /// "2 fixed prebuilt decks"). Deckbuilding is out of M1 scope, so the host is constructed with the
     /// decklists; the <see cref="IMatchHost.BeginMatch"/> contract still owns the seed and all RNG.
     /// Each decklist is an ordered list of card definition ids; order is the pre-shuffle order, so it
@@ -18,7 +18,7 @@ namespace Emberfall.Core
         public IReadOnlyList<string> P1Deck { get; }
         public int HeroMaxHealth { get; }
 
-        /// <summary>The free catch-up card inserted into the second player's hand (interfaces.md §2.1).</summary>
+        /// <summary>The free catch-up card inserted into the second player's hand (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §2.1).</summary>
         public string SparkTokenId { get; }
 
         public MatchSetup(

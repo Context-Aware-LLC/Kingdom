@@ -14,7 +14,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
     /// Replays a <see cref="ReplayFixture"/> against a FRESH core via the same <c>Submit → Execute</c>
-    /// path the slice (and later the server) uses (golden-replay.md §2). Produces the actual final-state
+    /// path the slice (and later the server) uses (dev-docs/quality/testing-and-ci.md:24). Produces the actual final-state
     /// hash + full event stream and, on mismatch, a first-divergence <see cref="ReplayDivergenceReport"/>.
     /// Never rewrites a fixture on mismatch — rebaselining is loud, deliberate, and one-fixture-at-a-time
     /// (§5).
@@ -32,7 +32,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
         /// <summary>
         /// Run the fixture and capture actual outputs (no assertions — caller decides).
-        /// <paramref name="onState"/> (A5, a5-wire-protocol-design.md §6): invoked with the live
+        /// <paramref name="onState"/> (A5, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §6): invoked with the live
         /// authoritative state after <c>BeginMatch</c> and after every accepted command — this is
         /// how the wire bridge test obtains its per-command reachable-state corpus. The reference
         /// is to the MUTABLE host state: consume it synchronously inside the callback, never store it.
@@ -49,7 +49,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 heroMaxHealth: fx.HeroMaxHealth, sparkTokenId: fx.SparkTokenId);
             var host = new LocalMatchHost(processor, db, setup);
 
-            host.BeginMatch(fx.MatchId, fx.P0, fx.P1, fx.Seed);   // core-driven opening (interfaces.md §2.1)
+            host.BeginMatch(fx.MatchId, fx.P0, fx.P1, fx.Seed);   // core-driven opening (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §2.1)
             onState?.Invoke(host.State);
 
             var stream = new List<GameEvent>();
@@ -90,7 +90,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         }
 
         /// <summary>
-        /// Intentional rebaselining (golden-replay.md §5). NEVER called by CI — only by an explicit local
+        /// Intentional rebaselining (dev-docs/quality/testing-and-ci.md:31). NEVER called by CI — only by an explicit local
         /// command (env <c>EMBERFALL_REBASELINE=&lt;name&gt;|all</c>). Writes the computed expected block back
         /// into the one named fixture and drops a sibling <c>&lt;name&gt;.rebaseline.md</c> stub the committer
         /// must fill in (the §5.2 guard, enforced by the CI rebaseline path-pair check).
@@ -121,7 +121,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 File.WriteAllText(stub,
                     $"# Rebaseline: {fx.Name}\n\n" +
-                    "_Required by golden-replay.md §5.2 — a hash flip is guilty until proven a deliberate rule change._\n\n" +
+                    "_Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty until proven a deliberate rule change._\n\n" +
                     "- **Which rule changed:** _fill in_\n" +
                     "- **Why the new golden is correct:** _fill in_\n" +
                     "- **Link to the design/eng change that caused it:** _fill in_\n" +

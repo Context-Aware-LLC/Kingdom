@@ -3,11 +3,11 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
-    /// The single authoritative truth of a match (game-state-and-actions.md §2). A plain serializable
+    /// The single authoritative truth of a match (dev-docs/architecture/system-overview.md:36). A plain serializable
     /// object graph with NO UnityEngine deps and NO floats. It mutates ONLY through
     /// <see cref="ICommandProcessor.Execute"/>. Declaration order here <b>should</b> track the
     /// canonical walk in <c>Emberfall.Core.Serialization.GameStateSerializer</c>, but the serializer
-    /// is AUTHORITATIVE (A2 ruling, engineering/a2-serializer-design.md §2) — adding/removing a field
+    /// is AUTHORITATIVE (A2 ruling, dev-docs/architecture/determinism-and-projection.md:13) — adding/removing a field
     /// is a hash-canonical change: update the walk + manifest, convene §7, rebaseline fixtures.
     /// </summary>
     public sealed class GameState
@@ -26,7 +26,7 @@ namespace Emberfall.Core.Contracts
 
         /// <summary>Monotonic per-match counter behind <see cref="InstanceId"/> assignment (deterministic creation order).</summary>
         public int NextInstanceCounter;
-        /// <summary>Global event sequence cursor (game-state-and-actions.md §5.2).</summary>
+        /// <summary>Global event sequence cursor (dev-docs/architecture/determinism-and-projection.md:5).</summary>
         public ulong NextEventSequence;
         /// <summary>Per-player mulligan completion flags, seat-indexed.</summary>
         public bool Mulligan0Done;
@@ -37,7 +37,7 @@ namespace Emberfall.Core.Contracts
         /// Phase 2 adds interpreter machinery only, never a Contracts change. Carries serializable
         /// STATE only, never the continuation/delegate. Redaction contract for the future
         /// GameStateProjector is documented per-field on <see cref="PendingChoice"/> (§7 review
-        /// 2026-07-15, engineering/a2b-scoped-review-2026-07-15.md — OBL-1).
+        /// 2026-07-15, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md — OBL-1).
         /// </summary>
         public PendingChoice? PendingChoice;
 
@@ -50,7 +50,7 @@ namespace Emberfall.Core.Contracts
             Outcome = MatchOutcome.InProgress;
             ActivePlayer = p0.Id;
             TurnNumber = 0;
-            // D-P1 (state-sync-and-security.md §5.2.1): InstanceId(0) is the reserved redaction
+            // D-P1 (dev-docs/architecture/determinism-and-projection.md:23): InstanceId(0) is the reserved redaction
             // sentinel and is never minted — the counter starts at 1.
             NextInstanceCounter = 1;
         }
@@ -113,7 +113,7 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>
     /// Per-match mutable card state. Definitions are immutable; instances carry the runtime state
-    /// (game-state-and-actions.md §1, principle 3). All stats are <b>ints — never floats</b>.
+    /// (dev-docs/architecture/determinism-and-projection.md:10). All stats are <b>ints — never floats</b>.
     /// </summary>
     public sealed class CardInstance
     {
@@ -126,7 +126,7 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int? CurrentDurability;
         /// <summary>Base ∪ granted keywords. The one unordered collection in state — the hasher imposes
-        /// a total order over it (sorted by enum int) so it cannot perturb the hash (golden-replay.md §4.1).</summary>
+        /// a total order over it (sorted by enum int) so it cannot perturb the hash (dev-docs/architecture/determinism-and-projection.md:13).</summary>
         public HashSet<Keyword> Keywords = new HashSet<Keyword>();
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
@@ -146,7 +146,7 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>
     /// A choice awaiting a player (A2b seam). M2: never populated. The projection redaction class
-    /// per field below is fixed by the §7 ruling (engineering/a2b-scoped-review-2026-07-15.md)
+    /// per field below is fixed by the §7 ruling (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md)
     /// and is the BINDING contract for the future GameStateProjector — it is NOT implemented here
     /// (no projection layer exists in src/ yet). Walk order is fixed as declared.
     /// </summary>
@@ -206,7 +206,7 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>
-    /// Mana economy (GDD §1c, game-state-and-actions.md §7). All ints. The four display states the
+    /// Mana economy (GDD §1c, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §7). All ints. The four display states the
     /// D6 tray reads map onto these fields.
     /// </summary>
     public sealed class ManaPool

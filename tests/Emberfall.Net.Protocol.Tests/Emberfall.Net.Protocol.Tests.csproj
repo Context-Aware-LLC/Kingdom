@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Net.Protocol.Tests — the A5 wire contract tests (a5-wire-protocol-design.md §10).
+    Emberfall.Net.Protocol.Tests — the A5 wire contract tests (dev-docs/quality/testing-and-ci.md:22).
     Hard-blocking via the existing CI category stages: round-trip/bridge/mutation tests run as
     Category("Contract") (stage 3). References Emberfall.Core.Tests for the shared canonical
     fixtures (ONE manifest/mutation list — design §6 finding 2) and the golden-replay harness

@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
 {
     // Editor-only IArtProvider: resolves art straight from AssetDatabase under Assets/Art/.
     // Serves the M1 vertical slice (in-editor play mode) until Addressables groups exist —
-    // then AddressableArtProvider replaces it in builds (pipeline.md §5).
+    // then AddressableArtProvider replaces it in builds (dev-docs/pipelines/art-and-rendering.md:13).
     public sealed class EditorArtProvider : IArtProvider
     {
         public void LoadArt(string artId, Action<Sprite> onLoaded)

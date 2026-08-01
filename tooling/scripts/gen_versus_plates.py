@@ -1,6 +1,6 @@
 """Generate versus-screen landscape candidates.
 
-Per techart/versus-screen.md §7: direct OpenAI API (gpt-image-2), NOT the Unity
+Per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §7: direct OpenAI API (gpt-image-2), NOT the Unity
 wrapper — the wrapper silently drops width/height and caps at 1024 square.
 
 Native 21:9 in one pass at 3696x1584 (multiple of 16, longest edge <= 3840,
@@ -22,7 +22,7 @@ OUT = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "versus"
 SIZE = "3696x1584"
 MODEL = "gpt-image-2"
 
-# Zone constraints every candidate must satisfy — versus-screen.md §4.
+# Zone constraints every candidate must satisfy — hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §4.
 # Fractions are of the full canvas: frames at 32%/68% width, 39% height;
 # orb dead centre; text bands 62-79% height; status strip 81-91%.
 COMMON = """

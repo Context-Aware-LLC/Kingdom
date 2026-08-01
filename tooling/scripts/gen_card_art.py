@@ -2,9 +2,9 @@
 
 TWO PROVIDERS, and they are not interchangeable (Sam, 2026-07-26):
 
-  GEMINI (default, first pass) — fast and cheap, so this is where the volume
+  GEMINI — fast and cheap, so this is where the volume
       goes: TWO candidates per card, whole batch at once. Buy breadth here.
-  OPENAI gpt-image-2 (fallback) — "an ace one-shot," but ~5 minutes per image
+  OPENAI gpt-image-2 (default for card art and full screen images) — "an ace one-shot," but ~5 minutes per image
       and ~20x the cost. ONE candidate, and only on hand-picked cards whose
       Gemini candidates weren't good enough. The script REFUSES to run this
       provider over the whole batch; see `require_explicit_selection`.
@@ -16,7 +16,7 @@ and caps at 1024 square.
 WHERE THE PROMPT COMES FROM. Nothing here is invented. Each prompt is composed,
 in this order, from three sources on disk:
 
-  1. STYLE   — design/art-brief-m1.md §2 (the mandatory global style prefix,
+  1. STYLE   — dev-docs/specs/card-generation-prompt.md:36 (the mandatory global style prefix,
                verbatim) plus §1's technical delivery rules. ONE PER PROVIDER:
                STYLE_BLOCK for gemini (unchanged, silhouette-first, tuned to the
                board's 137x194 px), STYLE_BLOCK_OPENAI for gpt-image-2, which
@@ -27,7 +27,7 @@ in this order, from three sources on disk:
                negative-prompt parameter. READ THE COMMENT ON STYLE_BLOCK_OPENAI
                before changing any of it.
   2. CLASS   — the house-look paragraph that opens the "Art prompts" section of
-               design/card-drafts-<class>.md. Gravekeep = ash and ember,
+               dev-docs/specs/card-generation-prompt.md. Gravekeep = ash and ember,
                explicitly not Azeroth/WoW-adjacent; Verdant = this world's
                green, overgrown-and-encroaching.
   3. CARD    — the per-card paragraph from that same fenced block, keyed by card
@@ -40,20 +40,20 @@ thing that moved. The manifest stores provider + model + the exact prompt per
 generated image, so what a given file was actually asked for is always on disk.
 
 SCALE IS THE CONSTRAINT, as everywhere else in this repo. A board card is
-137x194 px at ortho 4.6 on 1080p, and art-brief-m1.md §1 sets the bar at
+137x194 px at ortho 4.6 on 1080p, and dev-docs/specs/card-generation-prompt.md:24 sets the bar at
 "readable at 220px". Both class house-look paragraphs already say it; they are
 passed through rather than restated here.
 
-Geometry: 1024x1024 square. techart/pipeline.md §2 — the illustration is the
+Geometry: 1024x1024 square. dev-docs/pipelines/art-and-rendering.md:9 — the illustration is the
 only per-card asset, a 1024 square that bleeds under the frame mask. OpenAI
 takes that as a literal `size`. Gemini takes `aspect_ratio: "1:1"` +
 `image_size: "1K"` and publishes NO table mapping that to exact pixels, so every
 saved file is measured and a non-1024 square is resampled (loudly).
 
-ORDER OF WORK is art-brief-m1.md §7.1: legendaries first, then epics, rares,
+ORDER OF WORK is hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.1: legendaries first, then epics, rares,
 commons — identity assets first, filler last.
 
-CANDIDATES, NOT SINGLES (art-brief-m1.md §7.2): candidates land in
+CANDIDATES, NOT SINGLES (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2): candidates land in
 
     art-bakeoff/card-art/<setId>/<art_file>/cand_<provider>_N.png
 
@@ -113,7 +113,7 @@ OUT = REPO / "art-bakeoff" / "card-art"
 UNITY_CARDS = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 MANIFEST = OUT / "prompt-manifest.json"
 
-EDGE = 1024  # techart/pipeline.md §2
+EDGE = 1024  # dev-docs/pipelines/art-and-rendering.md:9
 
 # ---------------------------------------------------------------- providers
 #
@@ -161,12 +161,12 @@ PROVIDERS = {
     },
 }
 
-# art-brief-m1.md §7.1 — identity assets first, filler last.
+# hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.1 — identity assets first, filler last.
 RARITY_ORDER = {"LEGENDARY": 0, "EPIC": 1, "RARE": 2, "COMMON": 3}
 
 # One entry per DRAFT FILE, not strictly per class. `batch2` carries both
 # EMBERWARD and TIDECALLER because they were designed as one balance pass
-# against each other (card-drafts-emberward-tidecaller.md §1) and share a single
+# against each other (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/card-drafts-emberward-tidecaller.md §1) and share a single
 # house-look paragraph; each card's prompt names its own class palette on its
 # last line, which is what actually keeps the two looks apart.
 CLASSES = {
@@ -175,11 +175,13 @@ CLASSES = {
     "batch2": "card-drafts-emberward-tidecaller",
     "batch3": "card-drafts-emberward-tidecaller-b3",
     "weapon-rerolls": "card-drafts-weapon-rerolls",
-    # M2 expansion classes (art-brief-m3.md)
+    # M2 expansion classes (dev-docs/descriptors/classes.md:7)
     "clockwright": "card-drafts-clockwright",
     "nightveil":   "card-drafts-nightveil",
     "stonewarden": "card-drafts-stonewarden",
     "tempest":     "card-drafts-tempest",
+    # REKINDLING second expansion set (dev-docs/descriptors/classes.md:7)
+    "rekindling":  "card-drafts-rekindling",
 }
 
 # WHERE CANDIDATES LAND under art-bakeoff/card-art/ (Sam, 2026-07-26). The
@@ -203,7 +205,7 @@ OUT_GROUP = {
 
 # ------------------------------------------------------------- style block
 #
-# THE ONE PLACE THE HOUSE LOOK IS DEFINED. Everything below is art-brief-m1.md:
+# THE ONE PLACE THE HOUSE LOOK IS DEFINED. Everything below is dev-docs/specs/card-generation-prompt.md:36:
 # §2's global style prefix verbatim, then §1's technical delivery rules. That
 # brief produced the 37 illustrations shipped in the game today, so it is the
 # established look. Change it here or nowhere.
@@ -218,7 +220,7 @@ OUT_GROUP = {
 # that is paid for to render detail. GLOBAL_STYLE and TECHNICAL are shared by
 # both — everything that differs is in OPENAI_DETAIL.
 
-# art-brief-m1.md §2, verbatim.
+# dev-docs/specs/card-generation-prompt.md:36, verbatim.
 GLOBAL_STYLE = (
     "Stylized fantasy trading-card-game illustration, painterly digital art, "
     "dramatic rim lighting, single clear subject with strong silhouette, rich "
@@ -227,7 +229,7 @@ GLOBAL_STYLE = (
     "quality, no text, no border, no frame, no watermark."
 )
 
-# art-brief-m1.md §1 — the non-negotiable delivery rules, as prompt scaffolding.
+# dev-docs/specs/card-generation-prompt.md:12 — the non-negotiable delivery rules, as prompt scaffolding.
 TECHNICAL = """
 SQUARE CROP. The card frame masks the edges: keep the subject's focal point
 inside the CENTRE 70% of the image, because the outer ~15% on every side may be
@@ -305,7 +307,7 @@ STYLE_BLOCK_OPENAI = (
 
 STYLE_BLOCKS = {"gemini": STYLE_BLOCK, "openai": STYLE_BLOCK_OPENAI}
 
-# art-brief-m1.md §2's negative prompt. Neither endpoint takes a negative
+# dev-docs/specs/card-generation-prompt.md:42. Neither endpoint takes a negative
 # parameter, so it is stated as an instruction instead of dropped.
 NEGATIVE = (
     "Avoid: text, letters, watermark, signature, frame, border, UI, "
@@ -456,7 +458,7 @@ def _post_gemini(prompt: str, key: str) -> tuple[bytes | None, str]:
     call this client made returned nothing (found 2026-07-26; the file
     extension `.png` had until then been the only evidence anyone had of the
     format). We ask for jpeg and transcode to PNG here, because
-    techart/pipeline.md §2 and the `CardArtPostprocessor.cs` folder contract
+    dev-docs/pipelines/art-and-rendering.md:9 and the `CardArtPostprocessor.cs` folder contract
     both want a real PNG on disk, not a JPEG wearing the extension.
     """
     r = requests.post(
@@ -538,7 +540,7 @@ def _conform(dest: pathlib.Path, tag: str) -> str:
             print(f"[{tag}] NOTE: provider returned {w}x{h}, resampled to {EDGE}x{EDGE}",
                   flush=True)
             return f"{w}x{h} -> {EDGE}x{EDGE}"
-    print(f"[{tag}] WARNING: NOT SQUARE ({w}x{h}) — pipeline.md §2 wants a "
+    print(f"[{tag}] WARNING: NOT SQUARE ({w}x{h}) — dev-docs/pipelines/art-and-rendering.md:9 wants a "
           f"{EDGE} square. Left as-is; fix before promoting.", flush=True)
     return f"{w}x{h} NOT SQUARE"
 
@@ -797,7 +799,7 @@ def main() -> int:
         return 0
 
     if not 1 <= candidates <= 4:
-        print("--candidates must be 1-4 (art-brief-m1.md §7.2)", file=sys.stderr)
+        print("--candidates must be 1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2)", file=sys.stderr)
         return 2
 
     if not require_explicit_selection(provider, cards, candidates, selected):

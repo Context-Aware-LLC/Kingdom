@@ -6,7 +6,7 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Editor
 {
-    /// <summary>Editor-time, metadata-only art lookup (interfaces.md §4.4). No sprite/GPU load.</summary>
+    /// <summary>Editor-time, metadata-only art lookup (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.4). No sprite/GPU load.</summary>
     public interface IAddressableArtCatalog
     {
         bool Exists(string artId);
@@ -21,7 +21,7 @@ namespace Emberfall.Editor
         public ArtCatalogEntry(string address, string guid) { Address = address; Guid = guid; }
     }
 
-    /// <summary>Balance-guardrails numbers provider for lint warnings (interfaces.md §4.5).</summary>
+    /// <summary>Balance-guardrails numbers provider for lint warnings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.5).</summary>
     public interface IBalanceGuardrails
     {
         int VanillaStatBudget(int cost);
@@ -33,7 +33,7 @@ namespace Emberfall.Editor
     }
 
     /// <summary>
-    /// EDITOR/content lint — the "E-series" (interfaces.md §4.3). Kept fully separate from the
+    /// EDITOR/content lint — the "E-series" (dev-docs/pipelines/card-authoring-and-import.md:22). Kept fully separate from the
     /// headless ICardValidator so core legality never depends on Unity/Addressables/design tables.
     /// All findings here are Warning/Info; only Error-severity core-validator issues block a bake.
     /// </summary>
@@ -56,7 +56,7 @@ namespace Emberfall.Editor
 
     /// <summary>
     /// No versioned guardrails data asset exists yet — these constants mirror
-    /// design/balance-guardrails.md's stated baselines closely enough to drive warnings; replace
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/balance-guardrails.md's stated baselines closely enough to drive warnings; replace
     /// with a real data-asset-backed provider when that asset exists (R2: balance is data, not code).
     /// </summary>
     public sealed class StubBalanceGuardrails : IBalanceGuardrails
@@ -76,10 +76,10 @@ namespace Emberfall.Editor
         public ValidationReport Lint(CardDefinition def, IAddressableArtCatalog art, IBalanceGuardrails guardrails, ICardDatabase db)
         {
             var issues = new List<ValidationIssue>();
-            // interfaces.md §4.3 is explicit: lint issues are "Warning/Info, never Error" — only the
+            // hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.3 is explicit: lint issues are "Warning/Info, never Error" — only the
             // headless ICardValidator's Errors block a bake. This deliberately overrides the older
-            // E-series severity table in tooling/validation-and-import.md (E1/E2/E7 as "error"),
-            // which predates that ruling; interfaces.md wins per CLAUDE.md.
+            // E-series severity table in hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/validation-and-import.md (E1/E2/E7 as "error"),
+            // which predates that ruling; hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md wins per CLAUDE.md.
             void Warn(string code, string field, string msg) => issues.Add(new ValidationIssue(Severity.Warning, code, field, msg, def.Id));
 
             // E2: artId format (checked before E1 so an empty/malformed id doesn't also spam E1)

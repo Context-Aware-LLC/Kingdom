@@ -1,6 +1,6 @@
 """Generate collection-screen (S6/S9) plate candidates.
 
-Per techart/collection-plate.md §6: direct OpenAI API (gpt-image-2), NOT the Unity
+Per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/collection-plate.md §6: direct OpenAI API (gpt-image-2), NOT the Unity
 wrapper — the wrapper silently drops width/height and caps at 1024 square.
 
 Native 21:9 in one pass at 3696x1584 (multiple of 16, longest edge <= 3840,
@@ -28,7 +28,7 @@ OUT = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "collection"
 SIZE = "3696x1584"
 MODEL = "gpt-image-2"
 
-# Constraints every candidate must satisfy — collection-plate.md §4.3.
+# Constraints every candidate must satisfy — hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/collection-plate.md §4.3.
 COMMON = """
 ULTRA-WIDE 21:9 painterly matte painting, dark fantasy interior, atmospheric and
 quiet. No people, no characters, no faces, no creatures anywhere. No books, no

@@ -6,13 +6,13 @@ using UnityEngine;
 
 namespace Emberfall.Session
 {
-    /// <summary>Whose projection the presentation events carry (a4-session-seam-design.md §4).
+    /// <summary>Whose projection the presentation events carry (dev-docs/contracts/gameplay-and-session.md:5).
     /// ActiveSeat (two-human hot-seat view flip) is reserved — it has no input driver yet
     /// (design §11 finding 8); GameBootstrap wires FixedSeat0.</summary>
     public enum PresentationViewer { FixedSeat0, ActiveSeat }
 
     /// <summary>
-    /// Unity-side session pump (M2 WS A4; a4-session-seam-design.md §4). Speaks ONLY
+    /// Unity-side session pump (M2 WS A4; dev-docs/contracts/gameplay-and-session.md:5). Speaks ONLY
     /// <see cref="IMatchSession"/> + <see cref="IIntentSource"/> — never a concrete host, never
     /// raw state — so B3's NetworkedMatchSession slots in without touching this class or any
     /// subscriber. Async-tolerant: SubmitAsync may resolve this frame (local) or much later

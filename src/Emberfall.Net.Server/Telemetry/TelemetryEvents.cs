@@ -7,7 +7,7 @@ using Emberfall.Net.Server.Identity;
 namespace Emberfall.Net.Server.Telemetry
 {
     /// <summary>
-    /// Which sample a finished match belongs to (design/telemetry-spec.md §1). The two combine for
+    /// Which sample a finished match belongs to (dev-docs/data/player-data-and-telemetry.md:17). The two combine for
     /// the §3 exit bar, but they are kept separable because only <see cref="AiSoak"/> answers the
     /// fast-kill prong and only <see cref="Ladder"/> is evidence about humans.
     ///

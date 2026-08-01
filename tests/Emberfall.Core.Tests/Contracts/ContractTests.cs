@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Contracts
 {
     /// <summary>
     /// L2 — asserts the Emberfall.Core.Contracts surface itself, so a refactor that silently breaks the
-    /// public API fails before any consumer team is affected (test-strategy.md §2, L2).
+    /// public API fails before any consumer team is affected (dev-docs/quality/testing-and-ci.md:21).
     /// </summary>
     [TestFixture]
     [Category("Contract")]
@@ -30,14 +30,14 @@ namespace Emberfall.Core.Tests.Contracts
         [Test]
         public void VfxEvent_Vocabulary_Is_The_Closed_D7_Set_Of_22()
         {
-            // game-state-and-actions.md §5.2 lists exactly 22 closed D7 events.
+            // hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2 lists exactly 22 closed D7 events.
             Assert.That(Enum.GetValues(typeof(VfxEvent)).Length, Is.EqualTo(22));
         }
 
         [Test]
         public void Keyword_Enum_Has_The_18_Canonical_Keywords()
         {
-            // card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
+            // dev-docs/specs/card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
             // REKINDLING set (M3) adds REINFORCE — 18 implemented keywords total.
             Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(18));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
@@ -66,7 +66,7 @@ namespace Emberfall.Core.Tests.Contracts
         [Test]
         public void DebugSpawnIntent_Is_Absent_Without_EMBERFALL_DEV()
         {
-            // interfaces.md §4.6 — the dev-only spawn door must not exist in a release/server compile.
+            // hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.6 — the dev-only spawn door must not exist in a release/server compile.
             var t = typeof(PlayerIntent).Assembly.GetType("Emberfall.Core.Contracts.DebugSpawnIntent");
             Assert.That(t, Is.Null, "DebugSpawnIntent must not compile without the EMBERFALL_DEV symbol.");
         }
@@ -74,7 +74,7 @@ namespace Emberfall.Core.Tests.Contracts
         [Test]
         public void DeterministicRandom_And_GameState_Are_In_The_Contracts_Assembly()
         {
-            // interfaces.md §1 — consumers bind to these as part of the contract surface.
+            // dev-docs/architecture/system-overview.md:9 — consumers bind to these as part of the contract surface.
             var asm = typeof(GameState).Assembly.GetName().Name;
             Assert.That(asm, Is.EqualTo("Emberfall.Core.Contracts"));
             Assert.That(typeof(DeterministicRandom).Assembly.GetName().Name, Is.EqualTo("Emberfall.Core.Contracts"));

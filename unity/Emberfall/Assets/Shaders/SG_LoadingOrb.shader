@@ -1,7 +1,7 @@
 // SG_LoadingOrb — the loading-screen mana orb (the "heartbeat" indicator).
 //
 // Renders Art/Loading/Orb_StormGlass.png with live interior motion so a frozen
-// orb reads as a hang (techart/loading-screen-plate.md §4 orb well, §5 anchoring).
+// orb reads as a hang (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §4 orb well, §5 anchoring).
 // Authored as hand-HLSL per the SG_ManaFill precedent: the motion is UV-space
 // resampling of the baked art — differential rotation (the storm core spins
 // faster than the glass rim, which stays fixed), a small value-noise churn for

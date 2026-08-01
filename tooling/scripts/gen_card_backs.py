@@ -1,7 +1,7 @@
 """Generate card-back candidates for the two M2 classes.
 
 Sam's call (2026-07-25): seed the generator from the class palettes that no art
-has leaned on yet — Gravekeep and Verdant Warden (design/art-brief-m2.md §3) —
+has leaned on yet — Gravekeep and Verdant Warden (dev-docs/descriptors/classes.md:7) —
 and run TWO candidates per palette.
 
 The two candidates per class differ on STRUCTURE, not just subject, so the

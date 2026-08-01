@@ -9,7 +9,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Session
 {
     /// <summary>
-    /// WS A4 session-seam suite (engineering/a4-session-seam-design.md §8) — including the
+    /// WS A4 session-seam suite (dev-docs/contracts/gameplay-and-session.md:5) — including the
     /// long-deferred a3 §7.1 TEST 6 (honest AI): everything an in-process consumer can reach
     /// through <see cref="IMatchSession"/> is projected, at every step of a live match.
     /// </summary>

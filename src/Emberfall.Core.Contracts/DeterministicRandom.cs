@@ -1,16 +1,16 @@
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
-    /// The ONE entropy source for the entire core (game-state-and-actions.md §6.1).
+    /// The ONE entropy source for the entire core (dev-docs/architecture/determinism-and-projection.md:9).
     /// NOT <see cref="System.Random"/>, NOT UnityEngine.Random — both are CI-banned.
     ///
     /// Algorithm is LOCKED for M1: <b>splitmix64</b> (Vigna). It is explicit, portable, and free of
     /// any platform/libc dependence, so a fixture baked on an x64 dev box replays identically on an
     /// ARM CI runner or server. The exact algorithm is part of the determinism contract: changing it
     /// invalidates every baked golden-replay fixture, so it is versioned, never swapped casually
-    /// (golden-replay.md §8 Q3).
+    /// (dev-docs/architecture/determinism-and-projection.md:9).
     ///
-    /// <see cref="RawState"/> is serialized into the GameState hash (golden-replay.md §4.3): two
+    /// <see cref="RawState"/> is serialized into the GameState hash (dev-docs/architecture/determinism-and-projection.md:16): two
     /// replays that reach the same board but consumed the RNG a different number of times are NOT
     /// equal — the next draw would differ. Hashing the cursor catches "right now, wrong future" desyncs.
     /// </summary>
@@ -66,7 +66,7 @@ namespace Emberfall.Core.Contracts
         /// <summary>
         /// Deterministic in-place Fisher–Yates shuffle (mulligan / opening deal, game-state §6).
         /// Draws from this RNG in a fixed call order, so two machines with the same seed produce the
-        /// identical permutation — the foundation of the RNG-dense opening fixture (golden-replay.md §7).
+        /// identical permutation — the foundation of the RNG-dense opening fixture (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7).
         /// </summary>
         public void Shuffle<T>(System.Collections.Generic.IList<T> list)
         {

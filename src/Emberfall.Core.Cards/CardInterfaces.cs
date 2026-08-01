@@ -4,11 +4,11 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Contracts
 {
     // Declared in Emberfall.Core.Cards but kept in the Emberfall.Core.Contracts NAMESPACE so consumers
-    // see one contract surface (interfaces.md §1). They live in the Cards assembly because they return
+    // see one contract surface (dev-docs/architecture/system-overview.md:12). They live in the Cards assembly because they return
     // CardDefinition (Cards → Contracts); declaring them in Contracts would create a dependency cycle.
 
     /// <summary>
-    /// Card data access — the only way the core sees cards (card-system.md §1.3). Client and server
+    /// Card data access — the only way the core sees cards (dev-docs/specs/card-schema.md:5). Client and server
     /// provide different impls; both deserialize the identical CardDefinition POCO (R1).
     /// </summary>
     public interface ICardDatabase
@@ -18,7 +18,7 @@ namespace Emberfall.Core.Contracts
         IReadOnlyCollection<Cards.CardDefinition> AllCollectible();
     }
 
-    /// <summary>Shared card validator — runs headless at server/client load and in the editor (interfaces.md §4.3).</summary>
+    /// <summary>Shared card validator — runs headless at server/client load and in the editor (dev-docs/pipelines/card-authoring-and-import.md:20).</summary>
     public interface ICardValidator
     {
         ValidationReport Validate(Cards.CardDefinition def, ICardDatabase db);

@@ -8,7 +8,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// Encode/decode identity for every message type (a5-wire-protocol-design.md §10.3) —
+    /// Encode/decode identity for every message type (dev-docs/contracts/wire-protocol.md:41) —
     /// property-complete bodies, envelope fields preserved, v≠1 refused.
     /// </summary>
     [TestFixture]
@@ -118,7 +118,7 @@ namespace Emberfall.Net.Protocol.Tests
             Assert.That(m.Opponent.DisplayName, Is.EqualTo("Rival"));
             Assert.That(m.Snapshot.VerifyIntegrity(), Is.True);
             Assert.That(m.ReconnectToken, Is.EqualTo("tok-3f9a"),
-                "B1 additive field (b1-match-server-design.md §6-bis) must survive the round trip.");
+                "B1 additive field (dev-docs/contracts/wire-protocol.md:41) must survive the round trip.");
         }
 
         [Test]

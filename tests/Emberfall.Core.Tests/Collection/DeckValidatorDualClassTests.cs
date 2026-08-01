@@ -8,7 +8,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
-    /// <see cref="DeckValidator"/> L1-L5 (ui/collection-deckbuilder.md §1, LOCKED) against the
+    /// <see cref="DeckValidator"/> L1-L5 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1, LOCKED) against the
     /// <b>live</b> M1 card set rather than synthetic rows — the same choice
     /// <c>CardValidatorTests</c> makes, and for the same reason: a rule that only holds against
     /// fixtures does not gate a Save button.

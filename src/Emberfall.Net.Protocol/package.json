@@ -2,7 +2,7 @@
   "name": "com.emberfall.net.protocol",
   "version": "0.1.0",
   "displayName": "Emberfall Net Protocol",
-  "description": "Wire message vocabulary + JSON codec, envelope v=1, hash-per-message (A5, engineering/a5-wire-protocol-design.md).",
+  "description": "Wire message vocabulary + JSON codec, envelope v=1, hash-per-message (A5, dev-docs/contracts/wire-protocol.md:7).",
   "unity": "6000.0",
   "type": "library"
 }

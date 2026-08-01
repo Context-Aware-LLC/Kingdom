@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Core.Cards — card POCO model + the single shared CardJson parser (card-system.md §1).
+    Emberfall.Core.Cards — card POCO model + the single shared CardJson parser (dev-docs/specs/card-schema.md:5).
     Plain C#, ZERO UnityEngine references. Both the client SO and the headless server deserialize
     through THIS parser, so they can never drift (R1).
   -->

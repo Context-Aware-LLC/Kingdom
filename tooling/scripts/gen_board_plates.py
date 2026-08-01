@@ -4,7 +4,7 @@ Same pipeline as gen_versus_plates.py: direct OpenAI API (gpt-image-2), NOT the
 Unity wrapper (it silently drops width/height and caps at 1024 square).
 
 The board camera is orthographic size 4.6 -> 9.2 world units tall, up to +-10.2
-wide at 20:9 (board-and-vfx.md 1.1). Native generation at 3696x1664 (~2.22:1,
+wide at 20:9 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md 1.1). Native generation at 3696x1664 (~2.22:1,
 multiple of 16, longest edge <= 3840). Narrower aspects crop the sides, so all
 required decoration lives inside the 16:9 span and the outer flanks are bonus.
 

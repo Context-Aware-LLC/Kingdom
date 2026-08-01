@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Core.Serialization — the canonical GameState serializer (A2, a2-serializer-design.md).
-    Owns the ONE canonical field order (golden-replay.md §4.1); the hasher is h(serialize(state)).
+    Emberfall.Core.Serialization — the canonical GameState serializer (A2, dev-docs/architecture/determinism-and-projection.md:13).
+    Owns the ONE canonical field order (dev-docs/architecture/determinism-and-projection.md:13); the hasher is h(serialize(state)).
     Plain C#, ZERO UnityEngine references, no float code path. Depends on Contracts ONLY —
     rules don't hash themselves; server (B1) and wire (A5) reference this as a sibling of Core.
   -->

@@ -1,0 +1,14 @@
+﻿<Solution>
+  <Project Path="Emberfall.Core.Contracts.csproj" />
+  <Project Path="Emberfall.Editor.csproj" />
+  <Project Path="Emberfall.Data.csproj" />
+  <Project Path="Emberfall.Core.csproj" />
+  <Project Path="Emberfall.Session.csproj" />
+  <Project Path="Emberfall.Presentation.csproj" />
+  <Project Path="Emberfall.Core.Collection.csproj" />
+  <Project Path="Emberfall.Net.Protocol.csproj" />
+  <Project Path="Emberfall.Core.Cards.csproj" />
+  <Project Path="Emberfall.Net.Client.csproj" />
+  <Project Path="Emberfall.Core.Serialization.csproj" />
+  <Project Path="Emberfall.AI.csproj" />
+</Solution>

@@ -5,11 +5,11 @@ using Emberfall.Core.Cards;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// Core-driven match-start sequence (interfaces.md §2.1). The coin flip, opening deal, "The Spark"
+    /// Core-driven match-start sequence (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §2.1). The coin flip, opening deal, "The Spark"
     /// catch-up card and mulligan entry are <b>rules</b> owned entirely by the core; the host only
     /// triggers them. Every random decision draws from the single seeded <see cref="DeterministicRandom"/>
     /// in a fixed call order, so the same seed produces the identical opening on any machine — the
-    /// RNG-dense moment the <c>opening_pyra_maren</c> golden fixture covers (golden-replay.md §7).
+    /// RNG-dense moment the <c>opening_pyra_maren</c> golden fixture covers (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7).
     /// </summary>
     public static class MatchEngine
     {
@@ -21,7 +21,7 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Loop backstop for the effect/trigger resolution queue per command (balance-guardrails §4,
-        /// game-state-and-actions.md §4). A drain exceeding this halts the chain rather than hanging —
+        /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4). A drain exceeding this halts the chain rather than hanging —
         /// a safety net against accidental infinite cascades, never a value any legitimate card reaches.
         /// </summary>
         public const int ActionResolutionCap = 100;

@@ -1,6 +1,6 @@
 /*
  * deckbuilder.uss — S7 screen styles. Consumes tokens from theme.uss only (no literal
- * colors/sizes that a token already names). design-system.md §6 components, §2 layout.
+ * colors/sizes that a token already names). dev-docs/ui/client-surfaces.md:22.
  * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
  */
 

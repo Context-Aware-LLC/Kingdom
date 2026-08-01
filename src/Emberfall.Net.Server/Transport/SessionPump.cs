@@ -7,7 +7,7 @@ namespace Emberfall.Net.Server.Transport
 {
     /// <summary>
     /// The commit-2 wrapper that gives <see cref="MatchSession.Dispatch"/> its single logical
-    /// thread (b1-match-server-design.md §4): one unbounded single-reader channel, one consumer
+    /// thread (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §4): one unbounded single-reader channel, one consumer
     /// task, plus the ~1 Hz clock pulse. Receive loops, timers, and the gate all Post; only the
     /// consumer ever touches the session.
     /// </summary>

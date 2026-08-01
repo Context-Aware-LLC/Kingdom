@@ -4,14 +4,14 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The single mutation door (game-state-and-actions.md §4: Validate → Apply → Emit). On reject
+    /// The single mutation door (dev-docs/architecture/system-overview.md:26). On reject
     /// there is ZERO mutation and ZERO events. Same <c>(GameState, PlayerIntent)</c> ⇒ same mutation
     /// and same ordered event stream on any machine — the property the golden-replay test proves (R1).
     ///
     /// M1-foundation subset: <see cref="MulliganIntent"/>, <see cref="EndTurnIntent"/>,
     /// <see cref="ConcedeIntent"/>, <see cref="AutoConfirmIntent"/> — i.e. the match-start + turn-loop
     /// spine (coin flip and the deal live in <see cref="MatchEngine"/>). Card-play / attack / hero-power
-    /// land with the effect interpreter (M1-KICKOFF.md Phase B) and are rejected as NotImplemented here.
+    /// land with the effect interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B) and are rejected as NotImplemented here.
     /// </summary>
     public sealed class CommandProcessor : ICommandProcessor, ICommandValidator
     {
@@ -55,13 +55,13 @@ namespace Emberfall.Core
                 // state, ships to BOTH seats, and throws in the OPPONENT's BoardController —
                 // freezing their client for the rest of the match while the server stays healthy.
                 // Binding rules (TryGet not Get; validate against the OFFERED set, not just the
-                // database) — docs\security\known-vulnerabilities\VULN-001-*.md §4.
+                // database) — dev-docs/quality/security.md#latent-vulnerabilities.
                 // └──────────────────────────────────────────────────────────────────────────┘
                 case DiscoverChoiceIntent _:
                     reason = RejectReason.NotImplemented;   // Discover = later
                     return false;
                 default:
-                    reason = RejectReason.UnknownIntent;    // off-allowlist (interfaces.md §4.6)
+                    reason = RejectReason.UnknownIntent;    // off-allowlist (dev-docs/contracts/gameplay-and-session.md:18)
                     return false;
             }
         }
@@ -191,8 +191,7 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Emit-time visibility sidecar for the events of the LAST accepted Execute call,
-        /// index-parallel to that call's <see cref="CommandResult.Events"/> (a3-projector-design.md
-        /// §6.1). Server-side only — feeds <c>GameStateProjector.ProjectEvent</c>; never serialized.
+        /// index-parallel to that call's <see cref="CommandResult.Events"/> (dev-docs/architecture/determinism-and-projection.md:24). Server-side only — feeds <c>GameStateProjector.ProjectEvent</c>; never serialized.
         /// Empty after a rejected command (rejects emit nothing).
         /// </summary>
         public IReadOnlyList<Projection.EventVisibility> LastEventVisibility { get; private set; }
@@ -293,7 +292,7 @@ namespace Emberfall.Core
 
         private void ApplyAutoConfirm(GameState state, AutoConfirmIntent a, EventBuffer buf)
         {
-            // Timer expiry is an ordinary command (game-state-and-actions.md §6.2): keep all cards in
+            // Timer expiry is an ordinary command (dev-docs/contracts/gameplay-and-session.md:38): keep all cards in
             // mulligan, or end the turn in Main.
             if (state.Phase == TurnPhase.Mulligan)
                 ApplyMulligan(state, new MulliganIntent(a.Player, System.Array.Empty<InstanceId>()), buf);

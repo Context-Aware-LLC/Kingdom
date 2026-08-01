@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
-    /// The async CLIENT seam (interfaces.md v3 §2, M2 WS A4; engineering/a4-session-seam-design.md).
+    /// The async CLIENT seam (dev-docs/contracts/gameplay-and-session.md:5).
     /// Callers (MatchRunner, presentation, AI intent sources) bind to THIS, never to a concrete
     /// host: the local session resolves instantly, a networked session resolves on the server's
     /// reply, and neither difference leaks past the seam (decisions/ADR-0004 — confirm-then-show).

@@ -9,7 +9,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
-    /// <see cref="DeckQuery"/> — the sidebar's one call (ui/collection-deckbuilder.md §2.7).
+    /// <see cref="DeckQuery"/> — the sidebar's one call (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.7).
     ///
     /// <para>What is under test is a contract about <i>order and completeness</i>: default first,
     /// stored order behind it, one <see cref="QueueCheck"/> per deck, and a stated answer for the two

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// World-space end-turn button (ui/match-hud.md §6 item 1). Right screen edge,
+    /// World-space end-turn button (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §6 item 1). Right screen edge,
     /// vertically centered — the genre-standard spot. Built procedurally like
     /// HeroPlateView/ManaTrayView; state-driven tint + label, click forwards to
     /// InputRouter which applies the same guards as the Enter/Space path.

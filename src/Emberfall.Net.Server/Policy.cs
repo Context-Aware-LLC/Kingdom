@@ -3,7 +3,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Net.Server
 {
     /// <summary>
-    /// Integer-milli-token bucket (b1-match-server-design.md §6.5). 1 token = 1000 milli;
+    /// Integer-milli-token bucket (dev-docs/contracts/wire-protocol.md:37). 1 token = 1000 milli;
     /// refill of N tokens/second is exactly N milli-tokens per millisecond — no float, ever.
     /// </summary>
     public sealed class TokenBucket

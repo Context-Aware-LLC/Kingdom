@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Data
 {
     /// <summary>
-    /// One line of a decklist: a card definition id and how many copies (ui/collection-deckbuilder.md §3).
+    /// One line of a decklist: a card definition id and how many copies (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
     /// </summary>
     public readonly struct DeckEntry
     {
@@ -16,7 +16,7 @@ namespace Emberfall.Data
     }
 
     /// <summary>
-    /// The persisted deck payload (ui/collection-deckbuilder.md §3): a hero/class binding, a name,
+    /// The persisted deck payload (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3): a hero/class binding, a name,
     /// and a small list of {definitionId, count}. Deliberately UnityEngine-free so the same type and
     /// the <see cref="DeckValidator"/> predicate below can move server-side unchanged.
     /// </summary>
@@ -45,7 +45,7 @@ namespace Emberfall.Data
     }
 
     /// <summary>
-    /// Which legality rule a violation maps to (ui/collection-deckbuilder.md §1, LOCKED).
+    /// Which legality rule a violation maps to (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1, LOCKED).
     /// </summary>
     public enum DeckRule { L1_Size, L2_CopyCap, L3_LegendaryCap, L4_ClassMembership, L5_HeroBound }
 
@@ -68,7 +68,7 @@ namespace Emberfall.Data
     }
 
     /// <summary>
-    /// Deck-legality predicate (ui/collection-deckbuilder.md §1 — the LOCKED unblocking deliverable).
+    /// Deck-legality predicate (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1 — the LOCKED unblocking deliverable).
     /// The deckbuilder enforces these live to gate Save; the identical predicate re-runs server-side at
     /// match-join (never trust the client). Pure and UnityEngine-free by design.
     ///

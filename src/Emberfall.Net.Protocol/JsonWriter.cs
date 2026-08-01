@@ -4,14 +4,14 @@ using System.Text;
 namespace Emberfall.Net.Protocol
 {
     /// <summary>
-    /// The canonical JSON emitter (a5-wire-protocol-design.md §3). Strict subset: objects,
+    /// The canonical JSON emitter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §3). Strict subset: objects,
     /// arrays, RFC 8259-escaped strings, integers, booleans, null. <b>There is deliberately no
     /// floating-point method</b> — the ICanonicalWriter philosophy applied to the wire: a float in
     /// a message cannot even be expressed. No indentation, no spaces — encoding the same value
     /// twice yields identical bytes (byte-stability, design §10.6).
     ///
     /// <para><b>Public since C-G1-8 step 3</b>, and only for that reason. It was internal while the
-    /// wire was its only caller; `design/telemetry-spec.md` §0 requires telemetry rows to carry the
+    /// wire was its only caller; `dev-docs/data/player-data-and-telemetry.md:17` requires telemetry rows to carry the
     /// "same float-free discipline as the wire (ADR-0003)", and reusing this writer *is* that rule
     /// rather than a restatement of it. The alternative — a second RFC 8259 escaper living in the
     /// server assembly — is precisely the parallel-parser surface `JsonlReplayStore` was written to

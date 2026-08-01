@@ -4,7 +4,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The single damage/heal door (game-state-and-actions.md §7 combat, card-system.md §4.1 keyword
+    /// The single damage/heal door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §7 combat, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1 keyword
     /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality
     /// → Frost freeze</b>.
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
@@ -53,7 +53,7 @@ namespace Emberfall.Core
 
             if (sourceKeywords != null && source.HasValue)
             {
-                // Lifedrain: the source's controller hero heals for the damage dealt (card-system.md §4.1).
+                // Lifedrain: the source's controller hero heals for the damage dealt (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).
                 if (sourceKeywords.Contains(Keyword.LIFESTEAL) &&
                     Characters.TryFind(state, source.Value, out var src))
                 {
@@ -66,7 +66,7 @@ namespace Emberfall.Core
                 if (sourceKeywords.Contains(Keyword.POISONOUS) && target.IsMinion)
                     target.Minion!.CurrentHealth = 0;
 
-                // Frost: whatever this damaged is frozen (balance-guardrails.md §2.1 "Frost",
+                // Frost: whatever this damaged is frozen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/balance-guardrails.md §2.1 "Frost",
                 // ~1 mana — "denies one attack from whatever it damages"). Applies to HEROES as
                 // well as minions, unlike Venom above: freezing a hero denies a weapon swing, and
                 // the FREEZE *action* (FreezeHandler) already treats both the same way, so the

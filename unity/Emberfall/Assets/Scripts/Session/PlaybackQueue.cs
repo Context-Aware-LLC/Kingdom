@@ -5,7 +5,7 @@ namespace Emberfall.Session
 {
     /// <summary>
     /// The presentation playback queue (decisions/ADR-0004's latency-smoother;
-    /// a4-session-seam-design.md §5). Buffers (projected snapshot, projected events) entries per
+    /// dev-docs/contracts/gameplay-and-session.md:44). Buffers (projected snapshot, projected events) entries per
     /// accepted command and releases them at watchable pace, decoupling animation cadence from
     /// authority cadence — under a networked session a reconnect burst queues up and plays out
     /// instead of teleporting the board.

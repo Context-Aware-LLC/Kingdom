@@ -1,4 +1,4 @@
-# Run-ArtBakeoff.ps1 — drive the 5-prompt art bake-off (design/art-bakeoff-run1.md)
+# Run-ArtBakeoff.ps1 — drive the 5-prompt art bake-off (dev-docs/specs/card-generation-prompt.md)
 # against the Gemini Interactions API (Nano Banana Pro = gemini-3-pro-image).
 #
 # Key discovery order: $env:GEMINI_API_KEY, else parsed from the repo-root .env
@@ -42,7 +42,7 @@ if (-not $OutRoot) { $OutRoot = Join-Path $repoRoot "art-bakeoff" }
 $outDir = Join-Path $OutRoot $Model
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
-# ── The 5 bake-off prompts, verbatim from design/art-bakeoff-run1.md ──────────
+# ── The 5 bake-off prompts, verbatim from dev-docs/specs/card-generation-prompt.md ──────────
 $style = "Stylized fantasy trading-card-game illustration, painterly digital art, dramatic rim lighting, single clear subject with strong silhouette, rich saturated colors, dynamic composition, centered focal point, background supports but never competes with subject, professional card game art quality, no text, no border, no frame, no watermark."
 
 $prompts = [ordered]@{
@@ -63,7 +63,7 @@ foreach ($artId in $prompts.Keys) {
         model = $Model
         input = @(@{ type = "text"; text = $prompts[$artId] })
         # API only supports image/jpeg output; winners get converted to PNG at curation time
-        # (pipeline.md delivery spec applies to the curated asset, not bake-off scratch).
+        # (dev-docs/pipelines/art-and-rendering.md:7 applies to the curated asset, not bake-off scratch).
         response_format = @{ type = "image"; mime_type = "image/jpeg"; aspect_ratio = "1:1" }
         store = $false
     } | ConvertTo-Json -Depth 8

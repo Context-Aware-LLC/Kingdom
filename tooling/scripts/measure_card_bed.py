@@ -1,6 +1,6 @@
 """Measure the parchment "bed" (rules-text panel) in each card frame.
 
-`card-rendering.md §3.1` sizes the rules body against "the bed's inner height"
+`hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md §3.1` sizes the rules body against "the bed's inner height"
 and states that height is **unmeasured**. This measures it, per rarity, so the
 wrap box can be a figure instead of a guess.
 
@@ -74,7 +74,7 @@ ALPHA_CUT = 128
 # plateau fractions: (key, f). "main" is the headline half-max figure.
 THRESHOLDS = (("tight", 0.65), ("main", 0.50), ("loose", 0.35), ("env", 0.25))
 
-# The current spec's wrap box: band_cy 0.70h, height 0.21h (card-rendering.md §3.1).
+# The current spec's wrap box: band_cy 0.70h, height 0.21h (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md §3.1).
 WRAP_TOP, WRAP_BOT = 0.595, 0.805
 
 
@@ -203,7 +203,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--overlay", default=None, help="write a visual-check sheet here")
     ap.add_argument("--body-pct", type=float, default=5.27,
-                    help="rules body size as %%h (card-rendering.md 3.1)")
+                    help="rules body size as %%h (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md 3.1)")
     ap.add_argument("--leading", type=float, default=1.20,
                     help="line pitch as a multiple of body size (single-spaced)")
     args = ap.parse_args()

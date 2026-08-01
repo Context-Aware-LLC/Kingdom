@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// World-space hero plate for one player (board-and-vfx.md §1 HeroAnchor/HeroPowerAnchor).
+    /// World-space hero plate for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1 HeroAnchor/HeroPowerAnchor).
     /// Portrait + name + HP read-out at HeroAnchor; hero-power disc (cost + name, greyed when
     /// spent/unaffordable) at HeroPowerAnchor. Created procedurally by GameBootstrap — one per
     /// player, same pattern as ManaTrayView. Purely state-driven; ClickableHeroPower (attached
@@ -24,7 +24,7 @@ namespace Emberfall.Presentation
         // Valid-target cue while a targeted spell / hero power / attack is armed.
         private static readonly Color TargetableTint = new Color(0.25f, 0.65f, 0.30f);
 
-        // board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
+        // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
         // ~1.8. Square. Keep PlateW/PlateH and ClickableHero's collider in step; they are one
         // figure. The socket column beside it is sized by HeroSocketsView.FrameSize.
         private const float PlateW   = 1.8f;
@@ -59,7 +59,7 @@ namespace Emberfall.Presentation
             Tint(_plate, PlateColor);
 
             // Portrait quad — front of the plate; art resolves by class artId
-            // ("art/hero_emberward" → art_hero_emberward.png, pipeline.md §7 naming).
+            // ("art/hero_emberward" → art_hero_emberward.png, dev-docs/specs/card-generation-prompt.md:18).
             _portrait = MakeQuad(transform, "Portrait",
                 new Vector3(0f, 0.05f, -0.005f), new Vector3(PlateW * 0.90f, PlateH * 0.78f, 1f));
             MaterialCatalog.Assign(_portrait, MaterialCatalog.CardArt);
@@ -170,7 +170,7 @@ namespace Emberfall.Presentation
             r.SetPropertyBlock(_mpb);
         }
 
-        // Display names per heroes.md — classes are the M1 pair + the two post-M1 heroes.
+        // Display names per hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/heroes.md — classes are the M1 pair + the two post-M1 heroes.
         private static string HeroName(CardClass c) => c switch
         {
             CardClass.EMBERWARD  => "Pyra, Emberward",

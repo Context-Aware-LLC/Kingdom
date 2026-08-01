@@ -3,7 +3,7 @@
 Same pipeline as gen_board_plates.py: direct OpenAI API (gpt-image-2). The
 winning candidate becomes the master composition: its art window is alpha-cut
 and its socket positions are measured off the pixels, then BoardController's
-label/art positions are fitted to the art (techart/frame-rarity-system.md).
+label/art positions are fitted to the art (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md).
 Rarity/type variants derive from the approved master by recoloring, keeping
 every socket aligned across the 12-frame matrix (spec 3, data-driven assembly).
 

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Read-only inspector for the baked artifact (card-authoring-tool.md §7). There is deliberately
+    /// Read-only inspector for the baked artifact (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §7). There is deliberately
     /// no field-by-field editable inspector — editing the SO directly would drift from the canonical
     /// JSON, so this closes that loophole and routes edits back to the authoring window.
     /// </summary>

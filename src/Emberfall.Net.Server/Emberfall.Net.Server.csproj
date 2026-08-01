@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <!--
-    Emberfall.Net.Server — the authoritative match server (B1, engineering/b1-match-server-design.md).
+    Emberfall.Net.Server — the authoritative match server (B1, dev-docs/architecture/system-overview.md:18).
     Kestrel/wss host over the deterministic core: MatchSession composes LocalMatchHost (zero rules
     surface here), all lifecycle time is session-layer synthetic intents through Submit, every
     outbound state payload is a projected Snapshot(viewer). NOT a UPM package — this exe targets

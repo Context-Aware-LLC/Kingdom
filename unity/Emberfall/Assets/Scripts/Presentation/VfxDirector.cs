@@ -7,9 +7,9 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Subscribes to the engine's D7 event stream and plays one-shot particle effects per
-    /// the board-and-vfx.md §2 table. Each VfxEvent maps to a prefab assigned in the Inspector;
+    /// the hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §2 table. Each VfxEvent maps to a prefab assigned in the Inspector;
     /// null entries are silently skipped (VFX asset not yet authored). Uses Instantiate + timed
-    /// Destroy for M1; replace with ObjectPool<T> in M2 (board-and-vfx.md §3).
+    /// Destroy for M1; replace with ObjectPool<T> in M2 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §3).
     ///
     /// Persistent auras (Shield / Taunt / Frozen tinting) are handled by CardPresenter.ApplyAuras()
     /// via ICardLiveState.Changed — no per-frame event required.
@@ -19,7 +19,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class VfxDirector : MonoBehaviour
     {
-        [Header("D7 Event → Prefab table (board-and-vfx.md §2)")]
+        [Header("D7 Event → Prefab table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §2)")]
         [SerializeField] private VfxEventEntry[] table = Array.Empty<VfxEventEntry>();
 
         [Header("Board anchors for world-position resolution")]
@@ -60,7 +60,7 @@ namespace Emberfall.Presentation
         private Vector3? ResolvePosition(InstanceId? id)
         {
             if (id == null || boardAnchors == null || _state == null) return null;
-            // Redaction sentinel guard (a4-session-seam-design.md §11 finding 3): id 0 would
+            // Redaction sentinel guard (dev-docs/architecture/determinism-and-projection.md:23): id 0 would
             // otherwise MATCH the first hidden-hand placeholder in the projected state and play
             // the effect on a random card-back. Hidden actor → no positional anchor; skip.
             if (id.Value.Value == 0) return null;

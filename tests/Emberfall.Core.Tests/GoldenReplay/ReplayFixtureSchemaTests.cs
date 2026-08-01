@@ -10,7 +10,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
-    /// C-G1-7 (M2-G1-REVIEW.md §3) — fixture schema v2. <c>heroMaxHealth</c> and <c>sparkTokenId</c> are
+    /// C-G1-7 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — fixture schema v2. <c>heroMaxHealth</c> and <c>sparkTokenId</c> are
     /// hash-load-bearing <see cref="MatchSetup"/> inputs (they reach the digest via
     /// <c>GameStateSerializer.WalkHero</c> and the second player's hand), but schema v1 never recorded
     /// them and the harness never passed them — so the R1 gate's promise, <i>these recorded inputs

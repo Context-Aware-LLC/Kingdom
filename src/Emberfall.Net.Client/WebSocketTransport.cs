@@ -11,7 +11,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Client
 {
     /// <summary>
-    /// The real wss <see cref="IWireTransport"/> (b3-networked-session-design.md §2). A hand-rolled
+    /// The real wss <see cref="IWireTransport"/> (dev-docs/architecture/system-overview.md:17). A hand-rolled
     /// RFC6455 client over <see cref="TcpClient"/> + <see cref="SslStream"/> — NOT
     /// <c>System.Net.WebSockets.ClientWebSocket</c>.
     ///

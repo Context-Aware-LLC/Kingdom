@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    // Position → named scene anchor (interfaces.md §5.1, D6 zones).
+    // Position → named scene anchor (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1, D6 zones).
     // BoardAnchors implements this; BoardController and VfxDirector consume it.
     public interface IBoardAnchors
     {
@@ -12,7 +12,7 @@ namespace Emberfall.Presentation
         Transform AnchorFor(PlayerId player, Zone zone, int slotIndex);
 
         // Hand slots are not fixed transforms: the fan re-solves all ten as a function of hand
-        // count (ui/match-hud.md §8). Call before resolving a Zone.Hand anchor for this tick.
+        // count (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8). Call before resolving a Zone.Hand anchor for this tick.
         void SetHandCount(PlayerId player, int count);
 
         Transform HeroAnchor(PlayerId player);

@@ -3,7 +3,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Server
 {
     /// <summary>
-    /// The closed input union of a <see cref="MatchSession"/> (b1-match-server-design.md §4).
+    /// The closed input union of a <see cref="MatchSession"/> (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §4).
     /// Everything that can happen to a match — bytes, clock, socket lifecycle — arrives as one
     /// of these through <see cref="MatchSession.Dispatch"/>, on one logical thread.
     ///

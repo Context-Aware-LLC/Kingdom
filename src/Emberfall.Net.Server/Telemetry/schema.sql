@@ -1,4 +1,4 @@
--- Emberfall match telemetry — durable store (C-G1-8; design/telemetry-spec.md §1–§2).
+-- Emberfall match telemetry — durable store (C-G1-8; dev-docs/data/player-data-and-telemetry.md:17).
 --
 -- This file is the CANONICAL schema and is applied idempotently by TelemetryDrain on
 -- startup (it ships as an EmbeddedResource, so the drain runs exactly this text). Edit

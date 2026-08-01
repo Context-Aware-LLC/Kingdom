@@ -84,7 +84,7 @@ namespace Emberfall.Editor
         public bool HasKeyword; public Keyword Keyword;
         public bool HasVfxOverride; public VfxEvent VfxOverride;
         public bool HasSelector; public string Selector = "";
-        public bool Permanent; public bool Empty; // GAIN_MANA payload flags (card-schema.md §5.2)
+        public bool Permanent; public bool Empty; // GAIN_MANA payload flags (dev-docs/specs/card-schema.md §5.2)
 
         public static EditableEffect FromEffectDef(EffectDef fx) => new EditableEffect
         {

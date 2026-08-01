@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Net.Protocol
 {
     /// <summary>
-    /// Envelope v=1 encode/decode (a5-wire-protocol-design.md §4/§7). One JSON object both
+    /// Envelope v=1 encode/decode (dev-docs/contracts/wire-protocol.md:5). One JSON object both
     /// directions: <c>{"v":1,"matchId":str,"seq":u64,"type":str,"body":{...}}</c>.
     /// Encode may throw on programmer error (unregistered message type); <see cref="Decode"/>
     /// NEVER throws on wire input — every failure is a <see cref="DecodeResult"/>.

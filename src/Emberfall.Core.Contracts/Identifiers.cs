@@ -4,7 +4,7 @@ namespace Emberfall.Core.Contracts
 {
     /// <summary>
     /// Stable identity of a player seat as supplied by the authority at match start
-    /// (interfaces.md §2.1 BeginMatch). Value equality; ordering is by string ordinal
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §2.1 BeginMatch). Value equality; ordering is by string ordinal
     /// so it can participate in a deterministic canonical walk if ever needed.
     /// </summary>
     public readonly struct PlayerId : IEquatable<PlayerId>, IComparable<PlayerId>
@@ -35,8 +35,8 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>
     /// Unique-within-match card/character id assigned by a deterministic per-match counter
-    /// (game-state-and-actions.md §2). Because ids are deterministic they are PART of what the
-    /// golden-replay test asserts (golden-replay.md §3.2). Serializes as "i&lt;n&gt;".
+    /// (dev-docs/architecture/determinism-and-projection.md:11). Because ids are deterministic they are PART of what the
+    /// golden-replay test asserts (dev-docs/architecture/determinism-and-projection.md:11). Serializes as "i&lt;n&gt;".
     /// </summary>
     public readonly struct InstanceId : IEquatable<InstanceId>, IComparable<InstanceId>
     {

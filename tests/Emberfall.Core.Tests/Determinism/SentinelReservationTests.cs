@@ -10,8 +10,7 @@ using Verb = Emberfall.Core.Contracts.Action;
 namespace Emberfall.Core.Tests.Determinism
 {
     /// <summary>
-    /// D-P1 + D-OQ1 (state-sync-and-security.md §5.2.1, ratified 2026-07-15 via
-    /// engineering/a3-projector-design.md): <c>InstanceId(0)</c> is the reserved redaction
+    /// D-P1 + D-OQ1 (dev-docs/architecture/determinism-and-projection.md:23): <c>InstanceId(0)</c> is the reserved redaction
     /// sentinel — the engine never mints it — and a publicly-known id is retired when its card
     /// enters a hidden zone (RETURN_TO_HAND re-mints on the board→hand branch, before the emit;
     /// a hand-cap burn goes to the public graveyard and keeps its id).

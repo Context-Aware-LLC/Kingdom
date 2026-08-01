@@ -3,7 +3,7 @@
 Usage: python mock_card_front.py [FrameName]   (default IronEmber)
 
 Type spec + digit nudges are the Sam-approved 2026-07-25 IronEmber calibration
-(docs techart/card-rendering.md §3.1); digits land on the named frame's own
+(docs hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md §3.1); digits land on the named frame's own
 measured boss centers from its fit JSON.
 """
 import json

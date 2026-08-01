@@ -10,7 +10,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Determinism
 {
     /// <summary>
-    /// The assembly firewall + determinism firewall (ci-gates.md §1, M1 exit criterion 7). Layer-2
+    /// The assembly firewall + determinism firewall (dev-docs/quality/testing-and-ci.md:10, M1 exit criterion 7). Layer-2
     /// backstop behind the asmdef <c>noEngineReferences</c> flag: a reflection scan over the COMPILED
     /// core assemblies' referenced-assembly tables, so a UnityEngine reference introduced by any means
     /// fails the build. Emits <c>artifacts/firewall-scan.json</c>.

@@ -9,7 +9,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// <see cref="CharacterQuery"/> — the read side the S6a character-select panel is built on
-    /// (ui/collection-deckbuilder.md §2: "list existing Characters whose Primary or Secondary is
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2: "list existing Characters whose Primary or Secondary is
     /// this class"), plus <see cref="CollectionPaths"/>, the storage-key convention it is scoped by.
     /// </summary>
     [TestFixture]

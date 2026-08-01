@@ -5,7 +5,7 @@ using UnityEditor.AddressableAssets.Settings;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Real IAddressableArtCatalog (interfaces.md §4.4) backed by the project's
+    /// Real IAddressableArtCatalog (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.4) backed by the project's
     /// AddressableAssetSettings: an artId exists iff a "card_art/&lt;flattened artId&gt;"
     /// address is registered in any group. Replaces StubArtCatalog (which answered
     /// Exists=true for everything, leaving lint E1 toothless). Metadata-only — never

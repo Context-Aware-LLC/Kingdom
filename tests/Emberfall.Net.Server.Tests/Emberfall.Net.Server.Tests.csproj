@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Net.Server.Tests — the B1 session-core tests (b1-match-server-design.md §14.1),
+    Emberfall.Net.Server.Tests — the B1 session-core tests (dev-docs/quality/testing-and-ci.md:22),
     hard-blocking via the existing CI category stages (Unit/Contract). Includes the named
     state-sync §7.2 enforcement set: out-of-turn rejection, seq monotonicity (+reset on
     reconnect), rate-limit trip + recovery-via-snapshot, reconnect token seat-binding

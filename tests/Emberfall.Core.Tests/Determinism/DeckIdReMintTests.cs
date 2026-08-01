@@ -8,7 +8,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Determinism
 {
     /// <summary>
-    /// OBL-7 (state-sync-and-security.md §5.2.1, a3-kickoff-review-2026-07-15.md Q1): deck-resident
+    /// OBL-7 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/multiplayer/state-sync-and-security.md §5.2.1, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a3-kickoff-review-2026-07-15.md Q1): deck-resident
     /// <see cref="InstanceId"/>s are re-minted in deck order after EVERY shuffle, so an id on the wire
     /// can only encode current post-shuffle deck position — never the decklist ordinal (which is
     /// cost-sorted and would bracket card identity). Visible-zone cards are never re-minted.

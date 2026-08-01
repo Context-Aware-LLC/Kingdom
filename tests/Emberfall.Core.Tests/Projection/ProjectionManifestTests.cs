@@ -7,7 +7,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.Projection
 {
     /// <summary>
-    /// §7.1 test 5 — the default-deny totality tripwire (a3-projector-design.md §3), mirror of the
+    /// §7.1 test 5 — the default-deny totality tripwire (dev-docs/architecture/determinism-and-projection.md:35), mirror of the
     /// A2a serializer-manifest discipline: every field reachable from <see cref="GameState"/> must
     /// be pinned below WITH its §5.2 redaction class, and every <see cref="VfxEvent"/> member must
     /// be pinned as OBL-8-classified. Adding a Contracts field or event kind without updating this
@@ -18,7 +18,7 @@ namespace Emberfall.Core.Tests.Projection
     [Category("Unit")]
     public sealed class ProjectionManifestTests
     {
-        // The pinned classification manifest (state-sync-and-security.md §5.2 verbatim).
+        // The pinned classification manifest (dev-docs/architecture/determinism-and-projection.md:35).
         private static readonly Dictionary<Type, Dictionary<string, string>> Manifest = new()
         {
             [typeof(GameState)] = new()
@@ -128,7 +128,7 @@ namespace Emberfall.Core.Tests.Projection
                 foreach (var f in fieldNames)
                     Assert.That(rows.ContainsKey(f), Is.True,
                         $"UNCLASSIFIED FIELD: {type.Name}.{f} has no redaction row. Default-deny: " +
-                        "classify it in state-sync-and-security.md §5.2, implement it in " +
+                        "classify it in dev-docs/architecture/determinism-and-projection.md:35, implement it in " +
                         "GameStateProjector, then pin it here — in that order.");
 
                 foreach (var r in rows.Keys)
@@ -140,7 +140,7 @@ namespace Emberfall.Core.Tests.Projection
         [Test]
         public void Every_VfxEvent_Kind_Has_An_OBL8_Row()
         {
-            // Pinned OBL-8 vocabulary (a3-projector-design.md §6.2). A new enum member without a
+            // Pinned OBL-8 vocabulary (dev-docs/architecture/determinism-and-projection.md:24). A new enum member without a
             // table row (and a projector rule) must fail here, not leak silently.
             var classified = new HashSet<string>
             {

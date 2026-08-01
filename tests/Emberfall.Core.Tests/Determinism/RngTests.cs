@@ -3,7 +3,7 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Tests.Determinism
 {
-    /// <summary>L1 — splitmix64 RNG: portability + raw-state exposure (game-state-and-actions.md §6.1).</summary>
+    /// <summary>L1 — splitmix64 RNG: portability + raw-state exposure (dev-docs/architecture/determinism-and-projection.md:9).</summary>
     [TestFixture]
     [Category("Unit")]
     public sealed class RngTests

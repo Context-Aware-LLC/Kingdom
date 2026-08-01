@@ -8,7 +8,7 @@ namespace Emberfall.Net.Client.Loopback
     /// <summary>
     /// An in-memory <see cref="IWireTransport"/> — a linked queue pair carrying the same UTF-8 A5
     /// envelopes a real socket carries, no bypass and no second codec
-    /// (b3-networked-session-design.md §8). The peer end is B1's REAL <c>MatchSession</c>, driven
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b3-networked-session-design.md §8). The peer end is B1's REAL <c>MatchSession</c>, driven
     /// through its real <c>Dispatch</c> path by <c>LoopbackServerPeer</c> in the test tree — so
     /// "fake" is the wrong word: there is a loopback transport and the real server core (§8, OQ-C
     /// ratified). It removes the client's dependency on deployment completely.

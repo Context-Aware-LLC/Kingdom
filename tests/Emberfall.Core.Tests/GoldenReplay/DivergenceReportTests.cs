@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
     /// Proves the harness produces a debuggable <see cref="ReplayDivergenceReport"/> on mismatch
-    /// (golden-replay.md §6) — a bare "hash mismatch" is useless for fixing a desync. We corrupt the
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §6) — a bare "hash mismatch" is useless for fixing a desync. We corrupt the
     /// expected block of a real fixture IN MEMORY (never on disk) and assert the report points at the
     /// first divergence and at the RNG-cursor-bearing hash.
     /// </summary>

@@ -1,6 +1,6 @@
 # Golden-Replay Fixtures — the R1 gate
 
-This directory is the **R1 determinism gate** (`testing/golden-replay.md`, M1-KICKOFF §4 criterion 6).
+This directory is the **R1 determinism gate** (`dev-docs/quality/testing-and-ci.md:24`, M1-KICKOFF §4 criterion 6).
 A fixture is a checked-in `(seed, intent-log)` plus the expected `(finalStateHash, GameEventStream)`.
 Replaying it against a **fresh** core must reproduce both **exactly** — any divergence fails the build.
 
@@ -23,9 +23,9 @@ cardsets/
 
 ## Tracked gap — `deathrattle_cascade`
 
-`golden-replay.md §7` requires a third fixture, `deathrattle_cascade`, covering death-resolution batch
+`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7` requires a third fixture, `deathrattle_cascade`, covering death-resolution batch
 ordering. It depends on the **effect interpreter + combat** (`DEAL_DAMAGE`, `SUMMON`, Deathrattle), which
-is **M1 Phase B** (`M1-KICKOFF.md §3 Phase B`) — not part of this determinism-foundation drop (steps 1–5:
+is **M1 Phase B** (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md §3 Phase B`) — not part of this determinism-foundation drop (steps 1–5:
 firewall, RNG, canonical serialization, golden-replay harness, CI). The harness, hasher, and CI gate are
 in place now; this fixture lands **with** the interpreter under the standing rule **"no new effect without
 a golden."** Until then the gate is green on the opening + full-match fixtures, and the harness is ready to
@@ -42,4 +42,4 @@ EMBERFALL_REBASELINE=<fixtureName>   dotnet test --filter Category=GoldenReplay
 
 This rewrites the one named `expected` block and drops/keeps the paired `<name>.rebaseline.md`, which the
 committer **must** fill in. CI's stage-1 rebaseline-guard fails any PR that changes an `expected` block
-without touching its paired `.rebaseline.md` (`ci-gates.md §3`).
+without touching its paired `.rebaseline.md` (`dev-docs/quality/testing-and-ci.md:31`).

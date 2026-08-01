@@ -10,8 +10,8 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Bake canonical JSON rows into Addressable CardDefinitionSO assets (interfaces.md §4,
-    /// card-authoring-tool.md §6.3). Editor-only; consumed by the authoring window and by
+    /// Bake canonical JSON rows into Addressable CardDefinitionSO assets (dev-docs/pipelines/card-authoring-and-import.md:10,
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §6.3). Editor-only; consumed by the authoring window and by
     /// Tools/Emberfall/Validate All Cards.
     /// </summary>
     public interface ICardImporter
@@ -21,7 +21,7 @@ namespace Emberfall.Editor
     }
 
     /// <summary>
-    /// Result of a bake (single-card or batch). No shape for this was locked in interfaces.md
+    /// Result of a bake (single-card or batch). No shape for this was locked in hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md
     /// beyond "Import(jsonPath) -> ImportResult" — this is Editor Tooling's own invented shape,
     /// generalized to cover both a single import and a batch (ImportSet) uniformly.
     /// </summary>
@@ -41,13 +41,13 @@ namespace Emberfall.Editor
 
     /// <summary>
     /// ICardImporter impl. Refuses to bake a row data-only when RequiresEngineeringPrimitive is set
-    /// or core validation fails (the R3 audit gate, card-system.md §7) — the window and CI both go
+    /// or core validation fails (the R3 audit gate, dev-docs/specs/card-schema.md:40) — the window and CI both go
     /// through this single path so nothing can bake a broken card.
     ///
     /// Deviation from the spec: bakes straight from the flat M1.cards.json array rather than
     /// per-file `.card.json` sources (see CardJsonRowIO header) — no ScriptedImporter is used here;
     /// baking is an explicit action (window "Bake" button / Validate-All menu), not import-on-save.
-    /// Addressable group/label assignment (card-system.md §6) is deferred — no Addressables group
+    /// Addressable group/label assignment (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §6) is deferred — no Addressables group
     /// exists for cards yet, so this writes a plain asset under Assets/Cards/&lt;setId&gt;/&lt;id&gt;.asset.
     /// </summary>
     public sealed class CardImporter : ICardImporter

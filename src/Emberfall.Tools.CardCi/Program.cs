@@ -9,7 +9,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Tools.CardCi
 {
     /// <summary>
-    /// CI Stage 6 — content C-series gate (M2-KICKOFF.md WS C3). Validates every row of every
+    /// CI Stage 6 — content C-series gate (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md WS C3). Validates every row of every
     /// <c>*.cards.json</c> under the given card-data directory through the shared
     /// <see cref="CardValidator"/> (C1–C20), checks id uniqueness across the whole library
     /// (C2 batch check), and verifies each <c>artId</c> resolves to an art file on disk.
@@ -22,7 +22,7 @@ namespace Emberfall.Tools.CardCi
     /// Usage: Emberfall.Tools.CardCi &lt;cardDataDir&gt; [artDir]
     ///   cardDataDir  directory scanned recursively for *.cards.json
     ///   artDir       optional; directory scanned recursively for art files. artId "art/&lt;name&gt;"
-    ///                must resolve to "art_&lt;name&gt;.&lt;ext&gt;" (the pipeline.md flattening rule).
+    ///                must resolve to "art_&lt;name&gt;.&lt;ext&gt;" (the dev-docs/specs/card-generation-prompt.md:18).
     /// </summary>
     internal static class Program
     {

@@ -1,8 +1,8 @@
 namespace Emberfall.Net.Server
 {
     /// <summary>
-    /// Every tunable the B1 server owns, in one record (b1-match-server-design.md §7):
-    /// the values are B1-ratified defaults pending a decision memo — match-lifecycle.md §4
+    /// Every tunable the B1 server owns, in one record (dev-docs/contracts/gameplay-and-session.md:28):
+    /// the values are B1-ratified defaults pending a decision memo — dev-docs/contracts/gameplay-and-session.md:28
     /// gives them as examples, not hard numbers — so the memo lands as a one-line change here.
     /// All time is integer milliseconds from <see cref="ITimeSource"/>; no float anywhere.
     /// </summary>

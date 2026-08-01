@@ -10,7 +10,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// Registry completeness + unknown-tag behavior (a5-wire-protocol-design.md §10.4). The codec's
+    /// Registry completeness + unknown-tag behavior (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §10.4). The codec's
     /// tag table is hand-written (zero runtime reflection → IL2CPP-stripping-proof, §5 as-built);
     /// THIS test is where the reflection lives: it proves the table covers every sealed
     /// [ReplayTag]-annotated PlayerIntent subtype, so a new intent that forgets either the attribute

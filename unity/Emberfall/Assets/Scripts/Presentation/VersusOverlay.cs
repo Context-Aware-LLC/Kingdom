@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The versus / match-load screen (techart/versus-screen.md). Split from
+    /// The versus / match-load screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md). Split from
     /// <see cref="LoadingOverlay"/>: the boot plate is a brand splash for app startup, this is
     /// the per-match "who am I fighting" card shown between matched-and-board-ready.
     ///
@@ -276,7 +276,7 @@ namespace Emberfall.Presentation
         /// <summary>
         /// The nameplate is the only string on this screen that does NOT originate in our own code —
         /// it comes off the wire (<c>NetworkedMatchSession.OpponentName</c>). Today the server sets it
-        /// to the opponent's server-assigned <c>PlayerId</c>, so it is trusted (security/README.md §4,
+        /// to the opponent's server-assigned <c>PlayerId</c>, so it is trusted (dev-docs/quality/security.md:24,
         /// VULN-001 §2 fact 3); this exists so that the day a player picks their own name, the
         /// renderer is not the thing that has to be remembered.
         ///

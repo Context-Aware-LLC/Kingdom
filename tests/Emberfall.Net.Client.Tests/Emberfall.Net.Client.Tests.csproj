@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Net.Client.Tests — the B3 client-seam tests (b3-networked-session-design.md §11),
+    Emberfall.Net.Client.Tests — the B3 client-seam tests (dev-docs/quality/testing-and-ci.md:22),
     hard-blocking via the existing CI category stages (Unit/Contract), slnx membership IS the
     enrollment (a5 §11 / b1 §2). The peer is B1's REAL MatchSession over the loopback transport
     (§8, RC-F9): this project references Emberfall.Net.Server so the authority under test is the

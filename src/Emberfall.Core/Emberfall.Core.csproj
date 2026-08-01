@@ -2,7 +2,7 @@
 
   <!--
     Emberfall.Core — GameState rules, command processor, match-start sequence, turn loop.
-    Plain C#, ZERO UnityEngine references (ARCHITECTURE.md §2). The identical DLL is the authority on
+    Plain C#, ZERO UnityEngine references (dev-docs/architecture/system-overview.md:9). The identical DLL is the authority on
     the headless server, the predictor on the client, and the system-under-test in CI.
   -->
   <PropertyGroup>

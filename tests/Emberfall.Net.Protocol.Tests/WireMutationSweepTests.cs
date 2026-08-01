@@ -9,7 +9,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// The per-field mutation sweep over the WIRE round-trip (a5-wire-protocol-design.md §6/§10.2):
+    /// The per-field mutation sweep over the WIRE round-trip (dev-docs/contracts/wire-protocol.md:41):
     /// for each canonical field, perturb it on the shared seed state and assert the mutated value
     /// survives Encode→Decode (hash-equal to the mutated original). A field the JSON walk drops or
     /// misreads goes red HERE even if no fixture happens to exercise it. Uses the ONE shared

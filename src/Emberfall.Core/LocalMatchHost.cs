@@ -5,7 +5,7 @@ namespace Emberfall.Core
     /// <summary>
     /// In-process core host for the M1 vertical slice and practice-vs-AI (ARCHITECTURE §6). Exercises
     /// the exact <c>Submit → Execute</c> path the server uses, which is precisely why the golden-replay
-    /// harness drives it rather than a parallel "test-only processor" (golden-replay.md §2).
+    /// harness drives it rather than a parallel "test-only processor" (dev-docs/quality/testing-and-ci.md:24).
     /// </summary>
     public sealed class LocalMatchHost : IMatchHost
     {

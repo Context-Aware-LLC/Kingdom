@@ -14,7 +14,7 @@ namespace Emberfall.Core.Collection
     {
         /// <summary>
         /// Characters whose <b>Primary or Secondary</b> is <paramref name="cardClass"/> — the S6a
-        /// side panel's list for the class tab you're standing on (ui/collection-deckbuilder.md §2).
+        /// side panel's list for the class tab you're standing on (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2).
         ///
         /// <para>Order matters to the caller in one way the filter does not express: a character
         /// listed under its <i>secondary</i> class plays a different hero power than one listed under

@@ -9,7 +9,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// The file-backed <see cref="ICharacterStore"/> / <see cref="IDeckStore"/>
-    /// (ui/collection-deckbuilder.md §3).
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
     ///
     /// <para>The behaviours worth pinning are the ones §3 states as requirements rather than the
     /// CRUD: a missing file is an empty collection but a corrupt one is <b>not</b>; a deck whose

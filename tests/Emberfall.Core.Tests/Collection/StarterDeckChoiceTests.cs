@@ -10,7 +10,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
-    /// The starter-deck choice (Sam, 2026-07-26 — ui/collection-deckbuilder.md §2.11): the first
+    /// The starter-deck choice (Sam, 2026-07-26 — hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.11): the first
     /// character always gets a generated deck, and every character after that is asked whether it
     /// wants one or a blank.
     /// </summary>

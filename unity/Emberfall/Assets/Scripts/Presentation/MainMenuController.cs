@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The front door — the first screen a player sees (ui/ux-flows.md: S1 Main Menu).
+    /// The front door — the first screen a player sees (dev-docs/ui/client-surfaces.md:7).
     /// A UI Toolkit meta-screen in the deckbuilder's lineage: theme.uss tokens, a UIDocument
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
@@ -71,7 +71,7 @@ namespace Emberfall.Presentation
         private Label _accountError;
 
         /// <summary>Frame-0 coverage, the same rig GameBootstrap/NetworkedGameBootstrap use
-        /// (loading-screen-plate.md §5): the overlay exists before anything renders. The menu's
+        /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay exists before anything renders. The menu's
         /// own content starts hidden (mm-root--hidden in the UXML) so there is no frame where
         /// the unbound menu shows through before <see cref="RevealMenu"/> runs.</summary>
         private void Awake()

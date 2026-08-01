@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
 {
     // Editor-only IUiSpriteProvider: resolves frame/gem/icon sprites straight from AssetDatabase
     // under Assets/Art/UI/. Serves the M1 vertical slice (in-editor play mode) until the UI Sprite
-    // Atlas group exists — then an AtlasUiSpriteProvider replaces it in builds (pipeline.md §2).
+    // Atlas group exists — then an AtlasUiSpriteProvider replaces it in builds (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §2).
     //
     // Results are cached: UI sprites are few, always-resident, and requested repeatedly (every card
     // build + every keyword-change rebuild), so a per-key lookup once is plenty.

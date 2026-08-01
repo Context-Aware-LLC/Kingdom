@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Emberfall.Net.Server.Transport
 {
     /// <summary>
-    /// <see cref="IServerConnection"/> over a real WebSocket (b1-match-server-design.md §4 outbound
+    /// <see cref="IServerConnection"/> over a real WebSocket (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §4 outbound
     /// rule, RC F5): a BOUNDED writer queue + one pump task per connection. <see cref="TryEnqueue"/>
     /// never blocks; a full queue (slow client) or dead writer returns false and the session vacates
     /// the seat. Nothing here ever runs on the session's dispatch thread.

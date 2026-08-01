@@ -1,12 +1,12 @@
 # Emberfall.Core — the deterministic rules core
 
 This is the **`UnityEngine`-free, zero-float, server-authoritative rules engine** that the whole
-architecture hangs off (`engineering/ARCHITECTURE.md §0`). The identical DLLs run headless on the
+architecture hangs off (`dev-docs/architecture/system-overview.md:5`). The identical DLLs run headless on the
 dedicated server, in `dotnet test` CI, and (compiled to the same `netstandard2.1` target) inside the
 Unity client. This drop is the **M1 determinism foundation** — steps 1–5 of the M1 engine plan:
 firewall + RNG + canonical serialization + the R1 golden-replay gate + CI.
 
-## Assemblies (the firewall layout — `ARCHITECTURE.md §2`)
+## Assemblies (the firewall layout — `dev-docs/architecture/system-overview.md:9`)
 
 | Project | Target | UnityEngine? | Holds |
 |---|---|:--:|---|
@@ -22,7 +22,7 @@ unit layers.
 ## The determinism contract (what's enforced here)
 
 - **splitmix64 RNG, raw-state exposed and hashed** — the one entropy source; its cursor is part of the
-  state hash so "right now, wrong future" desyncs are caught (`golden-replay.md §4.3`).
+  state hash so "right now, wrong future" desyncs are caught (`dev-docs/architecture/determinism-and-projection.md:16`).
 - **Canonical, float-free `GameState` serialization** — fixed field order, little-endian via
   `BinaryPrimitives`, UTF-8 length-prefixed strings, the one `HashSet<Keyword>` imposed into a total
   order → SHA-256. Platform-independent by construction; CI bakes on Windows and asserts on Linux.
@@ -41,8 +41,8 @@ EMBERFALL_REBASELINE=<name> dotnet test --filter Category=GoldenReplay   # delib
 
 ## What's intentionally NOT here yet (M1 Phase B)
 
-The **effect interpreter, combat, and the ~20 card behaviors** (`M1-KICKOFF.md §3 Phase B`) — and with
-them the `deathrattle_cascade` golden fixture (`golden-replay.md §7`). The processor rejects
+The **effect interpreter, combat, and the ~20 card behaviors** (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md §3 Phase B`) — and with
+them the `deathrattle_cascade` golden fixture (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7`). The processor rejects
 `PlayCard`/`Attack`/`HeroPower` with `NotImplemented` until that lands. This drop deliberately scopes to
 the determinism spine so the R1 gate and CI firewall are green from commit one, per the kickoff's
 "front-load R1" mandate. `IMatchHost.DeltaSince`/`StateDelta` (reconnection) are likewise M2.

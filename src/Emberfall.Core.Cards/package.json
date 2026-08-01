@@ -2,7 +2,7 @@
   "name": "com.emberfall.core.cards",
   "version": "0.1.0",
   "displayName": "Emberfall Core Cards",
-  "description": "CardDefinition POCO, EffectDef, and the shared CardJson parser (card-system.md §1).",
+  "description": "CardDefinition POCO, EffectDef, and the shared CardJson parser (dev-docs/specs/card-schema.md:5).",
   "unity": "6000.0",
   "type": "library",
   "dependencies": {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  DeckbuilderScreen.uxml — S7 split view (ui/collection-deckbuilder.md §2).
+  DeckbuilderScreen.uxml — S7 split view (dev-docs/ui/client-surfaces.md:9).
     left:  filtered card list (class ∪ neutral for this hero), virtualized ListView
     right: the 30-card deck list (curve strip + counts + legality state)
   Bound at runtime by DeckbuilderController; styled by theme.uss (tokens) + deckbuilder.uss.

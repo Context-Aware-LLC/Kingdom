@@ -457,7 +457,7 @@
     "m_EnumValues": [
         0
     ],
-    "m_TooltipText": "0 = whole card, 1 = fully dissolved. Driven per-instance on death (MaterialPropertyBlock; interfaces.md §5.2)."
+    "m_TooltipText": "0 = whole card, 1 = fully dissolved. Driven per-instance on death (MaterialPropertyBlock; hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.2)."
 }
 
 {

@@ -7,9 +7,9 @@ namespace Emberfall.Core
 {
     /// <summary>
     /// The closed set of reusable engine primitives — one <see cref="IActionHandler"/> per
-    /// <see cref="Contracts.Action"/> verb (card-system.md §3.1). There is no per-card code: a card is
+    /// <see cref="Contracts.Action"/> verb (dev-docs/specs/card-schema.md:36). There is no per-card code: a card is
     /// data that composes these verbs. The set grows ONLY through the <c>requiresEngineeringPrimitive</c>
-    /// gate (card-system.md §7), never per-card. Built once into an immutable, order-independent registry.
+    /// gate (dev-docs/specs/card-schema.md:40), never per-card. Built once into an immutable, order-independent registry.
     /// </summary>
     internal static class ActionHandlers
     {
@@ -39,7 +39,7 @@ namespace Emberfall.Core
             return set;
         }
 
-        /// <summary>+1 spell damage per friendly SPELL_DAMAGE minion in play (card-system.md §4.1).</summary>
+        /// <summary>+1 spell damage per friendly SPELL_DAMAGE minion in play (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
         internal static int SpellDamageBonus(GameState state, PlayerId controller)
         {
             var board = state.PlayerOf(controller).Board;
@@ -204,7 +204,7 @@ namespace Emberfall.Core
                 }
                 else
                 {
-                    // D-OQ1 (state-sync-and-security.md §5.2.1): a publicly-known id is retired
+                    // D-OQ1 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/multiplayer/state-sync-and-security.md §5.2.1): a publicly-known id is retired
                     // when its card enters a hidden zone — re-mint BEFORE the emit so the owner's
                     // event and snapshot agree. The opponent's projection sentinels it anyway.
                     m.Id = ctx.State.NextInstanceId();
@@ -257,7 +257,7 @@ namespace Emberfall.Core
 
             if (ctx.Effect.Permanent)
             {
-                // payload.permanent (card-schema.md §5.2): earn real crystals, capped at 10. Crystals
+                // payload.permanent (dev-docs/specs/card-schema.md §5.2): earn real crystals, capped at 10. Crystals
                 // beyond the cap simply don't exist — a gain that changed nothing emits no event.
                 // payload.empty ("Gain an empty Mana Crystal" — Quicken / Seedling Rite): the new
                 // crystals stay unfilled this turn; without it they are also spendable immediately.
@@ -350,8 +350,8 @@ namespace Emberfall.Core
     {
         public Verb Verb => Verb.DISCOVER;
         // DISCOVER opens an interactive 3-card choice that pauses the command for a DiscoverChoiceIntent
-        // (game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
-        // is a documented no-op and the card validator (card-system.md §5) flags any M1 card that uses it.
+        // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
+        // is a documented no-op and the card validator (dev-docs/specs/card-schema.md:40) flags any M1 card that uses it.
         public void Execute(in EffectContext ctx) { }
     }
 

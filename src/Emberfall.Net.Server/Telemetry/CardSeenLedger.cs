@@ -11,7 +11,7 @@ namespace Emberfall.Net.Server.Telemetry
     /// <para><b>Everything here is OBSERVED from outside the rules core.</b> No core edit, no new
     /// event kind, no hook in <c>CommandProcessor</c> — the ledger is fed the hand after every
     /// accepted command and the def id of every accepted play. That matters because the core is
-    /// hash-canonical (golden-replay.md §4.1): a telemetry field is not worth a fixture rebaseline,
+    /// hash-canonical (dev-docs/architecture/determinism-and-projection.md:13): a telemetry field is not worth a fixture rebaseline,
     /// and a core that has to remember to tell an observer about a draw is a core that will one day
     /// forget.</para>
     ///

@@ -6,12 +6,12 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Emberfall.Presentation
 {
-    // Shipping IArtProvider (pipeline.md §5): resolves artId → Addressables key
+    // Shipping IArtProvider (dev-docs/pipelines/art-and-rendering.md:13): resolves artId → Addressables key
     // "card_art/<flattened artId>" and streams the sprite on demand. Replaces
     // EditorArtProvider in player builds.
     //
     // Handles are cached for the lifetime of the provider (one match). Per-set
-    // eviction (pipeline.md §6 LOD/release strategy) is deferred until the mobile
+    // eviction (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §6 LOD/release strategy) is deferred until the mobile
     // memory ceiling makes it real work — desktop alpha holds every loaded sprite.
     public sealed class AddressableArtProvider : IArtProvider
     {

@@ -5,7 +5,7 @@ using Emberfall.Core.Serialization;
 namespace Emberfall.Net.Protocol
 {
     /// <summary>
-    /// The closed wire vocabulary (a5-wire-protocol-design.md §5; netcode-architecture.md v2
+    /// The closed wire vocabulary (dev-docs/contracts/wire-protocol.md:7; hist-docs/source-snapshots/2026-07-31-pre-reorganization/multiplayer/netcode-architecture.md v2
     /// §3.2/§3.3). One sealed type per message; the envelope discriminator strings live in
     /// <see cref="ProtocolCodec"/>. Bodies are canonical, float-free, integer-only.
     /// </summary>
@@ -109,7 +109,7 @@ namespace Emberfall.Net.Protocol
 
     /// <summary>Match start: seat assignment, contract version pin, opponent metadata, initial
     /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).
-    /// <see cref="ReconnectToken"/> is the B1 additive field (b1-match-server-design.md §6-bis, RC F2):
+    /// <see cref="ReconnectToken"/> is the B1 additive field (dev-docs/contracts/wire-protocol.md:41, RC F2):
     /// the opaque credential the client must present in <see cref="ReconnectMsg"/>. Empty on decode
     /// when an older encoder omitted it (A5 §8 forward-compat).</summary>
     public sealed record MatchStartMsg(

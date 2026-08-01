@@ -11,7 +11,7 @@ using Verb = Emberfall.Core.Contracts.Action;
 namespace Emberfall.Core.Tests.Interpreter
 {
     /// <summary>
-    /// L1 — the M2 Phase 0 grammar-freeze rulings (M2-KICKOFF.md tier a):
+    /// L1 — the M2 Phase 0 grammar-freeze rulings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier a):
     /// (1) GAIN_MANA permanent/empty payload semantics (the Quicken / Seedling Rite ramp primitive),
     /// (2) explicit-choice (ANY_*) selectors require a player-chosen target at the PlayCard door too,
     /// (3) chosen targets must fit the selector's shape (ANY_MINION can't aim at a hero),
@@ -88,7 +88,7 @@ namespace Emberfall.Core.Tests.Interpreter
             return new PlayCardIntent(s.Players[0].Id, card.Id, 0, refs);
         }
 
-        // ── GAIN_MANA permanent / empty (card-schema.md §5.2) ────────────────────
+        // ── GAIN_MANA permanent / empty (dev-docs/specs/card-schema.md §5.2) ────────────────────
 
         [Test]
         public void GainMana_Permanent_Empty_Raises_Max_But_Not_Available()

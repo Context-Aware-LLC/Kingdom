@@ -4,7 +4,7 @@ namespace Emberfall.Net.Client
 {
     /// <summary>The session layer's only clock (integer ms), mirroring the server's
     /// <c>ITimeSource</c> so every timer path is deterministic under test
-    /// (b3-networked-session-design.md §4.2, §11 — no <c>Task.Delay</c> in tests).</summary>
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b3-networked-session-design.md §4.2, §11 — no <c>Task.Delay</c> in tests).</summary>
     public interface IClientClock
     {
         long NowMs { get; }

@@ -4,7 +4,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// One row of the deck switcher (ui/collection-deckbuilder.md §2.7): the deck, whether it is the
+    /// One row of the deck switcher (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.7): the deck, whether it is the
     /// Character's default, and its queue standing — everything the row draws, resolved once.
     /// </summary>
     public readonly struct DeckSummary
@@ -31,7 +31,7 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// What the sidebar needs to open on a Character (ui/collection-deckbuilder.md §2.7): that
+    /// What the sidebar needs to open on a Character (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.7): that
     /// Character's decks, default first, each already judged.
     /// </summary>
     public readonly struct CharacterDecks

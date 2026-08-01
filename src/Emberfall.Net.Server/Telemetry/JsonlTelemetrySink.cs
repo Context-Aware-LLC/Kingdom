@@ -9,7 +9,7 @@ using Emberfall.Net.Server.Identity;
 namespace Emberfall.Net.Server.Telemetry
 {
     /// <summary>
-    /// The telemetry buffer (C-G1-8 step 3; telemetry-spec.md §5). Appends one canonical JSON object per
+    /// The telemetry buffer (C-G1-8 step 3; dev-docs/data/player-data-and-telemetry.md:17). Appends one canonical JSON object per
     /// line to a single file under the data dir — on Fly, the `emberfall_data` volume at `/data`,
     /// the same volume that already holds replays.
     ///

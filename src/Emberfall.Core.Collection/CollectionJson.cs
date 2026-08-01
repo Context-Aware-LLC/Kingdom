@@ -13,7 +13,7 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// The on-disk format for a player's profile, characters and decks (ui/collection-deckbuilder.md §3).
+    /// The on-disk format for a player's profile, characters and decks (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
     /// One class for all three so the <c>schemaVersion</c> ceiling has one definition and one guard,
     /// however many files the scope directory grows.
     ///

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Rebaseline guard (ci-gates.md §3, golden-replay.md §5.2).
+# Rebaseline guard (dev-docs/quality/testing-and-ci.md:31).
 # Fails if a GoldenReplay *.replay.json `expected` block changed in this PR WITHOUT its paired
 # <name>.rebaseline.md being touched in the same change. This converts "silently rebaselining a
 # regression" from a one-keystroke accident into a reviewed, documented action — the whole point of
@@ -29,7 +29,7 @@ while IFS= read -r f; do
         pair="${f%.replay.json}.rebaseline.md"
         if ! printf '%s\n' "$changed" | grep -qxF "$pair"; then
           echo "REBASELINE GUARD FAIL: '$f' changed its expected block but paired '$pair' was not touched."
-          echo "  A golden rebaseline must be justified — fill in the .rebaseline.md (golden-replay.md §5.2)."
+          echo "  A golden rebaseline must be justified — fill in the .rebaseline.md (dev-docs/quality/testing-and-ci.md:31)."
           fail=1
         fi
       fi

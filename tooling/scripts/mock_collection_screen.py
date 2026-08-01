@@ -1,7 +1,7 @@
 """Composite a collection-plate candidate under the REAL card grid at TRUE size.
 
-techart/collection-plate.md S8 step 2: a candidate is judged here, never on the
-bare sheet. The layout is the 2560x1440 row of ui/collection-deckbuilder.md S2.9:
+hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/collection-plate.md S8 step 2: a candidate is judged here, never on the
+bare sheet. The layout is the 2560x1440 row of hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md S2.9:
 
     gutter 48 . sidebar 380 . tabs+toolbar 144 . card 276x387 . gap 20
     wall width = 2560 - 2*48 - 380 = 2084 ; grid = 7*276 + 6*20 = 2052 (centered)

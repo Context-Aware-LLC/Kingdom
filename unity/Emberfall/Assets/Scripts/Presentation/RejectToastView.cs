@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Rejection-feedback toasts (ui/design-system.md §6.4/§6.5). World-space,
+    /// Rejection-feedback toasts (dev-docs/ui/client-surfaces.md:15). World-space,
     /// bottom-right, built procedurally like EndTurnButtonView. One line per
     /// RejectReason from the §6.5 copy table — the single source of player-facing
     /// rejection copy. Max 2 visible (oldest evicted), auto-dismiss, click to

@@ -11,8 +11,8 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Projection
 {
     /// <summary>
-    /// WS A3 snapshot suite (state-sync-and-security.md §7.1 tests 1–4, 7–9 +
-    /// counter-normalization; engineering/a3-projector-design.md §7). Test 6 (honest AI) is
+    /// WS A3 snapshot suite (dev-docs/architecture/determinism-and-projection.md:20 +
+    /// counter-normalization; dev-docs/architecture/determinism-and-projection.md:20). Test 6 (honest AI) is
     /// sequenced behind the IIntentSource→Snapshot binding and deliberately absent.
     /// </summary>
     [TestFixture]

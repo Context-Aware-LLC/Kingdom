@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// <see cref="Character"/> — the permanent class pairing (Sam, 2026-07-26; gbrain
-    /// <c>decisions/characters-dual-class-pairing</c>; ui/collection-deckbuilder.md §5 O-1).
+    /// <c>decisions/characters-dual-class-pairing</c>; hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §5 O-1).
     ///
     /// <para>Two properties carry the whole ruling and are worth pinning explicitly, because both
     /// are the kind of thing a later refactor "simplifies" away: pairs are <b>ordered</b> (the hero

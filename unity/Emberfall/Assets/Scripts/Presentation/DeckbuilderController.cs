@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// C-G0-5 UI Toolkit spike — the S7 deckbuilder slice (ui/collection-deckbuilder.md §2).
+    /// C-G0-5 UI Toolkit spike — the S7 deckbuilder slice (dev-docs/ui/client-surfaces.md:9).
     /// De-risks the five things the real screen lives or dies on: ListView virtualization of the
     /// full card pool, live L1–L5 legality (via <see cref="DeckValidator"/>) gating Save, single-
     /// source theme.uss token theming, the 22px text floor, and the responsive split view.

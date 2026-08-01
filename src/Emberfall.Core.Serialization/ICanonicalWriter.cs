@@ -7,7 +7,7 @@ using System.Text;
 namespace Emberfall.Core.Serialization
 {
     /// <summary>
-    /// The canonical primitive sink (golden-replay.md §4.2/§4.4). Implementations MUST write every
+    /// The canonical primitive sink (dev-docs/architecture/determinism-and-projection.md:13). Implementations MUST write every
     /// integer little-endian and strings length-prefixed UTF-8. There is deliberately NO float
     /// method — a float in state cannot even be expressed through this sink; the banned-API
     /// reflection scan is the static twin that keeps floats out of the state types.
@@ -78,7 +78,7 @@ namespace Emberfall.Core.Serialization
 
     /// <summary>
     /// Streams canonical bytes straight into an <see cref="IncrementalHash"/> — no intermediate
-    /// buffer. The only sink the hasher needs (a2-serializer-design.md §3.1).
+    /// buffer. The only sink the hasher needs (dev-docs/architecture/determinism-and-projection.md:13).
     /// </summary>
     public sealed class HashSink : CanonicalWriterBase
     {

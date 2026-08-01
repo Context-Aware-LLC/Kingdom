@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Data-driven frame/rarity assembly (techart/frame-rarity-system.md D2 + card-rendering.md §3.1).
+    /// Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2 + hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md §3.1).
     /// The four painted frames are keyed by rarity alone (<see cref="FrameSprite"/>), and
     /// <see cref="Sockets"/> carries each frame's Sam-calibrated digit centers and art window.
     /// <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the no-sprite fallback. No
@@ -40,7 +40,7 @@ namespace Emberfall.Presentation
         public static string FrameSprite(Rarity rarity) =>
             $"frame_{rarity.ToString().ToLowerInvariant()}";
 
-        // ── §3.1 socket table (card-rendering.md, Sam-calibrated 2026-07-25) ──────────────
+        // ── §3.1 socket table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md, Sam-calibrated 2026-07-25) ──────────────
         // Fractions of the 1456×2048 master frame, measured from the top-left. Digit centers
         // are the final resolved values (measured boss center + eyeball nudge); the art
         // window is the frame's transparent hole (l, t, r, b).

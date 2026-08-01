@@ -21,7 +21,7 @@ namespace Emberfall.Core.Collection
     /// on a truncation width or hex casing. If the client ever needs to show its own id, the server
     /// should tell it.</para>
     ///
-    /// <para><b>No timestamps.</b> Same reason <c>DeckList</c> has none (ui/collection-deckbuilder.md
+    /// <para><b>No timestamps.</b> Same reason <c>DeckList</c> has none (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md
     /// §3): this assembly is deterministic and holds no clock. A "created at" would have to be handed
     /// in by the caller, and nothing reads it.</para>
     /// </summary>
@@ -112,7 +112,7 @@ namespace Emberfall.Core.Collection
         public const int MinLength = 3;
 
         /// <summary>
-        /// The cap the nameplate is laid out against (techart/versus-screen.md §6). A renderer must
+        /// The cap the nameplate is laid out against (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §6). A renderer must
         /// still clip or ellipsize — this bounds the string, not the pixels, and 16 wide glyphs are
         /// not 16 narrow ones.
         /// </summary>

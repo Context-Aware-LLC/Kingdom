@@ -8,14 +8,14 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
-    /// On-disk <c>(seed, intent-log, expected hash, expected event stream)</c> record (golden-replay.md §3).
+    /// On-disk <c>(seed, intent-log, expected hash, expected event stream)</c> record (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3).
     /// Self-contained and human-diffable: it pins its card snapshot, the two fixed slice decks, the seed,
     /// the intent log, and the expected outputs. <see cref="InstanceId"/>s serialize as "i&lt;n&gt;" — the
     /// deterministic counter values, themselves part of what is asserted (§3.2).
     /// </summary>
     public sealed class ReplayFixture
     {
-        /// <summary>Highest on-disk schema this loader understands (golden-replay.md §3.2).</summary>
+        /// <summary>Highest on-disk schema this loader understands (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2).</summary>
         public const int CurrentSchemaVersion = 2;
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         }
     }
 
-    /// <summary>One expected D7 event row (golden-replay.md §3.2). Compared field-by-field in sequence order.</summary>
+    /// <summary>One expected D7 event row (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2). Compared field-by-field in sequence order.</summary>
     public readonly struct ExpectedEvent
     {
         public readonly ulong Seq;

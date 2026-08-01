@@ -8,8 +8,8 @@ using NUnit.Framework;
 namespace Emberfall.Net.Server.Tests
 {
     /// <summary>
-    /// The named B1 enforcement set (state-sync-and-security.md §7.2 + RC F6;
-    /// b1-match-server-design.md §6/§14.1).
+    /// The named B1 enforcement set (dev-docs/contracts/wire-protocol.md:37;
+    /// dev-docs/contracts/wire-protocol.md:37).
     /// </summary>
     [TestFixture]
     [Category("Contract")]

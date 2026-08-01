@@ -10,7 +10,7 @@ namespace Emberfall.Editor
     /// Editor-owned load/save over the flat M1 card-row array
     /// (unity/Emberfall/Assets/Resources/cards/M1.cards.json). This is the pragmatic stand-in for
     /// the spec's per-file `cards/&lt;setId&gt;/&lt;id&gt;.card.json` + ScriptedImporter convention
-    /// (tooling/validation-and-import.md §2) — deliberately not adopted this pass since the M1 set
+    /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the M1 set
     /// already lives as one file; see the plan's "explicitly deferred" list.
     ///
     /// Reuses the shared <see cref="CardJson"/> parser for reads (no second deserializer, R1) and
@@ -48,7 +48,7 @@ namespace Emberfall.Editor
             File.WriteAllText(path, sb.ToString());
         }
 
-        /// <summary>Canonical single-row serialization (card-authoring-tool.md §6.3 "stable key order").</summary>
+        /// <summary>Canonical single-row serialization (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §6.3 "stable key order").</summary>
         public static string Serialize(CardDefinition def)
         {
             using var stream = new MemoryStream();

@@ -4,7 +4,7 @@ using System.Text;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// Where a player's collection lives on disk (ui/collection-deckbuilder.md §3: local on-device,
+    /// Where a player's collection lives on disk (dev-docs/data/player-data-and-telemetry.md:11:
     /// keyed by the guest device token until identity lands).
     ///
     /// <para>The <b>convention</b> lives here — in the UnityEngine-free assembly — while the

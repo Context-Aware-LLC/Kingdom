@@ -1,13 +1,13 @@
 /*
  * theme.uss — Emberfall meta-screen design tokens (single source of truth).
  *
- * design-system.md §10: "Tokens live in a single theme.uss ... One source of truth,
+ * dev-docs/ui/client-surfaces.md:22: "Tokens live in a single theme.uss ... One source of truth,
  * two consumers." This file is the UI Toolkit consumer; the in-match HUD mirrors these
  * values in a ThemeTokens ScriptableObject.
  *
- * Token NAMES are locked to design-system.md §2–§4. The hex VALUES here are the
+ * Token NAMES are locked to dev-docs/ui/client-surfaces.md:22. The hex VALUES here are the
  * dark-first M1 baseline; the rarity/class values are placeholders pending the Tech
- * Artist's exact frame-rarity-system.md gem/accent colors, which the UI adopts verbatim
+ * Artist's exact hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md gem/accent colors, which the UI adopts verbatim
  * (design-system §4.1/§4.2) — do not treat these hexes as the source of truth for those.
  *
  * Applied via the .emb-root class on the top VisualElement (UI Toolkit resolves var()

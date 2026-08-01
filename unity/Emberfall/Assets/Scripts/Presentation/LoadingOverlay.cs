@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The boot loading screen (techart/loading-screen-plate.md §4/§5) — a camera-parented
+    /// The boot loading screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §4/§5) — a camera-parented
     /// world-space rig built procedurally in Awake() by GameBootstrap, NetworkedGameBootstrap
     /// and MainMenuController alike, so it covers frame 0 with no scene surgery. Serves app
     /// startup (MainMenu) and menu→match boot (Board/BoardNetworked) with the same rig.

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// One-shot (idempotent) Addressables bootstrap per pipeline.md §8:
+    /// One-shot (idempotent) Addressables bootstrap per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8:
     ///   UI_Core           — Assets/Art/UI/** at address "ui/&lt;fileName&gt;" (always loaded)
     ///   CardArt_CORE      — Assets/Art/Cards/CORE/** + Assets/Art/Hero/** at "card_art/&lt;fileName&gt;"
     ///   CardArt_EMBERFALL — Assets/Art/Cards/EMBERFALL/** at "card_art/&lt;fileName&gt;"

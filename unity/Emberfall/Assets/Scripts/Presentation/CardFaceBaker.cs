@@ -8,7 +8,7 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Turns a <see cref="CardDefinition"/> into a card-face texture for the collection wall
-    /// (ui/collection-deckbuilder.md §2.9): the REAL world-space card, built by
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9): the REAL world-space card, built by
     /// <see cref="BoardController.BuildDetachedCard"/> and photographed by
     /// <see cref="CardSnapshot"/>, handed back as a Texture UI Toolkit can use as a
     /// backgroundImage.
@@ -39,7 +39,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardFaceBaker : MonoBehaviour
     {
-        // Desktop wall tile at Sam's 2560×1440 (collection-deckbuilder.md §2.9 breakpoint table).
+        // Desktop wall tile at Sam's 2560×1440 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9 breakpoint table).
         // Serialized rather than const because the wall's card size is DERIVED from the viewport —
         // it is 190×267 at 1920×1080 and 108×151 on phone-landscape — and it has already changed
         // once this week. Anything that hard-codes it is wrong at four of five breakpoints.

@@ -6,7 +6,7 @@ namespace Emberfall.Core
     /// <summary>
     /// Fixed 20-card prebuilt decklists for the M1/M2 slice (MatchSetup, ARCHITECTURE §6 / M1-KICKOFF §3).
     /// Ported out of the Unity tree so the headless server can construct matches
-    /// (b1-match-server-design.md §5-bis, RC F1) — this is the single source; the Unity-side
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §5-bis, RC F1) — this is the single source; the Unity-side
     /// <c>Emberfall.Data.PrebuiltDecks</c> delegates here. Deckbuilding is out of slice scope;
     /// these lists give BeginMatch its deterministic input. Max 2 copies per card; 1 for Legendaries.
     /// </summary>

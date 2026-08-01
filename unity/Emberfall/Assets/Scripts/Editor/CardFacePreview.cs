@@ -11,8 +11,8 @@ namespace Emberfall.Editor
     /// <summary>
     /// Bakes real cards through the real <see cref="CardFaceBaker"/> and composites them into one
     /// contact sheet at TRUE collection-wall geometry — 276 × 387 faces, 7 per row, on the wall's
-    /// own 20px gutter and dark surface (ui/collection-deckbuilder.md §2.9,
-    /// ui/design-system.md §2.1) — written to <c>artifacts/card-face-preview/</c>.
+    /// own 20px gutter and dark surface (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9,
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §2.1) — written to <c>artifacts/card-face-preview/</c>.
     ///
     /// THE GEOMETRY IS THE POINT. What this sheet answers is one question the .NET tests and every
     /// full-size render cannot: is a card FACE legible as a 276 × 387 tile, sitting next to six
@@ -41,7 +41,7 @@ namespace Emberfall.Editor
         private const int Cards   = Columns * Rows;
 
         // --space-5 (20px) is the wall's inter-card gap; --space-12 (48px) is the desktop screen
-        // gutter, standing in here for the wall's outer margin (design-system.md §2.1).
+        // gutter, standing in here for the wall's outer margin (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §2.1).
         private const int Gutter = 20;
         private const int Margin = 48;
 
@@ -141,7 +141,7 @@ namespace Emberfall.Editor
 
         /// <summary>
         /// The twelve EMBERWARD/TIDECALLER cards imported 2026-07-26
-        /// (tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
+        /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
         /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFESTEAL on Emberdrinker —
         /// so their pill has never rendered, and this sheet is where that shows up or doesn't.
         /// The weapon, Deepfrost Spear, is the highest-risk face in the batch: the engine supports

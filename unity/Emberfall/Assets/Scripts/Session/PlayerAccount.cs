@@ -9,7 +9,7 @@ namespace Emberfall.Session
 {
     /// <summary>
     /// The player, on this device: their name, their characters, and their decks
-    /// (ui/collection-deckbuilder.md §3; accounts posture decision 6a).
+    /// (dev-docs/data/player-data-and-telemetry.md:11).
     ///
     /// <para><b>This class is the missing wire, and it is the only reason it exists.</b>
     /// <c>Emberfall.Core.Collection</c> shipped complete and green, and until now nothing under

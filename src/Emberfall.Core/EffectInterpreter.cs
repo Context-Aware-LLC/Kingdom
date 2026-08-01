@@ -5,19 +5,19 @@ using Emberfall.Core.Cards;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The runtime tree-walking interpreter over <see cref="EffectDef"/> data (card-system.md §3 — chosen
+    /// The runtime tree-walking interpreter over <see cref="EffectDef"/> data (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3 — chosen
     /// over codegen so balance is a data patch, not a rebuild). One instance is created per command; it owns
     /// the deterministic effect queue and drains it to a fixed point, running the three post-mutation checks
     /// (DeathCheck / CapCheck / WinCheck) after every step. Ordering is part of the determinism contract and
-    /// is exercised by the golden-replay gate (golden-replay.md §1) — no Dictionary/HashSet iteration ever
+    /// is exercised by the golden-replay gate (dev-docs/quality/testing-and-ci.md:24) — no Dictionary/HashSet iteration ever
     /// drives order here; only sorted lists and ascending <see cref="InstanceId"/> tie-breaks.
     ///
     /// <para><b>M1 targeting model.</b> The committed <see cref="EffectDef"/> carries no <c>TargetSpec</c>
-    /// (design's card-schema.md §5.3 is not yet in the data model). So targets resolve two ways: a
+    /// (design's dev-docs/specs/card-schema.md §5.3 is not yet in the data model). So targets resolve two ways: a
     /// player-initiated trigger (ON_PLAY / ON_CAST) uses the validated targets from the intent; a fired
     /// trigger (ON_DEATH / observers) has no player, so it falls back to a verb-relative default
     /// (DEAL_DAMAGE→enemy hero, HEAL→friendly hero, BUFF/GIVE_KEYWORD→self). Selector-based AoE awaits a
-    /// TargetSpec primitive via the <c>requiresEngineeringPrimitive</c> gate (card-system.md §7).</para>
+    /// TargetSpec primitive via the <c>requiresEngineeringPrimitive</c> gate (dev-docs/specs/card-schema.md:40).</para>
     /// </summary>
     internal sealed class EffectInterpreter
     {
@@ -58,7 +58,7 @@ namespace Emberfall.Core
         /// <summary>
         /// Enqueue every OTHER permanent's effects subscribed to <paramref name="trigger"/> (observer triggers
         /// such as ON_FRIENDLY_SUMMON), in the canonical order: active player's side first, board left→right by
-        /// position, then hero; ties by ascending instance id (game-state-and-actions.md §5.1).
+        /// position, then hero; ties by ascending instance id (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.1).
         /// </summary>
         public void RaiseObservers(Trigger trigger, CardInstance? excluded)
         {
@@ -109,7 +109,7 @@ namespace Emberfall.Core
             handler.Execute(new EffectContext(this, qe.Effect, qe.Source, targets));
         }
 
-        // ── Death resolution (the deathrattle cascade engine, card-system.md §3.3) ─
+        // ── Death resolution (the deathrattle cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
 
         /// <summary>
         /// Resolve all minions currently at ≤0 health as a single batch in deterministic death order, firing
@@ -153,7 +153,7 @@ namespace Emberfall.Core
                         if (effects[i].Trigger == Trigger.ON_DEATH)
                             _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<CharacterRef>()));
 
-                    // REBORN: the first death resummons a 1-health copy at the same slot (card-schema.md §4).
+                    // REBORN: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
                     if (minion.Keywords.Contains(Keyword.REBORN) && !minion.HasUsedReborn)
                     {
                         minion.HasUsedReborn = true; // mark original consumed; copy gets its own flag in Resummon
@@ -186,7 +186,7 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// Auto-resolve targets from the effect's declared selector (card-schema.md §5.3). Activated only
+        /// Auto-resolve targets from the effect's declared selector (dev-docs/specs/card-schema.md §5.3). Activated only
         /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS), unconditional
         /// auto-targets (ENEMY_HERO), and SELF. Explicit-choice (ANY_*) selectors are never auto-resolved:
         /// CommandProcessor validation rejects a player intent that omits their target, so reaching here
@@ -302,7 +302,7 @@ namespace Emberfall.Core
     }
 
     /// <summary>
-    /// Everything a single primitive needs to apply itself (card-system.md §3.1). The handler mutates
+    /// Everything a single primitive needs to apply itself (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.1). The handler mutates
     /// <see cref="State"/> through the shared pipelines, emits D7 events via <see cref="Events"/>, and may
     /// enqueue follow-on triggers via the back-reference to the interpreter.
     /// </summary>
@@ -326,7 +326,7 @@ namespace Emberfall.Core
         public ICardDatabase Db => Interpreter.Db;
         public EventBuffer Events => Interpreter.Events;
 
-        /// <summary>The effect's VFX override if present, else the action's default event (card-schema.md §5.2).</summary>
+        /// <summary>The effect's VFX override if present, else the action's default event (dev-docs/specs/card-schema.md §5.2).</summary>
         public VfxEvent Vfx(VfxEvent fallback) => Effect.VfxOverride ?? fallback;
     }
 

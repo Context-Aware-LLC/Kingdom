@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Data
 {
     /// <summary>
-    /// Loads the canonical card-row JSON array and serves it as ICardDatabase (card-system.md §1.3).
+    /// Loads the canonical card-row JSON array and serves it as ICardDatabase (dev-docs/specs/card-schema.md:5).
     /// Both the server (raw JSON file) and this Unity client path use CardJson.DeserializeArray —
     /// the single parser — so they can never drift (R1, ARCHITECTURE §3 rule 6).
     /// </summary>

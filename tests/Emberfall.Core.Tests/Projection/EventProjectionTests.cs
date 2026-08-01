@@ -11,7 +11,7 @@ using Verb = Emberfall.Core.Contracts.Action;
 namespace Emberfall.Core.Tests.Projection
 {
     /// <summary>
-    /// WS A3 event-stream suite (state-sync-and-security.md §5.3/§7.1 tests 10–11, plus the
+    /// WS A3 event-stream suite (dev-docs/architecture/determinism-and-projection.md:24, plus the
     /// §10-mandated corpus additions: hero-power-sourced batch and weapon-break batch).
     /// Drives the concrete <see cref="CommandProcessor"/> to read the emit-time
     /// <see cref="CommandProcessor.LastEventVisibility"/> sidecar.

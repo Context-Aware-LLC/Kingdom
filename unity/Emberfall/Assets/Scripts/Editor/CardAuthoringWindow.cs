@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Card Authoring EditorWindow (M1-KICKOFF.md Phase B, tooling/card-authoring-tool.md). Edits the
+    /// Card Authoring EditorWindow (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B, dev-docs/pipelines/card-authoring-and-import.md:9). Edits the
     /// canonical JSON row (M1.cards.json today — see CardJsonRowIO), never the baked SO directly.
     /// Every enum control is a real C# enum popup (EnumPopup/Toggle), so a designer cannot type an
     /// unknown verb/keyword/selector — invalid effects are structurally unrepresentable in the UI.
@@ -205,7 +205,7 @@ namespace Emberfall.Editor
 
         private void DrawStatFields(EditableCard card)
         {
-            // Per-type field gating (card-authoring-tool.md §5) — mirrors card-schema.md §2.1.
+            // Per-type field gating (dev-docs/specs/card-schema.md:30).
             bool attackEnabled = card.Type == CardType.MINION || card.Type == CardType.WEAPON;
             bool healthEnabled = card.Type == CardType.MINION;
             bool durabilityEnabled = card.Type == CardType.WEAPON;

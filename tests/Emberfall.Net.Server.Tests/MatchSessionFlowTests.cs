@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace Emberfall.Net.Server.Tests
 {
-    /// <summary>Happy-path session flow (b1-match-server-design.md §3/§14.1).</summary>
+    /// <summary>Happy-path session flow (dev-docs/contracts/gameplay-and-session.md:20).</summary>
     [TestFixture]
     [Category("Contract")]
     public class MatchSessionFlowTests

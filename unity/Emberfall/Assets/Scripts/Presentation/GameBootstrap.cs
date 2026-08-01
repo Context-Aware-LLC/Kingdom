@@ -45,7 +45,7 @@ namespace Emberfall.Presentation
 
         private void Awake()
         {
-            // Frame-0 coverage (loading-screen-plate.md §5): the overlay exists before
+            // Frame-0 coverage (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay exists before
             // anything renders; Start()'s synchronous boot happens behind it.
             loadingOverlay = LoadingOverlay.Create(Camera.main);
         }
@@ -75,7 +75,7 @@ namespace Emberfall.Presentation
             var p0Id = new PlayerId("P0");
             var p1Id = new PlayerId("P1");
 
-            // ── Session pair (WS A4, a4-session-seam-design.md §3) ────────────────
+            // ── Session pair (WS A4, dev-docs/contracts/gameplay-and-session.md:5) ────────────────
             // LocalMatch.Start is the only blessed local-match door: everything below —
             // sources, presentation, input — sees PROJECTED state only. The networked boot is
             // NOT a swap of this block — it is the sibling NetworkedGameBootstrap (b3 §3.1/F4):
@@ -83,7 +83,7 @@ namespace Emberfall.Presentation
             // projected snapshot. This local boot stays hot-seat and must remain green (C1 entry).
             var (p0Session, p1Session) = LocalMatch.Start(db, setup, p0Id, p1Id);
 
-            // ── Versus screen (techart/versus-screen.md §1) ────────────────────────
+            // ── Versus screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §1) ────────────────────────
             // Raised the instant both hero classes are known, which locally is right here — the
             // setup is in hand and LocalMatch.Start has minted the match id the orb variant keys
             // off. The boot plate is released in the same breath and cross-fades out UNDERNEATH
@@ -171,7 +171,7 @@ namespace Emberfall.Presentation
                     inputRouter.SetHeroPlates(p0Plate, p1Plate);
             }
 
-            // ── End-turn button (hot-seat only; ui/match-hud.md §6 item 1) ────────
+            // ── End-turn button (hot-seat only; hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §6 item 1) ────────
             if (inputRouter != null)
             {
                 var endTurnGo = new GameObject("EndTurnButton");
@@ -211,7 +211,7 @@ namespace Emberfall.Presentation
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
-            // ── Reject toasts (hot-seat only; design-system.md §6.4/§6.5) ─────────
+            // ── Reject toasts (hot-seat only; dev-docs/ui/client-surfaces.md:15) ─────────
             // Single hook: local-validator and authority rejects both funnel through
             // HotSeatInput.OnRejected, so one subscription covers both paths.
             if (hotSeat != null)

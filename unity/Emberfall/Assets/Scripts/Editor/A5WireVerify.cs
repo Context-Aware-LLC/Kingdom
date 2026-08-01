@@ -7,7 +7,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// A5 commit-2 named verify (a5-wire-protocol-design.md §11 / §12 finding 9): Serialization's
+    /// A5 commit-2 named verify (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §11 / §12 finding 9): Serialization's
     /// first Unity compile — proves IncrementalHash (GameStateHasher) and the full wire round-trip
     /// work under the Unity runtime. Kept as a menu item so the check is re-runnable after Unity
     /// or package upgrades.

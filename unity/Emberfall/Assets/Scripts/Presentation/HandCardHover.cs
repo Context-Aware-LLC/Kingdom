@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 
 namespace Emberfall.Presentation
 {
-    // Hover-reveal for cards in hand (ui/match-hud.md §8, revised by Sam 2026-07-24).
+    // Hover-reveal for cards in hand (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8, revised by Sam 2026-07-24).
     //
     // §8 originally ruled the hovered card "does not move — no lift, no scale", because hand slots
     // were then a flat row where nothing overlapped and nothing was clipped. The fan invalidated

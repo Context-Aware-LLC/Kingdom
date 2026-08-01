@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// The named B3 transport verify (b3-networked-session-design.md §11.1 row 1 / §14 step 3;
+    /// The named B3 transport verify (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b3-networked-session-design.md §11.1 row 1 / §14 step 3;
     /// a5 §11 precedent, which caught a real gap). Opens REAL <see cref="WebSocketTransport"/>
     /// (ClientWebSocket) connections under Unity's Mono/IL2CPP runtime and plays a self-match to a
     /// decided outcome — the one thing pure-.NET `dotnet test` cannot prove about the client stack,

@@ -7,7 +7,7 @@ namespace Emberfall.Core.Collection
 {
     /// <summary>
     /// JSON-file implementations of <see cref="ICharacterStore"/> and <see cref="IDeckStore"/>
-    /// (ui/collection-deckbuilder.md §3 — local, on-device, keyed by the guest device token).
+    /// (dev-docs/data/player-data-and-telemetry.md:11).
     ///
     /// <para><b>The path is a constructor argument, not a lookup.</b> That is the whole reason this
     /// compiles without UnityEngine: the Unity side composes
@@ -213,7 +213,7 @@ namespace Emberfall.Core.Collection
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
 
-            // ── VULN-001-adjacent (security/README.md §4, row "A player display name rendered on the
+            // ── VULN-001-adjacent (dev-docs/quality/security.md:24, row "A player display name rendered on the
             //    opponent's client"). THIS IS THE LINE THAT ARMS IT. Today DisplayName is written and
             //    read on one device and rendered only in our own nameplate, so the validator below is
             //    belt-and-braces. The moment a display name is added to HelloMsg and carried into

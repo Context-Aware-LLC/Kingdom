@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// World-space mana tray for one player (board-and-vfx.md §1 ManaTrayAnchor, ui/design-system.md §4.4).
+    /// World-space mana tray for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1 ManaTrayAnchor, hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §4.4).
     ///
     /// Renders a quad at ManaTrayAnchor whose SG_ManaFill shader draws MatchEngine.MaxMana orbs,
     /// each a socket with a crystal seated in it. The four ManaPool states (Available / Spent /
@@ -21,7 +21,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class ManaTrayView : MonoBehaviour
     {
-        // board-and-vfx.md §1.1 mana rail: 4.03 wide (x +2.5..+6.53) x 0.32 tall.
+        // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 mana rail: 4.03 wide (x +2.5..+6.53) x 0.32 tall.
         private const float RailW = 4.03f;
         private const float RailH = 0.32f;
 
@@ -46,7 +46,7 @@ namespace Emberfall.Presentation
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
 
-            // Tray quad — the full mana rail of board-and-vfx.md §1.1: 4.03 wide, spanning
+            // Tray quad — the full mana rail of hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1: 4.03 wide, spanning
             // x +2.5..+6.53. SG_ManaFill derives all ten orbs procedurally from UV.x, so
             // the rail needs no per-orb GameObjects: at this width the pitch falls out at
             // 0.403 and each orb at ~0.32Ø, which is §1.1's "0.4 pitch, ~0.32Ø". The shader

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// Deleting a character deletes its decks (Sam, 2026-07-26 — ui/collection-deckbuilder.md §3).
+    /// Deleting a character deletes its decks (Sam, 2026-07-26 — hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
     ///
     /// <para><b>Why a cascade here when the rest of this assembly refuses to touch what it did not
     /// ask about.</b> A deck belongs to exactly one Character (L5) and cannot be played without one,

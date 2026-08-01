@@ -2,7 +2,7 @@ namespace Emberfall.Core.Contracts
 {
     /// <summary>
     /// How many seats a <c>MatchRunner</c> drives, and which one it renders from
-    /// (engineering/a4-session-seam-design.md §12; b3-networked-session-design.md §3.1, §16 ruling 3
+    /// (dev-docs/contracts/wire-protocol.md:14
     /// — Architect-ruled 2026-07-17). This RETIRES the emergent "same session instance at both
     /// indices + inert remote source" invariant B3's Reality-Checker pass found load-bearing in
     /// three places, whose violation was a mirrored board rather than a crash.

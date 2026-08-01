@@ -6,7 +6,7 @@ namespace Emberfall.Core
 {
     /// <summary>
     /// Shared, stateless rules primitives used by BOTH the turn-loop command processor and the effect
-    /// interpreter (game-state-and-actions.md §4 post-mutation checks, §7 mana/fatigue). Keeping draw,
+    /// interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4 post-mutation checks, §7 mana/fatigue). Keeping draw,
     /// board-entry, reindexing and the win check here means a deathrattle that draws or a battlecry that
     /// kills uses the EXACT same code path as the turn loop — no second implementation to drift (R1).
     /// </summary>
@@ -14,7 +14,7 @@ namespace Emberfall.Core
     {
         /// <summary>
         /// Draw one card for <paramref name="seat"/> off the top of the deck — with escalating fatigue on an
-        /// empty deck and overdraw burn at the hand cap (game-state-and-actions.md §4 CapCheck, §7 fatigue).
+        /// empty deck and overdraw burn at the hand cap (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4 CapCheck, §7 fatigue).
         /// </summary>
         public static void DrawOne(GameState state, int seat, EventBuffer buf)
         {
@@ -96,7 +96,7 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// WinCheck (game-state-and-actions.md §4): a hero at ≤0 health ends the match; both at once is a Draw.
+        /// WinCheck (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4): a hero at ≤0 health ends the match; both at once is a Draw.
         /// Idempotent — does nothing once an outcome is set.
         /// </summary>
         public static void CheckWin(GameState state, EventBuffer buf)

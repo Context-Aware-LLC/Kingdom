@@ -1,7 +1,7 @@
 namespace Emberfall.Net.Client
 {
     /// <summary>
-    /// The B3 connection lifecycle (b3-networked-session-design.md §4.1). Terminal reasons ride
+    /// The B3 connection lifecycle (dev-docs/contracts/wire-protocol.md:16). Terminal reasons ride
     /// <see cref="DeadReason"/>. <c>NetworkedGameBootstrap</c> subscribes
     /// <see cref="NetworkedMatchSession.OnConnectionStateChanged"/> and stops the runner on
     /// <see cref="Dead"/>/<see cref="Ended"/> (RC-F10 — the runner cannot discover death itself,

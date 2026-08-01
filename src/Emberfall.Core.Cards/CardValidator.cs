@@ -5,8 +5,8 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The shared, headless card-legality validator (C1-C20, tooling/validation-and-import.md §3).
-    /// Runs identically at server/client load and inside the editor (interfaces.md §4.3) — this
+    /// The shared, headless card-legality validator (C1-C20, dev-docs/pipelines/card-authoring-and-import.md:20).
+    /// Runs identically at server/client load and inside the editor (dev-docs/pipelines/card-authoring-and-import.md:20) — this
     /// assembly has zero UnityEngine references, so this type is safe to run on the dedicated server.
     /// Content/art/budget lint (the E-series) is a separate, editor-only IContentLinter — never here.
     /// </summary>
@@ -14,7 +14,7 @@ namespace Emberfall.Core.Cards
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
 
-        // Selector is a closed vocabulary (design/card-schema.md §5.3) but carried as a plain string
+        // Selector is a closed vocabulary (dev-docs/specs/card-schema.md §5.3) but carried as a plain string
         // on EffectDef today rather than a structured TargetSpec/enum — validate against the list.
         // ANY_MINION / ANY_FRIENDLY_MINION canonized in the M2 Phase 0 grammar freeze (tier a).
         private static readonly HashSet<string> ValidSelectors = new HashSet<string>
@@ -27,7 +27,7 @@ namespace Emberfall.Core.Cards
         // Schema-valid selectors the EffectInterpreter cannot resolve yet (no adjacency/trigger-source
         // plumbing). The interpreter now throws on them instead of silently mistargeting, so a row that
         // authors one must declare requiresEngineeringPrimitive — the documented gate for grammar the
-        // engine hasn't grown (card-system.md §7). Keep in sync with EffectInterpreter.SelectorTargets.
+        // engine hasn't grown (dev-docs/specs/card-schema.md:40). Keep in sync with EffectInterpreter.SelectorTargets.
         private static readonly HashSet<string> UnimplementedSelectors = new HashSet<string>
         {
             "ADJACENT", "TRIGGER_SOURCE",
@@ -57,14 +57,14 @@ namespace Emberfall.Core.Cards
             // Validate(def, db) call can't distinguish "db already contains THIS card" from "db
             // contains a DIFFERENT card with a colliding id" — every db lookup by id returns some
             // instance regardless. Uniqueness is a batch-level property; the set-level validator
-            // (Editor Tooling's CardSetValidator, tooling/validation-and-import.md §6) checks it by
+            // (Editor Tooling's CardSetValidator, dev-docs/pipelines/card-authoring-and-import.md:21) checks it by
             // scanning all ids in the loaded set for collisions before calling Validate per-card.
 
             // C3
             if (string.IsNullOrEmpty(def.Name) || def.Name.Length < 1 || def.Name.Length > 32)
                 Err("C3-NAME-LENGTH", "name", "name must be 1-32 characters.");
 
-            // C4 / C5 / C6 — per-type stat shape (card-schema.md §2.1)
+            // C4 / C5 / C6 — per-type stat shape (dev-docs/specs/card-schema.md §2.1)
             switch (def.Type)
             {
                 case CardType.MINION:
@@ -95,7 +95,7 @@ namespace Emberfall.Core.Cards
             if (def.Cost < 0 || def.Cost > 25)
                 Err("C7-COST-RANGE", "cost", "cost must be 0-25.");
 
-            // C8 — numeric stat ranges (card-schema.md §2)
+            // C8 — numeric stat ranges (dev-docs/specs/card-schema.md §2)
             if (def.Attack is int atk && (atk < 0 || atk > 30))
                 Err("C8-ATTACK-RANGE", "attack", "attack must be 0-30.");
             if (def.Health is int hp && (hp < 1 || hp > 30))
@@ -155,7 +155,7 @@ namespace Emberfall.Core.Cards
 
                 // C14
                 if (!string.IsNullOrEmpty(fx.Selector) && !ValidSelectors.Contains(fx.Selector!))
-                    Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (card-schema.md §5.3).");
+                    Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
                 else if (!string.IsNullOrEmpty(fx.Selector) && UnimplementedSelectors.Contains(fx.Selector!)
                          && !def.RequiresEngineeringPrimitive)
                     Err("C14-SELECTOR-UNIMPLEMENTED", $"{prefix}.target.selector",
@@ -190,7 +190,7 @@ namespace Emberfall.Core.Cards
 
         /// <summary>
         /// C2 (id unique across the library) — a batch-level check. Callers validating a whole set
-        /// (Editor Tooling's CardSetValidator, tooling/validation-and-import.md §6) should run this
+        /// (Editor Tooling's CardSetValidator, dev-docs/pipelines/card-authoring-and-import.md:21) should run this
         /// once over all loaded rows in addition to per-card <see cref="Validate"/> calls.
         /// </summary>
         public static IReadOnlyList<ValidationIssue> CheckDuplicateIds(IEnumerable<CardDefinition> all)

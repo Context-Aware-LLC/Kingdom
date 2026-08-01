@@ -6,7 +6,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// Decode never throws on wire input (a5-wire-protocol-design.md §7/§10.5) — the server feeds
+    /// Decode never throws on wire input (dev-docs/contracts/wire-protocol.md:5) — the server feeds
     /// attacker-controlled bytes straight in (state-sync §6.2 T-class). Every row must yield a
     /// typed <see cref="DecodeResult"/> failure, no exception.
     /// </summary>

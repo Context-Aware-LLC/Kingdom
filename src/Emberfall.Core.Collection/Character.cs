@@ -23,7 +23,7 @@ namespace Emberfall.Core.Collection
 
         /// <summary>
         /// The deck this character opens on — what S6 shows when you select it in the roster panel
-        /// (ui/collection-deckbuilder.md §2). Set at creation to the generated starter deck
+        /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2). Set at creation to the generated starter deck
         /// (<see cref="DefaultDeckGenerator"/>) and changed whenever the player picks a different one.
         ///
         /// <para><b>Mutable, unlike the pairing.</b> The pairing is a permanent identity decision with

@@ -6,7 +6,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// What a brand-new character's default deck starts as (ui/collection-deckbuilder.md §2.11).
+    /// What a brand-new character's default deck starts as (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.11).
     /// </summary>
     public enum StarterDeck
     {
@@ -22,7 +22,7 @@ namespace Emberfall.Core.Collection
 
     /// <summary>
     /// Creating a character is three writes that must happen in one order, so it lives here rather
-    /// than in the caller (ui/collection-deckbuilder.md §2, "Create a Character" → S6 Build mode).
+    /// than in the caller (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2, "Create a Character" → S6 Build mode).
     ///
     /// <para><b>The order is the point.</b> Generate the starter deck, save the <i>deck</i>, then save
     /// the character carrying its id. Do it the other way round and a process that dies between the

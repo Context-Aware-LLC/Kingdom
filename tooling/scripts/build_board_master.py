@@ -1,7 +1,7 @@
 """Build the board backdrop master from a 16:9 plate.
 
 The BoardCamera is orthographic size 4.6 (9.2 world units tall, always fully
-visible); width flexes with aspect up to +-10.2 at 20:9 (board-and-vfx.md 1.1).
+visible); width flexes with aspect up to +-10.2 at 20:9 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md 1.1).
 The generated plate is 16:9 with its decorated ruin ring at the frame edge, so
 narrower content never loses it. This script extends the plate to the 20:9
 span with horizontally MIRRORED edge strips: pixel-continuous at the seam (a

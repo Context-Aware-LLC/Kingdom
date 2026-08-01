@@ -1,7 +1,7 @@
 # Walking Skeleton — deploy scaffold (C-G0-6 → B1)
 
 **Status:** ✅ B1 — the scaffold fronts the REAL match server (`Emberfall.Net.Server`,
-`engineering/b1-match-server-design.md`). Live at `wss://emberfall.fly.dev/ws` on **fly.io**
+`hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md`). Live at `wss://emberfall.fly.dev/ws` on **fly.io**
 (app `emberfall`, region `sjc`); Fly terminates TLS with its own `*.fly.dev` cert.
 
 The custom hostname `emberfall.outofcontext.to` was **retired 2026-07-30** — it existed only to
@@ -37,4 +37,4 @@ No `.env`, no Caddy, no box to sync to — Fly builds from the repo and provisio
 
 > **Scope honesty:** B1 = pairing-placeholder FIFO gate, prebuilt decks, JSONL replay logs.
 > Guest identity, the real queue, and Postgres persistence are WS B2; in-flight matches are
-> lost on server restart until then (design §1).
+> lost on server restart

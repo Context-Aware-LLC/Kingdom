@@ -10,8 +10,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// Byte-stability + internal-hash + seed-never-on-the-wire (a5-wire-protocol-design.md
-    /// §10.6/§10.7).
+    /// Byte-stability + internal-hash + seed-never-on-the-wire (dev-docs/contracts/wire-protocol.md:14).
     /// </summary>
     [TestFixture]
     [Category("Contract")]

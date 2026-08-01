@@ -8,9 +8,9 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
-    /// L3 — the R1 gate (golden-replay.md). Every fixture replays against a fresh core and must
+    /// L3 — the R1 gate (dev-docs/quality/testing-and-ci.md:24). Every fixture replays against a fresh core and must
     /// reproduce the stored final-state hash AND the full ordered event stream exactly. Either mismatch
-    /// fails the build. Emits <c>artifacts/golden-replay-results.json</c> (ci-gates.md §4).
+    /// fails the build. Emits <c>artifacts/golden-replay-results.json</c> (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §4).
     ///
     /// Rebaseline mode: set env <c>EMBERFALL_REBASELINE=&lt;fixtureName&gt;</c> (or <c>all</c>) to regenerate
     /// the expected block for the named fixture(s) — loud, deliberate, never automatic in CI (§5).

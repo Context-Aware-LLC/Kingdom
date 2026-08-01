@@ -11,8 +11,8 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// The A2 deferred bridge obligation, discharged (a2-serializer-design.md §3.2/§5;
-    /// a5-wire-protocol-design.md §6/§10.1): for every reachable state s,
+    /// The A2 deferred bridge obligation, discharged (dev-docs/architecture/determinism-and-projection.md:13;
+    /// dev-docs/contracts/wire-protocol.md:41): for every reachable state s,
     /// <c>CanonicalHash(Decode(Encode(s))) == CanonicalHash(s)</c>. Corpus = every post-command
     /// state of every golden-replay fixture — authoritative AND per-viewer projected (projected
     /// states are what the wire actually carries; authoritative states additionally exercise live
@@ -57,7 +57,7 @@ namespace Emberfall.Net.Protocol.Tests
             var snap = (SnapshotMsg)decoded.Message!;
             Assert.That(GameStateHasher.Hash(snap.State), Is.EqualTo(expectedHash),
                 $"[{label}] the JSON walk dropped or misread a field — canonical hash changed across " +
-                "the wire round-trip (a5-wire-protocol-design.md §6: fix SnapshotJsonCodec, never the hasher).");
+                "the wire round-trip (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §6: fix SnapshotJsonCodec, never the hasher).");
             Assert.That(snap.VerifyIntegrity(), Is.True,
                 $"[{label}] mirror-integrity check failed on a clean round-trip.");
         }

@@ -1,13 +1,13 @@
 """A/B: can Gemini hold the card-art house look that gpt-image-2 established?
 
 THE CONTROL. Every one of the 37 shipped illustrations was generated from
-design/art-brief-m1.md on gpt-image-2. This script re-generates a card that
+hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md on gpt-image-2. This script re-generates a card that
 ALREADY SHIPPED, from the SAME brief text, on Gemini — so the prompt is held
 fixed and the model is the only variable. The gpt-image-2 side of the
 comparison is the file already on disk; this script never calls OpenAI, and
 there is no code path here that could.
 
-PROMPT COMPOSITION is art-brief-m1.md's own instruction, §6 header line:
+PROMPT COMPOSITION is hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md's own instruction, §6 header line:
 "Prepend §2 global style; use the class palette noted." So, in order:
 
   1. §2 global style prompt, verbatim.
@@ -62,7 +62,7 @@ from gen_card_art import (  # noqa: E402  (path must be set first)
     _post_gemini,
 )
 
-BRIEF = DESIGN / "art-brief-m1.md"
+BRIEF = DESIGN / "hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md"
 OUT = CARD_ART_OUT.parent / "ab-gemini-vs-gpt"
 
 # artId -> (class key as it appears in the §3 table, setId of the shipped PNG).
@@ -80,7 +80,7 @@ def global_style(md: str) -> str:
     """§2's blockquote, verbatim (it is a single '>' paragraph)."""
     sec = re.search(r"^## 2\. Global style prompt.*?^(> .*?)\n\n", md, re.M | re.S)
     if not sec:
-        raise ValueError("art-brief-m1.md §2 global style blockquote not found")
+        raise ValueError("hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §2 global style blockquote not found")
     return " ".join(
         line.lstrip("> ").strip() for line in sec.group(1).splitlines()
     ).strip()
@@ -90,7 +90,7 @@ def class_palette(md: str, cls: str) -> str:
     """The §3 row for one class, as a sentence: palette, motifs, mood."""
     sec = re.search(r"^## 3\. Class palettes.*?(?=^## 4\.)", md, re.M | re.S)
     if not sec:
-        raise ValueError("art-brief-m1.md §3 not found")
+        raise ValueError("hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §3 not found")
     for line in sec.group(0).splitlines():
         cells = [_unbold(c) for c in line.strip().strip("|").split("|")]
         if len(cells) == 4 and cells[0] == cls:
@@ -103,7 +103,7 @@ def prompt_core(md: str, art_id: str) -> tuple[str, str]:
     """(card name, §6 'Prompt core' cell) for one artId."""
     sec = re.search(r"^## 6\. Card illustrations.*?(?=^## 7\.)", md, re.M | re.S)
     if not sec:
-        raise ValueError("art-brief-m1.md §6 not found")
+        raise ValueError("hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §6 not found")
     for line in sec.group(0).splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) == 3 and cells[0].strip("`") == art_id:

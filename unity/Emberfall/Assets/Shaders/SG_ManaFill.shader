@@ -2,10 +2,10 @@
 //
 // Supersedes SG_ManaFill.shadergraph (single-quad, _FillLevel only, unmet
 // _CrystalMask dependency). Authored as hand-HLSL on 2026-07-18 because the
-// signed-off design (ui/design-system.md §4.4, ui/match-hud.md §2) and the live
+// signed-off design (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §4.4, hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §2) and the live
 // binder (ManaTrayView.cs) both carry _Spent/_Locked/_Temp levels the graph
 // never implemented — and the graph could not be safely edited without the
-// Shader Graph editor. See ui/visual-contract.md §Contradictions 1.
+// Shader Graph editor. See hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/visual-contract.md §Contradictions 1.
 //
 // Model: the tray is 10 ORBS derived procedurally from UV.x (no mask texture),
 // each a carved socket with a gem seated in it. Each orb is colored by
@@ -13,7 +13,7 @@
 //   Available (blue) → Spent (dim) → Locked (overload) → Temporary → Empty.
 // Each level is a 0..1 ratio (count / cap) pushed per-instance via MPB.
 //
-// Round, not rectangular: board-and-vfx.md §1.1 specifies "~0.32Ø" — a diameter,
+// Round, not rectangular: hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 specifies "~0.32Ø" — a diameter,
 // not a cell. The cell is 0.403 wide and 0.32 tall, so orbs are circularised by
 // the aspect the vertex stage reads off the object-to-world scale. That derives
 // from the transform rather than a pushed constant, so the orb cannot go oval

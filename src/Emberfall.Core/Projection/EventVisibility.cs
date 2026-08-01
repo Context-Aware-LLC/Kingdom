@@ -4,7 +4,7 @@ namespace Emberfall.Core.Projection
 {
     /// <summary>
     /// Where an <see cref="InstanceId"/> referent lived <b>at the moment its event was emitted</b>
-    /// (a3-projector-design.md §6.1). Captured by <c>EventBuffer</c> because post-command state
+    /// (dev-docs/architecture/determinism-and-projection.md:24). Captured by <c>EventBuffer</c> because post-command state
     /// cannot answer it: a broken weapon is nulled and the ephemeral hero-power source never
     /// enters a zone. Server-side sidecar only — never serialized, never hashed.
     /// </summary>

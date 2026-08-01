@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Emberfall.Core.Collection
 {
-    /// <summary>One line of a decklist: a card definition id and how many copies (ui/collection-deckbuilder.md §3).</summary>
+    /// <summary>One line of a decklist: a card definition id and how many copies (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).</summary>
     public readonly struct DeckEntry
     {
         public readonly string CardId;
@@ -12,11 +12,11 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// The persisted deck payload (ui/collection-deckbuilder.md §3): a <see cref="Character"/> binding,
+    /// The persisted deck payload (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3): a <see cref="Character"/> binding,
     /// a name, and a small list of {definitionId, count}. Ported from the original Unity-only
     /// Emberfall.Data.DeckList (the C-G0-5 spike) — single-CardClass HeroClass replaced by CharacterId
     /// per the dual-class ruling. UnityEngine-free so this and <see cref="DeckValidator"/> move
-    /// server-side unchanged (interfaces.md §1.3 pattern).
+    /// server-side unchanged (dev-docs/architecture/system-overview.md:15).
     /// </summary>
     public sealed class DeckList
     {

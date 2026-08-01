@@ -11,7 +11,7 @@ using Emberfall.Net.Server.Telemetry;
 namespace Emberfall.Net.Server
 {
     /// <summary>
-    /// One live match (b1-match-server-design.md §3/§4): the online sibling of LocalMatch's
+    /// One live match (dev-docs/architecture/system-overview.md:36): the online sibling of LocalMatch's
     /// Coordinator. Composes <see cref="LocalMatchHost"/> — zero rules surface here — and adds
     /// the policy gate, the clocks, the replay log, and the wire.
     ///

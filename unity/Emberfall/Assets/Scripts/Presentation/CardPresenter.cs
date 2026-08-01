@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    // World-space card visual (board-and-vfx.md §1, interfaces.md §5.1).
+    // World-space card visual (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1).
     // Subscribes to ICardLiveState.Changed; never polls per-frame.
     // For Phase C step 2: primitive Unity visuals only — no shaders yet.
     // Setup(…) is called by BoardController when creating presenters at runtime.
@@ -24,7 +24,7 @@ namespace Emberfall.Presentation
         [SerializeField] private Renderer cardBackground;
         [SerializeField] private Renderer artRenderer;
 
-        // Frame/rarity layer (frame-rarity-system.md D2) — sprites resolved by name through _ui.
+        // Frame/rarity layer (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2) — sprites resolved by name through _ui.
         [SerializeField] private SpriteRenderer frameRenderer;
         [SerializeField] private SpriteRenderer gemRenderer;
         [SerializeField] private SpriteRenderer[] keywordIcons;
@@ -62,7 +62,7 @@ namespace Emberfall.Presentation
             bodyLabel      = body;
         }
 
-        // Frame/rarity layer wiring (frame-rarity-system.md D2). Separate from Setup() so the
+        // Frame/rarity layer wiring (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2). Separate from Setup() so the
         // sprite composition is optional — a card still renders (art + labels) without it.
         public void SetupFrameLayer(SpriteRenderer frame, SpriteRenderer gem,
                                     SpriteRenderer[] icons, IUiSpriteProvider ui)
@@ -114,7 +114,7 @@ namespace Emberfall.Presentation
             artRenderer.SetPropertyBlock(_artMpb);
         }
 
-        // Card-back mode for projected hidden cards (a4-session-seam-design.md §6): no definition,
+        // Card-back mode for projected hidden cards (dev-docs/architecture/determinism-and-projection.md:23): no definition,
         // no live state — hide everything face-side and show the back sprite if the atlas has one.
         public void SetHidden()
         {
@@ -280,7 +280,7 @@ namespace Emberfall.Presentation
             sr.size = size;
         }
 
-        // Data-driven frame/rarity assembly (frame-rarity-system.md §3 ApplyFrame) — stat-plate
+        // Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md §3 ApplyFrame) — stat-plate
         // visibility keyed by type, frame + digit sockets keyed by rarity. No per-card branching.
         private void ApplyFrame()
         {
@@ -326,7 +326,7 @@ namespace Emberfall.Presentation
                 attackLabel.text = (_def.Attack ?? 0).ToString();
         }
 
-        // §3.1 socket table (card-rendering.md, Sam-calibrated 2026-07-25): move every card-front
+        // §3.1 socket table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md, Sam-calibrated 2026-07-25): move every card-front
         // element onto this rarity's frame geometry. Fractions are top-left-origin on the frame;
         // local space is center-origin with +y up, so x' = (fx-.5)·W, y' = (.5-fy)·H.
         // TMP world text: fontSize = em height in units × 10.

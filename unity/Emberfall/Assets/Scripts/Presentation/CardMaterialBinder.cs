@@ -9,7 +9,7 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Drives the 4 per-instance MaterialPropertyBlock shader floats on a card's renderers
-    /// (shaders/README.md §3, interfaces.md §5.2). Added to the card root by BoardController;
+    /// (shaders/README.md §3, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.2). Added to the card root by BoardController;
     /// call SetupRenderers() first, then Init() after ICardLiveState exists.
     ///
     /// Param ownership (shaders/README.md §3 consolidated table):
@@ -43,7 +43,7 @@ namespace Emberfall.Presentation
         private float _frostCurrent;
         private float _stealthCurrent;
 
-        // Durations from board-and-vfx.md §5 and shaders/README.md §3.
+        // Durations from hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §5 and shaders/README.md §3.
         private const float FlashDecay    = 0.25f;
         private const float FrostDur      = 0.30f;
         private const float StealthDur    = 0.40f;

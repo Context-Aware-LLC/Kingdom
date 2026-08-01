@@ -9,10 +9,10 @@ namespace Emberfall.Core
 {
     /// <summary>
     /// In-process match construction — the ONLY blessed way to stand up a local match above the
-    /// core (a4-session-seam-design.md §3). Creates the host + processor, runs BeginMatch, and
+    /// core (dev-docs/contracts/gameplay-and-session.md:5). Creates the host + processor, runs BeginMatch, and
     /// returns one <see cref="IMatchSession"/> per viewer seat. Nothing this returns can reach
     /// raw authoritative state: both sessions deliver projections only, which is what discharges
-    /// the a3 §9.2 honest-AI gap (a3-projector-design.md §7.1 test 6).
+    /// the a3 §9.2 honest-AI gap (dev-docs/architecture/determinism-and-projection.md:25).
     /// </summary>
     public static class LocalMatch
     {

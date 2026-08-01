@@ -11,7 +11,7 @@ recollection.
 Do not add this path to `.gitignore`. That mistake is the entire reason it exists as a
 separate directory: on 2026-07-21 the C-G1-4 desync capture was produced correctly, landed in
 `Application.persistentDataPath`, and was invisible to git — so a condition that was satisfied
-in reality read as OPEN in the record. See `M2-G1-REVIEW.md` §3 C-G1-4 and its §5 delta note.
+in reality read as OPEN in the record. See `hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md` §3 C-G1-4 and its §5 delta note.
 
 Keep it small. Evidence, not logs.
 

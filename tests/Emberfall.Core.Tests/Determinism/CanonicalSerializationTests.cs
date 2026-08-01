@@ -9,9 +9,9 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Determinism
 {
     /// <summary>
-    /// The anti-divergence guards for the canonical serializer (A2a — a2-serializer-design.md §2.1/§5).
+    /// The anti-divergence guards for the canonical serializer (A2a — dev-docs/architecture/determinism-and-projection.md:13).
     /// The hand-written <see cref="GameStateSerializer"/> walk is the ONE canonical field order; these
-    /// tests keep the state types and the walk locked together (M2-KICKOFF.md §5 Risk 3):
+    /// tests keep the state types and the walk locked together (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md §5 Risk 3):
     ///  1. <b>Field-inventory lock</b> — reflection over the state types vs. a committed manifest.
     ///     Adding/removing/renaming a state field goes red until the author updates BOTH the manifest
     ///     and the walk. (Reflection lives HERE, in a CI guard — never in the encode path, §4.1.)
@@ -23,7 +23,7 @@ namespace Emberfall.Core.Tests.Determinism
     ///  4. <b>Stability</b> — repeat and rebuild invariance.
     ///
     /// The manifest, mutation list, and seed state live in <see cref="CanonicalStateFixtures"/> —
-    /// shared with the A5 wire mutation sweep (a5-wire-protocol-design.md §6) so there is exactly
+    /// shared with the A5 wire mutation sweep (dev-docs/contracts/wire-protocol.md:41) so there is exactly
     /// ONE list for both the hash walk and the wire walk.
     /// </summary>
     [TestFixture]
@@ -47,7 +47,7 @@ namespace Emberfall.Core.Tests.Determinism
                     $"{type.Name}'s public fields diverged from the canonical manifest. If you added/" +
                     "removed/renamed a state field: update GameStateSerializer's walk, the A5 wire walk " +
                     "(SnapshotJsonCodec), AND the manifest in CanonicalStateFixtures together " +
-                    "(a2-serializer-design.md §2.1). A GameState field addition is hash-canonical " +
+                    "(dev-docs/architecture/determinism-and-projection.md:13). A GameState field addition is hash-canonical " +
                     "— it needs the §7 scoped review + fixture rebaseline.");
             }
         }
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.Determinism
 
             Assert.That(CanonicalStateFixtures.Mutations.Keys.OrderBy(k => k, StringComparer.Ordinal), Is.EqualTo(expectedKeys),
                 "Mutation coverage diverged from the manifest — every state field needs a perturbation " +
-                "case proving it reaches the digest (a2-serializer-design.md §2.1).");
+                "case proving it reaches the digest (dev-docs/architecture/determinism-and-projection.md:13).");
         }
 
         [TestCaseSource(nameof(MutationKeys))]

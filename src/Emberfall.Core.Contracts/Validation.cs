@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Emberfall.Core.Contracts
 {
-    /// <summary>Canonical validation-issue shape, LOCKED in v2 (interfaces.md §4.1).</summary>
+    /// <summary>Canonical validation-issue shape, LOCKED in v2 (dev-docs/specs/card-schema.md:63).</summary>
     public readonly struct ValidationIssue
     {
         public readonly Severity Severity;

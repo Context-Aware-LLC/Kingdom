@@ -7,7 +7,7 @@ namespace Emberfall.Core.Tests.Support
     /// Locates source-tree directories at test runtime by walking up from the test assembly's base
     /// directory. Fixtures are read directly from source (not copied to output) so the rebaseline
     /// command can rewrite the canonical file, and so the artifacts land at the repo root where CI
-    /// publishes them (ci-gates.md §4).
+    /// publishes them (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §4).
     /// </summary>
     public static class RepoPaths
     {

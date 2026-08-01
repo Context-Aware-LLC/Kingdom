@@ -82,7 +82,7 @@ namespace Emberfall.Net.Server
     }
 
     /// <summary>
-    /// The B1 Kestrel host (b1-match-server-design.md §11): `/ws` (fresh pairing; `?reconnect=1`
+    /// The B1 Kestrel host (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §11): `/ws` (fresh pairing; `?reconnect=1`
     /// skips the queue and must open with a `reconnect` envelope), `/healthz`, nothing else.
     /// Split from Program.cs so the loopback integration test can boot the REAL app on an
     /// ephemeral port with test paths.

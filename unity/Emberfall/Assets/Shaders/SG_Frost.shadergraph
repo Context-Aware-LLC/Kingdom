@@ -811,7 +811,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "0 = clear, 1 = fully encased. Tweened on freeze/thaw. Driven per-instance via MaterialPropertyBlock (interfaces.md §5.2, AuraSet.Frozen)."
+    "tooltip": "0 = clear, 1 = fully encased. Tweened on freeze/thaw. Driven per-instance via MaterialPropertyBlock (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.2, AuraSet.Frozen)."
 }
 
 {

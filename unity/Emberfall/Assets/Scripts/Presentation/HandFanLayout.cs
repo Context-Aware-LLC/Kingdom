@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     // Positions the ten hand anchors as a fan whose footprint is FIXED
-    // (techart/board-and-vfx.md §1.1): hand count changes overlap, never span.
+    // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1): hand count changes overlap, never span.
     //
     // The spec's table is an x-budget only — it describes a straight row. Tilt, sag and the
     // vertical seat are the additions, all Sam's starting values (2026-07-24) and all meant

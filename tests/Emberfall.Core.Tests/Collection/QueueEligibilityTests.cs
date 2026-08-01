@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// <see cref="QueueEligibility"/> — the one named gate between a saved deck and the queue
-    /// (ui/collection-deckbuilder.md §1: legality gates queueing, not saving).
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §1: legality gates queueing, not saving).
     ///
     /// <para>The property that matters most here is not any single verdict but that there is only
     /// <b>one</b> of them: the deck-pick chooser's greyed row and match-join's rejection must never be

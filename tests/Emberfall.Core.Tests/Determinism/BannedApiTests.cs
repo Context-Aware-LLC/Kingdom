@@ -10,10 +10,10 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Determinism
 {
     /// <summary>
-    /// The determinism firewall — banned-API static checks (ci-gates.md §1.3, ARCHITECTURE §7). Two
+    /// The determinism firewall — banned-API static checks (dev-docs/quality/testing-and-ci.md:10). Two
     /// independent layers:
     ///  1. <b>Float-in-state reflection scan</b> — no <c>float</c>/<c>double</c> field on any core type.
-    ///     This is the static twin of the GameStateHasher's no-float tripwire (golden-replay.md §4.2):
+    ///     This is the static twin of the GameStateHasher's no-float tripwire (dev-docs/architecture/determinism-and-projection.md:10):
     ///     a float in state would hash platform-dependent bits and silently desync.
     ///  2. <b>Source-text scan</b> — forbids <c>System.Random</c>, <c>UnityEngine.Random</c>,
     ///     <c>DateTime.Now/UtcNow</c>, <c>Time.deltaTime</c> in core source (comments excluded). These are
@@ -95,10 +95,10 @@ namespace Emberfall.Core.Tests.Determinism
         }
 
         /// <summary>
-        /// golden-replay.md §4.1 bans reflection from the canonical ENCODE path (reflection field
+        /// dev-docs/architecture/determinism-and-projection.md:13 bans reflection from the canonical ENCODE path (reflection field
         /// order is not stable across runtimes). The serializer assembly must therefore contain no
         /// reflection token at all — completeness guards using reflection live HERE, in tests,
-        /// never in the walk (a2-serializer-design.md §2.1).
+        /// never in the walk (dev-docs/architecture/determinism-and-projection.md:13).
         /// </summary>
         [Test]
         public void No_Reflection_In_Canonical_Serializer_Source()

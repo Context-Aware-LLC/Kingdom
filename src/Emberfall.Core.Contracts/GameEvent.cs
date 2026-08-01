@@ -3,9 +3,9 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
-    /// One outward D7 event (game-state-and-actions.md §5.2). Purely observational — it never
+    /// One outward D7 event (dev-docs/contracts/gameplay-and-session.md:46). Purely observational — it never
     /// feeds back into the core, so different animation speeds across clients cannot desync state.
-    /// The full ordered stream is part of what the golden-replay test asserts (golden-replay.md §1).
+    /// The full ordered stream is part of what the golden-replay test asserts (dev-docs/quality/testing-and-ci.md:24).
     /// </summary>
     public readonly struct GameEvent
     {

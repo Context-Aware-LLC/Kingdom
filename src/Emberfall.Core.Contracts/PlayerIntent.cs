@@ -5,7 +5,7 @@ namespace Emberfall.Core.Contracts
 {
     /// <summary>
     /// Stable, immutable serialization tag for a <see cref="PlayerIntent"/> subtype
-    /// (game-state-and-actions.md §6.3). Fixtures serialize by this tag, never by C# type
+    /// (dev-docs/contracts/gameplay-and-session.md:9). Fixtures serialize by this tag, never by C# type
     /// name, so renaming a record never breaks a golden fixture baked today.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
@@ -17,7 +17,7 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>
     /// A reference to a target character/permanent within a play/attack/hero-power intent.
-    /// Resolved and legality-checked up front (card-system.md §3.2) so resolution stays
+    /// Resolved and legality-checked up front (dev-docs/contracts/gameplay-and-session.md:18) so resolution stays
     /// server-authoritative and deterministic.
     /// </summary>
     public readonly struct TargetRef : IEquatable<TargetRef>
@@ -59,7 +59,7 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>
     /// System-issued command produced by a session-layer timer expiry (mulligan/turn clock,
-    /// GDD §1b). The core is timeless (game-state-and-actions.md §6.2): timer expiry is just
+    /// GDD §1b). The core is timeless (dev-docs/architecture/determinism-and-projection.md:10): timer expiry is just
     /// another command in the log, never a wall-clock call.
     /// </summary>
     [ReplayTag("auto_confirm")]

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Core.Tests — the headless determinism base of the test pyramid (test-strategy.md §1).
+    Emberfall.Core.Tests — the headless determinism base of the test pyramid (dev-docs/quality/testing-and-ci.md:20).
     Plain `dotnet test`, NO Unity license. Holds L1 (unit), L2 (contract), L3 (golden-replay, the R1
-    gate), and the assembly-firewall + banned-API scans (ci-gates.md §1).
+    gate), and the assembly-firewall + banned-API scans (dev-docs/quality/testing-and-ci.md:10).
   -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

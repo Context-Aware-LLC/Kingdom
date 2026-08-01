@@ -5,7 +5,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Emberfall.Presentation
 {
-    // Shipping IUiSpriteProvider (pipeline.md §2): resolves frame/gem/icon keys from the
+    // Shipping IUiSpriteProvider (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §2): resolves frame/gem/icon keys from the
     // UI_Core Addressables group at address "ui/<key>". UI chrome is small and always
     // resident, and IUiSpriteProvider.Get is a synchronous contract, so the first request
     // per key uses WaitForCompletion — a boot-time cost, not a per-frame one, because

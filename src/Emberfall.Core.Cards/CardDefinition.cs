@@ -4,7 +4,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// 1:1 mapping of the D1 §2 card row (card-system.md §1.1). <b>Immutable after load</b> — runtime
+    /// 1:1 mapping of the D1 §2 card row (dev-docs/specs/card-schema.md:5). <b>Immutable after load</b> — runtime
     /// mutable state lives on the <see cref="CardInstance"/>, never on the definition.
     /// </summary>
     public sealed class CardDefinition
@@ -60,7 +60,7 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>
-    /// One entry in <c>effects[]</c> (card-schema.md §5). The interpreter (Phase B) tree-walks these;
+    /// One entry in <c>effects[]</c> (dev-docs/specs/card-schema.md §5). The interpreter (Phase B) tree-walks these;
     /// for the determinism foundation they are carried as immutable data only.
     /// </summary>
     public sealed class EffectDef
@@ -73,7 +73,7 @@ namespace Emberfall.Core.Cards
         public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
         public VfxEvent? VfxOverride { get; }
         /// <summary>
-        /// <c>payload.permanent</c> for GAIN_MANA (card-schema.md §5.2): true = gain permanent
+        /// <c>payload.permanent</c> for GAIN_MANA (dev-docs/specs/card-schema.md §5.2): true = gain permanent
         /// crystals (raises <c>Mana.Max</c>, capped at 10 — the Quicken / Seedling Rite ramp
         /// primitive); false/absent = this-turn temporary crystals (the Spark/Coin pattern).
         /// </summary>
@@ -85,7 +85,7 @@ namespace Emberfall.Core.Cards
         /// </summary>
         public bool Empty { get; }
         /// <summary>
-        /// Optional target selector from <c>target.selector</c> in the card JSON (card-schema.md §5.3).
+        /// Optional target selector from <c>target.selector</c> in the card JSON (dev-docs/specs/card-schema.md §5.3).
         /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
         /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
         /// auto-targeted battlecries). Player-chosen targets always take precedence.

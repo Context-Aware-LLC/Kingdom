@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
     /// Runs the real CardValidator (C1-C20) against the real M1 card set, not synthetic fixtures,
-    /// so a rule regression against actual content is caught (tooling/card-authoring-tool.md).
+    /// so a rule regression against actual content is caught (dev-docs/pipelines/card-authoring-and-import.md:11).
     /// </summary>
     [TestFixture]
     [Category("CardValidation")]
@@ -41,7 +41,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void All_M1_Cards_Pass_Core_Validation()
         {
             // ANY_MINION / ANY_FRIENDLY_MINION were canonized into the Selector vocabulary by the
-            // M2 Phase 0 grammar freeze (card-schema.md §5.3), so tide_undertow — previously the
+            // M2 Phase 0 grammar freeze (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
             // one known-bad row — now validates clean along with everything else.
             var (cards, db) = LoadM1Set();
             var validator = new CardValidator();

@@ -2,7 +2,7 @@ namespace Emberfall.Net.Server
 {
     /// <summary>
     /// The session layer's only clock (integer Unix-epoch milliseconds). The CORE stays timeless
-    /// (game-state-and-actions.md §6.2) — this feeds MatchClock deadlines and the token bucket,
+    /// (dev-docs/architecture/system-overview.md:18) — this feeds MatchClock deadlines and the token bucket,
     /// never the rules. Injectable so every timer path is deterministic under test.
     /// </summary>
     public interface ITimeSource

@@ -2,7 +2,7 @@ using Emberfall.Core.Cards;
 
 namespace Emberfall.Presentation
 {
-    // Presentation binding surface for a card GameObject (interfaces.md §5.1).
+    // Presentation binding surface for a card GameObject (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1).
     // Named ICardPresenter to avoid collision with the read-model ICardView in Core.Contracts.
     public interface ICardPresenter
     {

@@ -5,7 +5,7 @@ namespace Emberfall.Core.Contracts
 {
     /// <summary>
     /// Outcome of <see cref="ICommandProcessor.Execute"/>. Invariant (L2 contract test,
-    /// game-state-and-actions.md §3): <c>Reason == null</c> iff <c>Accepted</c>, and a rejected
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §3): <c>Reason == null</c> iff <c>Accepted</c>, and a rejected
     /// command produces zero events and does not bump the version.
     /// </summary>
     public sealed class CommandResult

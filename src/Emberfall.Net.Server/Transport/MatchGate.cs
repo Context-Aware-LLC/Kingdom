@@ -15,7 +15,7 @@ using Emberfall.Net.Server.Telemetry;
 namespace Emberfall.Net.Server.Transport
 {
     /// <summary>
-    /// B1's throwaway pairing door (b1-match-server-design.md §5) — replaced by B2 queue; do not
+    /// B1's throwaway pairing door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §5) — replaced by B2 queue; do not
     /// grow. FIFO: the first two fresh sockets that have said hello form a match. Reconnects skip
     /// the queue via `/ws?reconnect=1` — a transport routing hint only; authentication is the
     /// ReconnectMsg token, judged by the session (§8). Also owns the RC Q4 session cap: at

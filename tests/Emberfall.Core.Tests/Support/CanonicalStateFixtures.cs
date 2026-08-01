@@ -7,7 +7,7 @@ namespace Emberfall.Core.Tests.Support
     /// <summary>
     /// The ONE field-inventory manifest + per-field mutation list + hand-built seed state, shared
     /// between the canonical-serializer guards (<c>CanonicalSerializationTests</c>) and the A5 wire
-    /// mutation sweep (<c>Emberfall.Net.Protocol.Tests</c>). Extracted per a5-wire-protocol-design.md
+    /// mutation sweep (<c>Emberfall.Net.Protocol.Tests</c>). Extracted per hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md
     /// §6 (§12 finding 2): duplicating this list would re-create exactly the two-lists drift the
     /// bridge test exists to kill — every consumer references THIS list.
     /// </summary>

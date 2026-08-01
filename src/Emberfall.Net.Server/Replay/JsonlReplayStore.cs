@@ -6,7 +6,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Server.Replay
 {
     /// <summary>
-    /// Append-only `.jsonl` per match under a data dir (b1-match-server-design.md §9). Each intent
+    /// Append-only `.jsonl` per match under a data dir (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §9). Each intent
     /// row is a full `ProtocolCodec.Encode(IntentMsg)` envelope — one codec both directions, zero
     /// parallel parser surface (the reason IntentJsonCodec stays internal to the protocol assembly).
     /// Row 0 is a header line carrying the seed; the seed lives ONLY here, server-side (ADR-0004).

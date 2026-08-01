@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
-    /// One-shot fixture generator for <c>deathrattle_cascade</c> (golden-replay.md §5 / Step 5 of
+    /// One-shot fixture generator for <c>deathrattle_cascade</c> (dev-docs/quality/testing-and-ci.md:31 / Step 5 of
     /// M1 Phase B). Marked [Explicit] — never runs in CI. Run it once locally to produce and rebaseline
     /// the fixture, then commit the resulting <c>*.replay.json</c> and <c>*.rebaseline.md</c> pair.
     ///

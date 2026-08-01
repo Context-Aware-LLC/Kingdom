@@ -13,7 +13,7 @@ using NUnit.Framework;
 namespace Emberfall.Net.Server.Tests
 {
     /// <summary>
-    /// C-G1-8 step 3 — the rows survive (design/telemetry-spec.md §5).
+    /// C-G1-8 step 3 — the rows survive (dev-docs/data/player-data-and-telemetry.md:17).
     ///
     /// Step 2 proved the events are emitted; these prove they still exist afterwards. The distinction
     /// is the entire condition: before the volume landed, telemetry died on every machine restart, so
