@@ -6,6 +6,7 @@ name: Emberfall CI — determinism gates
 #   Stage 1  Lint + rebaseline-guard      BLOCKING   (dotnet format + golden rebaseline path-pair)
 #   Stage 2  Core unit tests              BLOCKING   (L1)
 #   Stage 3  Contract / interface tests   BLOCKING   (L2)
+#   Stage 3b Collection + CardValidation  BLOCKING   (ran in NO stage before 2026-08-01)
 #   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
 #   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -68,6 +69,16 @@ jobs:
       - name: "Stage 3 · Contract tests"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Contract" --logger "trx;LogFileName=contract.trx" --results-directory artifacts
 
+      # ── Stage 3b — Collection + CardValidation (BLOCKING) ───────────────────────
+      # These two categories existed in the suite but were filtered by NO stage until
+      # 2026-08-01 — a change could gut the collection backend with CI still green.
+      # Run as their own step so a failure names the category instead of hiding in Stage 2.
+      #
+      # ADDING A NEW [Category("X")]? Add it to a stage here in the same commit, or it
+      # runs nowhere and green stops meaning anything.
+      - name: "Stage 3b · Collection + CardValidation"
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Collection|Category=CardValidation" --logger "trx;LogFileName=collection-cardvalidation.trx" --results-directory artifacts
+
       # ── Stage 4 — Assembly firewall + banned-API (BLOCKING, criterion 7) ────────
       - name: "Stage 4 · Assembly firewall + banned-API"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Firewall" --logger "trx;LogFileName=firewall.trx" --results-directory artifacts
@@ -84,9 +95,14 @@ jobs:
         run: dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
 
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
+      # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.
+      # The standing substitute is tools/ci/unity-verify.ps1 (EF-001) — it drives a LOCAL
+      # headless Editor, so it runs on a machine with a seat before pushing, never here.
+      # RETIREMENT TRIGGER: when a Unity seat lands, replace this echo with the real job
+      # and drop the pre-push requirement from the agent AGENTS.md briefs.
       - name: "Stages 7–8 · Unity E-series + PlayMode (informational — no Unity seat at M1)"
         continue-on-error: true
-        run: echo "No paid Unity seat at M1 (ci-gates.md §7 Q1). These become blocking at M2 with a Unity Pro/Build Server seat."
+        run: echo "No paid Unity seat at M1 (ci-gates.md §7 Q1). These become blocking at M2 with a Unity Pro/Build Server seat. Local pre-push gate is tools/ci/unity-verify.ps1"
 
       # ── Stage 9 — On-device perf gate (manual, milestone boundary) ──────────────
       - name: "Stage 9 · On-device perf gate D8 (manual device job)"
