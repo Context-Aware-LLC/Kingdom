@@ -241,7 +241,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a689a568ca59bd2448e581136e291d36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.DeckbuilderController
-  _heroClass: 1
 --- !u!114 &729156695
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,7 +253,7 @@ MonoBehaviour:
   m_Script: {fileID: 19102, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
-  m_PanelSettings: {fileID: 0}
+  m_PanelSettings: {fileID: 11400000, guid: 030c5c9a468d79a4d8b001543ee91038, type: 2}
   m_ParentUI: {fileID: 0}
   sourceAsset: {fileID: 9197481963319205126, guid: 755b9d63b9ed1ad40b8a3cb240232098, type: 3}
   m_SortingOrder: 0

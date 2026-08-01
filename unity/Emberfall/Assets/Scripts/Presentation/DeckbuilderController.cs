@@ -1,28 +1,37 @@
+using System;
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
+using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
-using Emberfall.Data;
+using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// C-G0-5 UI Toolkit spike — the S7 deckbuilder slice (dev-docs/ui/client-surfaces.md:9).
-    /// De-risks the five things the real screen lives or dies on: ListView virtualization of the
-    /// full card pool, live L1–L5 legality (via <see cref="DeckValidator"/>) gating Save, single-
-    /// source theme.uss token theming, the 22px text floor, and the responsive split view.
+    /// The S7 deckbuilder slice (dev-docs/ui/client-surfaces.md:9), grown out of the C-G0-5 spike:
+    /// ListView virtualization of the full card pool, live L1–L5 legality (via
+    /// <see cref="DeckValidator"/>) driving the legality pill, single-source theme.uss token
+    /// theming, the 22px text floor, and the responsive split view.
     ///
-    /// Keeper-quality: binds REAL <see cref="CardDefinition"/> data (same JsonCardDatabase path as
-    /// GameBootstrap) and reuses the shared, server-side-portable legality predicate — not stubs.
+    /// <para>Opens one real <see cref="Character"/>'s deck from <see cref="PlayerAccount.Local"/> —
+    /// <see cref="PendingCharacterId"/>, set by <c>MainMenuController.OnDeckBuilder</c> before this
+    /// scene loads, or the roster's first character when that is empty (so the scene still opens
+    /// standalone in the Editor). There is no character switcher yet — S6's sidebar is separate,
+    /// unbuilt scope — so today this is always the one character's own deck.</para>
+    ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// DeckbuilderScreen.uxml.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class DeckbuilderController : MonoBehaviour
     {
-        [SerializeField] private CardClass _heroClass = CardClass.EMBERWARD;
+        /// <summary>Which character to open, set by the caller before loading this scene.</summary>
+        public static string PendingCharacterId;
 
+        private PlayerAccount _account;
+        private Character _character;
         private ICardDatabase _db;
         private DeckList _deck;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
@@ -40,18 +49,50 @@ namespace Emberfall.Presentation
 
         private void OnEnable()
         {
-            _db = CardDatabaseLoader.Load();
-            _deck = new DeckList { HeroClass = _heroClass, Name = $"{_heroClass} Deck" };
-            BuildPool();
-
             _root = GetComponent<UIDocument>().rootVisualElement;
             if (_root == null) { Debug.LogError("[Deckbuilder] No rootVisualElement — is the UXML assigned?"); return; }
 
+            try
+            {
+                _account = PlayerAccount.Local;
+                _db = CardDatabaseLoader.Load();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[Deckbuilder] could not open this device's collection: {ex.Message}");
+                return;
+            }
+
+            IReadOnlyList<Character> roster = _account.Roster();
+            _character = FindPending(roster) ?? (roster.Count > 0 ? roster[0] : null);
+            if (_character == null)
+            {
+                Debug.LogError("[Deckbuilder] No character on this account — Main Menu should have " +
+                                "gated this scene behind character creation.");
+                return;
+            }
+
+            _deck = _account.DecksOf(_character, _db).Opening?.Deck;
+            if (_deck == null)
+            {
+                Debug.LogError($"[Deckbuilder] '{_character.Name}' has no deck to open.");
+                return;
+            }
+
+            BuildPool();
             CacheElements();
             WireCollectionList();
             WireDeckList();
             WireChrome();
             Refresh();
+        }
+
+        private Character FindPending(IReadOnlyList<Character> roster)
+        {
+            if (string.IsNullOrEmpty(PendingCharacterId)) return null;
+            foreach (var c in roster)
+                if (c.Id == PendingCharacterId) return c;
+            return null;
         }
 
 #if UNITY_EDITOR
@@ -68,18 +109,18 @@ namespace Emberfall.Presentation
                 foreach (var def in _pool)
                 {
                     if (_deck.TotalCount >= target) break;
-                    if (DeckValidator.CanAdd(_deck, def)) { AddCopy(def); progressed = true; }
+                    if (DeckValidator.CanAdd(_deck, _character, def)) { AddCopy(def); progressed = true; }
                 }
             }
         }
 #endif
 
-        // ---- Pool: class ∪ neutral, sorted by cost then name (§2 left list) ----
+        // ---- Pool: character's pairing ∪ neutral, sorted by cost then name (§2 left list) ----
         private void BuildPool()
         {
             _pool.Clear();
             foreach (var def in _db.AllCollectible())
-                if (def.Class == CardClass.NEUTRAL || def.Class == _deck.HeroClass)
+                if (_character.AllowsClass(def.Class))
                     _pool.Add(def);
             _pool.Sort((a, b) => a.Cost != b.Cost ? a.Cost.CompareTo(b.Cost)
                                                   : string.CompareOrdinal(a.Name, b.Name));
@@ -98,8 +139,8 @@ namespace Emberfall.Presentation
 
             if (_heroLabel != null)
             {
-                _heroLabel.text = _heroClass.ToString();
-                _heroLabel.style.color = ClassColorToken(_heroClass);
+                _heroLabel.text = $"{_character.Name} · {Pretty(_character.PrimaryClass)}/{Pretty(_character.SecondaryClass)}";
+                _heroLabel.style.color = ClassColorToken(_character.PrimaryClass);
             }
         }
 
@@ -119,7 +160,7 @@ namespace Emberfall.Presentation
             var def = _pool[index];
             row.userData = def;
             SetCardRow(row, def, _deck.CountOf(def.Id), DeckValidator.MaxCopies(def.Rarity));
-            row.EnableInClassList("card-row--disabled", !DeckValidator.CanAdd(_deck, def));
+            row.EnableInClassList("card-row--disabled", !DeckValidator.CanAdd(_deck, _character, def));
         }
 
         private void OnCollectionClick(ClickEvent evt)
@@ -187,7 +228,7 @@ namespace Emberfall.Presentation
         // ---- Mutations ----
         private void AddCopy(CardDefinition def)
         {
-            if (!DeckValidator.CanAdd(_deck, def)) return;   // L1 ceiling / L2/L3 cap / L4 off-class
+            if (!DeckValidator.CanAdd(_deck, _character, def)) return;   // L1 ceiling / L2/L3 cap / L4 off-class
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
             if (i >= 0) _deck.Entries[i] = _deck.Entries[i].With(_deck.Entries[i].Count + 1);
             else        _deck.Entries.Add(new DeckEntry(def.Id, 1));
@@ -226,10 +267,32 @@ namespace Emberfall.Presentation
                 nameField.value = _deck.Name;
                 nameField.RegisterValueChangedCallback(e => _deck.Name = e.newValue);
             }
-            _saveButton?.RegisterCallback<ClickEvent>(_ =>
-                Debug.Log($"[Deckbuilder] Save '{_deck.Name}' ({_deck.TotalCount} cards) — valid, persisting."));
-            _root.Q<Button>("done-button")?.RegisterCallback<ClickEvent>(_ =>
-                Debug.Log("[Deckbuilder] Done → S6."));
+            _saveButton?.RegisterCallback<ClickEvent>(_ => SaveDeck());
+            _root.Q<Button>("done-button")?.RegisterCallback<ClickEvent>(_ => Go("MainMenu"));
+        }
+
+        /// <summary>Persist the deck as-is. Never legality-gated (collection-deckbuilder-spec §1,
+        /// Sam 2026-07-26): an illegal deck is a savable draft, not a blocked action — only queue
+        /// eligibility (computed fresh on load, never stored) refuses it a match.</summary>
+        private void SaveDeck()
+        {
+            _account.Save(_deck);
+            Debug.Log($"[Deckbuilder] Saved '{_deck.Name}' ({_deck.TotalCount} cards) for {_character.Name}.");
+        }
+
+        /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
+        /// (a scene missing from the build list is a dead button with nothing logged in the Editor).
+        /// Mirrors <c>MainMenuController.Go</c> — see there for why <c>CanStreamedLevelBeLoaded</c>
+        /// over <c>GetBuildIndexByScenePath</c>.</summary>
+        private static void Go(string sceneName)
+        {
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            {
+                Debug.LogError($"[Deckbuilder] Scene '{sceneName}' is not in the build list, so this " +
+                               "button cannot do anything. Run Emberfall/Build/Sync Scene List.");
+                return;
+            }
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
 
         // ---- The live legality loop: single source, runs on every mutation ----
@@ -240,7 +303,7 @@ namespace Emberfall.Presentation
             _deckList.RefreshItems();
             RebuildCurve();
 
-            var result = DeckValidator.Validate(_deck, _db);
+            var result = DeckValidator.Validate(_deck, _character, _db);
 
             _countLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
 
@@ -255,8 +318,6 @@ namespace Emberfall.Presentation
                 msg.AddToClassList("legality-msg");
                 _legalityBox.Add(msg);
             }
-
-            _saveButton?.SetEnabled(result.IsValid);   // Save gated by the predicate (§1)
         }
 
         private void RebuildCurve()
@@ -309,6 +370,13 @@ namespace Emberfall.Presentation
         {
             var all = prefix == "rarity--" ? AllRarity : AllEdge;
             foreach (var c in all) e.EnableInClassList(c, c == keep);
+        }
+
+        /// <summary>Enum name as a player reads it: EMBERWARD → Emberward.</summary>
+        private static string Pretty(CardClass c)
+        {
+            string raw = c.ToString();
+            return raw.Length == 0 ? raw : char.ToUpperInvariant(raw[0]) + raw.Substring(1).ToLowerInvariant();
         }
 
         private static Color ClassColorToken(CardClass c) => c switch

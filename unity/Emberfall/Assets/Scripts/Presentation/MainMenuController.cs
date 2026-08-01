@@ -645,14 +645,20 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Deck Builder → DeckbuilderSpike.unity (exists as a spike). With an empty roster there is
-        /// nothing to build for, so this opens character creation instead — the only entry point to it
-        /// until S6 is built.
+        /// Deck Builder → DeckbuilderSpike.unity. With an empty roster there is nothing to build for,
+        /// so this opens character creation instead — the only entry point to it until S6 is built.
+        ///
+        /// <para>No character switcher exists yet (that's S6's sidebar, still unbuilt), so a roster of
+        /// more than one opens the first character's own deck rather than offering a choice.</para>
         /// </summary>
         private void OnDeckBuilder()
         {
-            if (_account != null && _account.Roster().Count == 0) { OpenCharacterModal(); return; }
-            Debug.Log("[MainMenu] Deck Builder → DeckbuilderSpike. Not wired yet.");
+            if (_account == null) return;
+            var roster = _account.Roster();
+            if (roster.Count == 0) { OpenCharacterModal(); return; }
+
+            DeckbuilderController.PendingCharacterId = roster[0].Id;
+            Go("DeckbuilderSpike");
         }
 
         // Store → no backend yet.
