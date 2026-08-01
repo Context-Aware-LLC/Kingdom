@@ -181,6 +181,48 @@ namespace Emberfall.Editor
             }
         }
 
+        // Profile name is the stable human-readable key; the corresponding m_Id lives in
+        // AddressableAssetSettings.asset. If the profile is renamed there, update this too.
+        private const string AndroidProfileName = "Android";
+
+        /// <summary>
+        /// Builds Addressables content for Android using the dedicated Android profile.
+        ///
+        /// <para><b>The active build target MUST already be Android before calling this.</b>
+        /// Texture compression (ASTC via <see cref="CardArtPostprocessor"/>) is applied by
+        /// Unity's TextureImporter at content-build time and requires Android to be the active
+        /// platform — the profile alone does not change what compression is used.</para>
+        ///
+        /// <para>The Android profile hardcodes <c>BuildTarget = Android</c> so
+        /// <c>[BuildTarget]</c> path tokens always resolve to <c>Android</c>, even if the
+        /// Editor's active target changes between profile selection and build. Called by
+        /// EF-060's <c>BuildAndroid()</c> after it switches the active build target.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Android Addressables Content (requires Android active target)")]
+        public static void BuildAndroidAddressables()
+        {
+            var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
+            if (settings == null)
+                throw new BuildFailedException("[EmberfallBuild] AddressableAssetSettings not found.");
+
+            string androidProfileId = settings.profileSettings.GetProfileId(AndroidProfileName);
+            if (string.IsNullOrEmpty(androidProfileId))
+                throw new BuildFailedException(
+                    $"[EmberfallBuild] Addressables profile '{AndroidProfileName}' not found. " +
+                    "Check AddressableAssetSettings.asset.");
+
+            string previousProfileId = settings.activeProfileId;
+            settings.activeProfileId = androidProfileId;
+            try
+            {
+                BuildAddressables();
+            }
+            finally
+            {
+                settings.activeProfileId = previousProfileId;
+            }
+        }
+
         private static void BuildAddressables()
         {
             RequireSavedScenes();
