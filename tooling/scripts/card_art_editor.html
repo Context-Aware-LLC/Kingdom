@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Emberfall Card Art Editor</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; font-family: -apple-system, Segoe UI, sans-serif; background: #1b1b1f; color: #e6e6e9; }
+  header { padding: 12px 20px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  select, input[type=text] { background: #26262c; color: #e6e6e9; border: 1px solid #3a3a42; border-radius: 4px; padding: 5px 8px; }
+  label.filter { font-size: 13px; color: #aaa; display: flex; align-items: center; gap: 6px; }
+  #listView, #detailView { padding: 16px 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: #999; font-weight: 500; padding: 6px 10px; border-bottom: 1px solid #333; }
+  td { padding: 7px 10px; border-bottom: 1px solid #262629; cursor: pointer; }
+  tr:hover td { background: #24242a; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+  .rarity-COMMON { color: #bbb; }
+  .rarity-RARE { color: #6fa8ff; }
+  .rarity-EPIC { color: #c58cff; }
+  .rarity-LEGENDARY { color: #ffb454; }
+  .yes { color: #6fcf7f; }
+  .no { color: #666; }
+  .missing-row td { background: #2a2020; }
+  #backBtn { background: none; border: none; color: #8ab4ff; cursor: pointer; font-size: 13px; padding: 0; margin-bottom: 12px; }
+  #cardInfo { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px 20px; background: #232329; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px; }
+  #cardInfo .field-label { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+  #cardInfo .field-value { margin-top: 2px; }
+  #cardInfo .full-row { grid-column: 1 / -1; }
+  h2 { font-size: 18px; margin: 0 0 4px; }
+  #cardSubtitle { color: #999; font-size: 13px; margin-bottom: 16px; }
+  #promptText { width: 100%; box-sizing: border-box; height: 60vh; background: #131316; color: #e6e6e9; border: 1px solid #3a3a42; border-radius: 6px; padding: 14px; font-family: Consolas, "Cascadia Mono", monospace; font-size: 13px; line-height: 1.5; resize: vertical; }
+  .actions { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
+  button.primary { background: #3a6bd6; color: white; border: none; border-radius: 5px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  button.primary:hover { background: #4a7bea; }
+  #saveStatus { font-size: 13px; color: #6fcf7f; }
+  .hint { color: #ffb454; }
+  mark { background: #4a3a1f; color: #ffcf8a; padding: 0 2px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Card Art Editor</h1>
+  <select id="setSelect"></select>
+  <span class="filter" id="cardCount"></span>
+</header>
+
+<div id="listView">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Class</th><th>Rarity</th><th>Cost</th><th>Atk/HP</th><th>Art</th><th>Draft</th></tr>
+    </thead>
+    <tbody id="cardRows"></tbody>
+  </table>
+</div>
+
+<div id="detailView" style="display:none">
+  <button id="backBtn">&larr; back to list</button>
+  <h2 id="cardName"></h2>
+  <div id="cardSubtitle"></div>
+
+  <div id="cardInfo"></div>
+
+  <textarea id="promptText" spellcheck="false"></textarea>
+  <div class="actions">
+    <button class="primary" id="saveBtn">Save draft</button>
+    <span id="saveStatus"></span>
+  </div>
+</div>
+
+<script>
+let currentSet = null;
+let currentCardId = null;
+
+const listView = document.getElementById('listView');
+const detailView = document.getElementById('detailView');
+const setSelect = document.getElementById('setSelect');
+const cardRows = document.getElementById('cardRows');
+const cardCount = document.getElementById('cardCount');
+
+async function init() {
+  const sets = await fetch('/api/sets').then(r => r.json());
+  setSelect.innerHTML = sets.map(s => `<option value="${s}">${s}</option>`).join('');
+  currentSet = sets[0];
+  await loadCards();
+}
+
+setSelect.addEventListener('change', () => { currentSet = setSelect.value; loadCards(); });
+
+let cardsCache = [];
+
+async function loadCards() {
+  cardsCache = await fetch(`/api/cards?set=${encodeURIComponent(currentSet)}`).then(r => r.json());
+  renderRows();
+}
+
+function renderRows() {
+  // Server already filters to cards missing both art and a draft.
+  cardCount.textContent = `${cardsCache.length} needing a brief`;
+  cardRows.innerHTML = cardsCache.map(c => `
+    <tr class="${c.hasArt ? '' : 'missing-row'}" onclick="openCard('${c.id}')">
+      <td>${c.name}</td>
+      <td>${c.class || ''}</td>
+      <td class="rarity-${c.rarity}">${c.rarity || ''}</td>
+      <td>${c.cost ?? ''}</td>
+      <td>${c.attack != null ? c.attack + '/' + c.health : ''}</td>
+      <td class="${c.hasArt ? 'yes' : 'no'}">${c.hasArt ? '✓' : '—'}</td>
+      <td class="${c.hasDraft ? 'yes' : 'no'}">${c.hasDraft ? '✓' : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+async function openCard(id) {
+  currentCardId = id;
+  const data = await fetch(`/api/card?set=${encodeURIComponent(currentSet)}&id=${encodeURIComponent(id)}`).then(r => r.json());
+  const c = data.card;
+
+  document.getElementById('cardName').textContent = c.name;
+  document.getElementById('cardSubtitle').textContent = `${c.id}  ·  ${c.setId}  ·  ${data.hasDraft ? 'has a saved draft' : 'no draft yet — showing fresh boilerplate'}`;
+
+  const info = document.getElementById('cardInfo');
+  const rows = [
+    ['Type', c.type],
+    ['Class', c.class],
+    ['Rarity', c.rarity],
+    ['Cost', c.cost],
+    ['Attack / Health', c.attack != null ? `${c.attack} / ${c.health}` : '—'],
+    ['Tribe', c.tribe || '—'],
+    ['Keywords', (c.keywords || []).join(', ') || '—'],
+  ];
+  let html = rows.map(([label, val]) => `
+    <div><div class="field-label">${label}</div><div class="field-value">${val ?? '—'}</div></div>
+  `).join('');
+  if (c.cardText) {
+    html += `<div class="full-row"><div class="field-label">Card text (not part of the prompt — reference only)</div><div class="field-value">${c.cardText}</div></div>`;
+  }
+  info.innerHTML = html;
+
+  document.getElementById('promptText').value = data.text;
+  document.getElementById('saveStatus').textContent = '';
+
+  listView.style.display = 'none';
+  detailView.style.display = 'block';
+}
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  detailView.style.display = 'none';
+  listView.style.display = 'block';
+  loadCards();
+});
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const text = document.getElementById('promptText').value;
+  const res = await fetch(`/api/card?set=${encodeURIComponent(currentSet)}&id=${encodeURIComponent(currentCardId)}`, {
+    method: 'POST',
+    body: text,
+  }).then(r => r.json());
+  document.getElementById('saveStatus').textContent = res.ok ? `Saved → ${res.path}` : 'Save failed';
+});
+
+init();
+</script>
+
+</body>
+</html>
