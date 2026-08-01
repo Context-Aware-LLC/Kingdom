@@ -1,0 +1,93 @@
+{
+  "primaryClass": "CLOCKWRIGHT",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-CLOCKWRIGHT",
+  "deckId": "fixture-deck-CLOCKWRIGHT",
+  "seed": 64159285253,
+  "entries": [
+    {
+      "id": "clock_assembly_drone",
+      "count": 1
+    },
+    {
+      "id": "clock_bronze_frame",
+      "count": 1
+    },
+    {
+      "id": "clock_gear_imp",
+      "count": 2
+    },
+    {
+      "id": "clock_overclocker",
+      "count": 1
+    },
+    {
+      "id": "clock_snap_bolt",
+      "count": 2
+    },
+    {
+      "id": "clock_spring_coil",
+      "count": 2
+    },
+    {
+      "id": "clock_temporal_rewinder",
+      "count": 2
+    },
+    {
+      "id": "core_bonehound",
+      "count": 2
+    },
+    {
+      "id": "core_hollow_acolyte",
+      "count": 1
+    },
+    {
+      "id": "core_thistleguard_sprig",
+      "count": 1
+    },
+    {
+      "id": "core_throneless_king",
+      "count": 1
+    },
+    {
+      "id": "core_veilstalker",
+      "count": 1
+    },
+    {
+      "id": "ember_ashfall_wyrm",
+      "count": 1
+    },
+    {
+      "id": "ember_cinder_lance",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch",
+      "count": 2
+    },
+    {
+      "id": "ember_slagshell_bulwark",
+      "count": 2
+    },
+    {
+      "id": "ember_twin_flame",
+      "count": 2
+    },
+    {
+      "id": "ember_zealot",
+      "count": 1
+    },
+    {
+      "id": "relic_bound_revenant",
+      "count": 1
+    },
+    {
+      "id": "relic_corpse_cart",
+      "count": 1
+    },
+    {
+      "id": "stone_sentry",
+      "count": 2
+    }
+  ]
+}
