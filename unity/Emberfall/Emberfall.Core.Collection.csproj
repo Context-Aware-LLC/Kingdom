@@ -86,6 +86,9 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\CharacterCreation.cs">
       <Link>CharacterCreation.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\CardQuery.cs">
+      <Link>CardQuery.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\LocalAccount.cs">
       <Link>LocalAccount.cs</Link>
     </Compile>

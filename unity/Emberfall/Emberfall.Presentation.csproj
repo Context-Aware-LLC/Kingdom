@@ -90,6 +90,7 @@
     <Compile Include="Assets\Scripts\Presentation\EditorUiTextProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardController.cs" />
     <Compile Include="Assets\Scripts\Presentation\HandFanLayout.cs" />
+    <Compile Include="Assets\Scripts\Presentation\StatusMarkCatalog.cs" />
     <Compile Include="Assets\Scripts\Presentation\HotSeatInput.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardBackdrop.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorArtProvider.cs" />

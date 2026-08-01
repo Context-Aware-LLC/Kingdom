@@ -63,6 +63,7 @@
     <Compile Include="Assets\Scripts\Editor\CardJsonRowIO.cs" />
     <Compile Include="Assets\Scripts\Editor\AddressablesSetup.cs" />
     <Compile Include="Assets\Scripts\Editor\ContentLinter.cs" />
+    <Compile Include="Assets\Scripts\Editor\HeadlessVerify.cs" />
     <Compile Include="Assets\Scripts\Editor\UxmlIntegrityCheck.cs" />
     <Compile Include="Assets\Scripts\Editor\DeckPilePreview.cs" />
     <Compile Include="Assets\Scripts\Editor\CardFrostPreview.cs" />
