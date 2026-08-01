@@ -19,6 +19,11 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Headless Verify (all local checks)")]
         public static void RunAll()
         {
+            // unity-verify.ps1 refuses a locked project and starts a fresh batch Editor. Unity completes
+            // its startup asset refresh and script compilation before invoking -executeMethod; a compile
+            // error prevents this method from running and is detected from the Editor log by the script.
+            // Do not call AssetDatabase.Refresh here: in -nographics mode it reserializes unrelated source
+            // assets (including TMP font atlases). These checks are synchronous and do not use scaled time.
             var results = new[]
             {
                 RunCheck("A5WireVerify",         A5WireVerify.Run),

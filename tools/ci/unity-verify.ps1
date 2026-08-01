@@ -30,6 +30,12 @@ if (-not (Test-Path $PROJECT)) {
     exit 1
 }
 
+$lockFile = Join-Path $PROJECT 'Temp\UnityLockfile'
+if (Test-Path $lockFile) {
+    Write-Error "Unity project is locked ('$lockFile'). Close the Editor or remove a confirmed-stale lock manually; this harness never clears project locks."
+    exit 1
+}
+
 Write-Host "unity-verify: Unity  $UnityPath"
 Write-Host "unity-verify: project $PROJECT"
 Write-Host "unity-verify: log    $LOG"
@@ -40,13 +46,21 @@ $unityArgs = @(
     '-batchmode',
     '-nographics',
     '-quit',
-    '-projectPath', $PROJECT,
+    '-projectPath', "`"$PROJECT`"",
     '-executeMethod', 'Emberfall.Editor.HeadlessVerify.RunAll',
-    '-logFile', $LOG
+    '-logFile', "`"$LOG`""
 )
 
-& $UnityPath @unityArgs
-$unityExit = $LASTEXITCODE
+$proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
+$finished = $proc.WaitForExit(480000)
+if (-not $finished) {
+    Write-Host "unity-verify: ERROR — Unity timed out after 480 seconds"
+    try { $proc.Kill() } catch { Write-Host "unity-verify: WARNING — could not stop timed-out Unity process: $($_.Exception.Message)" }
+    $proc.WaitForExit()
+    $unityExit = 124
+} else {
+    $unityExit = $proc.ExitCode
+}
 
 # ── Log read ────────────────────────────────────────────────────────────────
 if (-not (Test-Path $LOG)) {
