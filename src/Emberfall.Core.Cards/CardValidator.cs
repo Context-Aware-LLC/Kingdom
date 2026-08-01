@@ -71,7 +71,7 @@ namespace Emberfall.Core.Cards
             [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:531 (weapons only)
             [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
             [Trigger.ON_TURN_START] = TriggerLiveness.Dead, // EF-011
-            [Trigger.ON_TURN_END] = TriggerLiveness.Dead, // EF-012
+            [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
             [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
             [Trigger.ON_SPELL_CAST] = TriggerLiveness.Dead, // EF-016
             [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b

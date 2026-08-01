@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 2,
+  "name": "turn_end_toll",
+  "engineContractVersion": "interfaces.v3",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0004",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "seed": 2718281828459045,
+  "p0Deck": [
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller"
+  ],
+  "p1Deck": [
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller",
+    "test_turn_end_toller"
+  ],
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i23",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i33",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "ec7902a4228e584b5fc8f2ea7ef2668ad8be144e7e26a482099effbfadd150d0",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "onDraw",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "onPlay",
+        "src": "i23",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 4,
+        "kind": "onDamage",
+        "src": "i23",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 5,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 6,
+        "kind": "onDraw",
+        "src": "i37",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 7,
+        "kind": "onPlay",
+        "src": "i33",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 8,
+        "kind": "onTurnEnd",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 9,
+        "kind": "onDamage",
+        "src": "i33",
+        "tgt": "i1",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 10,
+        "kind": "onDamage",
+        "src": "i23",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 11,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 12,
+        "kind": "onDraw",
+        "src": "i27",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 13,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 14,
+        "kind": "onDamage",
+        "src": "i23",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 15,
+        "kind": "onDamage",
+        "src": "i33",
+        "tgt": "i1",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 16,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 17,
+        "kind": "onDraw",
+        "src": "i38",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      }
+    ]
+  }
+}

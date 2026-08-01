@@ -204,6 +204,19 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void OnTurnEnd_Is_Live_After_EF012()
+        {
+            var effect = new EffectDef(Trigger.ON_TURN_END, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            var def = WithEffect(CardType.MINION, effect);
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                "EF-012 raises ON_TURN_END from CommandProcessor.ApplyEndTurn, so C21 must not classify it as dead.");
+        }
+
+        [Test]
         public void OnDamaged_Is_Live_After_EF013()
         {
             var effect = new EffectDef(Trigger.ON_DAMAGED, Action.DRAW, amount: 1, amount2: null,
@@ -236,8 +249,9 @@ namespace Emberfall.Core.Tests.CardValidation
             // Fail-closed only works if the table is exhaustive; a new enum member with no row is a
             // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
-                               Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED };
-            var dead = new[] { Trigger.ON_TURN_START, Trigger.ON_TURN_END,
+                               Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
+                               Trigger.ON_TURN_END };
+            var dead = new[] { Trigger.ON_TURN_START,
                                Trigger.ON_HEAL, Trigger.ON_SPELL_CAST, Trigger.AURA };
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();

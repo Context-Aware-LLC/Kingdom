@@ -76,5 +76,9 @@
     "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 2 } ] },
   { "id": "hero_power_quicken",       "name": "Quicken",      "type": "HERO_POWER", "cost": 2, "class": "VERDANT",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/hero_power_quicken",
     "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 3 } ] },
-  { "id": "token_tide_wisp",          "name": "Tide Wisp",    "type": "MINION",     "cost": 0, "attack": 0, "health": 2, "class": "TIDECALLER", "rarity": "COMMON", "keywords": ["TAUNT"], "setId": "CORE", "collectible": false, "artId": "art/token_tide_wisp" }
+  { "id": "token_tide_wisp",          "name": "Tide Wisp",    "type": "MINION",     "cost": 0, "attack": 0, "health": 2, "class": "TIDECALLER", "rarity": "COMMON", "keywords": ["TAUNT"], "setId": "CORE", "collectible": false, "artId": "art/token_tide_wisp" },
+
+  { "_comment": "EF-012 fixture card. Fixture-only: it exists to give turn_end_toll an ON_TURN_END subscriber and is deliberately NOT in the shipping cards/** tree. Appending a definition here is inert for the other three fixtures — decks are explicit id lists and the hasher walks state, never the db — which the unrebaselined R1 run proves.",
+    "id": "test_turn_end_toller",      "name": "Turn-End Toller","type": "MINION",   "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_turn_end_toller",
+    "effects": [ { "trigger": "ON_TURN_END", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
 ]

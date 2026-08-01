@@ -80,7 +80,8 @@ namespace Emberfall.Core.Contracts
         // DEAD — no raise site. Intended site: CommandProcessor.StartTurnSequence, before the draw.
         ON_TURN_START,
 
-        // DEAD — no raise site. Intended site: CommandProcessor.ApplyEndTurn, before the seat flip.
+        // LIVE — CommandProcessor.ApplyEndTurn raises it after the onTurnEnd VFX emit and before the
+        // seat flip (EF-012). Fires for BOTH players' permanents, not just the active player's.
         ON_TURN_END,
 
         // LIVE — ActionHandlers + CommandProcessor.
