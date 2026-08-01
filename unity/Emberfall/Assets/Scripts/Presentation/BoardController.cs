@@ -698,12 +698,9 @@ namespace Emberfall.Presentation
         // instance a material per digit and break batching across the whole board.
         private static Material s_statLabelMaterial;
 
-        // §3.1 two-typeface split (plan decision 17, EF-050): display face for name/stats/digits,
-        // clean text face for the rules box. Loaded once each; TMP's default font is the fallback.
-        // To complete EF-050: open Unity Editor, run Font Asset Creator on NotoSans-Regular.ttf
-        // (already in Assets/Art/Fonts/), then register both SDFs in EF-041's Addressables group.
+        // EF-050 display face for card names, stats, and digits. Loaded once;
+        // TMP's default font remains the fallback when the asset is unavailable.
         private static TMP_FontAsset s_cardFont;
-        private static TMP_FontAsset s_bodyFont;
 
         // Internal, not private: DeckPileView's hover count is a card-face digit by any other
         // name and has to be the same typeface — a second copy of this loader would be a second

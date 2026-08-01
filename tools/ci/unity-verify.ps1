@@ -36,9 +36,39 @@ if (Test-Path $lockFile) {
     exit 1
 }
 
+# Git operations can replace a script while preserving an old timestamp. Unity's Asset Database can
+# then regard a cached assembly as current, so a fresh Editor process alone is not a compile barrier.
+# Advance project-owned compilation-input timestamps before startup. Unity's normal initial refresh
+# will reimport these inputs and rebuild scripts without force-refreshing unrelated assets.
+$compileRoots = @(
+    (Join-Path $PROJECT 'Assets'),
+    (Join-Path $PROJECT 'Packages')
+)
+$compileExtensions = @('.cs', '.asmdef', '.asmref', '.rsp')
+$compileInputs = @(
+    foreach ($root in $compileRoots) {
+        if (Test-Path -LiteralPath $root) {
+            Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
+                $compileExtensions -contains $_.Extension.ToLowerInvariant()
+            }
+        }
+    }
+)
+
+if ($compileInputs.Count -eq 0) {
+    Write-Error "No project-owned Unity compilation inputs were found under Assets or Packages."
+    exit 1
+}
+
+$compileBarrierUtc = [DateTime]::UtcNow
+foreach ($input in $compileInputs) {
+    [System.IO.File]::SetLastWriteTimeUtc($input.FullName, $compileBarrierUtc)
+}
+
 Write-Host "unity-verify: Unity  $UnityPath"
 Write-Host "unity-verify: project $PROJECT"
 Write-Host "unity-verify: log    $LOG"
+Write-Host "unity-verify: compile barrier $($compileBarrierUtc.ToString('O')) ($($compileInputs.Count) input(s))"
 Write-Host "unity-verify: launching headless…"
 Write-Host ""
 
