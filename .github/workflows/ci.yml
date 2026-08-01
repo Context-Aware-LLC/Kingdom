@@ -1,6 +1,6 @@
 name: Emberfall CI — determinism gates
 
-# The 9-stage CI pipeline (testing/ci-gates.md §2). At M1 there is NO paid Unity seat
+# The 9-stage CI pipeline (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §2). At M1 there is NO paid Unity seat
 # (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
 #
 #   Stage 1  Lint + rebaseline-guard      BLOCKING   (dotnet format + golden rebaseline path-pair)

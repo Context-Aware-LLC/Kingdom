@@ -110,7 +110,7 @@ with the R1 gate as witness.
 ## Player-facing input consults the vulnerability index
 
 **Before implementing anything that accepts client-authored input, scan §4 of the security
-index** (`Project Docs\Emberfall\docs\security\README.md`). It is a trigger-keyed table, a few
+index** (`Project Docs\Emberfall\docs\dev-docs\quality\security.md`). It is a trigger-keyed table, a few
 words per row, so the scan takes seconds and a matching row is obvious. Match a row, read that
 `VULN-nnn` in full, and follow its binding rules. This index is a specification, not a tracker.
 
@@ -188,7 +188,7 @@ is harmless while it stays in the working tree; only the commit is damaging.
 ## Conventions
 
 - Shaders use the `SG_<Name>` naming convention.
-- Keep cross-references explicit (e.g. "see `interfaces.md §5.3`") when one spec depends on
+- Keep cross-references explicit (e.g. "see `hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.3`") when one spec depends on
   another.
 
 ## Two things about this working copy that will cost you a day
