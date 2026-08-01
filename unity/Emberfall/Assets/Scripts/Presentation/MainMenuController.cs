@@ -81,7 +81,12 @@ namespace Emberfall.Presentation
 
         private void OnEnable()
         {
-            _root = GetComponent<UIDocument>().rootVisualElement;
+            // GetComponent<UIDocument>().rootVisualElement is Unity's synthetic per-panel
+            // wrapper, NOT the UXML's own top-level element — the "root" element (which carries
+            // mm-root--hidden) is one level below it. Grabbing the wrapper here made
+            // RevealMenu's RemoveFromClassList a silent no-op: the class it targeted was never
+            // on the object it called it on, so the menu stayed visibility:hidden forever.
+            _root = GetComponent<UIDocument>().rootVisualElement?.Q<VisualElement>("root");
             if (_root == null)
             {
                 Debug.LogError("[MainMenu] No rootVisualElement — is the UXML assigned?");
