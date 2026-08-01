@@ -72,6 +72,14 @@ namespace Emberfall.Presentation
             }
             MatchSetup    setup = Emberfall.Data.PrebuiltDecks.EmberwardVsTidecaller();
 
+            // Same provider split BoardController and the hero plates use — declared once up here
+            // so VfxDirector's spell-reveal art can share it too.
+#if UNITY_EDITOR
+            IArtProvider artProvider = new EditorArtProvider();
+#else
+            IArtProvider artProvider = new AddressableArtProvider();
+#endif
+
             var p0Id = new PlayerId("P0");
             var p1Id = new PlayerId("P1");
 
@@ -158,15 +166,8 @@ namespace Emberfall.Presentation
             // ── Hero plates (portrait + HP + hero-power disc) ─────────────────────
             if (boardAnchors != null)
             {
-                // Same provider split as BoardController: AssetDatabase in the editor,
-                // Addressables in player builds.
-#if UNITY_EDITOR
-                IArtProvider heroArt = new EditorArtProvider();
-#else
-                IArtProvider heroArt = new AddressableArtProvider();
-#endif
-                var p0Plate = CreateHeroPlate(p0Id, setup.P0Class, boardAnchors, db, heroArt);
-                var p1Plate = CreateHeroPlate(p1Id, setup.P1Class, boardAnchors, db, heroArt);
+                var p0Plate = CreateHeroPlate(p0Id, setup.P0Class, boardAnchors, db, artProvider);
+                var p1Plate = CreateHeroPlate(p1Id, setup.P1Class, boardAnchors, db, artProvider);
                 if (inputRouter != null && p0Plate != null)
                     inputRouter.SetHeroPlates(p0Plate, p1Plate);
             }
@@ -227,6 +228,17 @@ namespace Emberfall.Presentation
             {
                 matchRunner.OnMatchEvent   += vfxDirector.OnMatchEvent;
                 matchRunner.OnStateUpdated += vfxDirector.OnStateUpdated;
+
+                // Opponent-spell-cast-has-no-visible-tell: a played spell has no reveal moment
+                // today, unlike a minion (which announces itself by appearing on the board). Holds
+                // the whole entry for a beat and shows the cast card over its target before the
+                // effect becomes visible. db lives here, not on MatchRunner, so the classifier is
+                // built here and handed down rather than teaching MatchRunner about card types.
+                vfxDirector.Init(artProvider, boardController);
+                float holdSeconds = vfxDirector.SpellRevealHoldSeconds;
+                matchRunner.SpellRevealClassifier = (snapshot, events) =>
+                    SpellRevealClassifier.Classify(snapshot, events, db, holdSeconds);
+                matchRunner.OnSpellReveal += vfxDirector.ShowSpellReveal;
             }
 
             // ── Debug logging ─────────────────────────────────────────────────────

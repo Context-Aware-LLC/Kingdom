@@ -52,6 +52,16 @@ namespace Emberfall.Session
         /// before the banner).</summary>
         public event Action<MatchOutcome> OnMatchEnded;
 
+        /// <summary>Optional: classify a released-but-not-yet-visible command as a spell-cast
+        /// reveal. Null = no reveal beat, existing instant-effect behavior. Set by the scene's
+        /// bootstrap (GameBootstrap), which is where the card database lives — this class stays
+        /// card-type-agnostic, same as everywhere else in it.</summary>
+        public Func<GameState, IReadOnlyList<GameEvent>, SpellReveal?> SpellRevealClassifier { get; set; }
+
+        /// <summary>Fires the instant a spell-cast entry begins its extra hold, before its state/
+        /// events release — the signal for a reveal visual to appear while the hold plays out.</summary>
+        public event Action<SpellReveal> OnSpellReveal;
+
         private IMatchSession[] _sessions;   // [0]=P0, [1]=P1
         private IIntentSource[] _sources;    // index-parallel to _sessions
         private readonly PlaybackQueue _playback = new PlaybackQueue();
@@ -105,7 +115,21 @@ namespace Emberfall.Session
             // entry exists by the time its batch attaches.
             var view = _sessions[_owner.ViewSeat]; // explicit — no longer the hardcoded _sessions[0]
             view.OnSnapshot += st => _playback.Enqueue(st, instant: st.Phase == TurnPhase.Mulligan);
-            view.OnEvents   += batch => _playback.AttachEventsToNewest(batch);
+            view.OnEvents   += batch =>
+            {
+                _playback.AttachEventsToNewest(batch);
+
+                // view.Current is already the post-command snapshot here (OnSnapshot fires before
+                // OnEvents for the same command, per this class's own cadence contract above), so
+                // the classifier can resolve the played card's definition straight off it.
+                var classify = SpellRevealClassifier;
+                SpellReveal? reveal = classify?.Invoke(view.Current, batch);
+                if (reveal.HasValue)
+                {
+                    _playback.SetExtraHoldForNewest(reveal.Value.HoldSeconds);
+                    OnSpellReveal?.Invoke(reveal.Value);
+                }
+            };
 
             _running = true;
 

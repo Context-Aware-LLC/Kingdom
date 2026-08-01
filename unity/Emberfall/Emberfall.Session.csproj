@@ -57,6 +57,7 @@
     <Compile Include="Assets\Scripts\Session\MatchRunner.cs" />
     <Compile Include="Assets\Scripts\Session\IIntentSource.cs" />
     <Compile Include="Assets\Scripts\Session\PlayerAccount.cs" />
+    <Compile Include="Assets\Scripts\Session\SpellRevealClassifier.cs" />
     <Compile Include="Assets\Scripts\Session\NullIntentSource.cs" />
     <Compile Include="Assets\Scripts\Session\DeviceIdentity.cs" />
     <Compile Include="Assets\Scripts\Session\DeviceAccounts.cs" />
@@ -1149,12 +1150,12 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\ref\System.Text.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEditor.UI">
       <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

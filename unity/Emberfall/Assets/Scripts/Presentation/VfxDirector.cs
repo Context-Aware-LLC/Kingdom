@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
+using Emberfall.Session;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -25,8 +26,26 @@ namespace Emberfall.Presentation
         [Header("Board anchors for world-position resolution")]
         [SerializeField] private BoardAnchors boardAnchors;
 
+        [Header("Spell reveal (opponent-spell-cast-has-no-visible-tell)")]
+        [Tooltip("How long the whole entry holds before the spell's effect becomes visible — the " +
+                 "beat the reveal is read in. Also fed to MatchRunner.SpellRevealClassifier via " +
+                 "GameBootstrap, so this is the one tunable for the pause itself.")]
+        [SerializeField, Range(0f, 3f)] private float spellRevealHoldSeconds = 0.6f;
+        [Tooltip("How much longer the reveal visual stays up AFTER the hold ends (overlapping the " +
+                 "now-visible effect) so it doesn't feel like it vanishes the instant damage lands.")]
+        [SerializeField, Range(0f, 3f)] private float spellRevealLingerSeconds = 1.2f;
+        [Tooltip("Reveal card size as a multiple of the in-hand/board card size.")]
+        [SerializeField, Range(0.5f, 2f)] private float spellRevealScale = 1.2f;
+
         private readonly Dictionary<VfxEvent, ParticleSystem> _lookup = new();
         private GameState _state;
+        private IArtProvider _artProvider;
+        private BoardController _board;
+
+        /// <summary>The one tunable MatchRunner needs to know about — how long the reveal holds
+        /// up the rest of the command. Read by GameBootstrap when it builds the classifier
+        /// delegate, so this stays the single source for the number (Sam, 2026-08-01).</summary>
+        public float SpellRevealHoldSeconds => spellRevealHoldSeconds;
 
         private void Awake()
         {
@@ -35,8 +54,56 @@ namespace Emberfall.Presentation
                     _lookup[entry.Kind] = entry.Prefab;
         }
 
+        /// <summary>Wire what's needed to draw a spell reveal as a REAL card, not a bare texture:
+        /// the art provider for its illustration and BoardController.BuildDetachedCard for the
+        /// same frame/art-fit/name rig a card in hand or on the board gets. Called once by
+        /// GameBootstrap, after boardController.Initialize (BuildDetachedCard depends on it).</summary>
+        public void Init(IArtProvider artProvider, BoardController board)
+        {
+            _artProvider = artProvider;
+            _board = board;
+        }
+
         // Called by MatchRunner.OnStateUpdated — keeps _state current for anchor resolution.
         public void OnStateUpdated(GameState state) => _state = state;
+
+        /// <summary>Called by MatchRunner.OnSpellReveal, the instant a spell-cast entry begins its
+        /// extra hold — shows the cast card over its target (or the caster's hero, if there's no
+        /// single target) for spellRevealHoldSeconds + spellRevealLingerSeconds, then self-destroys.
+        /// Uses _state as of THIS call (the pre-effect snapshot: MatchRunner fires this before the
+        /// held entry releases), which matters for a lethal hit — the target is still on the board
+        /// in this snapshot even though it won't be once the hold ends.</summary>
+        public void ShowSpellReveal(SpellReveal reveal)
+        {
+            if (boardAnchors == null || reveal.Def == null || _board == null) return;
+
+            Vector3? pos = ResolvePosition(reveal.Target) ?? ResolveHeroPosition(reveal.Controller);
+            if (pos == null) return;
+
+            // A real card, not a stretched texture: BuildDetachedCard gives the same frame,
+            // art-cover-fit and name label a card in hand or on the board gets, through the
+            // shipping CreatePresenter rig — one card face implementation, not a second one drifting
+            // here. anchorGo's scale carries down to every child quad/label uniformly.
+            var anchorGo = new GameObject($"SpellReveal_{reveal.Def.Name}");
+            anchorGo.transform.position = pos.Value + new Vector3(0f, 0f, -0.2f); // in front of the target
+            anchorGo.transform.localScale = Vector3.one * spellRevealScale;
+
+            CardPresenter card = _board.BuildDetachedCard(anchorGo.transform);
+            card.Bind(reveal.Def, new CardLiveState(new InstanceId(-1)));
+            if (_artProvider != null && !string.IsNullOrEmpty(reveal.Def.ArtId))
+                _artProvider.LoadArt(reveal.Def.ArtId, card.SetArt);
+
+            Destroy(anchorGo, spellRevealHoldSeconds + spellRevealLingerSeconds);
+        }
+
+        private Vector3? ResolveHeroPosition(PlayerId controller)
+        {
+            if (boardAnchors == null || _state == null) return null;
+            foreach (var ps in _state.Players)
+                if (ps.Id == controller)
+                    return boardAnchors.HeroAnchor(ps.Id)?.position;
+            return null;
+        }
 
         // Called by MatchRunner.OnMatchEvent — plays one effect per event in emission order.
         public void OnMatchEvent(IReadOnlyList<GameEvent> batch)

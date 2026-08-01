@@ -30,6 +30,11 @@ namespace Emberfall.Session
             /// <summary>Instant entries (mulligan picks, initial state) skip pacing — they resolve
             /// simultaneously in fiction and shouldn't drip one by one (old MatchRunner rule kept).</summary>
             public bool Instant { get; }
+            /// <summary>Extra pacing beyond the normal per-command delay, e.g. a spell-cast reveal
+            /// beat (MatchRunner's SpellRevealClassifier) that should hold the whole entry — state
+            /// AND events — until the reveal has had time to read before its effect becomes visible.
+            /// 0 for the overwhelming majority of entries.</summary>
+            public float ExtraHoldSeconds { get; internal set; }
         }
 
         private readonly Queue<Entry> _queue = new Queue<Entry>();
@@ -52,14 +57,24 @@ namespace Emberfall.Session
                 _newest.Events = events;
         }
 
-        /// <summary>Release the head entry if it's instant, pacing is off, or the window elapsed.</summary>
+        /// <summary>Add pacing to the most recent entry on top of the normal per-command delay
+        /// (MatchRunner.SpellRevealClassifier). A no-op if there's no newest entry to hold.</summary>
+        public void SetExtraHoldForNewest(float seconds)
+        {
+            if (_newest != null) _newest.ExtraHoldSeconds = seconds;
+        }
+
+        /// <summary>Release the head entry if it's instant, pacing is off, or the window elapsed.
+        /// The window is the normal per-command delay plus that entry's own ExtraHoldSeconds (0
+        /// unless something asked for a reveal beat) — skipped entirely when delaySeconds is 0
+        /// (replay/perf testing wants zero waiting, full stop, not just the normal pacing).</summary>
         public bool TryDequeue(double now, float delaySeconds, out Entry entry)
         {
             entry = null;
             if (_queue.Count == 0) return false;
 
             var head = _queue.Peek();
-            if (!head.Instant && delaySeconds > 0f && now - _lastRelease < delaySeconds)
+            if (!head.Instant && delaySeconds > 0f && now - _lastRelease < delaySeconds + head.ExtraHoldSeconds)
                 return false;
 
             entry = _queue.Dequeue();
