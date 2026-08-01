@@ -1,4 +1,4 @@
-# Emberfall.Net.Server image (B1 commit 2, b1-match-server-design.md §11).
+# Emberfall.Net.Server image (B1 commit 2, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §11).
 # BUILD CONTEXT IS THE REPO ROOT (RC F4): the server references five sibling src/ projects and
 # bakes in the canonical card data — the echo's self-contained single-project context does not
 # transfer. From deploy/walking-skeleton: docker compose build (context: ../..).
