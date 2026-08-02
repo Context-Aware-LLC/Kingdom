@@ -11,11 +11,14 @@ namespace Emberfall.Core.Tests.Combat
     /// <summary>
     /// EF-013 — <see cref="DamagePipeline"/> now holds the <see cref="EffectInterpreter"/> (the queue) and
     /// raises a damaged minion's ON_DAMAGED onto it, <b>enqueue-only</b> (no drain between hits — see the
-    /// decision recorded in <c>DamagePipeline.cs</c>). These tests pin the two things that matters about that:
-    /// (1) an on-damage trigger actually fires on a normal hit, and (2) a mutual damage→counter-damage cycle
+    /// decision recorded in <c>DamagePipeline.cs</c>). These tests pin three things about that:
+    /// (1) an on-damage trigger actually fires on a normal hit, (2) an <b>Aegis-absorbed</b> hit fires nothing
+    /// — the pipeline's two damage sites, EF-014 — and (3) a mutual damage→counter-damage cycle
     /// <b>terminates</b>, bounded by <see cref="MatchEngine.ActionResolutionCap"/> in the interpreter's single
     /// <see cref="EffectInterpreter.Drain"/> loop rather than recursing without bound.
     /// Driven through the public <c>CommandProcessor.Execute</c> door; no golden fixtures.
+    /// The cross-hit ordering these leave untested — both volley hits landing before any retaliation —
+    /// is pinned by the <c>on_damaged_thorns</c> golden's event stream (EF-014).
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -64,6 +67,10 @@ namespace Emberfall.Core.Tests.Combat
                 Position = ps.Board.Count,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
+            // Mirror the real summon path (RulesEngine.cs:67), which derives the shield from the
+            // keyword rather than leaving it false — otherwise a DIVINE_SHIELD def boards unshielded
+            // and an Aegis test would silently pass for the wrong reason.
+            ci.HasAegisShield = ci.Keywords.Contains(Keyword.DIVINE_SHIELD);
             ps.Board.Add(ci);
             return ci;
         }
@@ -71,10 +78,11 @@ namespace Emberfall.Core.Tests.Combat
         private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? selector = null)
             => new EffectDef(trigger, action, amount, null, null, null, null, selector);
 
-        private static CardDefinition Minion(string id, int atk, int hp, IReadOnlyList<EffectDef>? effects = null)
+        private static CardDefinition Minion(string id, int atk, int hp, IReadOnlyList<EffectDef>? effects = null,
+            IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects ?? System.Array.Empty<EffectDef>(),
+                keywords ?? System.Array.Empty<Keyword>(), effects ?? System.Array.Empty<EffectDef>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Spell(string id, params EffectDef[] effects)
@@ -107,6 +115,36 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(stinger.CurrentHealth, Is.EqualTo(9), "stinger took the 1-damage poke.");
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(27),
                 "ON_DAMAGED fired exactly once: a single 3-damage ping back at the poking hero.");
+        }
+
+        [Test]
+        public void Aegis_Absorbed_Hit_Raises_No_ON_DAMAGED()
+        {
+            // EF-014 site 2 — the Aegis early return (DamagePipeline.cs:60-65). The SAME minion as the test
+            // above, plus DIVINE_SHIELD: the shield eats the hit, so the minion was never "damaged" and its
+            // ON_DAMAGED must not fire (G0 ruling R-2(c), "no on-hit riders" on an absorbed hit).
+            //
+            // This is the only place that decision is enforced rather than merely commented. Deleting the
+            // early return, or moving the raise above it, makes the enemy hero take 3 and fails here.
+            var db = new FakeCardDatabase()
+                .Register(Spell("poke", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 1)))
+                .Register(Minion("wardstinger", 1, 10,
+                    effects: new[] { Eff(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, amount: 3, selector: "ENEMY_HERO") },
+                    keywords: new[] { Keyword.DIVINE_SHIELD }));
+            var s = MainPhase();
+            var warded = Board(s, 1, db.Get("wardstinger"));   // enemy minion; its enemy hero = P0
+            var poke = Hand(s, 0, "poke");
+
+            Assert.That(warded.HasAegisShield, Is.True, "precondition: it boarded with its shield up.");
+
+            var r = Processor(db).Execute(s, new PlayCardIntent(
+                s.Players[0].Id, poke.Id, 0, new[] { new TargetRef(warded.Id) }));
+
+            Assert.That(r.Accepted, Is.True);
+            Assert.That(warded.CurrentHealth, Is.EqualTo(10), "Aegis absorbed the whole hit — no health lost.");
+            Assert.That(warded.HasAegisShield, Is.False, "…and the shield is spent.");
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(30),
+                "ON_DAMAGED did NOT fire: an absorbed hit is not 'damaged', so no 3-damage ping came back.");
         }
 
         [Test]
