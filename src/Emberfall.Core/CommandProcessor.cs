@@ -641,9 +641,23 @@ namespace Emberfall.Core
             var interp = new EffectInterpreter(state, _db, buf);
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
 
-            // EF-011 seam: raise Trigger.ON_TURN_START here — AFTER the thaw/mana reset above and BEFORE the
-            // draw, so a start-of-turn cascade settles before DrawOne (or a corpse would draw fatigue).
-            // Nothing is raised yet, so the Drain is a no-op and this block is hash-neutral until EF-011 lands.
+            // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
+            // effect sees the board the turn actually starts on (unfrozen, sickness cleared, mana
+            // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
+            // alive. Draining after DrawOne would let a corpse draw fatigue.
+            //
+            // SCOPE IS BOTH SIDES, exactly as ON_TURN_END (EF-012). RaiseObservers is the engine's one
+            // observer sweep, so a controller filter here would be a new, unspecified rule rather than an
+            // implementation detail — "at the start of YOUR turn" is the Hearthstone reading and is not
+            // what the GDD says. `excluded: null` because nothing "causes" a turn to start; unlike a
+            // summon there is no source card to leave out. Order is RaiseObservers' canonical
+            // active-side-first, board left→right sweep, which is what makes this replay-stable.
+            interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null);
+
+            // The start-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE
+            // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is
+            // non-empty, and a start-of-turn toll that kills its own controller must end the match here
+            // rather than draw a card into a finished game.
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;

@@ -69,16 +69,22 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Three card triggers are NO-GO until implemented
+## Two card triggers are NO-GO until implemented
 
-**Do not author a card using any of these.** They are declared in `Enums.cs`'s `Trigger` enum
+**Do not author a card using either of these.** They are declared in `Enums.cs`'s `Trigger` enum
 and **raised nowhere in the engine**. A card using one parses, validates, loads, and then does
 nothing — forever, silently, with no error.
 
-> `ON_TURN_START` · `ON_HEAL` · `AURA`
+> `ON_HEAL` · `AURA`
 
-**The eight that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
-`ON_DAMAGED`, `ON_TURN_END`, `ON_SPELL_CAST`.
+**The nine that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
+`ON_DAMAGED`, `ON_TURN_START`, `ON_TURN_END`, `ON_SPELL_CAST`.
+
+**`ON_TURN_START` fires on BOTH players' turn starts** (EF-011) — same observer sweep and same
+caveat as `ON_TURN_END`: not "at the start of *your* turn". It is raised in `StartTurnSequence`
+**after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrozen
+board with mana already refilled, and a start-of-turn toll that kills its controller ends the
+match instead of drawing into a finished game.
 
 **`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
 permanent on both boards, not "at the end of *your* turn". A card that should only fire on its

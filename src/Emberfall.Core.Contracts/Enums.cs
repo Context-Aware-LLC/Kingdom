@@ -43,9 +43,11 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. Six of these have no raise site anywhere in the engine — a card
-    /// using one parses, validates, loads and then does nothing, forever, silently, with no error.
-    /// The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>DECLARED IS NOT LIVE. Two of these — ON_HEAL (EF-015) and AURA (EF-017b) — still have no
+    /// raise site anywhere in the engine: a card using one parses, validates, loads and then does
+    /// nothing, forever, silently, with no error. The markers below are the guard, and `CLAUDE.md`
+    /// repeats them for card authors. (This count was stale at "six" through EF-012/EF-016/EF-020;
+    /// it is part of the retirement trigger below, so correct it when you flip a marker.)</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
@@ -78,7 +80,9 @@ namespace Emberfall.Core.Contracts
         // reentrantly inside ApplyDamage via LIFESTEAL.
         ON_HEAL,
 
-        // DEAD — no raise site. Intended site: CommandProcessor.StartTurnSequence, before the draw.
+        // LIVE — CommandProcessor.StartTurnSequence raises it after the thaw/mana reset and before the
+        // draw (EF-011). Fires for BOTH players' permanents, not just the active player's — the same
+        // scope ruling as ON_TURN_END, for the same reason.
         ON_TURN_START,
 
         // LIVE — CommandProcessor.ApplyEndTurn raises it after the onTurnEnd VFX emit and before the

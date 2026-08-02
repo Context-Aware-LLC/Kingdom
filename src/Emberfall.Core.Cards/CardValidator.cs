@@ -70,7 +70,7 @@ namespace Emberfall.Core.Cards
             [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
             [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:560 (weapons only)
             [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
-            [Trigger.ON_TURN_START] = TriggerLiveness.Dead, // EF-011
+            [Trigger.ON_TURN_START] = TriggerLiveness.Live, // CommandProcessor.StartTurnSequence (both sides, after the thaw, before the draw — EF-011)
             [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
             [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
             [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)

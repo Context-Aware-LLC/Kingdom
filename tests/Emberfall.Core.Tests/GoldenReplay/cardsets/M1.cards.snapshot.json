@@ -94,5 +94,9 @@
     "id": "test_spell_cast_echo",     "name": "Spell Echo",   "type": "MINION",     "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_spell_cast_echo",
     "effects": [ { "trigger": "ON_SPELL_CAST", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
   { "id": "test_spell_cast_probe",    "name": "Probe",        "type": "SPELL",      "cost": 0, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/test_spell_cast_probe",
-    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 2, "target": { "selector": "ENEMY_HERO" } } ] }
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 2, "target": { "selector": "ENEMY_HERO" } } ] },
+
+  { "_comment": "EF-011 fixture card. Fixture-only, same contract as test_turn_end_toller above: appended never inserted, collectible:false, absent from the shipping cards/** tree. Gives turn_start_toll an ON_TURN_START subscriber. Deliberately a mirror of test_turn_end_toller so the two fixtures differ only in WHERE in the turn the toll lands — end-of-turn before the seat flip, versus start-of-turn after the thaw and before the draw.",
+    "id": "test_turn_start_toller",   "name": "Turn-Start Toller","type": "MINION", "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_turn_start_toller",
+    "effects": [ { "trigger": "ON_TURN_START", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
 ]

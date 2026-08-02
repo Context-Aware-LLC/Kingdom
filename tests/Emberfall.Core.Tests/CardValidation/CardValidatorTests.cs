@@ -181,8 +181,10 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Dead_Trigger_Is_An_Error()
         {
-            // ON_TURN_START is declared in the Trigger enum but has no raise site (blocked on EF-011).
-            var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
+            // ON_HEAL is declared in the Trigger enum but has no raise site (blocked on EF-015). This
+            // used to probe ON_TURN_START; EF-011 gave that one a raise site, so it is Live now and no
+            // longer proves anything here.
+            var effect = new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
                 tokenId: null, grantedKeyword: null, vfxOverride: null);
             var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
             Assert.That(report.Ok, Is.False);
@@ -266,8 +268,8 @@ namespace Emberfall.Core.Tests.CardValidation
             // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
-                               Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST };
-            var dead = new[] { Trigger.ON_TURN_START, Trigger.ON_HEAL, Trigger.AURA };
+                               Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST };
+            var dead = new[] { Trigger.ON_HEAL, Trigger.AURA };
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
             Assert.That(missing, Is.Empty,
