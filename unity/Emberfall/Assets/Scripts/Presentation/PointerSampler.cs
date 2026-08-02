@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>One frame of the abstract pointer (EF-048).</summary>
-    internal enum PointerPhase
+    public enum PointerPhase
     {
         /// <summary>Nothing is happening this frame.</summary>
         None,
@@ -15,7 +15,8 @@ namespace Emberfall.Presentation
         Released,
     }
 
-    internal readonly struct PointerSample
+    /// <summary>One sample frame of the abstract pointer, for testing and injection.</summary>
+    public readonly struct PointerSample
     {
         public readonly PointerPhase Phase;
         public readonly Vector2      Position;   // screen pixels, origin bottom-left (Unity convention)
@@ -42,16 +43,25 @@ namespace Emberfall.Presentation
     ///
     /// <para>So: while any touch is live, the mouse stream is ignored outright, and the frames
     /// immediately after a touch ends swallow the synthetic mouse tail.</para>
+    ///
+    /// <para>For testing: <see cref="QueueSyntheticFrame"/> allows the Editor test harness to feed a
+    /// scripted frame sequence, overriding Input readings for headless gesture verification.</para>
     /// </summary>
-    internal sealed class PointerSampler
+    public sealed class PointerSampler
     {
         private int     _fingerId = -1;      // -1 = not tracking a finger
         private Vector2 _last;
         private bool    _mouseSuppressed;    // a touch owned the pointer; ignore the synthetic tail
         private bool    _pendingMouseRelease;// down+up arrived in the SAME frame (fast click)
 
+        private System.Collections.Generic.Queue<PointerSample> _syntheticFrames;  // test-only queue
+
         public PointerSample Sample()
         {
+            // Test injection: if synthetic frames are queued, drain them instead of reading Input.
+            if (_syntheticFrames != null && _syntheticFrames.Count > 0)
+                return _syntheticFrames.Dequeue();
+
             if (Input.touchCount > 0 || _fingerId >= 0)
             {
                 _mouseSuppressed = true;
@@ -76,6 +86,19 @@ namespace Emberfall.Presentation
         {
             _fingerId            = -1;
             _pendingMouseRelease = false;
+        }
+
+        /// <summary>
+        /// EDITOR/TEST ONLY: inject a scripted frame sequence, overriding Input readings for headless
+        /// verification (EF-048 InputGestureVerify). Drains from the queue in order; once depleted,
+        /// Sample() resumes reading Input normally.
+        /// </summary>
+        public void QueueSyntheticFrames(params PointerSample[] frames)
+        {
+            if (_syntheticFrames == null)
+                _syntheticFrames = new System.Collections.Generic.Queue<PointerSample>();
+            foreach (var frame in frames)
+                _syntheticFrames.Enqueue(frame);
         }
 
         private PointerSample SampleTouch()

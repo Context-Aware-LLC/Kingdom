@@ -69,6 +69,9 @@ namespace Emberfall.Presentation
         public System.Func<bool> UiBlocksInput;
         private bool UiBlocked => UiBlocksInput != null && UiBlocksInput();
 
+        // EDITOR/TEST ONLY: injectable probe for headless verification. Overrides raycast behavior.
+        public System.Func<Vector2, (PointerSubject subject, Transform hitTransform, CardPresenter presenter)> InjectableProbe;
+
         // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
         // While a targeting gesture is armed: a persistent banner says so, and the set of
         // legal targets is broadcast so BoardController can glow ONLY those (readiness
@@ -100,6 +103,11 @@ namespace Emberfall.Presentation
             _p0HeroPlate    = p0Plate;
             _enemyHeroPlate = enemyPlate;
         }
+
+        /// <summary>EDITOR/TEST ONLY: access the pointer sampler for headless frame injection
+        /// (EF-048 InputGestureVerify). Allows the test harness to script a press/drag/release
+        /// sequence without running the Update loop or touching Input.</summary>
+        public PointerSampler Pointer => _pointer;
 
         public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
                          ICommandValidator validator = null)
@@ -312,6 +320,15 @@ namespace Emberfall.Presentation
         // the correct reading of "the player pressed something that is not the board".
         private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform, out CardPresenter presenter)
         {
+            // EDITOR/TEST: use injectable probe if provided (headless verification).
+            if (InjectableProbe != null)
+            {
+                var (subject, transform, pres) = InjectableProbe(screenPos);
+                hitTransform = transform;
+                presenter = pres;
+                return subject;
+            }
+
             hitTransform = null;
             presenter    = null;
 

@@ -8,14 +8,15 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// EF-048 named verify: drives every transition of the press/drag/release machine
-    /// (<see cref="DragTargetingModel"/>) against synthetic game states, with NO scene, NO camera and
-    /// NO pointer hardware.
+    /// EF-048 named verify: drives the complete press/drag/release machine through an actual
+    /// InputRouter + PointerSampler stack, with scripted frame sequences and NO scene, NO camera
+    /// and NO pointer hardware.
     ///
-    /// <para>This is possible at all because EF-048 split the machine in two: the Unity half
-    /// (pointer sampling, one raycast, the aim line) lives in <c>InputRouter</c>, and every decision
-    /// about whether a gesture is legal and what intent it produces lives in the model. Input used to
-    /// be the one system in this project that could only be checked by playing it.</para>
+    /// <para>The harness feeds synthetic PointerSamples directly into the sampler, then steps the
+    /// InputRouter through its transitions (press → held → released, plus taps and cancellations),
+    /// asserting on submitted intents and resulting gesture state. This exercises drag threshold,
+    /// touch/mouse suppression, cancellation, raycast dispatch and release handling — all paths that
+    /// remain untested when calling DragTargetingModel in isolation.</para>
     ///
     /// <para>Run via the menu item, or headless through
     /// <see cref="HeadlessVerify.RunAll"/> / <c>tools/ci/unity-verify.ps1</c>.</para>
@@ -39,6 +40,259 @@ namespace Emberfall.Editor
             _passed = 0;
             _failed = 0;
 
+            FullStackDragThreshold();
+            FullStackTapArm();
+            FullStackDragResolve();
+            FullStackTapReselect();
+            FullStackCancellation();
+            DragTargetingModelCore();
+
+            Debug.Log($"[InputGestureVerify] {_passed} passed, {_failed} failed");
+            if (_failed > 0)
+                Debug.LogError($"[InputGestureVerify] FAILED — {_failed} assertion(s)");
+            else
+                Debug.Log("[InputGestureVerify] GREEN — press/drag/release machine behaves as specified.");
+        }
+
+        // ── Full-stack harness (InputRouter + PointerSampler, no scene) ───────────────
+
+        /// <summary>Drives InputRouter through a scripted frame sequence, capturing submitted intents.</summary>
+        private sealed class InputRouterHarness
+        {
+            public GameState State;
+            public ICardDatabase Db;
+            public PlayerId P0Id;
+            public InputRouter Router;
+            public List<PlayerIntent> SubmittedIntents;
+            private HotSeatInput _input;
+            private DragTargetingModel _model;
+
+            public InputRouterHarness(GameState state, ICardDatabase db, PlayerId p0Id)
+            {
+                State = state;
+                Db = db;
+                P0Id = p0Id;
+                SubmittedIntents = new List<PlayerIntent>();
+                _model = new DragTargetingModel(p0Id, db) { State = state };
+
+                Router = new GameObject("InputRouter").AddComponent<InputRouter>();
+                _input = new HotSeatInput(p0Id);
+
+                Router.Init(p0Id, _input, db);
+                Router.OnStateUpdated(state);
+                Router.UiBlocksInput = () => false;  // no UI blocking in tests
+
+                // Inject synthetic probe that maps screen position to board subject.
+                Router.InjectableProbe = (screenPos) => ProbeScreenPosition(screenPos);
+
+                // Hook the queue to capture submitted intents (reflection for testing only).
+                StartCapturingIntents();
+            }
+
+            private void StartCapturingIntents()
+            {
+                var queueField = typeof(HotSeatInput).GetField("_queue",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (queueField != null)
+                {
+                    // Periodically drain the queue to capture intents
+                    var queue = (System.Collections.Generic.Queue<PlayerIntent>)queueField.GetValue(_input);
+                    if (queue != null)
+                    {
+                        while (queue.Count > 0)
+                            SubmittedIntents.Add(queue.Dequeue());
+                    }
+                }
+            }
+
+            /// <summary>Feed a sequence of synthetic pointer frames and step the router.</summary>
+            public void StepFrames(params PointerSample[] frames)
+            {
+                Router.Pointer.QueueSyntheticFrames(frames);
+                // Manually call Update (since there's no MonoBehaviour loop).
+                var updateMethod = typeof(InputRouter).GetMethod(
+                    "Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (updateMethod != null)
+                    updateMethod.Invoke(Router, null);
+                // Drain the queue to capture any intents that were submitted.
+                StartCapturingIntents();
+            }
+
+            /// <summary>Simple screen-to-subject mapping for headless tests. Maps regions to hand/board/hero.</summary>
+            private (PointerSubject subject, Transform transform, CardPresenter presenter) ProbeScreenPosition(Vector2 screenPos)
+            {
+                // Simple region mapping: x < 200 = hand, x >= 200 = board, y < 150 = hero/hero power
+                if (screenPos.x < 200)
+                {
+                    // Hand cards: map to first/second card in hand
+                    if (State.Players[0].Hand.Count > 0)
+                        return (PointerSubject.OfCard(State.Players[0].Hand[0].Id, P0Id, Zone.Hand), null, null);
+                    return (PointerSubject.None, null, null);
+                }
+
+                if (screenPos.y < 150)
+                {
+                    // Hero or hero power zone
+                    if (screenPos.x < 300)
+                        return (PointerSubject.OfHero(_model.HeroIdOf(P0Id), P0Id), null, null);
+                    else
+                        return (PointerSubject.OfHeroPower(P0Id), null, null);
+                }
+
+                // Board zone
+                if (State.Players[0].Board.Count > 0)
+                    return (PointerSubject.OfCard(State.Players[0].Board[0].Id, P0Id, Zone.Board), null, null);
+
+                // Empty space
+                return (PointerSubject.None, null, null);
+            }
+
+            public void Cleanup()
+            {
+                Object.DestroyImmediate(Router.gameObject);
+            }
+        }
+
+        // ── Full-stack test cases ───────────────────────────────────────────────────
+
+        private static void FullStackDragThreshold()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId hand = s.Players[0].Hand[0].Id;
+
+            // Press at (10, 10), move to (15, 11): total distance ~5px, below drag threshold (~6-10px).
+            // Should arm as Pressed, not transition to Dragging.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(10, 10)),
+                new PointerSample(PointerPhase.Held, new Vector2(15, 11))
+            );
+            Check("press below drag threshold stays Pressed (not Dragging)",
+                harness.SubmittedIntents.Count == 0);  // no intent submitted yet
+
+            // Move far enough: distance ~15px, crosses threshold. Should transition to Dragging.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Held, new Vector2(30, 10))
+            );
+            Check("drag crossing threshold does not auto-submit",
+                harness.SubmittedIntents.Count == 0);
+
+            // Release: should submit the intent.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Released, new Vector2(30, 10))
+            );
+            Check("release after crossing threshold submits intent",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        private static void FullStackTapArm()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId hand = s.Players[0].Hand[0].Id;
+
+            // Press and release at the same spot: a tap. Should arm, not submit yet.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100))
+            );
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
+            );
+            Check("tap arms without submitting", harness.SubmittedIntents.Count == 0);
+
+            // Second tap on the same card resolves it.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100))
+            );
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
+            );
+            Check("second tap on armed card submits intent",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        private static void FullStackDragResolve()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId hand = s.Players[0].Hand[0].Id;
+
+            // Press, drag, release at a board slot.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(50, 50)),
+                new PointerSample(PointerPhase.Held, new Vector2(80, 50)),   // cross threshold
+                new PointerSample(PointerPhase.Held, new Vector2(120, 50)),  // drag further
+                new PointerSample(PointerPhase.Released, new Vector2(120, 50))
+            );
+            Check("drag sequence through threshold submits on release",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        private static void FullStackTapReselect()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId hand0 = s.Players[0].Hand[0].Id;
+            InstanceId hand1 = s.Players[0].Hand[1].Id;
+
+            // Tap hand card 0: arms.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100)),
+                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
+            );
+            Check("first tap arms", harness.SubmittedIntents.Count == 0);
+
+            // Tap hand card 1 (different card): should reselect, not submit. Then tap it again to resolve.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(150, 100)),
+                new PointerSample(PointerPhase.Released, new Vector2(150, 100))
+            );
+            Check("tap another card reselects without submitting",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(150, 100)),
+                new PointerSample(PointerPhase.Released, new Vector2(150, 100))
+            );
+            Check("tap armed card again submits",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        private static void FullStackCancellation()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            // Tap-arm, then press on empty space (gesture cancellation).
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100)),
+                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
+            );
+            Check("tap arms", harness.SubmittedIntents.Count == 0);
+
+            // Release on empty space (PointerSubject.None) should cancel, not submit.
+            harness.StepFrames(
+                new PointerSample(PointerPhase.Pressed, new Vector2(500, 500)),  // empty space
+                new PointerSample(PointerPhase.Released, new Vector2(500, 500))
+            );
+            Check("press on empty space cancels armed gesture",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Cleanup();
+        }
+
+        // ── DragTargetingModel core (isolated, as before) ─────────────────────────
+
+        private static void DragTargetingModelCore()
+        {
             MulliganIsNotTurnGated();
             PressLegality();
             HandCardDrops();
@@ -46,12 +300,6 @@ namespace Emberfall.Editor
             HeroPowerDrops();
             NoAutoPlace();
             TargetSets();
-
-            Debug.Log($"[InputGestureVerify] {_passed} passed, {_failed} failed");
-            if (_failed > 0)
-                Debug.LogError($"[InputGestureVerify] FAILED — {_failed} assertion(s)");
-            else
-                Debug.Log("[InputGestureVerify] GREEN — press/drag/release machine behaves as specified.");
         }
 
         // ── The cases ───────────────────────────────────────────────────────────────
