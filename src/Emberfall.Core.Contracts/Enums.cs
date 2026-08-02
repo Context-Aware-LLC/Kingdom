@@ -60,9 +60,10 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor.
         ON_PLAY,
 
-        // LIVE — EffectInterpreter.
-        // TRAP: RulesEngine.BreakWeapon raises nothing at all, so a Deathrattle on a WEAPON
-        // never fires. That is a separate gap from this trigger being live on minions.
+        // LIVE on BOTH card types. Minions: EffectInterpreter.DeathCheck (the deathrattle cascade).
+        // Weapons: RulesEngine.BreakWeapon, on durability exhaustion AND on equip-replacement (EF-020).
+        // A weapon's rattle ENQUEUES like a minion's, so on a replacement the NEW weapon is already
+        // equipped when it resolves — an ON_DEATH that equips will break the replacement, not itself.
         ON_DEATH,
 
         // LIVE, BUT WEAPONS ONLY. CommandProcessor gates the raise on

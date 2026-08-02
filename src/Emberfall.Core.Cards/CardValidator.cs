@@ -66,7 +66,7 @@ namespace Emberfall.Core.Cards
         {
             [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:325,348 (battlecry / weapon equip)
             [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:333,411 (spell / hero power)
-            [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion deathrattle) — weapon case gated below
+            [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
             [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:326, ActionHandlers.cs:108
             [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:531 (weapons only)
             [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
@@ -164,12 +164,9 @@ namespace Emberfall.Core.Cards
                             $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:527-531) — it is dead on a {def.Type}.");
                         break;
                 }
-                // ON_DEATH is live for minions but a WEAPON deathrattle never fires: RulesEngine.BreakWeapon
-                // (RulesEngine.cs:90-96) emits onDeath VFX and raises no trigger. Error until EF-020 gives it a
-                // raise site — flip this to allow ON_DEATH on a weapon in the SAME commit that lands EF-020.
-                if (fx.Trigger == Trigger.ON_DEATH && def.Type == CardType.WEAPON)
-                    Err("C21-WEAPON-DEATHRATTLE", $"{prefix}.trigger",
-                        "ON_DEATH on a WEAPON never fires — RulesEngine.BreakWeapon raises no trigger (blocked on EF-020).");
+                // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave
+                // RulesEngine.BreakWeapon a raise site. It is now live on BOTH card types, so the gate is
+                // gone rather than relaxed — there is no weapon-shaped exception left to express.
 
                 // C10
                 if (AmountRequiredActions.Contains(fx.Action) && fx.Amount is null)

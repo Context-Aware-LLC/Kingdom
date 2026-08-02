@@ -357,7 +357,7 @@ namespace Emberfall.Core
                 case CardType.WEAPON:
                     card.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(card);
-                    RulesEngine.BreakWeapon(state, seat, buf); // destroy old weapon before equipping new
+                    RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
                     ps.Weapon = new WeaponInstance
                     {
                         Id = state.NextInstanceId(),
@@ -566,7 +566,7 @@ namespace Emberfall.Core
             {
                 ps.Weapon.Durability--;
                 if (ps.Weapon.Durability <= 0)
-                    RulesEngine.BreakWeapon(state, seat, buf);
+                    RulesEngine.BreakWeapon(interp, seat);   // rattle enqueued; interp.Drain() below resolves it
             }
 
             // Settle deaths, deathrattles, win-check.

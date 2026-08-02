@@ -84,15 +84,30 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// Destroy the equipped weapon for <paramref name="seat"/>, emitting onDeath. No-op if no weapon.
-        /// Called before equipping a new weapon and by combat when durability reaches zero.
+        /// Destroy the equipped weapon for <paramref name="seat"/>, emitting onDeath and raising the weapon's
+        /// ON_DEATH deathrattle onto <paramref name="interp"/>'s queue (EF-020). No-op if no weapon. Called
+        /// before equipping a new weapon and by combat when durability reaches zero.
+        ///
+        /// <para>Takes the interpreter rather than (state, buf) because a weapon deathrattle has to enqueue,
+        /// and every caller already holds one — same shape as <see cref="DamagePipeline.ApplyDamage"/>. The
+        /// deathrattle ENQUEUES, it does not resolve here: it drains with everything else, so on an equip
+        /// replacement the new weapon is already in the slot by the time the old one's rattle runs. That
+        /// mirrors minion deathrattles (a board has already moved on when theirs resolve) and keeps the
+        /// resolution order the single deterministic one the golden-replay gate pins.</para>
         /// </summary>
-        public static void BreakWeapon(GameState state, int seat, EventBuffer buf)
+        public static void BreakWeapon(EffectInterpreter interp, int seat)
         {
-            var ps = state.Players[seat];
+            var ps = interp.State.Players[seat];
             if (ps.Weapon is null) return;
-            buf.Emit(VfxEvent.onDeath, source: ps.Weapon.Id);
-            ps.Weapon = null;
+
+            var broken = ps.Weapon;
+            interp.Events.Emit(VfxEvent.onDeath, source: broken.Id);
+            ps.Weapon = null;   // leave the slot BEFORE raising, so the rattle observes an unequipped hero
+
+            // WeaponInstance carries no CardInstance of its own, so wrap it in a throwaway one purely for
+            // effect lookup — exactly as CommandProcessor.ApplyAttack does for ON_ATTACK.
+            var weaponCard = new CardInstance(broken.Id, broken.DefinitionId, ps.Id);
+            interp.RaiseSelf(weaponCard, Trigger.ON_DEATH, System.Array.Empty<CharacterRef>());
         }
 
         /// <summary>
