@@ -333,7 +333,7 @@ namespace Emberfall.Core
             if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             int seat = ctx.State.SeatOf(ctx.Source.Controller);
-            RulesEngine.BreakWeapon(ctx.State, seat, ctx.Events); // destroy old weapon before equipping new
+            RulesEngine.BreakWeapon(ctx.Interpreter, seat); // destroy old weapon (rattle enqueued) before equipping new
             ps.Weapon = new WeaponInstance
             {
                 Id = ctx.State.NextInstanceId(),

@@ -230,7 +230,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void OnDeath_Is_Live_On_A_Minion_But_A_Weapon_Deathrattle_Is_Blocked_On_EF020()
+        public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
         {
             EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
                 tokenId: null, grantedKeyword: null, vfxOverride: null);
@@ -239,8 +239,11 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion deathrattle.");
 
             var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Death()), Db(WithEffect(CardType.WEAPON, Death())));
-            Assert.That(onWeapon.Ok, Is.False);
-            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-DEATHRATTLE"));
+            Assert.That(onWeapon.Ok, Is.True,
+                "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon deathrattle is legal — "
+                + "C21-WEAPON-DEATHRATTLE is retired and must not come back.");
+            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-DEATHRATTLE"), Is.False,
+                "the retired weapon-deathrattle gate must not fire.");
         }
 
         [Test]

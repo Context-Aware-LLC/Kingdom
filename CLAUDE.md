@@ -87,13 +87,14 @@ controller's turn end cannot be expressed today.
 **`ON_ATTACK` is the trap** — it is raised for **weapons only**, so it is *valid* on a weapon
 and *dead* on a minion. A membership check alone will not catch that.
 
-**`ON_DEATH` is the mirror trap** — `RulesEngine.BreakWeapon` emits a VFX event when a weapon
-breaks and raises no trigger at all. **A Deathrattle on a weapon never fires.**
+**`ON_DEATH` fires on a weapon as well as a minion** (EF-020) — `RulesEngine.BreakWeapon` raises it
+on **durability exhaustion** and on **equip-replacement**. The non-obvious half: it *enqueues* like a
+minion's, so on a replacement the **new weapon is already equipped** when the old one's rattle
+resolves — an `ON_DEATH` that equips will break the replacement, not itself.
 
 Lift a name from this list only when its raise site actually exists. `CardValidator`
-rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`),
-rejects `ON_ATTACK` on a non-`WEAPON` (`C21-TRIGGER-WEAPON-ONLY`), and rejects `ON_DEATH`
-on a `WEAPON` until EF-020 (`C21-WEAPON-DEATHRATTLE`). The source of truth is
+rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`) and
+rejects `ON_ATTACK` on a non-`WEAPON` (`C21-TRIGGER-WEAPON-ONLY`). The source of truth is
 `CardValidator.TriggerLivenessTable` — **flip a trigger Dead→Live in that table in the same
 commit that lands its raise site** (each Dead row names its EF task). This prose list is no
 longer the only guard, but keep it in sync with the table.
@@ -109,9 +110,13 @@ A hero attacking with a weapon carries **no keywords at all** — `attackerKws` 
 set for a hero, and `WeaponInstance` has no keyword field to read from. **No weapon can carry
 Lifedrain, Venom or Frost as an on-hit rider.** Do not author one.
 
-A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip battlecry), and
+A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip battlecry),
 **`ON_ATTACK` with a static selector** — that trigger fires with an empty target list, so "the
-minion this hits" is not addressable.
+minion this hits" is not addressable — and **`ON_DEATH`** (EF-020).
+
+**A weapon deathrattle resolves with the weapon already unequipped**, and on an equip-replacement
+with the *replacement* already in the slot. A `SELF`-selector effect on one therefore targets
+nothing: a weapon is not on the board, and its wrapper `CardInstance` is not in `Zone.Board`.
 
 Giving weapons keywords is a **hash-canonical change**, not a small patch: `WeaponInstance` is
 game state, so a new field must enter the serializer and hasher, and the golden replays re-bake
@@ -119,10 +124,12 @@ with the R1 gate as witness.
 
 ## Player-facing input consults the vulnerability index
 
-**Before implementing anything that accepts client-authored input, scan §4 of the security
-index** (`Project Docs\Emberfall\docs\dev-docs\quality\security.md`). It is a trigger-keyed table, a few
-words per row, so the scan takes seconds and a matching row is obvious. Match a row, read that
-`VULN-nnn` in full, and follow its binding rules. This index is a specification, not a tracker.
+**Before implementing anything that accepts client-authored input, scan the `Review triggers` and
+`Latent vulnerabilities` sections of the security index**
+(`Project Docs\Emberfall\docs\dev-docs\quality\security.md`). Both are a few lines, so the scan takes
+seconds and a match is obvious. Match one, read that `VULN-nnn` in full, and follow its binding rules.
+This index is a specification, not a tracker. (It was a numbered `§4` table before the 2026-07-31 docs
+reorganisation; the sections are named now.)
 
 **Reciprocal:** a `LATENT` entry must also leave a pointer comment on the line an implementer is
 forced to edit to arm it. The entry records the vulnerability; only the comment delivers it —
