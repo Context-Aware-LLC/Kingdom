@@ -19,6 +19,14 @@ namespace Emberfall.Data
                 _cards[def.Id] = def;
         }
 
+        /// <summary>Merge multiple card-set JSON payloads into one database. Last write wins on duplicate id.</summary>
+        public JsonCardDatabase(IEnumerable<string> jsonPayloads)
+        {
+            foreach (var json in jsonPayloads)
+                foreach (var def in CardJson.DeserializeArray(json))
+                    _cards[def.Id] = def;
+        }
+
         public bool TryGet(string cardId, out CardDefinition def) =>
             _cards.TryGetValue(cardId, out def);
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using UnityEngine;
@@ -5,36 +6,49 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Loads the canonical card database (Assets/CardData/M1.cards.json) as an
-    /// <see cref="ICardDatabase"/> — the same path GameBootstrap uses. Tries the
-    /// "cards/M1.cards" Addressables address first (the runtime path); in the Editor it falls
-    /// back to a direct AssetDatabase load so tools like the deckbuilder spike work even before
-    /// the Addressables content catalog has been built.
+    /// Loads all card sets (M1, M2, M3) as one merged <see cref="ICardDatabase"/>.
+    /// Tries each Addressables address first; in the Editor falls back to direct AssetDatabase
+    /// loads so tools work before the Addressables catalog has been built.
     /// </summary>
     public static class CardDatabaseLoader
     {
-        private const string Address = "cards/M1.cards";
-        private const string EditorPath = "Assets/CardData/M1.cards.json";
+        // All registered card-set Addressables addresses and their Editor fallback paths.
+        private static readonly (string address, string editorPath)[] CardSets =
+        {
+            ("cards/M1.cards", "Assets/CardData/M1.cards.json"),
+            ("cards/M2.cards", "Assets/CardData/M2.cards.json"),
+            ("cards/M3.cards", "Assets/CardData/M3.cards.json"),
+        };
 
         public static ICardDatabase Load()
         {
-            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<TextAsset>(Address);
-            TextAsset asset = handle.WaitForCompletion();
-            if (asset != null)
-                return new JsonCardDatabase(asset.text);
+            var payloads = new List<string>();
+            foreach (var (address, editorPath) in CardSets)
+            {
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<TextAsset>(address);
+                TextAsset asset = handle.WaitForCompletion();
+                if (asset != null)
+                {
+                    payloads.Add(asset.text);
+                    continue;
+                }
 
 #if UNITY_EDITOR
-            var direct = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(EditorPath);
-            if (direct != null)
-            {
-                Debug.LogWarning($"[CardDatabaseLoader] Addressable '{Address}' not built; " +
-                                 $"loaded {EditorPath} directly (Editor fallback).");
-                return new JsonCardDatabase(direct.text);
-            }
+                var direct = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(editorPath);
+                if (direct != null)
+                {
+                    Debug.LogWarning($"[CardDatabaseLoader] Addressable '{address}' not built; " +
+                                     $"loaded {editorPath} directly (Editor fallback).");
+                    payloads.Add(direct.text);
+                    continue;
+                }
 #endif
-            throw new System.Exception(
-                $"Card data not found — '{Address}' not in Addressables. " +
-                "Run Emberfall/Addressables/Setup Groups + Migrate Card Data.");
+                throw new System.Exception(
+                    $"Card data not found — '{address}' not in Addressables. " +
+                    "Run Emberfall/Addressables/Setup Groups + Migrate Card Data.");
+            }
+
+            return new JsonCardDatabase(payloads);
         }
     }
 }
