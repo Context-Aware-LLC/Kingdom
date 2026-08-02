@@ -6,7 +6,7 @@
   "seed": 64159285253,
   "entries": [
     {
-      "id": "clock_assembly_drone",
+      "id": "cinder_drake",
       "count": 1
     },
     {
@@ -14,27 +14,31 @@
       "count": 1
     },
     {
-      "id": "clock_gear_imp",
-      "count": 2
+      "id": "clock_chrono_construct",
+      "count": 1
+    },
+    {
+      "id": "clock_clockwork_sniper",
+      "count": 1
+    },
+    {
+      "id": "clock_mainspring_halberd",
+      "count": 1
     },
     {
       "id": "clock_overclocker",
       "count": 1
     },
     {
-      "id": "clock_snap_bolt",
-      "count": 2
-    },
-    {
-      "id": "clock_spring_coil",
-      "count": 2
-    },
-    {
-      "id": "clock_temporal_rewinder",
-      "count": 2
-    },
-    {
       "id": "core_bonehound",
+      "count": 2
+    },
+    {
+      "id": "core_choking_vines",
+      "count": 1
+    },
+    {
+      "id": "core_grove_mender",
       "count": 2
     },
     {
@@ -42,11 +46,15 @@
       "count": 1
     },
     {
-      "id": "core_thistleguard_sprig",
+      "id": "core_lantern_bearer",
       "count": 1
     },
     {
-      "id": "core_throneless_king",
+      "id": "core_stoneback",
+      "count": 2
+    },
+    {
+      "id": "core_thistleguard_sprig",
       "count": 1
     },
     {
@@ -54,19 +62,23 @@
       "count": 1
     },
     {
-      "id": "ember_ashfall_wyrm",
+      "id": "ember_cinder_lance",
+      "count": 2
+    },
+    {
+      "id": "ember_forgeheart_colossus",
       "count": 1
     },
     {
-      "id": "ember_cinder_lance",
+      "id": "ember_pyras_wrath",
       "count": 1
     },
     {
       "id": "ember_scorch",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "ember_slagshell_bulwark",
+      "id": "ember_stoke_the_coals",
       "count": 2
     },
     {
@@ -79,15 +91,11 @@
     },
     {
       "id": "relic_bound_revenant",
-      "count": 1
-    },
-    {
-      "id": "relic_corpse_cart",
-      "count": 1
-    },
-    {
-      "id": "stone_sentry",
       "count": 2
+    },
+    {
+      "id": "wandering_scout",
+      "count": 1
     }
   ]
 }

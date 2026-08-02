@@ -10,7 +10,7 @@ namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
     /// Loader test: asserts the client card database (M1+M2+M3) equals CardCi's count.
-    /// Discharges EF-040 DONE-WHEN: client database count equals 258.
+    /// Discharges EF-040 DONE-WHEN: client database count equals 259.
     /// Update counts here when cards are added to any set.
     /// </summary>
     [TestFixture]
@@ -41,13 +41,14 @@ namespace Emberfall.Core.Tests.CardValidation
             var m2 = LoadSet(SetFiles[1]);
             var m3 = LoadSet(SetFiles[2]);
 
-            Assert.That(m1.Count, Is.EqualTo(143), "M1 set count mismatch (card_inventory.py: 143)");
+            // 144 since NOR-126 added clock_mainspring_halberd, CLOCKWRIGHT's signature weapon.
+            Assert.That(m1.Count, Is.EqualTo(144), "M1 set count mismatch (card_inventory.py: 144)");
             Assert.That(m2.Count, Is.EqualTo(42), "M2 set count mismatch (card_inventory.py: 42)");
             Assert.That(m3.Count, Is.EqualTo(73), "M3 set count mismatch (card_inventory.py: 73)");
 
             var combined = m1.Concat(m2).Concat(m3).ToList();
-            Assert.That(combined.Count, Is.EqualTo(258),
-                "Total card count across M1+M2+M3 must match CardCi output (card_inventory.py: 258).");
+            Assert.That(combined.Count, Is.EqualTo(259),
+                "Total card count across M1+M2+M3 must match CardCi output (card_inventory.py: 259).");
         }
 
         [Test]
