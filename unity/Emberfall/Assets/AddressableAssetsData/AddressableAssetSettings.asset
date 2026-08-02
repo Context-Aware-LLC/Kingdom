@@ -73,7 +73,7 @@ MonoBehaviour:
     m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
   m_ProfileSettings:
     m_Profiles:
-    - m_InheritedParent: 
+    - m_InheritedParent:
       m_Id: 207d10d73baaa00449cc6ee5a5d3add9
       m_ProfileName: Default
       m_Values:
@@ -85,6 +85,20 @@ MonoBehaviour:
         m_Value: <undefined>
       - m_Id: 6f0eb348fcf18c646a756e809090d654
         m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: c818c57dfba8b7b48b7a7a441eee2c84
+        m_Value: 'ServerData/[BuildTarget]'
+    - m_InheritedParent:
+      m_Id: 26362b7cbc5a4240b09c30466dd02a0e
+      m_ProfileName: Android
+      m_Values:
+      - m_Id: 131be713b8e4477498a9f1844f02c7f2
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 2134f79211ec36a4889ed3accbe86a77
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: 4d4d2e54962e378479d4117b596cbdb6
+        m_Value: <undefined>
+      - m_Id: 6f0eb348fcf18c646a756e809090d654
+        m_Value: Android
       - m_Id: c818c57dfba8b7b48b7a7a441eee2c84
         m_Value: 'ServerData/[BuildTarget]'
     m_ProfileEntryNames:
