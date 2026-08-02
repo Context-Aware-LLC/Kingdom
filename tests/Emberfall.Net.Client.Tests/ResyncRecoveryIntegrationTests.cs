@@ -36,7 +36,7 @@ namespace Emberfall.Net.Client.Tests
         /// would mask the bug.</para>
         /// </summary>
         [Test]
-        [CancelAfter(90_000)]
+        [CancelAfter(120_000)]
         public async Task A_Resync_Lost_On_The_Wire_Is_Retried_And_The_Client_Recovers()
         {
             string replays = Path.Combine(Path.GetTempPath(), "emberfall-resync-" + Guid.NewGuid().ToString("N"));
@@ -45,12 +45,31 @@ namespace Emberfall.Net.Client.Tests
                 Urls = "http://127.0.0.1:0",
                 CardsDir = LoopbackServerPeer.CardDataDir(),
                 ReplaysDir = replays,
+                // Widen the SERVER liveness window far past this test's whole duration. This fixture
+                // deliberately makes the match go QUIET after the wedge (no inbound to c0, and while a
+                // resync is pending the client sends no heartbeats), so the only thing keeping c0's
+                // seat alive is the resync retry reaching the server. Under the Stage 3 four-assembly
+                // batch the client's 1s timer loop is CPU-starved; if its first post-wedge wake lands
+                // past the default 30s HeartbeatTimeoutMs, the server vacates c0 and closes the socket
+                // BEFORE the retry can fire — which killed the session (→ Dead) and made the retry we
+                // are testing structurally impossible. That is a starvation artifact of the test host,
+                // not a product fault: in real play the 2s/5s retry always beats the 30s window. We
+                // isolate the resync-retry behaviour under test from that unrelated liveness race by
+                // making the window unreachable within the test; nothing about the retry/recover
+                // assertions is relaxed. (b3 §11: don't let a wall-clock the test can't schedule decide
+                // the outcome.)
+                Options = new ServerOptions { HeartbeatTimeoutMs = 600_000 },
             });
             await app.StartAsync();
 
             var fault = new FaultInjectingTransport(new WebSocketTransport());
-            var c0 = new NetworkedMatchSession(fault, new ClientOptions { DeviceToken = "test-device-0", ResyncTimeoutMs = 2_000 });
-            var c1 = new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions { DeviceToken = "test-device-1" });
+            // ResyncTimeoutMs kept tight (2s) so the retry is DUE quickly — the behaviour under test.
+            // InboundSilenceMs widened to match the server: the same starved-timer-loop race can trip
+            // the CLIENT's own 30s link-death check first (it is evaluated BEFORE the resync-retry
+            // branch in TimerLoopAsync), declaring the link dead and skipping the retry. Both windows
+            // must be unreachable within the test for the retry to be deterministic under load.
+            var c0 = new NetworkedMatchSession(fault, new ClientOptions { DeviceToken = "test-device-0", ResyncTimeoutMs = 2_000, InboundSilenceMs = 600_000 });
+            var c1 = new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions { DeviceToken = "test-device-1", InboundSilenceMs = 600_000 });
 
             try
             {
@@ -67,7 +86,7 @@ namespace Emberfall.Net.Client.Tests
                 await WaitUntil(() => c0.Current.Phase != TurnPhase.Mulligan, TimeSpan.FromSeconds(10), "mulligan to close");
 
                 // Arm both halves of the fault: the next inbound frame fails to decode (the §4.5
-                // resync trigger), and the resync it provokes never reaches the socket.
+                // resync trigger), and the first resync it provokes never reaches the socket.
                 fault.CorruptNextInbound(1);
                 fault.DropNextResync(1);
 
@@ -77,16 +96,47 @@ namespace Emberfall.Net.Client.Tests
                 NetworkedMatchSession active = Equals(c0.Current.ActivePlayer, c0.Player) ? c0 : c1;
                 _ = active.SubmitAsync(new EndTurnIntent(active.Player));
 
-                await WaitUntil(() => fault.ResyncFramesDropped >= 1, TimeSpan.FromSeconds(15),
-                    "the corrupted frame to provoke a resync that we then drop");
+                // Wait for the wedge to FORM, event-driven: FirstResyncDropped completes the instant
+                // the first resync is swallowed. The client only ever sends a resync AFTER it has set
+                // the pending flag, so a swallowed resync is itself proof the client is wedged and
+                // waiting on an answer nobody will send — the precondition, captured with no wall-clock
+                // window for the Stage 3 batch to starve us past. (The old code polled for the drop
+                // and then read ResyncPending live; under load that poll could return only after the
+                // auto-delivered retry had already cleared the flag — the ~40% precondition flake.)
+                await fault.FirstResyncDropped.WaitAsync(TimeSpan.FromSeconds(20));
+                Assert.That(fault.ResyncFramesDropped, Is.GreaterThanOrEqualTo(1),
+                    "precondition: a resync was requested and then lost — the client is waiting on an answer nobody will send");
 
-                Assert.That(c0.ResyncPending, Is.True, "precondition: the client is waiting on a resync nobody will answer");
+                // THE ASSERTION. The client must re-send the unanswered resync, and the retry must
+                // actually reach the socket. Awaited event-driven, exactly as the precondition above:
+                // FirstResyncDelivered completes the instant the retry passes the fault decorator to
+                // the real socket, however late the starved 1s timer loop was in firing it. The 45s
+                // ceiling is a failsafe, not a race — far larger than ResyncTimeoutMs (2s) and the
+                // handful of seconds the retry takes even under the full Stage 3 batch, so only a
+                // genuinely absent retry (a real product wedge) trips it. Robust margin, not a tight
+                // real-time deadline (b3 §11).
+                try
+                {
+                    await fault.FirstResyncDelivered.WaitAsync(TimeSpan.FromSeconds(45));
+                }
+                catch (TimeoutException)
+                {
+                    // Turn the opaque WaitAsync timeout into the state that explains it. State=Dead here
+                    // means a liveness path (client link-death or a server seat-vacate) killed the
+                    // session before the retry — the starvation race the widened windows above exist to
+                    // prevent; anything else is a genuine resync-retry wedge worth escalating.
+                    Assert.Fail($"retry never reached the socket within 45s. state={c0.State} " +
+                        $"resyncPending={c0.ResyncPending} resyncCount={c0.ResyncCount} " +
+                        $"dropped={fault.ResyncFramesDropped} delivered={fault.ResyncFramesDelivered}");
+                }
+                Assert.That(fault.ResyncFramesDelivered, Is.GreaterThanOrEqualTo(1),
+                    "the client must re-send the unanswered resync and the retry must reach the socket");
 
-                // THE ASSERTION. The client must re-send the unanswered resync.
-                await WaitUntil(() => fault.ResyncFramesDelivered >= 1, TimeSpan.FromSeconds(20),
-                    "a RETRY to reach the real socket after ResyncTimeoutMs");
-
-                await WaitUntil(() => !c0.ResyncPending, TimeSpan.FromSeconds(20),
+                // Recovery is driven by that retry: the delivered resync is answered and the flag
+                // clears. A spurious snapshot cannot mask the bug — we already proved, in order, that
+                // a real retry reached the wire above. One server round-trip; 30s is generous headroom
+                // under load, not a deadline the recovery races.
+                await WaitUntil(() => !c0.ResyncPending, TimeSpan.FromSeconds(30),
                     "the client to recover once the retry is answered");
 
                 Assert.That(c0.State, Is.EqualTo(ConnectionState.Live), "recovery is not a disconnect");
