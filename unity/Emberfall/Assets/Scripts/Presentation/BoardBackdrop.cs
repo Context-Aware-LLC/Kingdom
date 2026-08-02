@@ -16,13 +16,35 @@ namespace Emberfall.Presentation
         private const string EditorPath = "Assets/Art/Backgrounds/BoardPlate_Master.png";
         private const string Address = "backgrounds/BoardPlate_Master";
 
-        private const float VisibleHeight = 9.2f; // 2 × BoardCamera orthographic size 4.6
+        // 2 × BoardCamera orthographic size 4.6 — the height the plate is AUTHORED against.
+        // SafeAreaCamera raises the camera's ortho size to clear a device's insets (EF-062),
+        // and the plate has to grow with it or the zoom-out uncovers its edges; SetVisibleHeight
+        // below is how that happens. DeviceLayout.DesignHalfHeight is the same number and the
+        // two are asserted equal by DeviceLayoutVerify.
+        private const float VisibleHeight = 9.2f;
 
         // Cards sit at z ≤ 0 stepping toward the camera (negative z); +5 is safely
         // behind everything. The sprite is transparent-queue, so it depth-tests
         // behind the opaque card bodies and the sorting order settles the rest.
         private const float BehindZ = 5f;
         private const int SortOrder = -1000;
+
+        // The live plate, so SetVisibleHeight can reach it. A destroyed GameObject compares
+        // equal to null under Unity's overload, so a scene unload clears this on its own and a
+        // second Create simply replaces it.
+        private static Transform s_instance;
+
+        /// <summary>
+        /// Rescale the plate to span <paramref name="visibleHeight"/> world units, matching
+        /// whatever orthographicSize SafeAreaCamera solved for the device's safe area (EF-062).
+        /// A no-op at the authored 9.2, and safe to call before the backdrop exists.
+        /// </summary>
+        public static void SetVisibleHeight(float visibleHeight)
+        {
+            if (s_instance == null || visibleHeight <= 0f) return;
+            float k = visibleHeight / VisibleHeight;
+            s_instance.localScale = new Vector3(k, k, 1f);
+        }
 
         public static void Create(Transform parent)
         {
@@ -32,6 +54,7 @@ namespace Emberfall.Presentation
             var go = new GameObject("BoardBackdrop");
             go.transform.SetParent(parent, false);
             go.transform.localPosition = new Vector3(0f, 0f, BehindZ);
+            s_instance = go.transform;
 
             // SpriteRenderer, not a quad primitive: the default sprite material
             // honors alpha and survives URP builds (LoadingOverlay precedent).

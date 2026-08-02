@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Headless Unity verification harness (EF-001). Aggregates the four local self-checks
+    /// Headless Unity verification harness (EF-001). Aggregates the local self-checks
     /// and exits non-zero on any compile error or check failure.
     ///
     /// <para>Run via: <c>Unity.exe -batchmode -nographics -quit -projectPath &lt;path&gt;
@@ -32,6 +32,7 @@ namespace Emberfall.Editor
                 RunCheck("UxmlIntegrityCheck",   UxmlIntegrityCheck.Check),
                 RunCheck("PlayerAccountSelfCheck", PlayerAccountTools.SelfCheck),
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
+                RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");

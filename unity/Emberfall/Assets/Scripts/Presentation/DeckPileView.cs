@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
         // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 deck pile: 1.3 wide (x +6.53..+7.83), card-proportioned, so
         // 1.83 tall. Deliberately larger than the 1.17 x 1.65 card quad — the pile is furniture,
         // not a card in play, and the extra size is what keeps the back's pattern legible.
-        private const float PileW = 1.30f;
+        internal const float PileW = 1.30f;
         private const float PileH = 1.83f;
 
         // Thickness. Six layers is the visual ceiling; past that the steps stop reading and just
