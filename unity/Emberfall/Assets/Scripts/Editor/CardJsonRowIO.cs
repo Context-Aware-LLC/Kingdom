@@ -85,6 +85,13 @@ namespace Emberfall.Editor
                     {
                         w.WriteStartObject();
                         w.WriteString("trigger", fx.Trigger.ToString());
+                        if (fx.Condition is { } condition)
+                        {
+                            w.WriteStartObject("condition");
+                            w.WriteString("type", condition.Type.ToString());
+                            if (condition.TurnOwner is { } owner) w.WriteString("value", owner.ToString());
+                            w.WriteEndObject();
+                        }
                         w.WriteString("action", fx.Action.ToString());
                         if (fx.Amount is int a) w.WriteNumber("amount", a);
                         if (fx.Amount2 is int a2) w.WriteNumber("amount2", a2);

@@ -366,7 +366,7 @@ namespace Emberfall.Core
                     // SCOPE IS BOTH SIDES, matching ON_TURN_END (EF-012): the name carries no FRIENDLY_
                     // qualifier the way ON_FRIENDLY_SUMMON does, and RaiseObservers is the engine's one
                     // observer sweep, so a controller filter here would be a new, unspecified rule.
-                    // `excluded: null` because the spell is in the graveyard by now and OrderedPermanents
+                    // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
                     interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null);
                     break;
@@ -646,13 +646,13 @@ namespace Emberfall.Core
             // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
             // alive. Draining after DrawOne would let a corpse draw fatigue.
             //
-            // SCOPE IS BOTH SIDES, exactly as ON_TURN_END (EF-012). RaiseObservers is the engine's one
-            // observer sweep, so a controller filter here would be a new, unspecified rule rather than an
-            // implementation detail — "at the start of YOUR turn" is the Hearthstone reading and is not
-            // what the GDD says. `excluded: null` because nothing "causes" a turn to start; unlike a
-            // summon there is no source card to leave out. Order is RaiseObservers' canonical
-            // active-side-first, board left→right sweep, which is what makes this replay-stable.
-            interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null);
+            // The incoming player is explicit event context, separate from each source controller.
+            // EffectConditionDef then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
+            // into trigger/selector names. `excluded: null` because no card causes a turn to start.
+            // The current source seam is board minions, active-side first and left→right; weapon and
+            // ongoing-spell lifecycles are deliberately split follow-ups.
+            interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
+                context: TriggerContext.ForTurnStart(player));
 
             // The start-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE
             // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is

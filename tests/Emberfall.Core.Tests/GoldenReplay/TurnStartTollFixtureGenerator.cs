@@ -19,11 +19,11 @@ namespace Emberfall.Core.Tests.GoldenReplay
     ///   --filter "FullyQualifiedName~TurnStartTollFixtureGenerator"
     /// </code>
     ///
-    /// <para>Scenario: both players run <c>test_turn_start_toller</c> (1/3, "deal 1 to the enemy hero at
-    /// the start of a turn"). The first player lands one on turn 1 and ends; the second lands one on
+    /// <para>Scenario: both players run <c>test_turn_start_toller</c> (1/3, explicit
+    /// <c>TURN_OWNER:ANY</c>, "deal 1 to the enemy hero at the start of a turn"). The first player lands one on turn 1 and ends; the second lands one on
     /// turn 2 and ends; the first ends again on turn 3. That pins three properties of the new raise site
-    /// in one replay — that ON_TURN_START resolves at all, that a toller fires on its OWNER's turn start
-    /// as well as the opponent's (the both-sides scope), and that when both boards are subscribed the
+    /// in one replay — that ON_TURN_START resolves at all, that the ANY condition qualifies the owner's
+    /// turn start as well as the opponent's, and that when both boards are subscribed the
     /// sweep runs active-player-first.</para>
     ///
     /// <para>It also pins the BEFORE-THE-DRAW half of the ordering directly, which is the part worth
@@ -97,7 +97,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Assert.That(state.Players[firstSeat].Hero.CurrentHealth, Is.EqualTo(firstHeroStart - 1),
                 "The second player's toller hits the first player's hero.");
             Assert.That(state.Players[secondSeat].Hero.CurrentHealth, Is.EqualTo(secondHeroStart - 2),
-                "The first player's toller fires on its OWNER's turn start too — the both-sides scope.");
+                "The first player's explicit ANY toller fires on its owner's turn start too.");
 
             // ── Turn 3: first player ends again — both fire once more ────────────
             Submit(new EndTurnIntent(firstId));

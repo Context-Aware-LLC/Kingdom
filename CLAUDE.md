@@ -69,22 +69,21 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Two card triggers are NO-GO until implemented
+## Card triggers that are NO-GO until implemented
 
-**Do not author a card using either of these.** They are declared in `Enums.cs`'s `Trigger` enum
-and **raised nowhere in the engine**. A card using one parses, validates, loads, and then does
-nothing — forever, silently, with no error.
+**Do not author a card using these.** They are declared in `Enums.cs`'s `Trigger` enum and
+**raised nowhere in the engine**. Rule C21 rejects a card using one before it loads; bypassing
+validation would leave the effect inert forever.
 
 > `ON_HEAL` · `AURA`
 
-**The nine that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
-`ON_DAMAGED`, `ON_TURN_START`, `ON_TURN_END`, `ON_SPELL_CAST`.
-
-**`ON_TURN_START` fires on BOTH players' turn starts** (EF-011) — same observer sweep and same
-caveat as `ON_TURN_END`: not "at the start of *your* turn". It is raised in `StartTurnSequence`
+**`ON_TURN_START` is live for board minions with an explicit turn-owner condition** (EF-011).
+Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
+missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
 **after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrozen
-board with mana already refilled, and a start-of-turn toll that kills its controller ends the
-match instead of drawing into a finished game.
+board with mana already refilled, and a lethal start-of-turn cascade ends the match instead of
+drawing into a finished game. Weapons and persistent spell effects are not turn-start sources yet;
+`CardValidator` rejects those source types until their explicit lifecycle follow-ups land.
 
 **`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
 permanent on both boards, not "at the end of *your* turn". A card that should only fire on its
@@ -107,15 +106,17 @@ resolves — an `ON_DEATH` that equips will break the replacement, not itself.
 
 Lift a name from this list only when its raise site actually exists. `CardValidator`
 rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`) and
-rejects `ON_ATTACK` on a non-`WEAPON` (`C21-TRIGGER-WEAPON-ONLY`). The source of truth is
-`CardValidator.TriggerLivenessTable` — **flip a trigger Dead→Live in that table in the same
-commit that lands its raise site** (each Dead row names its EF task). This prose list is no
-longer the only guard, but keep it in sync with the table.
+rejects source types without a wired lifecycle. The source of truth is
+`CardValidator.TriggerLivenessTable` — **assign the exact liveness classification in the same
+commit that lands a raise site** (each Dead or type-scoped row names its retirement trigger).
+Do not promote a type-scoped trigger to Live until every accepted source type has a runtime path.
+This prose list is no longer the only guard, but keep it in sync with the table.
 
 **This list does not live here alone.** Each member of the `Trigger` enum in
-`Emberfall.Core.Contracts/Enums.cs` is marked `LIVE` or `DEAD` on its own line, with the intended
-raise site and the retirement trigger. That is the copy an implementer actually meets. If the two
-ever disagree, **the enum markers win** — they sit next to the code and this file does not.
+`Emberfall.Core.Contracts/Enums.cs` is marked with its exact liveness on its own line, with the
+intended raise site and the retirement trigger. That is the copy an implementer actually meets.
+If the two ever disagree, **the enum markers win** — they sit next to the code and this file does
+not.
 
 ## What a weapon can and cannot do
 

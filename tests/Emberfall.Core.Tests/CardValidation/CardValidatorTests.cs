@@ -171,18 +171,24 @@ namespace Emberfall.Core.Tests.CardValidation
         private static CardDefinition WithEffect(CardType type, EffectDef effect)
             => new CardDefinition(
                 id: "test_c21", name: "Test", type: type, cost: 1,
-                attack: 1, health: type == CardType.MINION ? 1 : (int?)null,
+                attack: type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
+                health: type == CardType.MINION ? 1 : (int?)null,
                 durability: type == CardType.WEAPON ? 1 : (int?)null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
+        private static EffectDef TurnStart(TurnOwner? owner)
+            => new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                condition: new EffectConditionDef(ConditionType.TURN_OWNER, owner));
+
         [Test]
         public void Dead_Trigger_Is_An_Error()
         {
             // ON_HEAL is declared in the Trigger enum but has no raise site (blocked on EF-015). This
-            // used to probe ON_TURN_START; EF-011 gave that one a raise site, so it is Live now and no
+            // used to probe ON_TURN_START; EF-011 gave that one a minion raise site, so it is no
             // longer proves anything here.
             var effect = new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
                 tokenId: null, grantedKeyword: null, vfxOverride: null);
@@ -203,6 +209,97 @@ namespace Emberfall.Core.Tests.CardValidation
 
             var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Attack()), Db(WithEffect(CardType.WEAPON, Attack())));
             Assert.That(onWeapon.Ok, Is.True, "ON_ATTACK is raised for weapons — a weapon 'whenever this attacks' effect is legal.");
+        }
+
+        [TestCase(TurnOwner.CONTROLLER)]
+        [TestCase(TurnOwner.OPPONENT)]
+        [TestCase(TurnOwner.ANY)]
+        public void OnTurnStart_Is_Live_On_A_Minion_With_Explicit_Turn_Ownership(TurnOwner owner)
+        {
+            var def = WithEffect(CardType.MINION, TurnStart(owner));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                $"A minion with explicit {owner} turn ownership has a runtime observation path.");
+        }
+
+        [Test]
+        public void OnTurnStart_Requires_A_TurnOwner_Condition()
+        {
+            var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            var def = WithEffect(CardType.MINION, effect);
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-REQUIRED"));
+        }
+
+        [Test]
+        public void OnTurnStart_Requires_A_TurnOwner_Value()
+        {
+            var def = WithEffect(CardType.MINION, TurnStart(owner: null));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-REQUIRED"));
+        }
+
+        [Test]
+        public void OnTurnStart_Rejects_An_Invalid_TurnOwner_Value()
+        {
+            var def = WithEffect(CardType.MINION, TurnStart((TurnOwner)999));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-INVALID"));
+        }
+
+        [TestCase(CardType.SPELL)]
+        [TestCase(CardType.WEAPON)]
+        [TestCase(CardType.HERO_POWER)]
+        public void OnTurnStart_Is_Rejected_On_Unsupported_Source_Types(CardType type)
+        {
+            var def = WithEffect(type, TurnStart(TurnOwner.ANY));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"));
+        }
+
+        [Test]
+        public void TurnOwner_Condition_Is_Rejected_On_Other_Triggers()
+        {
+            var effect = new EffectDef(Trigger.ON_PLAY, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER));
+            var def = WithEffect(CardType.MINION, effect);
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-TRIGGER"));
+        }
+
+        [Test]
+        public void CardJson_Parses_The_TurnOwner_Condition()
+        {
+            const string json = "{\"id\":\"turn_probe\",\"name\":\"Turn Probe\",\"type\":\"MINION\",\"cost\":1,"
+                + "\"attack\":1,\"health\":1,\"class\":\"NEUTRAL\",\"rarity\":\"COMMON\",\"keywords\":[],"
+                + "\"setId\":\"CORE\",\"collectible\":false,\"artId\":\"art/turn_probe\",\"effects\":[{"
+                + "\"trigger\":\"ON_TURN_START\",\"condition\":{\"type\":\"TURN_OWNER\",\"value\":\"OPPONENT\"},"
+                + "\"action\":\"DRAW\",\"amount\":1}]}";
+
+            var def = CardJson.Deserialize(json);
+
+            Assert.That(def.Effects[0].Condition, Is.Not.Null);
+            Assert.That(def.Effects[0].Condition!.Type, Is.EqualTo(ConditionType.TURN_OWNER));
+            Assert.That(def.Effects[0].Condition!.TurnOwner, Is.EqualTo(TurnOwner.OPPONENT));
         }
 
         [Test]

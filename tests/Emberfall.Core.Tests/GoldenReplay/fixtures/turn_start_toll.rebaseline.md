@@ -6,11 +6,12 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   there is no old hash to compare against. It is the golden EF-011 owes under the standing rule
   "no new effect without a golden": `Trigger.ON_TURN_START` was declared in `Enums.cs` and raised
   nowhere, and `CommandProcessor.StartTurnSequence` now raises it
-  (`interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null)`) after the thaw/mana reset and
+  with an explicit incoming-player `TriggerContext` after the thaw/mana reset and
   before `RulesEngine.DrawOne`.
-- **Why the new golden is correct:** baked by `TurnStartTollFixtureGenerator` (seed
-  `3141592653589793`), whose in-scenario assertions all passed during generation. Both players run
-  `test_turn_start_toller` (1/3, `ON_TURN_START → DEAL_DAMAGE 1`, `selector: ENEMY_HERO`). The baked
+- **Why the new golden is correct:** `TurnStartTollFixtureGenerator` defines the scenario with seed
+  `3141592653589793`. Both players run
+  `test_turn_start_toller` (1/3, `ON_TURN_START`, `TURN_OWNER:ANY`, `DEAL_DAMAGE 1`,
+  `selector: ENEMY_HERO`). The baked
   event stream is exactly what the raise site's contract predicts:
 
   | seq | event | meaning |
@@ -21,10 +22,9 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   Three properties are pinned here that nothing else pins:
 
-  1. **The raise is an "any turn start" observer sweep across both boards**, not a controller-scoped
-     "start of YOUR turn" — the same scope ruling `ON_TURN_END` took in EF-012, for the same reason
-     (`RaiseObservers` is the engine's one observer sweep; a controller filter would be a new,
-     unspecified rule). A controller-scoped reimplementation drops half these `onDamage` rows.
+  1. **The fixture card explicitly requests `TURN_OWNER:ANY`**, so both the controller's and the
+     opponent's turn start qualify. `TurnStartTriggerTests` separately pins `CONTROLLER` and
+     `OPPONENT`; changing ANY to either narrower condition drops half these `onDamage` rows.
   2. **The sweep order is `RaiseObservers`' canonical active-player-first walk**, so it reverses
      every turn — rows 2 and 3 are the same scenario with the seats swapped, and their `onDamage`
      pairs come out in opposite order. A fixed-seat ordering leaves those two rows identical.
@@ -37,19 +37,23 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
      granting temporary mana from the trigger and asserting it survives the reset that would
      otherwise zero it.
 
-  Baked hash: `53e7b3bfc64dd33ebb1dd3c8077c345a0d7dacf0a13384881c81cafdfc232c3a` (18 events,
-  7 intents). The match is deliberately still `InProgress` at the end of the log — a decided
-  outcome would truncate the replay.
-- **Link to the design/eng change that caused it:** EF-011 (NOR-51), `LAUNCH-WORKPLAN.md`
+     The hostile mutation hoisted both `RaiseObservers` and `Drain` above the reset. Its targeted
+     test output was:
+
+     > Failed Turn_Start_Trigger_Fires_After_The_Mana_Reset
+     > Expected: 2
+     > But was: 0
+
+  The scenario deliberately ends `InProgress`; a decided outcome would truncate the replay log.
+- **Link to the design/eng change that caused it:** EF-011 (NOR-51),
+  `dev-docs/project/LAUNCH-WORKPLAN.md`
   Track E; raise site `src/Emberfall.Core/CommandProcessor.cs` (`StartTurnSequence`); liveness
-  flipped Dead→Live in `CardValidator.TriggerLivenessTable` and in the `Trigger` enum markers
+  flipped Dead→MinionOnly in `CardValidator.TriggerLivenessTable` and live-for-minions in the `Trigger` enum markers
   (`Enums.cs`); headless siblings in `tests/Emberfall.Core.Tests/TurnLoop/TurnStartTriggerTests.cs`.
 - **cardSetSnapshot changed?** **yes — `M1.cards.snapshot.json` gained one card**,
   `test_turn_start_toller`, appended at the end. It is fixture-only (`collectible: false`, not in the
   shipping `cards/**` tree) and exists solely to give this replay an `ON_TURN_START` subscriber; no
-  existing row was edited. The append is inert for the pre-existing fixtures — decks are explicit id
-  lists and `GameStateHasher` walks game state, never the card db — and the proof is that all of
-  them replay green **unrebaselined** with the card present (their `.replay.json` files are
-  byte-unchanged in this commit).
-- **engineContractVersion changed?** no. `Trigger.ON_TURN_START` already existed in the enum; EF-011
-  adds a raise site, not a contract member. Stays `interfaces.v3`.
+  existing row was edited. Its condition is card-definition data, not mutable match state: decks
+  contain explicit card-id lists, while `GameStateHasher` walks game state rather than the card db.
+- **engineContractVersion changed?** no. The new condition enums describe immutable card-definition
+  data and are not serialized into `GameState` or the wire protocol. Stays `interfaces.v3`.
