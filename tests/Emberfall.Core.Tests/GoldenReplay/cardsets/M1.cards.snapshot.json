@@ -80,5 +80,13 @@
 
   { "_comment": "EF-012 fixture card. Fixture-only: it exists to give turn_end_toll an ON_TURN_END subscriber and is deliberately NOT in the shipping cards/** tree. Appending a definition here is inert for the other three fixtures — decks are explicit id lists and the hasher walks state, never the db — which the unrebaselined R1 run proves.",
     "id": "test_turn_end_toller",      "name": "Turn-End Toller","type": "MINION",   "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_turn_end_toller",
-    "effects": [ { "trigger": "ON_TURN_END", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
+    "effects": [ { "trigger": "ON_TURN_END", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+
+  { "_comment": "EF-014 fixture card (1 of 2). Fixture-only, same contract as test_turn_end_toller above: appended never inserted, collectible:false, absent from the shipping cards/** tree. Gives on_damaged_thorns an ON_DAMAGED subscriber that survives the hit (5 health vs a 1-damage volley) so the fixture pins the raise, not a death.",
+    "id": "test_thornback",            "name": "Thornback",      "type": "MINION",   "cost": 1, "attack": 1, "health": 5, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_thornback",
+    "effects": [ { "trigger": "ON_DAMAGED", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+
+  { "_comment": "EF-014 fixture card (2 of 2). Identical to test_thornback except for DIVINE_SHIELD. The pair is the whole point of on_damaged_thorns: one volley hits both, and only the unshielded one retaliates — pinning DamagePipeline's early return, which raises no ON_DAMAGED for an Aegis-absorbed hit.",
+    "id": "test_aegis_thornback",      "name": "Aegis Thornback","type": "MINION",   "cost": 1, "attack": 1, "health": 5, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": ["DIVINE_SHIELD"], "setId": "CORE", "collectible": false, "artId": "art/test_aegis_thornback",
+    "effects": [ { "trigger": "ON_DAMAGED", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
 ]
