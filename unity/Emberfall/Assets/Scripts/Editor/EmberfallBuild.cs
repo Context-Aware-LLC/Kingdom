@@ -127,17 +127,13 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// Put the three playable scenes in <c>EditorBuildSettings</c>, menu first.
+        /// Put the four playable scenes in <c>EditorBuildSettings</c>, menu first.
         ///
         /// <para><b>This is what makes scene navigation work in the EDITOR.</b>
         /// <c>SceneManager.LoadScene(name)</c> resolves against the build list, so with an empty list —
         /// which is how this project sat until 2026-07-27 — every menu button that loads a scene is a
         /// dead button in the Editor, with no exception thrown and nothing logged. The Editor is one of
         /// the two seats for local two-player testing, so it has to work there, not only in a player.</para>
-        ///
-        /// <para>The <b>shipping</b> build deliberately does not use this list — it passes
-        /// <c>BoardNetworked</c> alone, so a tester build keeps booting straight into a match. Only the
-        /// dev seat build ships the menu.</para>
         /// </summary>
         [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
         public static void SyncSceneList()
