@@ -80,6 +80,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2640e5c49177d4542a4ff8f3bc897bff
+    m_Address: card_art/art_ember_scorch_blade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27483a35eacdf3444866199d4b4a9e04
     m_Address: card_art/art_relic_bound_revenant
     m_ReadOnly: 0
@@ -90,8 +95,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2901ae6a082ab42458a0134c1e1f4422
+    m_Address: card_art/art_ember_fusillade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ad429463a058654bb35c21669b9e272
     m_Address: card_art/art_verdant_worldroot_behemoth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ce04a04f19c91b41a488f85a37882a5
+    m_Address: card_art/art_grave_warden_of_dusk
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -120,6 +135,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e7b70083c4df9f43a4917aa08c525de
+    m_Address: card_art/art_grave_spectral_wolf
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3fc6b7f2e92e882459328a6c0fb129d2
     m_Address: card_art/art_tide_deepfrost_spear
     m_ReadOnly: 0
@@ -132,6 +152,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40fbd71823b95cb4e93ef14f3c2cf88a
     m_Address: card_art/art_verdant_grasping_thornvine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42a9af08e64a4814fbb5aa2c52ead22c
+    m_Address: card_art/art_tide_icecrown_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -152,6 +177,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51795eae9bdebad49a497feb0d58bd06
     m_Address: card_art/art_verdant_thornback_cub
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53c9d3564841ef54aa35aad0b57708c4
+    m_Address: card_art/art_verdant_thorn_swarm
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -190,6 +220,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7174b2284ed23c54c8e267524763083d
+    m_Address: card_art/art_ember_vanguard_drake
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71eea5635520cfd45ab21c230cbb8982
     m_Address: card_art/art_grave_ashen_archivist
     m_ReadOnly: 0
@@ -202,6 +237,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 75bc42f263a89304f8ed100994b81019
     m_Address: card_art/art_grave_tollkeeper_moth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76670ba006a00c74faf8e270b731123d
+    m_Address: card_art/art_tide_abyssal_devourer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -255,6 +295,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f4ba82978c611d41a58908ce9921b4d
+    m_Address: card_art/art_grave_graven_bell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0406593d61fc354895b5ffe5a8b8861
     m_Address: card_art/art_tide_initiate
     m_ReadOnly: 0
@@ -295,6 +340,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b353c062830e40a458fab9fb257622f0
+    m_Address: card_art/art_tide_maren_avatar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b710845155427c24bbb617d69329bcaf
     m_Address: card_art/art_grave_gatewatch_whelp
     m_ReadOnly: 0
@@ -302,6 +352,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bd236c53f820ce14e89a87b8f90cfabc
     m_Address: card_art/art_verdant_bramblehide_guardian
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf4802f50b7135c41a20a13d770f02c6
+    m_Address: card_art/art_ember_blazewing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -347,6 +402,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0b8061f770922443a22ca18cbd8dd8f
     m_Address: card_art/art_wandering_scout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4c28d2ff47dd0c48ad3a513ea8810f7
+    m_Address: card_art/art_verdant_world_titan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
