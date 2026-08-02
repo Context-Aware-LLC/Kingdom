@@ -8,13 +8,11 @@
 #
 # Usage: pwsh tools/ci/build-android.ps1
 #        pwsh tools/ci/build-android.ps1 -PerfCapture
-#        pwsh tools/ci/build-android.ps1 -PerfCapture -NoUpm
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
     [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe',
-    [switch]$PerfCapture,
-    [switch]$NoUpm
+    [switch]$PerfCapture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -47,11 +45,6 @@ if (-not (Test-Path $UnityPath)) {
 
 if (-not (Test-Path $PROJECT)) {
     Write-Error "Unity project not found at '$PROJECT'."
-    exit 1
-}
-
-if ($NoUpm -and -not (Test-Path (Join-Path $PROJECT 'Library\PackageManager\ProjectCache'))) {
-    Write-Error '-NoUpm requires an already-resolved Library/PackageManager/ProjectCache.'
     exit 1
 }
 
@@ -92,7 +85,6 @@ Write-Host "build-android: project $PROJECT"
 Write-Host "build-android: log     $LOG"
 Write-Host "build-android: commit  $BUILD_COMMIT$DIRTY_SUFFIX"
 Write-Host "build-android: profile $(if ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
-Write-Host "build-android: package manager $(if ($NoUpm) { 'disabled (resolved cache required)' } else { 'enabled' })"
 Write-Host "build-android: compile barrier $($compileBarrierUtc.ToString('O')) ($($compileInputs.Count) input(s))"
 Write-Host "build-android: launching headless (IL2CPP + ARM64)…"
 Write-Host ""
@@ -106,10 +98,6 @@ $unityArgs = @(
     '-executeMethod', 'Emberfall.Editor.EmberfallBuild.BuildAndroid',
     '-logFile', "`"$LOG`""
 )
-
-if ($NoUpm) {
-    $unityArgs += '-noUpm'
-}
 
 $previousCaptureBuild = $env:EMBERFALL_PERF_CAPTURE_BUILD
 $previousBuildCommit = $env:EMBERFALL_BUILD_COMMIT
@@ -178,7 +166,6 @@ if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
         commit = $BUILD_COMMIT
         dirty = $BUILD_DIRTY
         perfCapture = [bool]$PerfCapture
-        noUpm = [bool]$NoUpm
         apkSha256 = $apkSha256
         apkBytes = $apkItem.Length
         builtUtc = [DateTime]::UtcNow.ToString('O')
