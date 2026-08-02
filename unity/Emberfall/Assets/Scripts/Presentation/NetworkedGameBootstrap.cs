@@ -205,6 +205,12 @@ namespace Emberfall.Presentation
             CardClass localClass  = s0.Players[0].Id == localId ? s0.Players[0].Hero.Class : s0.Players[1].Hero.Class;
             CardClass remoteClass = s0.Players[0].Id == localId ? s0.Players[1].Hero.Class : s0.Players[0].Hero.Class;
 
+#if UNITY_EDITOR
+            IArtProvider artProvider = new EditorArtProvider();
+#else
+            IArtProvider artProvider = new AddressableArtProvider();
+#endif
+
             // ── Versus screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md §1) ───────────────────────
             // THIS is the moment the screen was specified for: match_start has landed, so the two
             // classes are known, and the board does not exist yet. Everything before this point is
@@ -222,7 +228,7 @@ namespace Emberfall.Presentation
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
                 localClass,  PlayerAccount.LocalDisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
-                s0.Id.Value));
+                s0.Id.Value), artProvider);
             // Carry the narration across the handover rather than letting the line blink empty —
             // "Opponent found" was posted to the plate a frame ago and is still the true state.
             SetStatus("Opponent found");
@@ -280,13 +286,8 @@ namespace Emberfall.Presentation
             // ── Hero plates — class rides the projected snapshot (state-sync §5.2 PUBLIC), no MatchSetup. ─
             if (boardAnchors != null)
             {
-#if UNITY_EDITOR
-                IArtProvider heroArt = new EditorArtProvider();
-#else
-                IArtProvider heroArt = new AddressableArtProvider();
-#endif
-                var localPlate  = CreateHeroPlate(localId, localClass, boardAnchors, db, heroArt);
-                var remotePlate = CreateHeroPlate(remoteId, remoteClass, boardAnchors, db, heroArt);
+                var localPlate  = CreateHeroPlate(localId, localClass, boardAnchors, db, artProvider);
+                var remotePlate = CreateHeroPlate(remoteId, remoteClass, boardAnchors, db, artProvider);
                 // Selection/target cues track OUR seat (also closes the missing
                 // hero-as-attacker gold cue in networked mode).
                 if (inputRouter != null)

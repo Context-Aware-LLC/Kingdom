@@ -122,6 +122,7 @@ namespace Emberfall.Presentation
         private readonly System.Collections.Generic.List<Material> _medallionMats = new();
         private readonly System.Collections.Generic.List<TextMeshPro> _texts = new();
         private TextMeshPro _status;
+        private IArtProvider _artProvider;
 
         private float _t0;
         private bool _matchReady;
@@ -144,7 +145,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Build the rig under <paramref name="cam"/>. Null camera → null (skipped, boot unaffected).</summary>
-        public static VersusOverlay Create(Camera cam, Data data)
+        public static VersusOverlay Create(Camera cam, Data data, IArtProvider artProvider = null)
         {
             if (cam == null)
             {
@@ -156,6 +157,7 @@ namespace Emberfall.Presentation
             float dist = cam.nearClipPlane + 1f;
             go.transform.localPosition = new Vector3(0f, 0f, dist);
             var overlay = go.AddComponent<VersusOverlay>();
+            overlay._artProvider = artProvider;
             overlay.Build(cam, dist, data);
             return overlay;
         }
@@ -252,25 +254,29 @@ namespace Emberfall.Presentation
         private void BuildMedallion(CardClass heroClass, float x, float y, float dia, float h, string name)
         {
             var shader = Shader.Find("Emberfall/SG_MedallionMask");
-            var heroTex = LoadAsset<Texture2D>(
-                $"Assets/Art/Hero/art_hero_{heroClass.ToString().ToLowerInvariant()}.png",
-                $"art/hero_{heroClass.ToString().ToLowerInvariant()}");
-            if (shader == null || heroTex == null) return;
+            if (shader == null) return;
 
             var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             quad.name = name;
+            quad.SetActive(false);
             Destroy(quad.GetComponent<Collider>());
             quad.transform.SetParent(transform, false);
             quad.transform.localPosition = new Vector3(x, y, -0.008f);
             quad.transform.localScale = new Vector3(dia, dia, 1f);
 
             var mat = new Material(shader);
-            mat.SetTexture(MainTexId, heroTex);
             _medallionMats.Add(mat);
 
             var rend = quad.GetComponent<MeshRenderer>();
             rend.sharedMaterial = mat;
             rend.sortingOrder = SortBase + 5;   // above the plate, below the orb
+
+            _artProvider?.LoadArt($"art/hero_{heroClass.ToString().ToLowerInvariant()}", sprite =>
+            {
+                if (_destroyed || sprite == null) return;
+                mat.SetTexture(MainTexId, sprite.texture);
+                quad.SetActive(true);
+            });
         }
 
         /// <summary>

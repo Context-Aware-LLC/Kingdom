@@ -107,7 +107,7 @@ namespace Emberfall.Presentation
             versusOverlay = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
                 setup.P0Class, PlayerAccount.LocalDisplayNameOr("You"),
                 setup.P1Class, "AI Opponent",
-                p0Session.Current.Id.Value));
+                p0Session.Current.Id.Value), artProvider);
             if (loadingOverlay != null) loadingOverlay.NotifyMatchReady();
 
             // ── Intent sources ────────────────────────────────────────────────────
