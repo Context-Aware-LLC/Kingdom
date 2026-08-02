@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Tools.CollectionSelfCheck — the EF-046 DONE-WHEN harness.
+
+    Discharges "a scripted self-check creates a character, builds a legal 30-card deck, saves,
+    reloads it from disk in a fresh session, and reports queue-eligible" without a Unity seat.
+
+    Deliberately pure Emberfall.Core.Collection: it exercises the exact stores, validator and
+    eligibility policy the deckbuilder binds (PlayerAccount is a thin Unity facade over these,
+    2 UnityEngine touches), so a green run here is evidence about the shipping path rather than
+    about a parallel test double. That is also why it is a tool and not a test — "a fresh
+    session" is only honest if it is a second OS process re-reading the same files, which an
+    in-process fixture cannot claim.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Tools.CollectionSelfCheck</AssemblyName>
+    <RootNamespace>Emberfall.Tools.CollectionSelfCheck</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+    <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
+    <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

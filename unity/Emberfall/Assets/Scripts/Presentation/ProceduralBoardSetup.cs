@@ -36,13 +36,13 @@ namespace Emberfall.Presentation
         //
         // Hero cluster owns x -7.88..-4.98 (2.9). Portrait outer against the margin, the
         // two-disc column inboard toward the hand (Sam, 2026-07-24).
-        private const float HeroX      = 6.98f;  // 1.8-wide plate centred in -7.88..-6.08
+        internal const float HeroX     = 6.98f;  // 1.8-wide plate centred in -7.88..-6.08
         private const float DiscX      = 5.53f;  // socket column centred in -6.08..-4.98; the
                                                  // 1.008 rings span -6.03..-5.03 inside it
 
         // Mana rail owns +2.5..+6.53 (4.03); deck pile +6.53..+7.83 (1.3).
         private const float ManaRailX  = 4.515f;
-        private const float DeckX      = 7.18f;
+        internal const float DeckX     = 7.18f;
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // §1.1 is an x-budget only. Everything in it rests on one baseline 0.15 above the
@@ -77,6 +77,26 @@ namespace Emberfall.Presentation
             BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f);
             BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f);
             BoardBackdrop.Create(transform);
+            AttachSafeAreaCamera();
+        }
+
+        // EF-062. The safe-area solve is attached here rather than authored into the scene:
+        // Board.unity and BoardNetworked.unity both build their board through this component,
+        // so one call covers both and neither can drift from the other. Must run AFTER
+        // BoardBackdrop.Create — SafeAreaCamera.Awake rescales the plate, and there has to be
+        // a plate to rescale.
+        private static void AttachSafeAreaCamera()
+        {
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                Debug.LogWarning("[ProceduralBoardSetup] no MainCamera — safe-area insets "
+                                 + "will not be applied (EF-062).");
+                return;
+            }
+
+            if (cam.GetComponent<SafeAreaCamera>() == null)
+                cam.gameObject.AddComponent<SafeAreaCamera>();
         }
 
         private void BuildSeat(SeatAnchors seat, string prefix, float ySign, float xSign)

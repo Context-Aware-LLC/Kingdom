@@ -23,6 +23,24 @@ namespace Emberfall.Core.Contracts
 
         public DeterministicRandom(ulong seed) => _state = seed;
 
+        /// <summary>
+        /// The independent sub-stream keyed by an integer — the cursor the stream seeded at
+        /// <paramref name="seed"/> would hold after <paramref name="index"/> draws, computed in O(1).
+        ///
+        /// <para>splitmix64 advances its cursor by a plain addition of <see cref="Gamma"/>, so the n-th
+        /// cursor is exactly <c>seed + n*Gamma</c> — no iteration required and no new algorithm
+        /// introduced. Skipping ahead is therefore <b>the same stream</b>, not a second entropy source:
+        /// <c>Substream(s, n).NextUInt64()</c> is bit-for-bit the (n+1)-th value of
+        /// <c>new DeterministicRandom(s)</c>, which is what makes it safe under the M1 algorithm lock.</para>
+        ///
+        /// <para>Use it where a family of independent, replayable streams is keyed by an integer and the
+        /// caller must not have to replay the earlier members to reach the n-th — the booster-pack open
+        /// (NOR-109), where <c>(seed, packIndex)</c> alone must reproduce a pack byte-identically
+        /// however many packs came before it.</para>
+        /// </summary>
+        public static DeterministicRandom Substream(ulong seed, long index)
+            => new DeterministicRandom(unchecked(seed + (Gamma * (ulong)index)));
+
         /// <summary>The raw 64-bit cursor. Serialized with GameState for mid-match resume AND hashing.</summary>
         public ulong RawState => _state;
 
