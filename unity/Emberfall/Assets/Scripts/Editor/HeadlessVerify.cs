@@ -32,6 +32,7 @@ namespace Emberfall.Editor
                 RunCheck("UxmlIntegrityCheck",   UxmlIntegrityCheck.Check),
                 RunCheck("PlayerAccountSelfCheck", PlayerAccountTools.SelfCheck),
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
+                RunCheck("CardRevealVerify",     CardRevealVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");

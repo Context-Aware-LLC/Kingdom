@@ -262,21 +262,13 @@ namespace Emberfall.Presentation
         private static string BoldInlineKeywordBrackets(string text) =>
             InlineKeywordBracket.Replace(text, $"<size={FrameRarityCatalog.KeywordLeadPct}%><b>$1</b></size>");
 
-        // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by
-        // design; humanize for the card face until the full display layer lands.
-        private static string KeywordDisplayName(Keyword kw)
-        {
-            string[] parts = kw.ToString().Split('_');
-            var sb = new StringBuilder();
-            foreach (string p in parts)
-            {
-                if (p.Length == 0) continue;
-                if (sb.Length > 0) sb.Append(' ');
-                sb.Append(char.ToUpperInvariant(p[0]));
-                if (p.Length > 1) sb.Append(p.Substring(1).ToLowerInvariant());
-            }
-            return sb.ToString();
-        }
+        // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by design;
+        // humanize for the card face until the full display layer lands.
+        //
+        // The humaniser itself moved to KeywordCopy when EF-049's reveal panel became its second
+        // consumer. Keep it there: a card and its own tooltip disagreeing about what a keyword is
+        // CALLED is the exact failure a duplicated copy of this method would produce.
+        private static string KeywordDisplayName(Keyword kw) => KeywordCopy.DisplayName(kw);
 
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
         // natural PPU dimensions — clobbering the world-space size BoardController set at build

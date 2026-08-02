@@ -43,7 +43,7 @@ namespace Emberfall.Net.Server.Data
         public IReadOnlyCollection<CardDefinition> AllCollectible()
         {
             var list = new List<CardDefinition>();
-            foreach (var d in _byId.Values) if (d.Collectible) list.Add(d);
+            foreach (var d in _byId.Values) if (d.IsPoolEligible) list.Add(d);
             return list;
         }
     }

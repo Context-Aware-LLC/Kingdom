@@ -29,6 +29,20 @@ namespace Emberfall.Core.Cards
         public string FactionId { get; }
         public bool RequiresEngineeringPrimitive { get; }
 
+        /// <summary>
+        /// True when this row may enter a live card pool — a generated deck, a deck the player
+        /// builds, a collection view, a pack. <see cref="Collectible"/> is the author's intent;
+        /// <see cref="RequiresEngineeringPrimitive"/> is the engine's veto over it, and the veto wins.
+        ///
+        /// Both <c>EffectInterpreter.SelectorTargets</c> and <c>CardValidator</c> C14 tell an author to
+        /// "gate it behind requiresEngineeringPrimitive" when a row outruns the engine. Until EF-032a
+        /// that advice was inert — the flag was parsed, validated and reported with no consumer, so the
+        /// only pool filter was <see cref="Collectible"/> and a gated row still entered generated decks
+        /// and still threw at runtime. This property is what makes those two messages true. Every
+        /// <c>ICardDatabase.AllCollectible</c> implementation must filter on it.
+        /// </summary>
+        public bool IsPoolEligible => Collectible && !RequiresEngineeringPrimitive;
+
         public CardDefinition(
             string id, string name, CardType type, int cost,
             int? attack, int? health, int? durability,

@@ -189,7 +189,7 @@ namespace Emberfall.Core.Tests.Collection
             public bool TryGet(string cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
             public CardDefinition Get(string cardId) => _byId[cardId];
             public IReadOnlyCollection<CardDefinition> AllCollectible()
-                => _byId.Values.Where(d => d.Collectible).ToList();
+                => _byId.Values.Where(d => d.IsPoolEligible).ToList();
         }
     }
 }

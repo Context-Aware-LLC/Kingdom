@@ -39,6 +39,7 @@ namespace Emberfall.Presentation
         private MatchRunner _matchRunner;
         private IArtProvider _artProvider;
         private IUiSpriteProvider _uiSprites;
+        private CardRevealController _reveal;   // EF-049 hover / long-press reveal layer
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -111,6 +112,11 @@ namespace Emberfall.Presentation
             // alive long enough to burn.
             if (_matchRunner != null)
                 _matchRunner.OnMatchEvent += OnMatchEventForDeaths;
+
+            // EF-049. One reveal layer per board — see CardRevealController for why the model
+            // cannot be per-card. Created here rather than authored in the scene because every
+            // other match-time surface (banner, toasts, mana tray) is built the same way.
+            _reveal = CardRevealController.Create(transform, _inputRouter);
         }
 
         private void OnDestroy()
@@ -287,11 +293,20 @@ namespace Emberfall.Presentation
                 presenter.GetComponent<CardMaterialBinder>()?.Init(live, _matchRunner);
 
                 // Attach click handler when InputRouter is present (hot-seat mode).
+                ClickableCard clickable = null;
                 if (_inputRouter != null)
                 {
-                    var clickable = presenter.gameObject.AddComponent<ClickableCard>();
+                    clickable = presenter.gameObject.AddComponent<ClickableCard>();
                     clickable.Init(ci.Id, owner, zone, presenter, _inputRouter);
                 }
+
+                // EF-049 hover / long-press reveal. Not gated on _inputRouter: reading a card is
+                // useful in replay playback too, where nothing is clickable. Gated on def instead,
+                // because a card with no definition has nothing to reveal — and a panel that opens
+                // blank reads as a broken feature rather than a missing one.
+                if (def != null && _reveal != null)
+                    presenter.gameObject.AddComponent<CardRevealTrigger>()
+                             .Init(ci.Id, def, live, clickable, _reveal);
 
                 _presenters[ci.Id] = presenter;
             }

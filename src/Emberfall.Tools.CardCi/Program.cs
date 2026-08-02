@@ -165,6 +165,6 @@ namespace Emberfall.Tools.CardCi
         public CardDefinition Get(string cardId) => _cards[cardId];
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()
-            => _cards.Values.Where(d => d.Collectible).ToArray();
+            => _cards.Values.Where(d => d.IsPoolEligible).ToArray();
     }
 }

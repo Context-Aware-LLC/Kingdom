@@ -15,6 +15,14 @@ namespace Emberfall.Core.Contracts
     {
         bool TryGet(string cardId, out Cards.CardDefinition def);
         Cards.CardDefinition Get(string cardId);
+
+        /// <summary>
+        /// Every row eligible for a live card pool. Implementations MUST filter on
+        /// <see cref="Cards.CardDefinition.IsPoolEligible"/>, not on <c>Collectible</c> alone — a row
+        /// flagged <c>requiresEngineeringPrimitive</c> declares grammar the engine cannot resolve and
+        /// throws if it reaches play (EF-032a). <c>TryGet</c>/<c>Get</c> deliberately still return it:
+        /// a held row must stay resolvable for tokens, replays and existing saved decks.
+        /// </summary>
         IReadOnlyCollection<Cards.CardDefinition> AllCollectible();
     }
 

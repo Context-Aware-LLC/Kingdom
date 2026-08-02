@@ -53,7 +53,12 @@ namespace Emberfall.Presentation
         private SortingGroup _group;
         private int   _baseOrder;
         private bool  _hovered;
+        private bool  _externalReveal;
         private float _t;          // 0 = resting, 1 = fully revealed
+
+        // Either source raises the card. _hovered is the mouse; _externalReveal is EF-049's
+        // touch long-press, which has no enter/exit to work with.
+        private bool Raised => _hovered || _externalReveal;
 
         internal void Init(Transform visual, SortingGroup group)
         {
@@ -76,17 +81,27 @@ namespace Emberfall.Presentation
         // because Update stops running.
         private void OnDisable()
         {
-            _hovered = false;
-            _t       = 0f;
+            _hovered        = false;
+            _externalReveal = false;
+            _t              = 0f;
             Apply();
         }
 
         private void OnMouseEnter() => _hovered = true;
         private void OnMouseExit()  => _hovered = false;
 
+        /// <summary>
+        /// EF-049. Raises the card from a source that is not the mouse. The lift exists because 30%
+        /// of every hand card is deliberately below the screen edge, and that is just as true under
+        /// a finger as under a cursor — but <c>OnMouseEnter</c>/<c>OnMouseExit</c> never fire on
+        /// touch, so before this the lift simply did not exist on Android. The reveal layer's
+        /// long-press drives it here.
+        /// </summary>
+        internal void SetExternalReveal(bool revealed) => _externalReveal = revealed;
+
         private void Update()
         {
-            float target = _hovered ? 1f : 0f;
+            float target = Raised ? 1f : 0f;
             if (_t == target) return;
             _t = Mathf.MoveTowards(_t, target, Speed * Time.deltaTime);
             Apply();
