@@ -7,12 +7,14 @@ Reuses gen_card_prompt_briefs.py for everything that script already gets right: 
 text, class palette lookup, world tone, the scale clause, and the background-opposition hint.
 This file adds only the browser UI and per-card draft persistence on top.
 
-Drafts are saved as plain text to tooling/card-art-seeds/drafts/<setId>/<cardId>.txt — tracked
-in git (unlike art-bakeoff/, which CLAUDE.md documents as disposable), so nothing typed here is
-ever lost to an untracked-folder cleanup.
+Drafts are saved as plain text to art-pipeline/card-art/<setId>/art_<cardId>/draft.txt — right
+next to where that card's generated candidates land, so art you like has its prompt sitting beside it.
+Untracked, same as the rest of art-pipeline/ (2026-08-02: an earlier version of this file kept
+drafts under tooling/card-art-seeds/drafts/ and claimed that location was git-tracked for safety;
+it never actually was — tooling/card-art-seeds/* has been gitignored the whole time).
 
 "Has art" is checked against the PROMOTED location,
-unity/Emberfall/Assets/Art/Cards/<setId>/art_<cardId>.png — not the bake-off candidates folder,
+unity/Emberfall/Assets/Art/Cards/<setId>/art_<cardId>.png — not the pipeline's candidates folder,
 because the question this tool answers is "does the shipped game have art for this card yet."
 
 Usage:
@@ -43,7 +45,7 @@ from gen_card_prompt_briefs import (  # noqa: E402
 )
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DRAFTS_DIR = REPO / "tooling" / "card-art-seeds" / "drafts"
+DRAFTS_DIR = REPO / "art-pipeline" / "card-art" 
 PROMOTED_ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 HTML_PATH = pathlib.Path(__file__).resolve().parent / "card_art_editor.html"
 
@@ -74,9 +76,8 @@ def list_sets_cached():
         _sets_cache["mtimes"] = mtimes
     return _sets_cache["sets"]
 
-
 def draft_path(set_id, card_id):
-    return DRAFTS_DIR / set_id / f"{card_id}.txt"
+    return DRAFTS_DIR / set_id / f"art_{card_id}" / "draft.txt"
 
 
 def has_art(set_id, card_id):
@@ -126,8 +127,9 @@ def card_summary(card):
 def scale(rarity):
     scale_text = ["common", "uncommon", "rare", "legendary"]
     _scale_tier = scale_text.index(rarity)
-    scale_helper = _scale_tier.index(["small and unglamorous — modest scale, nothing here should read as imposing or dramatic.", "solid but unremarkable in scale — competent, not extraordinary.", "sizable — a genuine mid-to-late-game presence, but not the biggest thing on the board.", "commanding — one of the biggest, most dramatic shapes in its class."])
-    return scale_helper
+    scale_helper = ["small and unglamorous — modest scale, nothing here should read as imposing or dramatic.", "solid but unremarkable in scale — competent, not extraordinary.", "sizable — a genuine mid-to-late-game presence, but not the biggest thing on the board.", "commanding — one of the biggest, most dramatic shapes in its class."]
+    _scale =  scale_helper[_scale_tier]
+    return _scale
     
 
 class Handler(BaseHTTPRequestHandler):
@@ -146,9 +148,6 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
-
-
-
 
 
     def do_GET(self):
@@ -211,21 +210,15 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length).decode("utf-8")
 
-            # Authoritative copy — tracked in git, survives an art-bakeoff/ cleanup.
+            # Saved right next to where this card's generated candidates will land — no
+            # separate "authoritative" copy anymore; art-pipeline/ is untracked in full,
+            # same as everything else the generation pipeline produces. Plain overwrite
+            # on every save, no versioning.
             dp = draft_path(set_id, card_id)
             dp.parent.mkdir(parents=True, exist_ok=True)
             dp.write_text(body, encoding="utf-8")
 
-            # Convenience copy, colocated with where the candidate images will land.
-            # NOT authoritative — art-bakeoff/ is untracked and disposable per CLAUDE.md,
-            # so this can vanish on a cleanup with zero ceremony; the tracked copy above
-            # is what actually preserves the record. Plain overwrite on every save, no
-            # versioning — re-saving after an edit just replaces both copies.
-            bp = OUT_ROOT / set_id / f"art_{card_id}" / "prompt.txt"
-            bp.parent.mkdir(parents=True, exist_ok=True)
-            bp.write_text(body, encoding="utf-8")
-
-            self._json({"ok": True, "path": str(dp), "bakeoffPath": str(bp)})
+            self._json({"ok": True, "path": str(dp)})
             return
 
         self._json({"error": "not found"}, 404)

@@ -21,7 +21,7 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     table by the card's `class`. Never hardcoded here — parsed at runtime so it cannot drift.
   - World tone, from dev-docs/descriptors/world.md (base + REKINDLING section when relevant).
   - Output path + canonical filename, from setId/artId. ONE rule, no per-class exceptions:
-    art-bakeoff/card-art/<setId>/art_<cardId>/. The old emberward-tidecaller / EMBERFALL split
+    art-pipeline/card-art/<setId>/art_<cardId>/. The old emberward-tidecaller / EMBERFALL split
     that gen_card_art.py uses is a leftover of the pre-reorg batch files, not a rule worth
     perpetuating in new tooling — it has already caused two misfiled candidates in one session.
   - A SCALE CLAUSE derived from cost + attack/health + rarity (see `scale_clause`). This is the
@@ -33,7 +33,7 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
 WHAT IS A SEED (human-authored, tracked, never auto-overwritten):
   tooling/card-art-seeds/<setId>.json, keyed by card id:
     { "subject": "...", "perspective": "...", "background": "...", "tone": "...", "notes": "..." }
-  Deliberately NOT in art-bakeoff/ (untracked, disposable per CLAUDE.md) and NOT inside
+  Deliberately NOT in art-pipeline/ (untracked, disposable per CLAUDE.md) and NOT inside
   unity/Emberfall/Assets/CardData/ (that file is gameplay data feeding the determinism hash;
   art-authoring metadata does not belong mixed into it).
 
@@ -72,7 +72,7 @@ DOCS = pathlib.Path(
 )
 CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
-OUT_ROOT = REPO / "art-bakeoff" / "card-art"
+OUT_ROOT = REPO / "art-pipeline" / "card-art"
 
 CLASSES_MD = DOCS / "dev-docs" / "descriptors" / "classes.md"
 WORLD_MD = DOCS / "dev-docs" / "descriptors" / "world.md"

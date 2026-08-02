@@ -20,7 +20,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: eef364061eec07e4c9132d5c3e6bc324
+  - m_GUID: cd2ab3f78ea07bc4fbbfbccd9db6647b
     m_Address: fonts/GoogleSans-Regular SDF
     m_ReadOnly: 0
     m_SerializedLabels: []
