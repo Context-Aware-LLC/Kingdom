@@ -230,6 +230,19 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void OnSpellCast_Is_Live_After_EF016()
+        {
+            var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            var def = WithEffect(CardType.MINION, effect);
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                "EF-016 raises ON_SPELL_CAST from ApplyPlayCard's CardType.SPELL arm, so C21 must not classify it as dead.");
+        }
+
+        [Test]
         public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
         {
             EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
@@ -253,9 +266,8 @@ namespace Emberfall.Core.Tests.CardValidation
             // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
-                               Trigger.ON_TURN_END };
-            var dead = new[] { Trigger.ON_TURN_START,
-                               Trigger.ON_HEAL, Trigger.ON_SPELL_CAST, Trigger.AURA };
+                               Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST };
+            var dead = new[] { Trigger.ON_TURN_START, Trigger.ON_HEAL, Trigger.AURA };
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
             Assert.That(missing, Is.Empty,

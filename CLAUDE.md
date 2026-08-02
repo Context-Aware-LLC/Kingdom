@@ -69,20 +69,27 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Four card triggers are NO-GO until implemented
+## Three card triggers are NO-GO until implemented
 
 **Do not author a card using any of these.** They are declared in `Enums.cs`'s `Trigger` enum
 and **raised nowhere in the engine**. A card using one parses, validates, loads, and then does
 nothing — forever, silently, with no error.
 
-> `ON_TURN_START` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
+> `ON_TURN_START` · `ON_HEAL` · `AURA`
 
-**The seven that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
-`ON_DAMAGED`, `ON_TURN_END`.
+**The eight that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
+`ON_DAMAGED`, `ON_TURN_END`, `ON_SPELL_CAST`.
 
 **`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
 permanent on both boards, not "at the end of *your* turn". A card that should only fire on its
 controller's turn end cannot be expressed today.
+
+**`ON_SPELL_CAST` fires on BOTH players' casts and NOT on hero powers** (EF-016) — it is an
+observer sweep over both boards, so it means "whenever *any* spell is cast", not "whenever *you*
+cast". It is raised only from `ApplyPlayCard`'s `CardType.SPELL` arm; a hero power raises the same
+`ON_CAST` through an ephemeral `HERO_POWER` card and deliberately does not fire this. **Subscribers
+are snapshotted at cast time**, so a minion the spell itself kills still reacts — that is
+`RaiseObservers`' shape, shared with `ON_FRIENDLY_SUMMON` and `ON_TURN_END`.
 
 **`ON_ATTACK` is the trap** — it is raised for **weapons only**, so it is *valid* on a weapon
 and *dead* on a minion. A membership check alone will not catch that.

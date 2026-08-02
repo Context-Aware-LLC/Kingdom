@@ -88,5 +88,11 @@
 
   { "_comment": "EF-014 fixture card (2 of 2). Identical to test_thornback except for DIVINE_SHIELD. The pair is the whole point of on_damaged_thorns: one volley hits both, and only the unshielded one retaliates — pinning DamagePipeline's early return, which raises no ON_DAMAGED for an Aegis-absorbed hit.",
     "id": "test_aegis_thornback",      "name": "Aegis Thornback","type": "MINION",   "cost": 1, "attack": 1, "health": 5, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": ["DIVINE_SHIELD"], "setId": "CORE", "collectible": false, "artId": "art/test_aegis_thornback",
-    "effects": [ { "trigger": "ON_DAMAGED", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
+    "effects": [ { "trigger": "ON_DAMAGED", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+
+  { "_comment": "EF-016 fixture cards. Fixture-only: the pair exists to give spell_cast_echo an ON_SPELL_CAST subscriber and a cheap spell to trigger it, and both are deliberately NOT in the shipping cards/** tree. Appended, never edited into an existing row — the other fixtures' decks are explicit id lists and the hasher walks state, never the db, which the unrebaselined R1 run proves.",
+    "id": "test_spell_cast_echo",     "name": "Spell Echo",   "type": "MINION",     "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_spell_cast_echo",
+    "effects": [ { "trigger": "ON_SPELL_CAST", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+  { "id": "test_spell_cast_probe",    "name": "Probe",        "type": "SPELL",      "cost": 0, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/test_spell_cast_probe",
+    "effects": [ { "trigger": "ON_CAST", "action": "DEAL_DAMAGE", "amount": 2, "target": { "selector": "ENEMY_HERO" } } ] }
 ]
