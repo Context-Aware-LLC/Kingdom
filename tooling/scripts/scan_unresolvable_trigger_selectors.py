@@ -3,8 +3,9 @@
 explicit-choice selector.
 
 `EffectInterpreter.SelectorTargets` (src/Emberfall.Core/EffectInterpreter.cs) auto-resolves
-exactly seven selectors. Anything else reaching it throws `InvalidOperationException` — by
-design, per the M2 Phase 0 grammar-freeze ruling (silent fallback is silent mistargeting).
+exactly six selectors — the six `case` labels there, mirrored in AUTO_RESOLVABLE below.
+Anything else reaching it throws `InvalidOperationException` — by design, per the M2 Phase 0
+grammar-freeze ruling (silent fallback is silent mistargeting).
 
 Player-initiated effects (ON_PLAY / ON_CAST) are safe: CommandProcessor makes the player
 supply the target, so `ChosenTargets` is non-empty and the selector is never consulted. Every
@@ -15,6 +16,7 @@ Exit 1 if any offender is found.
 """
 import json
 import pathlib
+import re
 import sys
 
 # EffectInterpreter.SelectorTargets — the exhaustive auto-resolvable set.
@@ -28,9 +30,48 @@ PLAYER_TARGETED_TRIGGERS = {"ON_PLAY", "ON_CAST"}
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
+INTERPRETER = ROOT / "src" / "Emberfall.Core" / "EffectInterpreter.cs"
+
+# `case "X":` inside SelectorTargets — the labels this scan mirrors.
+CASE_LABEL = re.compile(r'^\s*case\s+"([A-Z_]+)"\s*:', re.MULTILINE)
+
+
+def interpreter_selectors() -> "set[str] | None":
+    """The `case` labels of EffectInterpreter.SelectorTargets, read from the source.
+
+    AUTO_RESOLVABLE is a hand-copy of a switch in another language in another file, which is
+    exactly the kind of duplicate that rots silently: a selector added there and not here makes
+    this scan cry wolf, and one removed there makes it miss a live crash. Read the real thing
+    and diff, so drift fails the scan instead of quietly degrading it.
+    """
+    if not INTERPRETER.exists():
+        return None
+    src = INTERPRETER.read_text(encoding="utf-8")
+    start = src.find("SelectorTargets(EffectDef eff, CardInstance source)")
+    if start < 0:
+        return None
+    # The method ends at its `default:` arm — the throw that this whole scan exists to prevent.
+    end = src.find("default:", start)
+    if end < 0:
+        return None
+    return set(CASE_LABEL.findall(src[start:end]))
 
 
 def main() -> int:
+    actual = interpreter_selectors()
+    if actual is None:
+        print(f"could not read SelectorTargets from {INTERPRETER} — "
+              "the scan cannot prove it is in sync with the engine", file=sys.stderr)
+        return 2
+    if actual != AUTO_RESOLVABLE:
+        print("AUTO_RESOLVABLE is out of sync with EffectInterpreter.SelectorTargets:",
+              file=sys.stderr)
+        for s in sorted(actual - AUTO_RESOLVABLE):
+            print(f"  in the interpreter, missing here : {s}", file=sys.stderr)
+        for s in sorted(AUTO_RESOLVABLE - actual):
+            print(f"  listed here, not in the interpreter: {s}", file=sys.stderr)
+        return 2
+
     files = sorted(CARD_DIR.glob("*.cards.json"))
     if not files:
         print(f"no *.cards.json under {CARD_DIR}", file=sys.stderr)
