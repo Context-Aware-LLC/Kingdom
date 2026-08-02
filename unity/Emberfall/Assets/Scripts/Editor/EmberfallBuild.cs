@@ -63,12 +63,16 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]
         public static void BuildWindows()
         {
+            SyncSceneList();
             BuildAddressables();
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputPath));
             var options = new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath },
+                // Menu first — testers enter through MainMenu and navigate from there.
+                // Find Game, Single Player and Deck Builder each need their target scene
+                // present or the button is a dead end in the shipping build.
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
