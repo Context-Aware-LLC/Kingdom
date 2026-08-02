@@ -123,7 +123,12 @@ def card_summary(card):
         "hasArt": has_art(card["setId"], card["id"]),
         "hasDraft": draft_path(card["setId"], card["id"]).exists(),
     }
-
+def scale(rarity):
+    scale_text = ["common", "uncommon", "rare", "legendary"]
+    _scale_tier = scale_text.index(rarity)
+    scale_helper = _scale_tier.index(["small and unglamorous — modest scale, nothing here should read as imposing or dramatic.", "solid but unremarkable in scale — competent, not extraordinary.", "sizable — a genuine mid-to-late-game presence, but not the biggest thing on the board.", "commanding — one of the biggest, most dramatic shapes in its class."])
+    return scale_helper
+    
 
 class Handler(BaseHTTPRequestHandler):
     def _json(self, obj, status=200):
@@ -141,6 +146,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+
+
+
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)

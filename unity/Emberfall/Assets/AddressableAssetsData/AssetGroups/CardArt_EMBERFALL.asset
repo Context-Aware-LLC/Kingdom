@@ -180,6 +180,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6518d16b50b1e8848b99f1cfd4879fb0
+    m_Address: card_art/art_clock_gear_imp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69c5a2f2a22565a40a52748fe7554774
     m_Address: card_art/art_grave_sorrows_blessing
     m_ReadOnly: 0
@@ -282,6 +287,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a88fa54dbd403b043a745537d1de33d3
     m_Address: card_art/art_bell_maul
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac6a64ceb9b7c224aa0f848b85aeb068
+    m_Address: card_art/art_grave_plague_bringer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
