@@ -27,7 +27,7 @@ namespace Emberfall.Presentation
         // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
         // ~1.8. Square. Keep PlateW/PlateH and ClickableHero's collider in step; they are one
         // figure. The socket column beside it is sized by HeroSocketsView.FrameSize.
-        private const float PlateW   = 1.8f;
+        internal const float PlateW  = 1.8f;
         private const float PlateH   = 1.8f;
 
         private PlayerId _playerId;
