@@ -85,16 +85,17 @@ namespace Emberfall.Core.Collection
     /// <summary>
     /// What a duplicate past the collection limit converts into (NOR-109 §6).
     ///
-    /// <para><b>PROPOSED VALUES — an economy call, not an engineering one.</b> The mechanism (a dupe
-    /// past <see cref="DeckValidator.MaxCopies"/> becomes shards instead of a card) is decision-free and
-    /// is what this ticket implements. The four numbers below are a proposal raised to Sam on NOR-109;
-    /// they are deliberately all in one place so that re-pricing the economy is a four-line change with
-    /// no algorithm edit and no fixture re-bake beyond the shard totals.</para>
+    /// <para><b>LOCKED BY SAM, 2026-08-02 (NOR-109).</b> An economy call, not an engineering one: the
+    /// mechanism (a dupe past <see cref="DeckValidator.MaxCopies"/> becomes shards instead of a card) is
+    /// what this ticket implements, and these are the numbers he chose over a flatter-legendary
+    /// alternative. They are deliberately all in one place so that re-pricing the economy is a four-line
+    /// change with no algorithm edit and no fixture re-bake beyond the shard totals. <b>Re-pricing is an
+    /// economy decision — do not retune these to make a test or a payout feel better.</b></para>
     /// </summary>
     public static class ShardValues
     {
-        public const int Common = 5;
-        public const int Rare = 20;
+        public const int Common = 10;
+        public const int Rare = 25;
         public const int Epic = 100;
         public const int Legendary = 400;
 
@@ -134,10 +135,10 @@ namespace Emberfall.Core.Collection
     public sealed class BoosterPack
     {
         /// <summary>
-        /// Cards per pack. <b>5 by default</b> — the brief left this unspecified and named 5 as the
-        /// default to assume; raised to Sam on NOR-109 for a lock. Every guarantee in
-        /// <see cref="BoosterPackOpener"/> is expressed against <see cref="CardCount"/>, not against a
-        /// literal 5, so changing it is a one-line change here.
+        /// Cards per pack. <b>5, locked by Sam on 2026-08-02 (NOR-109)</b> — the brief left it
+        /// unspecified and named 5 as the default to assume; he confirmed it over 4 and 6. Every
+        /// guarantee in <see cref="BoosterPackOpener"/> is expressed against <see cref="CardCount"/>,
+        /// not against a literal 5, so changing it is a one-line change here.
         /// </summary>
         public const int DefaultCardCount = 5;
 
