@@ -16,8 +16,8 @@ namespace Emberfall.Presentation
     ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on onDamage/onHeal
     ///   _StealthAmount  → bodyRenderer   SG_Stealth alpha body — tween to 0.6 (not 1; keeps card readable)
     ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frozen change (0.3s)
-    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow / affordance; self-animated, no float
-    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield|Taunt; self-animated, no float
+    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (SPELL_DAMAGE) | selection | AttackReadiness.Ready
+    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Taunt is spatial (row offset)
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
     /// BoardController, because dissolving one renderer out of ~13 dissolves nothing a player can

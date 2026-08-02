@@ -88,10 +88,11 @@ namespace Emberfall.Presentation
         private static AuraSet BuildAuras(CardInstance ci)
         {
             AuraSet a = AuraSet.None;
-            if (ci.HasAegisShield)                         a |= AuraSet.Shield;
-            if (ci.IsFrozen)                               a |= AuraSet.Frozen;
-            if (ci.Keywords.Contains(Keyword.TAUNT))       a |= AuraSet.Taunt;
-            if (ci.Keywords.Contains(Keyword.STEALTH))     a |= AuraSet.Stealth;
+            if (ci.HasAegisShield)                            a |= AuraSet.Shield;
+            if (ci.IsFrozen)                                  a |= AuraSet.Frozen;
+            if (ci.Keywords.Contains(Keyword.TAUNT))          a |= AuraSet.Taunt;
+            if (ci.Keywords.Contains(Keyword.STEALTH))        a |= AuraSet.Stealth;
+            if (ci.Keywords.Contains(Keyword.SPELL_DAMAGE))   a |= AuraSet.Glow;
             return a;
         }
     }
