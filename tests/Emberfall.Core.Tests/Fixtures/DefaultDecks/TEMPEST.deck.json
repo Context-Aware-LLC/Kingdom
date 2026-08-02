@@ -10,28 +10,28 @@
       "count": 2
     },
     {
-      "id": "core_choking_vines",
-      "count": 1
+      "id": "core_bonehound",
+      "count": 2
     },
     {
-      "id": "core_grove_mender",
+      "id": "core_emberling",
       "count": 1
     },
     {
       "id": "core_hollow_acolyte",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "core_thistleguard_sprig",
-      "count": 1
+      "id": "core_lantern_bearer",
+      "count": 2
     },
     {
       "id": "core_veilstalker",
       "count": 1
     },
     {
-      "id": "ember_ashfall_wyrm",
-      "count": 1
+      "id": "ember_cinder_lance",
+      "count": 2
     },
     {
       "id": "ember_emberdrinker",
@@ -43,34 +43,34 @@
     },
     {
       "id": "ember_scorch",
-      "count": 2
+      "count": 1
+    },
+    {
+      "id": "ember_stoke_the_coals",
+      "count": 1
+    },
+    {
+      "id": "ember_twin_flame",
+      "count": 1
     },
     {
       "id": "ember_zealot",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "flame_bolt",
-      "count": 2
-    },
-    {
-      "id": "stone_sentry",
+      "id": "relic_corpse_cart",
       "count": 2
     },
     {
       "id": "storm_chain_lightning",
+      "count": 2
+    },
+    {
+      "id": "storm_crackle",
       "count": 1
     },
     {
       "id": "storm_gust_sprite",
-      "count": 2
-    },
-    {
-      "id": "storm_hurricane",
-      "count": 1
-    },
-    {
-      "id": "storm_lightning_bolt",
       "count": 1
     },
     {
@@ -78,15 +78,15 @@
       "count": 2
     },
     {
-      "id": "storm_static_discharge",
+      "id": "storm_static_shock",
+      "count": 1
+    },
+    {
+      "id": "storm_tempest_striker",
       "count": 2
     },
     {
-      "id": "storm_wind_rider",
-      "count": 2
-    },
-    {
-      "id": "wandering_scout",
+      "id": "storm_thunder_hoof",
       "count": 1
     }
   ]
