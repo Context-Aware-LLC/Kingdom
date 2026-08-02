@@ -57,6 +57,34 @@ namespace Emberfall.Core.Tests.Determinism
                 Assert.That(c, Is.InRange(9000, 11000), "Distribution should be roughly uniform.");
         }
 
+        /// <summary>
+        /// <c>Substream(seed, n)</c> must be the SAME stream jumped to its n-th cursor, not a second
+        /// entropy source — that equivalence is what keeps the O(1) jump inside the M1 algorithm lock.
+        /// </summary>
+        [Test]
+        public void Substream_Is_The_Same_Stream_Jumped_Ahead()
+        {
+            const ulong Seed = 0xDEADBEEFCAFEF00DUL;
+            var walked = new DeterministicRandom(Seed);
+
+            for (int n = 0; n < 64; n++)
+            {
+                ulong expected = walked.NextUInt64();               // the (n+1)-th value of the base stream
+                ulong jumped = DeterministicRandom.Substream(Seed, n).NextUInt64();
+                Assert.That(jumped, Is.EqualTo(expected), $"Substream({n}) diverged from the walked stream.");
+            }
+        }
+
+        [Test]
+        public void Substream_Zero_Is_The_Base_Stream()
+        {
+            const ulong Seed = 12345UL;
+            var jumped = DeterministicRandom.Substream(Seed, 0);
+            var direct = new DeterministicRandom(Seed);
+            for (int i = 0; i < 100; i++)
+                Assert.That(jumped.NextUInt64(), Is.EqualTo(direct.NextUInt64()));
+        }
+
         [Test]
         public void Shuffle_Is_Deterministic_For_A_Seed()
         {

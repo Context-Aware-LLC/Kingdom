@@ -2352,30 +2352,6 @@
     ]
   },
   {
-    "id": "clock_mainspring_halberd",
-    "name": "Mainspring Halberd",
-    "type": "WEAPON",
-    "cost": 3,
-    "attack": 2,
-    "durability": 3,
-    "class": "CLOCKWRIGHT",
-    "rarity": "RARE",
-    "keywords": [
-      "DEATHRATTLE"
-    ],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/clock_mainspring_halberd",
-    "cardText": "[Toll] Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
-  },
-  {
     "id": "night_lurk_wisp",
     "name": "Lurk Wisp",
     "type": "MINION",

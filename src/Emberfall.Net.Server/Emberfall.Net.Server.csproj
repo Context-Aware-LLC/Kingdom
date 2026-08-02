@@ -43,6 +43,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
     <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+    <!-- NOR-109: the booster-pack model + open algorithm are core (netstandard2.1, float-free);
+         only the ledger/pity binding lives here. -->
+    <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
     <ProjectReference Include="..\Emberfall.Core\Emberfall.Core.csproj" />
     <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />

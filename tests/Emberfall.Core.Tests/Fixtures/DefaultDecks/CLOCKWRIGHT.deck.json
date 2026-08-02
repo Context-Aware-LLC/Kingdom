@@ -6,7 +6,7 @@
   "seed": 64159285253,
   "entries": [
     {
-      "id": "cinder_drake",
+      "id": "clock_assembly_drone",
       "count": 1
     },
     {
@@ -14,31 +14,27 @@
       "count": 1
     },
     {
-      "id": "clock_chrono_construct",
-      "count": 1
-    },
-    {
-      "id": "clock_clockwork_sniper",
-      "count": 1
-    },
-    {
-      "id": "clock_mainspring_halberd",
-      "count": 1
+      "id": "clock_gear_imp",
+      "count": 2
     },
     {
       "id": "clock_overclocker",
       "count": 1
     },
     {
-      "id": "core_bonehound",
+      "id": "clock_snap_bolt",
       "count": 2
     },
     {
-      "id": "core_choking_vines",
-      "count": 1
+      "id": "clock_spring_coil",
+      "count": 2
     },
     {
-      "id": "core_grove_mender",
+      "id": "clock_temporal_rewinder",
+      "count": 2
+    },
+    {
+      "id": "core_bonehound",
       "count": 2
     },
     {
@@ -46,15 +42,11 @@
       "count": 1
     },
     {
-      "id": "core_lantern_bearer",
+      "id": "core_thistleguard_sprig",
       "count": 1
     },
     {
-      "id": "core_stoneback",
-      "count": 2
-    },
-    {
-      "id": "core_thistleguard_sprig",
+      "id": "core_throneless_king",
       "count": 1
     },
     {
@@ -62,23 +54,19 @@
       "count": 1
     },
     {
-      "id": "ember_cinder_lance",
-      "count": 2
-    },
-    {
-      "id": "ember_forgeheart_colossus",
+      "id": "ember_ashfall_wyrm",
       "count": 1
     },
     {
-      "id": "ember_pyras_wrath",
+      "id": "ember_cinder_lance",
       "count": 1
     },
     {
       "id": "ember_scorch",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "ember_stoke_the_coals",
+      "id": "ember_slagshell_bulwark",
       "count": 2
     },
     {
@@ -91,11 +79,15 @@
     },
     {
       "id": "relic_bound_revenant",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "wandering_scout",
+      "id": "relic_corpse_cart",
       "count": 1
+    },
+    {
+      "id": "stone_sentry",
+      "count": 2
     }
   ]
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Emberfall.Core;
@@ -24,13 +26,29 @@ namespace Emberfall.Core.Tests.CardBehavior
     [Category("CardValidation")]
     public sealed class MainspringHalberdTests
     {
-        private const string Halberd = "clock_mainspring_halberd";
+        private const string Halberd = "rekind_clock_mainspring_halberd";
         private const string Replacement = "ember_cinder_lance"; // 1/2, no effects — cannot muddy the read
+
+        private static IReadOnlyList<CardDefinition>? _m3Cards;
+        private static ICardDatabase? _liveDb;
+
+        private static IReadOnlyList<CardDefinition> M3Cards => _m3Cards ??= LoadM3();
+
+        private static ICardDatabase LiveDb
+            => _liveDb ??= new JsonCardDatabase(LiveCardSet.Cards.Concat(M3Cards));
+
+        private static IReadOnlyList<CardDefinition> LoadM3()
+        {
+            string path = Path.Combine(RepoPaths.RepoRoot,
+                "unity", "Emberfall", "Assets", "CardData", "M3.cards.json");
+            Assert.That(File.Exists(path), Is.True, $"Live M3 card set not found at {path}");
+            return CardJson.DeserializeArray(File.ReadAllText(path));
+        }
 
         private static CardDefinition Def(string id)
         {
-            var card = LiveCardSet.Cards.FirstOrDefault(c => c.Id == id);
-            Assert.That(card, Is.Not.Null, $"'{id}' is missing from the live M1 set.");
+            var card = LiveCardSet.Cards.Concat(M3Cards).FirstOrDefault(c => c.Id == id);
+            Assert.That(card, Is.Not.Null, $"'{id}' is missing from the live M1+M3 sets.");
             return card!;
         }
 
@@ -44,8 +62,14 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Type, Is.EqualTo(CardType.WEAPON));
             Assert.That(def.Class, Is.EqualTo(CardClass.CLOCKWRIGHT));
             Assert.That(def.Collectible, Is.True, "a signature weapon has to be deck-buildable to be signature.");
+            Assert.That(def.Name, Is.EqualTo("Mainspring Halberd"));
+            Assert.That(def.Cost, Is.EqualTo(3));
             Assert.That(def.Attack, Is.EqualTo(2));
             Assert.That(def.Durability, Is.EqualTo(3));
+            Assert.That(def.Rarity, Is.EqualTo(Rarity.RARE));
+            Assert.That(def.SetId, Is.EqualTo(SetId.REKINDLING));
+            Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.DEATHRATTLE }));
+            Assert.That(def.CardText, Is.EqualTo("[Toll] Draw a card."));
 
             Assert.That(def.Effects.Count, Is.EqualTo(1));
             var fx = def.Effects[0];
@@ -61,7 +85,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         [Test]
         public void The_Shipped_Row_Validates_Clean()
         {
-            var report = new CardValidator().Validate(Def(Halberd), LiveCardSet.Db);
+            var report = new CardValidator().Validate(Def(Halberd), LiveDb);
             Assert.That(report.Ok, Is.True,
                 "validation errors: " + string.Join(", ", report.Issues
                     .Where(i => i.Severity == Severity.Error).Select(i => i.Code + " " + i.Message)));
@@ -80,7 +104,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             int handBefore = s.Players[0].Hand.Count;
 
             // The enemy hero carries no weapon, so it deals no retaliation damage back.
-            var r = new CommandProcessor(LiveCardSet.Db).Execute(s,
+            var r = new CommandProcessor(LiveDb).Execute(s,
                 new AttackIntent(s.ActivePlayer, s.Players[0].Hero.Id, new TargetRef(s.Players[1].Hero.Id)));
 
             Assert.That(r.Accepted, Is.True);
@@ -104,7 +128,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             int deckBefore = s.Players[0].Deck.Count;
             int handBefore = s.Players[0].Hand.Count;       // includes the lance, which leaves hand as it is played
 
-            var r = new CommandProcessor(LiveCardSet.Db).Execute(s,
+            var r = new CommandProcessor(LiveDb).Execute(s,
                 new PlayCardIntent(s.ActivePlayer, lance.Id, 0, Array.Empty<TargetRef>()));
 
             Assert.That(r.Accepted, Is.True);
@@ -126,7 +150,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             var lance = ToHand(s, 0, Def(Replacement));
             StockDeck(s, 0, 5);
 
-            new CommandProcessor(LiveCardSet.Db).Execute(s,
+            new CommandProcessor(LiveDb).Execute(s,
                 new PlayCardIntent(s.ActivePlayer, lance.Id, 0, Array.Empty<TargetRef>()));
 
             Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2),
