@@ -168,6 +168,7 @@ namespace Emberfall.Presentation
                 case PointerPhase.Pressed:  OnPointerPressed(p.Position);  break;
                 case PointerPhase.Held:     OnPointerHeld(p.Position);     break;
                 case PointerPhase.Released: OnPointerReleased(p.Position); break;
+                case PointerPhase.Canceled: CancelGesture(); _pointer.Reset(); break;
             }
         }
 
@@ -308,6 +309,24 @@ namespace Emberfall.Presentation
             _gesture         = Gesture.None;
             _aim.Hide();
             ClearTargeting();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                CancelGesture();
+                _pointer.Reset();
+            }
+        }
+
+        private void OnApplicationPause(bool isPaused)
+        {
+            if (isPaused)
+            {
+                CancelGesture();
+                _pointer.Reset();
+            }
         }
 
         private void OnDestroy() => _aim.Dispose();

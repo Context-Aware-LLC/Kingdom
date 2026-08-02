@@ -13,6 +13,8 @@ namespace Emberfall.Presentation
         Held,
         /// <summary>The pointer came up THIS frame.</summary>
         Released,
+        /// <summary>The pointer was canceled by the OS (focus loss, system gesture) before release (NOR-137).</summary>
+        Canceled,
     }
 
     /// <summary>One sample frame of the abstract pointer, for testing and injection.</summary>
@@ -120,7 +122,12 @@ namespace Emberfall.Presentation
                 if (t.fingerId != _fingerId) continue;
                 _last = t.position;
 
-                if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled)
+                if (t.phase == TouchPhase.Canceled)
+                {
+                    _fingerId = -1;
+                    return new PointerSample(PointerPhase.Canceled, t.position);
+                }
+                if (t.phase == TouchPhase.Ended)
                 {
                     _fingerId = -1;
                     return new PointerSample(PointerPhase.Released, t.position);
@@ -129,12 +136,12 @@ namespace Emberfall.Presentation
             }
 
             // The tracked finger disappeared without ever reporting Ended — app focus loss and
-            // OS gesture interception both do this. Synthesise the release, or the drag strands
+            // OS gesture interception both do this. Synthesise a cancel, or the drag strands
             // armed forever with no way for the player to clear it.
             if (_fingerId >= 0)
             {
                 _fingerId = -1;
-                return new PointerSample(PointerPhase.Released, _last);
+                return new PointerSample(PointerPhase.Canceled, _last);
             }
             return new PointerSample(PointerPhase.None, _last);
         }

@@ -45,6 +45,8 @@ namespace Emberfall.Editor
             FullStackDragResolve();
             FullStackTapReselect();
             FullStackCancellation();
+            OsCanceledDuringDrag();
+            OsCanceledDuringArmedTap();
             DragTargetingModelCore();
 
             Debug.Log($"[InputGestureVerify] {_passed} passed, {_failed} failed");
@@ -287,6 +289,61 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 300)));
             Check("release on empty space cancels armed gesture without submitting",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Cleanup();
+        }
+
+        /// <summary>NOR-137: OS-canceled touch during a drag (focus loss, system gesture, incoming call).</summary>
+        private static void OsCanceledDuringDrag()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            // Press and drag hand card 0 past the threshold.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed, new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,    new Vector2(25, 215)));  // crosses threshold
+            Check("mid-drag: no intent yet", harness.SubmittedIntents.Count == 0);
+
+            // OS cancels the touch (TouchPhase.Canceled) — should cancel the gesture cleanly
+            // without submitting an intent or leaving targeting armed.
+            harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(25, 215)));
+            Check("OS-canceled touch during drag: no intent submitted", harness.SubmittedIntents.Count == 0);
+            Check("OS-canceled touch during drag: gesture fully cleared",
+                harness.Router.Pointer._fingerId == -1);  // Gesture is reset
+
+            // Verify that targeting is also cleared (no armed state leaking through).
+            // A subsequent press on the same card should start fresh.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed, new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
+            Check("after OS cancel, new tap on the same card arms cleanly",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Cleanup();
+        }
+
+        /// <summary>NOR-137: OS-canceled touch while gesture is armed by tap (ArmedByTap state).</summary>
+        private static void OsCanceledDuringArmedTap()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            // Tap-arm hand card 0.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
+            Check("tap arms", harness.SubmittedIntents.Count == 0);
+
+            // OS cancels while armed (e.g., app loses focus mid-tap-armed state).
+            // PointerSampler synthesizes PointerPhase.Canceled when the finger disappears.
+            harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(25, 200)));
+            Check("OS-canceled touch during ArmedByTap: no intent submitted", harness.SubmittedIntents.Count == 0);
+            Check("OS-canceled touch during ArmedByTap: gesture fully cleared",
+                harness.Router.Pointer._fingerId == -1);
+
+            // Verify that a new press starts fresh without any residual ArmedByTap state.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            Check("after OS cancel, new tap on a different card arms cleanly (reselect works)",
                 harness.SubmittedIntents.Count == 0);
 
             harness.Cleanup();
