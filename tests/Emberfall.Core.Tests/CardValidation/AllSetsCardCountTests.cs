@@ -42,8 +42,8 @@ namespace Emberfall.Core.Tests.CardValidation
             var m3 = LoadSet(SetFiles[2]);
 
             Assert.That(m1.Count, Is.EqualTo(143), "M1 set count mismatch (card_inventory.py: 143)");
-            Assert.That(m2.Count, Is.EqualTo(42),  "M2 set count mismatch (card_inventory.py: 42)");
-            Assert.That(m3.Count, Is.EqualTo(73),  "M3 set count mismatch (card_inventory.py: 73)");
+            Assert.That(m2.Count, Is.EqualTo(42), "M2 set count mismatch (card_inventory.py: 42)");
+            Assert.That(m3.Count, Is.EqualTo(73), "M3 set count mismatch (card_inventory.py: 73)");
 
             var combined = m1.Concat(m2).Concat(m3).ToList();
             Assert.That(combined.Count, Is.EqualTo(258),
