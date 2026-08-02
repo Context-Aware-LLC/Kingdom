@@ -6,58 +6,71 @@ using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    // Click state machine: converts Unity clicks into PlayerIntents for the local human
-    // player (P0 in hot-seat mode) and routes them to HotSeatInput (ARCHITECTURE §6).
+    // Pointer state machine (EF-048): converts press / drag / release into PlayerIntents for the local
+    // human player and routes them to HotSeatInput (ARCHITECTURE §6).
+    //
+    // ONE MACHINE, BOTH INPUT MODELS. Mouse drag on desktop and tap-and-hold-drag on Android are the
+    // same code path, because PointerSampler collapses them into one press/drag/release stream before
+    // this class sees them. Hover is therefore ADDITIVE on desktop (HandCardHover) rather than load-
+    // bearing, which is the only shape that survives a phone.
     //
     // States:
-    //   Idle
-    //     → CardSelectedFromHand  : click own hand card while it's your Main phase
-    //     → AttackerSelected      : click own board minion while it's your Main phase
-    //   CardSelectedFromHand
-    //     → Idle + PlayCardIntent(slot, [])              : click own board slot
-    //     → Idle + PlayCardIntent(0, [target])           : click enemy board card (targeted spell)
-    //     → Idle + PlayCardIntent(0, [target])           : click OWN board card, when the selected
-    //                                                      card's effect declares an ANY_* selector
-    //                                                      (friendly-target battlecries/spells — the
-    //                                                      engine rejects a target-less play of these)
-    //     → Idle (deselect)                              : click same card again or Escape
-    //   AttackerSelected
-    //     → Idle + AttackIntent(attacker, defender)      : click enemy board card
-    //     → Idle (deselect)                              : click same card again or Escape
+    //   None       → Pressed     : pointer down on something of ours that can move
+    //   Pressed    → Dragging    : the pointer travelled past DragThresholdPx
+    //              → ArmedByTap  : released without travelling (a tap)
+    //   Dragging   → None        : released — resolves to an intent, or cancels if the drop meant nothing
+    //   ArmedByTap → None        : released on a target (submit), on the source again (cancel),
+    //                              on another of ours (reselect), or on nothing (cancel)
     //
-    // Hero power : click HeroPowerAnchor. Untargeted powers (SUMMON, self-heal) fire
-    //   HeroPowerIntent([]) immediately. Powers whose effect declares an explicit-choice
-    //   selector (ANY_*, e.g. Searing Bolt's ANY_CHARACTER) enter HeroPowerTargeting —
-    //   the next click on any minion or hero supplies the target; the engine rejects an
-    //   empty-target intent for these, so firing blind is never an option.
+    // ArmedByTap is not a legacy remnant — it is the accessibility path. A drag is a two-handed,
+    // fine-motor gesture; tap-then-tap is the same machine reached by two short presses, and it is
+    // what a mouse user's muscle memory produces. Both funnel through DragTargetingModel.Resolve, so
+    // there is exactly one place where a gesture becomes an intent.
     //
-    // End turn : Enter or Space key during Main phase.
-    // Cancel   : Escape clears any selection.
+    // WHAT IS NOT HERE ANY MORE: the four Clickable* components no longer forward OnMouseDown. They
+    // are raycast descriptors now — identity and a collider — and this class does the one raycast per
+    // frame itself. Unity's OnMouseDown does fire from touch (simulateMouseWithTouches), so the old
+    // click machine was not broken on Android; what it could not express was a gesture with a
+    // beginning, a middle and an end, which is what targeting actually is.
+    //
+    // End turn : Enter or Space during Main phase, or the on-screen button.
+    // Cancel   : Escape clears any armed gesture.
     public sealed class InputRouter : MonoBehaviour
     {
-        private enum State { Idle, CardSelectedFromHand, AttackerSelected, HeroPowerTargeting }
+        private enum Gesture { None, Pressed, Dragging, ArmedByTap }
 
-        private State        _state = State.Idle;
-        private GameState    _currentState;
-        private HotSeatInput _p0Input;
-        private PlayerId     _p0Id;
-        private ICardDatabase _db;
+        // Travel that separates a tap from a drag. Scaled off screen density because a thumb on a
+        // 420 dpi phone wanders several times further than a mouse does on a click, and a fixed
+        // pixel count is either a hair-trigger on mobile or unreachable on desktop.
+        private static float DragThresholdPx => Screen.dpi > 1f ? Mathf.Max(10f, Screen.dpi * 0.06f) : 10f;
 
-        private InstanceId    _selectedId;
-        private CardPresenter _selectedPresenter;
+        private Gesture       _gesture;
+        private DragSource    _source;
+        private Vector2       _pressPos;
+        private CardPresenter _sourcePresenter;
+        private Transform     _sourceTransform;
+        private bool          _sourceIsOwnHero;
+
+        private readonly PointerSampler _pointer = new PointerSampler();
+        private readonly AimLineView    _aim     = new AimLineView();
+
+        private GameState          _currentState;
+        private HotSeatInput       _p0Input;
+        private PlayerId           _p0Id;
+        private ICommandValidator  _validator;
+        private DragTargetingModel _model;
+
         private HeroPlateView _p0HeroPlate;      // selection + target cue for our hero
         private HeroPlateView _enemyHeroPlate;   // target cue for the enemy hero
-        private ICommandValidator _validator;
 
         // Set by the bootstrap to the settings overlay's IsBlockingInput. UI Toolkit does NOT
-        // block Unity physics, so while a UI surface owns input we suppress board clicks here —
-        // otherwise a click passes through the scrim to the cards behind it, and a card-selected
-        // click on the (collider-less) corner button plays a card into empty space.
+        // block Unity physics, so while a UI surface owns input we suppress board gestures here —
+        // otherwise a press passes through the scrim to the cards behind it.
         public System.Func<bool> UiBlocksInput;
         private bool UiBlocked => UiBlocksInput != null && UiBlocksInput();
 
         // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
-        // While a targeting state is armed: a persistent banner says so, and the set of
+        // While a targeting gesture is armed: a persistent banner says so, and the set of
         // legal targets is broadcast so BoardController can glow ONLY those (readiness
         // glow is suppressed for the duration). Null = targeting cleared.
         public event System.Action<HashSet<InstanceId>> TargetingChanged;
@@ -65,15 +78,16 @@ namespace Emberfall.Presentation
         private GameObject  _bannerGo;
         private TextMeshPro _bannerLabel;
 
-        private const string AimBanner    = "Choose a target — Esc cancels";
-        private const string AttackBanner = "Choose a target to attack — Esc cancels";
-
         // ── Mulligan picker (C-G1-2b) ──────────────────────────────────────────────
-        // During the Mulligan phase a hand-card click toggles that card into the toss set
-        // (a red X marker) instead of the normal play/select flow; the confirm button then
-        // submits MulliganIntent(toss). Own seat only — the AI/remote seat confirms itself.
-        // Empty toss set = keep all. Fires MulliganSelectionChanged(count) so the confirm
-        // button can label itself "KEEP ALL" vs "MULLIGAN (n)".
+        // During the Mulligan phase a hand-card press toggles that card into the toss set (a red X
+        // marker) instead of starting a gesture; the confirm button then submits MulliganIntent(toss).
+        // Own seat only — the AI/remote seat confirms itself. Empty toss set = keep all. Fires
+        // MulliganSelectionChanged(count) so the confirm button can label itself "KEEP ALL" vs
+        // "MULLIGAN (n)".
+        //
+        // MULLIGAN IS A TAP SURFACE, NOT A DRAG ONE, and it is NOT turn-gated: the engine's mulligan
+        // is simultaneous, so the non-active seat decides at the same time we do. Do not add an
+        // ActivePlayer check to this path — it hangs that seat with nothing logged.
         public event System.Action<int> MulliganSelectionChanged;
         private readonly HashSet<InstanceId> _mulliganToss = new HashSet<InstanceId>();
         private readonly Dictionary<InstanceId, CardPresenter> _tossPresenters =
@@ -92,25 +106,28 @@ namespace Emberfall.Presentation
         {
             _p0Id      = p0Id;
             _p0Input   = p0Input;
-            _db        = db;
             _validator = validator;
+            _model     = new DragTargetingModel(p0Id, db);
         }
 
         // Subscribed to the P0 session's OnSnapshot — the IMMEDIATE truth cadence, NOT the
         // queue-delayed MatchRunner.OnStateUpdated (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a4-session-seam-design.md §7 / §11 finding 7):
-        // turn gating and selection-clearing must not lag behind the authority while the playback
+        // turn gating and gesture-clearing must not lag behind the authority while the playback
         // queue drains, or the player is locked out / acts on a stale turn.
         public void OnStateUpdated(GameState state)
         {
             _currentState = state;
+            if (_model != null) _model.State = state;
+
             // Mulligan toss selection lives only while our seat is still deciding; once the phase
             // passes or our confirm lands, drop the bookkeeping (the cards are gone/replaced, so
             // don't touch their now-dead presenters — clearMarks: false).
             if (!IsMulliganActive() && _mulliganToss.Count > 0)
                 ResetMulliganSelection(clearMarks: false);
-            if (_state != State.Idle && state != null && state.ActivePlayer != _p0Id)
+
+            if (_gesture != Gesture.None && state != null && state.ActivePlayer != _p0Id)
             {
-                ClearSelection();
+                CancelGesture();
                 return;
             }
             // Refresh the armed-target set on every snapshot — board changes (a taunt dying
@@ -118,246 +135,249 @@ namespace Emberfall.Presentation
             RefreshTargeting();
         }
 
-        private void RefreshTargeting()
+        // ── The machine ─────────────────────────────────────────────────────────────
+
+        private void Update()
         {
-            switch (_state)
+            if (Input.GetKeyDown(KeyCode.Escape)) CancelGesture();
+
+            // Sample unconditionally: the sampler tracks press/release EDGES, so skipping frames
+            // makes it miss the transition it exists to report.
+            PointerSample p = _pointer.Sample();
+
+            if (UiBlocked)
             {
-                case State.CardSelectedFromHand:
-                    if (SelectedCardRequiresTarget())
-                        SetTargeting(ComputeSpellTargets(), AimBanner);
-                    else
-                        ClearTargeting();
-                    break;
-                case State.AttackerSelected:
-                    SetTargeting(ComputeAttackTargets(_selectedId), AttackBanner);
-                    break;
-                case State.HeroPowerTargeting:
-                    SetTargeting(ComputeHeroPowerTargets(), AimBanner);
-                    break;
-                default:
-                    ClearTargeting();
-                    break;
+                if (_gesture != Gesture.None) CancelGesture();
+                _pointer.Reset();   // a press that began under the UI must not arm when it lifts
+                return;
+            }
+            if (_currentState == null || _p0Input == null || _model == null) return;
+
+            HandleKeyboard();
+
+            switch (p.Phase)
+            {
+                case PointerPhase.Pressed:  OnPointerPressed(p.Position);  break;
+                case PointerPhase.Held:     OnPointerHeld(p.Position);     break;
+                case PointerPhase.Released: OnPointerReleased(p.Position); break;
             }
         }
 
-        // ── Entry points called by ClickableCard / ClickableBoardSlot / ClickableHeroPower ──
-
-        public void OnCardClicked(ClickableCard card)
+        private void OnPointerPressed(Vector2 screenPos)
         {
-            if (UiBlocked) return;
-            if (_currentState == null || _p0Input == null) return;
+            _pressPos = screenPos;
+            PointerSubject subject = Probe(screenPos, out Transform hitTransform, out CardPresenter presenter);
 
-            // Mulligan phase: a hand click toggles the toss set; nothing else on the board is
-            // actionable yet, so consume the click and return (the normal switch below gates on
-            // Main phase and would ignore it anyway).
             if (IsMulliganActive())
             {
-                if (card.OwnerId == _p0Id && card.Zone == Zone.Hand)
-                    ToggleMulliganCard(card);
+                if (subject.Kind == PointerSubjectKind.Card
+                    && subject.Owner == _p0Id && subject.Zone == Zone.Hand)
+                    ToggleMulliganCard(subject.Id, presenter);
                 return;
             }
 
-            switch (_state)
+            // Already armed by a tap: the press changes nothing, the RELEASE decides. This is what
+            // lets a tap-armed gesture be finished by dragging as well as by a second tap.
+            if (_gesture == Gesture.ArmedByTap) return;
+
+            DragSource src = _model.BeginSource(subject);
+            if (src.Kind == DragSourceKind.None) return;
+
+            _source          = src;
+            _sourcePresenter = presenter;
+            _sourceTransform = hitTransform;
+            _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
+            _gesture         = Gesture.Pressed;
+        }
+
+        private void OnPointerHeld(Vector2 screenPos)
+        {
+            if (_gesture == Gesture.Pressed
+                && (screenPos - _pressPos).sqrMagnitude >= DragThresholdPx * DragThresholdPx)
             {
-                case State.Idle:
-                    // Only respond to P0's cards on P0's Main turn.
-                    if (card.OwnerId != _p0Id) return;
-                    if (_currentState.ActivePlayer != _p0Id) return;
-                    if (_currentState.Phase != TurnPhase.Main) return;
-
-                    if (card.Zone == Zone.Hand)
-                        SelectCard(card, State.CardSelectedFromHand);
-                    else if (card.Zone == Zone.Board)
-                        SelectCard(card, State.AttackerSelected);
-                    break;
-
-                case State.CardSelectedFromHand:
-                    if (card.CardId.Equals(_selectedId))
-                    {
-                        ClearSelection(); // deselect on second click
-                    }
-                    else if (card.Zone == Zone.Board
-                             && (card.OwnerId != _p0Id || SelectedCardRequiresTarget()))
-                    {
-                        // Targeted play: aim the selected hand card at this board minion. Enemy minions
-                        // are always clickable targets; own minions only when the selected card actually
-                        // wants a chosen target (ANY_* selector), so a stray click on your own board
-                        // doesn't fire a vanilla card at slot 0.
-                        Submit(new PlayCardIntent(
-                            _p0Id, _selectedId, 0,
-                            new[] { new TargetRef(card.CardId) }));
-                        ClearSelection();
-                    }
-                    else if (card.OwnerId == _p0Id)
-                    {
-                        Reselect(card); // clicking another of our cards switches selection, not a dead click
-                    }
-                    break;
-
-                case State.AttackerSelected:
-                    if (card.CardId.Equals(_selectedId))
-                    {
-                        ClearSelection();
-                    }
-                    else if (card.OwnerId != _p0Id)
-                    {
-                        Submit(new AttackIntent(
-                            _p0Id, _selectedId, new TargetRef(card.CardId)));
-                        ClearSelection();
-                    }
-                    else
-                    {
-                        Reselect(card); // clicking another of our cards switches selection, not a dead click
-                    }
-                    break;
-
-                case State.HeroPowerTargeting:
-                    // ANY_CHARACTER: any board minion (either side) is a legal pick; hand cards are not.
-                    if (card.Zone == Zone.Board)
-                    {
-                        Submit(new HeroPowerIntent(
-                            _p0Id, new[] { new TargetRef(card.CardId) }));
-                        ClearSelection();
-                    }
-                    break;
+                _gesture = Gesture.Dragging;
+                ArmVisuals();
             }
+
+            if (_gesture == Gesture.Dragging || _gesture == Gesture.ArmedByTap)
+                UpdateAim(screenPos);
         }
 
-        public void OnBoardSlotClicked(ClickableBoardSlot slot)
+        private void OnPointerReleased(Vector2 screenPos)
         {
-            if (UiBlocked) return;
-            if (_currentState == null || _p0Input == null) return;
-            if (_state != State.CardSelectedFromHand) return;
-            if (slot.OwnerId != _p0Id) return;
-            if (_currentState.ActivePlayer != _p0Id) return;
+            if (IsMulliganActive()) return;   // the toggle already happened on press
+            if (_gesture == Gesture.None) return;
 
-            Submit(new PlayCardIntent(
-                _p0Id, _selectedId, slot.SlotIndex,
-                System.Array.Empty<TargetRef>()));
-            ClearSelection();
-        }
+            PointerSubject subject = Probe(screenPos, out Transform hitTransform, out CardPresenter presenter);
 
-        // Heroes are click targets, not selectables: attack the enemy hero with the selected
-        // minion ("going face"), or aim a targeted spell at either hero. Illegal picks
-        // (friendly-fire attacks, Taunt on board) are rejected by the engine, not filtered here.
-        public void OnHeroClicked(PlayerId owner)
-        {
-            if (UiBlocked) return;
-            if (_currentState == null || _p0Input == null) return;
-
-            switch (_state)
+            if (_gesture == Gesture.Pressed)
             {
-                case State.Idle:
-                    // Our hero is also an attacker when armed (engine: ValidateAttack IsHero +
-                    // weapon). Select it like a board minion; the validator rejects a weaponless
-                    // swing. Highlight routes through the plate view (no CardPresenter on heroes).
-                    if (owner == _p0Id
-                        && _currentState.ActivePlayer == _p0Id
-                        && _currentState.Phase == TurnPhase.Main)
-                    {
-                        _selectedId        = HeroIdOf(owner);
-                        _selectedPresenter = null;
-                        _state             = State.AttackerSelected;
-                        _p0HeroPlate?.SetSelected(true);
-                        RefreshTargeting();
-                    }
-                    break;
-
-                case State.AttackerSelected:
-                    if (owner != _p0Id)
-                    {
-                        Submit(new AttackIntent(
-                            _p0Id, _selectedId, new TargetRef(HeroIdOf(owner))));
-                        ClearSelection();
-                    }
-                    else if (_selectedId.Equals(HeroIdOf(owner)))
-                    {
-                        ClearSelection(); // second click on our selected hero deselects
-                    }
-                    break;
-
-                case State.CardSelectedFromHand:
-                    Submit(new PlayCardIntent(
-                        _p0Id, _selectedId, 0,
-                        new[] { new TargetRef(HeroIdOf(owner)) }));
-                    ClearSelection();
-                    break;
-
-                case State.HeroPowerTargeting:
-                    Submit(new HeroPowerIntent(
-                        _p0Id, new[] { new TargetRef(HeroIdOf(owner)) }));
-                    ClearSelection();
-                    break;
-            }
-        }
-
-        private InstanceId HeroIdOf(PlayerId owner)
-        {
-            foreach (var ps in _currentState.Players)
-                if (ps.Id == owner) return ps.Hero.Id;
-            return default;
-        }
-
-        public void OnHeroPowerClicked(PlayerId owner)
-        {
-            if (UiBlocked) return;
-            if (_currentState == null || _p0Input == null) return;
-            if (owner != _p0Id) return;
-            if (_currentState.ActivePlayer != _p0Id) return;
-            if (_currentState.Phase != TurnPhase.Main) return;
-            if (_state == State.HeroPowerTargeting) { ClearSelection(); return; } // second click cancels
-            if (_state != State.Idle) return;
-
-            if (HeroPowerRequiresTarget())
-            {
-                _state = State.HeroPowerTargeting; // next minion/hero click supplies the target
-                RefreshTargeting();
+                // Never travelled: this was a tap on the source, not a drag.
+                ArmByTap();
                 return;
             }
-            Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+
+            if (_gesture == Gesture.ArmedByTap && IsArmedSource(subject))
+            {
+                CancelGesture();   // second tap on what you armed puts it down
+                return;
+            }
+
+            bool wasArmedByTap = _gesture == Gesture.ArmedByTap;
+            if (TryResolve(subject)) return;
+
+            // A drag that ended on nothing is simply abandoned. A tap-armed gesture gets one more
+            // reading first: tapping another of our own cards switches the selection rather than
+            // being a dead tap, exactly as the click machine did.
+            if (!wasArmedByTap) return;
+
+            DragSource next = _model.BeginSource(subject);
+            if (next.Kind == DragSourceKind.None) return;   // TryResolve already cancelled
+
+            _source          = next;
+            _sourcePresenter = presenter;
+            _sourceTransform = hitTransform;
+            _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
+            _gesture         = Gesture.Pressed;
+            ArmByTap();
         }
 
-        // Mirrors the engine's ValidatePlayCard rule: a play-trigger effect with an explicit-choice
-        // (ANY_*) selector needs a player-chosen target. With no db wired this returns false and the
-        // engine's rejection is the backstop.
-        private bool SelectedCardRequiresTarget()
+        /// <summary>Submits if the drop produced an intent. Clears the gesture either way.</summary>
+        private bool TryResolve(PointerSubject released)
         {
-            if (_db == null || _currentState == null) return false;
-            foreach (var ps in _currentState.Players)
+            PlayerIntent intent = _model.Resolve(_source, released);
+            CancelGesture();
+            if (intent == null) return false;
+            Submit(intent);
+            return true;
+        }
+
+        private void ArmByTap()
+        {
+            // An untargeted hero power has nothing to aim at: a tap IS the whole gesture, so fire it
+            // rather than arming a state no subsequent tap could ever resolve.
+            if (_source.Kind == DragSourceKind.HeroPower && !_source.NeedsTarget)
             {
-                if (ps.Id != _p0Id) continue;
-                foreach (var ci in ps.Hand)
-                {
-                    if (!ci.Id.Equals(_selectedId)) continue;
-                    if (!_db.TryGet(ci.DefinitionId, out var def)) return false;
-                    foreach (var eff in def.Effects)
-                        if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
-                            && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                            return true;
+                CancelGesture();
+                Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+                return;
+            }
+            _gesture = Gesture.ArmedByTap;
+            ArmVisuals();
+        }
+
+        private bool IsArmedSource(PointerSubject s)
+        {
+            switch (_source.Kind)
+            {
+                case DragSourceKind.HandCard:
+                case DragSourceKind.Attacker:
+                    if (s.Kind == PointerSubjectKind.Card) return s.Id.Equals(_source.Id);
+                    if (s.Kind == PointerSubjectKind.Hero) return s.Owner == _p0Id && s.Id.Equals(_source.Id);
                     return false;
-                }
+                case DragSourceKind.HeroPower:
+                    return s.Kind == PointerSubjectKind.HeroPower && s.Owner == _p0Id;
+                default:
+                    return false;
             }
-            return false;
         }
 
-        // Mirrors the engine's ValidateHeroPower rule: an ON_CAST effect with an explicit-choice
-        // (ANY_*) selector needs a player-chosen target. With no db wired the click falls through
-        // to the immediate fire and the engine's rejection is the backstop.
-        private bool HeroPowerRequiresTarget()
+        private void ArmVisuals()
         {
-            if (_db == null) return false;
-            foreach (var ps in _currentState.Players)
+            _sourcePresenter?.SetSelectionHighlight(true);
+            if (_sourceIsOwnHero) _p0HeroPlate?.SetSelected(true);
+            RefreshTargeting();
+        }
+
+        private void CancelGesture()
+        {
+            _sourcePresenter?.SetSelectionHighlight(false);
+            _p0HeroPlate?.SetSelected(false);
+            _sourcePresenter = null;
+            _sourceTransform = null;
+            _sourceIsOwnHero = false;
+            _source          = DragSource.None;
+            _gesture         = Gesture.None;
+            _aim.Hide();
+            ClearTargeting();
+        }
+
+        private void OnDestroy() => _aim.Dispose();
+
+        // ── Raycast: screen point → what the pointer is over ────────────────────────
+
+        // ONE raycast per pointer event, resolved against the four Clickable* descriptors. Anything
+        // else the ray hits (the end-turn button, the mulligan confirm, the toast) reads as None here
+        // and cancels an in-flight gesture, while that object's own OnMouseDown still fires — which is
+        // the correct reading of "the player pressed something that is not the board".
+        private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform, out CardPresenter presenter)
+        {
+            hitTransform = null;
+            presenter    = null;
+
+            Camera cam = Camera.main;
+            if (cam == null) return PointerSubject.None;
+            if (!Physics.Raycast(cam.ScreenPointToRay(screenPos), out RaycastHit hit, 100f))
+                return PointerSubject.None;
+
+            var card = hit.collider.GetComponentInParent<ClickableCard>();
+            if (card != null)
             {
-                if (ps.Id != _p0Id) continue;
-                if (!_db.TryGet(ps.Hero.HeroPowerId, out var def)) return false;
-                foreach (var eff in def.Effects)
-                    if (eff.Trigger == Trigger.ON_CAST && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                        return true;
+                hitTransform = card.transform;
+                presenter    = card.Presenter;
+                return PointerSubject.OfCard(card.CardId, card.OwnerId, card.Zone);
             }
-            return false;
+
+            var slot = hit.collider.GetComponentInParent<ClickableBoardSlot>();
+            if (slot != null)
+            {
+                hitTransform = slot.transform;
+                return PointerSubject.OfBoardSlot(slot.OwnerId, slot.SlotIndex);
+            }
+
+            var hero = hit.collider.GetComponentInParent<ClickableHero>();
+            if (hero != null)
+            {
+                hitTransform = hero.transform;
+                return PointerSubject.OfHero(_model.HeroIdOf(hero.OwnerId), hero.OwnerId);
+            }
+
+            var power = hit.collider.GetComponentInParent<ClickableHeroPower>();
+            if (power != null)
+            {
+                hitTransform = power.transform;
+                return PointerSubject.OfHeroPower(power.OwnerId);
+            }
+
+            return PointerSubject.None;
+        }
+
+        private void UpdateAim(Vector2 screenPos)
+        {
+            if (_sourceTransform == null) { _aim.Hide(); return; }
+            Camera cam = Camera.main;
+            if (cam == null) { _aim.Hide(); return; }
+
+            float depth = Mathf.Abs(AimLineView.AimZ - cam.transform.position.z);
+            Vector3 world = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, depth));
+            _aim.Show(_sourceTransform.position, world);
         }
 
         // ── Targeting-state visibility ─────────────────────────────────────────────
+
+        private void RefreshTargeting()
+        {
+            if (_model == null) { ClearTargeting(); return; }
+            if (_gesture != Gesture.Dragging && _gesture != Gesture.ArmedByTap)
+            {
+                ClearTargeting();
+                return;
+            }
+
+            HashSet<InstanceId> targets = _model.TargetsFor(_source);
+            if (targets == null) ClearTargeting();
+            else                 SetTargeting(targets, _model.BannerFor(_source));
+        }
 
         private void SetTargeting(HashSet<InstanceId> targets, string bannerText)
         {
@@ -379,122 +399,11 @@ namespace Emberfall.Presentation
 
         private void ApplyHeroTargetCues()
         {
-            if (_currentState == null) return;
+            if (_currentState == null || _model == null) return;
             _p0HeroPlate?.SetTargetable(
-                _activeTargets != null && _activeTargets.Contains(HeroIdOf(_p0Id)));
+                _activeTargets != null && _activeTargets.Contains(_model.HeroIdOf(_p0Id)));
             _enemyHeroPlate?.SetTargetable(
-                _activeTargets != null && _activeTargets.Contains(HeroIdOf(EnemyId())));
-        }
-
-        private PlayerId EnemyId()
-        {
-            foreach (var ps in _currentState.Players)
-                if (ps.Id != _p0Id) return ps.Id;
-            return default;
-        }
-
-        private HashSet<InstanceId> ComputeSpellTargets()
-        {
-            var set = new HashSet<InstanceId>();
-            if (_db == null || _currentState == null) return set;
-            foreach (var ps in _currentState.Players)
-            {
-                if (ps.Id != _p0Id) continue;
-                foreach (var ci in ps.Hand)
-                    if (ci.Id.Equals(_selectedId) && _db.TryGet(ci.DefinitionId, out var def))
-                    {
-                        CollectSelectorTargets(def, set);
-                        return set;
-                    }
-            }
-            return set;
-        }
-
-        private HashSet<InstanceId> ComputeHeroPowerTargets()
-        {
-            var set = new HashSet<InstanceId>();
-            if (_db == null || _currentState == null) return set;
-            foreach (var ps in _currentState.Players)
-                if (ps.Id == _p0Id && _db.TryGet(ps.Hero.HeroPowerId, out var def))
-                    CollectSelectorTargets(def, set);
-            return set;
-        }
-
-        // Mirrors CommandProcessor.TargetsSatisfySelectors + the enemy-STEALTH targeting
-        // exclusion (ValidatePlayCard). Courtesy affordance — the validator still rules.
-        private void CollectSelectorTargets(CardDefinition def, HashSet<InstanceId> set)
-        {
-            var selectors = new List<string>();
-            foreach (var eff in def.Effects)
-                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
-                    && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                    selectors.Add(eff.Selector);
-            if (selectors.Count == 0) return;
-
-            foreach (var ps in _currentState.Players)
-            {
-                bool friendly = ps.Id == _p0Id;
-                if (SatisfiesSelectors(selectors, isMinion: false, friendly))
-                    set.Add(ps.Hero.Id);
-                foreach (var m in ps.Board)
-                {
-                    if (!friendly && m.Keywords.Contains(Keyword.STEALTH)) continue;
-                    if (SatisfiesSelectors(selectors, isMinion: true, friendly))
-                        set.Add(m.Id);
-                }
-            }
-        }
-
-        private static bool SatisfiesSelectors(List<string> selectors, bool isMinion, bool friendly)
-        {
-            foreach (var s in selectors)
-                switch (s)
-                {
-                    case "ANY_FRIENDLY":        if (!friendly)             return false; break;
-                    case "ANY_ENEMY":           if (friendly)              return false; break;
-                    case "ANY_MINION":          if (!isMinion)             return false; break;
-                    case "ANY_FRIENDLY_MINION": if (!isMinion || !friendly) return false; break;
-                    // ANY_CHARACTER (and future ANY_*) accepts every live character.
-                }
-            return true;
-        }
-
-        // Mirrors the defender-side half of CommandProcessor.ValidateAttack: stealth hides,
-        // a non-stealthed taunt wall restricts to taunts, rush-on-summon-turn can't go face.
-        private HashSet<InstanceId> ComputeAttackTargets(InstanceId attackerId)
-        {
-            var set = new HashSet<InstanceId>();
-            if (_currentState == null) return set;
-
-            bool rushBlocksFace = false;
-            PlayerState enemy = null;
-            foreach (var ps in _currentState.Players)
-            {
-                if (ps.Id == _p0Id)
-                {
-                    foreach (var m in ps.Board)
-                        if (m.Id.Equals(attackerId) && m.SummonedThisTurn
-                            && m.Keywords.Contains(Keyword.RUSH))
-                            rushBlocksFace = true;
-                }
-                else enemy = ps;
-            }
-            if (enemy == null) return set;
-
-            bool anyTaunt = false;
-            foreach (var m in enemy.Board)
-                if (m.Keywords.Contains(Keyword.TAUNT) && !m.Keywords.Contains(Keyword.STEALTH))
-                { anyTaunt = true; break; }
-
-            foreach (var m in enemy.Board)
-            {
-                if (m.Keywords.Contains(Keyword.STEALTH)) continue;
-                if (anyTaunt && !m.Keywords.Contains(Keyword.TAUNT)) continue;
-                set.Add(m.Id);
-            }
-            if (!anyTaunt && !rushBlocksFace)
-                set.Add(enemy.Hero.Id);
-            return set;
+                _activeTargets != null && _activeTargets.Contains(_model.HeroIdOf(_model.EnemyId())));
         }
 
         // ── Armed banner (built lazily; same primitives approach as the reject toast) ──
@@ -541,46 +450,16 @@ namespace Emberfall.Presentation
 
         // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 
-        private void Update()
+        private void HandleKeyboard()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
-                ClearSelection();
-
-            if (UiBlocked) return;
-            if (_currentState == null || _p0Input == null) return;
             if (_currentState.Phase != TurnPhase.Main) return;
             if (_currentState.ActivePlayer != _p0Id) return;
 
             if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
             {
-                ClearSelection();
+                CancelGesture();
                 Submit(new EndTurnIntent(_p0Id));
-                return;
             }
-
-            // Generous play area (Sam, 2026-07-17): with an untargeted hand card selected,
-            // a click on empty space plays it — the precise slot quads were frustrating.
-            // Clicks that hit any collider keep their existing meaning (cards, slots,
-            // heroes, buttons all handle themselves); targeted cards still require an aim.
-            if (_state == State.CardSelectedFromHand
-                && Input.GetMouseButtonDown(0)
-                && !SelectedCardRequiresTarget())
-            {
-                var cam = Camera.main;
-                if (cam != null && !Physics.Raycast(cam.ScreenPointToRay(Input.mousePosition), out _, 100f))
-                {
-                    Submit(new PlayCardIntent(_p0Id, _selectedId, OwnBoardCount(),
-                                              System.Array.Empty<TargetRef>()));
-                    ClearSelection();
-                }
-            }
-        }
-
-        private int OwnBoardCount()
-        {
-            foreach (var ps in _currentState.Players)
-                if (ps.Id == _p0Id) return ps.Board.Count;
-            return 0;
         }
 
         // On-screen end-turn button (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §6 item 1) — same guards as the
@@ -591,33 +470,27 @@ namespace Emberfall.Presentation
             if (_currentState.Phase != TurnPhase.Main) return;
             if (_currentState.ActivePlayer != _p0Id) return;
 
-            ClearSelection();
+            CancelGesture();
             Submit(new EndTurnIntent(_p0Id));
         }
 
         // ── Mulligan picker ────────────────────────────────────────────────────────
 
-        private bool IsMulliganActive()
-        {
-            if (_currentState == null || _currentState.Phase != TurnPhase.Mulligan) return false;
-            int seat = _currentState.SeatOf(_p0Id);
-            bool done = seat == 0 ? _currentState.Mulligan0Done : _currentState.Mulligan1Done;
-            return !done;
-        }
+        private bool IsMulliganActive() => _model != null && _model.IsMulliganActive();
 
-        private void ToggleMulliganCard(ClickableCard card)
+        private void ToggleMulliganCard(InstanceId cardId, CardPresenter presenter)
         {
-            if (_mulliganToss.Contains(card.CardId))
+            if (_mulliganToss.Contains(cardId))
             {
-                _mulliganToss.Remove(card.CardId);
-                _tossPresenters.Remove(card.CardId);
-                card.Presenter?.SetMulliganMark(false);
+                _mulliganToss.Remove(cardId);
+                _tossPresenters.Remove(cardId);
+                presenter?.SetMulliganMark(false);
             }
             else
             {
-                _mulliganToss.Add(card.CardId);
-                if (card.Presenter != null) _tossPresenters[card.CardId] = card.Presenter;
-                card.Presenter?.SetMulliganMark(true);
+                _mulliganToss.Add(cardId);
+                if (presenter != null) _tossPresenters[cardId] = presenter;
+                presenter?.SetMulliganMark(true);
             }
             MulliganSelectionChanged?.Invoke(_mulliganToss.Count);
         }
@@ -653,7 +526,7 @@ namespace Emberfall.Presentation
         public void OnConcedeClicked()
         {
             if (_p0Input == null) return;
-            ClearSelection();
+            CancelGesture();
             Submit(new ConcedeIntent(_p0Id));
         }
 
@@ -663,7 +536,7 @@ namespace Emberfall.Presentation
         // affordance, not prediction). The viewer's own hand/mana/board are un-redacted in their
         // own projection, so verdicts match the authority for everything except hidden-info
         // rejects, which the authority still catches. A local reject routes to the same
-        // OnRejected path a server reject would take (toast copy + grey-out styling land in E2).
+        // OnRejected path a server reject would take.
         private void Submit(PlayerIntent intent)
         {
             if (_validator != null && _currentState != null
@@ -678,38 +551,6 @@ namespace Emberfall.Presentation
                 return;
             }
             _p0Input.Enqueue(intent);
-        }
-
-        // Switch selection to another of our own cards mid-selection, mirroring the Idle-state
-        // entry rules (Main phase, our turn). Hand → CardSelectedFromHand, board → AttackerSelected.
-        private void Reselect(ClickableCard card)
-        {
-            if (_currentState.ActivePlayer != _p0Id) return;
-            if (_currentState.Phase != TurnPhase.Main) return;
-            if (card.Zone == Zone.Hand)
-                SelectCard(card, State.CardSelectedFromHand);
-            else if (card.Zone == Zone.Board)
-                SelectCard(card, State.AttackerSelected);
-        }
-
-        private void SelectCard(ClickableCard card, State newState)
-        {
-            ClearSelection();
-            _selectedId        = card.CardId;
-            _selectedPresenter = card.Presenter;
-            _state             = newState;
-            _selectedPresenter?.SetSelectionHighlight(true);
-            RefreshTargeting();
-        }
-
-        private void ClearSelection()
-        {
-            _selectedPresenter?.SetSelectionHighlight(false);
-            _p0HeroPlate?.SetSelected(false);
-            _selectedPresenter = null;
-            _selectedId        = default;
-            _state             = State.Idle;
-            ClearTargeting();
         }
     }
 }

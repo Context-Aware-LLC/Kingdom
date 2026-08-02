@@ -286,11 +286,12 @@ namespace Emberfall.Presentation
 
                 presenter.GetComponent<CardMaterialBinder>()?.Init(live, _matchRunner);
 
-                // Attach click handler when InputRouter is present (hot-seat mode).
+                // Attach the raycast descriptor when InputRouter is present (hot-seat mode) —
+                // InputRouter reads identity off it after its own raycast (EF-048).
                 if (_inputRouter != null)
                 {
                     var clickable = presenter.gameObject.AddComponent<ClickableCard>();
-                    clickable.Init(ci.Id, owner, zone, presenter, _inputRouter);
+                    clickable.Init(ci.Id, owner, zone, presenter);
                 }
 
                 _presenters[ci.Id] = presenter;

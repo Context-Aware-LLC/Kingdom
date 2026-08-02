@@ -76,11 +76,13 @@
     <Compile Include="Assets\Scripts\Presentation\HandCardHover.cs" />
     <Compile Include="Assets\Scripts\Presentation\DeckPileView.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorUiSpriteProvider.cs" />
+    <Compile Include="Assets\Scripts\Presentation\PointerSampler.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardLiveState.cs" />
     <Compile Include="Assets\Scripts\Presentation\ClickableHero.cs" />
     <Compile Include="Assets\Scripts\Presentation\DesyncFaultInjector.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardDrawFlight.cs" />
     <Compile Include="Assets\Scripts\Presentation\VfxDirector.cs" />
+    <Compile Include="Assets\Scripts\Presentation\DragTargetingModel.cs" />
     <Compile Include="Assets\Scripts\Presentation\HeroPlateView.cs" />
     <Compile Include="Assets\Scripts\Presentation\ClickableHeroPower.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardMaterialBinder.cs" />
@@ -89,6 +91,7 @@
     <Compile Include="Assets\Scripts\Presentation\MatchEndBanner.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorUiTextProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardController.cs" />
+    <Compile Include="Assets\Scripts\Presentation\AimLineView.cs" />
     <Compile Include="Assets\Scripts\Presentation\HandFanLayout.cs" />
     <Compile Include="Assets\Scripts\Presentation\StatusMarkCatalog.cs" />
     <Compile Include="Assets\Scripts\Presentation\HotSeatInput.cs" />
@@ -1212,12 +1215,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.ResourceManager.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEditor.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
