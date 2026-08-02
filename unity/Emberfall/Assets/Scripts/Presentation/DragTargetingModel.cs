@@ -67,6 +67,9 @@ namespace Emberfall.Presentation
         public static DragSource None => default;
     }
 
+    /// <summary>Awaiting a second choice: a slot placement followed by a battlecry target.</summary>
+    public enum TargetingPhase { Direct, AwaitingEffectTarget }
+
     /// <summary>
     /// The press/drag/release decision core (EF-048), deliberately free of MonoBehaviour, Transform,
     /// collider and camera. Everything that decides WHETHER a gesture is legal and WHAT intent it
@@ -96,6 +99,15 @@ namespace Emberfall.Presentation
 
         /// <summary>The mirror this model judges against. Set from every snapshot.</summary>
         public GameState State { get; set; }
+
+        /// <summary>Current targeting phase: Direct (normal) or AwaitingEffectTarget (two-step battlecry).</summary>
+        public TargetingPhase Phase { get; set; } = TargetingPhase.Direct;
+
+        /// <summary>When in AwaitingEffectTarget phase, the slot where the card will be played.</summary>
+        public int AwaitingSlot { get; set; }
+
+        /// <summary>When in AwaitingEffectTarget phase, the card being played.</summary>
+        public InstanceId AwaitingCardId { get; set; }
 
         // ── Phase gates ────────────────────────────────────────────────────────────
 
@@ -192,6 +204,10 @@ namespace Emberfall.Presentation
         {
             if (State == null || !CanAct()) return null;
 
+            // If we're awaiting an effect target (two-step battlecry), handle that instead.
+            if (Phase == TargetingPhase.AwaitingEffectTarget)
+                return ResolveEffectTarget(released);
+
             switch (source.Kind)
             {
                 case DragSourceKind.HandCard:  return ResolveHandCard(source, released);
@@ -199,6 +215,32 @@ namespace Emberfall.Presentation
                 case DragSourceKind.HeroPower: return ResolveHeroPower(source, released);
                 default:                       return null;
             }
+        }
+
+        /// <summary>Resolve the second targeting step for a battlecry minion: the player has picked
+        /// a slot and now picks a target. Returns the PlayCardIntent with both slot and target,
+        /// or null if the target is invalid.</summary>
+        private PlayerIntent ResolveEffectTarget(PointerSubject released)
+        {
+            HashSet<InstanceId> validTargets = SpellTargets(AwaitingCardId);
+
+            switch (released.Kind)
+            {
+                case PointerSubjectKind.Card:
+                    if (released.Zone != Zone.Board) break;
+                    if (!validTargets.Contains(released.Id)) break;
+                    Phase = TargetingPhase.Direct;   // Clear the awaiting state before returning
+                    return new PlayCardIntent(_p0Id, AwaitingCardId, AwaitingSlot,
+                                              new[] { new TargetRef(released.Id) });
+
+                case PointerSubjectKind.Hero:
+                    if (!validTargets.Contains(released.Id)) break;
+                    Phase = TargetingPhase.Direct;   // Clear the awaiting state before returning
+                    return new PlayCardIntent(_p0Id, AwaitingCardId, AwaitingSlot,
+                                              new[] { new TargetRef(released.Id) });
+            }
+
+            return null;
         }
 
         private PlayerIntent ResolveHandCard(DragSource source, PointerSubject released)
@@ -210,6 +252,24 @@ namespace Emberfall.Presentation
                     // used to turn a click on empty space into a play at the end of the board: on touch
                     // it turned stray taps into misplays, and the slot path already carries the intent.
                     if (released.Owner != _p0Id) return null;
+
+                    // An occupied slot is never a legal placement target, on either side of the board.
+                    // Check if this slot already has a minion in it.
+                    PlayerState ps = null;
+                    foreach (PlayerState p in State.Players)
+                        if (p.Id == released.Owner) { ps = p; break; }
+                    if (ps != null && released.SlotIndex < ps.Board.Count) return null;
+
+                    // For targeted battlecry minions: enter AwaitingEffectTarget phase rather than
+                    // submitting immediately. The second targeting gesture will complete the intent.
+                    if (source.NeedsTarget)
+                    {
+                        Phase = TargetingPhase.AwaitingEffectTarget;
+                        AwaitingSlot = released.SlotIndex;
+                        AwaitingCardId = source.Id;
+                        return null;   // No intent yet; the player still needs to pick a target.
+                    }
+
                     return new PlayCardIntent(_p0Id, source.Id, released.SlotIndex,
                                               System.Array.Empty<TargetRef>());
 
@@ -219,10 +279,19 @@ namespace Emberfall.Presentation
                     // a spell fired at slot 0.
                     if (released.Zone != Zone.Board) return null;
                     if (released.Owner == _p0Id && !source.NeedsTarget) return null;
+
+                    // Check if the target is in the TargetsFor set to enforce boundary.
+                    HashSet<InstanceId> validTargets = SpellTargets(source.Id);
+                    if (!validTargets.Contains(released.Id)) return null;
+
                     return new PlayCardIntent(_p0Id, source.Id, 0,
                                               new[] { new TargetRef(released.Id) });
 
                 case PointerSubjectKind.Hero:
+                    // Check if the target is in the TargetsFor set to enforce boundary.
+                    HashSet<InstanceId> validHeroTargets = SpellTargets(source.Id);
+                    if (!validHeroTargets.Contains(released.Id)) return null;
+
                     return new PlayCardIntent(_p0Id, source.Id, 0,
                                               new[] { new TargetRef(released.Id) });
 
@@ -316,7 +385,7 @@ namespace Emberfall.Presentation
             return false;
         }
 
-        private HashSet<InstanceId> SpellTargets(InstanceId cardId)
+        public HashSet<InstanceId> SpellTargets(InstanceId cardId)
         {
             var set = new HashSet<InstanceId>();
             if (_db == null || State == null) return set;

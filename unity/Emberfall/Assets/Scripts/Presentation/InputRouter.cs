@@ -251,10 +251,21 @@ namespace Emberfall.Presentation
             ArmByTap();
         }
 
-        /// <summary>Submits if the drop produced an intent. Clears the gesture either way.</summary>
+        /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
+        /// we entered AwaitingEffectTarget (two-step battlecry), in which case we stay armed.</summary>
         private bool TryResolve(PointerSubject released)
         {
             PlayerIntent intent = _model.Resolve(_source, released);
+
+            // Check if we entered AwaitingEffectTarget phase (two-step targeting).
+            if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
+            {
+                // Transition to ArmedByTap-like state and stay armed for the second targeting.
+                _gesture = Gesture.ArmedByTap;
+                RefreshTargeting();
+                return true;   // Consumed the release; no intent submitted yet.
+            }
+
             CancelGesture();
             if (intent == null) return false;
             Submit(intent);
@@ -309,6 +320,10 @@ namespace Emberfall.Presentation
             _gesture         = Gesture.None;
             _aim.Hide();
             ClearTargeting();
+
+            // Clear any awaiting-effect-target state (two-step battlecry).
+            if (_model != null)
+                _model.Phase = DragTargetingModel.TargetingPhase.Direct;
         }
 
         private void OnApplicationFocus(bool hasFocus)
@@ -407,6 +422,15 @@ namespace Emberfall.Presentation
             if (_gesture != Gesture.Dragging && _gesture != Gesture.ArmedByTap)
             {
                 ClearTargeting();
+                return;
+            }
+
+            // If awaiting an effect target (two-step battlecry), show the effect targets instead.
+            if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
+            {
+                HashSet<InstanceId> effectTargets = _model.SpellTargets(_model.AwaitingCardId);
+                if (effectTargets == null || effectTargets.Count == 0) ClearTargeting();
+                else                                                    SetTargeting(effectTargets, _model.AimBanner);
                 return;
             }
 

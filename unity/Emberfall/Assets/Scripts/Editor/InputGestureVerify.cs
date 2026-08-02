@@ -45,6 +45,7 @@ namespace Emberfall.Editor
             FullStackDragResolve();
             FullStackTapReselect();
             FullStackCancellation();
+            FullStackTwoStepBattlecry();
             OsCanceledDuringDrag();
             OsCanceledDuringArmedTap();
             DragTargetingModelCore();
@@ -294,6 +295,38 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
+        // Issue #30: two-step targeting for battlecry minions (tap-arm, drop on slot, tap target).
+        private static void FullStackTwoStepBattlecry()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            // Tap hand card 1 (Targeted): press + release without travel → ArmedByTap.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            Check("tap targeted card arms without submitting", harness.SubmittedIntents.Count == 0);
+
+            // Tap on board slot 0: press + release → enters AwaitingEffectTarget, no submit.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("drop on board slot enters two-step targeting without submit",
+                harness.SubmittedIntents.Count == 0);
+
+            // Tap on enemy minion: press + release → resolves to PlayCardIntent with slot + target.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("second tap on target submits PlayCardIntent",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            var intent = harness.SubmittedIntents[0] as PlayCardIntent;
+            Check("PlayCardIntent carries the slot from step 1",
+                intent != null && intent.BoardSlot == 0);
+            Check("PlayCardIntent carries the target from step 2",
+                intent != null && intent.Targets.Count == 1);
+
+            harness.Cleanup();
+        }
+
         /// <summary>NOR-137: OS-canceled touch during a drag (focus loss, system gesture, incoming call).</summary>
         private static void OsCanceledDuringDrag()
         {
@@ -356,6 +389,7 @@ namespace Emberfall.Editor
             MulliganIsNotTurnGated();
             PressLegality();
             HandCardDrops();
+            TwoStepBattlecry();
             AttackDrops();
             HeroPowerDrops();
             NoAutoPlace();
@@ -445,12 +479,10 @@ namespace Emberfall.Editor
 
             Check("drop on an ENEMY slot plays nothing",
                 m.Resolve(vanilla, PointerSubject.OfBoardSlot(P1, 0)) == null);
-            Check("drop of a vanilla card on our own minion plays nothing",
+            Check("drop on an occupied slot plays nothing (friendly minion)",
                 m.Resolve(vanilla, PointerSubject.OfCard(mine, P0, Zone.Board)) == null);
-
-            var atEnemy = m.Resolve(vanilla, PointerSubject.OfCard(theirs, P1, Zone.Board)) as PlayCardIntent;
-            Check("drop on an enemy minion aims there", atEnemy != null && atEnemy.Targets.Count == 1
-                                                        && atEnemy.Targets[0].Instance.Equals(theirs));
+            Check("drop on an occupied slot plays nothing (enemy minion)",
+                m.Resolve(vanilla, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
 
             var atFriend = m.Resolve(targeted, PointerSubject.OfCard(mine, P0, Zone.Board)) as PlayCardIntent;
             Check("an ANY_* card CAN aim at our own minion", atFriend != null
@@ -459,6 +491,40 @@ namespace Emberfall.Editor
             var atHero = m.Resolve(targeted, PointerSubject.OfHero(m.HeroIdOf(P1), P1)) as PlayCardIntent;
             Check("a hand card can aim at a hero", atHero != null
                                                    && atHero.Targets[0].Instance.Equals(m.HeroIdOf(P1)));
+        }
+
+        // Issue #30: a targeted-battlecry minion needs two steps: (1) pick the slot, (2) pick the target.
+        private static void TwoStepBattlecry()
+        {
+            GameState s = NewState();
+            var m = Model(s);
+
+            InstanceId aimCard = s.Players[0].Hand[1].Id;   // Targeted (ANY_CHARACTER)
+            InstanceId theirs  = s.Players[1].Board[0].Id;
+            DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
+
+            // Drop on a legal empty slot → enters AwaitingEffectTarget, no intent yet.
+            var result = m.Resolve(targeted, PointerSubject.OfBoardSlot(P0, 2));
+            Check("targeted card dropped on empty slot enters AwaitingEffectTarget",
+                result == null && m.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
+            Check("AwaitingEffectTarget stores the slot and card",
+                m.AwaitingSlot == 2 && m.AwaitingCardId.Equals(aimCard));
+
+            // Second release: drop on a valid target → emits PlayCardIntent with both slot and target.
+            var intent = m.Resolve(DragSource.None, PointerSubject.OfCard(theirs, P1, Zone.Board)) as PlayCardIntent;
+            Check("targeted card: second release on valid target submits intent",
+                intent != null && intent.BoardSlot == 2 && intent.Targets.Count == 1
+                && intent.Targets[0].Instance.Equals(theirs));
+            Check("after resolving, AwaitingEffectTarget clears",
+                m.Phase == DragTargetingModel.TargetingPhase.Direct);
+
+            // Test cancellation: drop on an invalid target → cancels, no intent.
+            m.Phase = DragTargetingModel.TargetingPhase.AwaitingEffectTarget;
+            m.AwaitingSlot = 2;
+            m.AwaitingCardId = aimCard;
+            var invalidResult = m.Resolve(DragSource.None, PointerSubject.OfBoardSlot(P0, 1));
+            Check("targeted card: second release on invalid target plays nothing",
+                invalidResult == null);
         }
 
         private static void AttackDrops()
