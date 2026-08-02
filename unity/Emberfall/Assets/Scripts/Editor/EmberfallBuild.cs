@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets.Build;
@@ -85,30 +86,64 @@ namespace Emberfall.Editor
         {
             SyncSceneList();
 
-            // Force IL2CPP + ARM64 for this build regardless of editor overrides.
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,
-                ScriptingImplementation.IL2CPP);
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            bool perfCaptureBuild = Environment.GetEnvironmentVariable(
+                "EMBERFALL_PERF_CAPTURE_BUILD") == "1";
+            string buildCommit = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_COMMIT");
+            string originalVersion = PlayerSettings.bundleVersion;
+            bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
 
-            // Debug signing config checked in as config, not secret.
-            PlayerSettings.Android.keystoreName   = KeystorePath;
-            PlayerSettings.Android.keystorePass   = KeystorePass;
-            PlayerSettings.Android.keyaliasName   = KeyAliasName;
-            PlayerSettings.Android.keyaliasPass   = KeyAliasPass;
-            PlayerSettings.Android.useCustomKeystore = true;
-
-            BuildAndroidAddressables();
-
-            Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
-            var options = new BuildPlayerOptions
+            try
             {
-                scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
-                locationPathName   = AndroidOutputPath,
-                target             = BuildTarget.Android,
-                targetGroup        = BuildTargetGroup.Android,
-                options            = BuildOptions.None,
-            };
-            Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
+                if (perfCaptureBuild)
+                {
+                    // FrameTimingManager is always live in development players, but release
+                    // players require this build-time setting. Keep it scoped to the EF-064
+                    // measurement APK so ordinary release builds carry no profiling overhead.
+                    PlayerSettings.enableFrameTimingStats = true;
+
+                    if (!string.IsNullOrEmpty(buildCommit))
+                    {
+                        string shortCommit = buildCommit.Substring(0, Math.Min(12, buildCommit.Length));
+                        PlayerSettings.bundleVersion = $"{originalVersion}+perf.{shortCommit}";
+                    }
+
+                    Debug.Log($"[EmberfallBuild] EF-064 capture build: frame timing stats enabled; " +
+                              $"version {PlayerSettings.bundleVersion}");
+                }
+
+                // Force IL2CPP + ARM64 for this build regardless of editor overrides.
+                PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,
+                    ScriptingImplementation.IL2CPP);
+                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+
+                // Debug signing config checked in as config, not secret.
+                PlayerSettings.Android.keystoreName   = KeystorePath;
+                PlayerSettings.Android.keystorePass   = KeystorePass;
+                PlayerSettings.Android.keyaliasName   = KeyAliasName;
+                PlayerSettings.Android.keyaliasPass   = KeyAliasPass;
+                PlayerSettings.Android.useCustomKeystore = true;
+
+                BuildAndroidAddressables();
+
+                Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
+                var options = new BuildPlayerOptions
+                {
+                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                    locationPathName   = AndroidOutputPath,
+                    target             = BuildTarget.Android,
+                    targetGroup        = BuildTargetGroup.Android,
+                    options            = BuildOptions.None,
+                };
+                Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
+            }
+            finally
+            {
+                // These values identify and enable the measurement build, but they are not
+                // project defaults. Restore them even when Addressables or IL2CPP fails.
+                PlayerSettings.bundleVersion = originalVersion;
+                PlayerSettings.enableFrameTimingStats = originalFrameTimingStats;
+                AssetDatabase.SaveAssets();
+            }
         }
 
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]

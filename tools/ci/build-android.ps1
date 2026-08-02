@@ -7,10 +7,12 @@
 # This script keys off message text, not log severity, to catch them.
 #
 # Usage: pwsh tools/ci/build-android.ps1
+#        pwsh tools/ci/build-android.ps1 -PerfCapture
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
-    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
+    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe',
+    [switch]$PerfCapture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +21,22 @@ $REPO_ROOT  = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..' ))
 $PROJECT    = Join-Path $REPO_ROOT 'unity\Emberfall'
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
+$APK        = Join-Path $PROJECT 'Builds\Android\Emberfall.apk'
+$BUILD_INFO = "$APK.build.json"
+
+$BUILD_COMMIT = (& git -C $REPO_ROOT rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or -not $BUILD_COMMIT) {
+    Write-Error 'Could not resolve the build commit.'
+    exit 1
+}
+$BUILD_STATUS = @(& git -C $REPO_ROOT status --porcelain --untracked-files=all)
+$BUILD_DIRTY = $BUILD_STATUS.Count -gt 0
+$DIRTY_SUFFIX = if ($BUILD_DIRTY) { '-dirty' } else { '' }
+if ($PerfCapture -and $BUILD_DIRTY) {
+    Write-Error 'A performance capture build must come from a clean worktree so its commit identity is exact.'
+    $BUILD_STATUS | ForEach-Object { Write-Host "  $_" }
+    exit 1
+}
 
 if (-not (Test-Path $UnityPath)) {
     Write-Error "Unity not found at '$UnityPath'. Pass -UnityPath or install Unity 6000.5.1f1."
@@ -65,6 +83,8 @@ foreach ($input in $compileInputs) {
 Write-Host "build-android: Unity   $UnityPath"
 Write-Host "build-android: project $PROJECT"
 Write-Host "build-android: log     $LOG"
+Write-Host "build-android: commit  $BUILD_COMMIT$DIRTY_SUFFIX"
+Write-Host "build-android: profile $(if ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
 Write-Host "build-android: compile barrier $($compileBarrierUtc.ToString('O')) ($($compileInputs.Count) input(s))"
 Write-Host "build-android: launching headless (IL2CPP + ARM64)…"
 Write-Host ""
@@ -79,16 +99,26 @@ $unityArgs = @(
     '-logFile', "`"$LOG`""
 )
 
-$proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
-# Android IL2CPP builds are slow; allow 30 minutes.
-$finished = $proc.WaitForExit(1800000)
-if (-not $finished) {
-    Write-Host "build-android: ERROR — Unity timed out after 30 minutes"
-    try { $proc.Kill() } catch { Write-Host "build-android: WARNING — could not stop timed-out Unity process: $($_.Exception.Message)" }
-    $proc.WaitForExit()
-    $unityExit = 124
-} else {
-    $unityExit = $proc.ExitCode
+$previousCaptureBuild = $env:EMBERFALL_PERF_CAPTURE_BUILD
+$previousBuildCommit = $env:EMBERFALL_BUILD_COMMIT
+try {
+    $env:EMBERFALL_PERF_CAPTURE_BUILD = if ($PerfCapture) { '1' } else { '0' }
+    $env:EMBERFALL_BUILD_COMMIT = $BUILD_COMMIT
+
+    $proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
+    # Android IL2CPP builds are slow; allow 30 minutes.
+    $finished = $proc.WaitForExit(1800000)
+    if (-not $finished) {
+        Write-Host "build-android: ERROR — Unity timed out after 30 minutes"
+        try { $proc.Kill() } catch { Write-Host "build-android: WARNING — could not stop timed-out Unity process: $($_.Exception.Message)" }
+        $proc.WaitForExit()
+        $unityExit = 124
+    } else {
+        $unityExit = $proc.ExitCode
+    }
+} finally {
+    $env:EMBERFALL_PERF_CAPTURE_BUILD = $previousCaptureBuild
+    $env:EMBERFALL_BUILD_COMMIT = $previousBuildCommit
 }
 
 # ── Log read ─────────────────────────────────────────────────────────────────
@@ -124,7 +154,28 @@ $logLines | Select-Object -Last 60 | ForEach-Object { Write-Host "  $_" }
 Write-Host "build-android: =============================="
 
 if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
+    if (-not (Test-Path -LiteralPath $APK)) {
+        Write-Host "build-android: FAILED — success marker found but APK is missing at '$APK'"
+        exit 1
+    }
+
+    $apkItem = Get-Item -LiteralPath $APK
+    $apkSha256 = (Get-FileHash -LiteralPath $APK -Algorithm SHA256).Hash.ToLowerInvariant()
+    $buildInfo = [ordered]@{
+        schema = 1
+        commit = $BUILD_COMMIT
+        dirty = $BUILD_DIRTY
+        perfCapture = [bool]$PerfCapture
+        apkSha256 = $apkSha256
+        apkBytes = $apkItem.Length
+        builtUtc = [DateTime]::UtcNow.ToString('O')
+        unityPath = $UnityPath
+    } | ConvertTo-Json
+    [System.IO.File]::WriteAllText($BUILD_INFO, $buildInfo + "`n", [System.Text.UTF8Encoding]::new($false))
+
     Write-Host "build-android: SUCCESS — APK produced"
+    Write-Host "build-android: SHA256  $apkSha256"
+    Write-Host "build-android: metadata $BUILD_INFO"
     if ($apkLine) { Write-Host "build-android: $apkLine" }
     exit 0
 } else {

@@ -35,12 +35,15 @@
 .PARAMETER OutDir
   Where to drop the pulled capture. Default: artifacts/perf/<timestamp>/
 
+.PARAMETER SkipInstall
+  Keep the currently installed package, but still verify that its APK hash exactly matches -Apk.
+
 .EXAMPLE
   pwsh tools/ci/capture-android-perf.ps1 -Seconds 180
 #>
 [CmdletBinding()]
 param(
-    [string]$Apk = "Builds/Android/Emberfall.apk",
+    [string]$Apk = "unity/Emberfall/Builds/Android/Emberfall.apk",
     [string]$PackageName,
     [int]$Seconds = 120,
     [string]$OutDir,
@@ -50,6 +53,10 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Set-Location $repo
+
+if ($Seconds -lt 1 -or $Seconds -gt 300) {
+    throw '-Seconds must be between 1 and 300 (the in-player buffer holds five minutes).'
+}
 
 function Find-Adb {
     $c = Get-Command adb -ErrorAction SilentlyContinue
@@ -79,78 +86,202 @@ function Resolve-PackageName {
 }
 
 $adb = Find-Adb
-Write-Host "adb      : $adb"
-
-$devices = & $adb devices | Select-Object -Skip 1 | Where-Object { $_ -match '\sdevice$' }
-if (-not $devices) {
-    & $adb devices
-    throw "No Android device attached. Connect a device with USB debugging enabled, accept the RSA prompt, and re-run."
+$apkFull = if ([System.IO.Path]::IsPathRooted($Apk)) {
+    [System.IO.Path]::GetFullPath($Apk)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path $repo $Apk))
 }
-Write-Host "device   : $($devices[0])"
+$buildInfoPath = "$apkFull.build.json"
+if (-not (Test-Path -LiteralPath $apkFull)) {
+    throw "APK not found at '$apkFull'. Build it first with: pwsh tools/ci/build-android.ps1 -PerfCapture"
+}
+if (-not (Test-Path -LiteralPath $buildInfoPath)) {
+    throw "Build metadata not found at '$buildInfoPath'. Rebuild with tools/ci/build-android.ps1 -PerfCapture."
+}
+
+$buildInfo = Get-Content -LiteralPath $buildInfoPath -Raw | ConvertFrom-Json
+if (-not $buildInfo.perfCapture -or $buildInfo.dirty) {
+    throw 'The APK metadata does not describe a clean EF-064 performance-capture build.'
+}
+$localSha256 = (Get-FileHash -LiteralPath $apkFull -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($localSha256 -ne $buildInfo.apkSha256) {
+    throw "APK hash does not match its build metadata. Expected $($buildInfo.apkSha256), got $localSha256."
+}
+
+$devices = @(& $adb devices -l | Select-Object -Skip 1 | Where-Object { $_ -match '\sdevice(?:\s|$)' })
+if ($devices.Count -ne 1) {
+    & $adb devices -l
+    throw "Expected exactly one attached Android device; found $($devices.Count)."
+}
+$deviceSerial = ($devices[0] -split '\s+')[0]
 
 $pkg = Resolve-PackageName
+if ($pkg -notmatch '^[A-Za-z][A-Za-z0-9_.]+$') {
+    throw "Resolved package name '$pkg' is not safe to pass to adb."
+}
+
+if (-not $OutDir) {
+    $OutDir = Join-Path $repo ("artifacts/perf/" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+}
+$OutDir = [System.IO.Path]::GetFullPath($OutDir)
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+
+Write-Host "adb      : $adb"
+Write-Host "device   : $($devices[0])"
 Write-Host "package  : $pkg"
+Write-Host "commit   : $($buildInfo.commit)"
+Write-Host "APK SHA  : $localSha256"
 
 if (-not $SkipInstall) {
-    if (-not (Test-Path $Apk)) {
-        throw "APK not found at '$Apk'. Build it first: pwsh tools/ci/build-android.ps1  (EF-060). Or pass -Apk / -SkipInstall."
-    }
-    Write-Host "install  : $Apk"
-    & $adb install -r $Apk
+    Write-Host "install  : $apkFull"
+    & $adb install -r $apkFull
     if ($LASTEXITCODE -ne 0) { throw "adb install failed with exit code $LASTEXITCODE." }
 }
 
-# Clear logcat so the [EF-064-PERF] lines we read back are from THIS run and not a previous one.
-& $adb logcat -c
-
-Write-Host "launch   : monkey -p $pkg 1"
-& $adb shell monkey -p $pkg -c android.intent.category.LAUNCHER 1 | Out-Null
-
-Write-Host ""
-Write-Host "Capturing for $Seconds s. Drive the app now - get into a match with a full board;"
-Write-Host "an idle main menu measures nothing that matters."
-Write-Host ""
-Start-Sleep -Seconds $Seconds
-
-Write-Host "flush    : backgrounding app to trigger OnApplicationPause"
-& $adb shell input keyevent KEYCODE_HOME
-Start-Sleep -Seconds 3
-
-# Recover the output directory from the app's own log line rather than assuming internal vs
-# external storage -- which of the two persistentDataPath resolves to is a Player Setting.
-$log = & $adb logcat -d | Select-String -Pattern 'EF-064-PERF'
-if (-not $log) {
-    Write-Warning "No [EF-064-PERF] lines in logcat. The capture component did not arm."
-    Write-Warning "It arms on a development build, or when files/perfcapture.on exists:"
-    Write-Warning "  $adb shell run-as $pkg touch files/perfcapture.on"
-    throw "Capture did not run."
+$packagePathLine = (& $adb shell pm path $pkg | Select-Object -First 1)
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not resolve installed APK path for '$pkg'."
 }
-$log | ForEach-Object { Write-Host "  $_" }
+if ($packagePathLine -notmatch '^package:(.+)$') {
+    throw "Installed APK path for '$pkg' had an unexpected format: '$packagePathLine'."
+}
+$installedApkPath = $Matches[1].Trim()
+$installedHashLine = (& $adb shell sha256sum $installedApkPath | Select-Object -First 1)
+if ($LASTEXITCODE -ne 0) {
+    throw 'Could not hash the installed APK on the device.'
+}
+if ($installedHashLine -notmatch '^([0-9a-fA-F]{64})\s') {
+    throw "Installed APK hash had an unexpected format: '$installedHashLine'."
+}
+$installedSha256 = $Matches[1].ToLowerInvariant()
+if ($installedSha256 -ne $localSha256) {
+    throw "Installed APK hash mismatch. Local $localSha256, installed $installedSha256."
+}
+Write-Host "verify   : installed APK hash matches"
 
-if (-not $OutDir) { $OutDir = Join-Path $repo ("artifacts/perf/" + (Get-Date -Format 'yyyyMMdd-HHmmss')) }
-New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+$deviceFiles = "/sdcard/Android/data/$pkg/files"
+$marker = "$deviceFiles/perfcapture.on"
+$markerCreated = $false
+$startedUtc = [DateTime]::UtcNow
+$allLog = @()
 
-# Files land in the app sandbox; run-as is what reaches it on a debug-signed build.
-$listing = & $adb shell run-as $pkg ls files 2>&1
-$captures = $listing | Where-Object { $_ -match '^perf-.*\.(csv|txt)$' }
-if (-not $captures) {
-    Write-Warning "run-as could not list files (release-signed APK?). Falling back to external storage."
-    $captures = & $adb shell ls "/sdcard/Android/data/$pkg/files" 2>&1 | Where-Object { $_ -match '^perf-' }
-    foreach ($f in $captures) { & $adb pull "/sdcard/Android/data/$pkg/files/$f" (Join-Path $OutDir $f) }
-} else {
-    foreach ($f in $captures) {
-        # `run-as cat` is the portable way out of the internal sandbox; adb pull cannot reach it.
-        & $adb shell run-as $pkg cat "files/$f" > (Join-Path $OutDir $f)
+try {
+    & $adb shell am force-stop $pkg
+    if ($LASTEXITCODE -ne 0) { throw 'Could not stop the app before capture.' }
+
+    # Unity's Android persistentDataPath is the package's external files directory. This is
+    # reachable for a release APK; run-as files/ is an internal, debuggable-only directory.
+    & $adb shell mkdir -p $deviceFiles
+    if ($LASTEXITCODE -ne 0) {
+        # A fresh install might not have asked Android for getExternalFilesDir yet. Prime one
+        # launch so Unity creates it, then stop before the measured launch.
+        & $adb shell monkey -p $pkg -c android.intent.category.LAUNCHER 1 | Out-Null
+        Start-Sleep -Seconds 3
+        & $adb shell am force-stop $pkg
+        & $adb shell mkdir -p $deviceFiles
+        if ($LASTEXITCODE -ne 0) { throw "Could not create or access '$deviceFiles'." }
+    }
+    & $adb shell touch $marker
+    if ($LASTEXITCODE -ne 0) { throw "Could not create capture marker '$marker'." }
+    $markerCreated = $true
+
+    & $adb logcat -c
+    if ($LASTEXITCODE -ne 0) { throw 'Could not clear logcat before capture.' }
+
+    Write-Host "launch   : monkey -p $pkg 1"
+    & $adb shell monkey -p $pkg -c android.intent.category.LAUNCHER 1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Could not launch the app.' }
+
+    $armed = $false
+    for ($attempt = 0; $attempt -lt 15; $attempt++) {
+        Start-Sleep -Seconds 1
+        $recentLog = @(& $adb logcat -d -t 600)
+        if ($recentLog | Select-String -Quiet -SimpleMatch '[EF-064-PERF] capture armed') {
+            $armed = $true
+            break
+        }
+    }
+    if (-not $armed) {
+        throw 'Capture marker was created, but the APK did not report that the harness armed.'
+    }
+
+    Write-Host ""
+    Write-Host "CAPTURE ARMED for $Seconds seconds. Drive the app now: enter a match and exercise a full board."
+    Write-Host ""
+    Start-Sleep -Seconds $Seconds
+
+    Write-Host "flush    : backgrounding app to trigger OnApplicationPause"
+    & $adb shell input keyevent KEYCODE_HOME
+    if ($LASTEXITCODE -ne 0) { throw 'Could not background the app to flush the capture.' }
+
+    $complete = $false
+    for ($attempt = 0; $attempt -lt 15; $attempt++) {
+        Start-Sleep -Seconds 1
+        $allLog = @(& $adb logcat -d)
+        if ($allLog | Select-String -Quiet -SimpleMatch '[EF-064-PERF] CAPTURE-COMPLETE') {
+            $complete = $true
+            break
+        }
+    }
+    if (-not $complete) { throw 'The app did not report CAPTURE-COMPLETE after backgrounding.' }
+} finally {
+    if ($markerCreated) {
+        & $adb shell rm -f $marker | Out-Null
     }
 }
 
+$evidenceLog = @($allLog | Select-String -Pattern 'EF-064-PERF|\[SafeAreaCamera\]')
+$logPath = Join-Path $OutDir 'device-log.txt'
+[System.IO.File]::WriteAllLines(
+    $logPath,
+    [string[]]@($evidenceLog | ForEach-Object { $_.Line }),
+    [System.Text.UTF8Encoding]::new($false))
+
+if (-not ($evidenceLog | Where-Object { $_.Line.Contains('[SafeAreaCamera]') })) {
+    throw 'No SafeAreaCamera device evidence was logged. The capture did not reach a board scene.'
+}
+
+$captureNames = @(
+    [regex]::Matches(($allLog -join "`n"), 'perf-\d{8}-\d{6}(?:-summary)?\.(?:csv|txt)') |
+        ForEach-Object { $_.Value } |
+        Sort-Object -Unique
+)
+if ($captureNames.Count -ne 2) {
+    throw "Expected one CSV and one summary from this run; log named $($captureNames.Count) capture file(s)."
+}
+
+foreach ($name in $captureNames) {
+    $destination = Join-Path $OutDir $name
+    & $adb pull "$deviceFiles/$name" $destination
+    if ($LASTEXITCODE -ne 0) { throw "Failed to pull '$name'." }
+}
+
+$manifest = [ordered]@{
+    schema = 1
+    startedUtc = $startedUtc.ToString('O')
+    completedUtc = [DateTime]::UtcNow.ToString('O')
+    seconds = $Seconds
+    device = $devices[0]
+    deviceSerial = $deviceSerial
+    package = $pkg
+    installedApkPath = $installedApkPath
+    apkSha256 = $installedSha256
+    build = $buildInfo
+} | ConvertTo-Json -Depth 4
+$manifestPath = Join-Path $OutDir 'capture-manifest.json'
+[System.IO.File]::WriteAllText(
+    $manifestPath,
+    $manifest + "`n",
+    [System.Text.UTF8Encoding]::new($false))
+
 Write-Host ""
 Write-Host "pulled to: $OutDir"
-Get-ChildItem $OutDir | ForEach-Object { Write-Host ("  {0}  {1} bytes" -f $_.Name, $_.Length) }
-
-$summary = Get-ChildItem $OutDir -Filter '*-summary.txt' | Select-Object -First 1
-if ($summary) {
-    Write-Host ""
-    Write-Host "===== SUMMARY ====="
-    Get-Content $summary.FullName | ForEach-Object { Write-Host $_ }
+Get-ChildItem -LiteralPath $OutDir | ForEach-Object {
+    Write-Host ("  {0}  {1} bytes" -f $_.Name, $_.Length)
 }
+
+$summary = Get-ChildItem -LiteralPath $OutDir -Filter '*-summary.txt' | Select-Object -First 1
+if (-not $summary) { throw 'Capture summary was not pulled.' }
+Write-Host ""
+Write-Host "===== SUMMARY ====="
+Get-Content -LiteralPath $summary.FullName | ForEach-Object { Write-Host $_ }
