@@ -56,20 +56,23 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// Enqueue every OTHER permanent's effects subscribed to <paramref name="trigger"/> (observer triggers
-        /// such as ON_FRIENDLY_SUMMON), in the canonical order: active player's side first, board left→right by
-        /// position, then hero; ties by ascending instance id (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.1).
+        /// Enqueue every board-minion trigger source's effects subscribed to <paramref name="trigger"/>
+        /// (observer triggers such as ON_FRIENDLY_SUMMON), in canonical order: active player's side first,
+        /// then board left→right by position. This is the single source-enumeration seam; weapons and
+        /// ongoing effects extend it only when their runtime lifecycle and validation land together.
+        /// Conditions qualify effects while this snapshot is built, before queue/cap accounting.
         /// </summary>
-        public void RaiseObservers(Trigger trigger, CardInstance? excluded)
+        public void RaiseObservers(Trigger trigger, CardInstance? excluded, TriggerContext context = default)
         {
-            foreach (var src in OrderedPermanents())
+            foreach (var src in OrderedTriggerSources())
             {
                 if (excluded != null && ReferenceEquals(src, excluded)) continue;
                 var def = _db.Get(src.DefinitionId);
                 var effects = def.Effects;
                 for (int i = 0; i < effects.Count; i++)
-                    if (effects[i].Trigger == trigger)
-                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<CharacterRef>()));
+                    if (effects[i].Trigger == trigger &&
+                        ConditionEvaluator.Holds(effects[i], src, context))
+                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<CharacterRef>(), context));
             }
         }
 
@@ -85,9 +88,11 @@ namespace Emberfall.Core
             DeathCheck();
             while (_queue.Count > 0)
             {
-                if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
-
                 var qe = _queue.Dequeue();
+                if (!ConditionEvaluator.Holds(qe.Effect, qe.Source, qe.TriggerContext))
+                    continue; // defense in depth for self-triggers or invalid data; not a resolution
+
+                if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
                 ResolveOne(qe);
 
                 DeathCheck();
@@ -261,10 +266,10 @@ namespace Emberfall.Core
             }
         }
 
-        // ── Deterministic permanent ordering ─────────────────────────────────────
+        // ── Deterministic trigger-source ordering ────────────────────────────────
 
-        /// <summary>Active player's permanents first; within a side board left→right then hero (game-state §5.1).</summary>
-        private IEnumerable<CardInstance> OrderedPermanents()
+        /// <summary>Board-minion sources only: active player's side first, each board left→right.</summary>
+        private IEnumerable<CardInstance> OrderedTriggerSources()
         {
             int active = _state.SeatOf(_state.ActivePlayer);
             int other = active == 0 ? 1 : 0;
@@ -292,12 +297,54 @@ namespace Emberfall.Core
         public readonly EffectDef Effect;
         public readonly CardInstance Source;
         public readonly IReadOnlyList<CharacterRef> ChosenTargets;
+        public readonly TriggerContext TriggerContext;
 
-        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<CharacterRef> chosenTargets)
+        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<CharacterRef> chosenTargets,
+            TriggerContext triggerContext = default)
         {
             Effect = effect;
             Source = source;
             ChosenTargets = chosenTargets ?? System.Array.Empty<CharacterRef>();
+            TriggerContext = triggerContext;
+        }
+    }
+
+    /// <summary>Event-specific values conditions can inspect without conflating them with the source.</summary>
+    internal readonly struct TriggerContext
+    {
+        public readonly PlayerId? TurnPlayer;
+
+        private TriggerContext(PlayerId? turnPlayer) => TurnPlayer = turnPlayer;
+
+        public static TriggerContext ForTurnStart(PlayerId turnPlayer) => new TriggerContext(turnPlayer);
+    }
+
+    /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
+    internal static class ConditionEvaluator
+    {
+        public static bool Holds(EffectDef effect, CardInstance source, TriggerContext context)
+        {
+            var condition = effect.Condition;
+            if (condition == null)
+                return effect.Trigger != Trigger.ON_TURN_START; // invalid card data fails closed at runtime too
+
+            switch (condition.Type)
+            {
+                case ConditionType.TURN_OWNER:
+                    if (!condition.TurnOwner.HasValue || !context.TurnPlayer.HasValue)
+                        return false;
+
+                    bool controllerTurn = source.Controller == context.TurnPlayer.Value;
+                    switch (condition.TurnOwner.Value)
+                    {
+                        case TurnOwner.CONTROLLER: return controllerTurn;
+                        case TurnOwner.OPPONENT: return !controllerTurn;
+                        case TurnOwner.ANY: return true;
+                        default: return false;
+                    }
+                default:
+                    return false;
+            }
         }
     }
 

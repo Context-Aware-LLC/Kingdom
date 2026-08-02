@@ -49,6 +49,8 @@ namespace Emberfall.Core.Cards
             /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:557-560):
             /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
             WeaponOnly,
+            /// <summary>Observed from board minions only; other source lifecycles are not wired yet.</summary>
+            MinionOnly,
             /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
             /// a card on it parses, validates, loads, and does nothing forever, silently.</summary>
             Dead,
@@ -58,10 +60,10 @@ namespace Emberfall.Core.Cards
         // prose list in CLAUDE.md, which is exactly the kind of guard that rots. Every Trigger enum
         // member MUST appear here (a member with no row is treated as Dead — fail closed).
         //
-        // HARD RULE: UPDATE THIS TABLE as each of EF-011..EF-017b lands its raise site — flip that
-        // trigger's value from Dead to Live in the SAME commit that adds the raise site. The `// EF-0nn`
-        // pointer on each Dead row names the task that arms it; that comment is the whole point of the
-        // table (retirement triggers live in the code, not in a doc).
+        // HARD RULE: UPDATE THIS TABLE as each trigger source lifecycle lands — assign the exact
+        // liveness classification in the SAME commit that adds its raise site. Do not promote a
+        // type-scoped row to Live until every accepted type has a runtime path. The issue pointer on
+        // each Dead or type-scoped row is its retirement trigger.
         private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
         {
             [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (battlecry / weapon equip)
@@ -70,7 +72,9 @@ namespace Emberfall.Core.Cards
             [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
             [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:560 (weapons only)
             [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
-            [Trigger.ON_TURN_START] = TriggerLiveness.Dead, // EF-011
+            // RETIREMENT TRIGGER: #34/#35 must widen this classification and update CLAUDE.md's
+            // ON_TURN_START source restriction in the same change.
+            [Trigger.ON_TURN_START] = TriggerLiveness.MinionOnly, // CommandProcessor.StartTurnSequence (explicit turn owner, after reset, before draw — EF-011)
             [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
             [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
             [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)
@@ -163,10 +167,44 @@ namespace Emberfall.Core.Cards
                         Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.trigger",
                             $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
                         break;
+                    case TriggerLiveness.MinionOnly when def.Type != CardType.MINION:
+                        Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.trigger",
+                            $"trigger '{fx.Trigger}' is observed from board minions only — it is dead on a {def.Type} until that source lifecycle is implemented.");
+                        break;
                 }
                 // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave
                 // RulesEngine.BreakWeapon a raise site. It is now live on BOTH card types, so the gate is
                 // gone rather than relaxed — there is no weapon-shaped exception left to express.
+
+                // C22 — the first reusable condition seam. Turn ownership is mandatory and explicit
+                // for ON_TURN_START; on every other trigger it lacks a turn-event context and would be
+                // an inert authoring error, so fail closed rather than silently skipping forever.
+                if (fx.Condition != null
+                    && !System.Enum.IsDefined(typeof(ConditionType), fx.Condition.Type))
+                {
+                    Err("C22-CONDITION-UNKNOWN", $"{prefix}.condition.type",
+                        $"condition type '{fx.Condition.Type}' is not implemented.");
+                }
+                else if (fx.Trigger == Trigger.ON_TURN_START)
+                {
+                    if (fx.Condition == null
+                        || fx.Condition.Type != ConditionType.TURN_OWNER
+                        || !fx.Condition.TurnOwner.HasValue)
+                    {
+                        Err("C22-TURN-OWNER-REQUIRED", $"{prefix}.condition",
+                            "ON_TURN_START requires condition.type TURN_OWNER with value CONTROLLER, OPPONENT, or ANY.");
+                    }
+                    else if (!System.Enum.IsDefined(typeof(TurnOwner), fx.Condition.TurnOwner.Value))
+                    {
+                        Err("C22-TURN-OWNER-INVALID", $"{prefix}.condition.value",
+                            $"turn owner '{fx.Condition.TurnOwner.Value}' is not CONTROLLER, OPPONENT, or ANY.");
+                    }
+                }
+                else if (fx.Condition != null && fx.Condition.Type == ConditionType.TURN_OWNER)
+                {
+                    Err("C22-TURN-OWNER-TRIGGER", $"{prefix}.condition",
+                        "TURN_OWNER is valid only on ON_TURN_START because other triggers carry no incoming-turn context.");
+                }
 
                 // C10
                 if (AmountRequiredActions.Contains(fx.Action) && fx.Amount is null)

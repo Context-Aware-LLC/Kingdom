@@ -43,9 +43,10 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. Six of these have no raise site anywhere in the engine — a card
-    /// using one parses, validates, loads and then does nothing, forever, silently, with no error.
-    /// The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>DECLARED IS NOT LIVE. ON_HEAL (EF-015) and AURA (EF-017b) still have no
+    /// raise site anywhere in the engine: CardValidator rule C21 rejects a card using one before it
+    /// loads, while bypassing validation would leave the effect inert forever. The markers below are
+    /// the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
@@ -78,7 +79,9 @@ namespace Emberfall.Core.Contracts
         // reentrantly inside ApplyDamage via LIFESTEAL.
         ON_HEAL,
 
-        // DEAD — no raise site. Intended site: CommandProcessor.StartTurnSequence, before the draw.
+        // LIVE FOR BOARD MINIONS — CommandProcessor.StartTurnSequence raises it after the thaw/mana
+        // reset and before the draw (EF-011). Every effect declares a TURN_OWNER condition so controller,
+        // opponent and any-turn behavior are explicit. Weapons and ongoing spells are tracked follow-ups.
         ON_TURN_START,
 
         // LIVE — CommandProcessor.ApplyEndTurn raises it after the onTurnEnd VFX emit and before the
@@ -102,6 +105,23 @@ namespace Emberfall.Core.Contracts
         // exist anywhere in src/. BuffHandler bakes stats destructively and the Enchantment it
         // writes is never read back, so an aura source leaving the board cannot unapply itself.
         AURA
+    }
+
+    /// <summary>
+    /// Closed condition vocabulary for <c>EffectDef.condition</c>. Conditions gate resolution and are
+    /// deliberately separate from target selectors so adding a gate does not multiply selector names.
+    /// </summary>
+    public enum ConditionType
+    {
+        TURN_OWNER,
+    }
+
+    /// <summary>How an effect source relates to the player whose turn is beginning.</summary>
+    public enum TurnOwner
+    {
+        CONTROLLER,
+        OPPONENT,
+        ANY,
     }
 
     /// <summary>The primitive verbs (dev-docs/specs/card-schema.md §5.2). Closed; grows only via the requiresEngineeringPrimitive gate.</summary>

@@ -84,6 +84,8 @@ namespace Emberfall.Editor
         public bool HasKeyword; public Keyword Keyword;
         public bool HasVfxOverride; public VfxEvent VfxOverride;
         public bool HasSelector; public string Selector = "";
+        public bool HasCondition; public ConditionType ConditionKind = ConditionType.TURN_OWNER;
+        public TurnOwner TurnOwnerScope = TurnOwner.CONTROLLER;
         public bool Permanent; public bool Empty; // GAIN_MANA payload flags (dev-docs/specs/card-schema.md §5.2)
 
         public static EditableEffect FromEffectDef(EffectDef fx) => new EditableEffect
@@ -96,6 +98,9 @@ namespace Emberfall.Editor
             HasKeyword = fx.GrantedKeyword.HasValue, Keyword = fx.GrantedKeyword ?? default,
             HasVfxOverride = fx.VfxOverride.HasValue, VfxOverride = fx.VfxOverride ?? default,
             HasSelector = !string.IsNullOrEmpty(fx.Selector), Selector = fx.Selector ?? "",
+            HasCondition = fx.Condition != null,
+            ConditionKind = fx.Condition?.Type ?? ConditionType.TURN_OWNER,
+            TurnOwnerScope = fx.Condition?.TurnOwner ?? TurnOwner.CONTROLLER,
             Permanent = fx.Permanent, Empty = fx.Empty,
         };
 
@@ -107,6 +112,7 @@ namespace Emberfall.Editor
             HasKeyword ? Keyword : (Keyword?)null,
             HasVfxOverride ? VfxOverride : (VfxEvent?)null,
             HasSelector ? Selector : null,
-            Permanent, Empty);
+            Permanent, Empty,
+            HasCondition ? new EffectConditionDef(ConditionKind, TurnOwnerScope) : null);
     }
 }

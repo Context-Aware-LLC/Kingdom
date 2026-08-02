@@ -366,7 +366,7 @@ namespace Emberfall.Core
                     // SCOPE IS BOTH SIDES, matching ON_TURN_END (EF-012): the name carries no FRIENDLY_
                     // qualifier the way ON_FRIENDLY_SUMMON does, and RaiseObservers is the engine's one
                     // observer sweep, so a controller filter here would be a new, unspecified rule.
-                    // `excluded: null` because the spell is in the graveyard by now and OrderedPermanents
+                    // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
                     interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null);
                     break;
@@ -641,9 +641,23 @@ namespace Emberfall.Core
             var interp = new EffectInterpreter(state, _db, buf);
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
 
-            // EF-011 seam: raise Trigger.ON_TURN_START here — AFTER the thaw/mana reset above and BEFORE the
-            // draw, so a start-of-turn cascade settles before DrawOne (or a corpse would draw fatigue).
-            // Nothing is raised yet, so the Drain is a no-op and this block is hash-neutral until EF-011 lands.
+            // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
+            // effect sees the board the turn actually starts on (unfrozen, sickness cleared, mana
+            // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
+            // alive. Draining after DrawOne would let a corpse draw fatigue.
+            //
+            // The incoming player is explicit event context, separate from each source controller.
+            // EffectConditionDef then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
+            // into trigger/selector names. `excluded: null` because no card causes a turn to start.
+            // The current source seam is board minions, active-side first and left→right; weapon and
+            // ongoing-spell lifecycles are deliberately split follow-ups.
+            interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
+                context: TriggerContext.ForTurnStart(player));
+
+            // The start-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE
+            // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is
+            // non-empty, and a start-of-turn toll that kills its own controller must end the match here
+            // rather than draw a card into a finished game.
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;

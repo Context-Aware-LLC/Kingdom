@@ -251,6 +251,19 @@ namespace Emberfall.Editor
                 EditorGUILayout.EndHorizontal();
 
                 fx.Trigger = (Trigger)EditorGUILayout.EnumPopup("trigger", fx.Trigger);
+                if (fx.Trigger == Trigger.ON_TURN_START)
+                {
+                    fx.HasCondition = true;
+                    fx.ConditionKind = ConditionType.TURN_OWNER;
+                    fx.TurnOwnerScope = (TurnOwner)EditorGUILayout.EnumPopup("condition.turnOwner", fx.TurnOwnerScope);
+                }
+                else
+                {
+                    // TURN_OWNER is the only live condition today and has no context on other triggers.
+                    // RETIREMENT TRIGGER: when another ConditionType lands, replace this reset with its
+                    // type-specific editor instead of erasing every non-turn-start condition.
+                    fx.HasCondition = false;
+                }
                 fx.Action = (Emberfall.Core.Contracts.Action)EditorGUILayout.EnumPopup("action", fx.Action);
 
                 fx.HasAmount = EditorGUILayout.Toggle("has amount", fx.HasAmount);

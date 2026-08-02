@@ -87,8 +87,18 @@ namespace Emberfall.Core.Cards
             if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
                 selector = Str(tgt, "selector");
 
+            EffectConditionDef? condition = null;
+            if (e.TryGetProperty("condition", out var gate) && gate.ValueKind == JsonValueKind.Object)
+            {
+                var type = ReqEnum<ConditionType>(gate, "type");
+                TurnOwner? turnOwner = type == ConditionType.TURN_OWNER
+                    ? TryEnum<TurnOwner>(gate, "value")
+                    : null;
+                condition = new EffectConditionDef(type, turnOwner);
+            }
+
             return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector,
-                permanent, empty);
+                permanent, empty, condition);
         }
 
         // ── primitive readers ────────────────────────────────────────────────────

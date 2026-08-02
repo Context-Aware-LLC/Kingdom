@@ -60,6 +60,23 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>
+    /// One optional gate on an <see cref="EffectDef"/>. The shape is intentionally typed and extensible:
+    /// each <see cref="ConditionType"/> owns the value fields it understands, while validation rejects
+    /// incomplete or contextless combinations before a card can load into a match.
+    /// </summary>
+    public sealed class EffectConditionDef
+    {
+        public ConditionType Type { get; }
+        public TurnOwner? TurnOwner { get; }
+
+        public EffectConditionDef(ConditionType type, TurnOwner? turnOwner)
+        {
+            Type = type;
+            TurnOwner = turnOwner;
+        }
+    }
+
+    /// <summary>
     /// One entry in <c>effects[]</c> (dev-docs/specs/card-schema.md §5). The interpreter (Phase B) tree-walks these;
     /// for the determinism foundation they are carried as immutable data only.
     /// </summary>
@@ -72,6 +89,7 @@ namespace Emberfall.Core.Cards
         public string? TokenId { get; }       // payload.tokenId for SUMMON / ADD_TO_HAND / TRANSFORM
         public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
         public VfxEvent? VfxOverride { get; }
+        public EffectConditionDef? Condition { get; }
         /// <summary>
         /// <c>payload.permanent</c> for GAIN_MANA (dev-docs/specs/card-schema.md §5.2): true = gain permanent
         /// crystals (raises <c>Mana.Max</c>, capped at 10 — the Quicken / Seedling Rite ramp
@@ -94,7 +112,8 @@ namespace Emberfall.Core.Cards
 
         public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
                          string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
-                         string? selector = null, bool permanent = false, bool empty = false)
+                         string? selector = null, bool permanent = false, bool empty = false,
+                         EffectConditionDef? condition = null)
         {
             Trigger = trigger;
             Action = action;
@@ -103,6 +122,7 @@ namespace Emberfall.Core.Cards
             TokenId = tokenId;
             GrantedKeyword = grantedKeyword;
             VfxOverride = vfxOverride;
+            Condition = condition;
             Selector = selector;
             Permanent = permanent;
             Empty = empty;
