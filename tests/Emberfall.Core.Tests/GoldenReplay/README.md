@@ -22,19 +22,25 @@ cardsets/
 | `full_match_pyra_wins` | A complete match to a win condition (turn-loop spine → concede → `Player0Win`). |
 | `deathrattle_cascade` | Death-resolution batch ordering (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7`): both players trade identical 2/2 DEATHRATTLE minions, so two `ON_DEATH` effects fire in active-player-first board order. Baked by `CascadeFixtureGenerator` ([Explicit]). |
 | `turn_end_toll` | `ON_TURN_END` (EF-012): that it resolves at all, that it fires on **both** players' turn ends rather than only its controller's, and that the observer sweep order flips with the active seat. Baked by `TurnEndTollFixtureGenerator` ([Explicit]). |
+| `on_damaged_thorns` | `ON_DAMAGED` (EF-014): that a damaged minion's self-trigger resolves, and that an **Aegis-absorbed** hit does not raise it. Baked by `OnDamagedThornsFixtureGenerator` ([Explicit]). |
+| `spell_cast_echo` | `ON_SPELL_CAST` (EF-016): that it resolves at all, that it fires on **both** players' casts, that the sweep runs active-side-first, that the spell's own `ON_CAST` resolves before the reactions — and, the reason the fixture exists, that a **hero power does not fire it** even though hero powers raise the same `ON_CAST`. Baked by `SpellCastEchoFixtureGenerator` ([Explicit]). |
 
 Fixtures whose scenario is scripted rather than hand-written have a paired `[Explicit]` generator in
 this directory — never run by CI. Run one locally to re-produce and re-bake its fixture, then commit
 the resulting `*.replay.json` + `*.rebaseline.md` pair.
 
-## The one fixture-only card
+## The fixture-only cards
 
-`M1.cards.snapshot.json` carries `test_turn_end_toller`, which exists **only** to give `turn_end_toll`
-an `ON_TURN_END` subscriber — it is `collectible: false` and deliberately absent from the shipping
-`cards/**` tree. Appending a definition to the snapshot is inert for the other fixtures (decks are
-explicit id lists; the hasher walks game state, never the card db), but that is a claim the
-unrebaselined run is what actually proves. **If you add another fixture-only card, append it — never
-edit an existing row**, and re-run the full gate unrebaselined before committing.
+`M1.cards.snapshot.json` carries `test_turn_end_toller` (EF-012), `test_thornback` +
+`test_aegis_thornback` (EF-014), and `test_spell_cast_echo` + `test_spell_cast_probe` (EF-016), which
+exist **only** to give those three fixtures the subscribers they need — an `ON_TURN_END` toller, an
+`ON_DAMAGED` pair differing solely by `DIVINE_SHIELD`, and an `ON_SPELL_CAST` echo with a cheap spell
+to trigger it. All are
+`collectible: false` and deliberately absent from the shipping `cards/**` tree. Appending a definition
+to the snapshot is inert for the other fixtures (decks are explicit id lists; the hasher walks game
+state, never the card db), but that is a claim the unrebaselined run is what actually proves. **If you
+add another fixture-only card, append it — never edit an existing row**, and re-run the full gate
+unrebaselined before committing.
 
 ## Rebaselining (never automatic)
 

@@ -46,7 +46,7 @@ namespace Emberfall.Core.Cards
         {
             /// <summary>Has a raise site in the engine; type-specific exceptions are gated separately.</summary>
             Live,
-            /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:527-531):
+            /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:557-560):
             /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
             WeaponOnly,
             /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
@@ -64,16 +64,16 @@ namespace Emberfall.Core.Cards
         // table (retirement triggers live in the code, not in a doc).
         private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
         {
-            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:325,348 (battlecry / weapon equip)
-            [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:333,411 (spell / hero power)
+            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (battlecry / weapon equip)
+            [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:354,454 (spell / hero power)
             [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
-            [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:326, ActionHandlers.cs:108
-            [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:531 (weapons only)
+            [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
+            [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:560 (weapons only)
             [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
             [Trigger.ON_TURN_START] = TriggerLiveness.Dead, // EF-011
             [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
             [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
-            [Trigger.ON_SPELL_CAST] = TriggerLiveness.Dead, // EF-016
+            [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)
             [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
         };
 
@@ -161,7 +161,7 @@ namespace Emberfall.Core.Cards
                         break;
                     case TriggerLiveness.WeaponOnly when def.Type != CardType.WEAPON:
                         Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:527-531) — it is dead on a {def.Type}.");
+                            $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
                         break;
                 }
                 // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave

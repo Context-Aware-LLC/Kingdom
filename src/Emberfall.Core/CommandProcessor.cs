@@ -352,6 +352,23 @@ namespace Emberfall.Core
                     ps.Graveyard.Add(card);
                     buf.Emit(VfxEvent.onPlay, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_CAST, targets);                 // the spell's one-shot effect
+                    // EF-016: ON_SPELL_CAST — the observer half of a cast, enqueued AFTER the spell's own
+                    // ON_CAST so the spell resolves first and reactions see the board it left behind. Same
+                    // RaiseSelf-then-RaiseObservers shape as the MINION arm above (ON_PLAY → ON_FRIENDLY_SUMMON).
+                    //
+                    // THE TRAP THIS PLACEMENT EXISTS TO AVOID: hero powers reach the interpreter through an
+                    // ephemeral HERO_POWER CardInstance and raise Trigger.ON_CAST too (ApplyHeroPower below).
+                    // Hooking generic ON_CAST would therefore fire spell-cast reactions on every hero power.
+                    // Gating the raise to this branch — the only place a CardType.SPELL is cast — is what
+                    // keeps "whenever a spell is cast" meaning spells. Any future cast path must decide
+                    // deliberately whether it belongs here; do NOT move this into EffectInterpreter.RaiseSelf.
+                    //
+                    // SCOPE IS BOTH SIDES, matching ON_TURN_END (EF-012): the name carries no FRIENDLY_
+                    // qualifier the way ON_FRIENDLY_SUMMON does, and RaiseObservers is the engine's one
+                    // observer sweep, so a controller filter here would be a new, unspecified rule.
+                    // `excluded: null` because the spell is in the graveyard by now and OrderedPermanents
+                    // only walks boards — it cannot observe its own cast whatever we pass.
+                    interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null);
                     break;
 
                 case CardType.WEAPON:
@@ -429,6 +446,11 @@ namespace Emberfall.Core
 
             var interp = new EffectInterpreter(state, _db, buf);
             var targets = ResolveTargets(state, hp.Targets);
+            // This ON_CAST is the SECOND raise site for the trigger — a hero power, not a spell. EF-016
+            // deliberately does NOT follow it with RaiseObservers(ON_SPELL_CAST): that raise lives only in
+            // ApplyPlayCard's CardType.SPELL arm, so "whenever a spell is cast" excludes hero powers.
+            // If a design ruling ever makes hero powers count as spell casts, this is the line to change —
+            // and HeroPowerDoesNotFireOnSpellCast in SpellCastTriggerTests is the test that must change with it.
             interp.RaiseSelf(src, Trigger.ON_CAST, targets);
             interp.Drain();
         }

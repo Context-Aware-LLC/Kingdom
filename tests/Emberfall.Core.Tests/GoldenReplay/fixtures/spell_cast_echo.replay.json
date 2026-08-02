@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 2,
+  "name": "spell_cast_echo",
+  "engineContractVersion": "interfaces.v3",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0005",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "EMBERWARD",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "seed": 1618033988749894,
+  "p0Deck": [
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe"
+  ],
+  "p1Deck": [
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe"
+  ],
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i43",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i64",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i63",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "hero_power",
+      "player": "P0",
+      "targets": [
+        "i2"
+      ]
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i65",
+      "slot": 0,
+      "targets": []
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "2f5e482b4db3513cf8e998726f2da62f46911c0957c0177510b42ca700d3148f",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "onDraw",
+        "src": "i46",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "onPlay",
+        "src": "i43",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 4,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 5,
+        "kind": "onDraw",
+        "src": "i67",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 6,
+        "kind": "onPlay",
+        "src": "i64",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 7,
+        "kind": "onDamage",
+        "src": "i64",
+        "tgt": "i1",
+        "amt": 2,
+        "flags": "None"
+      },
+      {
+        "seq": 8,
+        "kind": "onDamage",
+        "src": "i43",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 9,
+        "kind": "onPlay",
+        "src": "i63",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 10,
+        "kind": "onTurnEnd",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 11,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 12,
+        "kind": "onDraw",
+        "src": "i47",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 13,
+        "kind": "onHeroPower",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 14,
+        "kind": "onDamage",
+        "src": "i84",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 15,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 16,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 17,
+        "kind": "onDraw",
+        "src": "i68",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 18,
+        "kind": "onPlay",
+        "src": "i65",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 19,
+        "kind": "onDamage",
+        "src": "i65",
+        "tgt": "i1",
+        "amt": 2,
+        "flags": "None"
+      },
+      {
+        "seq": 20,
+        "kind": "onDamage",
+        "src": "i63",
+        "tgt": "i1",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 21,
+        "kind": "onDamage",
+        "src": "i43",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      }
+    ]
+  }
+}

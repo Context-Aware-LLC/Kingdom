@@ -88,10 +88,11 @@ namespace Emberfall.Core.Contracts
         // LIVE — ActionHandlers + CommandProcessor.
         ON_FRIENDLY_SUMMON,
 
-        // DEAD — no raise site.
-        // TRAP when arming: hero powers also raise ON_CAST through an ephemeral HERO_POWER card,
-        // so a generic ON_CAST hook fires on hero powers too. Gate any new raise to the
-        // CardType.SPELL branch only.
+        // LIVE — CommandProcessor.ApplyPlayCard raises it from the CardType.SPELL arm only, right after
+        // the spell's own ON_CAST (EF-016). Observer trigger: fires on BOTH players' permanents, so it
+        // means "whenever ANY spell is cast", not "whenever YOU cast a spell".
+        // TRAP, still true: hero powers also raise ON_CAST through an ephemeral HERO_POWER card, and this
+        // trigger is deliberately NOT raised there — a hero power is not a spell cast.
         ON_SPELL_CAST,
 
         // LIVE — CommandProcessor, for spells AND hero powers.
