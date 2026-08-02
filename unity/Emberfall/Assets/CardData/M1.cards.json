@@ -3330,29 +3330,5 @@
         }
       }
     ]
-  },
-  {
-    "id": "storm_galecleaver",
-    "name": "Galecleaver",
-    "type": "WEAPON",
-    "cost": 1,
-    "attack": 3,
-    "durability": 2,
-    "class": "TEMPEST",
-    "rarity": "RARE",
-    "keywords": [
-      "OVERLOAD"
-    ],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_galecleaver",
-    "cardText": "Whenever this attacks, [Backdraft] (2).",
-    "effects": [
-      {
-        "trigger": "ON_ATTACK",
-        "action": "OVERLOAD",
-        "amount": 2
-      }
-    ]
   }
 ]
