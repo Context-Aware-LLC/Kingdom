@@ -250,6 +250,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d671807379fe2b449244dedfdfaa1a5
+    m_Address: card_art/art_clock_gear_imp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0406593d61fc354895b5ffe5a8b8861
     m_Address: card_art/art_tide_initiate
     m_ReadOnly: 0
@@ -372,6 +377,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd3fa8a4fa04f0c47a527d1884dcc32c
     m_Address: card_art/art_ember_kiln_warden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe74160637d67a742b4497297167f664
+    m_Address: card_art/art_grave_plague_bringer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

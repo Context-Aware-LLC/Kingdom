@@ -58,6 +58,7 @@
     <Compile Include="Assets\Scripts\Editor\TurnClockVerify.cs" />
     <Compile Include="Assets\Scripts\Editor\ManaTrayPreview.cs" />
     <Compile Include="Assets\Scripts\Editor\A5WireVerify.cs" />
+    <Compile Include="Assets\Scripts\Editor\AddressablesGuard.cs" />
     <Compile Include="Assets\Scripts\Editor\CardImporter.cs" />
     <Compile Include="Assets\Scripts\Editor\CardArtPostprocessor.cs" />
     <Compile Include="Assets\Scripts\Editor\CardJsonRowIO.cs" />

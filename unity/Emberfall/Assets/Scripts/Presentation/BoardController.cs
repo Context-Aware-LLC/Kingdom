@@ -740,9 +740,6 @@ namespace Emberfall.Presentation
 #if UNITY_EDITOR
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(editorPath);
 #else
-            // Build path: needs the asset in an Addressables group at this address
-            // (MaterialCatalog precedent). The card font is NOT registered - fonts are
-            // still a player-build TODO. Backgrounds were done 2026-07-26; fonts were not.
             var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(address);
             var asset = handle.WaitForCompletion();
 #endif
