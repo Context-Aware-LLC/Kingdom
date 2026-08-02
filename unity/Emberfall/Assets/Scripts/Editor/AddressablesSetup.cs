@@ -47,9 +47,16 @@ namespace Emberfall.Editor
                 entry.SetAddress(address);
             }
 
+            var bgGroup = GetGroup(settings, "Backgrounds");
+            AddFolderAssets(settings, bgGroup, "Assets/Art/Backgrounds", "backgrounds", "t:Texture2D");
+            var loadingGroup = GetGroup(settings, "Loading");
+            AddFolderAssets(settings, loadingGroup, "Assets/Art/Loading", "loading", "t:Texture2D");
+            var fontsGroup = GetGroup(settings, "Fonts");
+            AddFolderAssets(settings, fontsGroup, "Assets/Art/Fonts", "fonts", "t:TMP_FontAsset");
+
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
-            Debug.Log("[AddressablesSetup] groups synced: UI_Core, CardArt_CORE, CardArt_EMBERFALL, CardData");
+            Debug.Log("[AddressablesSetup] groups synced: UI_Core, CardArt_CORE, CardArt_EMBERFALL, CardData, Backgrounds, Loading, Fonts");
         }
 
         private static void MigrateCardDataOutOfResources()
