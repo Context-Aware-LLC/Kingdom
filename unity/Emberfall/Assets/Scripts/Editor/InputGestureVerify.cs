@@ -105,45 +105,74 @@ namespace Emberfall.Editor
                 }
             }
 
-            /// <summary>Feed a sequence of synthetic pointer frames and step the router.</summary>
+            /// <summary>Feed a sequence of synthetic pointer frames and step the router — one Update per frame.</summary>
             public void StepFrames(params PointerSample[] frames)
             {
-                Router.Pointer.QueueSyntheticFrames(frames);
-                // Manually call Update (since there's no MonoBehaviour loop).
                 var updateMethod = typeof(InputRouter).GetMethod(
                     "Update", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (updateMethod != null)
-                    updateMethod.Invoke(Router, null);
-                // Drain the queue to capture any intents that were submitted.
+                foreach (var frame in frames)
+                {
+                    Router.Pointer.QueueSyntheticFrames(frame);
+                    if (updateMethod != null)
+                        updateMethod.Invoke(Router, null);
+                }
                 StartCapturingIntents();
             }
 
-            /// <summary>Simple screen-to-subject mapping for headless tests. Maps regions to hand/board/hero.</summary>
+            /// <summary>
+            /// Screen-to-subject mapping for headless tests.
+            ///
+            /// Region map (all coordinates in screen pixels):
+            ///   x in [  0,  50) → hand card 0 (Vanilla)
+            ///   x in [ 50, 100) → hand card 1 (Targeted)
+            ///   x in [100, 400), y  &lt;  200 → our hero (x &lt; 250) / our hero power (x ≥ 250)
+            ///   x in [100, 400), y in [200, 400) → our board slot 0
+            ///   x in [100, 400), y ≥ 400 → our board minion 0
+            ///   x in [400, 700), y  &lt;  200 → enemy hero
+            ///   x in [400, 700), y ≥ 200 → enemy board minion 0
+            ///   x ≥ 700 → empty space (PointerSubject.None)
+            /// </summary>
             private (PointerSubject subject, Transform transform, CardPresenter presenter) ProbeScreenPosition(Vector2 screenPos)
             {
-                // Simple region mapping: x < 200 = hand, x >= 200 = board, y < 150 = hero/hero power
-                if (screenPos.x < 200)
+                float x = screenPos.x, y = screenPos.y;
+
+                // Hand zone
+                if (x < 100)
                 {
-                    // Hand cards: map to first/second card in hand
-                    if (State.Players[0].Hand.Count > 0)
-                        return (PointerSubject.OfCard(State.Players[0].Hand[0].Id, P0Id, Zone.Hand), null, null);
+                    int idx = x < 50 ? 0 : 1;
+                    var hand = State.Players[0].Hand;
+                    if (hand.Count > idx)
+                        return (PointerSubject.OfCard(hand[idx].Id, P0Id, Zone.Hand), null, null);
                     return (PointerSubject.None, null, null);
                 }
 
-                if (screenPos.y < 150)
+                // Friendly side
+                if (x < 400)
                 {
-                    // Hero or hero power zone
-                    if (screenPos.x < 300)
-                        return (PointerSubject.OfHero(_model.HeroIdOf(P0Id), P0Id), null, null);
-                    else
-                        return (PointerSubject.OfHeroPower(P0Id), null, null);
+                    if (y < 200)
+                        return x < 250
+                            ? (PointerSubject.OfHero(_model.HeroIdOf(P0Id), P0Id), null, null)
+                            : (PointerSubject.OfHeroPower(P0Id), null, null);
+                    if (y < 400)
+                        return (PointerSubject.OfBoardSlot(P0Id, 0), null, null);
+                    // Friendly board minion
+                    var board = State.Players[0].Board;
+                    if (board.Count > 0)
+                        return (PointerSubject.OfCard(board[0].Id, P0Id, Zone.Board), null, null);
+                    return (PointerSubject.None, null, null);
                 }
 
-                // Board zone
-                if (State.Players[0].Board.Count > 0)
-                    return (PointerSubject.OfCard(State.Players[0].Board[0].Id, P0Id, Zone.Board), null, null);
+                // Enemy side
+                if (x < 700)
+                {
+                    if (y < 200)
+                        return (PointerSubject.OfHero(_model.HeroIdOf(_model.EnemyId()), _model.EnemyId()), null, null);
+                    var board = State.Players[1].Board;
+                    if (board.Count > 0)
+                        return (PointerSubject.OfCard(board[0].Id, _model.EnemyId(), Zone.Board), null, null);
+                    return (PointerSubject.None, null, null);
+                }
 
-                // Empty space
                 return (PointerSubject.None, null, null);
             }
 
@@ -155,33 +184,31 @@ namespace Emberfall.Editor
 
         // ── Full-stack test cases ───────────────────────────────────────────────────
 
+        // Probe coordinate landmarks (see InputRouterHarness.ProbeScreenPosition for the full map):
+        //   (25, 200)  → hand card 0 (Vanilla)          (75, 200)  → hand card 1 (Targeted)
+        //   (200, 300) → our board slot 0                (200, 500) → our board minion 0
+        //   (150, 100) → our hero                        (300, 100) → our hero power
+        //   (500, 300) → enemy board minion 0            (500, 100) → enemy hero
+        //   (750, 300) → empty space (PointerSubject.None)
+        // DragThresholdPx = 10 when Screen.dpi == 0 (headless); we cross it by moving ≥ 10 px.
+
         private static void FullStackDragThreshold()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
-            InstanceId hand = s.Players[0].Hand[0].Id;
 
-            // Press at (10, 10), move to (15, 11): total distance ~5px, below drag threshold (~6-10px).
-            // Should arm as Pressed, not transition to Dragging.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(10, 10)),
-                new PointerSample(PointerPhase.Held, new Vector2(15, 11))
-            );
-            Check("press below drag threshold stays Pressed (not Dragging)",
-                harness.SubmittedIntents.Count == 0);  // no intent submitted yet
+            // Press hand card 0 and move 4 px — below the 10 px threshold. Should stay Pressed.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed, new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,    new Vector2(29, 200)));
+            Check("press below drag threshold: no intent yet", harness.SubmittedIntents.Count == 0);
 
-            // Move far enough: distance ~15px, crosses threshold. Should transition to Dragging.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Held, new Vector2(30, 10))
-            );
-            Check("drag crossing threshold does not auto-submit",
-                harness.SubmittedIntents.Count == 0);
+            // Move exactly 10 px more (total ≥ threshold) — transitions to Dragging, still no submit.
+            harness.StepFrames(new PointerSample(PointerPhase.Held, new Vector2(25, 210)));
+            Check("drag threshold crossed: no auto-submit", harness.SubmittedIntents.Count == 0);
 
-            // Release: should submit the intent.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Released, new Vector2(30, 10))
-            );
-            Check("release after crossing threshold submits intent",
+            // Release on our board slot 0 — Dragging resolves to PlayCardIntent.
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("release on board slot after drag submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -191,25 +218,16 @@ namespace Emberfall.Editor
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
-            InstanceId hand = s.Players[0].Hand[0].Id;
 
-            // Press and release at the same spot: a tap. Should arm, not submit yet.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100))
-            );
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
-            );
+            // Tap hand card 0: press + release without crossing threshold → ArmedByTap, no submit.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
             Check("tap arms without submitting", harness.SubmittedIntents.Count == 0);
 
-            // Second tap on the same card resolves it.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100))
-            );
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
-            );
-            Check("second tap on armed card submits intent",
+            // While armed, press is ignored; release on board slot resolves to PlayCardIntent.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("tap-armed card: release on board slot submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -219,16 +237,13 @@ namespace Emberfall.Editor
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
-            InstanceId hand = s.Players[0].Hand[0].Id;
 
-            // Press, drag, release at a board slot.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(50, 50)),
-                new PointerSample(PointerPhase.Held, new Vector2(80, 50)),   // cross threshold
-                new PointerSample(PointerPhase.Held, new Vector2(120, 50)),  // drag further
-                new PointerSample(PointerPhase.Released, new Vector2(120, 50))
-            );
-            Check("drag sequence through threshold submits on release",
+            // Press hand card 0, drag past threshold, release on board slot.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 215)));  // 15 px > threshold
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 220)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("drag-and-drop on board slot submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -238,29 +253,21 @@ namespace Emberfall.Editor
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
-            InstanceId hand0 = s.Players[0].Hand[0].Id;
-            InstanceId hand1 = s.Players[0].Hand[1].Id;
 
-            // Tap hand card 0: arms.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100)),
-                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
-            );
-            Check("first tap arms", harness.SubmittedIntents.Count == 0);
+            // Tap hand card 0 (Vanilla): arms.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
+            Check("first tap arms vanilla card", harness.SubmittedIntents.Count == 0);
 
-            // Tap hand card 1 (different card): should reselect, not submit. Then tap it again to resolve.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(150, 100)),
-                new PointerSample(PointerPhase.Released, new Vector2(150, 100))
-            );
-            Check("tap another card reselects without submitting",
-                harness.SubmittedIntents.Count == 0);
+            // Tap hand card 1 (Targeted): different card — reselects, does NOT submit.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            Check("tap different card reselects without submitting", harness.SubmittedIntents.Count == 0);
 
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(150, 100)),
-                new PointerSample(PointerPhase.Released, new Vector2(150, 100))
-            );
-            Check("tap armed card again submits",
+            // Now armed on the targeted card; release on an enemy minion resolves to PlayCardIntent.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("release on enemy after reselect submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -271,19 +278,15 @@ namespace Emberfall.Editor
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
 
-            // Tap-arm, then press on empty space (gesture cancellation).
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(100, 100)),
-                new PointerSample(PointerPhase.Released, new Vector2(100, 100))
-            );
+            // Tap-arm hand card 0.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
             Check("tap arms", harness.SubmittedIntents.Count == 0);
 
-            // Release on empty space (PointerSubject.None) should cancel, not submit.
-            harness.StepFrames(
-                new PointerSample(PointerPhase.Pressed, new Vector2(500, 500)),  // empty space
-                new PointerSample(PointerPhase.Released, new Vector2(500, 500))
-            );
-            Check("press on empty space cancels armed gesture",
+            // Release on empty space while armed → TryResolve(None) → cancel, no intent.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 300)));
+            Check("release on empty space cancels armed gesture without submitting",
                 harness.SubmittedIntents.Count == 0);
 
             harness.Cleanup();
