@@ -1,0 +1,24 @@
+{
+    "name": "Unity.Addressables.Android.Editor.Tests",
+    "references": [
+        "Unity.ResourceManager",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.Addressables.Android.Editor",
+        "Unity.Addressables.Android",
+        "Unity.Addressables.Android.Tests"
+    ],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
