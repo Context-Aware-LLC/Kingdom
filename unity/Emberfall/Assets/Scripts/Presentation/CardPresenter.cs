@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using TMPro;
@@ -248,11 +249,18 @@ namespace Emberfall.Presentation
             if (!string.IsNullOrEmpty(_def.CardText))
             {
                 if (sb.Length > 0) sb.Append('\n');
-                sb.Append(_def.CardText);
+                sb.Append(BoldInlineKeywordBrackets(_def.CardText));
             }
             bodyLabel.text = sb.ToString();
             bodyLabel.gameObject.SetActive(sb.Length > 0);
         }
+
+        private static readonly Regex InlineKeywordBracket = new(@"\[([^\]]+)\]", RegexOptions.Compiled);
+
+        // Authored cardText spells keyword triggers inline as "[Battlecry] ..." — bold them in
+        // place instead of showing the raw brackets (keyword-visual-language decision 2026-07-17).
+        private static string BoldInlineKeywordBrackets(string text) =>
+            InlineKeywordBracket.Replace(text, $"<size={FrameRarityCatalog.KeywordLeadPct}%><b>$1</b></size>");
 
         // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by
         // design; humanize for the card face until the full display layer lands.
