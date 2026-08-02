@@ -60,6 +60,57 @@ namespace Emberfall.Editor
             Report(BuildPipeline.BuildPlayer(options), DevOutputPath);
         }
 
+        private const string AndroidOutputPath = "Builds/Android/Emberfall.apk";
+
+        // Keystore is a debug signing config checked in alongside the source.
+        // Alias, store password, and key password are the Android debug defaults.
+        // Do not use this keystore for Play Store submissions.
+        private const string KeystorePath   = "keystore/debug.keystore";
+        private const string KeystorePass   = "android";
+        private const string KeyAliasName   = "androiddebugkey";
+        private const string KeyAliasPass   = "android";
+
+        /// <summary>
+        /// Headless Android build entry point (EF-060): IL2CPP + ARM64 APK via the Android
+        /// Addressables profile. Invoke via <c>-executeMethod Emberfall.Editor.EmberfallBuild.BuildAndroid
+        /// -buildTarget android</c> so the build target is already Android at startup.
+        ///
+        /// <para>IL2CPP and ARM64 are forced explicitly here so the build is deterministic
+        /// regardless of whatever the Editor's per-user overrides happen to be.  The keystore
+        /// is the checked-in debug config at <c>keystore/debug.keystore</c>; never use it
+        /// for Play Store submissions.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Android APK (content + player, IL2CPP ARM64)")]
+        public static void BuildAndroid()
+        {
+            SyncSceneList();
+
+            // Force IL2CPP + ARM64 for this build regardless of editor overrides.
+            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,
+                ScriptingImplementation.IL2CPP);
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+
+            // Debug signing config checked in as config, not secret.
+            PlayerSettings.Android.keystoreName   = KeystorePath;
+            PlayerSettings.Android.keystorePass   = KeystorePass;
+            PlayerSettings.Android.keyaliasName   = KeyAliasName;
+            PlayerSettings.Android.keyaliasPass   = KeyAliasPass;
+            PlayerSettings.Android.useCustomKeystore = true;
+
+            BuildAndroidAddressables();
+
+            Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
+            var options = new BuildPlayerOptions
+            {
+                scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                locationPathName   = AndroidOutputPath,
+                target             = BuildTarget.Android,
+                targetGroup        = BuildTargetGroup.Android,
+                options            = BuildOptions.None,
+            };
+            Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
+        }
+
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]
         public static void BuildWindows()
         {
