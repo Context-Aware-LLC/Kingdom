@@ -14,22 +14,27 @@ cardsets/
   M1.cards.snapshot.json    pinned card data the fixtures replay against (§3.3)
 ```
 
-## Current fixtures (M1 foundation)
+## Current fixtures
 
 | Fixture | Covers |
 |---|---|
 | `opening_pyra_maren` | The RNG-dense opening: coin flip → shuffle → 3/4 deal → `token_spark_coin` insertion → mulligan → first start-of-turn draw. |
 | `full_match_pyra_wins` | A complete match to a win condition (turn-loop spine → concede → `Player0Win`). |
+| `deathrattle_cascade` | Death-resolution batch ordering (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7`): both players trade identical 2/2 DEATHRATTLE minions, so two `ON_DEATH` effects fire in active-player-first board order. Baked by `CascadeFixtureGenerator` ([Explicit]). |
+| `turn_end_toll` | `ON_TURN_END` (EF-012): that it resolves at all, that it fires on **both** players' turn ends rather than only its controller's, and that the observer sweep order flips with the active seat. Baked by `TurnEndTollFixtureGenerator` ([Explicit]). |
 
-## Tracked gap — `deathrattle_cascade`
+Fixtures whose scenario is scripted rather than hand-written have a paired `[Explicit]` generator in
+this directory — never run by CI. Run one locally to re-produce and re-bake its fixture, then commit
+the resulting `*.replay.json` + `*.rebaseline.md` pair.
 
-`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7` requires a third fixture, `deathrattle_cascade`, covering death-resolution batch
-ordering. It depends on the **effect interpreter + combat** (`DEAL_DAMAGE`, `SUMMON`, Deathrattle), which
-is **M1 Phase B** (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md §3 Phase B`) — not part of this determinism-foundation drop (steps 1–5:
-firewall, RNG, canonical serialization, golden-replay harness, CI). The harness, hasher, and CI gate are
-in place now; this fixture lands **with** the interpreter under the standing rule **"no new effect without
-a golden."** Until then the gate is green on the opening + full-match fixtures, and the harness is ready to
-accept the third the moment combat exists.
+## The one fixture-only card
+
+`M1.cards.snapshot.json` carries `test_turn_end_toller`, which exists **only** to give `turn_end_toll`
+an `ON_TURN_END` subscriber — it is `collectible: false` and deliberately absent from the shipping
+`cards/**` tree. Appending a definition to the snapshot is inert for the other fixtures (decks are
+explicit id lists; the hasher walks game state, never the card db), but that is a claim the
+unrebaselined run is what actually proves. **If you add another fixture-only card, append it — never
+edit an existing row**, and re-run the full gate unrebaselined before committing.
 
 ## Rebaselining (never automatic)
 

@@ -69,16 +69,20 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Five card triggers are NO-GO until implemented
+## Four card triggers are NO-GO until implemented
 
 **Do not author a card using any of these.** They are declared in `Enums.cs`'s `Trigger` enum
 and **raised nowhere in the engine**. A card using one parses, validates, loads, and then does
 nothing — forever, silently, with no error.
 
-> `ON_TURN_START` · `ON_TURN_END` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
+> `ON_TURN_START` · `ON_HEAL` · `ON_SPELL_CAST` · `AURA`
 
-**The six that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
-`ON_DAMAGED`.
+**The seven that work:** `ON_PLAY`, `ON_CAST`, `ON_DEATH`, `ON_FRIENDLY_SUMMON`, `ON_ATTACK`,
+`ON_DAMAGED`, `ON_TURN_END`.
+
+**`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
+permanent on both boards, not "at the end of *your* turn". A card that should only fire on its
+controller's turn end cannot be expressed today.
 
 **`ON_ATTACK` is the trap** — it is raised for **weapons only**, so it is *valid* on a weapon
 and *dead* on a minion. A membership check alone will not catch that.

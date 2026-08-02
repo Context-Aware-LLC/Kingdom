@@ -277,9 +277,16 @@ namespace Emberfall.Core
             buf.Emit(VfxEvent.onTurnEnd, source: state.Players[activeSeat].Hero.Id);
             state.Phase = TurnPhase.EndOfTurn;
 
-            // EF-012 seam: raise Trigger.ON_TURN_END here — the active player still owns the turn and the
-            // phase is EndOfTurn. Nothing is raised yet, so the Drain below is a no-op (empty queue, no
-            // corpses at a settled turn boundary) and this whole block is hash-neutral until EF-012 lands.
+            // EF-012: ON_TURN_END fires here — the active player still owns the turn and the phase is
+            // EndOfTurn, so a turn-end effect sees the board the turn actually ended on.
+            //
+            // SCOPE IS BOTH SIDES, not just the active player's permanents. GDD §1b step 3 says "fire all
+            // ON_TURN_END effects", and RaiseObservers is the engine's one observer sweep — the same call
+            // that carries ON_FRIENDLY_SUMMON — so a controller filter here would be a new, unspecified
+            // rule. `excluded: null` because nothing "causes" a turn to end; unlike a summon there is no
+            // source card to leave out. Order is RaiseObservers' canonical active-side-first, board
+            // left→right sweep, which is what makes this replay-stable.
+            interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
 
             // The end-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE the seat
             // flip and the incoming StartTurnSequence, whose thaw loop resets SummonedThisTurn /
