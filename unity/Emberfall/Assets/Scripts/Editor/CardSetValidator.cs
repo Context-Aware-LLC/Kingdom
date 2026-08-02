@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
@@ -6,16 +8,32 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Batch "validate entire card set" (dev-docs/pipelines/card-authoring-and-import.md:21), scoped down for M1:
-    /// logs a grouped console report rather than emitting CSV/JUnit artifacts (no CI runner wired
-    /// to this yet — that's the not-yet-built headless CardCI entry point from §7).
+    /// Batch "validate entire card pool" (dev-docs/pipelines/card-authoring-and-import.md:21):
+    /// loads M1+M2+M3 and logs a grouped console report.
     /// </summary>
     public static class CardSetValidator
     {
+        private static readonly string[] SetPaths =
+        {
+            CardJsonRowIO.DefaultM1JsonPath,
+            "Assets/CardData/M2.cards.json",
+            "Assets/CardData/M3.cards.json",
+        };
+
         public static void RunAndLog()
         {
-            var rows = CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultM1JsonPath);
-            var defs = rows.Select(r => r.def).ToList();
+            var allRows = new List<(CardDefinition def, string json)>();
+            foreach (var path in SetPaths)
+            {
+                if (!File.Exists(path))
+                {
+                    Debug.LogWarning($"[CardValidate] Skipping missing set: {path}");
+                    continue;
+                }
+                allRows.AddRange(CardJsonRowIO.LoadRows(path));
+            }
+
+            var defs = allRows.Select(r => r.def).ToList();
             var db = new InMemoryCardDatabase(defs);
             var validator = new CardValidator();
             var linter = new ContentLinter();

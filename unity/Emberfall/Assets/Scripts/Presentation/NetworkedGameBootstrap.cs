@@ -463,11 +463,7 @@ namespace Emberfall.Presentation
 
         private static ICardDatabase LoadCardDatabase()
         {
-            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<TextAsset>("cards/M1.cards");
-            TextAsset asset = handle.WaitForCompletion();
-            if (asset == null)
-                throw new Exception("cards/M1.cards not found in Addressables — run Emberfall/Addressables/Setup Groups + Migrate Card Data");
-            return new JsonCardDatabase(asset.text);
+            return CardDatabaseLoader.Load();
         }
 
         /// <summary>

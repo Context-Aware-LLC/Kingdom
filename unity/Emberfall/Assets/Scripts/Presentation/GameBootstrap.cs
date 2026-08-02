@@ -13,7 +13,7 @@ namespace Emberfall.Presentation
     /// Wires: JsonCardDatabase → MatchSetup → intent sources → MatchRunner
     ///        → BoardController for visual card tracking.
     ///
-    /// Card data: Assets/CardData/M1.cards.json via Addressables address "cards/M1.cards".
+    /// Card data: M1+M2+M3 via CardDatabaseLoader (Addressables addresses "cards/M*.cards").
     ///
     /// Phase C step 3 scene setup — add all components to one GameObject in a new scene:
     ///   • MatchRunner
@@ -334,14 +334,8 @@ namespace Emberfall.Presentation
 
         private static ICardDatabase LoadCardDatabase()
         {
-            // CardData Addressables group (M2 D1 — card data no longer lives in Resources/).
             // Synchronous on purpose: this is the boot path, and Start() has no async context.
-            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<TextAsset>("cards/M1.cards");
-            TextAsset asset = handle.WaitForCompletion();
-            if (asset == null)
-                throw new System.Exception(
-                    "cards/M1.cards not found in Addressables — run Emberfall/Addressables/Setup Groups + Migrate Card Data");
-            return new JsonCardDatabase(asset.text);
+            return CardDatabaseLoader.Load();
         }
     }
 }

@@ -1,4 +1,4 @@
-Alright, man. <Project>
+<Project>
   <!--
     Unity's UPM "file:" package references point straight at these project folders and
     recursively scan every .cs/.dll under them. Default obj/bin output sitting inside
