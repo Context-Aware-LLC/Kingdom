@@ -25,6 +25,9 @@ may narrow an agent's scope or forbid publishing; when they do, follow the stric
   `git rebase origin/master`.
 - Push the issue branch and open a pull request against `master`. Never merge the pull request,
   push directly to `master`, or force-push a shared branch. The merge is Sam's checkpoint.
+- If role-specific instructions forbid pushing or opening a pull request, hand the local commit to
+  the named lead. That lead owns the rebase, branch publication, and mandatory pull request before
+  integration; a local-only handoff never bypasses CI.
 - `agent/**` is deliberately absent from the workflow's `push` branches. For an `agent/**`
   branch, opening a pull request is mandatory: the `pull_request` workflow is its only cloud CI
   gate and reruns on every subsequent push. `feat/**` and `fix/**` also run CI on push before a
