@@ -29,14 +29,25 @@ namespace Emberfall.Net.Server
 
         private sealed class Seat
         {
-            public Seat(PlayerId player, string token)
+            public Seat(PlayerId player, string token, string displayName)
             {
                 Player = player;
                 ReconnectToken = token;
+                DisplayName = displayName;
             }
 
             public PlayerId Player { get; }
             public string ReconnectToken { get; }
+
+            /// <summary>
+            /// What the OPPOSITE seat's nameplate renders (VULN-002 §4.2). Server-authored or
+            /// server-checked, never raw peer input: <c>MatchGate</c> has already run
+            /// <c>PlayerName.Check</c> and substituted the seat id on failure by the time this is set.
+            /// <b>The invariant this field exists to hold is that nothing unvalidated can reach
+            /// <c>OpponentInfo</c></b> — if you find yourself assigning to it from a wire message,
+            /// that invariant is the thing you are breaking.
+            /// </summary>
+            public string DisplayName { get; }
             public IServerConnection? Conn;
             public ConnectionPolicyState? Link;
             /// <summary>Consecutive clock-fired auto-end-turns; resets on any voluntary accepted intent (§7, RC F11).</summary>
@@ -80,12 +91,20 @@ namespace Emberfall.Net.Server
         /// rules-level tests, which have no identity and no interest in it, keep constructing a
         /// session in one line. The defaults are the honest ones: nothing recorded, nobody
         /// attributed — see <see cref="MatchAttribution.None"/>.
+        ///
+        /// <para><paramref name="p0Name"/>/<paramref name="p1Name"/> are optional for the same
+        /// reason and default to the <c>PlayerId</c>, which is what this sent before EF-073. They
+        /// must ALREADY have passed <c>PlayerName.Check</c> — this constructor does not re-check
+        /// them, because the caller that reads the wire is the one that knows the value is peer
+        /// input. Today that caller is <c>MatchGate</c>; a second one inherits the obligation
+        /// (VULN-002 §4.1).</para>
         /// </summary>
         public MatchSession(
             MatchId id, ulong seed, ServerOptions opts, ITimeSource time,
             ICardDatabase db, MatchSetup setup, IReplayStore replay,
             PlayerId p0, PlayerId p1,
-            ITelemetrySink? telemetry = null, MatchAttribution? attribution = null)
+            ITelemetrySink? telemetry = null, MatchAttribution? attribution = null,
+            string? p0Name = null, string? p1Name = null)
         {
             _id = id;
             _seed = seed;
@@ -97,8 +116,8 @@ namespace Emberfall.Net.Server
             _attribution = attribution ?? MatchAttribution.None;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
-            _seats[0] = new Seat(p0, MintToken());
-            _seats[1] = new Seat(p1, MintToken());
+            _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!);
+            _seats[1] = new Seat(p1, MintToken(), string.IsNullOrEmpty(p1Name) ? p1.Value : p1Name!);
         }
 
         public MatchId Id => _id;
@@ -141,7 +160,9 @@ namespace Emberfall.Net.Server
                 var opp = _seats[1 - seat];
                 Send(seat, new MatchStartMsg(
                     me.Player, seat, _opts.EngineContractVersion,
-                    new OpponentInfo(opp.Player, opp.Player.Value),
+                    // VULN-002 §4.2: opp.DisplayName, never a value read off a wire message here.
+                    // The Seat holds it precisely so this line cannot be the place a raw name enters.
+                    new OpponentInfo(opp.Player, opp.DisplayName),
                     SnapshotMsg.Of(_host.Snapshot(me.Player)),
                     me.ReconnectToken));
             }

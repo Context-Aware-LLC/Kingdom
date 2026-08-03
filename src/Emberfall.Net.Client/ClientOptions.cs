@@ -62,6 +62,22 @@ namespace Emberfall.Net.Client
         public string Platform { get; init; } = "";
         public string BuildId { get; init; } = "";
 
+        /// <summary>
+        /// This device's display name, sent in the hello for the opponent's nameplate (EF-073).
+        /// Optional — empty is the honest first-run state ("never set") and never a refused connect.
+        ///
+        /// <para><b>Pass the raw profile name, not a UI placeholder.</b> "You", "Opponent" and
+        /// "Unnamed player" are strings our own chrome writes, so the server RESERVES them
+        /// (VULN-002 §4.3) and will refuse one — sending a placeholder here gets the seat id on the
+        /// opponent's plate, which is the same thing an empty name gets, only after a detour. The
+        /// fallback is the renderer's job.</para>
+        ///
+        /// <para><b>Setting this does not make it true.</b> The server re-runs
+        /// <c>PlayerName.Check</c> on arrival and substitutes its own fallback if this fails; that
+        /// is the check that counts, and this end cannot make a name legal by asserting it.</para>
+        /// </summary>
+        public string DisplayName { get; init; } = "";
+
         /// <summary>The contract version this client was built against, sent in the hello so the
         /// server can compare (it previously never learned the client's).</summary>
         public string ContractVersion { get; init; } = "interfaces.v3";

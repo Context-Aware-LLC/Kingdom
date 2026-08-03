@@ -27,7 +27,8 @@ namespace Emberfall.Net.Protocol.Tests
                 DeviceToken: "8f14e45fce8f4b6ea1c2d3e4f5a6b7c8",
                 ClientContractVersion: "interfaces.v3",
                 Platform: "windows",
-                BuildId: "m2-alpha-7");
+                BuildId: "m2-alpha-7",
+                DisplayName: "Sam Ember");
 
             var res = ProtocolCodec.Decode(ProtocolCodec.Encode(sent, M, 0));
 
@@ -81,6 +82,27 @@ namespace Emberfall.Net.Protocol.Tests
             Assert.That(hello.DeviceToken, Is.EqualTo("abc"));
             Assert.That(hello.Platform, Is.Empty);
             Assert.That(hello.BuildId, Is.Empty);
+            Assert.That(hello.DisplayName, Is.Empty,
+                "an absent name is the first-run state, not a decode failure");
+        }
+
+        [Test]
+        public void Hello_Decodes_A_Hostile_DisplayName_Without_Judging_It()
+        {
+            // EF-073/VULN-002. The codec's gate is the tag registry; whether a value is ACCEPTABLE
+            // is the server's policy gate (design §5, two gates). This asserts the split on purpose:
+            // if a future change makes the codec refuse a bad name, the CLIENT — which decodes with
+            // this same method — starts enforcing the server's policy, and MatchGate's check stops
+            // being the thing that is tested. The name below is refused by PlayerName.Check; it must
+            // still DECODE, and MatchGate is what must then drop it.
+            var bytes = System.Text.Encoding.UTF8.GetBytes(
+                "{\"v\":1,\"matchId\":\"m\",\"seq\":0,\"type\":\"hello\",\"body\":{\"deviceToken\":\"abc\"," +
+                "\"displayName\":\"<size=400%>PWNED\"}}");
+
+            var res = ProtocolCodec.Decode(bytes);
+
+            Assert.That(res.Ok, Is.True, $"decode failed: {res.Error} {res.Detail}");
+            Assert.That(((HelloMsg)res.Message!).DisplayName, Is.EqualTo("<size=400%>PWNED"));
         }
     }
 }

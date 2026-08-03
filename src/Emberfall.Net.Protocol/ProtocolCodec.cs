@@ -85,6 +85,7 @@ namespace Emberfall.Net.Protocol
                     w.Name("clientContractVersion"); w.Str(m.ClientContractVersion);
                     w.Name("platform"); w.Str(m.Platform);
                     w.Name("buildId"); w.Str(m.BuildId);
+                    w.Name("displayName"); w.Str(m.DisplayName);
                     w.EndObject();
                     break;
                 case IntentMsg m:
@@ -270,6 +271,15 @@ namespace Emberfall.Net.Protocol
         /// The device token is REQUIRED and must be non-empty — an identity-less hello is the exact
         /// hole C-G1-8 closes, so it fails here rather than producing an unattributable match.
         /// Provenance fields are optional (absent ⇒ empty): they feed the funnel, not identity.
+        ///
+        /// <para><b><c>displayName</c> is decoded, NOT validated, and that is deliberate</b>
+        /// (VULN-002/EF-073). This is the codec, whose gate is the tag registry; whether a decoded
+        /// value is <i>acceptable</i> is the server's policy gate — the same two-gate split the
+        /// intent allowlist uses (design §5). Refusing a bad name here would also refuse it for the
+        /// client, which decodes with this same method and has no business enforcing the server's
+        /// policy. <c>MatchGate</c> runs <c>PlayerName.Check</c> on it; an absent name is empty,
+        /// which is the honest encoding of "this player never set one" and never a refused connect.
+        /// The 16 KiB frame ceiling is what bounds the string at this layer.</para>
         /// </summary>
         private static DecodeResult ReadHello(JVal body, MatchId matchId, ulong seq)
         {
@@ -279,7 +289,8 @@ namespace Emberfall.Net.Protocol
 
             return DecodeResult.Success(
                 new HelloMsg(deviceToken, OptStr(body, "clientContractVersion"),
-                             OptStr(body, "platform"), OptStr(body, "buildId")),
+                             OptStr(body, "platform"), OptStr(body, "buildId"),
+                             OptStr(body, "displayName")),
                 matchId, seq);
         }
 

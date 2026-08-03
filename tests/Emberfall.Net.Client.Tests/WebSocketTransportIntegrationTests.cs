@@ -73,9 +73,30 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(misattributions, Is.EqualTo(0), "no clock race in a promptly-played match");
 
                 // The server's replay log reached disk with the outcome footer (proves the real core ran).
+                //
+                // POLLED, not read once, because the client reaching Ended does NOT imply the footer
+                // is on disk: MatchSession broadcasts MatchEndMsg and only writes _replay.Complete on
+                // the NEXT line. So the ordering under test is "the server tells you, THEN it records"
+                // — and the two clients above are awaiting the telling. Read immediately and a loaded
+                // runner loses that race: the file holds the header and every intent, but no footer.
+                // Observed under the Stage 3 four-assembly batch on CI, green 5/5 locally, which is
+                // exactly the starvation signature ade48e2 dealt with for the sibling fixture.
+                //
+                // Widening the window cannot mask a real regression: a server that never completes
+                // the replay still fails, 5s later. What it removes is a scheduling assumption the
+                // test never meant to make.
                 string[] logs = Directory.GetFiles(replays, "*.jsonl");
                 Assert.That(logs, Has.Length.EqualTo(1));
-                Assert.That(File.ReadAllText(logs[0]), Does.Contain("\"outcome\""));
+
+                string replayText = "";
+                for (int attempt = 0; attempt < 100; attempt++)
+                {
+                    replayText = File.ReadAllText(logs[0]);
+                    if (replayText.Contains("\"outcome\"")) break;
+                    await Task.Delay(50);
+                }
+                Assert.That(replayText, Does.Contain("\"outcome\""),
+                    "the server must record the outcome footer after announcing the match end");
             }
             finally
             {

@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core;
+using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Decks;
@@ -98,6 +99,10 @@ namespace Emberfall.Net.Server.Transport
             MatchmakingTicket Ticket,
             WebSocketConnection Conn,
             AccountId Account,
+            /// <summary>Already through PlayerName.Check (VULN-002 §4.1). Empty means "use the
+            /// server-assigned fallback" — either the player never set one or theirs was refused,
+            /// and the two are deliberately indistinguishable from here down.</summary>
+            string DisplayName,
             TaskCompletionSource<Seating?> Seated);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
@@ -154,7 +159,24 @@ namespace Emberfall.Net.Server.Transport
             //    is a permanent back door into the account it was meant to protect.
             var account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
 
-            Seating? seating = await PairAsync(conn, account, ct);
+            // ── VULN-002 §4 (EF-073). THIS IS THE HALF THAT COUNTS. hello.DisplayName is a string
+            //    the PEER chose and our client renders; their client's copy of PlayerName.Check is
+            //    advice they can decline by patching the client or editing profile.json. So it is
+            //    re-checked here, on arrival, with the IDENTICAL predicate — Emberfall.Core.Collection
+            //    is UnityEngine-free for exactly this reason, and a re-implementation here would be a
+            //    second definition free to drift on a length or a category.
+            //
+            //    A refusal is a FALLBACK, not a closed socket: an empty name is the honest first-run
+            //    state, and dropping a player's connect over a name they may not know is bad would be
+            //    a support incident for no security gain. The fallback is server-authored from a
+            //    closed set (the seat id, minted in StartMatch) — see NameForSeat there.
+            //
+            //    Note what is NOT done: the name is not stored, forwarded, or logged before it passes.
+            //    An unvalidated name echoed anywhere is the server laundering peer input into
+            //    trusted-looking state (§4.2).
+            string checkedName = PlayerName.Check(hello.DisplayName).Normalized;   // "" when refused
+
+            Seating? seating = await PairAsync(conn, account, checkedName, ct);
             if (seating is null)
             {
                 conn.Close(1013, "server full");
@@ -198,13 +220,13 @@ namespace Emberfall.Net.Server.Transport
         }
 
         private async Task<Seating?> PairAsync(
-            WebSocketConnection conn, AccountId account, CancellationToken ct)
+            WebSocketConnection conn, AccountId account, string displayName, CancellationToken ct)
         {
             var ticket = new MatchmakingTicket(
                 Guid.NewGuid().ToString("N"),
                 _ratingForAccount(account));
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var waiter = new WaitingPlayer(ticket, conn, account, mySeating);
+            var waiter = new WaitingPlayer(ticket, conn, account, displayName, mySeating);
 
             lock (_lock)
             {
@@ -281,6 +303,21 @@ namespace Emberfall.Net.Server.Transport
             }
         }
 
+        /// <summary>
+        /// The nameplate string for a seat: the player's own name once it has passed
+        /// <c>PlayerName.Check</c>, otherwise the server-minted <c>PlayerId</c> (VULN-002 §4.1's
+        /// "server-assigned fallback").
+        ///
+        /// <para><b>The fallback is deliberately the seat id and not a friendly word.</b> "Player 1"
+        /// or "Opponent" would be a string the server authors into a nameplate that ALSO renders
+        /// peer-chosen names — so the moment one player is called "Opponent" by us, "Opponent" is a
+        /// name worth claiming, and the reserved list is doing work it should not have to. The seat
+        /// id is ugly on purpose: it is unmistakably not a chosen name. The CLIENT substitutes its
+        /// own placeholder for display; that is a presentation decision and it belongs there.</para>
+        /// </summary>
+        private static string NameForSeat(string checkedName, PlayerId seat)
+            => checkedName.Length > 0 ? checkedName : seat.Value;
+
         private void StartMatch(WaitingPlayer first, WaitingPlayer second)
         {
             bool committed = false;
@@ -302,7 +339,8 @@ namespace Emberfall.Net.Server.Transport
 
                 var session = new MatchSession(
                     id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1,
-                    _telemetry, attribution);
+                    _telemetry, attribution,
+                    NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1));
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {

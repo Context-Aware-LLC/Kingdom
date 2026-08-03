@@ -91,6 +91,39 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(PlayerName.Check(null!).IsValid, Is.False);
         }
 
+        [TestCase("You")]
+        [TestCase("Opponent")]
+        [TestCase("AI Opponent")]
+        [TestCase("Unnamed player")]
+        [TestCase("Emberfall")]
+        [TestCase("SYSTEM")]
+        [TestCase("system")]              // case is not an escape hatch
+        [TestCase("  OPPONENT  ")]        // nor is whitespace the normalizer would strip anyway
+        [TestCase("unnamed   player")]    // nor is a whitespace run that collapses onto a reserved name
+        public void Check_refuses_a_name_our_own_chrome_authors(string raw)
+        {
+            // VULN-002 §4.3. Every character in these is legal, so no character-class rule above can
+            // reach them — a nameplate reading "SYSTEM" is an impersonation primitive made entirely
+            // of allowed letters. This is also the one refusal that is not about the name being
+            // unusable, which is why it carries its own message.
+            var check = PlayerName.Check(raw);
+            Assert.That(check.IsValid, Is.False, $"'{raw}' impersonates our own UI");
+            Assert.That(check.Reason, Does.Contain("reserved"));
+            Assert.That(check.Normalized, Is.Empty);
+        }
+
+        [Test]
+        public void A_reserved_word_INSIDE_a_name_is_still_allowed()
+        {
+            // The rule is "could this be mistaken for the game talking", not "does it contain a
+            // banned substring". "Emberfall Sam" is nobody's chrome, and a substring ban would be
+            // both wider than the threat and trivially worked around.
+            Assert.That(PlayerName.IsValid("Emberfall Sam"), Is.True);
+            Assert.That(PlayerName.IsValid("NotYou"), Is.True);
+            Assert.That(PlayerName.IsReserved("Emberfall Sam"), Is.False);
+            Assert.That(PlayerName.IsReserved("SYSTEM"), Is.True);
+        }
+
         [Test]
         public void Check_allows_non_latin_scripts()
         {

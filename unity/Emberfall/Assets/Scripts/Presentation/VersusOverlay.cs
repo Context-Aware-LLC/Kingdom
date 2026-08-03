@@ -322,7 +322,18 @@ namespace Emberfall.Presentation
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             // richText off for anything not authored here — see SanitizeName. This is the line that
             // actually neutralises markup in a wire-supplied name; the character filter only trims it.
-            if (plainText) { tmp.richText = false; tmp.parseCtrlCharacters = false; }
+            //
+            // Ellipsis is the other half, and it is a DIFFERENT guarantee from SanitizeName's cap
+            // (VULN-002 §4.4). That cap counts CHARACTERS; this bounds PIXELS against the rect above,
+            // and 20 of "WWWWWWWWWWWWWWWWWWWW" is not 20 of "iiiiiiiiiiiiiiiiiiii". Without it TMP's
+            // default Overflow draws the name straight out of its plate and across the board — a
+            // playable-area denial that no length rule can prevent. Do not drop one for the other.
+            if (plainText)
+            {
+                tmp.richText = false;
+                tmp.parseCtrlCharacters = false;
+                tmp.overflowMode = TextOverflowModes.Ellipsis;
+            }
             tmp.color = new Color(tint.r, tint.g, tint.b, 0f);   // fades in with the rig
             tmp.sortingOrder = SortBase + 20;
             tmp.text = text;
