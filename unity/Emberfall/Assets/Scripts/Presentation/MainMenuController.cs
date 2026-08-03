@@ -13,11 +13,9 @@ namespace Emberfall.Presentation
     /// A UI Toolkit meta-screen in the deckbuilder's lineage: theme.uss tokens, a UIDocument
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
-    /// <para>The five destinations (Find Game, Single Player, Deck Builder, Store, Leaderboards) still
-    /// log their intent — navigation is a later pass, and each handler is a named method so a
-    /// scene-loader drops straight in. <b>Deck Builder is the one exception</b>: with no characters on
-    /// the device there is nothing to build for, so it opens the create-character step instead of
-    /// logging. That is the only entry point to character creation until S6 exists.</para>
+    /// <para>Each destination has a named handler so a scene-loader drops straight in. The Store opens
+    /// its in-scene panel; Deck Builder opens the create-character step when the device has no
+    /// characters; the remaining unfinished destinations still log their intent.</para>
     ///
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
     /// asked once, here, and the answer plus the first character are the first collection files ever
@@ -69,6 +67,7 @@ namespace Emberfall.Presentation
         private VisualElement _accountModal;
         private VisualElement _accountList;
         private Label _accountError;
+        private ShopPanelController _shop;
 
         /// <summary>Frame-0 coverage, the same rig GameBootstrap/NetworkedGameBootstrap use
         /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay exists before anything renders. The menu's
@@ -99,6 +98,11 @@ namespace Emberfall.Presentation
             Wire("btn-deck-builder", OnDeckBuilder);
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
+
+            _shop = new ShopPanelController(
+                _root,
+                ShopRuntime.Gateway,
+                ShopRuntime.PackagingArt);
 
             BindIdentity();
             BindNameModal();
@@ -661,8 +665,8 @@ namespace Emberfall.Presentation
             Go("DeckbuilderSpike");
         }
 
-        // Store → no backend yet.
-        private void OnStore() => Debug.Log("[MainMenu] Store → coming soon. No backend yet.");
+        // Store stays in this scene: its full-screen UI Toolkit panel owns the purchase/reveal flow.
+        private void OnStore() => _shop?.Open();
 
         // Leaderboards → no backend yet.
         private void OnLeaderboards() => Debug.Log("[MainMenu] Leaderboards → coming soon. No backend yet.");

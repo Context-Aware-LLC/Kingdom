@@ -1,0 +1,365 @@
+.shop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 14, 19, 0.94);
+    padding: var(--space-4);
+}
+
+.shop-overlay--hidden {
+    display: none;
+}
+
+.shop-shell {
+    width: 96%;
+    height: 94%;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+    padding: var(--space-4);
+}
+
+.shop-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+
+.shop-heading {
+    flex-grow: 1;
+}
+
+.shop-title {
+    color: var(--ink-1);
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+}
+
+.shop-subtitle,
+.shop-section__help,
+.shop-status {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    white-space: normal;
+}
+
+.shop-wallet {
+    flex-direction: row;
+    margin-right: var(--space-4);
+}
+
+.shop-wallet__balance {
+    color: var(--ink-1);
+    background-color: var(--surface-0);
+    border-radius: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    margin-left: var(--space-2);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+
+.shop-wallet__balance--gold {
+    border-left-width: 3px;
+    border-left-color: var(--accent);
+}
+
+.shop-wallet__balance--gems {
+    border-left-width: 3px;
+    border-left-color: var(--mana);
+}
+
+.shop-close,
+.shop-action {
+    min-height: 44px;
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    padding: 0 var(--space-4);
+}
+
+.shop-scroll {
+    flex-grow: 1;
+}
+
+.shop-scroll .unity-scroller {
+    display: none;
+}
+
+.shop-section {
+    margin-bottom: var(--space-6);
+}
+
+.shop-section__title {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    margin-bottom: var(--space-1);
+}
+
+.shop-pack-list,
+.shop-gem-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.shop-pack {
+    width: 48%;
+    min-width: 260px;
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+    padding: var(--space-3);
+    margin-right: 2%;
+    margin-top: var(--space-3);
+}
+
+.shop-pack__art-rail {
+    flex-direction: row;
+    width: 100%;
+    aspect-ratio: 3.2;
+    margin-bottom: var(--space-3);
+}
+
+.shop-pack__art-slot {
+    flex-grow: 1;
+    flex-basis: 0;
+    align-items: center;
+    justify-content: flex-end;
+    background-color: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    margin-right: var(--space-1);
+    padding: var(--space-1);
+    -unity-background-scale-mode: scale-and-crop;
+    overflow: hidden;
+}
+
+.shop-pack__art-slot--loaded {
+    background-color: rgba(11, 14, 19, 0.35);
+}
+
+.shop-pack__art-slot-label {
+    color: var(--ink-1);
+    background-color: rgba(11, 14, 19, 0.78);
+    border-radius: var(--space-1);
+    padding: 2px var(--space-1);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.shop-pack__name {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
+
+.shop-pack__detail {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    margin-bottom: var(--space-3);
+}
+
+.shop-pack__actions {
+    flex-direction: row;
+}
+
+.shop-pack__buy {
+    flex-grow: 1;
+    min-height: 48px;
+    margin-right: var(--space-2);
+    border-radius: var(--space-2);
+    -unity-font-style: bold;
+}
+
+.shop-pack__buy--gold {
+    color: var(--surface-0);
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.shop-pack__buy--gems {
+    color: var(--ink-1);
+    background-color: rgb(35, 91, 142);
+    border-color: var(--mana);
+}
+
+.shop-pack__buy:disabled {
+    color: var(--ink-2);
+    background-color: var(--surface-2);
+    border-color: var(--surface-3);
+}
+
+.shop-gem {
+    width: 31%;
+    min-width: 180px;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--surface-0);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    padding: var(--space-3);
+    margin-right: 2%;
+    margin-top: var(--space-2);
+}
+
+.shop-gem__amount {
+    flex-grow: 1;
+    color: var(--mana);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+
+.shop-gem__price {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+}
+
+.shop-status {
+    min-height: 20px;
+    color: var(--warning);
+    margin-top: var(--space-2);
+}
+
+.reveal-shell {
+    align-items: center;
+    justify-content: center;
+}
+
+.reveal-title {
+    color: var(--ink-1);
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    margin-bottom: var(--space-2);
+}
+
+.reveal-summary {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    margin-bottom: var(--space-4);
+}
+
+.reveal-cards {
+    width: 96%;
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.reveal-card {
+    width: 18%;
+    min-width: 135px;
+    max-width: 230px;
+    aspect-ratio: 0.7;
+    align-items: stretch;
+    justify-content: space-between;
+    background-color: var(--surface-0);
+    border-width: 3px;
+    border-color: var(--rarity-common);
+    border-radius: var(--space-3);
+    padding: var(--space-3);
+    margin: 1%;
+    opacity: 0;
+    scale: 0 1;
+    transition-property: opacity, scale;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    overflow: hidden;
+}
+
+.reveal-card--shown {
+    opacity: 1;
+    scale: 1 1;
+}
+
+.reveal-card--rare {
+    border-color: var(--rarity-rare);
+}
+
+.reveal-card--epic {
+    border-color: var(--rarity-epic);
+}
+
+.reveal-card--legendary {
+    border-color: var(--rarity-legendary);
+    background-color: rgb(48, 35, 20);
+}
+
+.reveal-card__flourish {
+    position: absolute;
+    top: -18%;
+    left: -15%;
+    width: 130%;
+    height: 34%;
+    rotate: -8deg;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.reveal-card--rare .reveal-card__flourish {
+    background-color: rgba(77, 149, 255, 0.18);
+}
+
+.reveal-card--epic .reveal-card__flourish {
+    background-color: rgba(181, 102, 255, 0.22);
+}
+
+.reveal-card--legendary .reveal-card__flourish {
+    background-color: rgba(255, 190, 65, 0.28);
+}
+
+.reveal-card__rarity {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.reveal-card__name {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.reveal-card__award {
+    color: var(--positive);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.reveal-card__award--dupe {
+    color: var(--warning);
+}
+
+.reveal-card__upgrade {
+    color: var(--accent);
+    font-size: var(--type-caption);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.reveal-done {
+    min-width: 28%;
+    min-height: 48px;
+    color: var(--surface-0);
+    background-color: var(--accent);
+    border-color: var(--accent);
+    border-radius: var(--space-2);
+    -unity-font-style: bold;
+}

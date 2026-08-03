@@ -71,6 +71,9 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\ClientOptions.cs">
       <Link>ClientOptions.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\Emberfall.Net.Client\Shop\ShopFlow.cs">
+      <Link>Shop\ShopFlow.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\Loopback\LoopbackTransport.cs">
       <Link>Loopback\LoopbackTransport.cs</Link>
     </Compile>
