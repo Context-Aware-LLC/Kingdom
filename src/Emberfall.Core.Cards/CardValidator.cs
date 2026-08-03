@@ -49,7 +49,9 @@ namespace Emberfall.Core.Cards
             /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:557-560):
             /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
             WeaponOnly,
-            /// <summary>Observed from board minions only; other source lifecycles are not wired yet.</summary>
+            /// <summary>Raised on board minions only — either observed from them (<c>ON_TURN_START</c>,
+            /// pending a weapon/spell source lifecycle) or self-raised on one (<c>ON_HEAL</c>, permanently:
+            /// nothing else has health to restore). Read the row's comment for which.</summary>
             MinionOnly,
             /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
             /// a card on it parses, validates, loads, and does nothing forever, silently.</summary>
@@ -76,7 +78,10 @@ namespace Emberfall.Core.Cards
             // ON_TURN_START source restriction in the same change.
             [Trigger.ON_TURN_START] = TriggerLiveness.MinionOnly, // CommandProcessor.StartTurnSequence (explicit turn owner, after reset, before draw — EF-011)
             [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
-            [Trigger.ON_HEAL] = TriggerLiveness.Dead, // EF-015
+            // NO retirement trigger, unlike ON_TURN_START above: this row is minion-only permanently,
+            // not pending a lifecycle. A SPELL is not a permanent and a WEAPON has no health to restore,
+            // so neither can ever be the character DamagePipeline.ApplyHeal raises this on.
+            [Trigger.ON_HEAL] = TriggerLiveness.MinionOnly, // DamagePipeline.ApplyHeal (healed-minion self-trigger — EF-015)
             [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)
             [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
         };
@@ -168,8 +173,16 @@ namespace Emberfall.Core.Cards
                             $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
                         break;
                     case TriggerLiveness.MinionOnly when def.Type != CardType.MINION:
+                        // The tail differs per trigger and is load-bearing: ON_TURN_START is minion-only
+                        // *pending* a weapon/spell lifecycle, so pointing at that is a real lead;
+                        // ON_HEAL is minion-only permanently (nothing else has health to restore), and
+                        // telling an author to wait for a lifecycle that will never come is worse than
+                        // saying nothing.
                         Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is observed from board minions only — it is dead on a {def.Type} until that source lifecycle is implemented.");
+                            $"trigger '{fx.Trigger}' is raised on board minions only — it is dead on a {def.Type}"
+                            + (fx.Trigger == Trigger.ON_TURN_START
+                                ? " until that source lifecycle is implemented."
+                                : "."));
                         break;
                 }
                 // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave

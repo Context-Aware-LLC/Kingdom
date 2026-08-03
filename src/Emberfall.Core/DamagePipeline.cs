@@ -13,9 +13,11 @@ namespace Emberfall.Core
     ///
     /// <para><b>EF-013 — the queue, and why on-damage triggers ENQUEUE rather than resolve here.</b>
     /// Both entry points now take the live <see cref="EffectInterpreter"/> instead of a bare
-    /// <c>(GameState, EventBuffer)</c>, so a hit can raise a follow-on trigger (ON_DAMAGED, and ON_HEAL
-    /// once EF-015 lands) by <b>enqueuing</b> it onto the interpreter's shared queue. It never drains that
-    /// queue itself.</para>
+    /// <c>(GameState, EventBuffer)</c>, so a hit can raise a follow-on trigger (ON_DAMAGED, EF-014;
+    /// ON_HEAL, EF-015) by <b>enqueuing</b> it onto the interpreter's shared queue. It never drains that
+    /// queue itself. That matters most for ON_HEAL, which is raised <b>reentrantly inside
+    /// <see cref="ApplyDamage"/></b> on the LIFESTEAL path below — enqueue-only is what keeps a heal
+    /// raised mid-hit from resolving before the hit that caused it has finished landing.</para>
     ///
     /// <para><b>Decision: observers do NOT drain between hits (enqueue-only).</b> A single command can fire
     /// several <see cref="ApplyDamage"/> calls before anything drains — <see cref="CommandProcessor"/>'s
@@ -130,8 +132,34 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Restore up to <paramref name="amount"/> health to <paramref name="target"/>, clamped to its max,
-        /// using <paramref name="interp"/> for events (and the queue, once EF-015 raises ON_HEAL here).
+        /// using <paramref name="interp"/> for events and to enqueue the healed minion's ON_HEAL.
         /// Emits <c>onHeal</c> with the effective amount healed. Returns the amount actually restored.
+        ///
+        /// <para><b>EF-015 — ON_HEAL is a SELF trigger on the healed minion, not an observer sweep.</b>
+        /// It mirrors ON_DAMAGED at the sibling site exactly: <see cref="EffectInterpreter.RaiseSelf"/> on
+        /// the character that actually gained health, minions only. So it reads "whenever THIS minion is
+        /// healed", never "whenever any character is healed". The rejected alternative —
+        /// <see cref="EffectInterpreter.RaiseObservers"/>, the shape ON_SPELL_CAST and ON_TURN_END use —
+        /// loses on three counts:
+        /// <list type="number">
+        /// <item><b>Symmetry with its sibling.</b> ApplyDamage raises ON_DAMAGED on the damaged minion.
+        ///   A heal arriving through the same door and fanning out to every permanent instead would make
+        ///   the two halves of one pipeline mean different things by the same kind of name.</item>
+        /// <item><b>Reentrancy cost.</b> This method is called from inside <see cref="ApplyDamage"/> on the
+        ///   LIFESTEAL path. An observer sweep there would enqueue one effect per permanent on BOTH boards
+        ///   for every lifesteal swing — a fan-out the queue bound (<see cref="MatchEngine.ActionResolutionCap"/>)
+        ///   would then have to absorb, on a path no card asked for.</item>
+        /// <item><b>Direction of travel.</b> Widening later is additive — a distinct observer trigger
+        ///   ("whenever any character is healed") can be added beside this one. Narrowing an observer
+        ///   ON_HEAL afterwards would silently break every card authored against it.</item>
+        /// </list></para>
+        ///
+        /// <para><b>Two paths deliberately raise nothing.</b> An <i>ineffective</i> heal — a target already
+        /// at max health — returns at the <c>healed &lt;= 0</c> guard below, before the raise: nothing was
+        /// restored, so nothing was healed (the same "the no-op is not the event" precedent as an
+        /// Aegis-absorbed hit in <see cref="ApplyDamage"/>). And a <b>hero</b> heal raises nothing, because
+        /// heroes carry no card effects — which is why LIFESTEAL, whose heal always targets the source's
+        /// own hero, fires no ON_HEAL today despite being the reentrant path.</para>
         /// </summary>
         public static int ApplyHeal(EffectInterpreter interp, CharacterRef target, int amount, InstanceId? source)
         {
@@ -150,6 +178,16 @@ namespace Emberfall.Core
             else target.Minion!.CurrentHealth = after;
 
             interp.Events.Emit(VfxEvent.onHeal, source: source, target: target.Id, amount: healed);
+
+            // ON_HEAL (self-trigger, EF-015): a minion that actually gained health fires its own on-heal
+            // effects. ENQUEUED only — resolution is deferred to the interpreter's bounded Drain, exactly
+            // as ON_DAMAGED is (see class remarks: no drain between hits, cap lives once in
+            // EffectInterpreter.Drain). This is the LAST thing the heal does, so the target's health is
+            // already restored when the effect resolves. Heroes do not raise (no card effects); an
+            // overheal returned above (nothing restored is not "healed").
+            if (target.IsMinion)
+                interp.RaiseSelf(target.Minion!, Trigger.ON_HEAL, System.Array.Empty<CharacterRef>());
+
             return healed;
         }
     }

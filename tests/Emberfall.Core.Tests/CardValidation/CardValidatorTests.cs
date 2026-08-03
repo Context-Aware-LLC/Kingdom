@@ -187,14 +187,39 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Dead_Trigger_Is_An_Error()
         {
-            // ON_HEAL is declared in the Trigger enum but has no raise site (blocked on EF-015). This
-            // used to probe ON_TURN_START; EF-011 gave that one a minion raise site, so it is no
-            // longer proves anything here.
-            var effect = new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
+            // AURA is declared in the Trigger enum but has no raise site — and cannot get one until a
+            // derived-stat recompute pass exists (EF-017a/b). This probe has migrated twice as triggers
+            // went live under it: ON_TURN_START (EF-011), then ON_HEAL (EF-015). AURA is the last one
+            // left, so when EF-017b lands this test needs a different subject or a different shape.
+            var effect = new EffectDef(Trigger.AURA, Action.DRAW, amount: 1, amount2: null,
                 tokenId: null, grantedKeyword: null, vfxOverride: null);
             var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
             Assert.That(report.Ok, Is.False);
             Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
+        }
+
+        [Test]
+        public void OnHeal_Is_Live_On_A_Minion_And_Dead_Everywhere_Else()
+        {
+            // EF-015 flipped ON_HEAL from Dead to MinionOnly. DamagePipeline.ApplyHeal raises it on the
+            // character whose health was restored, and only a minion can be that character: a SPELL is
+            // not a permanent, a WEAPON has no health. So the type gate here is permanent, not staging.
+            EffectDef Heal() => new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
+                tokenId: null, grantedKeyword: null, vfxOverride: null);
+
+            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Heal()), Db(WithEffect(CardType.MINION, Heal())));
+            Assert.That(onMinion.Ok, Is.True,
+                "a minion 'whenever this is healed' effect has a runtime raise site (DamagePipeline.ApplyHeal).");
+            Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"), Is.False,
+                "the dead-trigger gate must not fire on ON_HEAL any more.");
+
+            foreach (var type in new[] { CardType.SPELL, CardType.WEAPON })
+            {
+                var report = Validator().Validate(WithEffect(type, Heal()), Db(WithEffect(type, Heal())));
+                Assert.That(report.Ok, Is.False, $"ON_HEAL on a {type} is inert — nothing there can be healed.");
+                Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"), Is.True,
+                    $"ON_HEAL on a {type} must be rejected as minion-only.");
+            }
         }
 
         [Test]
@@ -365,8 +390,9 @@ namespace Emberfall.Core.Tests.CardValidation
             // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
-                               Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST };
-            var dead = new[] { Trigger.ON_HEAL, Trigger.AURA };
+                               Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
+                               Trigger.ON_HEAL };
+            var dead = new[] { Trigger.AURA };
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
             Assert.That(missing, Is.Empty,

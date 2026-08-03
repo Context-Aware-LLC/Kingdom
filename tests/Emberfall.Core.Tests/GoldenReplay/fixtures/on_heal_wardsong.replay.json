@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 2,
+  "name": "on_heal_wardsong",
+  "engineContractVersion": "interfaces.v3",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0007",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "TIDECALLER",
+  "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "seed": 2718281828459045,
+  "p0Deck": [
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong"
+  ],
+  "p1Deck": [
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong"
+  ],
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i23",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i26",
+      "slot": 1,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i34",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i28",
+      "slot": 2,
+      "targets": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i24",
+      "slot": 0,
+      "targets": []
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "24e4e68b544d280a5a4a71d058d631f2fe1ad8ce7ae5a640c72724ecf17f3a97",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "onDraw",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "onPlay",
+        "src": "i23",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 4,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 5,
+        "kind": "onDraw",
+        "src": "i37",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 6,
+        "kind": "onTurnEnd",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 7,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 8,
+        "kind": "onDraw",
+        "src": "i27",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 9,
+        "kind": "onPlay",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 10,
+        "kind": "onTurnEnd",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 11,
+        "kind": "onTurnStart",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 12,
+        "kind": "onDraw",
+        "src": "i38",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 13,
+        "kind": "onPlay",
+        "src": "i34",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 14,
+        "kind": "onDamage",
+        "src": "i34",
+        "tgt": "i23",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 15,
+        "kind": "onDamage",
+        "src": "i34",
+        "tgt": "i26",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 16,
+        "kind": "onTurnEnd",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 17,
+        "kind": "onTurnStart",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 18,
+        "kind": "onDraw",
+        "src": "i28",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 19,
+        "kind": "onPlay",
+        "src": "i28",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 20,
+        "kind": "onPlay",
+        "src": "i24",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 21,
+        "kind": "onHeal",
+        "src": "i24",
+        "tgt": "i23",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 22,
+        "kind": "onHeal",
+        "src": "i24",
+        "tgt": "i26",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 23,
+        "kind": "onDamage",
+        "src": "i23",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 24,
+        "kind": "onDamage",
+        "src": "i26",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      }
+    ]
+  }
+}
