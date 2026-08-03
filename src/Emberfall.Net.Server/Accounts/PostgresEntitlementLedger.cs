@@ -64,6 +64,108 @@ namespace Emberfall.Net.Server.Accounts
             return new GrantResult(rows == 1 ? GrantOutcome.Applied : GrantOutcome.Duplicate);
         }
 
+        public async Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+        {
+            if (batch == null) throw new ArgumentNullException(nameof(batch));
+
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var tx = await conn.BeginTransactionAsync(ct);
+
+            // Serialize both retries of one transaction id and distinct spends by one player. The
+            // two keys are acquired in a stable order so concurrent purchases cannot deadlock.
+            await AdvisoryLockAsync(conn, tx, "batch:" + batch.TransactionId, ct);
+            await AdvisoryLockAsync(conn, tx, "player:" + batch.PlayerId, ct);
+
+            var expected = new List<EntitlementGrant>(batch.Deltas.Count);
+            for (int i = 0; i < batch.Deltas.Count; i++) expected.Add(batch.GrantAt(i));
+
+            var existing = new List<EntitlementGrant>();
+            var placeholders = new List<string>(expected.Count);
+            for (int i = 0; i < expected.Count; i++) placeholders.Add("$" + (i + 1));
+            await using (var find = new NpgsqlCommand(
+                "select player_id, item, qty, source, external_txn_id, created_at " +
+                "from entitlement_grant where external_txn_id in (" + string.Join(",", placeholders) + ") " +
+                "order by external_txn_id", conn, tx))
+            {
+                for (int i = 0; i < expected.Count; i++)
+                    find.Parameters.Add(P(NpgsqlDbType.Text, expected[i].ExternalTxnId));
+                await using var reader = await find.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
+                    existing.Add(new EntitlementGrant(
+                        reader.GetString(0), reader.GetString(1), reader.GetInt64(2), reader.GetString(3),
+                        reader.GetString(4),
+                        new DateTimeOffset(DateTime.SpecifyKind(reader.GetDateTime(5), DateTimeKind.Utc))));
+            }
+
+            if (existing.Count > 0)
+            {
+                EntitlementBatchOutcome replayOutcome = SameRows(expected, existing)
+                    ? EntitlementBatchOutcome.Duplicate
+                    : EntitlementBatchOutcome.Conflict;
+                await tx.RollbackAsync(ct);
+                return new EntitlementBatchResult(replayOutcome);
+            }
+
+            if (batch.Requirement != null)
+            {
+                await using var balance = new NpgsqlCommand(
+                    "select coalesce(sum(qty),0) from entitlement_grant where player_id=$1 and item=$2",
+                    conn, tx);
+                balance.Parameters.Add(P(NpgsqlDbType.Text, batch.PlayerId));
+                balance.Parameters.Add(P(NpgsqlDbType.Text, batch.Requirement.Item));
+                long current = Convert.ToInt64(await balance.ExecuteScalarAsync(ct));
+                if (current < batch.Requirement.Minimum)
+                {
+                    await tx.RollbackAsync(ct);
+                    return new EntitlementBatchResult(EntitlementBatchOutcome.InsufficientBalance);
+                }
+            }
+
+            for (int i = 0; i < expected.Count; i++)
+            {
+                EntitlementGrant grant = expected[i];
+                await using var insert = new NpgsqlCommand(
+                    "insert into entitlement_grant (external_txn_id, player_id, item, qty, source, created_at) " +
+                    "values ($1,$2,$3,$4,$5,$6)", conn, tx);
+                insert.Parameters.Add(P(NpgsqlDbType.Text, grant.ExternalTxnId));
+                insert.Parameters.Add(P(NpgsqlDbType.Text, grant.PlayerId));
+                insert.Parameters.Add(P(NpgsqlDbType.Text, grant.Item));
+                insert.Parameters.Add(P(NpgsqlDbType.Bigint, grant.Qty));
+                insert.Parameters.Add(P(NpgsqlDbType.Text, grant.Source));
+                insert.Parameters.Add(P(NpgsqlDbType.TimestampTz, grant.CreatedAt.UtcDateTime));
+                await insert.ExecuteNonQueryAsync(ct);
+            }
+
+            await tx.CommitAsync(ct);
+            return new EntitlementBatchResult(EntitlementBatchOutcome.Applied);
+        }
+
+        public async Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
+            string playerId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(playerId))
+                throw new ArgumentException("Player id is required.", nameof(playerId));
+
+            var conn = new NpgsqlConnection(_connString);
+            try
+            {
+                await conn.OpenAsync(ct);
+                string key = "player_mutation:" + playerId;
+                await using var cmd = new NpgsqlCommand(
+                    "select pg_advisory_lock(hashtextextended($1,0))", conn);
+                cmd.Parameters.Add(P(NpgsqlDbType.Text, key));
+                await cmd.ExecuteNonQueryAsync(ct);
+                return new PostgresPlayerMutationLock(conn, key);
+            }
+            catch
+            {
+                await conn.DisposeAsync();
+                throw;
+            }
+        }
+
         public async Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default)
         {
             await using var conn = new NpgsqlConnection(_connString);
@@ -111,5 +213,65 @@ namespace Emberfall.Net.Server.Accounts
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)
             => new NpgsqlParameter { NpgsqlDbType = type, Value = value ?? DBNull.Value };
+
+        private static async Task AdvisoryLockAsync(
+            NpgsqlConnection conn,
+            NpgsqlTransaction tx,
+            string key,
+            CancellationToken ct)
+        {
+            await using var cmd = new NpgsqlCommand(
+                "select pg_advisory_xact_lock(hashtextextended($1,0))", conn, tx);
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, key));
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+
+        private static bool SameRows(
+            IReadOnlyList<EntitlementGrant> expected,
+            IReadOnlyList<EntitlementGrant> actual)
+        {
+            if (expected.Count != actual.Count) return false;
+            var byId = new Dictionary<string, EntitlementGrant>(StringComparer.Ordinal);
+            for (int i = 0; i < actual.Count; i++) byId[actual[i].ExternalTxnId] = actual[i];
+            for (int i = 0; i < expected.Count; i++)
+            {
+                EntitlementGrant wanted = expected[i];
+                if (!byId.TryGetValue(wanted.ExternalTxnId, out EntitlementGrant? found)) return false;
+                if (found.PlayerId != wanted.PlayerId || found.Item != wanted.Item ||
+                    found.Qty != wanted.Qty || found.Source != wanted.Source)
+                    return false;
+            }
+            return true;
+        }
+
+        private sealed class PostgresPlayerMutationLock : IAsyncDisposable
+        {
+            private NpgsqlConnection? _conn;
+            private readonly string _key;
+
+            public PostgresPlayerMutationLock(NpgsqlConnection conn, string key)
+            {
+                _conn = conn;
+                _key = key;
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                NpgsqlConnection? conn = Interlocked.Exchange(ref _conn, null);
+                if (conn == null) return;
+
+                try
+                {
+                    await using var cmd = new NpgsqlCommand(
+                        "select pg_advisory_unlock(hashtextextended($1,0))", conn);
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, _key));
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                finally
+                {
+                    await conn.DisposeAsync();
+                }
+            }
+        }
     }
 }

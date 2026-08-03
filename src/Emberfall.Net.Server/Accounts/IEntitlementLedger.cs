@@ -32,6 +32,22 @@ namespace Emberfall.Net.Server.Accounts
         /// </exception>
         Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default);
 
+        /// <summary>
+        /// Evaluate an optional balance requirement and append every batch delta atomically. A replay
+        /// of the same batch is a no-op; a reused transaction id bound to different deltas is a
+        /// conflict. No implementation may expose a partially applied batch.
+        /// </summary>
+        Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default);
+
+        /// <summary>
+        /// Hold an exclusive per-player gate across a workflow that spans multiple ledger calls or
+        /// another store. The Postgres adapter binds this to a session advisory lock, so the scope is
+        /// process-independent and is released if the owning connection/process dies.
+        /// </summary>
+        Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
+            string playerId,
+            CancellationToken ct = default);
+
         /// <summary>The net quantity of one item a player holds — the signed sum of its grants (0 if none).</summary>
         Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default);
 
@@ -53,6 +69,9 @@ namespace Emberfall.Net.Server.Accounts
         private readonly object _lock = new object();
         private readonly List<EntitlementGrant> _log = new List<EntitlementGrant>();
         private readonly HashSet<string> _txnIds = new HashSet<string>(StringComparer.Ordinal);
+        private readonly object _mutationLock = new object();
+        private readonly Dictionary<string, SemaphoreSlim> _playerMutationLocks =
+            new Dictionary<string, SemaphoreSlim>(StringComparer.Ordinal);
 
         public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default)
         {
@@ -68,6 +87,105 @@ namespace Emberfall.Net.Server.Accounts
                 _log.Add(grant);
                 return Task.FromResult(new GrantResult(GrantOutcome.Applied));
             }
+        }
+
+        public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+        {
+            if (batch == null) throw new ArgumentNullException(nameof(batch));
+
+            lock (_lock)
+            {
+                var expected = new List<EntitlementGrant>(batch.Deltas.Count);
+                var existing = new List<EntitlementGrant>();
+                for (int i = 0; i < batch.Deltas.Count; i++)
+                {
+                    EntitlementGrant wanted = batch.GrantAt(i);
+                    expected.Add(wanted);
+                    if (!_txnIds.Contains(wanted.ExternalTxnId)) continue;
+                    for (int row = 0; row < _log.Count; row++)
+                    {
+                        if (_log[row].ExternalTxnId == wanted.ExternalTxnId)
+                        {
+                            existing.Add(_log[row]);
+                            break;
+                        }
+                    }
+                }
+
+                if (existing.Count > 0)
+                    return Task.FromResult(new EntitlementBatchResult(
+                        SameRows(expected, existing)
+                            ? EntitlementBatchOutcome.Duplicate
+                            : EntitlementBatchOutcome.Conflict));
+
+                if (batch.Requirement != null)
+                {
+                    long balance = 0;
+                    foreach (EntitlementGrant grant in _log)
+                    {
+                        if (grant.PlayerId == batch.PlayerId && grant.Item == batch.Requirement.Item)
+                            balance += grant.Qty;
+                    }
+                    if (balance < batch.Requirement.Minimum)
+                        return Task.FromResult(new EntitlementBatchResult(EntitlementBatchOutcome.InsufficientBalance));
+                }
+
+                for (int i = 0; i < batch.Deltas.Count; i++)
+                {
+                    EntitlementGrant grant = batch.GrantAt(i);
+                    _txnIds.Add(grant.ExternalTxnId);
+                    _log.Add(grant);
+                }
+                return Task.FromResult(new EntitlementBatchResult(EntitlementBatchOutcome.Applied));
+            }
+        }
+
+        public async Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
+            string playerId,
+            CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(playerId))
+                throw new ArgumentException("Player id is required.", nameof(playerId));
+
+            SemaphoreSlim gate;
+            lock (_mutationLock)
+            {
+                if (!_playerMutationLocks.TryGetValue(playerId, out gate!))
+                    _playerMutationLocks[playerId] = gate = new SemaphoreSlim(1, 1);
+            }
+            await gate.WaitAsync(ct).ConfigureAwait(false);
+            return new SemaphoreLease(gate);
+        }
+
+        private sealed class SemaphoreLease : IAsyncDisposable
+        {
+            private SemaphoreSlim? _gate;
+
+            public SemaphoreLease(SemaphoreSlim gate) => _gate = gate;
+
+            public ValueTask DisposeAsync()
+            {
+                Interlocked.Exchange(ref _gate, null)?.Release();
+                return ValueTask.CompletedTask;
+            }
+        }
+
+        private static bool SameRows(
+            IReadOnlyList<EntitlementGrant> expected,
+            IReadOnlyList<EntitlementGrant> actual)
+        {
+            if (expected.Count != actual.Count) return false;
+            for (int i = 0; i < expected.Count; i++)
+            {
+                EntitlementGrant wanted = expected[i];
+                EntitlementGrant? found = null;
+                for (int row = 0; row < actual.Count; row++)
+                    if (actual[row].ExternalTxnId == wanted.ExternalTxnId) found = actual[row];
+                if (found == null || found.PlayerId != wanted.PlayerId || found.Item != wanted.Item ||
+                    found.Qty != wanted.Qty || found.Source != wanted.Source)
+                    return false;
+            }
+            return true;
         }
 
         public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default)

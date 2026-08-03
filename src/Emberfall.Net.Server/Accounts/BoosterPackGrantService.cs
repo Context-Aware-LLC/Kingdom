@@ -69,35 +69,36 @@ namespace Emberfall.Net.Server.Accounts
     /// what is in it and writes the grants. The client renders the answer and never computes one
     /// (ADR-0004).
     ///
-    /// <para><b>Exactly-once, by write order rather than by a transaction.</b> There is no transaction
+    /// <para><b>Exactly-once, by an atomic reservation plus write order.</b> There is no transaction
     /// spanning the ledger and the pity store, so the ordering below is doing that job and is not
     /// arbitrary:</para>
     /// <list type="number">
+    ///   <item>atomically reserve one unopened pack entitlement for this instance;</item>
     ///   <item>project ownership from the ledger, <b>excluding this pack instance's own rows</b>;</item>
     ///   <item>roll (pure);</item>
     ///   <item>write the per-slot grant rows, each idempotent on its own derived transaction id;</item>
-    ///   <item>write the <i>consume</i> row — the pack instance itself, at quantity −1;</item>
+    ///   <item>write the completion marker;</item>
     ///   <item>advance the pity counters.</item>
     /// </list>
-    /// <para>Step 1 is the linchpin: because ownership ignores the rows this very instance wrote, a
-    /// crash anywhere in step 3 re-rolls to a <b>bit-identical</b> result on the next attempt (same
+    /// <para>Step 1 prevents two server processes from spending one pack entitlement. Because the
+    /// reservation is replay-safe, a crash leaves durable evidence that only this instance may resume.
+    /// Ownership then ignores the rows this very instance wrote, so a crash during the slot grants
+    /// re-rolls to a <b>bit-identical</b> result on the next attempt (same
     /// seed, same index, same ownership, same pity), the rows already written come back
     /// <see cref="GrantOutcome.Duplicate"/>, and the missing ones land. The open is therefore
     /// resumable, not merely non-duplicating.</para>
     ///
-    /// <para>The consume row is written <b>after</b> the slots, so its presence means "this pack is
+    /// <para>The completion marker is written <b>after</b> the slots, so its presence means "this pack is
     /// fully granted" and is what <see cref="PackOpenStatus.AlreadyOpened"/> keys off. One window
-    /// remains, and it is stated rather than papered over: a crash between step 4 and step 5 loses a
+    /// remains, and it is stated rather than papered over: a crash between step 5 and step 6 loses a
     /// single pity tick. It cannot double-grant and it cannot lose a card; it can only make one pack not
     /// count toward a pity clock. Closing it needs the two stores under one transaction, which is a
     /// store-binding concern (NOR-107b), not an algorithm one.</para>
     ///
-    /// <para><b>Concurrency.</b> Two simultaneous opens of <i>different</i> instances by the same player
-    /// would both read the same pity state, roll the same index, and hand out the same cards. A
-    /// per-player gate serialises them, which is sufficient for the single-process host Emberfall runs.
-    /// A multi-instance deployment must replace it with a conditional (compare-and-set) pity update —
-    /// <b>RETIREMENT TRIGGER:</b> if you are the one scaling the server past one machine, this gate is
-    /// no longer a control and this paragraph is your notice.</para>
+    /// <para><b>Concurrency.</b> The ledger's per-player mutation lock spans reservation, grants, and
+    /// the pity update. The in-memory adapter uses a semaphore; Postgres uses a session advisory lock,
+    /// so different server processes cannot concurrently roll the same or different instances for one
+    /// player. A dead process releases the database session and a retry can resume from the ledger.</para>
     /// </summary>
     public sealed class BoosterPackGrantService
     {
@@ -110,14 +111,17 @@ namespace Emberfall.Net.Server.Accounts
         /// <summary>Every transaction id this service derives starts here, keyed by pack instance.</summary>
         public const string TxnPrefix = "packopen:";
 
+        /// <summary>Suffix for the atomic ledger transaction that reserves an unopened pack.</summary>
+        public const string ReservationSuffix = ":reserve";
+
+        /// <summary>Ledger item prefix for the durable "fully opened" marker.</summary>
+        public const string OpenedItemPrefix = "pack_opened:";
+
         private readonly IEntitlementLedger _ledger;
         private readonly IPackPityStore _pity;
         private readonly IPackSeedSource _seeds;
         private readonly ICardDatabase _cards;
         private readonly ITimeSource _time;
-
-        private readonly object _gateLock = new object();
-        private readonly Dictionary<string, SemaphoreSlim> _perPlayerGate = new Dictionary<string, SemaphoreSlim>(StringComparer.Ordinal);
 
         public BoosterPackGrantService(IEntitlementLedger ledger, IPackPityStore pity,
                                        IPackSeedSource seeds, ICardDatabase cards, ITimeSource time)
@@ -138,45 +142,55 @@ namespace Emberfall.Net.Server.Accounts
         /// client:</b> a client that chooses it can replay one purchase into an unbounded number of
         /// opens by varying it, or grief another player by colliding with theirs.</para>
         /// </summary>
-        public async Task<PackOpenOutcome> OpenAsync(string playerId, BoosterPack pack, string packInstanceId,
+        public async Task<PackOpenOutcome> OpenAsync(Account account, BoosterPack pack, string packInstanceId,
                                                      CancellationToken ct = default)
         {
-            if (string.IsNullOrEmpty(playerId)) throw new ArgumentException("playerId is required.", nameof(playerId));
+            if (account == null) throw new ArgumentNullException(nameof(account));
             if (pack == null) throw new ArgumentNullException(nameof(pack));
             if (string.IsNullOrEmpty(packInstanceId))
                 throw new ArgumentException(
                     "A pack instance id is required; it is the idempotency key for the whole open.",
                     nameof(packInstanceId));
+            EconomyAccountPolicy.RequireDurable(account);
 
-            var gate = GateFor(playerId);
-            await gate.WaitAsync(ct).ConfigureAwait(false);
-            try
-            {
-                return await OpenLockedAsync(playerId, pack, packInstanceId, ct).ConfigureAwait(false);
-            }
-            finally
-            {
-                gate.Release();
-            }
+            await using IAsyncDisposable gate =
+                await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
+            return await OpenLockedAsync(account.PlayerId, pack, packInstanceId, ct).ConfigureAwait(false);
         }
 
         private async Task<PackOpenOutcome> OpenLockedAsync(string playerId, BoosterPack pack,
                                                             string packInstanceId, CancellationToken ct)
         {
             string instanceTxnPrefix = TxnPrefix + packInstanceId + ":";
-            string consumeTxnId = TxnPrefix + packInstanceId;
+            string completionTxnId = TxnPrefix + packInstanceId;
 
             var history = await _ledger.HistoryAsync(playerId, ct).ConfigureAwait(false);
 
-            // Already fully granted? The consume row is written last, so its presence is the only
+            // Already fully granted? The completion row is written last, so its presence is the only
             // honest "this pack is finished" signal.
-            if (Contains(history, consumeTxnId))
+            if (Contains(history, completionTxnId))
             {
                 var replayed = ReconstructAwards(history, instanceTxnPrefix, pack.CardCount);
                 var currentPity = await _pity.LoadAsync(playerId, pack.Id, ct).ConfigureAwait(false);
                 return new PackOpenOutcome(PackOpenStatus.AlreadyOpened, pack.Id, packInstanceId, replayed, currentPity);
             }
 
+            var reservation = new EntitlementBatch(
+                playerId,
+                TxnPrefix + packInstanceId + ReservationSuffix,
+                new[] { new EntitlementDelta(pack.Id, -1, GrantSource) },
+                new EntitlementBalanceRequirement(pack.Id, 1),
+                DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
+            EntitlementBatchResult reserved =
+                await _ledger.ApplyBatchAsync(reservation, ct).ConfigureAwait(false);
+            if (reserved.Conflict)
+                throw new InvalidOperationException(
+                    "The pack instance id is already bound to a different entitlement reservation.");
+            if (reserved.InsufficientBalance)
+                throw new InvalidOperationException(
+                    "The player does not own an unopened entitlement for this pack.");
+
+            history = await _ledger.HistoryAsync(playerId, ct).ConfigureAwait(false);
             var pity = await _pity.LoadAsync(playerId, pack.Id, ct).ConfigureAwait(false);
             ulong seed = await _seeds.SeedAsync(playerId, pack.Id, ct).ConfigureAwait(false);
 
@@ -200,13 +214,19 @@ namespace Emberfall.Net.Server.Accounts
                 await _ledger.GrantAsync(grant, ct).ConfigureAwait(false);
             }
 
-            // 4 — consume the pack instance itself. A pack is an entitlement (NOR-107b grants it at
-            // +1 on purchase); opening it is the matching −1, so "unopened packs I hold" stays a plain
-            // ledger balance with no second bookkeeping.
+            // 5 — mark completion only after every slot is durable. The pack itself was atomically
+            // reserved before the roll, so this row is an audit/replay marker rather than another debit.
             await _ledger.GrantAsync(
-                new EntitlementGrant(playerId, pack.Id, -1, GrantSource, consumeTxnId, now), ct).ConfigureAwait(false);
+                new EntitlementGrant(
+                    playerId,
+                    OpenedItemPrefix + pack.Id,
+                    1,
+                    GrantSource,
+                    completionTxnId,
+                    now),
+                ct).ConfigureAwait(false);
 
-            // 5 — advance the clocks.
+            // 6 — advance the clocks.
             await _pity.SaveAsync(playerId, pack.Id, result.PityAfter, ct).ConfigureAwait(false);
 
             return new PackOpenOutcome(PackOpenStatus.Opened, pack.Id, packInstanceId, result.Awards, result.PityAfter);
@@ -297,14 +317,5 @@ namespace Emberfall.Net.Server.Accounts
             return false;
         }
 
-        private SemaphoreSlim GateFor(string playerId)
-        {
-            lock (_gateLock)
-            {
-                if (!_perPlayerGate.TryGetValue(playerId, out var gate))
-                    _perPlayerGate[playerId] = gate = new SemaphoreSlim(1, 1);
-                return gate;
-            }
-        }
     }
 }

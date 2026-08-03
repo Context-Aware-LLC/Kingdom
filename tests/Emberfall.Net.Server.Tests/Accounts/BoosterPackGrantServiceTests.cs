@@ -15,10 +15,10 @@ namespace Emberfall.Net.Server.Tests.Accounts
     /// ledger, and opening the same pack instance twice must not grant twice.
     ///
     /// <para>The interesting case is not the clean replay (that one is easy); it is the <b>half-written
-    /// open</b>. The service writes slot rows first and the consume row last, and projects ownership
-    /// while ignoring its own instance's rows, precisely so a crash mid-write re-rolls to a bit-identical
-    /// pack and finishes. <see cref="A_Crash_Mid_Grant_Resumes_To_The_Identical_Pack"/> is the fixture
-    /// that pins it.</para>
+    /// open</b>. The service atomically reserves the entitlement, writes slot rows, then writes the
+    /// completion marker. It projects ownership while ignoring its own instance's rows, precisely so a
+    /// crash mid-write re-rolls to a bit-identical pack and finishes.
+    /// <see cref="A_Crash_Mid_Grant_Resumes_To_The_Identical_Pack"/> is the fixture that pins it.</para>
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -53,6 +53,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 if (_remaining-- <= 0) throw new SimulatedLedgerOutage();
                 return _inner.GrantAsync(grant, ct);
             }
+
+            public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+                => _inner.ApplyBatchAsync(batch, ct);
+
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
+                string playerId,
+                CancellationToken ct = default)
+                => _inner.AcquirePlayerMutationLockAsync(playerId, ct);
 
             public Task<long> BalanceAsync(string p, string i, CancellationToken ct = default) => _inner.BalanceAsync(p, i, ct);
             public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string p, CancellationToken ct = default) => _inner.BalancesAsync(p, ct);
@@ -92,6 +100,28 @@ namespace Emberfall.Net.Server.Tests.Accounts
         private static BoosterPackGrantService Service(IEntitlementLedger ledger, IPackPityStore pity, ICardDatabase cards)
             => new BoosterPackGrantService(ledger, pity, new FixedPackSeedSource(Seed), cards, new FixedTime());
 
+        private static Account AuthenticatedAccount(string playerId = Player)
+            => new Account(
+                playerId,
+                "google",
+                "subject-hash",
+                DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs));
+
+        private static async Task GrantPackAsync(
+            IEntitlementLedger ledger,
+            string playerId,
+            BoosterPack pack,
+            string packInstanceId)
+        {
+            await ledger.GrantAsync(new EntitlementGrant(
+                playerId,
+                pack.Id,
+                1,
+                EconomyService.PackPurchaseSource,
+                "test-pack:" + packInstanceId,
+                DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs)));
+        }
+
         // ── the happy path ───────────────────────────────────────────────────────────────────
 
         [Test]
@@ -99,8 +129,9 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
 
-            var outcome = await service.OpenAsync(Player, Pack, "inst-1");
+            var outcome = await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
             Assert.That(outcome.Status, Is.EqualTo(PackOpenStatus.Opened));
             Assert.That(outcome.Awards, Has.Count.EqualTo(Pack.CardCount));
@@ -110,8 +141,13 @@ namespace Emberfall.Net.Server.Tests.Accounts
             foreach (var row in history)
                 TestContext.Out.WriteLine($"  {row.ExternalTxnId,-24} {row.Item,-24} {row.Qty,5}  {row.Source}");
 
-            Assert.That(history, Has.Count.EqualTo(Pack.CardCount + 1), "One row per slot, plus the consume row.");
-            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(-1),
+            Assert.That(history, Has.Count.EqualTo(Pack.CardCount + 3),
+                "One purchase row, one reservation, one row per slot, plus the completion row.");
+            Assert.That(
+                history,
+                Has.Some.Matches<EntitlementGrant>(row =>
+                    row.ExternalTxnId == "packopen:inst-1:reserve:0"));
+            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0),
                 "Opening a pack consumes the pack entitlement itself.");
         }
 
@@ -120,8 +156,9 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
 
-            var outcome = await service.OpenAsync(Player, Pack, "inst-1");
+            var outcome = await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
             foreach (var award in outcome.Awards)
             {
@@ -143,7 +180,8 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             for (int i = 1; i <= 5; i++)
             {
-                await service.OpenAsync(Player, Pack, "inst-" + i);
+                await GrantPackAsync(ledger, Player, Pack, "inst-" + i);
+                await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-" + i);
                 var pity = await pityStore.LoadAsync(Player, Pack.Id);
                 Assert.That(pity.PacksOpened, Is.EqualTo(i));
             }
@@ -157,12 +195,13 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var ledger = new InMemoryEntitlementLedger();
             var pityStore = new InMemoryPackPityStore();
             var service = Service(ledger, pityStore, Cards());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
 
-            var first = await service.OpenAsync(Player, Pack, "inst-1");
+            var first = await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
             string balancesAfterFirst = await RenderBalances(ledger, Player);
             var pityAfterFirst = await pityStore.LoadAsync(Player, Pack.Id);
 
-            var second = await service.OpenAsync(Player, Pack, "inst-1");
+            var second = await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
             string balancesAfterSecond = await RenderBalances(ledger, Player);
             var pityAfterSecond = await pityStore.LoadAsync(Player, Pack.Id);
 
@@ -183,18 +222,50 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task Separate_Service_Instances_Serialize_The_Same_Pack_Open()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var pityStore = new InMemoryPackPityStore();
+            ICardDatabase cards = Cards();
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
+
+            PackOpenOutcome[] outcomes = await Task.WhenAll(
+                Service(ledger, pityStore, cards)
+                    .OpenAsync(AuthenticatedAccount(), Pack, "inst-1"),
+                Service(ledger, pityStore, cards)
+                    .OpenAsync(AuthenticatedAccount(), Pack, "inst-1"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    outcomes,
+                    Has.Exactly(1).Matches<PackOpenOutcome>(outcome =>
+                        outcome.Status == PackOpenStatus.Opened));
+                Assert.That(
+                    outcomes,
+                    Has.Exactly(1).Matches<PackOpenOutcome>(outcome =>
+                        outcome.Status == PackOpenStatus.AlreadyOpened));
+                Assert.That(outcomes[1].Awards, Has.Count.EqualTo(Pack.CardCount));
+            });
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3));
+            Assert.That((await pityStore.LoadAsync(Player, Pack.Id)).PacksOpened, Is.EqualTo(1));
+        }
+
+        [Test]
         public async Task Ten_Replays_Of_One_Instance_Still_Grant_Once()
         {
             var ledger = new InMemoryEntitlementLedger();
             var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
 
-            await service.OpenAsync(Player, Pack, "inst-1");
+            await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
             string expected = await RenderBalances(ledger, Player);
 
-            for (int i = 0; i < 10; i++) await service.OpenAsync(Player, Pack, "inst-1");
+            for (int i = 0; i < 10; i++)
+                await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
             Assert.That(await RenderBalances(ledger, Player), Is.EqualTo(expected));
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 1));
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3));
         }
 
         [Test]
@@ -202,12 +273,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
+            await GrantPackAsync(ledger, Player, Pack, "inst-2");
 
-            await service.OpenAsync(Player, Pack, "inst-1");
-            await service.OpenAsync(Player, Pack, "inst-2");
+            await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
+            await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-2");
 
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(2 * (Pack.CardCount + 1)));
-            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(-2));
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(2 * (Pack.CardCount + 3)));
+            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
         }
 
         // ── the crash window ─────────────────────────────────────────────────────────────────
@@ -221,27 +294,38 @@ namespace Emberfall.Net.Server.Tests.Accounts
         public async Task A_Crash_Mid_Grant_Resumes_To_The_Identical_Pack()
         {
             var reference = new InMemoryEntitlementLedger();
+            await GrantPackAsync(reference, Player, Pack, "inst-1");
             var referenceOutcome = await Service(reference, new InMemoryPackPityStore(), Cards())
-                .OpenAsync(Player, Pack, "inst-1");
+                .OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
-            for (int allowed = 0; allowed < Pack.CardCount; allowed++)
+            for (int allowed = 0; allowed <= Pack.CardCount; allowed++)
             {
                 var ledger = new InMemoryEntitlementLedger();
                 var pityStore = new InMemoryPackPityStore();
                 var cards = Cards();
+                await GrantPackAsync(ledger, Player, Pack, "inst-1");
 
                 var crashing = Service(new CrashingLedger(ledger, allowed), pityStore, cards);
-                Assert.ThrowsAsync<SimulatedLedgerOutage>(async () => await crashing.OpenAsync(Player, Pack, "inst-1"));
+                Assert.ThrowsAsync<SimulatedLedgerOutage>(async () =>
+                    await crashing.OpenAsync(AuthenticatedAccount(), Pack, "inst-1"));
                 Assert.That(await pityStore.LoadAsync(Player, Pack.Id), Is.EqualTo(PackPityState.Fresh),
                     "Pity advanced despite the open never completing.");
+                Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
+                Assert.That(
+                    await ledger.HistoryAsync(Player),
+                    Has.Some.Matches<EntitlementGrant>(row =>
+                        row.ExternalTxnId == "packopen:inst-1:reserve:0"),
+                    "A failed open lost the durable reservation needed to resume its value.");
 
-                var resumed = await Service(ledger, pityStore, cards).OpenAsync(Player, Pack, "inst-1");
+                var resumed = await Service(ledger, pityStore, cards)
+                    .OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
                 Assert.That(resumed.Status, Is.EqualTo(PackOpenStatus.Opened));
                 Assert.That(Render(resumed.Awards), Is.EqualTo(Render(referenceOutcome.Awards)),
                     $"Resuming after {allowed} written rows produced a different pack.");
-                Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 1),
+                Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3),
                     "The resume duplicated a row instead of colliding on its transaction id.");
+                Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
                 Assert.That((await pityStore.LoadAsync(Player, Pack.Id)).PacksOpened, Is.EqualTo(1));
             }
         }
@@ -249,11 +333,44 @@ namespace Emberfall.Net.Server.Tests.Accounts
         // ── input hardening ──────────────────────────────────────────────────────────────────
 
         [Test]
+        public async Task Opening_Without_An_Unopened_Pack_Entitlement_Is_Refused()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1"));
+
+            Assert.That(await ledger.HistoryAsync(Player), Is.Empty);
+        }
+
+        [Test]
         public void A_Missing_Pack_Instance_Id_Is_Refused()
         {
             var service = Service(new InMemoryEntitlementLedger(), new InMemoryPackPityStore(), Cards());
-            Assert.ThrowsAsync<ArgumentException>(async () => await service.OpenAsync(Player, Pack, ""));
-            Assert.ThrowsAsync<ArgumentException>(async () => await service.OpenAsync("", Pack, "inst-1"));
+            Assert.ThrowsAsync<ArgumentException>(async () =>
+                await service.OpenAsync(AuthenticatedAccount(), Pack, ""));
+            Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await service.OpenAsync(null!, Pack, "inst-1"));
+        }
+
+        [Test]
+        public async Task A_Device_Token_Account_Cannot_Open_Valuable_Inventory()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
+            var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            var deviceAccount = new Account(
+                Player,
+                "device_token",
+                "subject-hash",
+                DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs));
+
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await service.OpenAsync(deviceAccount, Pack, "inst-1"));
+
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(1));
+            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(1));
         }
 
         [Test]
@@ -262,10 +379,13 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var ledger = new InMemoryEntitlementLedger();
             var pityStore = new InMemoryPackPityStore();
             var service = Service(ledger, pityStore, Cards());
+            await GrantPackAsync(ledger, "player-a", Pack, "a-1");
+            await GrantPackAsync(ledger, "player-a", Pack, "a-2");
+            await GrantPackAsync(ledger, "player-b", Pack, "b-1");
 
-            await service.OpenAsync("player-a", Pack, "a-1");
-            await service.OpenAsync("player-a", Pack, "a-2");
-            await service.OpenAsync("player-b", Pack, "b-1");
+            await service.OpenAsync(AuthenticatedAccount("player-a"), Pack, "a-1");
+            await service.OpenAsync(AuthenticatedAccount("player-a"), Pack, "a-2");
+            await service.OpenAsync(AuthenticatedAccount("player-b"), Pack, "b-1");
 
             Assert.That((await pityStore.LoadAsync("player-a", Pack.Id)).PacksOpened, Is.EqualTo(2));
             Assert.That((await pityStore.LoadAsync("player-b", Pack.Id)).PacksOpened, Is.EqualTo(1));
@@ -279,8 +399,10 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var service = Service(ledger, pityStore, Cards());
 
             var rekindling = new BoosterPack(SetId.REKINDLING);
-            await service.OpenAsync(Player, Pack, "e-1");
-            await service.OpenAsync(Player, Pack, "e-2");
+            await GrantPackAsync(ledger, Player, Pack, "e-1");
+            await GrantPackAsync(ledger, Player, Pack, "e-2");
+            await service.OpenAsync(AuthenticatedAccount(), Pack, "e-1");
+            await service.OpenAsync(AuthenticatedAccount(), Pack, "e-2");
 
             Assert.That((await pityStore.LoadAsync(Player, Pack.Id)).PacksOpened, Is.EqualTo(2));
             Assert.That((await pityStore.LoadAsync(Player, rekindling.Id)).PacksOpened, Is.EqualTo(0),

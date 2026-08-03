@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Net.Server.Accounts;
 using NUnit.Framework;
@@ -24,6 +26,18 @@ namespace Emberfall.Net.Server.Tests.Accounts
         private static EntitlementGrant Grant(string player, string item, long qty, string source, string txn)
             => new EntitlementGrant(player, item, qty, source, txn, At);
 
+        private static EntitlementBatch PurchaseBatch(string txn)
+            => new EntitlementBatch(
+                "p1",
+                txn,
+                new List<EntitlementDelta>
+                {
+                    new EntitlementDelta("gold", -100, "pack_purchase"),
+                    new EntitlementDelta("pack_core", 1, "pack_purchase"),
+                },
+                new EntitlementBalanceRequirement("gold", 100),
+                At);
+
         [Test]
         public async Task Grant_Appends_And_Balance_Reflects_It()
         {
@@ -31,6 +45,132 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             Assert.That(res.Applied, Is.True);
             Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(5));
+        }
+
+        [Test]
+        public async Task Conditional_Batch_Appends_All_Deltas_When_The_Balance_Covers_The_Spend()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gold", 100, "quest", "quest-1"));
+
+            EntitlementBatchResult result = await Ledger.ApplyBatchAsync(PurchaseBatch("purchase-1"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Applied, Is.True);
+                Assert.That(result.Outcome, Is.EqualTo(EntitlementBatchOutcome.Applied));
+            });
+            Assert.That(await Ledger.BalanceAsync("p1", "gold"), Is.EqualTo(0));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(1));
+            Assert.That(await Ledger.HistoryAsync("p1"), Has.Count.EqualTo(3),
+                "The seed plus both batch rows must commit together.");
+        }
+
+        [Test]
+        public async Task Conditional_Batch_Appends_Nothing_When_The_Balance_Is_Insufficient()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gold", 99, "quest", "quest-1"));
+
+            EntitlementBatchResult result = await Ledger.ApplyBatchAsync(PurchaseBatch("purchase-1"));
+
+            Assert.That(result.InsufficientBalance, Is.True);
+            Assert.That(await Ledger.BalanceAsync("p1", "gold"), Is.EqualTo(99));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(0));
+            Assert.That(await Ledger.HistoryAsync("p1"), Has.Count.EqualTo(1),
+                "A failed precondition must not expose either batch row.");
+        }
+
+        [Test]
+        public async Task Replayed_Conditional_Batch_Is_A_No_Op()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gold", 100, "quest", "quest-1"));
+            EntitlementBatch batch = PurchaseBatch("purchase-1");
+
+            EntitlementBatchResult first = await Ledger.ApplyBatchAsync(batch);
+            EntitlementBatchResult second = await Ledger.ApplyBatchAsync(batch);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(first.Applied, Is.True);
+                Assert.That(second.Duplicate, Is.True);
+            });
+            Assert.That(await Ledger.BalanceAsync("p1", "gold"), Is.EqualTo(0));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(1));
+            Assert.That(await Ledger.HistoryAsync("p1"), Has.Count.EqualTo(3));
+        }
+
+        [Test]
+        public async Task Reused_Batch_Id_With_Different_Deltas_Is_A_Conflict()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gold", 200, "quest", "quest-1"));
+            await Ledger.ApplyBatchAsync(PurchaseBatch("purchase-1"));
+            var conflicting = new EntitlementBatch(
+                "p1",
+                "purchase-1",
+                new List<EntitlementDelta>
+                {
+                    new EntitlementDelta("gold", -100, "pack_purchase"),
+                    new EntitlementDelta("pack_other", 1, "pack_purchase"),
+                },
+                new EntitlementBalanceRequirement("gold", 100),
+                At);
+
+            EntitlementBatchResult result = await Ledger.ApplyBatchAsync(conflicting);
+
+            Assert.That(result.Conflict, Is.True);
+            Assert.That(await Ledger.BalanceAsync("p1", "gold"), Is.EqualTo(100));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(1));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_other"), Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task Concurrent_Conditional_Batches_Cannot_Overspend_One_Balance()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gold", 100, "quest", "quest-1"));
+
+            EntitlementBatchResult[] results = await Task.WhenAll(
+                Ledger.ApplyBatchAsync(PurchaseBatch("purchase-1")),
+                Ledger.ApplyBatchAsync(PurchaseBatch("purchase-2")));
+
+            int applied = (results[0].Applied ? 1 : 0) + (results[1].Applied ? 1 : 0);
+            int insufficient = (results[0].InsufficientBalance ? 1 : 0) +
+                               (results[1].InsufficientBalance ? 1 : 0);
+            Assert.Multiple(() =>
+            {
+                Assert.That(applied, Is.EqualTo(1));
+                Assert.That(insufficient, Is.EqualTo(1));
+            });
+            Assert.That(await Ledger.BalanceAsync("p1", "gold"), Is.EqualTo(0));
+            Assert.That(await Ledger.BalanceAsync("p1", "pack_core"), Is.EqualTo(1));
+            Assert.That(await Ledger.HistoryAsync("p1"), Has.Count.EqualTo(3));
+        }
+
+        [Test]
+        public async Task Player_Mutation_Lock_Serializes_Cross_Store_Workflows()
+        {
+            int active = 0;
+            int maximumActive = 0;
+
+            async Task HoldLock()
+            {
+                await using IAsyncDisposable held =
+                    await Ledger.AcquirePlayerMutationLockAsync("p1");
+                int current = Interlocked.Increment(ref active);
+                int observed;
+                do
+                {
+                    observed = maximumActive;
+                    if (observed >= current) break;
+                }
+                while (Interlocked.CompareExchange(
+                    ref maximumActive, current, observed) != observed);
+
+                await Task.Delay(25);
+                Interlocked.Decrement(ref active);
+            }
+
+            await Task.WhenAll(HoldLock(), HoldLock());
+
+            Assert.That(maximumActive, Is.EqualTo(1));
         }
 
         [Test]

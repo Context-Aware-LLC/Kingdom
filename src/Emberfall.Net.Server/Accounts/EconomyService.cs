@@ -1,0 +1,199 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Emberfall.Core.Collection;
+
+namespace Emberfall.Net.Server.Accounts
+{
+    /// <summary>Canonical ledger item ids for the two founder-locked wallet currencies.</summary>
+    public static class EconomyItems
+    {
+        public const string Gold = "gold";
+        public const string Gems = "gems";
+    }
+
+    /// <summary>The server-authored wallet projection returned to callers.</summary>
+    public readonly record struct WalletBalances
+    {
+        public long Gold { get; }
+        public long Gems { get; }
+
+        public WalletBalances(long gold, long gems) : this()
+        {
+            if (gold < 0) throw new ArgumentOutOfRangeException(nameof(gold));
+            if (gems < 0) throw new ArgumentOutOfRangeException(nameof(gems));
+            Gold = gold;
+            Gems = gems;
+        }
+    }
+
+    public enum EconomyCurrency
+    {
+        Gold,
+        Gems,
+    }
+
+    public enum GoldRewardKind
+    {
+        DailyQuest,
+        FirstWinOfDay,
+        Match,
+    }
+
+    internal static class EconomyAccountPolicy
+    {
+        public static void RequireDurable(Account account)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (string.IsNullOrWhiteSpace(account.PlayerId))
+                throw new ArgumentException("A durable player id is required.", nameof(account));
+            if (string.IsNullOrWhiteSpace(account.CredentialKind))
+                throw new ArgumentException("A credential kind is required.", nameof(account));
+            if (string.Equals(account.CredentialKind, "device_token", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    "Account linking is required before currency or purchased inventory can change.");
+        }
+    }
+
+    public enum PackPurchaseStatus
+    {
+        Purchased,
+        Replayed,
+        InsufficientFunds,
+    }
+
+    public sealed class PackPurchaseOutcome
+    {
+        public PackPurchaseStatus Status { get; }
+        public string PackInstanceId { get; }
+        public WalletBalances Wallet { get; }
+
+        public PackPurchaseOutcome(
+            PackPurchaseStatus status,
+            string packInstanceId,
+            WalletBalances wallet)
+        {
+            Status = status;
+            PackInstanceId = packInstanceId;
+            Wallet = wallet;
+        }
+    }
+
+    /// <summary>
+    /// The server-authoritative economy module. Its interface accepts an account and returns ledger
+    /// projections; callers never supply or calculate wallet balances.
+    /// </summary>
+    public sealed class EconomyService
+    {
+        public const long PackPrice = 100;
+        public const string PackPurchaseSource = "pack_purchase";
+
+        private readonly IEntitlementLedger _ledger;
+        private readonly ITimeSource _time;
+
+        public EconomyService(IEntitlementLedger ledger, ITimeSource time)
+        {
+            _ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
+            _time = time ?? throw new ArgumentNullException(nameof(time));
+        }
+
+        public async Task<WalletBalances> GetWalletAsync(Account account, CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            IReadOnlyDictionary<string, long> balances =
+                await _ledger.BalancesAsync(account.PlayerId, ct).ConfigureAwait(false);
+            long gold = balances.TryGetValue(EconomyItems.Gold, out long heldGold) ? heldGold : 0;
+            long gems = balances.TryGetValue(EconomyItems.Gems, out long heldGems) ? heldGems : 0;
+            return new WalletBalances(gold, gems);
+        }
+
+        /// <summary>
+        /// Grants an amount selected by the authoritative quest or match subsystem. This module
+        /// deliberately defines no reward amounts; it only supplies one replay-safe seam for each
+        /// founder-locked Gold faucet.
+        /// </summary>
+        public async Task<WalletBalances> GrantGoldAsync(
+            Account account,
+            GoldRewardKind kind,
+            long amount,
+            string rewardEventId,
+            CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
+            if (string.IsNullOrWhiteSpace(rewardEventId))
+                throw new ArgumentException("A server-authored reward event id is required.", nameof(rewardEventId));
+            EconomyAccountPolicy.RequireDurable(account);
+
+            string source = kind switch
+            {
+                GoldRewardKind.DailyQuest => "daily_quest",
+                GoldRewardKind.FirstWinOfDay => "first_win",
+                GoldRewardKind.Match => "match_reward",
+                _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+            };
+            var batch = new EntitlementBatch(
+                account.PlayerId,
+                "gold:" + account.PlayerId + ":" + source + ":" + rewardEventId,
+                new[] { new EntitlementDelta(EconomyItems.Gold, amount, source) },
+                requirement: null,
+                DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
+            EntitlementBatchResult result = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
+            if (result.Conflict)
+                throw new InvalidOperationException(
+                    "The reward event id is already bound to a different Gold grant.");
+            return await GetWalletAsync(account, ct).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Atomically debit one founder-locked currency price and grant one unopened pack. The
+        /// caller supplies a server-minted transaction id; retries reuse it and therefore cannot
+        /// spend twice. Opening is a separate resumable step, so a failed open leaves this durable
+        /// pack entitlement available for retry instead of stranding the spend.
+        /// </summary>
+        public async Task<PackPurchaseOutcome> PurchasePackAsync(
+            Account account,
+            BoosterPack pack,
+            EconomyCurrency currency,
+            string serverTransactionId,
+            CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (pack == null) throw new ArgumentNullException(nameof(pack));
+            if (string.IsNullOrWhiteSpace(serverTransactionId))
+                throw new ArgumentException("A server-minted purchase transaction id is required.", nameof(serverTransactionId));
+            EconomyAccountPolicy.RequireDurable(account);
+
+            string currencyItem = currency switch
+            {
+                EconomyCurrency.Gold => EconomyItems.Gold,
+                EconomyCurrency.Gems => EconomyItems.Gems,
+                _ => throw new ArgumentOutOfRangeException(nameof(currency)),
+            };
+            var batch = new EntitlementBatch(
+                account.PlayerId,
+                PackPurchaseSource + ":" + serverTransactionId,
+                new List<EntitlementDelta>
+                {
+                    new EntitlementDelta(currencyItem, -PackPrice, PackPurchaseSource),
+                    new EntitlementDelta(pack.Id, 1, PackPurchaseSource),
+                },
+                new EntitlementBalanceRequirement(currencyItem, PackPrice),
+                DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
+
+            EntitlementBatchResult applied = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
+            if (applied.Conflict)
+                throw new InvalidOperationException(
+                    "The purchase transaction id is already bound to different economy movements.");
+
+            WalletBalances wallet = await GetWalletAsync(account, ct).ConfigureAwait(false);
+            PackPurchaseStatus status = applied.Applied
+                ? PackPurchaseStatus.Purchased
+                : applied.Duplicate
+                    ? PackPurchaseStatus.Replayed
+                    : PackPurchaseStatus.InsufficientFunds;
+            return new PackPurchaseOutcome(status, serverTransactionId, wallet);
+        }
+    }
+}
