@@ -58,6 +58,9 @@ namespace Emberfall.Presentation
 
         private System.Collections.Generic.Queue<PointerSample> _syntheticFrames;  // test-only queue
 
+        /// <summary>EDITOR/TEST ONLY: whether a finger/gesture is currently being tracked.</summary>
+        public bool IsTrackingFinger => _fingerId >= 0;
+
         public PointerSample Sample()
         {
             // Test injection: if synthetic frames are queued, drain them instead of reading Input.
