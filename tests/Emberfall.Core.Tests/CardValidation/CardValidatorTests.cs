@@ -393,7 +393,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public System.Collections.Generic.IReadOnlyCollection<CardDefinition> AllCollectible()
         {
             var result = new System.Collections.Generic.List<CardDefinition>();
-            foreach (var d in _cards.Values) if (d.Collectible) result.Add(d);
+            foreach (var d in _cards.Values) if (d.PoolEligible) result.Add(d);
             return result;
         }
     }

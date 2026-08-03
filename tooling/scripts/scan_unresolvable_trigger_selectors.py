@@ -12,6 +12,16 @@ supply the target, so `ChosenTargets` is non-empty and the selector is never con
 OTHER trigger fires with an empty target list, so its selector MUST be auto-resolvable or the
 card is a live crash the moment it fires.
 
+A row carrying `requiresEngineeringPrimitive: true` is HELD, not an offender: since EF-032a
+that flag excludes the row from `ICardDatabase.AllCollectible()`, so it reaches no deck, no
+pack and no pool, and therefore can never fire. Held rows are printed anyway — a reservation
+the set is carrying is worth seeing, and a silent hold is how content goes missing.
+
+requiresEngineeringPrimitive is a TEMPORARY quarantine (Sam, 2026-08-03), not a standing
+pattern — see the retirement trigger on CardDefinition.PoolEligible. Once card authoring is
+backend-first (no new card ships against a primitive that doesn't exist yet) and this backlog
+clears, the HELD branch below should read zero rows forever; that is the signal to retire it.
+
 Exit 1 if any offender is found.
 """
 import json
@@ -80,6 +90,7 @@ def main() -> int:
     scanned = 0
     effects = 0
     offenders = []
+    held = []
 
     for path in files:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -96,19 +107,33 @@ def main() -> int:
                     continue
                 if selector in AUTO_RESOLVABLE:
                     continue
-                offenders.append((path.name, card["id"], trigger,
-                                  eff.get("action"), selector))
+                row = (path.name, card["id"], trigger, eff.get("action"), selector)
+                # Held out of every pool by the gate — it cannot be drawn, so it cannot fire.
+                if card.get("requiresEngineeringPrimitive") is True:
+                    held.append(row)
+                else:
+                    offenders.append(row)
+
+    def table(rows):
+        print(f"{'file':<16} {'card id':<34} {'trigger':<14} {'action':<10} selector")
+        print("-" * 96)
+        for row in rows:
+            print(f"{row[0]:<16} {row[1]:<34} {str(row[2]):<14} {str(row[3]):<10} {row[4]}")
 
     print(f"card files scanned : {len(files)}  ({', '.join(p.name for p in files)})")
     print(f"cards scanned      : {scanned}")
     print(f"effects scanned    : {effects}")
     print(f"offenders          : {len(offenders)}")
+    print(f"held (quarantined) : {len(held)}")
+    if held:
+        print()
+        print("HELD — requiresEngineeringPrimitive is set, so AllCollectible() excludes these rows")
+        print("and they reach no pool. TEMPORARY quarantine (retire this branch once it's empty):")
+        table(held)
     if offenders:
         print()
-        print(f"{'file':<16} {'card id':<34} {'trigger':<14} {'action':<10} selector")
-        print("-" * 96)
-        for row in offenders:
-            print(f"{row[0]:<16} {row[1]:<34} {str(row[2]):<14} {str(row[3]):<10} {row[4]}")
+        print("OFFENDERS — these WILL throw when the trigger fires:")
+        table(offenders)
     return 1 if offenders else 0
 
 

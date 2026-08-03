@@ -26,7 +26,7 @@ namespace Emberfall.Editor
         public IReadOnlyCollection<CardDefinition> AllCollectible()
         {
             var result = new List<CardDefinition>();
-            foreach (var d in _cards.Values) if (d.Collectible) result.Add(d);
+            foreach (var d in _cards.Values) if (d.PoolEligible) result.Add(d);
             return result;
         }
     }

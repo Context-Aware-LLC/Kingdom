@@ -11,6 +11,7 @@ name: Emberfall CI — determinism gates
 #   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
 #   Stage 6  Content C-series             BLOCKING as of M2 (WS C3 — pure-.NET CardCi over *.cards.json)
+#   Stage 6b Trigger/selector drift guard BLOCKING as of EF-032a (validator list vs the interpreter switch)
 #   Stage 7  Content E-series (Unity)     informational at M1 (no seat — becomes blocking at M2)
 #   Stage 8  Unity PlayMode integration   informational at M1 (no seat — becomes blocking at M2)
 #   Stage 9  On-device perf gate (D8)     manual device job at the milestone boundary (not per-PR)
@@ -104,6 +105,14 @@ jobs:
       # (art misses WARN only — placeholder-art policy, M2 decision 18).
       - name: "Stage 6 · Content C-series card gate (Emberfall.Tools.CardCi)"
         run: dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
+
+      # CardValidator C14b (above, via CardCi) already fails a fired trigger that declares an
+      # ANY_* selector. This scan is NOT that check twice: its real job is the drift guard the
+      # .NET side cannot do — it reads the `case` labels out of EffectInterpreter.SelectorTargets
+      # and fails (exit 2) when the validator's hand-copied selector list stops matching the
+      # switch it mirrors. C14b is only as true as that list.
+      - name: "Stage 6b · Trigger/selector drift guard (tooling/scripts)"
+        run: python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
 
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.

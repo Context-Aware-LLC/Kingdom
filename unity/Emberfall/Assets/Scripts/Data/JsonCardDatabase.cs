@@ -42,7 +42,7 @@ namespace Emberfall.Data
         {
             var result = new List<CardDefinition>();
             foreach (var def in _cards.Values)
-                if (def.Collectible) result.Add(def);
+                if (def.PoolEligible) result.Add(def);
             return result;
         }
     }
