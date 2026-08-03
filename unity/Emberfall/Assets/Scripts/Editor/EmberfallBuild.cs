@@ -21,6 +21,14 @@ namespace Emberfall.Editor
         private const string DeckbuilderScenePath = "Assets/Scenes/DeckbuilderSpike.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
         private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
+        private const string AndroidOutputPath = "Builds/Android/Emberfall.apk";
+
+        // Debug signing config checked in with the project. These are the standard Android debug
+        // credentials and must never be reused for a store release.
+        private const string DebugKeystorePath = "keystore/debug.keystore";
+        private const string DebugKeystorePassword = "android";
+        private const string DebugKeyAlias = "androiddebugkey";
+        private const string DebugKeyAliasPassword = "android";
 
         /// <summary>
         /// A second seat for local testing: boots the main menu, and is a <b>development</b> player so
@@ -58,6 +66,70 @@ namespace Emberfall.Editor
                 options = BuildOptions.Development,
             };
             Report(BuildPipeline.BuildPlayer(options), DevOutputPath);
+        }
+
+        /// <summary>
+        /// Produces an installable Android test APK with Android-specific Addressables content,
+        /// IL2CPP, ARM64, and the project's checked-in debug signing configuration.
+        ///
+        /// <para>The menu command may be invoked while another platform is active. It switches to
+        /// Android before building Addressables so texture import and compression use the Android
+        /// platform settings. Headless callers should still pass <c>-buildTarget android</c> to avoid
+        /// paying for a platform switch after editor startup.</para>
+        /// </summary>
+        [MenuItem("Emberfall/Build/Android APK (content + player, IL2CPP ARM64)")]
+        public static void BuildAndroid()
+        {
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                Debug.Log("[EmberfallBuild] Switching active build target to Android before building content.");
+                bool switched = EditorUserBuildSettings.SwitchActiveBuildTarget(
+                    BuildTargetGroup.Android,
+                    BuildTarget.Android);
+                if (!switched || EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+                    throw new BuildFailedException(
+                        "[EmberfallBuild] Could not switch the active build target to Android. " +
+                        "Install Android Build Support in Unity Hub and try again.");
+            }
+
+            SyncSceneList();
+
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            EditorUserBuildSettings.buildAppBundle = false;
+
+            string projectRoot = Path.GetDirectoryName(Application.dataPath);
+            string keystorePath = Path.GetFullPath(Path.Combine(projectRoot, DebugKeystorePath));
+            if (!File.Exists(keystorePath))
+                throw new BuildFailedException(
+                    $"[EmberfallBuild] Debug keystore not found at '{keystorePath}'.");
+
+            PlayerSettings.Android.keystoreName = keystorePath;
+            PlayerSettings.Android.keystorePass = DebugKeystorePassword;
+            PlayerSettings.Android.keyaliasName = DebugKeyAlias;
+            PlayerSettings.Android.keyaliasPass = DebugKeyAliasPassword;
+            PlayerSettings.Android.useCustomKeystore = true;
+
+            BuildAndroidAddressables();
+
+            Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                locationPathName = AndroidOutputPath,
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+                options = BuildOptions.None,
+            };
+
+            Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
+
+            string apkPath = Path.GetFullPath(AndroidOutputPath);
+            if (!File.Exists(apkPath))
+                throw new BuildFailedException(
+                    $"[EmberfallBuild] Build reported success but no APK exists at '{apkPath}'.");
+
+            Debug.Log($"[EmberfallBuild] Installable APK verified: {apkPath} ({new FileInfo(apkPath).Length} bytes)");
         }
 
         [MenuItem("Emberfall/Build/Windows Standalone (content + player)")]

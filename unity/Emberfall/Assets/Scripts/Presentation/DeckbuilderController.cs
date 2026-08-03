@@ -153,7 +153,7 @@ namespace Emberfall.Presentation
             _curve          = _root.Q<VisualElement>("curve-strip");
             _legalityBox    = _root.Q<VisualElement>("legality-box");
             _countLabel     = _root.Q<Label>("count-label");
-            _legalityPill   = _root.Q<Label>("legality-pill");
+            // _legalityPill   = _root.Q<Label>("legality-pill");
             _heroLabel      = _root.Q<Label>("hero-label");
             _saveButton     = _root.Q<Button>("save-button");
             _filterAllButton     = _root.Q<Button>("filter-all");
@@ -339,17 +339,17 @@ namespace Emberfall.Presentation
         {
             var row = new VisualElement();
             row.AddToClassList("card-row");
-            var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
+            // var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
             // var dot  = new VisualElement { name = "dot" }; dot.AddToClassList("card-rarity-dot");
             var name = new Label { name = "name" };   name.AddToClassList("card-name");
-            //  row.add(dot); removed from the line below for offending someones sensibilities
-            row.Add(cost); row.Add(name);
+            //  row.Add(cost); row.add(dot); removed from the line below for offending someones sensibilities
+             row.Add(name);
             return row;
         }
 
         private static void SetCardRow(VisualElement row, CardDefinition def)
         {
-            row.Q<Label>("cost").text = def.Cost.ToString();
+            // row.Q<Label>("cost").text = def.Cost.ToString();
             row.Q<Label>("name").text = def.Name;
 
             SwapPrefixedClass(row, "edge--", ClassEdgeClass(def.Class));
@@ -437,9 +437,9 @@ namespace Emberfall.Presentation
 
             _countLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
 
-            _legalityPill.text = result.IsValid ? "Legal" : "Incomplete";
-            _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
-            _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
+            // _legalityPill.text = result.IsValid ? "Legal" : "Incomplete";
+            // _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
+            // _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
 
             _legalityBox.Clear();
             foreach (var v in result.Violations)

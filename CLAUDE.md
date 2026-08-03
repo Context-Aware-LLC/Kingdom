@@ -22,7 +22,7 @@ become wrong, and this file is loaded into every session that touches the repo.
 ## Where things are
 
 `src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`,
-not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-bakeoff/` hold source art and
+not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-pipeline/` hold source art and
 generated candidates. `tooling/scripts/` and `tools/ci/` hold automation. See `src/README.md` for
 the engine map.
 
@@ -156,10 +156,10 @@ Placed so far: the `Trigger` enum (`Enums.cs`), the per-effect loop in `CardVali
 **A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
 that is simply true. Only pin the ones that a known, named change will invalidate.
 
-## Generated art lands in `art-bakeoff/`
+## Generated art lands in `art-pipeline`
 
 **Generation never writes into the Unity project.** Generators drop candidates into
-`art-bakeoff/card-art/<batch>/art_<cardId>/cand_*.png`, organised by batch rather than by where
+`art-pipeline/card-art/<batch>/art_<cardId>/art_<setId>_<cardId>_<cardName>.png`, organised by batch rather than by where
 the asset will live. **Resolving a candidate into a project path is the importer's job**, after
 generation — the generating session does not have the information to get it right.
 
@@ -173,10 +173,6 @@ the row's `setId` before copying — it does not always match the batch folder i
 pair.** The `.meta` carries the guid the Addressables entry points at; deleting it mints a new
 one and silently orphans that entry. Overwriting keeps it. New art still needs its generated
 `.meta` committed — a separate and easy-to-forget step.
-
-**`art-bakeoff/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31).** Every final
-version already lives under `Assets/`, so the whole folder could vanish and no build, test or asset
-would change. It is kept because it is good to look at.
 
 **What that changes: nothing there is a deliverable, and losing a candidate is not an incident** —
 do not treat it as recoverable state, do not audit it, do not raise a deletion as a finding.

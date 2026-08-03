@@ -16,7 +16,6 @@
             <ui:VisualElement class="db-header-spacer" />
             <ui:Label name="hero-label" text="Emberward" class="db-hero" />
             <ui:Label name="count-label" text="0 / 30" class="db-count" />
-            <ui:Label name="legality-pill" text="Incomplete" class="db-pill db-pill--invalid" />
         </ui:VisualElement>
 
         <!-- Body: split view -->

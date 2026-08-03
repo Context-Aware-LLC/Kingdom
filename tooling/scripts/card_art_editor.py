@@ -18,7 +18,7 @@ unity/Emberfall/Assets/Art/Cards/<setId>/art_<cardId>.png — not the pipeline's
 because the question this tool answers is "does the shipped game have art for this card yet."
 
 Usage:
-  python tooling/scripts/card_art_editor.py [--port 8765]
+  python tooling/scripts/card_art_editor.py --port 8765
   Then open http://localhost:8765/ in a browser.
 """
 
@@ -34,10 +34,9 @@ from gen_card_prompt_briefs import (  # noqa: E402
     BACKGROUND_OPPOSITION_HINTS,
     CARD_DATA_DIR,
     COMPOSITION,
-    DELIVERY_TMPL,
     NEGATIVE_PROMPT,
-    OUT_ROOT,
     STYLE,
+    delivery_block,
     load_cards,
     load_class_descriptors,
     load_world_tone,
@@ -89,12 +88,10 @@ def compose_blank(card, class_descriptors, world_tone):
     text — just an obvious marker to type over, per Sam's explicit ask."""
     cls = card.get("class", "NEUTRAL").lower()
     palette, motifs, mood = class_descriptors.get(cls, ("", "", ""))
-    filename = f"art_{card['id']}.png"
-    out_dir = f"{OUT_ROOT}\\{card['setId']}\\"
     bg_hint = BACKGROUND_OPPOSITION_HINTS.get(cls, "oppose the subject palette in hue or temperature")
 
     header = f"Generate one Emberfall card illustration for {card['name']} ({card['id']})."
-    delivery = DELIVERY_TMPL.format(out_dir=out_dir, filename=filename)
+    delivery = delivery_block(card)
     subj_opp = (
         "SUBJECT AND BACKGROUND OPPOSITION\n"
         f"- Subject class: {card.get('class', 'NEUTRAL').title()}.\n"
