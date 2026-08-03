@@ -20,4 +20,14 @@
     <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!--
+      EF-017a. DerivedStats.RemoveBySource is the unapply half of the derived-stat layer and has no
+      in-engine caller until AURA lands (EF-017b), so behaviour tests cannot reach it. Testing it
+      directly is what stops it shipping as unproven scaffolding. Same seam Emberfall.Net.Server
+      already uses for its own internals.
+    -->
+    <InternalsVisibleTo Include="Emberfall.Core.Tests" />
+  </ItemGroup>
+
 </Project>

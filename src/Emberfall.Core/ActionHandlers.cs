@@ -123,10 +123,11 @@ namespace Emberfall.Core
             {
                 if (!t.IsMinion) continue;
                 var m = t.Minion!;
+                // The enchantment is the record and the recompute reads it back (EF-017a). Before that
+                // layer this baked `CurrentAttack += atk` and the enchantment was write-only, so nothing
+                // could ever take the buff off again.
                 m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, AttackDelta = atk, HealthDelta = hp });
-                m.CurrentAttack += atk;
-                m.MaxHealth += hp;
-                m.CurrentHealth += hp;
+                DerivedStats.Recompute(m, ctx.Db.Get(m.DefinitionId));
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onBuff), source: ctx.Source.Id, target: m.Id, amount: atk != 0 ? atk : hp);
             }
         }
@@ -144,6 +145,11 @@ namespace Emberfall.Core
             {
                 if (!t.IsMinion) continue;
                 var m = t.Minion!;
+                // KNOWN GAP for EF-017b: the enchantment is recorded only when the keyword was NEWLY
+                // added, so a second grant of a keyword the minion already has leaves no record. Once
+                // auras can grant keywords, that makes "aura leaves" strip a keyword a permanent grant
+                // was also holding up. Recording unconditionally is the fix and it is HASH-CANONICAL —
+                // the enchantment list is serialized — so it belongs in the batched rebaseline, not here.
                 if (m.Keywords.Add(kw.Value))
                     m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, GrantedKeyword = kw });
                 if (kw.Value == Keyword.DIVINE_SHIELD) m.HasAegisShield = true;
@@ -183,19 +189,13 @@ namespace Emberfall.Core
                 ps.Board.RemoveAt(idx);
                 RulesEngine.Reindex(ps.Board);
 
-                // Reset to printed form — board-runtime state is dropped on the bounce.
+                // Reset to printed form — board-runtime state is dropped on the bounce. The card arrives
+                // in hand whole, so damage is NOT preserved across the zone change (EF-017a).
                 var def = ctx.Db.Get(m.DefinitionId);
-                m.Enchantments.Clear();
-                m.Keywords.Clear();
-                foreach (var k in def.Keywords) m.Keywords.Add(k);
-                m.HasAegisShield = m.Keywords.Contains(Keyword.DIVINE_SHIELD);
-                m.IsFrozen = false;
+                DerivedStats.ResetToPrinted(m, def, preserveDamage: false);
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
                 m.HasUsedReborn = false;
-                m.CurrentAttack = def.Attack ?? 0;
-                m.MaxHealth = def.Health ?? 1;
-                m.CurrentHealth = def.Health ?? 1;
 
                 if (ps.Hand.Count >= MatchEngine.HandCap)
                 {
@@ -228,17 +228,9 @@ namespace Emberfall.Core
                 var m = t.Minion!;
                 var def = ctx.Db.Get(m.DefinitionId);
 
-                int damageTaken = m.MaxHealth - m.CurrentHealth;   // damage already on the minion is kept
-                if (damageTaken < 0) damageTaken = 0;
-
-                m.Enchantments.Clear();
-                m.Keywords.Clear();
-                foreach (var k in def.Keywords) m.Keywords.Add(k);
-                m.CurrentAttack = def.Attack ?? 0;
-                m.MaxHealth = def.Health ?? 1;
-                m.CurrentHealth = m.MaxHealth - damageTaken;       // may drop ≤0 → DeathCheck kills it
-                m.HasAegisShield = m.Keywords.Contains(Keyword.DIVINE_SHIELD);
-                m.IsFrozen = false;
+                // Damage already on the minion is KEPT, so a buffed body falling away can leave the
+                // printed one at ≤0 → DeathCheck kills it (EF-017a).
+                DerivedStats.ResetToPrinted(m, def, preserveDamage: true);
 
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onSilence), source: ctx.Source.Id, target: m.Id);
             }

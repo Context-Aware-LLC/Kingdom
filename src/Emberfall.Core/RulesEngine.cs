@@ -58,14 +58,9 @@ namespace Emberfall.Core
 
             ci.Controller = ps.Id;
             ci.Zone = Zone.Board;
-            ci.CurrentAttack = def.Attack ?? 0;
-            ci.CurrentHealth = def.Health ?? 1;
-            ci.MaxHealth = def.Health ?? 1;
-            ci.Enchantments.Clear();
-            ci.Keywords.Clear();
-            foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            ci.HasAegisShield = ci.Keywords.Contains(Keyword.DIVINE_SHIELD);
-            ci.IsFrozen = false;
+            // Stats, keywords, Aegis and freeze all come off the printed form (EF-017a). A card entering
+            // the board arrives whole, so no damage is carried in from whatever it was doing before.
+            DerivedStats.ResetToPrinted(ci, def, preserveDamage: false);
             ci.SummonedThisTurn = true;     // summoning sickness; CHARGE/RUSH override in combat (step 2)
             ci.AttacksUsedThisTurn = 0;
             ci.HasUsedReborn = false;
