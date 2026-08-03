@@ -1,6 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
+    <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim" style="background-image: none;"/>
         <ui:Button name="identity" class="mm-identity">
@@ -58,6 +59,42 @@
                     <ui:Button name="btn-account-close" text="Close" class="mm-modal__button"/>
                     <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden">
+            <ui:VisualElement name="shop-shell" class="shop-shell">
+                <ui:VisualElement class="shop-header">
+                    <ui:VisualElement class="shop-heading">
+                        <ui:Label text="Booster Shop" class="shop-title"/>
+                        <ui:Label text="Choose a set. Pack contents and wallet changes are resolved by the server." class="shop-subtitle"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="shop-wallet">
+                        <ui:Label name="shop-gold-balance" text="Gold  —" class="shop-wallet__balance shop-wallet__balance--gold"/>
+                        <ui:Label name="shop-gem-balance" text="Gems  —" class="shop-wallet__balance shop-wallet__balance--gems"/>
+                    </ui:VisualElement>
+                    <ui:Button name="btn-shop-close" text="Close" class="shop-close"/>
+                </ui:VisualElement>
+                <ui:ScrollView name="shop-scroll" class="shop-scroll">
+                    <ui:VisualElement class="shop-section">
+                        <ui:Label text="Booster Packs" class="shop-section__title"/>
+                        <ui:Label text="Each pack contains five cards from Core plus its expansion, with at least one Rare or better." class="shop-section__help"/>
+                        <ui:VisualElement name="shop-pack-list" class="shop-pack-list"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="shop-section">
+                        <ui:Label text="Gem Bundles" class="shop-section__title"/>
+                        <ui:Label text="Founder-approved tiers. Live platform purchasing remains disabled until store product IDs are bound." class="shop-section__help"/>
+                        <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
+                    </ui:VisualElement>
+                </ui:ScrollView>
+                <ui:Label name="shop-status" text="" class="shop-status"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="reveal-overlay" class="shop-overlay shop-overlay--hidden">
+            <ui:VisualElement class="shop-shell reveal-shell">
+                <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
+                <ui:Label name="reveal-summary" text="" class="reveal-summary"/>
+                <ui:VisualElement name="reveal-cards" class="reveal-cards"/>
+                <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

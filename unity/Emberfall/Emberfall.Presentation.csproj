@@ -86,6 +86,7 @@
     <Compile Include="Assets\Scripts\Presentation\CardMaterialBinder.cs" />
     <Compile Include="Assets\Scripts\Presentation\RejectToastView.cs" />
     <Compile Include="Assets\Scripts\Presentation\MainMenuController.cs" />
+    <Compile Include="Assets\Scripts\Presentation\ShopPanelController.cs" />
     <Compile Include="Assets\Scripts\Presentation\MatchEndBanner.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorUiTextProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardController.cs" />
