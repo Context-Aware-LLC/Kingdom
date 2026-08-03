@@ -43,11 +43,15 @@ namespace Emberfall.Net.Server.Accounts
     /// <summary>An opaque client receipt sent to one platform-specific server validator.</summary>
     public sealed record StoreReceipt(string Provider, string Payload);
 
-    /// <summary>The only facts the economy trusts after a platform adapter validates a receipt.</summary>
+    /// <summary>
+    /// The only facts the economy trusts after a platform adapter validates a receipt, including the
+    /// authenticated player identity bound into the store transaction.
+    /// </summary>
     public sealed record ValidatedStorePurchase(
         string Provider,
         string StoreTransactionId,
-        string ProductKey);
+        string ProductKey,
+        string PlayerId);
 
     public sealed class StoreReceiptValidation
     {
@@ -112,7 +116,8 @@ namespace Emberfall.Net.Server.Accounts
 
     /// <summary>
     /// Validates store receipts before crossing the replay-once entitlement-ledger seam. The store
-    /// transaction id, not receipt bytes or a client-generated id, anchors idempotency.
+    /// transaction id, not receipt bytes or a client-generated id, anchors idempotency. A validated
+    /// purchase must also be bound to the same authenticated player that receives the Gems.
     /// </summary>
     public sealed class GemGrantService
     {
@@ -155,6 +160,7 @@ namespace Emberfall.Net.Server.Accounts
             ValidatedStorePurchase purchase = validation.Purchase;
             if (!string.Equals(purchase.Provider, receipt.Provider, StringComparison.Ordinal) ||
                 string.IsNullOrWhiteSpace(purchase.StoreTransactionId) ||
+                !string.Equals(purchase.PlayerId, account.PlayerId, StringComparison.Ordinal) ||
                 !GemBundleCatalog.TryGet(purchase.ProductKey, out GemBundleDefinition bundle))
                 return await RejectedAsync(account, "invalid_validated_purchase", ct).ConfigureAwait(false);
 

@@ -45,11 +45,12 @@ namespace Emberfall.Net.Server.Tests.Accounts
                     new ValidatedStorePurchase(
                         receipt.Provider,
                         "store-txn-1",
-                        "gems.tier.200")));
+                        "gems.tier.200",
+                        "player-1")));
         }
 
-        private static Account AuthenticatedAccount()
-            => new Account("player-1", "google", "subject-hash", At);
+        private static Account AuthenticatedAccount(string playerId = "player-1")
+            => new Account(playerId, "google", "subject-hash", At);
 
         [Test]
         public void Catalog_Exposes_The_Six_Founder_Locked_Abstract_Gem_Tiers()
@@ -90,7 +91,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var validator = new StubValidator(StoreReceiptValidation.Valid(
-                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.550")));
+                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.550", "player-1")));
             var service = new GemGrantService(ledger, validator, new FixedTime());
             var receipt = new StoreReceipt("play", "opaque-signed-payload");
 
@@ -111,7 +112,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var validator = new StubValidator(StoreReceiptValidation.Valid(
-                new ValidatedStorePurchase("play", "store-txn-1", "live.sku.not-mapped")));
+                new ValidatedStorePurchase("play", "store-txn-1", "live.sku.not-mapped", "player-1")));
             var service = new GemGrantService(ledger, validator, new FixedTime());
 
             GemGrantOutcome result = await service.GrantAsync(
@@ -119,6 +120,23 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             Assert.That(result.Status, Is.EqualTo(GemGrantStatus.Rejected));
             Assert.That(await ledger.HistoryAsync("player-1"), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_Validated_Receipt_Cannot_Be_Claimed_By_Another_Account()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var validator = new StubValidator(StoreReceiptValidation.Valid(
+                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.200", "player-1")));
+            var service = new GemGrantService(ledger, validator, new FixedTime());
+
+            GemGrantOutcome result = await service.GrantAsync(
+                AuthenticatedAccount("player-2"),
+                new StoreReceipt("play", "opaque-signed-payload"));
+
+            Assert.That(result.Status, Is.EqualTo(GemGrantStatus.Rejected));
+            Assert.That(await ledger.HistoryAsync("player-1"), Is.Empty);
+            Assert.That(await ledger.HistoryAsync("player-2"), Is.Empty);
         }
 
         [Test]
@@ -145,7 +163,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             var validator = new StubValidator(StoreReceiptValidation.Valid(
-                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.200")));
+                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.200", "player-1")));
             var service = new GemGrantService(ledger, validator, new FixedTime());
             var account = new Account("player-1", "device_token", "subject-hash", At);
 
