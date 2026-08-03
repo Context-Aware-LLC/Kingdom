@@ -43,10 +43,11 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. AURA (EF-017b) still has no raise site anywhere in the engine —
-    /// and cannot have one until a derived-stat recompute pass exists: CardValidator rule C21 rejects a
-    /// card using it before it loads, while bypassing validation would leave the effect inert forever.
-    /// The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>DECLARED IS NOT LIVE. AURA (EF-017b) still has no raise site anywhere in the engine:
+    /// CardValidator rule C21 rejects a card using it before it loads, while bypassing validation would
+    /// leave the effect inert forever. Its former blocker — the absence of a derived-stat recompute
+    /// pass — was cleared by EF-017a; what remains is the raise site itself and the board sweep that
+    /// calls it. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
@@ -106,9 +107,11 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor, for spells AND hero powers.
         ON_CAST,
 
-        // DEAD, and not an event at all: it needs a derived-stat recompute pass, which does not
-        // exist anywhere in src/. BuffHandler bakes stats destructively and the Enchantment it
-        // writes is never read back, so an aura source leaving the board cannot unapply itself.
+        // DEAD, and not an event at all: it needs a raise site plus a sweep that reapplies it as the
+        // board changes, and neither exists in src/. Its OTHER half is now built — EF-017a made stats
+        // a fold over CardInstance.Enchantments (DerivedStats), so DerivedStats.RemoveBySource can take
+        // an aura's contribution back off when its source leaves. That method has no in-engine caller
+        // until this trigger gets one; EF-017b is where they meet.
         AURA
     }
 
