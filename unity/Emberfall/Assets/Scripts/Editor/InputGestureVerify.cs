@@ -399,7 +399,7 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(25, 215)));
             Check("OS-canceled touch during drag: no intent submitted", harness.SubmittedIntents.Count == 0);
             Check("OS-canceled touch during drag: gesture fully cleared",
-                harness.Router.Pointer._fingerId == -1);  // Gesture is reset
+                !harness.Router.Pointer.IsTrackingFinger);  // Gesture is reset
 
             // Verify that targeting is also cleared (no armed state leaking through).
             // A subsequent press on the same card should start fresh.
@@ -427,7 +427,7 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(25, 200)));
             Check("OS-canceled touch during ArmedByTap: no intent submitted", harness.SubmittedIntents.Count == 0);
             Check("OS-canceled touch during ArmedByTap: gesture fully cleared",
-                harness.Router.Pointer._fingerId == -1);
+                !harness.Router.Pointer.IsTrackingFinger);
 
             // Verify that a new press starts fresh without any residual ArmedByTap state.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));

@@ -430,7 +430,7 @@ namespace Emberfall.Presentation
             {
                 HashSet<InstanceId> effectTargets = _model.SpellTargets(_model.AwaitingCardId);
                 if (effectTargets == null || effectTargets.Count == 0) ClearTargeting();
-                else                                                    SetTargeting(effectTargets, _model.AimBanner);
+                else                                                    SetTargeting(effectTargets, DragTargetingModel.AimBanner);
                 return;
             }
 
