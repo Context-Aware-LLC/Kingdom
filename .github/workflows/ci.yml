@@ -9,6 +9,7 @@ name: Emberfall CI — determinism gates
 #   Stage 3b Collection + CardValidation  BLOCKING   (ran in NO stage before 2026-08-01)
 #   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
 #   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
+#   Stage 5b Networked AI soak            BLOCKING as of EF-077 (real AI, real sockets, real server)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
 #   Stage 6  Content C-series             BLOCKING as of M2 (WS C3 — pure-.NET CardCi over *.cards.json)
 #   Stage 6b Trigger/selector drift guard BLOCKING as of EF-032a (validator list vs the interpreter switch)
@@ -16,7 +17,9 @@ name: Emberfall CI — determinism gates
 #   Stage 8  Unity PlayMode integration   informational at M1 (no seat — becomes blocking at M2)
 #   Stage 9  On-device perf gate (D8)     manual device job at the milestone boundary (not per-PR)
 #
-# => 5 hard-blocking stages run here. Runs on Linux x64 on purpose: baking the golden fixtures on a
+# => Every stage marked BLOCKING above runs here. This line used to restate that as a number; it was
+#    wrong by the time EF-077 read it, so the map above and the steps below are the only list.
+#    Runs on Linux x64 on purpose: baking the golden fixtures on a
 #    Windows dev box and asserting them on a Linux runner proves the little-endian, platform-independent
 #    canonical hash (golden-replay.md §4.4).
 
@@ -98,6 +101,34 @@ jobs:
       # ── Stage 5 — Golden-replay, the R1 gate (BLOCKING, criterion 6) ────────────
       - name: "Stage 5 · Golden-replay (R1 gate)"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
+
+      # ── Stage 5b — Networked AI soak (BLOCKING as of EF-077) ───────────────────
+      # Stage 5 replays PINNED fixtures through the engine in-process. This one plays NEW matches
+      # through the whole shipped stack: the real ServerApp Kestrel host on an ephemeral 127.0.0.1
+      # port, the real wire codec, real WebSocket sockets, and the real GreedyAi on BOTH seats to a
+      # natural decided end. It is the only step here that can catch a break in the snapshot
+      # PIPELINE rather than in the rules core.
+      #
+      # WHAT "hash-asserted" MEANS HERE — the two assertions already inside `liveai`, now gating:
+      #   * the client's RC-F8 per-snapshot hash verify. Every snapshot the client applies is
+      #     re-hashed and compared to the server's; a mismatch forces a resync and is tallied as an
+      #     integrity failure. A non-zero tally exits 1.
+      #   * the client's terminal outcome must AGREE with the outcome the server persisted in its
+      #     own replay footer. A disagreement exits 1.
+      # There is deliberately NO pinned digest for this stage: the match is not reproducible
+      # run-to-run (same argv, different turn counts and different winners — measured), so a pinned
+      # value could only be re-baked, never asserted. Pinned-digest determinism is Stage 5's job and
+      # Stage 5 does it properly. See the EF-077 issue for the full finding.
+      # `capped`, `undecided` and `rejects` also exit 1 — each is a real stall/timeout, not noise.
+      #
+      # WHY 5 MATCHES. Fixed cost is the ~6.4s process+server boot; each additional match is ~0.2s
+      # (measured 1/5/10/20 → 6.6/7.4/8.7/10.0s), so 5 buys four extra matches for under a second.
+      # One match is not enough to read the intent-mix rows the tool prints: a verb the AI simply
+      # never reached in a single game is indistinguishable from a verb that no longer works over
+      # the wire. Raise N here rather than adding a second soak step.
+      - name: "Stage 5b · Networked AI soak (Emberfall.Tools.NetSoak liveai)"
+        timeout-minutes: 10
+        run: dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
 
       # ── Stage 6 — Content validation, C-series (BLOCKING as of M2 WS C3) ────────
       # Pure-.NET card gate over the flat-file-per-set card JSON: C1-C21 per row via the
