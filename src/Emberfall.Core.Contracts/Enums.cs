@@ -43,10 +43,10 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. ON_HEAL (EF-015) and AURA (EF-017b) still have no
-    /// raise site anywhere in the engine: CardValidator rule C21 rejects a card using one before it
-    /// loads, while bypassing validation would leave the effect inert forever. The markers below are
-    /// the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>DECLARED IS NOT LIVE. AURA (EF-017b) still has no raise site anywhere in the engine —
+    /// and cannot have one until a derived-stat recompute pass exists: CardValidator rule C21 rejects a
+    /// card using it before it loads, while bypassing validation would leave the effect inert forever.
+    /// The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
@@ -75,8 +75,13 @@ namespace Emberfall.Core.Contracts
         // LIVE — DamagePipeline raises this for minions that actually take damage (not Aegis absorbs).
         ON_DAMAGED,
 
-        // DEAD — no raise site. Intended site: the DamagePipeline heal path. Note it would fire
-        // reentrantly inside ApplyDamage via LIFESTEAL.
+        // LIVE FOR MINIONS — DamagePipeline.ApplyHeal raises it on the character whose health was
+        // actually restored (EF-015). SELF trigger, mirroring ON_DAMAGED: "whenever THIS minion is
+        // healed", never "whenever anything is healed". Two silences are deliberate and permanent:
+        // an overheal raises nothing (nothing was restored), and a HERO heal raises nothing (heroes
+        // carry no card effects) — which is why the reentrant LIFESTEAL heal inside ApplyDamage,
+        // whose target is always a hero, fires this on nobody. Dead on SPELL/WEAPON: neither has
+        // health to restore, so the minion-only classification here is not a staging step.
         ON_HEAL,
 
         // LIVE FOR BOARD MINIONS — CommandProcessor.StartTurnSequence raises it after the thaw/mana

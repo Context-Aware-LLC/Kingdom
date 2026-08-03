@@ -75,7 +75,18 @@ safeguard. **Reading its output is the safeguard.**
 **raised nowhere in the engine**. Rule C21 rejects a card using one before it loads; bypassing
 validation would leave the effect inert forever.
 
-> `ON_HEAL` · `AURA`
+> `AURA`
+
+**`ON_HEAL` is a SELF trigger on the healed minion, and minion-only** (EF-015) —
+`DamagePipeline.ApplyHeal` raises it with `RaiseSelf`, mirroring `ON_DAMAGED` at the sibling site. It
+means "whenever *this* minion is healed", never "whenever anything is healed"; a card that reacts to
+somebody else being healed cannot be expressed today. Two silences are deliberate and both are load-
+bearing: an **overheal raises nothing** (a target already at max restores nothing, so nothing was
+healed — the same "the no-op is not the event" precedent as an Aegis-absorbed hit), and a **hero heal
+raises nothing**, because heroes carry no card effects. That second one is why the reentrant LIFESTEAL
+heal inside `ApplyDamage` — the path the trigger was expected to fire on — fires it on nobody: lifedrain
+always heals the source's own *hero*. Dead on `SPELL`/`WEAPON` permanently, not pending a lifecycle:
+neither has health to restore.
 
 **`ON_TURN_START` is live for board minions with an explicit turn-owner condition** (EF-011).
 Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;

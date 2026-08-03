@@ -98,5 +98,11 @@
 
   { "_comment": "EF-011 fixture card. Fixture-only, appended never inserted, collectible:false, absent from the shipping cards/** tree. Its explicit TURN_OWNER:ANY condition pins the globally recurring variant while unit tests separately pin CONTROLLER and OPPONENT. The fixture remains a timing mirror of test_turn_end_toller: end-of-turn before the seat flip versus start-of-turn after reset and before draw.",
     "id": "test_turn_start_toller",   "name": "Turn-Start Toller","type": "MINION", "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_turn_start_toller",
-    "effects": [ { "trigger": "ON_TURN_START", "condition": { "type": "TURN_OWNER", "value": "ANY" }, "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] }
+    "effects": [ { "trigger": "ON_TURN_START", "condition": { "type": "TURN_OWNER", "value": "ANY" }, "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+
+  { "_comment": "EF-015 fixture cards. Fixture-only, appended never inserted, collectible:false, absent from the shipping cards/** tree — the same contract test_turn_end_toller established for EF-012. The pair gives on_heal_wardsong an ON_HEAL subscriber and a no-target sweep to heal it with. FRIENDLY_MINIONS (not ANY_FRIENDLY) so the interpreter auto-resolves the sweep and the replay carries no target ids.",
+    "id": "test_heal_wardsong",       "name": "Wardsong",     "type": "MINION",     "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_heal_wardsong",
+    "effects": [ { "trigger": "ON_HEAL", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
+  { "id": "test_heal_salve",          "name": "Mending Salve","type": "SPELL",      "cost": 1, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/test_heal_salve",
+    "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 2, "target": { "selector": "FRIENDLY_MINIONS" } } ] }
 ]
