@@ -48,6 +48,10 @@
     <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
     <ProjectReference Include="..\Emberfall.Core\Emberfall.Core.csproj" />
+    <!-- EF-073/VULN-002: PlayerName.Check, so the display name arriving in HelloMsg is judged by the
+         IDENTICAL predicate the client uses rather than a re-implementation free to drift from it.
+         This assembly is UnityEngine-free precisely so the server can take this reference. -->
+    <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
   </ItemGroup>
 

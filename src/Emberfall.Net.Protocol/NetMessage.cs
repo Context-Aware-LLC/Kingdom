@@ -28,21 +28,35 @@ namespace Emberfall.Net.Protocol
     /// separately.</para>
     /// <para><see cref="Platform"/>/<see cref="BuildId"/> are funnel provenance (telemetry-spec
     /// §4 <c>app_install</c>) and are optional — absent means empty, never a refused connect.</para>
+    /// <para><see cref="DisplayName"/> is <b>peer-authored text</b> — see the comment on the field.</para>
     /// </summary>
     public sealed record HelloMsg(
-        // VULN-002 (security/known-vulnerabilities, LATENT — trigger rows "A player display name, or
-        // any player-typed text the opponent sees" and "Adding a field to HelloMsg"). ADDING A
-        // DISPLAY NAME HERE ARMS IT. A player profile with a validated DisplayName already exists
-        // on-device (Emberfall.Core.Collection.PlayerName); carrying it here inverts the direction of
-        // trust — the opponent's client renders a string THEY chose, and their client's validator is
-        // advice they can decline. Read VULN-002 §4 first: validate on arrival with the same
-        // PlayerName.Check (that assembly is UnityEngine-free so the server can call it), never echo
-        // an unvalidated name into OpponentInfo, and reserve the strings our own UI authors ("You",
-        // "Opponent", "Unnamed player"). §2 fact 1 of that entry is this record's current shape.
         string DeviceToken,
         string ClientContractVersion = "",
         string Platform = "",
-        string BuildId = "") : NetMessage;
+        string BuildId = "",
+        // ── VULN-002 (security/known-vulnerabilities) — ARMED as of EF-073. This field is the arming
+        //    point the LATENT entry named, and it is now live, so this comment's job has changed from
+        //    "do not add this" to "here is what is holding it up".
+        //
+        //    WHAT THIS STRING IS: a value the sender's client chose, rendered on the OTHER player's
+        //    machine. PlayerName.Check runs on the sender before a local save, but that is advice the
+        //    sender can decline — by patching the client or editing profile.json in a text editor.
+        //    Nothing about this field arriving means it was validated.
+        //
+        //    WHAT DEFENDS IT — all four are load-bearing; do not remove one because the others exist:
+        //      1. MatchGate.HandleFreshAsync calls the SAME PlayerName.Check on arrival and drops the
+        //         name to a server-assigned fallback if it fails. This is the fix; the rest is depth.
+        //      2. MatchSession only ever puts an already-checked name in OpponentInfo — an unvalidated
+        //         name echoed there would be the server laundering peer input into trusted state.
+        //      3. PlayerName reserves the strings our own UI writes ("You", "Opponent", "SYSTEM", …),
+        //         which no character-class rule can catch because every letter in them is legal.
+        //      4. VersusOverlay renders it with richText OFF and overflowMode Ellipsis, so markup is
+        //         inert and the plate CLIPS in pixels rather than trusting MaxLength's character count.
+        //
+        //    RETIREMENT TRIGGER: if a second renderer ever draws this string, it owns obligation 4
+        //    for itself — a length bound is not a clip. Add it to VULN-002 §4 when you write it.
+        string DisplayName = "") : NetMessage;
 
     /// <summary>A player intent + the client's last-applied StateVersion (stale-client detection,
     /// netcode §3.2). Which decoded intents a client may SUBMIT is the server's §4.6 allowlist —

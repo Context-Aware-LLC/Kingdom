@@ -131,6 +131,10 @@ namespace Emberfall.Presentation
                 DeviceToken = DeviceAccounts.WireToken(),
                 Platform = DeviceIdentity.Platform,
                 BuildId = DeviceIdentity.BuildId,
+                // EF-073: our name for the OPPONENT's nameplate. Empty fallback on purpose — "" is
+                // "never set", whereas the "You" this screen renders locally is a string the server
+                // RESERVES (VULN-002 §4.3) and would refuse. The server re-checks whatever we send.
+                DisplayName = PlayerAccount.LocalDisplayNameOr(""),
                 DevCapture = Debug.isDebugBuild,
                 OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
                 OnMisattribution = m => Debug.LogWarning(
@@ -220,11 +224,14 @@ namespace Emberfall.Presentation
             // Orb variant keys off the MATCH ID, not a local roll, so both clients see the same one
             // (spec §4.2) — s0.Id is the server's id, identical on both seats by construction.
             // Nameplates: OURS is this device's real display name (spec §6) — PlayerAccount reads
-            // the local profile, falling back to "You" when none was ever set. THEIRS is still a
-            // seat id dressed as a name: HelloMsg carries no display name, so the server fills
-            // OpponentInfo.DisplayName from the PlayerId. Making that real is a protocol change
-            // (HelloMsg → MatchStartMsg) plus a server deploy — and the arming point for the
-            // display-name row in the security index. See NetworkedMatchSession.OpponentName.
+            // the local profile, falling back to "You" when none was ever set. THEIRS is now the
+            // opponent's real name too (EF-073): it rides their HelloMsg, and the server re-runs
+            // PlayerName.Check on arrival before putting it in OpponentInfo, substituting the seat
+            // id if it fails. So this string is PEER-AUTHORED and safe only because of that
+            // server-side check — see NetworkedMatchSession.OpponentName and VULN-002 §4.
+            //
+            // "Opponent" below is still ours to draw when the server sent nothing usable; it is not
+            // a name the peer can claim, because the server reserves it.
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
                 localClass,  PlayerAccount.LocalDisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,

@@ -89,10 +89,15 @@ namespace Emberfall.Core.Collection
     /// player-authored string in the project that is destined to be rendered on <i>somebody else's
     /// machine</i> — the versus-screen nameplate and the board plate opposite. That is the shape of
     /// VULN-001 (a client-authored string detonating on the peer's client), and the security index
-    /// carries a row for it. Today the name never leaves this device, so nothing here is reachable;
-    /// it is written now because the day the name joins the handshake, the validator that should have
-    /// existed is the one that has to already be in place. See the pointer comment in
-    /// <see cref="JsonProfileStore.Save"/>.</para>
+    /// carries a row for it.</para>
+    ///
+    /// <para><b>This now runs on BOTH ends, and the receiving end is the one that counts</b>
+    /// (EF-073, VULN-002 §4.1). <c>HelloMsg</c> carries a display name, so
+    /// <c>Emberfall.Net.Server.Transport.MatchGate</c> calls this same <see cref="Check"/> on
+    /// arrival before the name is ever put in an <c>OpponentInfo</c>. That is why this assembly is
+    /// UnityEngine-free: the server needs the identical predicate, not a re-implementation free to
+    /// drift from it. <b>A rule relaxed here is relaxed on the wire</b> — this type is no longer a
+    /// local-only convenience.</para>
     ///
     /// <para><b>Normalize where we can, refuse where we must.</b> Leading/trailing and doubled
     /// whitespace are fixed silently — refusing a name over a stray space is hostile and teaches
@@ -120,6 +125,40 @@ namespace Emberfall.Core.Collection
 
         /// <summary>Punctuation a name may contain. Everything outside this and letters/digits/marks is refused.</summary>
         private const string AllowedPunctuation = " -_'.";
+
+        /// <summary>
+        /// Strings our own UI authors, which a player therefore may not claim (VULN-002 §4.3).
+        ///
+        /// <para><b>Every character in these is legal, which is the point.</b> The other rules ask
+        /// "is this a name?"; this one asks "could a player mistake this for the game talking?" A
+        /// nameplate reading <c>Opponent</c> or <c>SYSTEM</c> is an impersonation primitive built
+        /// entirely out of allowed letters, so no character-class rule can reach it.</para>
+        ///
+        /// <para>Sourced from what the UI actually writes: <c>You</c> and <c>Opponent</c> are the
+        /// versus-screen nameplate fallbacks, <c>Unnamed player</c> is the main menu's, and
+        /// <c>AI Opponent</c> is the single-player one. <b>Add to this list in the same commit that
+        /// teaches a screen a new placeholder</b>, or that placeholder is claimable the day it
+        /// ships.</para>
+        /// </summary>
+        private static readonly string[] ReservedNames =
+        {
+            "You", "Opponent", "AI Opponent", "Unnamed player", "Emberfall", "SYSTEM",
+        };
+
+        /// <summary>
+        /// True if <paramref name="candidate"/> collides with a string our own chrome writes.
+        /// Compared case-insensitively on the NORMALIZED value — <c>sYsTeM</c> and
+        /// <c>"  SYSTEM  "</c> impersonate exactly as well as the original.
+        /// </summary>
+        public static bool IsReserved(string candidate)
+        {
+            if (string.IsNullOrEmpty(candidate)) return false;
+            string normalized = Normalize(candidate);
+            foreach (string reserved in ReservedNames)
+                if (string.Equals(normalized, reserved, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
+        }
 
         /// <summary>
         /// Validate and clean a candidate name. Never throws — an unusable name is a
@@ -187,6 +226,11 @@ namespace Emberfall.Core.Collection
             // something, so require the something.
             if (!hasSubstance)
                 return NameCheck.Bad("Names need at least one letter or number.");
+
+            // Last, because it is the only rule about MEANING rather than characters — and the only
+            // one whose refusal is not about the name being unusable (VULN-002 §4.3).
+            if (IsReserved(normalized))
+                return NameCheck.Bad($"'{normalized}' is reserved. Pick another name.");
 
             return NameCheck.Ok(normalized);
         }

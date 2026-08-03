@@ -213,15 +213,19 @@ namespace Emberfall.Core.Collection
         {
             if (profile == null) throw new ArgumentNullException(nameof(profile));
 
-            // ── VULN-001-adjacent (dev-docs/quality/security.md:24, row "A player display name rendered on the
-            //    opponent's client"). THIS IS THE LINE THAT ARMS IT. Today DisplayName is written and
-            //    read on one device and rendered only in our own nameplate, so the validator below is
-            //    belt-and-braces. The moment a display name is added to HelloMsg and carried into
-            //    MatchStartMsg.Opponent.DisplayName, this string becomes peer-authored input rendered
-            //    on OUR client — and a client that validates its own name proves nothing about the
-            //    one the server hands it. Read VULN-002 before wiring that: the server must validate
-            //    on arrival with these same rules, and the receiving nameplate must clip rather than
-            //    trust a length.
+            // ── VULN-002 (dev-docs/quality/security.md) — ARMED AND MITIGATED as of EF-073. This line
+            //    used to carry the "do not arm this" pointer; the name now rides HelloMsg, so what it
+            //    warns about has happened and the warning has been replaced by the fact.
+            //
+            //    WHAT CHANGED FOR THIS LINE: nothing about its behaviour, and everything about what it
+            //    proves. This check runs on the SENDER before a local save — it is a courtesy to the
+            //    player typing, not a security control, because an attacker edits profile.json or
+            //    patches the client and never reaches this code at all. The control is
+            //    MatchGate.HandleFreshAsync, which re-runs the IDENTICAL PlayerName.Check on arrival.
+            //
+            //    SO: do not read "the name is validated on save" as "the name is validated". VULN-002
+            //    §5 names that exact inference as how this ships by accident — a sweep sees a
+            //    validator, tests, and a call on every save, and stops looking.
             var check = PlayerName.Check(profile.DisplayName);
             if (profile.HasDisplayName && !check.IsValid)
                 throw new ArgumentException(

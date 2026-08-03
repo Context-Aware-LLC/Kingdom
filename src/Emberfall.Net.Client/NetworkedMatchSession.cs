@@ -119,13 +119,16 @@ namespace Emberfall.Net.Client
         /// <summary><c>MatchStartMsg.Opponent.DisplayName</c> — for the versus screen's opposite
         /// nameplate. Empty until the match starts.
         ///
-        /// SECURITY (dev-docs/quality/security.md:24): today the server sets this to the
-        /// opponent's server-assigned <c>PlayerId.Value</c>, so it is NOT peer-authored — that is the
-        /// only reason it can be rendered without a server-side allowlist. <b>The day a client picks
-        /// its own display name (a profile field in <c>HelloMsg</c>, an account name), this string
-        /// becomes attacker-controlled text rendered on the VICTIM's machine</b> — the exact shape of
-        /// VULN-001 — and it must be validated server-side before it is sent. The renderer
-        /// (<c>VersusOverlay.SanitizeName</c>) hardens defensively; that is not the fix.</summary>
+        /// <para>SECURITY (VULN-002, armed and mitigated by EF-073): <b>this string originates with
+        /// the opponent</b>, who picked it on their own device. It is safe to render for exactly one
+        /// reason — the SERVER re-ran <c>PlayerName.Check</c> on it at the handshake and replaced it
+        /// with the seat id if it failed, so what arrives here is either a checked name or a
+        /// server-authored one. That check is the fix.</para>
+        ///
+        /// <para>The renderer still hardens: <c>VersusOverlay</c> drops control characters, disables
+        /// rich text so markup cannot redraw your layout, and clips the plate in pixels. <b>That is
+        /// defense in depth and not the fix</b> — but obligation 4 of VULN-002 §4 is genuinely
+        /// client-side, so a NEW renderer of this string owns it and does not inherit it.</para></summary>
         public string OpponentName { get { lock (_lock) return _opponentName; } }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
@@ -164,7 +167,8 @@ namespace Emberfall.Net.Client
             // which does not encode into a decodable envelope.
             await _transport.SendAsync(
                 ProtocolCodec.Encode(
-                    new HelloMsg(_opts.DeviceToken, _opts.ContractVersion, _opts.Platform, _opts.BuildId),
+                    new HelloMsg(_opts.DeviceToken, _opts.ContractVersion, _opts.Platform,
+                                 _opts.BuildId, _opts.DisplayName),
                     ProtocolCodec.PreMatch, 0),
                 ct).ConfigureAwait(false);
 
