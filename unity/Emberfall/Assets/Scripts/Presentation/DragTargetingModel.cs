@@ -67,8 +67,6 @@ namespace Emberfall.Presentation
         public static DragSource None => default;
     }
 
-    /// <summary>Awaiting a second choice: a slot placement followed by a battlecry target.</summary>
-    public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
     /// <summary>
     /// The press/drag/release decision core (EF-048), deliberately free of MonoBehaviour, Transform,
@@ -85,6 +83,9 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DragTargetingModel
     {
+        /// <summary>Awaiting a second choice: a slot placement followed by a battlecry target.</summary>
+        public enum TargetingPhase { Direct, AwaitingEffectTarget }
+
         public const string AimBanner    = "Drag to a target — Esc cancels";
         public const string AttackBanner = "Drag to a target to attack — Esc cancels";
 
@@ -260,10 +261,12 @@ namespace Emberfall.Presentation
                         if (p.Id == released.Owner) { ps = p; break; }
                     if (ps != null && released.SlotIndex < ps.Board.Count) return null;
 
-                    // For targeted battlecry minions: enter AwaitingEffectTarget phase rather than
-                    // submitting immediately. The second targeting gesture will complete the intent.
                     if (source.NeedsTarget)
                     {
+                        // Targeted spells do not place on the board, so a slot release is a miss.
+                        if (!HandCardOccupiesBoardSlot(source.Id)) return null;
+
+                        // A targeted minion needs placement before its battlecry effect target.
                         Phase = TargetingPhase.AwaitingEffectTarget;
                         AwaitingSlot = released.SlotIndex;
                         AwaitingCardId = source.Id;
@@ -280,6 +283,9 @@ namespace Emberfall.Presentation
                     if (released.Zone != Zone.Board) return null;
                     if (released.Owner == _p0Id && !source.NeedsTarget) return null;
 
+                    // Cards that occupy a board slot must be placed before choosing an effect target.
+                    if (HandCardOccupiesBoardSlot(source.Id)) return null;
+
                     // Check if the target is in the TargetsFor set to enforce boundary.
                     HashSet<InstanceId> validTargets = SpellTargets(source.Id);
                     if (!validTargets.Contains(released.Id)) return null;
@@ -288,6 +294,9 @@ namespace Emberfall.Presentation
                                               new[] { new TargetRef(released.Id) });
 
                 case PointerSubjectKind.Hero:
+                    // Cards that occupy a board slot must be placed before choosing an effect target.
+                    if (HandCardOccupiesBoardSlot(source.Id)) return null;
+
                     // Check if the target is in the TargetsFor set to enforce boundary.
                     HashSet<InstanceId> validHeroTargets = SpellTargets(source.Id);
                     if (!validHeroTargets.Contains(released.Id)) return null;
@@ -363,6 +372,22 @@ namespace Emberfall.Presentation
                             && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
                             return true;
                     return false;
+                }
+            }
+            return false;
+        }
+
+        private bool HandCardOccupiesBoardSlot(InstanceId cardId)
+        {
+            if (_db == null || State == null) return false;
+            foreach (PlayerState ps in State.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                foreach (CardInstance ci in ps.Hand)
+                {
+                    if (!ci.Id.Equals(cardId)) continue;
+                    return _db.TryGet(ci.DefinitionId, out CardDefinition def)
+                           && def.Type == CardType.MINION;
                 }
             }
             return false;

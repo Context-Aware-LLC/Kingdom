@@ -23,10 +23,11 @@ namespace Emberfall.Editor
     /// </summary>
     public static class InputGestureVerify
     {
-        private const string Vanilla   = "c_vanilla";     // a minion with no chosen target
-        private const string Targeted  = "c_targeted";    // ON_PLAY + ANY_CHARACTER
-        private const string PowerFree = "hp_untargeted"; // hero power, no chosen target
-        private const string PowerAim  = "hp_targeted";   // hero power, ANY_CHARACTER
+        private const string Vanilla        = "c_vanilla";         // a minion with no chosen target
+        private const string TargetedSpell  = "c_targeted_spell";  // ON_CAST + ANY_CHARACTER
+        private const string TargetedMinion = "c_targeted_minion"; // ON_PLAY + ANY_CHARACTER
+        private const string PowerFree      = "hp_untargeted";     // hero power, no chosen target
+        private const string PowerAim       = "hp_targeted";       // hero power, ANY_CHARACTER
 
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
@@ -45,6 +46,7 @@ namespace Emberfall.Editor
             FullStackDragResolve();
             FullStackTapReselect();
             FullStackCancellation();
+            FullStackTargetedSpellDirectSelection();
             FullStackTwoStepBattlecry();
             OsCanceledDuringDrag();
             OsCanceledDuringArmedTap();
@@ -69,6 +71,10 @@ namespace Emberfall.Editor
             public List<PlayerIntent> SubmittedIntents;
             private HotSeatInput _input;
             private DragTargetingModel _model;
+
+            public DragTargetingModel.TargetingPhase Phase => _model.Phase;
+            public int AwaitingSlot => _model.AwaitingSlot;
+            public InstanceId AwaitingCardId => _model.AwaitingCardId;
 
             public InputRouterHarness(GameState state, ICardDatabase db, PlayerId p0Id)
             {
@@ -127,10 +133,11 @@ namespace Emberfall.Editor
             ///
             /// Region map (all coordinates in screen pixels):
             ///   x in [  0,  50) → hand card 0 (Vanilla)
-            ///   x in [ 50, 100) → hand card 1 (Targeted)
-            ///   x in [100, 400), y  &lt;  200 → our hero (x &lt; 250) / our hero power (x ≥ 250)
-            ///   x in [100, 400), y in [200, 400) → our board slot 0
-            ///   x in [100, 400), y ≥ 400 → our board minion 0
+            ///   x in [ 50, 100) → hand card 1 (TargetedSpell)
+            ///   x in [100, 150) → hand card 2 (TargetedMinion)
+            ///   x in [150, 400), y  &lt;  200 → our hero (x &lt; 250) / our hero power (x ≥ 250)
+            ///   x in [150, 400), y in [200, 400) → our board slot 1
+            ///   x in [150, 400), y ≥ 400 → our board minion 0
             ///   x in [400, 700), y  &lt;  200 → enemy hero
             ///   x in [400, 700), y ≥ 200 → enemy board minion 0
             ///   x ≥ 700 → empty space (PointerSubject.None)
@@ -140,9 +147,9 @@ namespace Emberfall.Editor
                 float x = screenPos.x, y = screenPos.y;
 
                 // Hand zone
-                if (x < 100)
+                if (x < 150)
                 {
-                    int idx = x < 50 ? 0 : 1;
+                    int idx = x < 50 ? 0 : x < 100 ? 1 : 2;
                     var hand = State.Players[0].Hand;
                     if (hand.Count > idx)
                         return (PointerSubject.OfCard(hand[idx].Id, P0Id, Zone.Hand), null, null);
@@ -157,7 +164,7 @@ namespace Emberfall.Editor
                             ? (PointerSubject.OfHero(_model.HeroIdOf(P0Id), P0Id), null, null)
                             : (PointerSubject.OfHeroPower(P0Id), null, null);
                     if (y < 400)
-                        return (PointerSubject.OfBoardSlot(P0Id, 0), null, null);
+                        return (PointerSubject.OfBoardSlot(P0Id, 1), null, null);
                     // Friendly board minion
                     var board = State.Players[0].Board;
                     if (board.Count > 0)
@@ -188,8 +195,9 @@ namespace Emberfall.Editor
         // ── Full-stack test cases ───────────────────────────────────────────────────
 
         // Probe coordinate landmarks (see InputRouterHarness.ProbeScreenPosition for the full map):
-        //   (25, 200)  → hand card 0 (Vanilla)          (75, 200)  → hand card 1 (Targeted)
-        //   (200, 300) → our board slot 0                (200, 500) → our board minion 0
+        //   (25, 200)  → hand card 0 (Vanilla)          (75, 200)  → hand card 1 (TargetedSpell)
+        //   (125, 200) → hand card 2 (TargetedMinion)
+        //   (200, 300) → our board slot 1                (200, 500) → our board minion 0
         //   (150, 100) → our hero                        (300, 100) → our hero power
         //   (500, 300) → enemy board minion 0            (500, 100) → enemy hero
         //   (750, 300) → empty space (PointerSubject.None)
@@ -209,7 +217,7 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Held, new Vector2(25, 210)));
             Check("drag threshold crossed: no auto-submit", harness.SubmittedIntents.Count == 0);
 
-            // Release on our board slot 0 — Dragging resolves to PlayCardIntent.
+            // Release on our board slot 1 — Dragging resolves to PlayCardIntent.
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("release on board slot after drag submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
@@ -262,7 +270,7 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
             Check("first tap arms vanilla card", harness.SubmittedIntents.Count == 0);
 
-            // Tap hand card 1 (Targeted): different card — reselects, does NOT submit.
+            // Tap hand card 1 (TargetedSpell): different card — reselects, does NOT submit.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
             Check("tap different card reselects without submitting", harness.SubmittedIntents.Count == 0);
@@ -295,18 +303,65 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
+        private static void FullStackTargetedSpellDirectSelection()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId enemy = s.Players[1].Board[0].Id;
+
+            // A targeted spell is armed once, then released directly on its character target.
+            // Releasing it on a slot is a miss: it must not retain that slot or arm a second phase.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("targeted spell released on a board slot submits nothing",
+                harness.SubmittedIntents.Count == 0);
+            Check("targeted spell slot miss stores no placement and stays in direct targeting",
+                harness.Phase == DragTargetingModel.TargetingPhase.Direct && harness.AwaitingSlot == 0
+                && harness.AwaitingCardId.Equals(default));
+
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("targeted spell slot miss does not leave a second targeting phase armed",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+
+            var intent = harness.SubmittedIntents.Count == 1
+                ? harness.SubmittedIntents[0] as PlayCardIntent
+                : null;
+            Check("targeted spell direct selection submits exactly one targeted play intent",
+                intent != null && intent.BoardSlot == 0 && intent.Targets.Count == 1
+                && intent.Targets[0].Instance.Equals(enemy));
+
+            harness.Cleanup();
+        }
+
         // Issue #30: two-step targeting for battlecry minions (tap-arm, drop on slot, tap target).
         private static void FullStackTwoStepBattlecry()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId enemy = s.Players[1].Board[0].Id;
 
-            // Tap hand card 1 (Targeted): press + release without travel → ArmedByTap.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            // Tap hand card 2 (TargetedMinion): press + release without travel → ArmedByTap.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
             Check("tap targeted card arms without submitting", harness.SubmittedIntents.Count == 0);
 
-            // Tap on board slot 0: press + release → enters AwaitingEffectTarget, no submit.
+            // A battlecry minion cannot skip placement by releasing directly on its effect target.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("targeted minion released directly on a character submits nothing",
+                harness.SubmittedIntents.Count == 0);
+
+            // Re-arm, then tap empty board slot 1 to enter the effect-target phase.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("drop on board slot enters two-step targeting without submit",
@@ -320,9 +375,10 @@ namespace Emberfall.Editor
 
             var intent = harness.SubmittedIntents[0] as PlayCardIntent;
             Check("PlayCardIntent carries the slot from step 1",
-                intent != null && intent.BoardSlot == 0);
+                intent != null && intent.BoardSlot == 1);
             Check("PlayCardIntent carries the target from step 2",
-                intent != null && intent.Targets.Count == 1);
+                intent != null && intent.Targets.Count == 1
+                && intent.Targets[0].Instance.Equals(enemy));
 
             harness.Cleanup();
         }
@@ -424,8 +480,9 @@ namespace Emberfall.Editor
             GameState s = NewState();
             var m = Model(s);
 
-            InstanceId hand    = s.Players[0].Hand[0].Id;   // Vanilla
-            InstanceId aimCard = s.Players[0].Hand[1].Id;   // Targeted
+            InstanceId hand      = s.Players[0].Hand[0].Id; // Vanilla
+            InstanceId aimCard   = s.Players[0].Hand[1].Id; // TargetedSpell
+            InstanceId battlecry = s.Players[0].Hand[2].Id; // TargetedMinion
             InstanceId mine    = s.Players[0].Board[0].Id;
             InstanceId theirs  = s.Players[1].Board[0].Id;
 
@@ -435,6 +492,8 @@ namespace Emberfall.Editor
                 !m.BeginSource(PointerSubject.OfCard(hand, P0, Zone.Hand)).NeedsTarget);
             Check("an ANY_* hand card needs a target",
                 m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand)).NeedsTarget);
+            Check("a targeted battlecry minion needs a target",
+                m.BeginSource(PointerSubject.OfCard(battlecry, P0, Zone.Hand)).NeedsTarget);
             Check("press on our board minion starts an Attacker drag",
                 m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)).Kind == DragSourceKind.Attacker);
             Check("press on our hero starts an Attacker drag",
@@ -499,9 +558,12 @@ namespace Emberfall.Editor
             GameState s = NewState();
             var m = Model(s);
 
-            InstanceId aimCard = s.Players[0].Hand[1].Id;   // Targeted (ANY_CHARACTER)
+            InstanceId aimCard = s.Players[0].Hand[2].Id;   // TargetedMinion (ANY_CHARACTER)
             InstanceId theirs  = s.Players[1].Board[0].Id;
             DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
+
+            Check("targeted minion cannot bypass placement by releasing directly on a character",
+                m.Resolve(targeted, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
 
             // Drop on a legal empty slot → enters AwaitingEffectTarget, no intent yet.
             var result = m.Resolve(targeted, PointerSubject.OfBoardSlot(P0, 2));
@@ -626,7 +688,8 @@ namespace Emberfall.Editor
         private static DragTargetingModel Model(GameState s)
             => new DragTargetingModel(P0, Db()) { State = s };
 
-        // Our Main turn, one vanilla + one targeted card in hand, one minion each on board.
+        // Our Main turn, distinct vanilla, targeted-spell and targeted-minion cards in hand,
+        // with one minion on each board.
         private static GameState NewState()
         {
             var p0 = new PlayerState(P0, new HeroInstance(new InstanceId(1), P0, CardClass.EMBERWARD,  30));
@@ -641,10 +704,11 @@ namespace Emberfall.Editor
                 TurnNumber   = 3,
             };
 
-            p0.Hand.Add(new CardInstance(new InstanceId(10), Vanilla,  P0) { Zone = Zone.Hand });
-            p0.Hand.Add(new CardInstance(new InstanceId(11), Targeted, P0) { Zone = Zone.Hand });
-            p0.Board.Add(Minion(P0, 12));
-            p1.Board.Add(Minion(P1, 13));
+            p0.Hand.Add(new CardInstance(new InstanceId(10), Vanilla,        P0) { Zone = Zone.Hand });
+            p0.Hand.Add(new CardInstance(new InstanceId(11), TargetedSpell,  P0) { Zone = Zone.Hand });
+            p0.Hand.Add(new CardInstance(new InstanceId(12), TargetedMinion, P0) { Zone = Zone.Hand });
+            p0.Board.Add(Minion(P0, 13));
+            p1.Board.Add(Minion(P1, 14));
             return s;
         }
 
@@ -677,10 +741,11 @@ namespace Emberfall.Editor
 
             return new InMemoryCardDatabase(new[]
             {
-                Def(Vanilla,   CardType.MINION,     System.Array.Empty<EffectDef>()),
-                Def(Targeted,  CardType.SPELL,      anyCharacter),
-                Def(PowerFree, CardType.HERO_POWER, selfHeal),
-                Def(PowerAim,  CardType.HERO_POWER, anyCharacterCast),
+                Def(Vanilla,        CardType.MINION,     System.Array.Empty<EffectDef>()),
+                Def(TargetedSpell,  CardType.SPELL,      anyCharacterCast),
+                Def(TargetedMinion, CardType.MINION,     anyCharacter),
+                Def(PowerFree,      CardType.HERO_POWER, selfHeal),
+                Def(PowerAim,       CardType.HERO_POWER, anyCharacterCast),
             });
         }
 
