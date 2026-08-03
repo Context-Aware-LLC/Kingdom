@@ -48,7 +48,7 @@ namespace Emberfall.Core.Tests.Collection
         {
             var list = new List<CardDefinition>();
             foreach (var c in Cards)
-                if (c.Collectible && c.Class == cardClass) list.Add(c);
+                if (c.PoolEligible && c.Class == cardClass) list.Add(c);
             return list;
         }
 
@@ -64,7 +64,7 @@ namespace Emberfall.Core.Tests.Collection
         internal static CardDefinition AnyCollectible(CardClass cardClass, Rarity rarity)
         {
             foreach (var c in Cards)
-                if (c.Collectible && c.Class == cardClass && c.Rarity == rarity) return c;
+                if (c.PoolEligible && c.Class == cardClass && c.Rarity == rarity) return c;
             Assert.Fail($"Live set has no collectible {rarity} {cardClass} card.");
             return null!;
         }

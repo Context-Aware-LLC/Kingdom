@@ -15,6 +15,15 @@ namespace Emberfall.Core.Contracts
     {
         bool TryGet(string cardId, out Cards.CardDefinition def);
         Cards.CardDefinition Get(string cardId);
+
+        /// <summary>
+        /// Every row eligible for a live card pool. <b>The contract is
+        /// <see cref="Cards.CardDefinition.PoolEligible"/>, not <c>Collectible</c> alone</b> — a row
+        /// holding a <c>requiresEngineeringPrimitive</c> reservation is excluded until the engine
+        /// grows the primitive it needs. Implementations MUST filter on that property rather than
+        /// re-deriving the predicate: <c>Get</c>/<c>TryGet</c> still resolve a held row by id, so a
+        /// token, a replay and a set-count all still see it. Only the POOLS do not.
+        /// </summary>
         IReadOnlyCollection<Cards.CardDefinition> AllCollectible();
     }
 

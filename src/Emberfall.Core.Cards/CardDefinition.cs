@@ -29,6 +29,29 @@ namespace Emberfall.Core.Cards
         public string FactionId { get; }
         public bool RequiresEngineeringPrimitive { get; }
 
+        /// <summary>
+        /// Whether this row may enter a live card pool — deck generation, deck-building, booster
+        /// packs, the soak's generated decks. <b>This is the whole of the</b>
+        /// <c>requiresEngineeringPrimitive</c> <b>gate</b>: a row that declares grammar the engine
+        /// has not grown yet is authored, parsed, validated and shipped in the set file, but is held
+        /// out of every pool until the primitive lands, so it can never be drawn and never fire.
+        /// <para>Until EF-032a this flag gated NOTHING at runtime. Both <c>EffectInterpreter</c> and
+        /// <c>CardValidator</c> C14 told authors to "gate it behind requiresEngineeringPrimitive",
+        /// and every consumer filtered on <see cref="Collectible"/> alone — so following that advice
+        /// bought a green validator and an identical crash. Every <c>ICardDatabase.AllCollectible</c>
+        /// implementation now reads THIS property rather than re-deriving the predicate, so the gate
+        /// cannot come half-loose again.</para>
+        /// <para><b>RETIREMENT TRIGGER (Sam, 2026-08-03):</b> this flag is a transitional mechanism
+        /// for clearing the backlog of cards authored before the engine caught up, not a standing
+        /// pattern. Going forward the rule is backend-first: don't author a card against a primitive
+        /// that doesn't exist yet. When no live row sets this flag anymore, retire it — delete this
+        /// property, <see cref="RequiresEngineeringPrimitive"/>, every <c>AllCollectible</c> call site
+        /// that reads it, C14b in <c>CardValidator</c>, and the held-row branch in
+        /// <c>scan_unresolvable_trigger_selectors.py</c> — and fold <see cref="PoolEligible"/> back
+        /// down to a plain read of <see cref="Collectible"/>.</para>
+        /// </summary>
+        public bool PoolEligible => Collectible && !RequiresEngineeringPrimitive;
+
         public CardDefinition(
             string id, string name, CardType type, int cost,
             int? attack, int? health, int? durability,

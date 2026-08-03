@@ -33,6 +33,24 @@ namespace Emberfall.Core.Cards
             "ADJACENT", "TRIGGER_SOURCE",
         };
 
+        // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
+        // call site: CommandProcessor.cs:346/354/386/454 pass the player's `targets`; ON_ATTACK
+        // (CommandProcessor.cs:560), ON_DAMAGED (DamagePipeline.cs:128), the weapon ON_DEATH
+        // (RulesEngine.cs:110), the minion ON_DEATH (EffectInterpreter.cs:154) and every observer
+        // trigger (EffectInterpreter.RaiseObservers) all pass Array.Empty.
+        private static readonly HashSet<Trigger> PlayerTargetedTriggers = new HashSet<Trigger>
+        {
+            Trigger.ON_PLAY, Trigger.ON_CAST,
+        };
+
+        // Explicit-choice selectors: they mean "the PLAYER picks", so they resolve only from a
+        // player intent. On any other trigger `ChosenTargets` is empty, `SelectorTargets` is
+        // consulted, and it throws — the card is a live crash the moment it fires (C14b).
+        private static readonly HashSet<string> PlayerChosenSelectors = new HashSet<string>
+        {
+            "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION", "ANY_FRIENDLY_MINION",
+        };
+
         // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
         // verbs actually present in the Action enum/M1 data (OVERLOAD, FREEZE) that doc predates.
         private static readonly HashSet<Action> AmountRequiredActions = new HashSet<Action>
@@ -242,6 +260,18 @@ namespace Emberfall.Core.Cards
                          && !def.RequiresEngineeringPrimitive)
                     Err("C14-SELECTOR-UNIMPLEMENTED", $"{prefix}.target.selector",
                         $"'{fx.Selector}' is schema-valid but the engine cannot resolve it yet (the interpreter rejects it at runtime) — set requiresEngineeringPrimitive to hold the row for the primitive.");
+                // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
+                // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
+                // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
+                // through this very rule, because C14 checked the selector without the trigger.
+                else if (!string.IsNullOrEmpty(fx.Selector) && PlayerChosenSelectors.Contains(fx.Selector!)
+                         && !PlayerTargetedTriggers.Contains(fx.Trigger)
+                         && !def.RequiresEngineeringPrimitive)
+                    Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.target.selector",
+                        $"'{fx.Selector}' is an explicit-choice selector, but {fx.Trigger} fires with no player choosing — " +
+                        "the interpreter throws on it at runtime. Use an auto-resolvable selector " +
+                        "(SELF / FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
+                        "or set requiresEngineeringPrimitive to hold the row out of every pool until the primitive lands.");
 
                 // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
                 if (fx.Empty && !fx.Permanent)
