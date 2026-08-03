@@ -44,14 +44,14 @@
     <ProjectReference Include="..\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
     <ProjectReference Include="..\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
     <!-- NOR-109: the booster-pack model + open algorithm are core (netstandard2.1, float-free);
-         only the ledger/pity binding lives here. -->
+         only the ledger/pity binding lives here.
+         EF-073/VULN-002 leans on this SAME reference for PlayerName.Check, so the display name
+         arriving in HelloMsg is judged by the IDENTICAL predicate the client uses rather than a
+         re-implementation free to drift from it. This assembly is UnityEngine-free precisely so
+         the server can take this reference — do not drop it if the pack binding ever moves out. -->
     <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
     <ProjectReference Include="..\Emberfall.Core\Emberfall.Core.csproj" />
-    <!-- EF-073/VULN-002: PlayerName.Check, so the display name arriving in HelloMsg is judged by the
-         IDENTICAL predicate the client uses rather than a re-implementation free to drift from it.
-         This assembly is UnityEngine-free precisely so the server can take this reference. -->
-    <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
   </ItemGroup>
 
