@@ -3,14 +3,15 @@ using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    // Attached to the Hero anchor by ProceduralBoardSetup.SetupClickables. Forwards
-    // OnMouseDown to InputRouter so heroes are valid click targets: attack the enemy
-    // hero ("going face") with a selected minion, or aim a targeted spell at either hero.
+    // Attached to the Hero anchor by ProceduralBoardSetup.SetupClickables.
+    //
+    // A raycast descriptor for InputRouter's press/drag/release machine (EF-048). A hero is both a
+    // drag SOURCE (our own, swinging an equipped weapon) and a drag TARGET (going face with a minion,
+    // or aiming a spell at either hero) — which is exactly the pair a click machine could not
+    // distinguish without a mode, and a gesture with a beginning and an end can.
     public sealed class ClickableHero : MonoBehaviour
     {
         public PlayerId OwnerId { get; private set; }
-
-        private InputRouter _router;
 
         private void Awake()
         {
@@ -21,12 +22,6 @@ namespace Emberfall.Presentation
             }
         }
 
-        public void Init(PlayerId ownerId, InputRouter router)
-        {
-            OwnerId = ownerId;
-            _router = router;
-        }
-
-        private void OnMouseDown() => _router?.OnHeroClicked(OwnerId);
+        public void Init(PlayerId ownerId) => OwnerId = ownerId;
     }
 }

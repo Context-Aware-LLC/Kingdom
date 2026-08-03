@@ -33,6 +33,7 @@ namespace Emberfall.Editor
                 RunCheck("PlayerAccountSelfCheck", PlayerAccountTools.SelfCheck),
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
+                RunCheck("InputGestureVerify",   InputGestureVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");

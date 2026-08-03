@@ -124,19 +124,23 @@ namespace Emberfall.Presentation
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
         }
 
-        // Called from GameBootstrap.Start() after SetPlayers() — attaches ClickableBoardSlot
-        // and ClickableHeroPower so the human player can click the board and hero power.
-        // Board slots get slots for own side only; P1's slots are intentionally not clickable
-        // in hot-seat mode (P1 is AI-controlled).
+        // Called from GameBootstrap.Start() after SetPlayers() — attaches the ClickableBoardSlot /
+        // ClickableHeroPower / ClickableHero raycast descriptors so InputRouter's press/drag/release
+        // machine can identify what the pointer is over (EF-048). Both seats get them: ownership is
+        // read off the descriptor, not implied by which ones exist, and the enemy side has to be
+        // identifiable to be a drag TARGET.
+        //
+        // `router` is only a mode flag now (null = AI-vs-AI, nothing to point at). The descriptors
+        // no longer hold a reference to it — InputRouter raycasts and reads them.
         public void SetupClickables(PlayerId p0Id, PlayerId p1Id, InputRouter router)
         {
             if (router == null) return;
             var anchors = GetComponent<BoardAnchors>();
-            AttachSlotClickables(anchors.p0, p0Id, router);
-            AttachSlotClickables(anchors.p1, p1Id, router);
+            AttachSlotClickables(anchors.p0, p0Id);
+            AttachSlotClickables(anchors.p1, p1Id);
         }
 
-        private static void AttachSlotClickables(SeatAnchors seat, PlayerId ownerId, InputRouter router)
+        private static void AttachSlotClickables(SeatAnchors seat, PlayerId ownerId)
         {
             if (seat.BoardSlots != null)
             {
@@ -144,20 +148,20 @@ namespace Emberfall.Presentation
                 {
                     if (seat.BoardSlots[i] == null) continue;
                     var slot = seat.BoardSlots[i].gameObject.AddComponent<ClickableBoardSlot>();
-                    slot.Init(ownerId, i, router);
+                    slot.Init(ownerId, i);
                 }
             }
 
             if (seat.HeroPowerAnchor != null)
             {
                 var hp = seat.HeroPowerAnchor.gameObject.AddComponent<ClickableHeroPower>();
-                hp.Init(ownerId, router);
+                hp.Init(ownerId);
             }
 
             if (seat.HeroAnchor != null)
             {
                 var hero = seat.HeroAnchor.gameObject.AddComponent<ClickableHero>();
-                hero.Init(ownerId, router);
+                hero.Init(ownerId);
             }
         }
 
