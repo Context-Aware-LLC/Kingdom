@@ -88,10 +88,11 @@ namespace Emberfall.Core.Contracts
         // health to restore, so the minion-only classification here is not a staging step.
         ON_HEAL,
 
-        // LIVE FOR BOARD MINIONS AND EQUIPPED WEAPONS — CommandProcessor.StartTurnSequence raises it
-        // after the thaw/mana reset and before the draw (EF-011). Every effect declares a TURN_OWNER
-        // condition so controller, opponent and any-turn behavior are explicit. Ongoing spells remain
-        // a tracked follow-up because their canonical state does not exist yet.
+        // LIVE FOR BOARD MINIONS, EQUIPPED WEAPONS, AND ONGOING EFFECTS —
+        // CommandProcessor.StartTurnSequence raises it after the thaw/mana/attack reset and before
+        // the draw (EF-011 / NOR-31). Every rule declares a TURN_OWNER condition so controller,
+        // opponent, and any-turn behavior are explicit. Resolved spell observers participate through
+        // their canonical OngoingEffectInstance rather than through a card zone.
         ON_TURN_START,
 
         // LIVE — CommandProcessor.ApplyEndTurn raises it after the TurnEnded fact and before the
@@ -111,11 +112,10 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor, for spells AND hero powers.
         ON_CAST,
 
-        // DEAD, and not an event at all: it needs a raise site plus a sweep that reapplies it as the
-        // board changes, and neither exists in src/. Its OTHER half is now built — EF-017a made stats
-        // a fold over CardInstance.Enchantments (DerivedStats), so DerivedStats.RemoveBySource can take
-        // an aura's contribution back off when its source leaves. That method has no in-engine caller
-        // until this trigger gets one; EF-017b is where they meet.
+        // LIVE AS CONTINUOUS RECOMPUTATION, not as an emitted event. AuraEngine removes prior
+        // aura-derived enchantments and reapplies live, unsilenced board-minion sources after board
+        // topology, silence, transform, and control changes. AuraCapabilities owns the deliberately
+        // narrow fail-closed source/condition/lifetime/action/target relation.
         AURA
     }
 
