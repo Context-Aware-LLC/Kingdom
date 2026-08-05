@@ -2,10 +2,10 @@
 """Find card effects that will THROW at runtime because a fired trigger declares an
 explicit-choice selector.
 
-`EffectInterpreter.SelectorTargets` (src/Emberfall.Core/EffectInterpreter.cs) auto-resolves
-exactly six selectors — the six `case` labels there, mirrored in AUTO_RESOLVABLE below.
-Anything else reaching it throws `InvalidOperationException` — by design, per the M2 Phase 0
-grammar-frost ruling (silent fallback is silent mistargeting).
+The canonical selector switch lives in `Targeting.cs`. This scan reads its cases and the
+default player-choice selector set from `TargetSpec`, rather than duplicating either list.
+Anything outside those structural seams fails the scan — silent fallback is silent
+mistargeting.
 
 Player-initiated effects (ON_PLAY / ON_CAST) are safe: CommandProcessor makes the player
 supply the target, so `ChosenTargets` is non-empty and the selector is never consulted. Every
@@ -29,57 +29,81 @@ import pathlib
 import re
 import sys
 
-# EffectInterpreter.SelectorTargets — the exhaustive auto-resolvable set.
-AUTO_RESOLVABLE = {
-    "SELF", "ENEMY_MINIONS", "FRIENDLY_MINIONS", "ALL_MINIONS",
-    "ENEMY_HERO", "FRIENDLY_HERO",
-}
-
 # The two triggers whose targets come from the player's intent.
 PLAYER_TARGETED_TRIGGERS = {"ON_PLAY", "ON_CAST"}
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
-INTERPRETER = ROOT / "src" / "Emberfall.Core" / "EffectInterpreter.cs"
+TARGETING = ROOT / "src" / "Emberfall.Core" / "Targeting.cs"
+TARGET_SPEC = ROOT / "src" / "Emberfall.Core.Cards" / "CardDefinition.cs"
 
-# `case "X":` inside SelectorTargets — the labels this scan mirrors.
+# `case "X":` inside Targeting's switch over TargetSpec.Selector.
 CASE_LABEL = re.compile(r'^\s*case\s+"([A-Z_]+)"\s*:', re.MULTILINE)
+SELECTOR_SWITCH = re.compile(r'switch\s*\(\s*spec\.Selector\s*\)')
 
 
-def interpreter_selectors() -> "set[str] | None":
-    """The `case` labels of EffectInterpreter.SelectorTargets, read from the source.
-
-    AUTO_RESOLVABLE is a hand-copy of a switch in another language in another file, which is
-    exactly the kind of duplicate that rots silently: a selector added there and not here makes
-    this scan cry wolf, and one removed there makes it miss a live crash. Read the real thing
-    and diff, so drift fails the scan instead of quietly degrading it.
-    """
-    if not INTERPRETER.exists():
+def block_after(src: str, start: int) -> "str | None":
+    """Return the balanced brace block beginning at or after start, or None when malformed."""
+    opening = src.find("{", start)
+    if opening < 0:
         return None
-    src = INTERPRETER.read_text(encoding="utf-8")
-    start = src.find("SelectorTargets(EffectDef eff, CardInstance source)")
+    depth = 0
+    for index in range(opening, len(src)):
+        if src[index] == "{":
+            depth += 1
+        elif src[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return src[opening + 1:index]
+    return None
+
+
+def targeting_selectors() -> "set[str] | None":
+    """Read the selector labels from the shared runtime target-policy switch.
+
+    The scanner anchors on the selector expression, not a method name, because the structural
+    switch is the runtime seam shared by player validation and effect resolution.
+    """
+    if not TARGETING.exists():
+        return None
+    src = TARGETING.read_text(encoding="utf-8")
+    match = SELECTOR_SWITCH.search(src)
+    if match is None:
+        return None
+    body = block_after(src, match.end())
+    if body is None:
+        return None
+    selectors = set(CASE_LABEL.findall(body))
+    return selectors if selectors else None
+
+
+def default_player_selectors() -> "set[str] | None":
+    """Read TargetSpec's default explicit-choice policy from its declared set."""
+    if not TARGET_SPEC.exists():
+        return None
+    src = TARGET_SPEC.read_text(encoding="utf-8")
+    start = src.find("DefaultPlayerSelectors")
     if start < 0:
         return None
-    # The method ends at its `default:` arm — the throw that this whole scan exists to prevent.
-    end = src.find("default:", start)
-    if end < 0:
+    body = block_after(src, start)
+    if body is None:
         return None
-    return set(CASE_LABEL.findall(src[start:end]))
+    selectors = set(re.findall(r'"([A-Z_]+)"', body))
+    return selectors if selectors else None
 
 
 def main() -> int:
-    actual = interpreter_selectors()
-    if actual is None:
-        print(f"could not read SelectorTargets from {INTERPRETER} — "
+    selectors = targeting_selectors()
+    player_defaults = default_player_selectors()
+    if selectors is None or player_defaults is None:
+        print("could not read the Targeting selector switch or TargetSpec default choice set — "
               "the scan cannot prove it is in sync with the engine", file=sys.stderr)
         return 2
-    if actual != AUTO_RESOLVABLE:
-        print("AUTO_RESOLVABLE is out of sync with EffectInterpreter.SelectorTargets:",
+    if not player_defaults.issubset(selectors):
+        print("TargetSpec default player-choice selectors are not all handled by Targeting:",
               file=sys.stderr)
-        for s in sorted(actual - AUTO_RESOLVABLE):
-            print(f"  in the interpreter, missing here : {s}", file=sys.stderr)
-        for s in sorted(AUTO_RESOLVABLE - actual):
-            print(f"  listed here, not in the interpreter: {s}", file=sys.stderr)
+        for selector in sorted(player_defaults - selectors):
+            print(f"  default choice missing in Targeting: {selector}", file=sys.stderr)
         return 2
 
     files = sorted(CARD_DIR.glob("*.cards.json"))
@@ -88,7 +112,7 @@ def main() -> int:
         return 2
 
     scanned = 0
-    effects = 0
+    rules = 0
     offenders = []
     held = []
 
@@ -97,17 +121,29 @@ def main() -> int:
         cards = doc["cards"] if isinstance(doc, dict) and "cards" in doc else doc
         for card in cards:
             scanned += 1
-            for eff in card.get("effects") or []:
-                effects += 1
-                trigger = eff.get("trigger")
-                selector = (eff.get("target") or {}).get("selector")
+            for rule in card.get("rules") or []:
+                rules += 1
+                trigger = (rule.get("activation") or {}).get("trigger")
+                action = rule.get("action") or {}
+                target = action.get("target") or {}
+                selector = target.get("selector")
                 if selector is None:
                     continue  # DefaultTargets handles it
+                if selector not in selectors:
+                    print(f"{card['id']} uses selector '{selector}' that Targeting does not handle",
+                          file=sys.stderr)
+                    return 2
                 if trigger in PLAYER_TARGETED_TRIGGERS:
                     continue
-                if selector in AUTO_RESOLVABLE:
+                chosen_by = target.get("chosenBy")
+                if chosen_by == "RANDOM":
                     continue
-                row = (path.name, card["id"], trigger, eff.get("action"), selector)
+                if chosen_by not in (None, "PLAYER"):
+                    print(f"{card['id']} uses unknown target choice '{chosen_by}'", file=sys.stderr)
+                    return 2
+                if chosen_by is None and selector not in player_defaults:
+                    continue
+                row = (path.name, card["id"], trigger, action.get("type"), selector)
                 # Held out of every pool by the gate — it cannot be drawn, so it cannot fire.
                 if card.get("requiresEngineeringPrimitive") is True:
                     held.append(row)
@@ -122,7 +158,7 @@ def main() -> int:
 
     print(f"card files scanned : {len(files)}  ({', '.join(p.name for p in files)})")
     print(f"cards scanned      : {scanned}")
-    print(f"effects scanned    : {effects}")
+    print(f"rules scanned      : {rules}")
     print(f"offenders          : {len(offenders)}")
     print(f"held (quarantined) : {len(held)}")
     if held:

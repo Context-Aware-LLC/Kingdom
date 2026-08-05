@@ -143,9 +143,9 @@ jobs:
 
       # CardValidator C14b (above, via CardCi) already fails a fired trigger that declares an
       # ANY_* selector. This scan is NOT that check twice: its real job is the drift guard the
-      # .NET side cannot do — it reads the `case` labels out of EffectInterpreter.SelectorTargets
-      # and fails (exit 2) when the validator's hand-copied selector list stops matching the
-      # switch it mirrors. C14b is only as true as that list.
+      # .NET side cannot do — it reads Targeting's selector switch and TargetSpec's default-choice
+      # policy, then fails (exit 2) when either structural seam is incomplete. C14b is only as
+      # true as that policy.
       - name: "Stage 6b · Trigger/selector drift guard (tooling/scripts)"
         run: python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
 
