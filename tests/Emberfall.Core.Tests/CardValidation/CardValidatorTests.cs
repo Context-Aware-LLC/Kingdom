@@ -356,7 +356,6 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [TestCase(CardType.SPELL)]
-        [TestCase(CardType.WEAPON)]
         [TestCase(CardType.HERO_POWER)]
         public void OnTurnStart_Is_Rejected_On_Unsupported_Source_Types(CardType type)
         {
@@ -365,7 +364,18 @@ namespace Emberfall.Core.Tests.CardValidation
             var report = Validator().Validate(def, Db(def));
 
             Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"));
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-SOURCE-UNSUPPORTED"));
+        }
+
+        [Test]
+        public void OnTurnStart_Is_Live_On_An_Equipped_Weapon()
+        {
+            var def = WithEffect(CardType.WEAPON, TurnStart(TurnOwner.ANY));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                "the shared source policy admits the equipped-weapon observer path");
         }
 
         [Test]

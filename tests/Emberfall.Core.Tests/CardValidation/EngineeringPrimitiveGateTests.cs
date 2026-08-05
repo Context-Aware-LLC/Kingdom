@@ -83,8 +83,10 @@ namespace Emberfall.Core.Tests.CardValidation
         // A throwaway fixture, not a live card — these tests exercise the RULE, not any specific
         // row, so they stay valid no matter how the live set changes.
         private static CardDefinition FiredAnySelectorCard(Trigger trigger, bool gated) => new CardDefinition(
-            id: "test_fired_any_selector", name: "Test", type: CardType.MINION, cost: 1,
-            attack: 1, health: 1, durability: null,
+            id: "test_fired_any_selector", name: "Test",
+            type: trigger == Trigger.ON_CAST ? CardType.SPELL : CardType.MINION, cost: 1,
+            attack: trigger == Trigger.ON_CAST ? null : (int?)1,
+            health: trigger == Trigger.ON_CAST ? null : (int?)1, durability: null,
             @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
             keywords: System.Array.Empty<Keyword>(),
             rules: new[]

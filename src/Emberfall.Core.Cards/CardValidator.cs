@@ -25,51 +25,6 @@ namespace Emberfall.Core.Cards
             Trigger.ON_PLAY, Trigger.ON_CAST,
         };
 
-        /// <summary>Whether a <see cref="Trigger"/> has a raise site in the engine (C21).</summary>
-        private enum TriggerLiveness
-        {
-            /// <summary>Has a raise site in the engine; type-specific exceptions are gated separately.</summary>
-            Live,
-            /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:557-560):
-            /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
-            WeaponOnly,
-            /// <summary>Raised on board minions only — either observed from them (<c>ON_TURN_START</c>,
-            /// pending a weapon/spell source lifecycle) or self-raised on one (<c>ON_HEAL</c>, permanently:
-            /// nothing else has health to restore). Read the row's comment for which.</summary>
-            MinionOnly,
-            /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
-            /// a card on it parses, validates, loads, and does nothing forever, silently.</summary>
-            Dead,
-        }
-
-        // C21 — trigger liveness. THE authoritative guard against a dead trigger; it replaces the
-        // prose list in CLAUDE.md, which is exactly the kind of guard that rots. Every Trigger enum
-        // member MUST appear here (a member with no row is treated as Dead — fail closed).
-        //
-        // HARD RULE: UPDATE THIS TABLE as each trigger source lifecycle lands — assign the exact
-        // liveness classification in the SAME commit that adds its raise site. Do not promote a
-        // type-scoped row to Live until every accepted type has a runtime path. The issue pointer on
-        // each Dead or type-scoped row is its retirement trigger.
-        private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
-        {
-            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (herald / weapon equip)
-            [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:354,454 (spell / hero power)
-            [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
-            [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
-            [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:560 (weapons only)
-            [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
-            // RETIREMENT TRIGGER: #34/#35 must widen this classification and update CLAUDE.md's
-            // ON_TURN_START source restriction in the same change.
-            [Trigger.ON_TURN_START] = TriggerLiveness.MinionOnly, // CommandProcessor.StartTurnSequence (explicit turn owner, after reset, before draw — EF-011)
-            [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
-            // NO retirement trigger, unlike ON_TURN_START above: this row is minion-only permanently,
-            // not pending a lifecycle. A SPELL is not a permanent and a WEAPON has no health to restore,
-            // so neither can ever be the character DamagePipeline.ApplyHeal raises this on.
-            [Trigger.ON_HEAL] = TriggerLiveness.MinionOnly, // DamagePipeline.ApplyHeal (healed-minion self-trigger — EF-015)
-            [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)
-            [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
-        };
-
         /// <summary>Whether a keyword has meaningful behavior on an equipped weapon.</summary>
         private enum WeaponKeywordReach
         {
@@ -194,33 +149,32 @@ namespace Emberfall.Core.Cards
                     Err("C9-RULE-ID-DUPLICATE", $"{prefix}.id",
                         $"rule id '{ruleId}' appears more than once on this card.");
 
-                // C21 — trigger liveness (see TriggerLivenessTable). A card on a trigger with no raise
-                // site parses, validates, loads and does nothing, forever, with no error at runtime;
-                // this is the only place that catches it.
-                if (!TriggerLivenessTable.TryGetValue(trigger, out var liveness))
-                    liveness = TriggerLiveness.Dead; // fail closed: a new enum member is dead until tabled live
-                switch (liveness)
+                // C21 — the runtime enumerator and validation share this exact fail-closed relation.
+                // A new source kind, trigger, or pair is inert until EffectSourceCapabilities tables it.
+                bool knownSource = EffectSourceCapabilities.TryForCardType(def.Type,
+                    out EffectSourceKind sourceKind);
+                if (!knownSource || !EffectSourceCapabilities.Supports(sourceKind, trigger))
                 {
-                    case TriggerLiveness.Dead:
+                    if (!EffectSourceCapabilities.SupportsAny(trigger))
+                    {
                         Err("C21-TRIGGER-DEAD", $"{prefix}.activation",
                             $"trigger '{trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
-                        break;
-                    case TriggerLiveness.WeaponOnly when def.Type != CardType.WEAPON:
+                    }
+                    else if (trigger == Trigger.ON_ATTACK)
+                    {
                         Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.activation",
                             $"trigger '{trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
-                        break;
-                    case TriggerLiveness.MinionOnly when def.Type != CardType.MINION:
-                        // The tail differs per trigger and is load-bearing: ON_TURN_START is minion-only
-                        // *pending* a weapon/spell lifecycle, so pointing at that is a real lead;
-                        // ON_HEAL is minion-only permanently (nothing else has health to restore), and
-                        // telling an author to wait for a lifecycle that will never come is worse than
-                        // saying nothing.
+                    }
+                    else if (trigger == Trigger.ON_HEAL)
+                    {
                         Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.activation",
-                            $"trigger '{trigger}' is raised on board minions only — it is dead on a {def.Type}"
-                            + (trigger == Trigger.ON_TURN_START
-                                ? " until that source lifecycle is implemented."
-                                : "."));
-                        break;
+                            $"trigger '{trigger}' is raised on board minions only — it is dead on a {def.Type}.");
+                    }
+                    else
+                    {
+                        Err("C21-TRIGGER-SOURCE-UNSUPPORTED", $"{prefix}.activation",
+                            $"trigger '{trigger}' has no runtime path from a {sourceKind} source.");
+                    }
                 }
                 // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-TOLL) until EF-020 gave
                 // RulesEngine.BreakWeapon a raise site. It is now live on BOTH card types, so the gate is
