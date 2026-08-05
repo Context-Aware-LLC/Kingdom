@@ -73,7 +73,7 @@
     align-items: stretch;
     min-width: 300px;
     border-width: 1px;
-    border-color: rgba(11, 14, 19, 0.7);        /* dark inscribed edge — reads as carved, not glowing */
+    border-color: rgba(11, 14, 19, 0.35);        /* dark inscribed edge — reads as carved, not glowing */
     border-radius: var(--space-3);
     overflow: hidden;                            /* slats clip to the rounded group */
 }
@@ -81,8 +81,10 @@
     font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
-    background-color: rgba(30, 37, 48, 0);      /* fully transparent — backdrop shows straight through (styling base) */
+    background-color: rgba(30, 37, 48, 0);      /*fully transparent — backdrop shows straight through (styling base) */
     border-width: 0;
+    background: url("/Assets/Art/UI/Materials/Stone/ui_panel_stone_slate.svg");
+    
     border-radius: 0;                            /* the group owns the shape, not the slat */
     border-top-width: 1px;                       /* groove between slats */
     border-top-color: rgba(11, 14, 19, 0.55);
