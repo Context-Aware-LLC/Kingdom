@@ -136,8 +136,8 @@ function Get-ActiveFiles {
     foreach ($relative in $scope) {
         $entry = Join-Path $ScanRoot $relative
         if (-not (Test-Path -LiteralPath $entry)) { continue }
-        if ((Get-Item -LiteralPath $entry).PSIsContainer) {
-            Get-ChildItem -LiteralPath $entry -File -Recurse | ForEach-Object {
+        if ((Get-Item -LiteralPath $entry -Force).PSIsContainer) {
+            Get-ChildItem -LiteralPath $entry -File -Recurse -Force | ForEach-Object {
                 $path = $_.FullName
                 $rootPrefix = $ScanRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
                 $relativePath = $path.Substring($rootPrefix.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
@@ -145,7 +145,7 @@ function Get-ActiveFiles {
             }
         }
         else {
-            if (-not (Test-ExcludedPath $relative)) { Get-Item -LiteralPath $entry }
+            if (-not (Test-ExcludedPath $relative)) { Get-Item -LiteralPath $entry -Force }
         }
     }
 }
@@ -271,15 +271,17 @@ function Invoke-SelfTest {
     $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('vocabulary-gate-' + [guid]::NewGuid().ToString('N'))
     try {
         New-Item -ItemType Directory -Force -Path (Join-Path $testRoot 'src') | Out-Null
+        New-Item -ItemType Directory -Force -Path (Join-Path $testRoot '.github/workflows') | Out-Null
         $font = Join-Path $testRoot 'unity/Emberfall/Assets/Art/Fonts/AlfaSlabOne-OFL.txt'
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent $font) | Out-Null
         [IO.File]::WriteAllText((Join-Path $testRoot 'src/clean.cs'), 'public sealed class Clean {}')
+        [IO.File]::WriteAllText((Join-Path $testRoot '.github/workflows/ci.yml'), 'name: clean')
         $patterns = New-Patterns
         [IO.File]::WriteAllText($font, 'Permission is granted, free of ' + $patterns.Words.b.ToLowerInvariant() + ', to any person.')
 
         $clean = Invoke-VocabularyScan -ScanRoot $testRoot -AllowedNotes @() -Quiet
-        if ($clean.Unexplained -ne 0 -or $clean.Allowed -ne 1) {
-            throw "self-test clean case failed: unexplained=$($clean.Unexplained), allowed=$($clean.Allowed)"
+        if ($clean.Unexplained -ne 0 -or $clean.Allowed -ne 1 -or $clean.Files -ne 3) {
+            throw "self-test clean case failed: unexplained=$($clean.Unexplained), allowed=$($clean.Allowed), files=$($clean.Files)"
         }
 
         $note = Join-Path $testRoot 'tools/migration-note.md'
