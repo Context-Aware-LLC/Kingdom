@@ -43,6 +43,12 @@ namespace Emberfall.Core.Tests.Interpreter
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), effects,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
+        private static CardDefinition Weapon(string id, int attack = 2, int durability = 2,
+            params Keyword[] keywords)
+            => new CardDefinition(id, id, CardType.WEAPON, 1, attack, null, durability,
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, System.Array.Empty<EffectDef>(),
+                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+
         private static CardInstance Board(GameState state, int seat, CardDefinition def)
         {
             var card = new CardInstance(state.NextInstanceId(), def.Id, state.Players[seat].Id)
@@ -203,6 +209,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void Zone_Targets_Reach_Handlers_Instead_Of_Being_Dropped_As_NonCharacters()
         {
             var body = Minion("body");
+            var blade = Weapon("blade");
             var recover = Spell("recover", new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
                 null, null, null, null, null,
                 target: new TargetSpec("FRIENDLY_GRAVEYARD", TargetChosenBy.PLAYER)));
@@ -211,7 +218,8 @@ namespace Emberfall.Core.Tests.Interpreter
                 target: new TargetSpec("FRIENDLY_DECK", TargetChosenBy.RANDOM)));
             var disarm = Spell("disarm", new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
                 null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
-            var db = new FakeCardDatabase().Register(body).Register(recover).Register(tutor).Register(disarm);
+            var db = new FakeCardDatabase().Register(body).Register(blade)
+                .Register(recover).Register(tutor).Register(disarm);
 
             var graveState = State();
             CardInstance grave = ZoneCard(graveState, 0, body, Zone.Graveyard);
@@ -231,17 +239,84 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(deckState.Players[0].Hand.Single().DefinitionId, Is.EqualTo(body.Id));
 
             var weaponState = State();
-            weaponState.Players[0].Weapon = new CardInstance(
-                weaponState.NextInstanceId(), body.Id, weaponState.Players[0].Id)
+            var equipped = new CardInstance(
+                weaponState.NextInstanceId(), blade.Id, weaponState.Players[0].Id)
             {
-                Zone = Zone.Weapon, CurrentAttack = 1, CurrentDurability = 2,
+                Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2,
             };
+            InstanceId publicWeaponId = equipped.Id;
+            weaponState.Players[0].Weapon = equipped;
             CardInstance disarmCard = ZoneCard(weaponState, 0, disarm, Zone.Hand);
             var disarmed = new CommandProcessor(db).Execute(weaponState, new PlayCardIntent(
                 weaponState.Players[0].Id, disarmCard.Id, 0, System.Array.Empty<TargetRef>()));
             Assert.That(disarmed.Accepted, Is.True);
             Assert.That(weaponState.Players[0].Weapon, Is.Null);
-            Assert.That(weaponState.Players[0].Hand.Single().DefinitionId, Is.EqualTo(body.Id));
+            Assert.That(weaponState.Players[0].Hand.Single(), Is.SameAs(equipped));
+            Assert.That(equipped.DefinitionId, Is.EqualTo(blade.Id));
+            Assert.That(equipped.Id, Is.Not.EqualTo(publicWeaponId),
+                "A public weapon receives a fresh hidden-zone identity when bounced.");
+        }
+
+        [Test]
+        public void Weapon_Targets_Reach_Destroy_Silence_And_Transform_Handlers()
+        {
+            CardDefinition blade = Weapon("blade", keywords: Keyword.LIFESTEAL);
+            CardDefinition replacement = Weapon("replacement", attack: 4, durability: 3);
+            var silence = Spell("silence_weapon", new EffectDef(Trigger.ON_CAST, Verb.SILENCE,
+                null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
+            var destroy = Spell("destroy_weapon", new EffectDef(Trigger.ON_CAST, Verb.DESTROY,
+                null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
+            var transform = Spell("transform_weapon", new EffectDef(Trigger.ON_CAST, Verb.TRANSFORM,
+                null, null, replacement.Id, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
+            var db = new FakeCardDatabase().Register(blade).Register(replacement)
+                .Register(silence).Register(destroy).Register(transform);
+
+            GameState silenceState = State();
+            var enchanted = new CardInstance(silenceState.NextInstanceId(), blade.Id,
+                silenceState.Players[0].Id)
+            {
+                Zone = Zone.Weapon, CurrentAttack = 5, CurrentDurability = 1,
+            };
+            enchanted.Keywords.Add(Keyword.LIFESTEAL);
+            enchanted.Keywords.Add(Keyword.POISONOUS);
+            enchanted.Enchantments.Add(new Enchantment
+                { Source = new InstanceId(99), AttackDelta = 3, GrantedKeyword = Keyword.POISONOUS });
+            silenceState.Players[0].Weapon = enchanted;
+            CardInstance silenceCard = ZoneCard(silenceState, 0, silence, Zone.Hand);
+
+            Assert.That(new CommandProcessor(db).Execute(silenceState,
+                new PlayCardIntent(silenceState.Players[0].Id, silenceCard.Id, 0,
+                    System.Array.Empty<TargetRef>())).Accepted, Is.True);
+            Assert.That(silenceState.Players[0].Weapon, Is.SameAs(enchanted));
+            Assert.That((enchanted.CurrentAttack, enchanted.CurrentDurability), Is.EqualTo((2, 1)));
+            Assert.That(enchanted.Enchantments, Is.Empty);
+            Assert.That(enchanted.Keywords, Is.EquivalentTo(new[] { Keyword.LIFESTEAL }));
+
+            GameState destroyState = State();
+            var doomed = new CardInstance(destroyState.NextInstanceId(), blade.Id,
+                destroyState.Players[0].Id) { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
+            destroyState.Players[0].Weapon = doomed;
+            CardInstance destroyCard = ZoneCard(destroyState, 0, destroy, Zone.Hand);
+
+            Assert.That(new CommandProcessor(db).Execute(destroyState,
+                new PlayCardIntent(destroyState.Players[0].Id, destroyCard.Id, 0,
+                    System.Array.Empty<TargetRef>())).Accepted, Is.True);
+            Assert.That(destroyState.Players[0].Weapon, Is.Null);
+            Assert.That(destroyState.Players[0].Graveyard, Does.Contain(doomed));
+
+            GameState transformState = State();
+            var original = new CardInstance(transformState.NextInstanceId(), blade.Id,
+                transformState.Players[0].Id) { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
+            transformState.Players[0].Weapon = original;
+            CardInstance transformCard = ZoneCard(transformState, 0, transform, Zone.Hand);
+
+            Assert.That(new CommandProcessor(db).Execute(transformState,
+                new PlayCardIntent(transformState.Players[0].Id, transformCard.Id, 0,
+                    System.Array.Empty<TargetRef>())).Accepted, Is.True);
+            CardInstance transformed = transformState.Players[0].Weapon!;
+            Assert.That(transformed.DefinitionId, Is.EqualTo(replacement.Id));
+            Assert.That(transformed.Id, Is.Not.EqualTo(original.Id));
+            Assert.That((transformed.CurrentAttack, transformed.CurrentDurability), Is.EqualTo((4, 3)));
         }
     }
 }

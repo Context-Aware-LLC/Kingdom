@@ -252,15 +252,17 @@ namespace Emberfall.Core
         {
             foreach (var t in ctx.Targets)
             {
-                if (!t.IsMinion) continue;
-                var m = t.Minion!;
-                var def = ctx.Db.Get(m.DefinitionId);
+                CardInstance? card = t.IsMinion ? t.Minion
+                    : t.Kind == TargetCandidateKind.Weapon ? t.Card : null;
+                if (card == null) continue;
+                var def = ctx.Db.Get(card.DefinitionId);
 
                 // Damage already on the minion is KEPT, so a buffed body falling away can leave the
-                // printed one at ≤0 → DeathCheck kills it (EF-017a).
-                DerivedStats.ResetToPrinted(m, def, preserveDamage: true);
+                // printed one at ≤0 → DeathCheck kills it (EF-017a). A weapon retains spent durability
+                // while its enchantments and granted keywords reset to the printed definition.
+                DerivedStats.ResetToPrinted(card, def, preserveDamage: t.IsMinion);
 
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onSilence), source: ctx.Source.Id, target: m.Id);
+                ctx.Events.Emit(ctx.Vfx(VfxEvent.onSilence), source: ctx.Source.Id, target: card.Id);
             }
         }
     }
