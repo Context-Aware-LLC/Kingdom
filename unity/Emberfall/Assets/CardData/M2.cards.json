@@ -1,48 +1,1381 @@
 [
-  {"id":"neutral_galewind_runner","name":"Galewind Runner","type":"MINION","cost":2,"attack":2,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["SKIRMISH"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/neutral_galewind_runner","cardText":"[Skirmish]","effects":[]},
-  {"id":"neutral_razorcoil_adder","name":"Razorcoil Adder","type":"MINION","cost":2,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["VENOM"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/neutral_razorcoil_adder","cardText":"[Venom]","effects":[]},
-  {"id":"neutral_phantom_duelist","name":"Phantom Duelist","type":"MINION","cost":2,"attack":2,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["SHROUD"],"setId":"EMBERFALL","collectible":true,"artId":"art/neutral_phantom_duelist","cardText":"[Shroud]","effects":[]},
-  {"id":"neutral_doublestrike_hawk","name":"Doublestrike Hawk","type":"MINION","cost":4,"attack":2,"health":4,"class":"NEUTRAL","rarity":"RARE","keywords":["DOUBLESTRIKE"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/neutral_doublestrike_hawk","cardText":"[Doublestrike]","effects":[]},
-  {"id":"neutral_lifeclaw_bat","name":"Lifeclaw Bat","type":"MINION","cost":4,"attack":2,"health":3,"class":"NEUTRAL","rarity":"RARE","keywords":["SKIRMISH","LIFEDRAIN"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/neutral_lifeclaw_bat","cardText":"[Skirmish] [Lifedrain]","effects":[]},
-  {"id":"neutral_spellwarden","name":"Spellwarden","type":"MINION","cost":3,"attack":2,"health":4,"class":"NEUTRAL","rarity":"RARE","keywords":["ARCANE_SURGE"],"setId":"EMBERFALL","collectible":true,"artId":"art/neutral_spellwarden","cardText":"Arcane Surge +1","effects":[]},
-  {"id":"neutral_ironclad_bulwark","name":"Ironclad Bulwark","type":"MINION","cost":5,"attack":3,"health":5,"class":"NEUTRAL","rarity":"EPIC","keywords":["BULWARK","AEGIS"],"setId":"EMBERFALL","collectible":true,"tribe":"CONSTRUCT","artId":"art/neutral_ironclad_bulwark","cardText":"[Bulwark] [Aegis]","effects":[]},
-  {"id":"neutral_soulbound_revenant","name":"Soulbound Revenant","type":"MINION","cost":3,"attack":1,"health":2,"class":"NEUTRAL","rarity":"COMMON","keywords":["HERALD","TOLL"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/neutral_soulbound_revenant","cardText":"[Herald] Draw a card. [Toll] Summon a 1/1 Wisp.","effects":[{"trigger":"ON_PLAY","action":"DRAW","amount":1},{"trigger":"ON_DEATH","action":"SUMMON","amount":1,"payload":{"tokenId":"token_wisp_1_1"}}]},
-  {"id":"neutral_venomscale_drake","name":"Venomscale Drake","type":"MINION","cost":6,"attack":4,"health":5,"class":"NEUTRAL","rarity":"EPIC","keywords":["VENOM"],"setId":"EMBERFALL","collectible":true,"tribe":"DRAGON","artId":"art/neutral_venomscale_drake","cardText":"[Venom]","effects":[]},
-  {"id":"neutral_duneborn_construct","name":"Duneborn Construct","type":"MINION","cost":4,"attack":3,"health":4,"class":"NEUTRAL","rarity":"COMMON","keywords":["BULWARK","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"CONSTRUCT","artId":"art/neutral_duneborn_construct","cardText":"[Bulwark] [Herald] Give your minions +1/+1.","effects":[{"trigger":"ON_PLAY","action":"BUFF","target":{"selector":"FRIENDLY_MINIONS"},"amount":1,"amount2":1}]},
-  {"id":"neutral_bog_crawler","name":"Bog Crawler","type":"MINION","cost":1,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["SKIRMISH"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/neutral_bog_crawler","cardText":"[Skirmish]","effects":[]},
-  {"id":"neutral_searing_quill","name":"Searing Quill","type":"WEAPON","cost":2,"attack":2,"durability":2,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/neutral_searing_quill","cardText":"","effects":[]},
-
-  {"id":"ember_blazewing","name":"Blazewing","type":"MINION","cost":3,"attack":3,"health":2,"class":"EMBERWARD","rarity":"COMMON","keywords":["DOUBLESTRIKE"],"setId":"EMBERFALL","collectible":true,"tribe":"DRAGON","artId":"art/ember_blazewing","cardText":"[Doublestrike]","effects":[]},
-  {"id":"ember_scalded_striker","name":"Scalded Striker","type":"MINION","cost":2,"attack":2,"health":1,"class":"EMBERWARD","rarity":"COMMON","keywords":["SKIRMISH","HERALD"],"setId":"EMBERFALL","collectible":true,"artId":"art/ember_scalded_striker","cardText":"[Skirmish] [Herald] Deal 1 damage to a minion.","effects":[{"trigger":"ON_PLAY","action":"DEAL_DAMAGE","amount":1,"target":{"selector":"ANY_MINION"}}]},
-  {"id":"ember_fusillade","name":"Fusillade","type":"SPELL","cost":3,"class":"EMBERWARD","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/ember_fusillade","cardText":"Deal 5 damage to a minion. Deal 2 damage to your hero.","effects":[{"trigger":"ON_CAST","action":"DEAL_DAMAGE","amount":5,"target":{"selector":"ANY_MINION"}},{"trigger":"ON_CAST","action":"DEAL_DAMAGE","amount":2,"target":{"selector":"FRIENDLY_HERO"}}]},
-  {"id":"ember_cinderplate_golem","name":"Cinderplate Golem","type":"MINION","cost":4,"attack":6,"health":3,"class":"EMBERWARD","rarity":"RARE","keywords":["BACKDRAFT"],"setId":"EMBERFALL","collectible":true,"tribe":"CONSTRUCT","artId":"art/ember_cinderplate_golem","cardText":"Backdraft: (2)","effects":[{"trigger":"ON_PLAY","action":"BACKDRAFT","amount":2}]},
-  {"id":"ember_vanguard_drake","name":"Vanguard Drake","type":"MINION","cost":5,"attack":3,"health":4,"class":"EMBERWARD","rarity":"EPIC","keywords":["VANGUARD","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"DRAGON","artId":"art/ember_vanguard_drake","cardText":"[Vanguard] [Herald] Deal 2 damage to the enemy hero.","effects":[{"trigger":"ON_PLAY","action":"DEAL_DAMAGE","amount":2,"target":{"selector":"ENEMY_HERO"}}]},
-  {"id":"ember_scorch_blade","name":"Scorch Blade","type":"WEAPON","cost":3,"attack":3,"durability":2,"class":"EMBERWARD","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/ember_scorch_blade","cardText":"After your hero attacks, deal 1 damage to the enemy hero.","effects":[{"trigger":"ON_ATTACK","action":"DEAL_DAMAGE","amount":1,"target":{"selector":"ENEMY_HERO"}}]},
-  {"id":"ember_magmacore_warden","name":"Magmacore Warden","type":"MINION","cost":6,"attack":5,"health":7,"class":"EMBERWARD","rarity":"RARE","keywords":["BULWARK"],"setId":"EMBERFALL","collectible":true,"tribe":"ELEMENTAL","artId":"art/ember_magmacore_warden","cardText":"[Bulwark]","effects":[]},
-  {"id":"ember_heat_surge","name":"Heat Surge","type":"SPELL","cost":4,"class":"EMBERWARD","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/ember_heat_surge","cardText":"Deal 2 damage to all minions. Draw a card.","effects":[{"trigger":"ON_CAST","action":"DEAL_DAMAGE","amount":2,"target":{"selector":"ALL_MINIONS"}},{"trigger":"ON_CAST","action":"DRAW","amount":1}]},
-
-  {"id":"tide_venomfin","name":"Venomfin","type":"MINION","cost":2,"attack":1,"health":1,"class":"TIDECALLER","rarity":"COMMON","keywords":["VENOM"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/tide_venomfin","cardText":"[Venom]","effects":[]},
-  {"id":"tide_frostwhisper","name":"Frostwhisper","type":"MINION","cost":3,"attack":2,"health":3,"class":"TIDECALLER","rarity":"COMMON","keywords":["FROST"],"setId":"EMBERFALL","collectible":true,"tribe":"SPIRIT","artId":"art/tide_frostwhisper","cardText":"[Frost]","effects":[]},
-  {"id":"tide_icescale_whelp","name":"Icescale Whelp","type":"MINION","cost":2,"attack":1,"health":2,"class":"TIDECALLER","rarity":"COMMON","keywords":["FROST"],"setId":"EMBERFALL","collectible":true,"tribe":"SPIRIT","artId":"art/tide_icescale_whelp","cardText":"[Frost]","effects":[]},
-  {"id":"tide_glacial_echo","name":"Glacial Echo","type":"SPELL","cost":2,"class":"TIDECALLER","rarity":"COMMON","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/tide_glacial_echo","cardText":"Frost a minion. Draw a card.","effects":[{"trigger":"ON_CAST","action":"FROST","target":{"selector":"ANY_MINION"}},{"trigger":"ON_CAST","action":"DRAW","amount":1}]},
-  {"id":"tide_icecrown_herald","name":"Icecrown Herald","type":"MINION","cost":5,"attack":3,"health":5,"class":"TIDECALLER","rarity":"RARE","keywords":["BULWARK","HERALD"],"setId":"EMBERFALL","collectible":true,"artId":"art/tide_icecrown_herald","cardText":"[Bulwark] [Herald] Frost an enemy.","effects":[{"trigger":"ON_PLAY","action":"FROST","target":{"selector":"ANY_ENEMY"}}]},
-  {"id":"tide_abyssal_devourer","name":"Abyssal Devourer","type":"MINION","cost":6,"attack":4,"health":4,"class":"TIDECALLER","rarity":"EPIC","keywords":["SKIRMISH","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"ELEMENTAL","artId":"art/tide_abyssal_devourer","cardText":"[Skirmish] [Herald] Return a minion to its owner's hand.","effects":[{"trigger":"ON_PLAY","action":"RETURN_TO_HAND","target":{"selector":"ANY_MINION"}}]},
-  {"id":"tide_maren_avatar","name":"Maren's Avatar","type":"MINION","cost":7,"attack":5,"health":8,"class":"TIDECALLER","rarity":"LEGENDARY","keywords":["BULWARK","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"ELEMENTAL","artId":"art/tide_maren_avatar","cardText":"[Bulwark] [Herald] Frost all enemy minions.","effects":[{"trigger":"ON_PLAY","action":"FROST","target":{"selector":"ENEMY_MINIONS"}}]},
-  {"id":"tide_deep_channel","name":"Deep Channel","type":"SPELL","cost":4,"class":"TIDECALLER","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/tide_deep_channel","cardText":"Return all enemy minions to their owner's hand.","effects":[{"trigger":"ON_CAST","action":"RETURN_TO_HAND","target":{"selector":"ENEMY_MINIONS"}}]},
-  {"id":"tide_coldsnap_knife","name":"Coldsnap Knife","type":"WEAPON","cost":2,"attack":2,"durability":2,"class":"TIDECALLER","rarity":"RARE","keywords":["HERALD"],"setId":"EMBERFALL","collectible":true,"artId":"art/tide_coldsnap_knife","cardText":"[Herald] Frost an enemy.","effects":[{"trigger":"ON_PLAY","action":"FROST","target":{"selector":"ANY_ENEMY"}}]},
-
-  {"id":"grave_deathweaver","name":"Deathweaver","type":"MINION","cost":2,"attack":1,"health":2,"class":"GRAVEKEEP","rarity":"COMMON","keywords":["TOLL"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/grave_deathweaver","cardText":"[Toll] Draw a card.","effects":[{"trigger":"ON_DEATH","action":"DRAW","amount":1}]},
-  {"id":"grave_spectral_wolf","name":"Spectral Wolf","type":"MINION","cost":3,"attack":2,"health":2,"class":"GRAVEKEEP","rarity":"RARE","keywords":["SKIRMISH","TOLL"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/grave_spectral_wolf","cardText":"[Skirmish] [Toll] Restore 3 Health to your hero.","effects":[{"trigger":"ON_DEATH","action":"HEAL","amount":3,"target":{"selector":"FRIENDLY_HERO"}}]},
-  {"id":"grave_boneshield_sentinel","name":"Boneshield Sentinel","type":"MINION","cost":4,"attack":2,"health":4,"class":"GRAVEKEEP","rarity":"RARE","keywords":["BULWARK","AEGIS"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/grave_boneshield_sentinel","cardText":"[Bulwark] [Aegis]","effects":[]},
-  {"id":"grave_bone_horde","name":"Bone Horde","type":"SPELL","cost":3,"class":"GRAVEKEEP","rarity":"COMMON","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/grave_bone_horde","cardText":"Summon three 1/1 Grave Wisps.","effects":[{"trigger":"ON_CAST","action":"SUMMON","amount":3,"payload":{"tokenId":"token_wisp_1_1"}}]},
-  {"id":"grave_plague_bringer","name":"Plague Bringer","type":"MINION","cost":5,"attack":3,"health":3,"class":"GRAVEKEEP","rarity":"EPIC","keywords":["VENOM","TOLL"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/grave_plague_bringer","cardText":"[Venom] [Toll] Summon two 1/1 Grave Wisps.","effects":[{"trigger":"ON_DEATH","action":"SUMMON","amount":2,"payload":{"tokenId":"token_wisp_1_1"}}]},
-  {"id":"grave_echoing_knell","name":"Echoing Knell","type":"SPELL","cost":4,"class":"GRAVEKEEP","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/grave_echoing_knell","cardText":"Give your minions +1/+1.","effects":[{"trigger":"ON_CAST","action":"BUFF","target":{"selector":"FRIENDLY_MINIONS"},"amount":1,"amount2":1}]},
-  {"id":"grave_warden_of_dusk","name":"Warden of Dusk","type":"MINION","cost":7,"attack":6,"health":7,"class":"GRAVEKEEP","rarity":"LEGENDARY","keywords":["BULWARK","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"UNDEAD","artId":"art/grave_warden_of_dusk","cardText":"[Bulwark] [Herald] Destroy a friendly minion. Restore 10 Health to your hero.","effects":[{"trigger":"ON_PLAY","action":"DESTROY","target":{"selector":"ANY_FRIENDLY_MINION"}},{"trigger":"ON_PLAY","action":"HEAL","amount":10,"target":{"selector":"FRIENDLY_HERO"}}]},
-
-  {"id":"verdant_venomthorn","name":"Venomthorn","type":"MINION","cost":3,"attack":0,"health":3,"class":"VERDANT","rarity":"COMMON","keywords":["BULWARK","VENOM"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/verdant_venomthorn","cardText":"[Bulwark] [Venom]","effects":[]},
-  {"id":"verdant_windroot_sprinter","name":"Windroot Sprinter","type":"MINION","cost":3,"attack":2,"health":2,"class":"VERDANT","rarity":"COMMON","keywords":["SKIRMISH","HERALD"],"setId":"EMBERFALL","collectible":true,"tribe":"BEAST","artId":"art/verdant_windroot_sprinter","cardText":"[Skirmish] [Herald] Restore 2 Health to your hero.","effects":[{"trigger":"ON_PLAY","action":"HEAL","amount":2,"target":{"selector":"FRIENDLY_HERO"}}]},
-  {"id":"verdant_greatroot_speaker","name":"Greatroot Speaker","type":"MINION","cost":5,"attack":2,"health":6,"class":"VERDANT","rarity":"RARE","keywords":["ARCANE_SURGE"],"setId":"EMBERFALL","collectible":true,"artId":"art/verdant_greatroot_speaker","cardText":"Arcane Surge +1","effects":[]},
-  {"id":"verdant_primal_mend","name":"Primal Mend","type":"SPELL","cost":4,"class":"VERDANT","rarity":"RARE","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/verdant_primal_mend","cardText":"Restore 6 Health to a friendly character. Give a friendly minion +2/+2.","effects":[{"trigger":"ON_CAST","action":"HEAL","amount":6,"target":{"selector":"ANY_FRIENDLY"}},{"trigger":"ON_CAST","action":"BUFF","amount":2,"amount2":2,"target":{"selector":"ANY_FRIENDLY_MINION"}}]},
-  {"id":"verdant_world_titan","name":"World-Titan","type":"MINION","cost":9,"attack":10,"health":10,"class":"VERDANT","rarity":"LEGENDARY","keywords":["BULWARK","OVERWHELM"],"setId":"EMBERFALL","collectible":true,"artId":"art/verdant_world_titan","cardText":"[Bulwark] [Overwhelm]","effects":[]},
-  {"id":"verdant_thorn_swarm","name":"Thorn Swarm","type":"SPELL","cost":5,"class":"VERDANT","rarity":"EPIC","keywords":[],"setId":"EMBERFALL","collectible":true,"artId":"art/verdant_thorn_swarm","cardText":"Deal 2 damage to all enemies. Restore 4 Health to your hero.","effects":[{"trigger":"ON_CAST","action":"DEAL_DAMAGE","amount":2,"target":{"selector":"ENEMY_MINIONS"}},{"trigger":"ON_CAST","action":"DEAL_DAMAGE","amount":2,"target":{"selector":"ENEMY_HERO"}},{"trigger":"ON_CAST","action":"HEAL","amount":4,"target":{"selector":"FRIENDLY_HERO"}}]}
+  {
+    "id": "neutral_galewind_runner",
+    "name": "Galewind Runner",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "SKIRMISH"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/neutral_galewind_runner",
+    "cardText": "[Skirmish]"
+  },
+  {
+    "id": "neutral_razorcoil_adder",
+    "name": "Razorcoil Adder",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "VENOM"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/neutral_razorcoil_adder",
+    "cardText": "[Venom]"
+  },
+  {
+    "id": "neutral_phantom_duelist",
+    "name": "Phantom Duelist",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "SHROUD"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/neutral_phantom_duelist",
+    "cardText": "[Shroud]"
+  },
+  {
+    "id": "neutral_doublestrike_hawk",
+    "name": "Doublestrike Hawk",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 2,
+    "health": 4,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "keywords": [
+      "DOUBLESTRIKE"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/neutral_doublestrike_hawk",
+    "cardText": "[Doublestrike]"
+  },
+  {
+    "id": "neutral_lifeclaw_bat",
+    "name": "Lifeclaw Bat",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 2,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "keywords": [
+      "SKIRMISH",
+      "LIFEDRAIN"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/neutral_lifeclaw_bat",
+    "cardText": "[Skirmish] [Lifedrain]"
+  },
+  {
+    "id": "neutral_spellwarden",
+    "name": "Spellwarden",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 2,
+    "health": 4,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "keywords": [
+      "ARCANE_SURGE"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/neutral_spellwarden",
+    "cardText": "Arcane Surge +1"
+  },
+  {
+    "id": "neutral_ironclad_bulwark",
+    "name": "Ironclad Bulwark",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 3,
+    "health": 5,
+    "class": "NEUTRAL",
+    "rarity": "EPIC",
+    "keywords": [
+      "BULWARK",
+      "AEGIS"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "CONSTRUCT",
+    "artId": "art/neutral_ironclad_bulwark",
+    "cardText": "[Bulwark] [Aegis]"
+  },
+  {
+    "id": "neutral_soulbound_revenant",
+    "name": "Soulbound Revenant",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 1,
+    "health": 2,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "HERALD",
+      "TOLL"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/neutral_soulbound_revenant",
+    "cardText": "[Herald] Draw a card. [Toll] Summon a 1/1 Wisp."
+  },
+  {
+    "id": "neutral_venomscale_drake",
+    "name": "Venomscale Drake",
+    "type": "MINION",
+    "cost": 6,
+    "attack": 4,
+    "health": 5,
+    "class": "NEUTRAL",
+    "rarity": "EPIC",
+    "keywords": [
+      "VENOM"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "DRAGON",
+    "artId": "art/neutral_venomscale_drake",
+    "cardText": "[Venom]"
+  },
+  {
+    "id": "neutral_duneborn_construct",
+    "name": "Duneborn Construct",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 3,
+    "health": 4,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
+          "target": {
+            "selector": "FRIENDLY_MINIONS"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "CONSTRUCT",
+    "artId": "art/neutral_duneborn_construct",
+    "cardText": "[Bulwark] [Herald] Give your minions +1/+1."
+  },
+  {
+    "id": "neutral_bog_crawler",
+    "name": "Bog Crawler",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "SKIRMISH"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/neutral_bog_crawler",
+    "cardText": "[Skirmish]"
+  },
+  {
+    "id": "neutral_searing_quill",
+    "name": "Searing Quill",
+    "type": "WEAPON",
+    "cost": 2,
+    "attack": 2,
+    "durability": 2,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/neutral_searing_quill",
+    "cardText": ""
+  },
+  {
+    "id": "ember_blazewing",
+    "name": "Blazewing",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 3,
+    "health": 2,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "keywords": [
+      "DOUBLESTRIKE"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "DRAGON",
+    "artId": "art/ember_blazewing",
+    "cardText": "[Doublestrike]"
+  },
+  {
+    "id": "ember_scalded_striker",
+    "name": "Scalded Striker",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 1,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "keywords": [
+      "SKIRMISH",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ember_scalded_striker",
+    "cardText": "[Skirmish] [Herald] Deal 1 damage to a minion."
+  },
+  {
+    "id": "ember_fusillade",
+    "name": "Fusillade",
+    "type": "SPELL",
+    "cost": 3,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 5,
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ember_fusillade",
+    "cardText": "Deal 5 damage to a minion. Deal 2 damage to your hero."
+  },
+  {
+    "id": "ember_cinderplate_golem",
+    "name": "Cinderplate Golem",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 6,
+    "health": 3,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [
+      "BACKDRAFT"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "CONSTRUCT",
+    "artId": "art/ember_cinderplate_golem",
+    "cardText": "Backdraft: (2)"
+  },
+  {
+    "id": "ember_vanguard_drake",
+    "name": "Vanguard Drake",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 3,
+    "health": 4,
+    "class": "EMBERWARD",
+    "rarity": "EPIC",
+    "keywords": [
+      "VANGUARD",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "DRAGON",
+    "artId": "art/ember_vanguard_drake",
+    "cardText": "[Vanguard] [Herald] Deal 2 damage to the enemy hero."
+  },
+  {
+    "id": "ember_scorch_blade",
+    "name": "Scorch Blade",
+    "type": "WEAPON",
+    "cost": 3,
+    "attack": 3,
+    "durability": 2,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_ATTACK"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ember_scorch_blade",
+    "cardText": "After your hero attacks, deal 1 damage to the enemy hero."
+  },
+  {
+    "id": "ember_magmacore_warden",
+    "name": "Magmacore Warden",
+    "type": "MINION",
+    "cost": 6,
+    "attack": 5,
+    "health": 7,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "ELEMENTAL",
+    "artId": "art/ember_magmacore_warden",
+    "cardText": "[Bulwark]"
+  },
+  {
+    "id": "ember_heat_surge",
+    "name": "Heat Surge",
+    "type": "SPELL",
+    "cost": 4,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ALL_MINIONS"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ember_heat_surge",
+    "cardText": "Deal 2 damage to all minions. Draw a card."
+  },
+  {
+    "id": "tide_venomfin",
+    "name": "Venomfin",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 1,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "VENOM"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/tide_venomfin",
+    "cardText": "[Venom]"
+  },
+  {
+    "id": "tide_frostwhisper",
+    "name": "Frostwhisper",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 2,
+    "health": 3,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "FROST"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "SPIRIT",
+    "artId": "art/tide_frostwhisper",
+    "cardText": "[Frost]"
+  },
+  {
+    "id": "tide_icescale_whelp",
+    "name": "Icescale Whelp",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "FROST"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "SPIRIT",
+    "artId": "art/tide_icescale_whelp",
+    "cardText": "[Frost]"
+  },
+  {
+    "id": "tide_glacial_echo",
+    "name": "Glacial Echo",
+    "type": "SPELL",
+    "cost": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_glacial_echo",
+    "cardText": "Frost a minion. Draw a card."
+  },
+  {
+    "id": "tide_icecrown_herald",
+    "name": "Icecrown Herald",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 3,
+    "health": 5,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "keywords": [
+      "BULWARK",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_icecrown_herald",
+    "cardText": "[Bulwark] [Herald] Frost an enemy."
+  },
+  {
+    "id": "tide_abyssal_devourer",
+    "name": "Abyssal Devourer",
+    "type": "MINION",
+    "cost": 6,
+    "attack": 4,
+    "health": 4,
+    "class": "TIDECALLER",
+    "rarity": "EPIC",
+    "keywords": [
+      "SKIRMISH",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "ELEMENTAL",
+    "artId": "art/tide_abyssal_devourer",
+    "cardText": "[Skirmish] [Herald] Return a minion to its owner's hand."
+  },
+  {
+    "id": "tide_maren_avatar",
+    "name": "Maren's Avatar",
+    "type": "MINION",
+    "cost": 7,
+    "attack": 5,
+    "health": 8,
+    "class": "TIDECALLER",
+    "rarity": "LEGENDARY",
+    "keywords": [
+      "BULWARK",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "ELEMENTAL",
+    "artId": "art/tide_maren_avatar",
+    "cardText": "[Bulwark] [Herald] Frost all enemy minions."
+  },
+  {
+    "id": "tide_deep_channel",
+    "name": "Deep Channel",
+    "type": "SPELL",
+    "cost": 4,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_deep_channel",
+    "cardText": "Return all enemy minions to their owner's hand."
+  },
+  {
+    "id": "tide_coldsnap_knife",
+    "name": "Coldsnap Knife",
+    "type": "WEAPON",
+    "cost": 2,
+    "attack": 2,
+    "durability": 2,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "keywords": [
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_coldsnap_knife",
+    "cardText": "[Herald] Frost an enemy."
+  },
+  {
+    "id": "grave_deathweaver",
+    "name": "Deathweaver",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 2,
+    "class": "GRAVEKEEP",
+    "rarity": "COMMON",
+    "keywords": [
+      "TOLL"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/grave_deathweaver",
+    "cardText": "[Toll] Draw a card."
+  },
+  {
+    "id": "grave_spectral_wolf",
+    "name": "Spectral Wolf",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 2,
+    "health": 2,
+    "class": "GRAVEKEEP",
+    "rarity": "RARE",
+    "keywords": [
+      "SKIRMISH",
+      "TOLL"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 3,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/grave_spectral_wolf",
+    "cardText": "[Skirmish] [Toll] Restore 3 Health to your hero."
+  },
+  {
+    "id": "grave_boneshield_sentinel",
+    "name": "Boneshield Sentinel",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 2,
+    "health": 4,
+    "class": "GRAVEKEEP",
+    "rarity": "RARE",
+    "keywords": [
+      "BULWARK",
+      "AEGIS"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/grave_boneshield_sentinel",
+    "cardText": "[Bulwark] [Aegis]"
+  },
+  {
+    "id": "grave_bone_horde",
+    "name": "Bone Horde",
+    "type": "SPELL",
+    "cost": 3,
+    "class": "GRAVEKEEP",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 3
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/grave_bone_horde",
+    "cardText": "Summon three 1/1 Grave Wisps."
+  },
+  {
+    "id": "grave_plague_bringer",
+    "name": "Plague Bringer",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 3,
+    "health": 3,
+    "class": "GRAVEKEEP",
+    "rarity": "EPIC",
+    "keywords": [
+      "VENOM",
+      "TOLL"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 2
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/grave_plague_bringer",
+    "cardText": "[Venom] [Toll] Summon two 1/1 Grave Wisps."
+  },
+  {
+    "id": "grave_echoing_knell",
+    "name": "Echoing Knell",
+    "type": "SPELL",
+    "cost": 4,
+    "class": "GRAVEKEEP",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
+          "target": {
+            "selector": "FRIENDLY_MINIONS"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/grave_echoing_knell",
+    "cardText": "Give your minions +1/+1."
+  },
+  {
+    "id": "grave_warden_of_dusk",
+    "name": "Warden of Dusk",
+    "type": "MINION",
+    "cost": 7,
+    "attack": 6,
+    "health": 7,
+    "class": "GRAVEKEEP",
+    "rarity": "LEGENDARY",
+    "keywords": [
+      "BULWARK",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 10,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "UNDEAD",
+    "artId": "art/grave_warden_of_dusk",
+    "cardText": "[Bulwark] [Herald] Destroy a friendly minion. Restore 10 Health to your hero."
+  },
+  {
+    "id": "verdant_venomthorn",
+    "name": "Venomthorn",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 0,
+    "health": 3,
+    "class": "VERDANT",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK",
+      "VENOM"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/verdant_venomthorn",
+    "cardText": "[Bulwark] [Venom]"
+  },
+  {
+    "id": "verdant_windroot_sprinter",
+    "name": "Windroot Sprinter",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 2,
+    "health": 2,
+    "class": "VERDANT",
+    "rarity": "COMMON",
+    "keywords": [
+      "SKIRMISH",
+      "HERALD"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "tribe": "BEAST",
+    "artId": "art/verdant_windroot_sprinter",
+    "cardText": "[Skirmish] [Herald] Restore 2 Health to your hero."
+  },
+  {
+    "id": "verdant_greatroot_speaker",
+    "name": "Greatroot Speaker",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 2,
+    "health": 6,
+    "class": "VERDANT",
+    "rarity": "RARE",
+    "keywords": [
+      "ARCANE_SURGE"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_greatroot_speaker",
+    "cardText": "Arcane Surge +1"
+  },
+  {
+    "id": "verdant_primal_mend",
+    "name": "Primal Mend",
+    "type": "SPELL",
+    "cost": 4,
+    "class": "VERDANT",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 6,
+          "target": {
+            "selector": "ANY_FRIENDLY"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 2,
+          "health": 2,
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_primal_mend",
+    "cardText": "Restore 6 Health to a friendly character. Give a friendly minion +2/+2."
+  },
+  {
+    "id": "verdant_world_titan",
+    "name": "World-Titan",
+    "type": "MINION",
+    "cost": 9,
+    "attack": 10,
+    "health": 10,
+    "class": "VERDANT",
+    "rarity": "LEGENDARY",
+    "keywords": [
+      "BULWARK",
+      "OVERWHELM"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_world_titan",
+    "cardText": "[Bulwark] [Overwhelm]"
+  },
+  {
+    "id": "verdant_thorn_swarm",
+    "name": "Thorn Swarm",
+    "type": "SPELL",
+    "cost": 5,
+    "class": "VERDANT",
+    "rarity": "EPIC",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      },
+      {
+        "id": "rule_3",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 4,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_thorn_swarm",
+    "cardText": "Deal 2 damage to all enemies. Restore 4 Health to your hero."
+  }
 ]

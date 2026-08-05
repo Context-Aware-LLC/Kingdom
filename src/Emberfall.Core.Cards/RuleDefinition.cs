@@ -214,7 +214,7 @@ namespace Emberfall.Core.Cards
             => CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
     }
 
-    public enum ManaGainKind { Temporary, PermanentFilled, PermanentEmpty }
+    public enum ManaGainKind { TEMPORARY, PERMANENT_FILLED, PERMANENT_EMPTY }
 
     public sealed class GainManaAction : RuleAction
     {
@@ -328,8 +328,8 @@ namespace Emberfall.Core.Cards
                 case Verb.GAIN_MANA:
                     return new GainManaAction(effect.Amount ?? 0,
                         effect.Permanent
-                            ? effect.Empty ? ManaGainKind.PermanentEmpty : ManaGainKind.PermanentFilled
-                            : ManaGainKind.Temporary);
+                            ? effect.Empty ? ManaGainKind.PERMANENT_EMPTY : ManaGainKind.PERMANENT_FILLED
+                            : ManaGainKind.TEMPORARY);
                 case Verb.ADD_TO_HAND: return new AddToHandAction(effect.TokenId ?? "", effect.Amount ?? 1);
                 case Verb.FROST: return new FrostAction(RequireTarget(effect));
                 case Verb.BACKDRAFT: return new BackdraftAction(effect.Amount ?? 0);
@@ -362,8 +362,8 @@ namespace Emberfall.Core.Cards
                 case EquipAction a: return Effect(trigger, Verb.EQUIP, null, null, a.CardId, null, null, condition);
                 case GainManaAction a:
                     return new EffectDef(trigger, Verb.GAIN_MANA, a.Amount, null, null, null, null,
-                        permanent: a.Kind != ManaGainKind.Temporary,
-                        empty: a.Kind == ManaGainKind.PermanentEmpty, condition: condition);
+                        permanent: a.Kind != ManaGainKind.TEMPORARY,
+                        empty: a.Kind == ManaGainKind.PERMANENT_EMPTY, condition: condition);
                 case AddToHandAction a: return Effect(trigger, Verb.ADD_TO_HAND, a.Count, null, a.CardId, null, null, condition);
                 case FrostAction a: return Effect(trigger, Verb.FROST, null, null, null, null, a.Target, condition);
                 case BackdraftAction a: return Effect(trigger, Verb.BACKDRAFT, a.Amount, null, null, null, null, condition);
