@@ -26,6 +26,7 @@ cardsets/
 | `spell_cast_echo` | `ON_SPELL_CAST` (EF-016): that it resolves at all, that it fires on **both** players' casts, that the sweep runs active-side-first, that the spell's own `ON_CAST` resolves before the reactions — and, the reason the fixture exists, that a **hero power does not fire it** even though hero powers raise the same `ON_CAST`. Baked by `SpellCastEchoFixtureGenerator` ([Explicit]). |
 | `weapon_identity` | Unified weapon identity: original hand card → `Zone.Weapon` → graveyard, populated canonical weapon state, Lifedrain/Venom/Frost rider behavior and order, Aegis suppression, and current `DOUBLESTRIKE` carrier state. Baked by `WeaponIdentityFixtureGenerator` ([Explicit]). |
 | `unearth_choice` | Deterministic Unearth offers, correlated exact-set choice resolution, monotonic choice sequence, created-card events, and `AutoConfirm` selecting the first offered option. Baked by `UnearthChoiceFixtureGenerator` ([Explicit]). |
+| `ongoing_effect_lifecycle` | Carrierless ongoing-effect creation, deterministic trigger order, one-shot expiration, and a permanent instance retained in final canonical state. Baked by `OngoingEffectFixtureGenerator` ([Explicit]). |
 
 Fixtures whose scenario is scripted rather than hand-written have a paired `[Explicit]` generator in
 this directory — never run by CI. Run one locally to re-produce and re-bake its fixture, then commit
@@ -50,6 +51,10 @@ trio. They are the first GoldenReplay rows to exercise a populated weapon slot.
 `test_unearth_source` is the non-collectible fixture-only source for `unearth_choice`. Keeping it
 out of `AllCollectible` makes the append inert for the offer pool used by the new fixture and for
 every pre-existing replay.
+
+`test_ongoing_permanent` and `test_ongoing_one_shot` are the non-collectible fixture-only spell
+sources for `ongoing_effect_lifecycle`. They differ in lifetime and damage amount so the replay can
+assert creation order, both trigger events, one expiration, and the permanent survivor.
 
 ## Rebaselining (never automatic)
 
