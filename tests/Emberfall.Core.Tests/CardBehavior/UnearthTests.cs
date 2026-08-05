@@ -107,7 +107,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 state.PendingChoice.Options[0], firstSequence)).Accepted, Is.True);
 
             var secondSource = new CardInstance(state.NextInstanceId(), "unearth_source", P0)
-                { Zone = Zone.Hand };
+            { Zone = Zone.Hand };
             state.Players[0].Hand.Add(secondSource);
             CommandResult secondOffer = processor.Execute(state,
                 new PlayCardIntent(P0, secondSource.Id, 0, Array.Empty<TargetRef>()));
