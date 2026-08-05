@@ -12,12 +12,10 @@ namespace Emberfall.Core
     /// is exercised by the golden-replay gate (dev-docs/quality/testing-and-ci.md:24) — no Dictionary/HashSet iteration ever
     /// drives order here; only sorted lists and ascending <see cref="InstanceId"/> tie-breaks.
     ///
-    /// <para><b>M1 targeting model.</b> The committed <see cref="EffectDef"/> carries no <c>TargetSpec</c>
-    /// (design's dev-docs/specs/card-schema.md §5.3 is not yet in the data model). So targets resolve two ways: a
-    /// player-initiated trigger (ON_PLAY / ON_CAST) uses the validated targets from the intent; a fired
-    /// trigger (ON_DEATH / observers) has no player, so it falls back to a verb-relative default
-    /// (DEAL_DAMAGE→enemy hero, HEAL→friendly hero, BUFF/GIVE_KEYWORD→self). Selector-based AoE awaits a
-    /// TargetSpec primitive via the <c>requiresEngineeringPrimitive</c> gate (dev-docs/specs/card-schema.md:40).</para>
+    /// <para><b>Targeting.</b> Every authored <see cref="TargetSpec"/> is resolved through
+    /// <see cref="Targeting"/>, which owns candidate order, filters, bindings, multiplicity and canonical
+    /// RNG use. Selector-less legacy effects retain their verb-relative defaults until the typed-rule
+    /// migration makes every target policy explicit.</para>
     /// </summary>
     internal sealed class EffectInterpreter
     {
@@ -42,9 +40,8 @@ namespace Emberfall.Core
         // ── Raising triggers ─────────────────────────────────────────────────────
 
         /// <summary>
-        /// Enqueue a card's OWN effects matching <paramref name="trigger"/> (ON_PLAY battlecry, ON_CAST spell,
-        /// ON_DEATH deathrattle). <paramref name="chosenTargets"/> are the player-resolved targets (empty for
-        /// fired triggers, which fall back to verb defaults at resolution time).
+        /// Enqueue a card's OWN effects matching <paramref name="trigger"/>. Player-authored choices are
+        /// already validated; automatic and random target specs resolve later against authoritative state.
         /// </summary>
         public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<TargetRef> chosenTargets,
             TriggerContext context = default)

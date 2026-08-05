@@ -16,7 +16,7 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>
-    /// A reference to a target character/permanent within a play/attack/hero-power intent.
+    /// A reference to a targetable game object within a play/attack/hero-power intent.
     /// Resolved and legality-checked up front (dev-docs/contracts/gameplay-and-session.md:18) so resolution stays
     /// server-authoritative and deterministic.
     /// </summary>

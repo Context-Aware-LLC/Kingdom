@@ -194,10 +194,8 @@ namespace Emberfall.Core.Cards
         public bool Empty { get; }
         public TargetSpec? Target { get; }
         /// <summary>
-        /// Optional target selector from <c>target.selector</c> in the card JSON (dev-docs/specs/card-schema.md §5.3).
-        /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
-        /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
-        /// auto-targeted battlecries). Player-chosen targets always take precedence.
+        /// Compatibility view of <c>target.selector</c>. New consumers use <see cref="Target"/> so selection
+        /// policy, count, filters and bindings cannot be discarded while reading only the selector string.
         /// </summary>
         public string? Selector => Target?.Selector;
 
