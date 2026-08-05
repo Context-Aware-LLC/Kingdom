@@ -328,6 +328,46 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void CardJson_Rejects_Unknown_Properties_At_Every_Object_Schema_Level()
+        {
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_root\",\"type\":\"SPELL\",\"unexpected\":true}",
+                "card");
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_effect\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"unexpected\":true}]}",
+                "effect");
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_payload\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"SUMMON\",\"payload\":{\"tokenId\":\"token\",\"unexpected\":true}}]}",
+                "payload");
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_target\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"FRIENDLY_HERO\",\"unexpected\":true}}]}",
+                "target");
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_filter\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"ANY_MINION\",\"filter\":{\"damaged\":true,\"unexpected\":true}}}]}",
+                "target.filter");
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_condition\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"condition\":{\"type\":\"TURN_OWNER\",\"value\":\"ANY\",\"unexpected\":true}}]}",
+                "condition");
+        }
+
+        [Test]
+        public void CardJson_Accepts_All_Known_Target_And_Filter_Properties()
+        {
+            const string json = "{\"id\":\"known_target\",\"type\":\"SPELL\",\"effects\":[{"
+                + "\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"ANY_MINION\","
+                + "\"chosenBy\":\"RANDOM\",\"count\":-1,\"filter\":{\"damaged\":true,\"tribe\":\"CONSTRUCT\"}}}]}";
+
+            Assert.DoesNotThrow(() => CardJson.Deserialize(json));
+        }
+
+        private static void AssertRejectsUnknownProperty(string json, string schemaLevel)
+        {
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
+
+            Assert.That(ex!.Message, Is.EqualTo($"Unknown card JSON property 'unexpected' in {schemaLevel}."));
+        }
+
+        [Test]
         public void OnTurnEnd_Is_Live_After_EF012()
         {
             var effect = new EffectDef(Trigger.ON_TURN_END, Action.DRAW, amount: 1, amount2: null,
