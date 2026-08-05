@@ -440,7 +440,7 @@ namespace Emberfall.Core
         private static bool IsHiddenEnemyMinion(GameState state, int friendlySeat, TargetCandidate candidate)
             => candidate.Kind == TargetCandidateKind.Minion &&
                candidate.Character.Seat != friendlySeat &&
-               candidate.Character.Minion!.Keywords.Contains(Keyword.STEALTH);
+               candidate.Character.Minion!.Keywords.Contains(Keyword.SHROUD);
 
         private static void AddCharacters(GameState state, int seat, List<TargetCandidate> result)
         {

@@ -60,7 +60,7 @@ namespace Emberfall.Core.Cards
             {
                 case Contracts.Action.DEAL_DAMAGE:
                 case Contracts.Action.HEAL:
-                case Contracts.Action.FREEZE:
+                case Contracts.Action.FROST:
                     return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion;
                 case Contracts.Action.BUFF:
                 case Contracts.Action.GIVE_KEYWORD:
