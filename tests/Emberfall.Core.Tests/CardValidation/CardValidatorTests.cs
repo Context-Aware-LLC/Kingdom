@@ -185,6 +185,50 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(report.RequiresEngineeringPrimitive, Is.True);
         }
 
+        [Test]
+        public void Action_Target_Capability_Rejects_A_Selector_Whose_Objects_The_Handler_Cannot_Affect()
+        {
+            var effect = new EffectDef(Trigger.ON_CAST, Action.BUFF, amount: 1, amount2: 0,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                target: new TargetSpec("FRIENDLY_WEAPON"));
+            CardDefinition def = WithEffect(CardType.SPELL, effect);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i =>
+                i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE" && i.Severity == Severity.Error), Is.True);
+        }
+
+        [TestCase(CardType.WEAPON, Trigger.ON_PLAY)]
+        [TestCase(CardType.SPELL, Trigger.ON_CAST)]
+        public void Self_Capability_Uses_The_Source_Lifecycle_Instead_Of_An_AnyKind_Wildcard(
+            CardType type, Trigger trigger)
+        {
+            var effect = new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 0,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                target: new TargetSpec("SELF"));
+            CardDefinition def = WithEffect(type, effect);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE"), Is.True,
+                $"BUFF cannot affect the actual {type} SELF carrier at {trigger}.");
+        }
+
+        [Test]
+        public void TriggerSource_Capability_Fails_Closed_When_The_Event_Source_Kind_Is_Incompatible()
+        {
+            var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.BUFF, amount: 1, amount2: 0,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                target: new TargetSpec("TRIGGER_SOURCE"));
+            CardDefinition def = WithEffect(CardType.MINION, effect);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE"), Is.True,
+                "ON_SPELL_CAST's trigger source is a graveyard card, not a BUFF-capable minion.");
+        }
+
         // ── C21 — trigger liveness ───────────────────────────────────────────────────
         // A dead trigger (declared in the enum but raised nowhere) is silent at runtime; C21 is
         // the only guard. These lock the table so flipping a trigger live/dead is a deliberate edit.

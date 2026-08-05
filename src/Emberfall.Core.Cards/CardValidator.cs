@@ -287,6 +287,11 @@ namespace Emberfall.Core.Cards
                 // C14
                 if (!string.IsNullOrEmpty(fx.Selector) && !TargetSpec.IsKnownSelector(fx.Selector!))
                     Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
+                else if (fx.Target != null &&
+                         !ActionTargetCapabilities.HasCompatibleTarget(
+                             fx.Action, fx.Target.Selector, def.Type, fx.Trigger))
+                    Err("C14F-ACTION-TARGET-INCOMPATIBLE", $"{prefix}.target.selector",
+                        $"{fx.Action} cannot affect any target kind produced by '{fx.Target.Selector}'.");
                 // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
                 // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean

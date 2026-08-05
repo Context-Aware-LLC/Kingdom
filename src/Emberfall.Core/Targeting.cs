@@ -5,17 +5,6 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core
 {
-    /// <summary>The runtime shape of one selectable game object.</summary>
-    public enum TargetCandidateKind
-    {
-        Hero,
-        Minion,
-        Weapon,
-        HandCard,
-        DeckCard,
-        GraveyardCard,
-    }
-
     /// <summary>
     /// Public, Unity-free target candidate. Instance identity is the authoritative reference; kind,
     /// controller and zone let a client present candidates without learning engine-private objects.
@@ -58,6 +47,24 @@ namespace Emberfall.Core
         public override string ToString() => $"{Kind}:{Instance}";
     }
 
+    /// <summary>One ordered player-choice step exposed to headless and Unity presentation code.</summary>
+    public sealed class TargetChoiceRequirement
+    {
+        public string Binding { get; }
+        public int RequiredCount { get; }
+        public IReadOnlyList<string> DistinctFrom { get; }
+        public IReadOnlyList<TargetCandidate> Candidates { get; }
+
+        internal TargetChoiceRequirement(string binding, int requiredCount,
+            IReadOnlyList<string> distinctFrom, IReadOnlyList<TargetCandidate> candidates)
+        {
+            Binding = binding;
+            RequiredCount = requiredCount;
+            DistinctFrom = distinctFrom;
+            Candidates = candidates;
+        }
+    }
+
     /// <summary>
     /// The one target-policy seam used by intent validation, effect resolution and client targeting.
     /// Candidate order is canonical: controller side before opponent side; heroes before board
@@ -80,6 +87,44 @@ namespace Emberfall.Core
         }
 
         /// <summary>
+        /// Build the ordered, binding-aware choice plan a client must satisfy. Effects sharing a
+        /// binding share one choice; their candidate sets are intersected in canonical order.
+        /// </summary>
+        public static IReadOnlyList<TargetChoiceRequirement> PlayerChoicePlan(GameState state,
+            ICardDatabase db, PlayerId controller, CardDefinition def, Trigger trigger,
+            InstanceId? source = null)
+        {
+            var groups = new List<ChoiceGroup>();
+            var byBinding = new Dictionary<string, ChoiceGroup>();
+            foreach (EffectDef effect in def.Effects)
+            {
+                if (effect.Trigger != trigger || !IsPlayerChosen(effect.Target)) continue;
+                TargetSpec spec = effect.Target!;
+                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
+                    spec, effect.Action, source);
+                int required = RequiredPlayerCount(spec, candidates.Count);
+                if (!byBinding.TryGetValue(spec.Binding, out ChoiceGroup? group))
+                {
+                    group = new ChoiceGroup(spec.Binding, required, candidates);
+                    byBinding.Add(spec.Binding, group);
+                    groups.Add(group);
+                }
+                else
+                {
+                    group.Intersect(candidates);
+                    if (group.RequiredCount != required) group.RequiredCount = int.MaxValue;
+                }
+                group.AddDistinctFrom(spec.DistinctFrom);
+            }
+
+            var result = new List<TargetChoiceRequirement>(groups.Count);
+            foreach (ChoiceGroup group in groups)
+                result.Add(new TargetChoiceRequirement(group.Binding, group.RequiredCount,
+                    group.DistinctFrom, group.Candidates));
+            return result;
+        }
+
+        /// <summary>
         /// Candidate intersection for one named choice. Unbound legacy effects share one choice, so
         /// a candidate must satisfy every unbound player-chosen effect; named bindings isolate
         /// independent effects.
@@ -89,24 +134,39 @@ namespace Emberfall.Core
             string? binding = null, InstanceId? source = null)
         {
             string key = binding ?? "";
-            List<TargetCandidate>? result = null;
-            foreach (EffectDef effect in def.Effects)
+            foreach (TargetChoiceRequirement requirement in PlayerChoicePlan(
+                         state, db, controller, def, trigger, source))
+                if (requirement.Binding == key) return requirement.Candidates;
+            return Array.Empty<TargetCandidate>();
+        }
+
+        private sealed class ChoiceGroup
+        {
+            public readonly string Binding;
+            public int RequiredCount;
+            public readonly List<string> DistinctFrom = new List<string>();
+            public readonly List<TargetCandidate> Candidates;
+
+            public ChoiceGroup(string binding, int requiredCount,
+                IReadOnlyList<TargetCandidate> candidates)
             {
-                if (effect.Trigger != trigger || !IsPlayerChosen(effect.Target) ||
-                    effect.Target!.Binding != key) continue;
-                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
-                    effect.Target, source);
-                if (result == null)
-                {
-                    result = new List<TargetCandidate>(candidates);
-                    continue;
-                }
+                Binding = binding;
+                RequiredCount = requiredCount;
+                Candidates = new List<TargetCandidate>(candidates);
+            }
+
+            public void AddDistinctFrom(string binding)
+            {
+                if (binding.Length > 0 && !DistinctFrom.Contains(binding)) DistinctFrom.Add(binding);
+            }
+
+            public void Intersect(IReadOnlyList<TargetCandidate> candidates)
+            {
                 var allowed = new HashSet<InstanceId>();
                 foreach (TargetCandidate candidate in candidates) allowed.Add(candidate.Instance);
-                for (int i = result.Count - 1; i >= 0; i--)
-                    if (!allowed.Contains(result[i].Instance)) result.RemoveAt(i);
+                for (int i = Candidates.Count - 1; i >= 0; i--)
+                    if (!allowed.Contains(Candidates[i].Instance)) Candidates.RemoveAt(i);
             }
-            return result ?? (IReadOnlyList<TargetCandidate>)Array.Empty<TargetCandidate>();
         }
 
         /// <summary>
@@ -115,19 +175,21 @@ namespace Emberfall.Core
         /// and enemy Shroud exclusion. Hidden opponent zones and ordered decks fail closed.
         /// </summary>
         public static IReadOnlyList<TargetCandidate> Candidates(GameState state, ICardDatabase db,
-            PlayerId controller, TargetSpec spec, InstanceId? source = null,
+            PlayerId controller, TargetSpec spec, Contracts.Action? action = null,
+            InstanceId? source = null,
             InstanceId? triggerSource = null)
-            => EnumerateCandidates(state, db, controller, spec, source, triggerSource,
+            => EnumerateCandidates(state, db, controller, spec, action, source, triggerSource,
                 forPlayerChoice: true, allowHiddenZones: false);
 
         internal static IReadOnlyList<TargetCandidate> ResolutionCandidates(GameState state,
-            ICardDatabase db, PlayerId controller, TargetSpec spec, InstanceId? source = null,
+            ICardDatabase db, PlayerId controller, TargetSpec spec, Contracts.Action? action = null,
+            InstanceId? source = null,
             InstanceId? triggerSource = null)
-            => EnumerateCandidates(state, db, controller, spec, source, triggerSource,
+            => EnumerateCandidates(state, db, controller, spec, action, source, triggerSource,
                 forPlayerChoice: false, allowHiddenZones: true);
 
         private static IReadOnlyList<TargetCandidate> EnumerateCandidates(GameState state, ICardDatabase db,
-            PlayerId controller, TargetSpec spec, InstanceId? source,
+            PlayerId controller, TargetSpec spec, Contracts.Action? action, InstanceId? source,
             InstanceId? triggerSource, bool forPlayerChoice, bool allowHiddenZones)
         {
             int friendly = state.SeatOf(controller);
@@ -180,6 +242,11 @@ namespace Emberfall.Core
                     result.RemoveAt(i);
                     continue;
                 }
+                if (action.HasValue && !ActionTargetCapabilities.Allows(action.Value, candidate.Kind))
+                {
+                    result.RemoveAt(i);
+                    continue;
+                }
                 if (!PassesFilter(candidate, spec.Filter, db))
                     result.RemoveAt(i);
             }
@@ -217,7 +284,8 @@ namespace Emberfall.Core
             foreach (EffectDef effect in playerEffects)
             {
                 TargetSpec spec = effect.Target!;
-                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller, spec, source);
+                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller, spec,
+                    effect.Action, source);
                 var candidateIds = new HashSet<InstanceId>();
                 foreach (TargetCandidate candidate in candidates) candidateIds.Add(candidate.Instance);
 
@@ -258,6 +326,9 @@ namespace Emberfall.Core
             CardInstance source, EffectDef effect, IReadOnlyList<TargetRef> choices,
             TargetBindingContext bindings, InstanceId? triggerSource)
         {
+            if (!ActionTargetCapabilities.ConsumesTargets(effect.Action))
+                return Array.Empty<TargetCandidate>();
+
             TargetSpec? spec = effect.Target;
             if (spec == null)
             {
@@ -268,12 +339,12 @@ namespace Emberfall.Core
             IReadOnlyList<TargetCandidate> selected;
             if (IsPlayerChosen(spec))
             {
-                selected = ChoiceCandidates(state, choices, spec.Binding);
+                selected = ChoiceCandidates(state, choices, spec.Binding, effect.Action);
             }
             else
             {
                 var candidates = new List<TargetCandidate>(ResolutionCandidates(state, db,
-                    source.Controller, spec, source.Id, triggerSource));
+                    source.Controller, spec, effect.Action, source.Id, triggerSource));
                 bindings.Exclude(spec.DistinctFrom, candidates);
                 int count = RequiredAutomaticCount(spec, candidates.Count);
                 if (spec.ChosenBy == TargetChosenBy.RANDOM)
@@ -308,11 +379,12 @@ namespace Emberfall.Core
         }
 
         private static IReadOnlyList<TargetCandidate> ChoiceCandidates(GameState state,
-            IReadOnlyList<TargetRef> choices, string binding)
+            IReadOnlyList<TargetRef> choices, string binding, Contracts.Action? action = null)
         {
             var result = new List<TargetCandidate>();
             foreach (TargetRef choice in choices)
-                if (choice.Binding == binding && TryCandidate(state, choice.Instance, out TargetCandidate candidate))
+                if (choice.Binding == binding && TryCandidate(state, choice.Instance, out TargetCandidate candidate) &&
+                    (!action.HasValue || ActionTargetCapabilities.Allows(action.Value, candidate.Kind)))
                     result.Add(candidate);
             return result;
         }
@@ -459,6 +531,17 @@ namespace Emberfall.Core
                     return true;
             }
             candidate = default;
+            return false;
+        }
+
+        internal static bool TryControllerSeat(GameState state, InstanceId id, out int seat)
+        {
+            if (TryCandidate(state, id, out TargetCandidate candidate))
+            {
+                seat = candidate.Seat;
+                return true;
+            }
+            seat = -1;
             return false;
         }
 

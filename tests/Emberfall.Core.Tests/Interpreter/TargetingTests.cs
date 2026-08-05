@@ -84,7 +84,9 @@ namespace Emberfall.Core.Tests.Interpreter
             state.Players[0].Weapon = new CardInstance(
                 state.NextInstanceId(), def.Id, state.Players[0].Id)
             {
-                Zone = Zone.Weapon, CurrentAttack = 1, CurrentDurability = 1,
+                Zone = Zone.Weapon,
+                CurrentAttack = 1,
+                CurrentDurability = 1,
             };
 
             TargetCandidate handCandidate = Targeting.Candidates(state, db, state.Players[0].Id,
@@ -180,6 +182,33 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
+        public void Player_Choice_Plan_Exposes_Binding_Order_Counts_And_Distinctness()
+        {
+            var first = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, count: 2,
+                    binding: "first"));
+            var second = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+                target: new TargetSpec("ANY_ENEMY", TargetChosenBy.PLAYER,
+                    binding: "second", distinctFrom: "first"));
+            var spell = Spell("choice_plan", first, second);
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(spell).Register(body);
+            var state = State();
+            Board(state, 0, body);
+            Board(state, 1, body);
+
+            IReadOnlyList<TargetChoiceRequirement> plan = Targeting.PlayerChoicePlan(
+                state, db, state.Players[0].Id, spell, Trigger.ON_CAST);
+
+            Assert.That(plan.Select(p => (p.Binding, p.RequiredCount)),
+                Is.EqualTo(new[] { ("first", 2), ("second", 1) }));
+            Assert.That(plan[1].DistinctFrom, Is.EqualTo(new[] { "first" }));
+            Assert.That(plan[0].Candidates, Has.Count.EqualTo(2));
+            Assert.That(plan[1].Candidates.Select(c => c.Controller),
+                Is.All.EqualTo(state.Players[1].Id));
+        }
+
+        [Test]
         public void Binding_Distinctness_Rejects_The_Same_Target_Without_Mutation()
         {
             var first = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
@@ -203,6 +232,32 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(rejected.Events, Is.Empty);
             Assert.That(state.Players[0].Hand, Does.Contain(card));
             Assert.That(target.CurrentHealth, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Action_Capability_Filters_Presentation_And_Rejects_A_NoOp_Player_Target()
+        {
+            var buff = Spell("buff", new EffectDef(Trigger.ON_CAST, Verb.BUFF,
+                1, 1, null, null, null,
+                target: new TargetSpec("ANY_FRIENDLY", TargetChosenBy.PLAYER)));
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(buff).Register(body);
+            var state = State();
+            CardInstance minion = Board(state, 0, body);
+            CardInstance card = ZoneCard(state, 0, buff, Zone.Hand);
+
+            IReadOnlyList<TargetCandidate> candidates = Targeting.PlayerChoiceCandidates(
+                state, db, state.Players[0].Id, buff, Trigger.ON_CAST);
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { minion.Id }),
+                "BUFF can affect a minion but not the friendly hero produced by ANY_FRIENDLY.");
+            var rejected = new CommandProcessor(db).Execute(state, new PlayCardIntent(
+                state.Players[0].Id, card.Id, 0,
+                new[] { new TargetRef(state.Players[0].Hero.Id) }));
+            Assert.That(rejected.Accepted, Is.False);
+            Assert.That(rejected.Reason, Is.EqualTo(RejectReason.IllegalTarget));
+            Assert.That(rejected.Events, Is.Empty);
+            Assert.That(state.Players[0].Hand, Does.Contain(card));
         }
 
         [Test]
@@ -242,7 +297,9 @@ namespace Emberfall.Core.Tests.Interpreter
             var equipped = new CardInstance(
                 weaponState.NextInstanceId(), blade.Id, weaponState.Players[0].Id)
             {
-                Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2,
+                Zone = Zone.Weapon,
+                CurrentAttack = 2,
+                CurrentDurability = 2,
             };
             InstanceId publicWeaponId = equipped.Id;
             weaponState.Players[0].Weapon = equipped;
@@ -275,12 +332,14 @@ namespace Emberfall.Core.Tests.Interpreter
             var enchanted = new CardInstance(silenceState.NextInstanceId(), blade.Id,
                 silenceState.Players[0].Id)
             {
-                Zone = Zone.Weapon, CurrentAttack = 5, CurrentDurability = 1,
+                Zone = Zone.Weapon,
+                CurrentAttack = 5,
+                CurrentDurability = 1,
             };
             enchanted.Keywords.Add(Keyword.LIFESTEAL);
             enchanted.Keywords.Add(Keyword.POISONOUS);
             enchanted.Enchantments.Add(new Enchantment
-                { Source = new InstanceId(99), AttackDelta = 3, GrantedKeyword = Keyword.POISONOUS });
+            { Source = new InstanceId(99), AttackDelta = 3, GrantedKeyword = Keyword.POISONOUS });
             silenceState.Players[0].Weapon = enchanted;
             CardInstance silenceCard = ZoneCard(silenceState, 0, silence, Zone.Hand);
 
@@ -294,7 +353,8 @@ namespace Emberfall.Core.Tests.Interpreter
 
             GameState destroyState = State();
             var doomed = new CardInstance(destroyState.NextInstanceId(), blade.Id,
-                destroyState.Players[0].Id) { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
+                destroyState.Players[0].Id)
+            { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
             destroyState.Players[0].Weapon = doomed;
             CardInstance destroyCard = ZoneCard(destroyState, 0, destroy, Zone.Hand);
 
@@ -306,7 +366,8 @@ namespace Emberfall.Core.Tests.Interpreter
 
             GameState transformState = State();
             var original = new CardInstance(transformState.NextInstanceId(), blade.Id,
-                transformState.Players[0].Id) { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
+                transformState.Players[0].Id)
+            { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
             transformState.Players[0].Weapon = original;
             CardInstance transformCard = ZoneCard(transformState, 0, transform, Zone.Hand);
 
