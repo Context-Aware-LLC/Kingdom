@@ -32,4 +32,11 @@
     <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Unity-free gesture policy: compile the production model into headless tests so target-plan
+         changes do not require launching the Unity editor to verify. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\DragTargetingModel.cs"
+             Link="Presentation\DragTargetingModel.cs" />
+  </ItemGroup>
+
 </Project>

@@ -1,4 +1,6 @@
+#nullable disable
 using System.Collections.Generic;
+using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
@@ -11,17 +13,17 @@ namespace Emberfall.Presentation
     public readonly struct PointerSubject
     {
         public readonly PointerSubjectKind Kind;
-        public readonly InstanceId         Id;         // Card: the card instance. Hero: the hero instance.
-        public readonly PlayerId           Owner;
-        public readonly Zone               Zone;       // Card only
-        public readonly int                SlotIndex;  // BoardSlot only
+        public readonly InstanceId Id;         // Card: the card instance. Hero: the hero instance.
+        public readonly PlayerId Owner;
+        public readonly Zone Zone;       // Card only
+        public readonly int SlotIndex;  // BoardSlot only
 
         private PointerSubject(PointerSubjectKind kind, InstanceId id, PlayerId owner, Zone zone, int slotIndex)
         {
-            Kind      = kind;
-            Id        = id;
-            Owner     = owner;
-            Zone      = zone;
+            Kind = kind;
+            Id = id;
+            Owner = owner;
+            Zone = zone;
             SlotIndex = slotIndex;
         }
 
@@ -54,13 +56,13 @@ namespace Emberfall.Presentation
     public readonly struct DragSource
     {
         public readonly DragSourceKind Kind;
-        public readonly InstanceId     Id;           // hand card / attacker instance; unused for HeroPower
-        public readonly bool           NeedsTarget;  // an explicit-choice (ANY_*) selector is in play
+        public readonly InstanceId Id;           // hand card / attacker instance; unused for HeroPower
+        public readonly bool NeedsTarget;  // an explicit-choice (ANY_*) selector is in play
 
         public DragSource(DragSourceKind kind, InstanceId id, bool needsTarget)
         {
-            Kind        = kind;
-            Id          = id;
+            Kind = kind;
+            Id = id;
             NeedsTarget = needsTarget;
         }
 
@@ -86,29 +88,61 @@ namespace Emberfall.Presentation
         /// <summary>Awaiting a second choice: a slot placement followed by a battlecry target.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
-        public const string AimBanner    = "Drag to a target — Esc cancels";
+        public const string AimBanner = "Drag to a target — Esc cancels";
         public const string AttackBanner = "Drag to a target to attack — Esc cancels";
 
-        private readonly PlayerId      _p0Id;
+        private readonly PlayerId _p0Id;
         private readonly ICardDatabase _db;
+        private readonly List<TargetChoiceRequirement> _choicePlan =
+            new List<TargetChoiceRequirement>();
+        private readonly List<TargetRef> _chosenTargets = new List<TargetRef>();
+        private int _choiceIndex;
+        private DragSourceKind _awaitingSourceKind;
+        private TargetingPhase _phase;
 
         public DragTargetingModel(PlayerId p0Id, ICardDatabase db)
         {
             _p0Id = p0Id;
-            _db   = db;
+            _db = db;
         }
 
         /// <summary>The mirror this model judges against. Set from every snapshot.</summary>
         public GameState State { get; set; }
 
-        /// <summary>Current targeting phase: Direct (normal) or AwaitingEffectTarget (two-step battlecry).</summary>
-        public TargetingPhase Phase { get; set; } = TargetingPhase.Direct;
+        /// <summary>Current targeting phase: Direct (normal) or collecting an effect's choice plan.</summary>
+        public TargetingPhase Phase
+        {
+            get => _phase;
+            set
+            {
+                _phase = value;
+                if (value == TargetingPhase.Direct) ClearChoicePlan();
+            }
+        }
 
         /// <summary>When in AwaitingEffectTarget phase, the slot where the card will be played.</summary>
         public int AwaitingSlot { get; set; }
 
         /// <summary>When in AwaitingEffectTarget phase, the card being played.</summary>
         public InstanceId AwaitingCardId { get; set; }
+
+        public string AwaitingBinding
+            => _choiceIndex < _choicePlan.Count ? _choicePlan[_choiceIndex].Binding : "";
+
+        public int AwaitingRequiredCount
+            => _choiceIndex < _choicePlan.Count ? _choicePlan[_choiceIndex].RequiredCount : 0;
+
+        public int AwaitingSelectedCount
+        {
+            get
+            {
+                string binding = AwaitingBinding;
+                int count = 0;
+                foreach (TargetRef target in _chosenTargets)
+                    if (target.Binding == binding) count++;
+                return count;
+            }
+        }
 
         // ── Phase gates ────────────────────────────────────────────────────────────
 
@@ -185,10 +219,10 @@ namespace Emberfall.Presentation
         {
             switch (source.Kind)
             {
-                case DragSourceKind.HandCard:  return source.NeedsTarget ? SpellTargets(source.Id) : null;
-                case DragSourceKind.Attacker:  return AttackTargets(source.Id);
+                case DragSourceKind.HandCard: return source.NeedsTarget ? SpellTargets(source.Id) : null;
+                case DragSourceKind.Attacker: return AttackTargets(source.Id);
                 case DragSourceKind.HeroPower: return source.NeedsTarget ? HeroPowerTargets() : null;
-                default:                       return null;
+                default: return null;
             }
         }
 
@@ -211,37 +245,100 @@ namespace Emberfall.Presentation
 
             switch (source.Kind)
             {
-                case DragSourceKind.HandCard:  return ResolveHandCard(source, released);
-                case DragSourceKind.Attacker:  return ResolveAttack(source, released);
+                case DragSourceKind.HandCard: return ResolveHandCard(source, released);
+                case DragSourceKind.Attacker: return ResolveAttack(source, released);
                 case DragSourceKind.HeroPower: return ResolveHeroPower(source, released);
-                default:                       return null;
+                default: return null;
             }
         }
 
-        /// <summary>Resolve the second targeting step for a battlecry minion: the player has picked
-        /// a slot and now picks a target. Returns the PlayCardIntent with both slot and target,
-        /// or null if the target is invalid.</summary>
+        /// <summary>Resolve the next step in the current binding-aware choice plan.</summary>
         private PlayerIntent ResolveEffectTarget(PointerSubject released)
         {
-            HashSet<InstanceId> validTargets = SpellTargets(AwaitingCardId);
+            if (_choicePlan.Count == 0 && !BeginHandChoicePlan(AwaitingCardId, AwaitingSlot))
+                return null;
+            return ChooseTarget(released);
+        }
 
-            switch (released.Kind)
+        private bool BeginHandChoicePlan(InstanceId cardId, int slot)
+        {
+            if (!TryHandDefinition(cardId, out CardDefinition def)) return false;
+            Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            return BeginChoicePlan(DragSourceKind.HandCard, cardId, slot, def, trigger, cardId);
+        }
+
+        private bool BeginHeroPowerChoicePlan()
+        {
+            if (!TryHeroPowerDefinition(out CardDefinition def)) return false;
+            return BeginChoicePlan(DragSourceKind.HeroPower, default, 0, def, Trigger.ON_CAST, null);
+        }
+
+        private bool BeginChoicePlan(DragSourceKind sourceKind, InstanceId cardId, int slot,
+            CardDefinition def, Trigger trigger, InstanceId? source)
+        {
+            ClearChoicePlan();
+            foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
+                         State, _db, _p0Id, def, trigger, source))
+                _choicePlan.Add(requirement);
+            if (_choicePlan.Count == 0) return false;
+            _choiceIndex = 0;
+            _awaitingSourceKind = sourceKind;
+            AwaitingCardId = cardId;
+            AwaitingSlot = slot;
+            return true;
+        }
+
+        private PlayerIntent ChooseTarget(PointerSubject released)
+        {
+            if (released.Kind != PointerSubjectKind.Card && released.Kind != PointerSubjectKind.Hero)
+                return null;
+            if (!AwaitingTargets().Contains(released.Id)) return null;
+
+            TargetChoiceRequirement requirement = _choicePlan[_choiceIndex];
+            _chosenTargets.Add(new TargetRef(released.Id, requirement.Binding));
+            if (AwaitingSelectedCount >= requirement.RequiredCount) _choiceIndex++;
+
+            if (_choiceIndex < _choicePlan.Count)
             {
-                case PointerSubjectKind.Card:
-                    if (released.Zone != Zone.Board) break;
-                    if (!validTargets.Contains(released.Id)) break;
-                    Phase = TargetingPhase.Direct;   // Clear the awaiting state before returning
-                    return new PlayCardIntent(_p0Id, AwaitingCardId, AwaitingSlot,
-                                              new[] { new TargetRef(released.Id) });
-
-                case PointerSubjectKind.Hero:
-                    if (!validTargets.Contains(released.Id)) break;
-                    Phase = TargetingPhase.Direct;   // Clear the awaiting state before returning
-                    return new PlayCardIntent(_p0Id, AwaitingCardId, AwaitingSlot,
-                                              new[] { new TargetRef(released.Id) });
+                _phase = TargetingPhase.AwaitingEffectTarget;
+                return null;
             }
 
-            return null;
+            var targets = _chosenTargets.ToArray();
+            DragSourceKind sourceKind = _awaitingSourceKind;
+            InstanceId cardId = AwaitingCardId;
+            int slot = AwaitingSlot;
+            _phase = TargetingPhase.Direct;
+            ClearChoicePlan();
+            return sourceKind == DragSourceKind.HeroPower
+                ? (PlayerIntent)new HeroPowerIntent(_p0Id, targets)
+                : new PlayCardIntent(_p0Id, cardId, slot, targets);
+        }
+
+        public HashSet<InstanceId> AwaitingTargets()
+        {
+            var result = new HashSet<InstanceId>();
+            if (_choiceIndex >= _choicePlan.Count) return result;
+            TargetChoiceRequirement requirement = _choicePlan[_choiceIndex];
+            var excluded = new HashSet<InstanceId>();
+            foreach (TargetRef selected in _chosenTargets)
+            {
+                if (selected.Binding == requirement.Binding)
+                    excluded.Add(selected.Instance);
+                foreach (string binding in requirement.DistinctFrom)
+                    if (selected.Binding == binding) excluded.Add(selected.Instance);
+            }
+            foreach (TargetCandidate candidate in requirement.Candidates)
+                if (!excluded.Contains(candidate.Instance)) result.Add(candidate.Instance);
+            return result;
+        }
+
+        private void ClearChoicePlan()
+        {
+            _choicePlan.Clear();
+            _chosenTargets.Clear();
+            _choiceIndex = 0;
+            _awaitingSourceKind = DragSourceKind.None;
         }
 
         private PlayerIntent ResolveHandCard(DragSource source, PointerSubject released)
@@ -266,10 +363,9 @@ namespace Emberfall.Presentation
                         // Targeted spells do not place on the board, so a slot release is a miss.
                         if (!HandCardOccupiesBoardSlot(source.Id)) return null;
 
-                        // A targeted minion needs placement before its battlecry effect target.
-                        Phase = TargetingPhase.AwaitingEffectTarget;
-                        AwaitingSlot = released.SlotIndex;
-                        AwaitingCardId = source.Id;
+                        // A targeted minion needs placement before its battlecry choice plan.
+                        if (!BeginHandChoicePlan(source.Id, released.SlotIndex)) return null;
+                        _phase = TargetingPhase.AwaitingEffectTarget;
                         return null;   // No intent yet; the player still needs to pick a target.
                     }
 
@@ -280,29 +376,20 @@ namespace Emberfall.Presentation
                     // Enemy board minions are always aimable; our own only when the card actually wants
                     // a chosen target, so a drop on our own board with a vanilla minion is a miss, not
                     // a spell fired at slot 0.
-                    if (released.Zone != Zone.Board) return null;
                     if (released.Owner == _p0Id && !source.NeedsTarget) return null;
 
                     // Cards that occupy a board slot must be placed before choosing an effect target.
                     if (HandCardOccupiesBoardSlot(source.Id)) return null;
 
-                    // Check if the target is in the TargetsFor set to enforce boundary.
-                    HashSet<InstanceId> validTargets = SpellTargets(source.Id);
-                    if (!validTargets.Contains(released.Id)) return null;
-
-                    return new PlayCardIntent(_p0Id, source.Id, 0,
-                                              new[] { new TargetRef(released.Id) });
+                    if (!BeginHandChoicePlan(source.Id, 0)) return null;
+                    return ChooseTarget(released);
 
                 case PointerSubjectKind.Hero:
                     // Cards that occupy a board slot must be placed before choosing an effect target.
                     if (HandCardOccupiesBoardSlot(source.Id)) return null;
 
-                    // Check if the target is in the TargetsFor set to enforce boundary.
-                    HashSet<InstanceId> validHeroTargets = SpellTargets(source.Id);
-                    if (!validHeroTargets.Contains(released.Id)) return null;
-
-                    return new PlayCardIntent(_p0Id, source.Id, 0,
-                                              new[] { new TargetRef(released.Id) });
+                    if (!BeginHandChoicePlan(source.Id, 0)) return null;
+                    return ChooseTarget(released);
 
                 default:
                     return null;
@@ -343,10 +430,9 @@ namespace Emberfall.Presentation
             switch (released.Kind)
             {
                 case PointerSubjectKind.Card:
-                    if (released.Zone != Zone.Board) return null;
-                    return new HeroPowerIntent(_p0Id, new[] { new TargetRef(released.Id) });
                 case PointerSubjectKind.Hero:
-                    return new HeroPowerIntent(_p0Id, new[] { new TargetRef(released.Id) });
+                    if (!BeginHeroPowerChoicePlan()) return null;
+                    return ChooseTarget(released);
                 default:
                     return null;
             }
@@ -359,19 +445,9 @@ namespace Emberfall.Presentation
         /// returns false and the engine's rejection is the backstop.</summary>
         public bool HandCardNeedsTarget(InstanceId cardId)
         {
-            if (_db == null || State == null) return false;
-            foreach (PlayerState ps in State.Players)
-            {
-                if (ps.Id != _p0Id) continue;
-                foreach (CardInstance ci in ps.Hand)
-                {
-                    if (!ci.Id.Equals(cardId)) continue;
-                    if (!_db.TryGet(ci.DefinitionId, out CardDefinition def)) return false;
-                    Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
-                    return Targeting.RequiresPlayerChoice(def, trigger);
-                }
-            }
-            return false;
+            if (!TryHandDefinition(cardId, out CardDefinition def)) return false;
+            Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            return Targeting.RequiresPlayerChoice(def, trigger);
         }
 
         private bool HandCardOccupiesBoardSlot(InstanceId cardId)
@@ -394,51 +470,63 @@ namespace Emberfall.Presentation
         /// through to the immediate fire and the engine's rejection is the backstop.</summary>
         public bool HeroPowerNeedsTarget()
         {
-            if (_db == null || State == null) return false;
-            foreach (PlayerState ps in State.Players)
-            {
-                if (ps.Id != _p0Id) continue;
-                if (!_db.TryGet(ps.Hero.HeroPowerId, out CardDefinition def)) return false;
-                return Targeting.RequiresPlayerChoice(def, Trigger.ON_CAST);
-            }
-            return false;
+            return TryHeroPowerDefinition(out CardDefinition def) &&
+                   Targeting.RequiresPlayerChoice(def, Trigger.ON_CAST);
         }
 
         public HashSet<InstanceId> SpellTargets(InstanceId cardId)
         {
             var set = new HashSet<InstanceId>();
-            if (_db == null || State == null) return set;
-            foreach (PlayerState ps in State.Players)
-            {
-                if (ps.Id != _p0Id) continue;
-                foreach (CardInstance ci in ps.Hand)
-                    if (ci.Id.Equals(cardId) && _db.TryGet(ci.DefinitionId, out CardDefinition def))
-                    {
-                        CollectSelectorTargets(def, set);
-                        return set;
-                    }
-            }
+            if (_phase == TargetingPhase.AwaitingEffectTarget &&
+                _awaitingSourceKind == DragSourceKind.HandCard && AwaitingCardId == cardId)
+                return AwaitingTargets();
+            if (!TryHandDefinition(cardId, out CardDefinition def)) return set;
+            Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            CollectFirstChoiceTargets(def, trigger, cardId, set);
             return set;
         }
 
         private HashSet<InstanceId> HeroPowerTargets()
         {
             var set = new HashSet<InstanceId>();
-            if (_db == null || State == null) return set;
-            foreach (PlayerState ps in State.Players)
-                if (ps.Id == _p0Id && _db.TryGet(ps.Hero.HeroPowerId, out CardDefinition def))
-                    CollectSelectorTargets(def, set);
+            if (_phase == TargetingPhase.AwaitingEffectTarget &&
+                _awaitingSourceKind == DragSourceKind.HeroPower)
+                return AwaitingTargets();
+            if (TryHeroPowerDefinition(out CardDefinition def))
+                CollectFirstChoiceTargets(def, Trigger.ON_CAST, null, set);
             return set;
         }
 
-        // Uses the same headless candidate seam as CommandProcessor and EffectInterpreter.
-        private void CollectSelectorTargets(CardDefinition def, HashSet<InstanceId> set)
+        // Uses the same binding-aware headless choice plan as CommandProcessor and EffectInterpreter.
+        private void CollectFirstChoiceTargets(CardDefinition def, Trigger trigger,
+            InstanceId? source, HashSet<InstanceId> set)
         {
-            Trigger trigger = def.Type == CardType.SPELL || def.Type == CardType.HERO_POWER
-                ? Trigger.ON_CAST : Trigger.ON_PLAY;
-            foreach (TargetCandidate candidate in Targeting.PlayerChoiceCandidates(
-                         State, _db, _p0Id, def, trigger))
-                set.Add(candidate.Instance);
+            IReadOnlyList<TargetChoiceRequirement> plan = Targeting.PlayerChoicePlan(
+                State, _db, _p0Id, def, trigger, source);
+            if (plan.Count == 0) return;
+            foreach (TargetCandidate candidate in plan[0].Candidates) set.Add(candidate.Instance);
+        }
+
+        private bool TryHandDefinition(InstanceId cardId, out CardDefinition def)
+        {
+            def = null;
+            if (_db == null || State == null) return false;
+            foreach (PlayerState ps in State.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                foreach (CardInstance card in ps.Hand)
+                    if (card.Id.Equals(cardId)) return _db.TryGet(card.DefinitionId, out def);
+            }
+            return false;
+        }
+
+        private bool TryHeroPowerDefinition(out CardDefinition def)
+        {
+            def = null;
+            if (_db == null || State == null) return false;
+            foreach (PlayerState ps in State.Players)
+                if (ps.Id == _p0Id) return _db.TryGet(ps.Hero.HeroPowerId, out def);
+            return false;
         }
 
         // Mirrors the defender-side half of CommandProcessor.ValidateAttack: stealth hides, a

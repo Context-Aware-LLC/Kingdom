@@ -428,7 +428,7 @@ namespace Emberfall.Presentation
             // If awaiting an effect target (two-step battlecry), show the effect targets instead.
             if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
             {
-                HashSet<InstanceId> effectTargets = _model.SpellTargets(_model.AwaitingCardId);
+                HashSet<InstanceId> effectTargets = _model.AwaitingTargets();
                 if (effectTargets == null || effectTargets.Count == 0) ClearTargeting();
                 else                                                    SetTargeting(effectTargets, DragTargetingModel.AimBanner);
                 return;
