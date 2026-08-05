@@ -42,12 +42,12 @@ namespace Emberfall.Core.Tests.TurnLoop
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static CardDefinition Weapon(string id, EffectDef[] effects)
+        private static CardDefinition Weapon(string id, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.WEAPON, cost: 1,
                 attack: 1, health: null, durability: 3,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -291,13 +291,14 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             const string minionId = "ef031_order_minion";
             const string weaponId = "ef031_order_weapon";
-            EffectDef Toll(int amount) => new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount, null, null, null,
-                selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.ANY));
+            RuleDefinition Toll(string id, int amount) => TestRules.Rule(id,
+                Trigger.ON_TURN_START, new TurnOwnerCondition(TurnOwner.ANY),
+                TestRules.Damage(Trigger.ON_TURN_START, amount));
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(minionId, health: 3, effects: new[] { Toll(1) }))
-                .Register(Weapon(weaponId, new[] { Toll(2) }));
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(minionId, health: 3,
+                    rules: new[] { Toll("minion_toll", 1) }))
+                .Register(Weapon(weaponId, new[] { Toll("weapon_toll", 2) }));
             var (host, s) = Match(db, Vanilla, seed: 233UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
             int incoming = 1 - outgoing;
@@ -322,15 +323,15 @@ namespace Emberfall.Core.Tests.TurnLoop
         public void Queued_Damage_Keeps_The_Source_Keyword_Snapshot_After_Silence()
         {
             const string sourceId = "ef031_snapshot_source";
-            var silence = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.SILENCE, null, null, null, null,
-                selector: "SELF", condition: OwnerCondition(TurnOwner.CONTROLLER));
-            var damage = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, 3, null, null, null,
-                selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.CONTROLLER));
+            RuleDefinition silence = TestRules.Rule("silence_self", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                new SilenceAction(new TargetSpec("SELF")));
+            RuleDefinition damage = TestRules.Rule("damage_enemy", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 3));
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(sourceId, health: 3, effects: new[] { silence, damage }));
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(sourceId, health: 3, rules: new[] { silence, damage }));
             var (host, s) = Match(db, Vanilla, seed: 234UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
             int incoming = 1 - outgoing;
