@@ -46,7 +46,10 @@ namespace Emberfall.Core
         internal static HashSet<Keyword> SourceKeywords(in EffectContext ctx)
         {
             if (ctx.Source.Zone == Zone.Board || ctx.Source.Zone == Zone.Weapon)
+            {
+                if (ctx.Source.IsSilenced) return new HashSet<Keyword>();
                 return ctx.Source.Keywords;
+            }
             var set = new HashSet<Keyword>();
             foreach (var k in ctx.Db.Get(ctx.Source.DefinitionId).Keywords) set.Add(k);
             return set;
@@ -58,7 +61,7 @@ namespace Emberfall.Core
             var board = state.PlayerOf(controller).Board;
             int bonus = 0;
             for (int i = 0; i < board.Count; i++)
-                if (board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
+                if (!board[i].IsSilenced && board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
             return bonus;
         }
     }
@@ -197,6 +200,7 @@ namespace Emberfall.Core
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance) continue;
                     CardInstance weapon = owner.Weapon;
                     owner.Weapon = null;
+                    ResetForNewZoneLife(ctx, weapon);
                     MoveCardToHand(ctx, owner, weapon, wasPublic: true);
                     continue;
                 }
@@ -219,14 +223,18 @@ namespace Emberfall.Core
 
                 // Reset to printed form — board-runtime state is dropped on the bounce. The card arrives
                 // in hand whole, so damage is NOT preserved across the zone change (EF-017a).
-                var def = ctx.Db.Get(m.DefinitionId);
-                DerivedStats.ResetToPrinted(m, def, preserveDamage: false);
-                m.SummonedThisTurn = false;
-                m.AttacksUsedThisTurn = 0;
-                m.HasUsedRekindle = false;
+                ResetForNewZoneLife(ctx, m);
 
                 MoveCardToHand(ctx, ps, m, wasPublic: true);
             }
+        }
+
+        private static void ResetForNewZoneLife(in EffectContext ctx, CardInstance card)
+        {
+            DerivedStats.ResetToPrinted(card, ctx.Db.Get(card.DefinitionId), preserveDamage: false);
+            card.SummonedThisTurn = false;
+            card.AttacksUsedThisTurn = 0;
+            card.HasUsedRekindle = false;
         }
 
         private static void MoveCardToHand(in EffectContext ctx, PlayerState owner, CardInstance card,
@@ -262,9 +270,9 @@ namespace Emberfall.Core
                 var def = ctx.Db.Get(card.DefinitionId);
 
                 // Damage already on the minion is KEPT, so a buffed body falling away can leave the
-                // printed one at ≤0 → DeathCheck kills it (EF-017a). A weapon retains spent durability
-                // while its enchantments and granted keywords reset to the printed definition.
-                DerivedStats.ResetToPrinted(card, def, preserveDamage: t.IsMinion);
+                // printed one at ≤0 → DeathCheck kills it. A weapon retains spent durability: silence
+                // strips abilities, it never refunds a spent resource.
+                DerivedStats.ResetToSilenced(card, def, preserveDamage: t.IsMinion);
 
                 ctx.Events.Emit(GameEventKind.CardSilenced, source: ctx.Source.Id, target: card.Id);
             }

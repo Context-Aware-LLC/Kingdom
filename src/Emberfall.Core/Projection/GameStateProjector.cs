@@ -107,6 +107,7 @@ namespace Emberfall.Core.Projection
                 CurrentDurability = c.CurrentDurability,
                 HasAegisShield = c.HasAegisShield,
                 IsFrosted = c.IsFrosted,
+                IsSilenced = c.IsSilenced,
                 SummonedThisTurn = c.SummonedThisTurn,
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,
                 HasUsedRekindle = c.HasUsedRekindle,

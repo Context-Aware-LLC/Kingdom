@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.Support
             [typeof(CardInstance)] = new[]
             {
                 "AttacksUsedThisTurn", "Controller", "CurrentAttack", "CurrentDurability", "CurrentHealth",
-                "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id", "IsFrosted",
+                "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id", "IsFrosted", "IsSilenced",
                 "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
             },
             [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "Source" },
@@ -120,6 +120,7 @@ namespace Emberfall.Core.Tests.Support
                 new Enchantment { Source = new InstanceId(60), AttackDelta = 2, HealthDelta = 2 }),
             ["CardInstance.HasAegisShield"] = s => HandCard(s).HasAegisShield = !HandCard(s).HasAegisShield,
             ["CardInstance.IsFrosted"] = s => HandCard(s).IsFrosted = !HandCard(s).IsFrosted,
+            ["CardInstance.IsSilenced"] = s => HandCard(s).IsSilenced = !HandCard(s).IsSilenced,
             ["CardInstance.SummonedThisTurn"] = s => HandCard(s).SummonedThisTurn = !HandCard(s).SummonedThisTurn,
             ["CardInstance.AttacksUsedThisTurn"] = s => HandCard(s).AttacksUsedThisTurn++,
             ["CardInstance.HasUsedRekindle"] = s => HandCard(s).HasUsedRekindle = !HandCard(s).HasUsedRekindle,

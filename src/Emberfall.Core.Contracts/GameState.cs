@@ -131,6 +131,9 @@ namespace Emberfall.Core.Contracts
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
         public bool IsFrosted;
+        /// <summary>True while this live permanent has had its printed and granted abilities removed.
+        /// A zone-life reset clears this flag; it is canonical because it changes future resolution.</summary>
+        public bool IsSilenced;
         public bool SummonedThisTurn;
         public int AttacksUsedThisTurn;
         public bool HasUsedRekindle;

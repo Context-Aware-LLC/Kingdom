@@ -94,7 +94,9 @@ namespace Emberfall.Core.Tests.Determinism
         // state now exercises it non-null. Old pin: abb617ccf5e1c67c7697f4b52b1658c29e63045abda9e990f2561b1bfca439db
         // Re-pinned 2026-08-05 (NOR-31 step 2): PlayerState.Weapon now walks the complete equipped
         // CardInstance instead of the retired four-field WeaponInstance wrapper.
-        private const string PinnedSeedDigest = "7e02a1ff01d046b2006750b4894faee1f00c27725ddf28c674d3efab63b4a3ca";
+        // Re-pinned 2026-08-05 (NOR-31 silence): CardInstance.IsSilenced is public, projected and
+        // hash-canonical because it controls future permanent ability resolution.
+        private const string PinnedSeedDigest = "6a1f4650462d32a0802e3e4ca6256f26080f77a2fa91a4617e59848804d76e18";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()

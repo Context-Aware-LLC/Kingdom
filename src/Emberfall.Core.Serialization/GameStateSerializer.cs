@@ -106,6 +106,7 @@ namespace Emberfall.Core.Serialization
 
             w.Bool(c.HasAegisShield);
             w.Bool(c.IsFrosted);
+            w.Bool(c.IsSilenced);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);
             w.Bool(c.HasUsedRekindle);

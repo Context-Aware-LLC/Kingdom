@@ -44,6 +44,9 @@ namespace Emberfall.Core
         public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<TargetRef> chosenTargets,
             TriggerContext context = default)
         {
+            // Do not form new work from a silenced permanent. Already queued work deliberately reaches
+            // Drain unchanged: the subscription snapshot was taken before silence and must resolve.
+            if (source.IsSilenced) return;
             var def = _db.Get(source.DefinitionId);
             var rules = def.Rules;
             var bindings = new TargetBindingContext();
@@ -66,6 +69,7 @@ namespace Emberfall.Core
             foreach (var src in OrderedTriggerSources())
             {
                 if (excluded != null && ReferenceEquals(src, excluded)) continue;
+                if (src.IsSilenced) continue;
                 var def = _db.Get(src.DefinitionId);
                 var rules = def.Rules;
                 var bindings = new TargetBindingContext();
@@ -156,10 +160,11 @@ namespace Emberfall.Core
                     var def = _db.Get(minion.DefinitionId);
                     var rules = def.Rules;
                     var bindings = new TargetBindingContext();
-                    for (int i = 0; i < rules.Count; i++)
-                        if (RuleSemantics.ActivatesOn(rules[i], Trigger.ON_DEATH))
-                            _queue.Enqueue(new QueuedEffect(rules[i], minion, System.Array.Empty<TargetRef>(),
-                                bindings, TriggerContext.ForSource(minion.Id)));
+                    if (!minion.IsSilenced)
+                        for (int i = 0; i < rules.Count; i++)
+                            if (RuleSemantics.ActivatesOn(rules[i], Trigger.ON_DEATH))
+                                _queue.Enqueue(new QueuedEffect(rules[i], minion, System.Array.Empty<TargetRef>(),
+                                    bindings, TriggerContext.ForSource(minion.Id)));
 
                     // REKINDLE: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
                     if (minion.Keywords.Contains(Keyword.REKINDLE) && !minion.HasUsedRekindle)

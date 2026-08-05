@@ -135,6 +135,7 @@ namespace Emberfall.Net.Protocol
 
             w.Name("hasAegisShield"); w.Bool(c.HasAegisShield);
             w.Name("isFrosted"); w.Bool(c.IsFrosted);
+            w.Name("isSilenced"); w.Bool(c.IsSilenced);
             w.Name("summonedThisTurn"); w.Bool(c.SummonedThisTurn);
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
             w.Name("hasUsedRekindle"); w.Bool(c.HasUsedRekindle);
@@ -352,12 +353,14 @@ namespace Emberfall.Net.Protocol
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
             if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
+            if (!TryBoolField(obj, "isSilenced", out bool silenced, ref detail)) return false;
             if (!TryBoolField(obj, "summonedThisTurn", out bool summoned, ref detail)) return false;
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
             if (!TryBoolField(obj, "hasUsedRekindle", out bool rekindle, ref detail)) return false;
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
             card.HasAegisShield = aegis;
             card.IsFrosted = frosted;
+            card.IsSilenced = silenced;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;
             card.HasUsedRekindle = rekindle;

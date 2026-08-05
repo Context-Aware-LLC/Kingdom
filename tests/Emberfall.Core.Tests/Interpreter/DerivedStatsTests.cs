@@ -323,6 +323,27 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(c.Keywords, Does.Not.Contain(Keyword.AEGIS));
         }
 
+        [Test]
+        public void ResetToSilenced_Removes_Printed_And_Granted_Keywords_But_Keeps_Damage()
+        {
+            var def = Def(2, 5, Keyword.AEGIS, Keyword.LIFEDRAIN);
+            var c = Minion(def);
+            Enchant(c, SourceA, 3, 4);
+            Grant(c, SourceB, Keyword.BULWARK);
+            DerivedStats.Recompute(c, def);
+            c.CurrentHealth = 6; // seven-health body has taken three damage.
+            c.IsFrosted = true;
+
+            DerivedStats.ResetToSilenced(c, def, preserveDamage: true);
+
+            Assert.That(c.Enchantments, Is.Empty);
+            Assert.That(c.Keywords, Is.Empty, "silence removes printed and granted riders alike");
+            Assert.That(c.CurrentAttack, Is.EqualTo(2));
+            Assert.That((c.MaxHealth, c.CurrentHealth), Is.EqualTo((5, 2)));
+            Assert.That(c.HasAegisShield, Is.False);
+            Assert.That(c.IsFrosted, Is.False);
+        }
+
         // ── the invariant the layer exists to make true ──────────────────────────────
 
         [Test]

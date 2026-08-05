@@ -346,7 +346,8 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(silenceState.Players[0].Weapon, Is.SameAs(enchanted));
             Assert.That((enchanted.CurrentAttack, enchanted.CurrentDurability), Is.EqualTo((2, 1)));
             Assert.That(enchanted.Enchantments, Is.Empty);
-            Assert.That(enchanted.Keywords, Is.EquivalentTo(new[] { Keyword.LIFEDRAIN }));
+            Assert.That(enchanted.Keywords, Is.Empty, "silence removes printed as well as granted riders");
+            Assert.That(enchanted.IsSilenced, Is.True);
 
             GameState destroyState = State();
             var doomed = new CardInstance(destroyState.NextInstanceId(), blade.Id,

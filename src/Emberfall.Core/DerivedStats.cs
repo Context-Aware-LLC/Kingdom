@@ -72,6 +72,9 @@ namespace Emberfall.Core
         /// </summary>
         public static void EnterWeapon(CardInstance c, CardDefinition def)
         {
+            // Equipping starts a fresh weapon zone-life. A bounced silenced weapon may retain spent
+            // durability, but it never carries the removable silence state into the new life.
+            c.IsSilenced = false;
             foreach (var k in def.Keywords) c.Keywords.Add(k);
             foreach (var e in c.Enchantments)
                 if (e.GrantedKeyword.HasValue) c.Keywords.Add(e.GrantedKeyword.Value);
@@ -112,6 +115,29 @@ namespace Emberfall.Core
 
             c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
             c.IsFrosted = false;
+            c.IsSilenced = false;
+        }
+
+        /// <summary>
+        /// Apply the full SILENCE reset. Stats return to printed values while a minion's wounds survive;
+        /// all ability-bearing state is removed, including printed keywords. Weapon durability is
+        /// intentionally untouched: silence must not refund spent durability.
+        /// </summary>
+        public static void ResetToSilenced(CardInstance c, CardDefinition def, bool preserveDamage)
+        {
+            int damageTaken = 0;
+            if (preserveDamage)
+            {
+                damageTaken = c.MaxHealth - c.CurrentHealth;
+                if (damageTaken < 0) damageTaken = 0;
+            }
+
+            c.Enchantments.Clear();
+            c.Keywords.Clear();
+            ApplyStats(c, def, damageTaken);
+            c.HasAegisShield = false;
+            c.IsFrosted = false;
+            c.IsSilenced = true;
         }
 
         /// <summary>

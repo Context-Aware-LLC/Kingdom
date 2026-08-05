@@ -79,6 +79,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Enchantments"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["HasAegisShield"] = "PUBLIC in visible zones (false in card-backs)",
                 ["IsFrosted"] = "PUBLIC in visible zones (false in card-backs)",
+                ["IsSilenced"] = "PUBLIC in visible zones (false in card-backs)",
                 ["SummonedThisTurn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",
                 ["HasUsedRekindle"] = "PUBLIC in visible zones (false in card-backs)",
