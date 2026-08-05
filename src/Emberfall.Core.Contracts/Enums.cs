@@ -202,6 +202,7 @@ namespace Emberfall.Core.Contracts
         BoardFull, HeroPowerAlreadyUsed, WeaponMissing, UnknownIntent,
         NotImplemented, AlreadyMulliganed, GameOver,
         HasSummoningSickness, NoAttacksLeft, AttackerFrosted,
+        ChoicePending, NoPendingChoice, NotChoiceOwner, StaleChoice, InvalidChoice, HandFull,
         /// <summary>Session-layer only (B1 policy gate, dev-docs/contracts/wire-protocol.md:37):
         /// the token bucket refused the intent. Never minted by <c>CommandProcessor</c>.</summary>
         RateLimited,

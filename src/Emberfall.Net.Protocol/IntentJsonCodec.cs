@@ -11,7 +11,7 @@ namespace Emberfall.Net.Protocol
     /// hardening of design §5 finding 7 — reflection lives only in the completeness TEST, which
     /// proves this table covers every sealed PlayerIntent subtype). Field names are the golden-
     /// fixture dialect (`player`, `card`, `slot`, `targets`, `attacker`, `defender`, `toReplace`)
-    /// plus `chosenCardId` (no fixture precedent — design §5 finding 8).
+    /// plus `chosenCardId` and `choiceSequence` for authoritative pending-choice correlation.
     /// </summary>
     internal static class IntentJsonCodec
     {
@@ -77,6 +77,7 @@ namespace Emberfall.Net.Protocol
                     break;
                 case UnearthChoiceIntent dc:
                     w.Name("chosenCardId"); w.Str(dc.ChosenCardId);
+                    w.Name("choiceSequence"); w.U64(dc.ChoiceSequence);
                     break;
                     // EndTurn / Concede / AutoConfirm carry only $type + player.
             }
@@ -165,7 +166,10 @@ namespace Emberfall.Net.Protocol
                     {
                         if (!obj.TryGet("chosenCardId", out var ccVal) || !ccVal.TryStr(out string chosen))
                         { detail = "missing chosenCardId"; return false; }
-                        intent = new UnearthChoiceIntent(player, chosen);
+                        if (!obj.TryGet("choiceSequence", out var seqVal) ||
+                            !seqVal.TryU64(out ulong choiceSequence))
+                        { detail = "missing or bad choiceSequence"; return false; }
+                        intent = new UnearthChoiceIntent(player, chosen, choiceSequence);
                         return Success(out error);
                     }
                 default:

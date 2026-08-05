@@ -30,7 +30,7 @@ namespace Emberfall.Net.Protocol.Tests
             [typeof(HeroPowerIntent)] = new HeroPowerIntent(P, new List<TargetRef>()),
             [typeof(EndTurnIntent)] = new EndTurnIntent(P),
             [typeof(MulliganIntent)] = new MulliganIntent(P, new List<InstanceId> { new(3), new(4) }),
-            [typeof(UnearthChoiceIntent)] = new UnearthChoiceIntent(P, "card_x"),
+            [typeof(UnearthChoiceIntent)] = new UnearthChoiceIntent(P, "card_x", 17),
             [typeof(ConcedeIntent)] = new ConcedeIntent(P),
             [typeof(AutoConfirmIntent)] = new AutoConfirmIntent(P),
         };

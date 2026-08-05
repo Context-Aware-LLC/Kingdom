@@ -57,7 +57,8 @@ namespace Emberfall.Core.Contracts
     public sealed record MulliganIntent(PlayerId Player, IReadOnlyList<InstanceId> ToReplace) : PlayerIntent(Player);
 
     [ReplayTag("unearth_choice")]
-    public sealed record UnearthChoiceIntent(PlayerId Player, string ChosenCardId) : PlayerIntent(Player);
+    public sealed record UnearthChoiceIntent(PlayerId Player, string ChosenCardId, ulong ChoiceSequence)
+        : PlayerIntent(Player);
 
     [ReplayTag("concede")]
     public sealed record ConcedeIntent(PlayerId Player) : PlayerIntent(Player);
