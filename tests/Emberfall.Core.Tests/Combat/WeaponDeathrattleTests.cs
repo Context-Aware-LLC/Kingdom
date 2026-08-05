@@ -119,6 +119,31 @@ namespace Emberfall.Core.Tests.Combat
             return ci;
         }
 
+        [Test]
+        public void Equipped_Effect_Source_Uses_Granted_Live_Keywords_Not_Only_Printed_Keywords()
+        {
+            const string empowered = "ef020_empowered";
+            var def = Weapon(empowered, atk: 1, durability: 2,
+                new EffectDef(Trigger.ON_ATTACK, Verb.DEAL_DAMAGE, amount: 2, amount2: null,
+                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO"));
+            var db = new FakeCardDatabase().Register(def);
+            GameState state = MainPhase();
+            Equip(state, 0, def);
+            CardInstance weapon = state.Players[0].Weapon!;
+            weapon.Keywords.Add(Keyword.LIFESTEAL);
+            weapon.Enchantments.Add(new Enchantment
+            { Source = new InstanceId(99), GrantedKeyword = Keyword.LIFESTEAL });
+            state.Players[0].Hero.CurrentHealth = 20;
+
+            CommandResult result = new CommandProcessor(db).Execute(state, new AttackIntent(
+                state.Players[0].Id, state.Players[0].Hero.Id,
+                new TargetRef(state.Players[1].Hero.Id)));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(23),
+                "The combat hit heals 1 and the queued weapon effect heals 2 from the live granted keyword.");
+        }
+
         // ── Door 1: durability exhaustion ────────────────────────────────────────
 
         [Test]

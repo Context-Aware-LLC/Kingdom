@@ -89,9 +89,8 @@ namespace Emberfall.Core
             {
                 // Lifedrain: the source's controller hero heals for the damage dealt (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).
                 if (sourceKeywords.Contains(Keyword.LIFESTEAL) &&
-                    Characters.TryFind(state, source.Value, out var src))
+                    Targeting.TryControllerSeat(state, source.Value, out int healerSeat))
                 {
-                    int healerSeat = src.Seat;
                     ApplyHeal(interp, CharacterRef.OfHero(healerSeat, state.Players[healerSeat].Hero),
                         amount, source);
                 }

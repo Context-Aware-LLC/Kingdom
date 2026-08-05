@@ -30,10 +30,12 @@ namespace Emberfall.Core
             return map;
         }
 
-        /// <summary>The effective keyword set of an effect's source — live for a board minion, printed for a spell.</summary>
+        /// <summary>The effective keyword set of an effect's source — live for a board minion or
+        /// equipped weapon, printed for a spell that has already moved to the graveyard.</summary>
         internal static HashSet<Keyword> SourceKeywords(in EffectContext ctx)
         {
-            if (ctx.Source.Zone == Zone.Board) return ctx.Source.Keywords;
+            if (ctx.Source.Zone == Zone.Board || ctx.Source.Zone == Zone.Weapon)
+                return ctx.Source.Keywords;
             var set = new HashSet<Keyword>();
             foreach (var k in ctx.Db.Get(ctx.Source.DefinitionId).Keywords) set.Add(k);
             return set;
