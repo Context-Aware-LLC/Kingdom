@@ -317,7 +317,7 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Weapon_Targets_Reach_Destroy_Silence_And_Transform_Handlers()
         {
-            CardDefinition blade = Weapon("blade", keywords: Keyword.LIFESTEAL);
+            CardDefinition blade = Weapon("blade", keywords: Keyword.LIFEDRAIN);
             CardDefinition replacement = Weapon("replacement", attack: 4, durability: 3);
             var silence = Spell("silence_weapon", new EffectDef(Trigger.ON_CAST, Verb.SILENCE,
                 null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
@@ -336,10 +336,10 @@ namespace Emberfall.Core.Tests.Interpreter
                 CurrentAttack = 5,
                 CurrentDurability = 1,
             };
-            enchanted.Keywords.Add(Keyword.LIFESTEAL);
-            enchanted.Keywords.Add(Keyword.POISONOUS);
+            enchanted.Keywords.Add(Keyword.LIFEDRAIN);
+            enchanted.Keywords.Add(Keyword.VENOM);
             enchanted.Enchantments.Add(new Enchantment
-            { Source = new InstanceId(99), AttackDelta = 3, GrantedKeyword = Keyword.POISONOUS });
+            { Source = new InstanceId(99), AttackDelta = 3, GrantedKeyword = Keyword.VENOM });
             silenceState.Players[0].Weapon = enchanted;
             CardInstance silenceCard = ZoneCard(silenceState, 0, silence, Zone.Hand);
 
@@ -349,7 +349,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(silenceState.Players[0].Weapon, Is.SameAs(enchanted));
             Assert.That((enchanted.CurrentAttack, enchanted.CurrentDurability), Is.EqualTo((2, 1)));
             Assert.That(enchanted.Enchantments, Is.Empty);
-            Assert.That(enchanted.Keywords, Is.EquivalentTo(new[] { Keyword.LIFESTEAL }));
+            Assert.That(enchanted.Keywords, Is.EquivalentTo(new[] { Keyword.LIFEDRAIN }));
 
             GameState destroyState = State();
             var doomed = new CardInstance(destroyState.NextInstanceId(), blade.Id,

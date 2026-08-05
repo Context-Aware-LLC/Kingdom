@@ -130,9 +130,9 @@ namespace Emberfall.Core.Tests.Combat
             GameState state = MainPhase();
             Equip(state, 0, def);
             CardInstance weapon = state.Players[0].Weapon!;
-            weapon.Keywords.Add(Keyword.LIFESTEAL);
+            weapon.Keywords.Add(Keyword.LIFEDRAIN);
             weapon.Enchantments.Add(new Enchantment
-            { Source = new InstanceId(99), GrantedKeyword = Keyword.LIFESTEAL });
+            { Source = new InstanceId(99), GrantedKeyword = Keyword.LIFEDRAIN });
             state.Players[0].Hero.CurrentHealth = 20;
 
             CommandResult result = new CommandProcessor(db).Execute(state, new AttackIntent(

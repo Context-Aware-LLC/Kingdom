@@ -108,7 +108,7 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Assert.That(result.Accepted, Is.True);
             Assert.That(state.Players[1].Board, Is.Empty);
-            Assert.That(new[] { allyA, allyB }.Count(m => m.Keywords.Contains(Keyword.POISONOUS)), Is.EqualTo(1));
+            Assert.That(new[] { allyA, allyB }.Count(m => m.Keywords.Contains(Keyword.VENOM)), Is.EqualTo(1));
         }
 
         [Test]
@@ -148,7 +148,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         [TestCase("storm_crackle", 4, 2)]
         [TestCase("storm_static_shock", 3, 0)]
         public void SingleTarget_Random_Damage_Cards_Hit_Exactly_One_Enemy(
-            string cardId, int damage, int overload)
+            string cardId, int damage, int backdraft)
         {
             var state = State(seed: 19);
             CardInstance a = Board(state, 1, "core_stoneback");
@@ -167,7 +167,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             };
             Assert.That(losses.Sum(), Is.EqualTo(damage));
             Assert.That(losses.Count(loss => loss == damage), Is.EqualTo(1));
-            Assert.That(state.Players[0].NextTurnOverloadLock, Is.EqualTo(overload));
+            Assert.That(state.Players[0].NextTurnBackdraftLock, Is.EqualTo(backdraft));
         }
 
         [Test]
