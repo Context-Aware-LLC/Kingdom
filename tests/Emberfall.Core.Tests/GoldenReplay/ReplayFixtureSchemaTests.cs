@@ -92,6 +92,30 @@ namespace Emberfall.Core.Tests.GoldenReplay
         }
 
         [Test]
+        public void Load_Reads_A_Correlated_Unearth_Choice_Intent()
+        {
+            var path = WriteVariant("unearth_choice_intent", root =>
+            {
+                root["intents"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["$type"] = "unearth_choice",
+                        ["player"] = "P0",
+                        ["chosenCardId"] = "grave_spark",
+                        ["choiceSequence"] = 37,
+                    },
+                };
+            });
+
+            var fx = ReplayFixture.Load(path);
+
+            Assert.That(fx.Intents, Has.Count.EqualTo(1));
+            Assert.That(fx.Intents[0], Is.EqualTo(
+                new UnearthChoiceIntent(new PlayerId("P0"), "grave_spark", 37)));
+        }
+
+        [Test]
         public void Expected_Event_Rejects_A_Previous_Contract_Kind()
         {
             using var document = JsonDocument.Parse("{\"seq\":1,\"kind\":\"onDraw\"}");

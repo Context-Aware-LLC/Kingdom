@@ -148,6 +148,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
                                 targets.Add(new TargetRef(ParseInstance(t.GetString()!)));
                         return new HeroPowerIntent(player, targets);
                     }
+                case "unearth_choice":
+                    return new UnearthChoiceIntent(player,
+                        el.GetProperty("chosenCardId").GetString()!,
+                        el.GetProperty("choiceSequence").GetUInt64());
                 default:
                     throw new NotSupportedException($"Intent tag '{tag}' not supported by the golden-replay harness.");
             }

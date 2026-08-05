@@ -1257,5 +1257,37 @@
     "setId": "CORE",
     "collectible": false,
     "artId": "art/test_rider_aegis"
+  },
+  {
+    "_comment": "NOR-31 Unearth golden-replay source. Fixture-only, appended, non-collectible, and absent from shipping card data so it cannot enter or perturb the eligible offer pool.",
+    "id": "test_unearth_source",
+    "name": "Unearth Source",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_unearth_source",
+    "rules": [
+      {
+        "id": "offer_three",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "UNEARTH",
+          "count": 3
+        }
+      }
+    ]
   }
 ]
