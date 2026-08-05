@@ -38,7 +38,7 @@ namespace Emberfall.Editor
                 if (def.Health.HasValue) EditorGUILayout.IntField("health", def.Health.Value);
                 if (def.Durability.HasValue) EditorGUILayout.IntField("durability", def.Durability.Value);
                 EditorGUILayout.TextField("keywords", string.Join(", ", def.Keywords));
-                EditorGUILayout.IntField("effect count", def.Effects.Count);
+                EditorGUILayout.IntField("rule count", def.Rules.Count);
             }
 
             if (GUILayout.Button("Open in Card Authoring Tool"))

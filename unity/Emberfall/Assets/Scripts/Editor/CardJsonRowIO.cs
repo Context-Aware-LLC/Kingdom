@@ -78,47 +78,128 @@ namespace Emberfall.Editor
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
                 if (def.RequiresEngineeringPrimitive) w.WriteBoolean("requiresEngineeringPrimitive", true);
 
-                if (def.Effects.Count > 0)
+                w.WriteStartArray("rules");
+                foreach (var rule in def.Rules)
                 {
-                    w.WriteStartArray("effects");
-                    foreach (var fx in def.Effects)
-                    {
-                        w.WriteStartObject();
-                        w.WriteString("trigger", fx.Trigger.ToString());
-                        if (fx.Condition is { } condition)
-                        {
-                            w.WriteStartObject("condition");
-                            w.WriteString("type", condition.Type.ToString());
-                            if (condition.TurnOwner is { } owner) w.WriteString("value", owner.ToString());
-                            w.WriteEndObject();
-                        }
-                        w.WriteString("action", fx.Action.ToString());
-                        if (fx.Amount is int a) w.WriteNumber("amount", a);
-                        if (fx.Amount2 is int a2) w.WriteNumber("amount2", a2);
-                        if (!string.IsNullOrEmpty(fx.TokenId) || fx.GrantedKeyword is not null
-                            || fx.Permanent || fx.Empty)
-                        {
-                            w.WriteStartObject("payload");
-                            if (!string.IsNullOrEmpty(fx.TokenId)) w.WriteString("tokenId", fx.TokenId);
-                            if (fx.GrantedKeyword is { } kw) w.WriteString("keyword", kw.ToString());
-                            if (fx.Permanent) w.WriteBoolean("permanent", true);
-                            if (fx.Empty) w.WriteBoolean("empty", true);
-                            w.WriteEndObject();
-                        }
-                        if (!string.IsNullOrEmpty(fx.Selector))
-                        {
-                            w.WriteStartObject("target");
-                            w.WriteString("selector", fx.Selector);
-                            w.WriteEndObject();
-                        }
-                        w.WriteEndObject();
-                    }
-                    w.WriteEndArray();
+                    w.WriteStartObject();
+                    w.WriteString("id", rule.Id.Value);
+                    WriteActivation(w, rule.Activation);
+                    WriteCondition(w, rule.Condition);
+                    WriteLifetime(w, rule.Lifetime);
+                    WriteAction(w, rule.Action);
+                    w.WriteEndObject();
                 }
+                w.WriteEndArray();
 
                 w.WriteEndObject();
             }
             return Encoding.UTF8.GetString(stream.ToArray());
         }
+
+        private static void WriteActivation(Utf8JsonWriter w, RuleActivation activation)
+        {
+            w.WriteStartObject("activation");
+            if (activation is TriggeredActivation triggered)
+            {
+                w.WriteString("type", "TRIGGERED");
+                w.WriteString("trigger", triggered.Trigger.ToString());
+            }
+            else if (activation is AuraActivation)
+                w.WriteString("type", "AURA");
+            else
+                throw Unknown("activation", activation);
+            w.WriteEndObject();
+        }
+
+        private static void WriteCondition(Utf8JsonWriter w, RuleCondition condition)
+        {
+            w.WriteStartObject("condition");
+            if (condition is AlwaysCondition)
+                w.WriteString("type", "ALWAYS");
+            else if (condition is TurnOwnerCondition turnOwner)
+            {
+                w.WriteString("type", "TURN_OWNER");
+                w.WriteString("owner", turnOwner.Owner.ToString());
+            }
+            else
+                throw Unknown("condition", condition);
+            w.WriteEndObject();
+        }
+
+        private static void WriteLifetime(Utf8JsonWriter w, RuleLifetime lifetime)
+        {
+            w.WriteStartObject("lifetime");
+            if (lifetime is SourceBoundLifetime)
+                w.WriteString("type", "SOURCE_BOUND");
+            else if (lifetime is OneShotLifetime)
+                w.WriteString("type", "ONE_SHOT");
+            else if (lifetime is FiniteLifetime finite)
+            {
+                w.WriteString("type", "FINITE");
+                w.WriteNumber("uses", finite.Uses);
+            }
+            else if (lifetime is PermanentLifetime)
+                w.WriteString("type", "PERMANENT");
+            else
+                throw Unknown("lifetime", lifetime);
+            w.WriteEndObject();
+        }
+
+        private static void WriteAction(Utf8JsonWriter w, RuleAction action)
+        {
+            w.WriteStartObject("action");
+            if (action is DamageAction damage) { Type(w, "DAMAGE"); Amount(w, damage.Amount); Target(w, damage.Target); }
+            else if (action is HealAction heal) { Type(w, "HEAL"); Amount(w, heal.Amount); Target(w, heal.Target); }
+            else if (action is ModifyStatsAction stats)
+            {
+                Type(w, "MODIFY_STATS");
+                w.WriteNumber("attack", stats.AttackDelta);
+                w.WriteNumber("health", stats.HealthDelta);
+                Target(w, stats.Target);
+            }
+            else if (action is ReinforceAction reinforce) { Type(w, "REINFORCE"); Target(w, reinforce.Target); }
+            else if (action is GrantKeywordAction grant) { Type(w, "GRANT_KEYWORD"); w.WriteString("keyword", grant.Keyword.ToString()); Target(w, grant.Target); }
+            else if (action is DestroyAction destroy) { Type(w, "DESTROY"); Target(w, destroy.Target); }
+            else if (action is ReturnToHandAction returnToHand) { Type(w, "RETURN_TO_HAND"); Target(w, returnToHand.Target); }
+            else if (action is SilenceAction silence) { Type(w, "SILENCE"); Target(w, silence.Target); }
+            else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteString("cardId", transform.CardId); Target(w, transform.Target); }
+            else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
+            else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }
+            else if (action is DrawAction draw) { Type(w, "DRAW"); Count(w, draw.Count); }
+            else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteString("cardId", summon.CardId); Count(w, summon.Count); }
+            else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteString("cardId", addToHand.CardId); Count(w, addToHand.Count); }
+            else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteString("cardId", equip.CardId); }
+            else if (action is GainManaAction mana) { Type(w, "GAIN_MANA"); Amount(w, mana.Amount); w.WriteString("manaKind", mana.Kind.ToString()); }
+            else if (action is BackdraftAction backdraft) { Type(w, "BACKDRAFT"); Amount(w, backdraft.Amount); }
+            else if (action is UnearthAction unearth) { Type(w, "UNEARTH"); Count(w, unearth.Count); }
+            else if (action is GainArmorAction armor) { Type(w, "GAIN_ARMOR"); Amount(w, armor.Amount); }
+            else throw Unknown("action", action);
+            w.WriteEndObject();
+        }
+
+        private static void Type(Utf8JsonWriter w, string value) => w.WriteString("type", value);
+        private static void Amount(Utf8JsonWriter w, int value) => w.WriteNumber("amount", value);
+        private static void Count(Utf8JsonWriter w, int value) => w.WriteNumber("count", value);
+
+        private static void Target(Utf8JsonWriter w, TargetSpec target)
+        {
+            w.WriteStartObject("target");
+            w.WriteString("selector", target.Selector);
+            if (target.ChosenBy is { } chosenBy) w.WriteString("chosenBy", chosenBy.ToString());
+            if (target.Count is { } count) w.WriteNumber("count", count);
+            if (target.Filter is { } filter)
+            {
+                w.WriteStartObject("filter");
+                if (filter.Damaged is { } damaged) w.WriteBoolean("damaged", damaged);
+                if (filter.Tribe is { } tribe) w.WriteString("tribe", tribe.ToString());
+                w.WriteEndObject();
+            }
+            if (!string.IsNullOrEmpty(target.Binding)) w.WriteString("binding", target.Binding);
+            if (!string.IsNullOrEmpty(target.DistinctFrom)) w.WriteString("distinctFrom", target.DistinctFrom);
+            w.WriteEndObject();
+        }
+
+        private static System.InvalidOperationException Unknown(string family, object value)
+            => new System.InvalidOperationException($"Unknown rule {family} node '{value.GetType().Name}'.");
     }
 }

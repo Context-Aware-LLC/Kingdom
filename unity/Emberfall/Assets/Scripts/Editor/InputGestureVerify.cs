@@ -725,23 +725,20 @@ namespace Emberfall.Editor
         {
             var anyCharacter = new[]
             {
-                new EffectDef(Trigger.ON_PLAY, Emberfall.Core.Contracts.Action.DEAL_DAMAGE, 3, null,
-                              null, null, null, selector: "ANY_CHARACTER"),
+                Rule("battlecry_damage", Trigger.ON_PLAY, 3, "ANY_CHARACTER"),
             };
             var anyCharacterCast = new[]
             {
-                new EffectDef(Trigger.ON_CAST, Emberfall.Core.Contracts.Action.DEAL_DAMAGE, 1, null,
-                              null, null, null, selector: "ANY_CHARACTER"),
+                Rule("cast_damage", Trigger.ON_CAST, 1, "ANY_CHARACTER"),
             };
             var selfHeal = new[]
             {
-                new EffectDef(Trigger.ON_CAST, Emberfall.Core.Contracts.Action.DEAL_DAMAGE, 1, null,
-                              null, null, null, selector: "ENEMY_HERO"),
+                Rule("hero_power_damage", Trigger.ON_CAST, 1, "ENEMY_HERO"),
             };
 
             return new InMemoryCardDatabase(new[]
             {
-                Def(Vanilla,        CardType.MINION,     System.Array.Empty<EffectDef>()),
+                Def(Vanilla,        CardType.MINION,     System.Array.Empty<RuleDefinition>()),
                 Def(TargetedSpell,  CardType.SPELL,      anyCharacterCast),
                 Def(TargetedMinion, CardType.MINION,     anyCharacter),
                 Def(PowerFree,      CardType.HERO_POWER, selfHeal),
@@ -749,10 +746,14 @@ namespace Emberfall.Editor
             });
         }
 
-        private static CardDefinition Def(string id, CardType type, IReadOnlyList<EffectDef> effects)
+        private static RuleDefinition Rule(string id, Trigger trigger, int amount, string selector)
+            => new RuleDefinition(new RuleId(id), new TriggeredActivation(trigger), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new DamageAction(amount, new TargetSpec(selector)));
+
+        private static CardDefinition Def(string id, CardType type, IReadOnlyList<RuleDefinition> rules)
             => new CardDefinition(id, id, type, 1, 2, 3, null,
                                   CardClass.NEUTRAL, Rarity.COMMON,
-                                  System.Array.Empty<Keyword>(), effects,
+                                  System.Array.Empty<Keyword>(), rules,
                                   "", "", "", SetId.CORE, true, null, "", false);
 
         private static void Check(string what, bool ok)

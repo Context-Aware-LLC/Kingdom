@@ -37,6 +37,11 @@
          changes do not require launching the Unity editor to verify. -->
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\DragTargetingModel.cs"
              Link="Presentation\DragTargetingModel.cs" />
+    <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Editor\EditableCard.cs"
+             Link="Editor\EditableCard.cs" />
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Editor\CardJsonRowIO.cs"
+             Link="Editor\CardJsonRowIO.cs" />
   </ItemGroup>
 
 </Project>

@@ -28,6 +28,10 @@ namespace Emberfall.Editor
             "(none)", "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
             "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
             "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
+            "FRIENDLY_WEAPON", "ENEMY_WEAPON",
+            "FRIENDLY_HAND", "ENEMY_HAND", "ANY_HAND_CARD",
+            "FRIENDLY_DECK", "ENEMY_DECK", "ANY_DECK_CARD",
+            "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
         };
 
         [MenuItem("Emberfall/Card Authoring Tool")]
@@ -179,8 +183,8 @@ namespace Emberfall.Editor
             DrawKeywords(card);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Effects", EditorStyles.boldLabel);
-            DrawEffects(card);
+            EditorGUILayout.LabelField("Rules", EditorStyles.boldLabel);
+            DrawRules(card);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
@@ -234,71 +238,110 @@ namespace Emberfall.Editor
             }
         }
 
-        private void DrawEffects(EditableCard card)
+        private void DrawRules(EditableCard card)
         {
-            for (int i = 0; i < card.Effects.Count; i++)
+            for (int i = 0; i < card.Rules.Count; i++)
             {
-                var fx = card.Effects[i];
+                var rule = card.Rules[i];
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField($"effects[{i}]", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"rules[{i}]", EditorStyles.boldLabel);
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(i == 0))
-                    if (GUILayout.Button("▲", GUILayout.Width(24))) { Swap(card.Effects, i, i - 1); }
-                using (new EditorGUI.DisabledScope(i == card.Effects.Count - 1))
-                    if (GUILayout.Button("▼", GUILayout.Width(24))) { Swap(card.Effects, i, i + 1); }
-                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Effects.RemoveAt(i); _dirtyIds.Add(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
+                    if (GUILayout.Button("▲", GUILayout.Width(24))) { Swap(card.Rules, i, i - 1); }
+                using (new EditorGUI.DisabledScope(i == card.Rules.Count - 1))
+                    if (GUILayout.Button("▼", GUILayout.Width(24))) { Swap(card.Rules, i, i + 1); }
+                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Rules.RemoveAt(i); _dirtyIds.Add(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
                 EditorGUILayout.EndHorizontal();
 
-                fx.Trigger = (Trigger)EditorGUILayout.EnumPopup("trigger", fx.Trigger);
-                if (fx.Trigger == Trigger.ON_TURN_START)
-                {
-                    fx.HasCondition = true;
-                    fx.ConditionKind = ConditionType.TURN_OWNER;
-                    fx.TurnOwnerScope = (TurnOwner)EditorGUILayout.EnumPopup("condition.turnOwner", fx.TurnOwnerScope);
-                }
-                else
-                {
-                    // TURN_OWNER is the only live condition today and has no context on other triggers.
-                    // RETIREMENT TRIGGER: when another ConditionType lands, replace this reset with its
-                    // type-specific editor instead of erasing every non-turn-start condition.
-                    fx.HasCondition = false;
-                }
-                fx.Action = (Emberfall.Core.Contracts.Action)EditorGUILayout.EnumPopup("action", fx.Action);
+                rule.Id = EditorGUILayout.TextField("id", rule.Id);
+                rule.ActivationKind = (EditableActivationKind)EditorGUILayout.EnumPopup(
+                    "activation.type", rule.ActivationKind);
+                if (rule.ActivationKind == EditableActivationKind.Triggered)
+                    rule.Trigger = (Trigger)EditorGUILayout.EnumPopup("activation.trigger", rule.Trigger);
 
-                fx.HasAmount = EditorGUILayout.Toggle("has amount", fx.HasAmount);
-                if (fx.HasAmount) fx.Amount = EditorGUILayout.IntField("amount", fx.Amount);
+                rule.ConditionKind = (EditableConditionKind)EditorGUILayout.EnumPopup(
+                    "condition.type", rule.ConditionKind);
+                if (rule.ConditionKind == EditableConditionKind.TurnOwner)
+                    rule.TurnOwnerScope = (TurnOwner)EditorGUILayout.EnumPopup(
+                        "condition.owner", rule.TurnOwnerScope);
 
-                fx.HasAmount2 = EditorGUILayout.Toggle("has amount2", fx.HasAmount2);
-                if (fx.HasAmount2) fx.Amount2 = EditorGUILayout.IntField("amount2", fx.Amount2);
+                rule.LifetimeKind = (EditableLifetimeKind)EditorGUILayout.EnumPopup(
+                    "lifetime.type", rule.LifetimeKind);
+                if (rule.LifetimeKind == EditableLifetimeKind.Finite)
+                    rule.Uses = EditorGUILayout.IntField("lifetime.uses", rule.Uses);
 
-                fx.HasTokenId = EditorGUILayout.Toggle("has payload.tokenId", fx.HasTokenId);
-                if (fx.HasTokenId) fx.TokenId = EditorGUILayout.TextField("tokenId", fx.TokenId);
-
-                fx.HasKeyword = EditorGUILayout.Toggle("has payload.keyword", fx.HasKeyword);
-                if (fx.HasKeyword) fx.Keyword = (Keyword)EditorGUILayout.EnumPopup("keyword", fx.Keyword);
-
-                if (fx.Action == Emberfall.Core.Contracts.Action.GAIN_MANA)
-                {
-                    fx.Permanent = EditorGUILayout.Toggle("payload.permanent", fx.Permanent);
-                    if (fx.Permanent) fx.Empty = EditorGUILayout.Toggle("payload.empty", fx.Empty);
-                    else fx.Empty = false;
-                }
-
-                int selIndex = fx.HasSelector ? Array.IndexOf(SelectorOptions, fx.Selector) : 0;
-                if (selIndex < 0) selIndex = 0;
-                int newSelIndex = EditorGUILayout.Popup("target.selector", selIndex, SelectorOptions);
-                if (newSelIndex == 0) { fx.HasSelector = false; fx.Selector = ""; }
-                else { fx.HasSelector = true; fx.Selector = SelectorOptions[newSelIndex]; }
+                rule.ActionKind = (EditableRuleActionKind)EditorGUILayout.EnumPopup(
+                    "action.type", rule.ActionKind);
+                DrawRuleAction(rule);
 
                 EditorGUILayout.EndVertical();
             }
 
-            if (GUILayout.Button("+ Add Effect"))
+            if (GUILayout.Button("+ Add Rule"))
             {
-                card.Effects.Add(new EditableEffect());
+                string id = "rule_" + (card.Rules.Count + 1);
+                while (card.Rules.Any(rule => rule.Id == id)) id += "_new";
+                card.Rules.Add(new EditableRule { Id = id });
                 _dirtyIds.Add(card.Id);
             }
+        }
+
+        private static void DrawRuleAction(EditableRule rule)
+        {
+            switch (rule.ActionKind)
+            {
+                case EditableRuleActionKind.Damage:
+                case EditableRuleActionKind.Heal:
+                case EditableRuleActionKind.GainMana:
+                case EditableRuleActionKind.Backdraft:
+                case EditableRuleActionKind.GainArmor:
+                    rule.Amount = EditorGUILayout.IntField("action.amount", rule.Amount);
+                    break;
+                case EditableRuleActionKind.ModifyStats:
+                    rule.AttackDelta = EditorGUILayout.IntField("action.attack", rule.AttackDelta);
+                    rule.HealthDelta = EditorGUILayout.IntField("action.health", rule.HealthDelta);
+                    break;
+                case EditableRuleActionKind.Draw:
+                case EditableRuleActionKind.Summon:
+                case EditableRuleActionKind.AddToHand:
+                case EditableRuleActionKind.Unearth:
+                    rule.Count = EditorGUILayout.IntField("action.count", rule.Count);
+                    break;
+            }
+
+            if (rule.ActionKind == EditableRuleActionKind.Summon
+                || rule.ActionKind == EditableRuleActionKind.AddToHand
+                || rule.ActionKind == EditableRuleActionKind.Equip
+                || rule.ActionKind == EditableRuleActionKind.Transform)
+                rule.CardId = EditorGUILayout.TextField("action.cardId", rule.CardId);
+
+            if (rule.ActionKind == EditableRuleActionKind.GrantKeyword)
+                rule.Keyword = (Keyword)EditorGUILayout.EnumPopup("action.keyword", rule.Keyword);
+            if (rule.ActionKind == EditableRuleActionKind.GainMana)
+                rule.ManaKind = (ManaGainKind)EditorGUILayout.EnumPopup("action.manaKind", rule.ManaKind);
+            if (rule.IsTargeted) DrawTarget(rule.Target);
+        }
+
+        private static void DrawTarget(EditableTarget target)
+        {
+            int selectorIndex = Array.IndexOf(SelectorOptions, target.Selector);
+            if (selectorIndex < 1) selectorIndex = 1;
+            target.Selector = SelectorOptions[EditorGUILayout.Popup(
+                "action.target.selector", selectorIndex, SelectorOptions)];
+
+            target.HasChosenBy = EditorGUILayout.Toggle("target has chosenBy", target.HasChosenBy);
+            if (target.HasChosenBy)
+                target.ChosenBy = (TargetChosenBy)EditorGUILayout.EnumPopup("target.chosenBy", target.ChosenBy);
+            target.HasCount = EditorGUILayout.Toggle("target has count", target.HasCount);
+            if (target.HasCount) target.Count = EditorGUILayout.IntField("target.count", target.Count);
+            target.HasDamagedFilter = EditorGUILayout.Toggle("filter has damaged", target.HasDamagedFilter);
+            if (target.HasDamagedFilter) target.Damaged = EditorGUILayout.Toggle("filter.damaged", target.Damaged);
+            target.HasTribeFilter = EditorGUILayout.Toggle("filter has tribe", target.HasTribeFilter);
+            if (target.HasTribeFilter)
+                target.Tribe = (Tribe)EditorGUILayout.EnumPopup("filter.tribe", target.Tribe);
+            target.Binding = EditorGUILayout.TextField("target.binding", target.Binding);
+            target.DistinctFrom = EditorGUILayout.TextField("target.distinctFrom", target.DistinctFrom);
         }
 
         private static void Swap<T>(List<T> list, int a, int b)
@@ -355,7 +398,8 @@ namespace Emberfall.Editor
             if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Id}'? This removes it from M1.cards.json on next Save.", "Delete", "Cancel"))
                 return;
 
-            var referencedBy = _cards.Where(c => c.Effects.Any(e => e.TokenId == card.Id)).Select(c => c.Id).ToList();
+            var referencedBy = _cards.Where(c => c.Rules.Any(rule => rule.ReferencedCardId == card.Id))
+                .Select(c => c.Id).ToList();
             if (referencedBy.Count > 0
                 && !EditorUtility.DisplayDialog("Broken Reference Warning",
                     $"'{card.Id}' is referenced by: {string.Join(", ", referencedBy)}. Delete anyway?", "Delete Anyway", "Cancel"))
