@@ -30,9 +30,12 @@ namespace Emberfall.Core
             Rule = rule ?? throw new ArgumentNullException(nameof(rule));
             RuleReference = new RuleRef(definition.Id, rule.Id);
             Kind = kind;
-            var keywords = new List<Keyword>(currentCarrier == null
-                ? definition.Keywords
-                : currentCarrier.Keywords);
+            bool carrierOwnsEffectiveKeywords = currentCarrier != null &&
+                (kind == EffectSourceKind.BoardMinion ||
+                 kind == EffectSourceKind.EquippedWeapon);
+            var keywords = new List<Keyword>(carrierOwnsEffectiveKeywords
+                ? currentCarrier!.Keywords
+                : definition.Keywords);
             keywords.Sort((left, right) => ((int)left).CompareTo((int)right));
             SourceKeywords = keywords.AsReadOnly();
             CurrentCarrier = currentCarrier;

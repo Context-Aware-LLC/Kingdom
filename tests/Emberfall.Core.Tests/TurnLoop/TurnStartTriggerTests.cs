@@ -319,6 +319,31 @@ namespace Emberfall.Core.Tests.TurnLoop
                 }));
         }
 
+        [TestCase(TurnOwner.CONTROLLER, 1)]
+        [TestCase(TurnOwner.OPPONENT, 1)]
+        [TestCase(TurnOwner.ANY, 2)]
+        public void Equipped_Weapon_Uses_Explicit_Turn_Ownership(TurnOwner owner,
+            int expectedActivations)
+        {
+            const string weaponId = "ef031_turn_owner_weapon";
+            RuleDefinition toll = TestRules.Rule("weapon_toll", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(owner), TestRules.Damage(Trigger.ON_TURN_START, 1));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Weapon(weaponId, new[] { toll }));
+            var (host, s) = Match(db, Vanilla, seed: 235UL + (ulong)owner);
+            int weaponSeat = s.SeatOf(s.ActivePlayer);
+            int otherSeat = 1 - weaponSeat;
+            _ = PutWeapon(s, db, weaponSeat, weaponId);
+            int targetHealth = s.Players[otherSeat].Hero.CurrentHealth;
+
+            Accept(host, new EndTurnIntent(s.Players[weaponSeat].Id));
+            Accept(host, new EndTurnIntent(s.Players[otherSeat].Id));
+
+            Assert.That(s.Players[otherSeat].Hero.CurrentHealth,
+                Is.EqualTo(targetHealth - expectedActivations));
+        }
+
         [Test]
         public void Queued_Damage_Keeps_The_Source_Keyword_Snapshot_After_Silence()
         {

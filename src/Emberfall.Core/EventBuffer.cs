@@ -11,9 +11,9 @@ namespace Emberfall.Core
     /// golden-replay test asserts.
     ///
     /// Also captures the per-event <see cref="EventVisibility"/> sidecar AT EMIT TIME
-    /// (dev-docs/architecture/determinism-and-projection.md:24): post-command state cannot classify a broken weapon (nulled)
-    /// or the ephemeral hero-power source (never zoned), so the verdict is taken while it is
-    /// still true. The sidecar is server-side only — never serialized, never hashed.
+    /// (dev-docs/architecture/determinism-and-projection.md:24): post-command state may no longer
+    /// classify an identity whose public carrier left play, so the verdict is taken at emission.
+    /// The sidecar is server-side only — never serialized, never hashed.
     /// </summary>
     internal sealed class EventBuffer
     {
@@ -30,9 +30,8 @@ namespace Emberfall.Core
         public IReadOnlyList<EventVisibility> Visibility => _visibility;
 
         /// <summary>
-        /// Declare an id public for this command even though it resolves to no zone — the
-        /// ephemeral hero-power source (its act is public) is the one M2 case. Default-deny
-        /// stands for everything unmarked.
+        /// Declare an id public for this command even though it resolves to no current zone.
+        /// Default-deny stands for everything unmarked.
         /// </summary>
         public void MarkPublic(InstanceId id) => (_publicMarks ??= new HashSet<int>()).Add(id.Value);
 

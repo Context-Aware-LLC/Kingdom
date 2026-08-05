@@ -73,6 +73,27 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
+        public void Spell_Source_Snapshots_Printed_Keywords_Not_The_Uninitialized_Zone_Carrier()
+        {
+            RuleDefinition rule = Rule("cast", Trigger.ON_CAST);
+            var definition = new CardDefinition("lifedrain_spell", "lifedrain_spell",
+                CardType.SPELL, 1, null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
+                new[] { Keyword.LIFEDRAIN }, new[] { rule }, "", "", "art/lifedrain_spell",
+                SetId.CORE, true, null, "", false);
+            var carrier = new CardInstance(new InstanceId(18), definition.Id, P0)
+            {
+                Zone = Zone.Graveyard,
+            };
+
+            var context = new EffectSourceContext(carrier.Id, carrier.Controller, definition, rule,
+                EffectSourceKind.Spell, carrier);
+
+            Assert.That(carrier.Keywords, Is.Empty,
+                "ordinary deck/hand spell instances do not seed printed keywords");
+            Assert.That(context.SourceKeywords, Is.EqualTo(new[] { Keyword.LIFEDRAIN }));
+        }
+
+        [Test]
         public void Snapshot_Orders_Incoming_Board_Then_Weapon_Then_Ongoing_And_Repeats_For_Other_Side()
         {
             RuleDefinition p1LeftA = Rule("p1_left_a", Trigger.ON_TURN_START);

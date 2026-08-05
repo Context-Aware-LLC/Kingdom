@@ -525,19 +525,24 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Every_Trigger_Enum_Member_Is_Tabled()
+        public void Every_Trigger_Enum_Member_Has_An_Explicit_Liveness_Expectation()
         {
-            // Fail-closed only works if the table is exhaustive; a new enum member with no row is a
-            // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
+            // Fail-closed only works if every enum member has an explicit live/dead expectation.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
                                Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
                                Trigger.ON_HEAL };
             var dead = new[] { Trigger.AURA };
+            foreach (Trigger trigger in live)
+                Assert.That(EffectSourceCapabilities.SupportsAny(trigger), Is.True,
+                    $"{trigger} is expected to have at least one source/raise path.");
+            foreach (Trigger trigger in dead)
+                Assert.That(EffectSourceCapabilities.SupportsAny(trigger), Is.False,
+                    $"{trigger} is expected to remain fail-closed.");
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
             Assert.That(missing, Is.Empty,
-                "Trigger(s) not classified by the C21 test/table — add to TriggerLivenessTable and here: "
+                "Trigger(s) lack a C21 expectation — update EffectSourceCapabilities and this test: "
                 + string.Join(", ", missing));
         }
     }

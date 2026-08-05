@@ -88,13 +88,14 @@ heal inside `ApplyDamage` — the path the trigger was expected to fire on — f
 always heals the source's own *hero*. Dead on `SPELL`/`WEAPON` permanently, not pending a lifecycle:
 neither has health to restore.
 
-**`ON_TURN_START` is live for board minions with an explicit turn-owner condition** (EF-011).
+**`ON_TURN_START` is live for board minions and equipped weapons with an explicit turn-owner
+condition** (EF-011 / NOR-31).
 Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
 missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
 **after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrosted
 board with mana already refilled, and a lethal start-of-turn cascade ends the match instead of
-drawing into a finished game. Weapons and persistent spell effects are not turn-start sources yet;
-`CardValidator` rejects those source types until their explicit lifecycle follow-ups land.
+drawing into a finished game. Persistent spell effects are not turn-start sources yet because their
+canonical state does not exist; `CardValidator` rejects ordinary spell rows on this trigger.
 
 **`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
 permanent on both boards, not "at the end of *your* turn". A card that should only fire on its
@@ -103,7 +104,7 @@ controller's turn end cannot be expressed today.
 **`ON_SPELL_CAST` fires on BOTH players' casts and NOT on hero powers** (EF-016) — it is an
 observer sweep over both boards, so it means "whenever *any* spell is cast", not "whenever *you*
 cast". It is raised only from `ApplyPlayCard`'s `CardType.SPELL` arm; a hero power raises the same
-`ON_CAST` through an ephemeral `HERO_POWER` card and deliberately does not fire this. **Subscribers
+`ON_CAST` through a carrierless `HERO_POWER` source context and deliberately does not fire this. **Subscribers
 are snapshotted at cast time**, so a minion the spell itself kills still reacts — that is
 `RaiseObservers`' shape, shared with `ON_FRIENDLY_SUMMON` and `ON_TURN_END`.
 
@@ -117,9 +118,9 @@ resolves — an `ON_DEATH` that equips will break the replacement, not itself.
 
 Lift a name from this list only when its raise site actually exists. `CardValidator`
 rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`) and
-rejects source types without a wired lifecycle. The source of truth is
-`CardValidator.TriggerLivenessTable` — **assign the exact liveness classification in the same
-commit that lands a raise site** (each Dead or type-scoped row names its retirement trigger).
+rejects source types without a wired lifecycle. The source of truth is the shared
+`EffectSourceCapabilities` relation — **assign the exact source/trigger pair in the same commit
+that lands its raise path**.
 Do not promote a type-scoped trigger to Live until every accepted source type has a runtime path.
 This prose list is no longer the only guard, but keep it in sync with the table.
 
@@ -141,9 +142,11 @@ whose behavior is expressed by trigger/effect data (including `HERALD` and `TOLL
 legal. `CardValidator`'s fail-closed weapon-carrier table rejects keywords with no weapon behavior;
 weapon-ness alone is not a rejection reason.
 
-A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip herald),
-**`ON_ATTACK` with a static selector** — that trigger fires with an empty target list, so "the
-minion this hits" is not addressable — and **`ON_DEATH`** (EF-020).
+A weapon's expressive surface includes **stats**, **`ON_PLAY`** (equip herald), **`ON_ATTACK` with
+a static selector** — that trigger fires with an empty target list, so "the minion this hits" is not
+addressable — **`ON_DEATH`** (EF-020), and persistent observer rules such as `ON_TURN_START`,
+`ON_TURN_END`, `ON_FRIENDLY_SUMMON`, and `ON_SPELL_CAST`. Observer ordering is board minions
+left-to-right, then the equipped weapon, for the incoming/active side before the other side.
 
 **A weapon toll resolves with the weapon already in its controller's graveyard**, and on an
 equip-replacement with the *replacement* already in the slot. A `SELF`-selector effect on one

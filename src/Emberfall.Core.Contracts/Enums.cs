@@ -85,9 +85,10 @@ namespace Emberfall.Core.Contracts
         // health to restore, so the minion-only classification here is not a staging step.
         ON_HEAL,
 
-        // LIVE FOR BOARD MINIONS — CommandProcessor.StartTurnSequence raises it after the thaw/mana
-        // reset and before the draw (EF-011). Every effect declares a TURN_OWNER condition so controller,
-        // opponent and any-turn behavior are explicit. Weapons and ongoing spells are tracked follow-ups.
+        // LIVE FOR BOARD MINIONS AND EQUIPPED WEAPONS — CommandProcessor.StartTurnSequence raises it
+        // after the thaw/mana reset and before the draw (EF-011). Every effect declares a TURN_OWNER
+        // condition so controller, opponent and any-turn behavior are explicit. Ongoing spells remain
+        // a tracked follow-up because their canonical state does not exist yet.
         ON_TURN_START,
 
         // LIVE — CommandProcessor.ApplyEndTurn raises it after the TurnEnded fact and before the
