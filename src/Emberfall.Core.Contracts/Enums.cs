@@ -90,7 +90,7 @@ namespace Emberfall.Core.Contracts
         // opponent and any-turn behavior are explicit. Weapons and ongoing spells are tracked follow-ups.
         ON_TURN_START,
 
-        // LIVE — CommandProcessor.ApplyEndTurn raises it after the onTurnEnd VFX emit and before the
+        // LIVE — CommandProcessor.ApplyEndTurn raises it after the TurnEnded fact and before the
         // seat flip (EF-012). Fires for BOTH players' permanents, not just the active player's.
         ON_TURN_END,
 

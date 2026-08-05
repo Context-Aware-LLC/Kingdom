@@ -12,7 +12,7 @@ namespace Emberfall.Core.Tests.HeroPower
     /// <summary>
     /// L1 — HeroPowerIntent validation + execution (M1 Phase B step 3).
     /// Drives CommandProcessor directly in Main phase with a pre-constructed GameState, asserting on
-    /// state mutations and the ordered D7 event stream.
+    /// state mutations and the ordered semantic event stream.
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -254,7 +254,7 @@ namespace Emberfall.Core.Tests.HeroPower
         }
 
         [Test]
-        public void SearingBolt_Emits_onHeroPower_Then_onDamage()
+        public void SearingBolt_Emits_HeroPowerUsed_Then_DamageApplied()
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
@@ -315,7 +315,7 @@ namespace Emberfall.Core.Tests.HeroPower
         }
 
         [Test]
-        public void TidalWard_Emits_onHeroPower_Then_onSummon()
+        public void TidalWard_Emits_HeroPowerUsed_Then_CardSummoned()
         {
             var wispDef = WispDef();
             var db = new FakeCardDatabase();

@@ -23,9 +23,9 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   | seq | event | meaning |
   |---|---|---|
-  | 14 | `onDamage` i35→i23 amt 1, `None` | the bare thornback really takes the volley |
-  | 15 | `onDamage` i35→i24 amt 0, `AegisAbsorbed` | the shielded twin is hit — shield eats it, 0 health lost |
-  | 16 | `onDamage` i23→i2 amt 1, `None` | **exactly one** retaliation, from the unshielded minion only |
+  | 14 | `DamageApplied` i35→i23 amt 1, `None` | the bare thornback really takes the volley |
+  | 15 | `DamageApplied` i35→i24 amt 0, `AegisAbsorbed` | the shielded twin is hit — shield eats it, 0 health lost |
+  | 16 | `DamageApplied` i23→i2 amt 1, `None` | **exactly one** retaliation, from the unshielded minion only |
 
   Those three rows are the point of the fixture. They pin three properties that no per-hit unit test
   can reach:
@@ -33,7 +33,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   1. **The raise exists.** Row 3 is a minion's own `ON_DAMAGED` resolving after it took a real hit.
   2. **An Aegis-absorbed hit is not "damaged".** Rows 1 and 2 are the same volley against two
      otherwise-identical minions, and only one retaliates. A raise moved above the shield's early
-     return would produce a second `onDamage` back at the caster and fail this fixture.
+     return would produce a second `DamageApplied` back at the caster and fail this fixture.
   3. **Enqueue-only — no drain between hits.** Both volley hits (14, 15) land *before* the
      retaliation (16). A drain-between-hits implementation interleaves it as seq 15, reordering the
      stream — the ordering decision recorded at length in `DamagePipeline.cs`.

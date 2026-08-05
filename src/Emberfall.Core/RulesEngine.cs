@@ -49,7 +49,8 @@ namespace Emberfall.Core
         /// Move an existing card instance onto <paramref name="seat"/>'s board at <paramref name="atIndex"/>
         /// (clamped; -1 = append), initializing its live stats and keyword set from the definition. Returns
         /// false and does nothing if the board is at <see cref="MatchEngine.BoardCap"/> (CapCheck fizzle).
-        /// The caller emits the entry VFX (<c>onPlay</c> for a hand-play, <c>onSummon</c> for a token).
+        /// The caller emits the entry fact (<see cref="GameEventKind.CardPlayed"/> for a hand-play,
+        /// <see cref="GameEventKind.CardSummoned"/> for a token).
         /// </summary>
         public static bool EnterBoard(GameState state, CardInstance ci, CardDefinition def, int seat, int atIndex)
         {
@@ -93,7 +94,8 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// Destroy the equipped weapon for <paramref name="seat"/>, emitting onDeath and raising the weapon's
+        /// Destroy the equipped weapon for <paramref name="seat"/>, emitting
+        /// <see cref="GameEventKind.CardDestroyed"/> and raising the weapon's
         /// ON_DEATH toll onto <paramref name="interp"/>'s queue (EF-020). No-op if no weapon. Called
         /// before equipping a new weapon and by combat when durability reaches zero.
         ///

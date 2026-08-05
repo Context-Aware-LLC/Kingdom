@@ -63,7 +63,7 @@ namespace Emberfall.Presentation
         // THE ORDERING PROBLEM. MatchRunner.PlaybackLoop fires OnStateUpdated and THEN
         // OnMatchEvent off the same queue entry, in the same frame. A minion that dies is already
         // absent from that snapshot's board list, so the departed-card sweep below used to destroy
-        // its presenter before the onDeath event it belongs to had been raised at all — the card
+        // its presenter before the CardDestroyed fact it belongs to had been raised at all — the card
         // was gone, and nothing could have animated it.
         //
         // So the sweep no longer destroys: it PARKS ids, and a WaitForEndOfFrame flush resolves
@@ -121,9 +121,9 @@ namespace Emberfall.Presentation
                 _matchRunner.OnMatchEvent -= OnMatchEventForDeaths;
         }
 
-        // EffectInterpreter.cs:148 and RulesEngine.cs:94 both emit onDeath with SOURCE set and no
+        // EffectInterpreter.cs:148 and RulesEngine.cs:94 both emit CardDestroyed with SOURCE set and no
         // target — the dying thing is the subject of its own death. Reading both fields keeps this
-        // correct either way, and costs nothing: a weapon's onDeath names an id with no presenter,
+        // correct either way, and costs nothing: a weapon's CardDestroyed fact names an id with no presenter,
         // which the sweep simply never looks up.
         private void OnMatchEventForDeaths(IReadOnlyList<GameEvent> batch)
         {
@@ -171,7 +171,7 @@ namespace Emberfall.Presentation
             }
 
             // Park presenters for cards that left hand and board — resolved at end of frame, once
-            // this tick's onDeath events have told us WHICH of them died (see _pendingRemoval).
+            // this tick's CardDestroyed facts have told us WHICH of them died (see _pendingRemoval).
             foreach (InstanceId id in _lastLive)
                 if (!_thisLive.Contains(id))
                     _pendingRemoval.Add(id);
@@ -407,7 +407,7 @@ namespace Emberfall.Presentation
         }
 
         /// <param name="died">
-        /// True when this tick raised onDeath for the id. Cards that merely LEFT the board — played
+        /// True when this tick raised CardDestroyed for the id. Cards that merely LEFT the board — played
         /// from hand, returned to hand, discarded, shuffled back — keep the immediate destroy: a
         /// burn would read as "this card was killed", which for those is a lie.
         /// </param>

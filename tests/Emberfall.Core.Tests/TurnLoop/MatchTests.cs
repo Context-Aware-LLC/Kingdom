@@ -137,7 +137,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                     if (e.Kind == GameEventKind.FatigueDamage) sawFatigue = true;
             }
 
-            Assert.That(sawFatigue, Is.True, "Drawing from an empty deck must emit onFatigue.");
+            Assert.That(sawFatigue, Is.True, "Drawing from an empty deck must emit FatigueDamage.");
             Assert.That(s.Outcome, Is.AnyOf(MatchOutcome.Player0Win, MatchOutcome.Player1Win, MatchOutcome.Draw));
             Assert.That(s.Phase, Is.EqualTo(TurnPhase.GameOver));
         }

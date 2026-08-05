@@ -14,7 +14,7 @@ namespace Emberfall.Core.Tests.Interpreter
     /// L1 — the effect interpreter (M1 Phase B step 1) driven through the real public
     /// <c>CommandProcessor.Execute</c> door: PlayCard → herald/cast → DeathCheck → toll cascade.
     /// Constructs a Main-phase <see cref="GameState"/> directly so a known card sits in hand, then asserts
-    /// on the public state + the ordered D7 event stream.
+    /// on the public state + the ordered semantic event stream.
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -204,7 +204,7 @@ namespace Emberfall.Core.Tests.Interpreter
             foreach (var m in s.Players[1].Board)
                 Assert.That(m.DefinitionId, Is.EqualTo("token_imp"));
 
-            // onDeath events present and in ascending sequence (deterministic order).
+            // CardDestroyed facts present and in ascending sequence (deterministic order).
             ulong lastDeathSeq = 0; int deaths = 0;
             foreach (var e in r.Events)
                 if (e.Kind == GameEventKind.CardDestroyed) { Assert.That(e.Sequence, Is.GreaterThan(lastDeathSeq)); lastDeathSeq = e.Sequence; deaths++; }

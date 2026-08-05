@@ -16,14 +16,14 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   | seq | event | meaning |
   |---|---|---|
-  | 6 → 7, 8 | `onPlay` (i64), `onDamage` i64→i1 amt 2, then `onDamage` i43→i2 amt 1 | the spell's own `ON_CAST` resolves **first**; the echo reacts after it — and that echo belongs to the player who did **not** cast |
-  | 13 → 14 | `onHeroPower` (i1), `onDamage` i84→i2 amt 1, **and nothing else** | **THE TRAP.** A hero power raises the same `Trigger.ON_CAST` through an ephemeral `HERO_POWER` card (i84). Two echoes are standing on the boards. Neither fires |
-  | 18 → 19, 20, 21 | `onPlay` (i65), `onDamage` i65→i1, then i63→i1, then i43→i2 | one cast, **both** boards swept, **active side first** (i63 is the caster's echo, i43 the opponent's) |
+  | 6 → 7, 8 | `CardPlayed` (i64), `DamageApplied` i64→i1 amt 2, then `DamageApplied` i43→i2 amt 1 | the spell's own `ON_CAST` resolves **first**; the echo reacts after it — and that echo belongs to the player who did **not** cast |
+  | 13 → 14 | `HeroPowerUsed` (i1), `DamageApplied` i84→i2 amt 1, **and nothing else** | **THE TRAP.** A hero power raises the same `Trigger.ON_CAST` through an ephemeral `HERO_POWER` card (i84). Two echoes are standing on the boards. Neither fires |
+  | 18 → 19, 20, 21 | `CardPlayed` (i65), `DamageApplied` i65→i1, then i63→i1, then i43→i2 | one cast, **both** boards swept, **active side first** (i63 is the caster's echo, i43 the opponent's) |
 
   Rows 2 and 3 are the point of the fixture. Row 2 pins the gate that the whole task turns on: the
   raise lives in `ApplyPlayCard`'s `CardType.SPELL` arm and nowhere else, so "whenever a spell is
   cast" excludes hero powers. Hooking generic `ON_CAST` instead — the obvious and wrong
-  implementation — would add two `onDamage` rows at seq 14 and fail this fixture forever. Row 3
+  implementation — would add two `DamageApplied` rows at seq 14 and fail this fixture forever. Row 3
   pins the scope and the order: an "any spell" observer sweep across both boards rather than a
   controller-scoped "whenever YOU cast", in `RaiseObservers`' canonical active-player-first walk.
   Row 1 pins queue order — `RaiseSelf` before `RaiseObservers` into a FIFO queue — which totals

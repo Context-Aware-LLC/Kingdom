@@ -38,9 +38,10 @@ namespace Emberfall.Session
     /// </summary>
     public static class SpellRevealClassifier
     {
-        /// <summary>The first spell-cast onPlay in this entry's batch, or null if there isn't one.
+        /// <summary>The first spell-cast <see cref="GameEventKind.CardPlayed"/> in this entry's batch,
+        /// or null if there isn't one.
         /// Only the first — a command resolves one played card at a time in this M1 slice, so a
-        /// second onPlay in the same batch isn't a case that exists yet.</summary>
+        /// second CardPlayed fact in the same batch isn't a case that exists yet.</summary>
         public static SpellReveal? Classify(GameState snapshot, IReadOnlyList<GameEvent> events,
                                             ICardDatabase db, float holdSeconds)
         {
@@ -69,7 +70,7 @@ namespace Emberfall.Session
         }
 
         // The spell has already moved to Graveyard by the time this runs (CommandProcessor sets
-        // Zone before emitting onPlay), but this checks Board/Hand too rather than assume — the
+        // Zone before emitting CardPlayed), but this checks Board/Hand too rather than assume — the
         // snapshot is the only source of truth for where an instance actually landed.
         private static CardInstance FindInstance(GameState state, InstanceId id)
         {

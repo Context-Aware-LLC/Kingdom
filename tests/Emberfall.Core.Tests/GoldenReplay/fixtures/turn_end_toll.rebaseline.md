@@ -6,7 +6,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   there is no old hash to compare against. It is the golden EF-012 owes under the standing rule
   "no new effect without a golden": `Trigger.ON_TURN_END` was declared in `Enums.cs` and raised
   nowhere, and `CommandProcessor.ApplyEndTurn` now raises it
-  (`interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null)`) after the `onTurnEnd` VFX emit and
+  (`interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null)`) after the `TurnEnded` VFX emit and
   before the seat flip.
 - **Why the new golden is correct:** baked by `TurnEndTollFixtureGenerator` (seed
   `2718281828459045`), whose in-scenario assertions all passed during generation. Both players run
@@ -15,15 +15,15 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   | seq | event | meaning |
   |---|---|---|
-  | 3 → 4 | `onTurnEnd` (i1), `onDamage` i23→i2 amt 1 | first player's toller resolves on its owner's turn end |
-  | 8 → 9, 10 | `onTurnEnd` (i2), `onDamage` i33→i1, then i23→i2 | **both** boards fire on one turn end, **active side first** |
-  | 13 → 14, 15 | `onTurnEnd` (i1), `onDamage` i23→i2, then i33→i1 | the same sweep, order **flipped** with the active seat |
+  | 3 → 4 | `TurnEnded` (i1), `DamageApplied` i23→i2 amt 1 | first player's toller resolves on its owner's turn end |
+  | 8 → 9, 10 | `TurnEnded` (i2), `DamageApplied` i33→i1, then i23→i2 | **both** boards fire on one turn end, **active side first** |
+  | 13 → 14, 15 | `TurnEnded` (i1), `DamageApplied` i23→i2, then i33→i1 | the same sweep, order **flipped** with the active seat |
 
   Rows 2 and 3 are the point of the fixture: they pin the two properties that are otherwise
   invisible — that `ON_TURN_END` is an "end of ANY turn" observer sweep across both boards rather
   than a controller-scoped "end of YOUR turn" (GDD §1b step 3, "fire all `ON_TURN_END` effects"),
   and that the sweep order is `RaiseObservers`' canonical active-player-first walk, so it reverses
-  every turn. A controller-scoped reimplementation would drop half these `onDamage` rows; a
+  every turn. A controller-scoped reimplementation would drop half these `DamageApplied` rows; a
   fixed-seat ordering would leave rows 2 and 3 identical. Either regression fails this fixture.
 
   Baked hash: `ec7902a4228e584b5fc8f2ea7ef2668ad8be144e7e26a482099effbfadd150d0` (18 events,

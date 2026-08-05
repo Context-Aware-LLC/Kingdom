@@ -10,7 +10,7 @@ using Verb = Emberfall.Core.Contracts.Action;
 namespace Emberfall.Core.Tests.Combat
 {
     /// <summary>
-    /// L1 — EF-020. <c>RulesEngine.BreakWeapon</c> emitted an <c>onDeath</c> VFX event and raised no trigger
+    /// L1 — EF-020. <c>RulesEngine.BreakWeapon</c> emitted a CardDestroyed fact and raised no trigger
     /// at all, so a Toll on a WEAPON was structurally impossible: it parsed, validated, loaded and
     /// then did nothing forever, silently. (<c>CardValidator</c> rule C21 rejected the card outright to stop
     /// anyone authoring one — that gate is retired by the same change these tests cover.)

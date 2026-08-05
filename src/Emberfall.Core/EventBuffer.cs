@@ -5,7 +5,7 @@ using Emberfall.Core.Projection;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// Accumulates the ordered D7 event stream for one command, assigning each event a global,
+    /// Accumulates the ordered semantic event stream for one command, assigning each event a global,
     /// monotonic <see cref="GameEvent.Sequence"/> from the match-wide cursor on the state
     /// (dev-docs/architecture/determinism-and-projection.md:5). The sequence is deterministic and is part of what the
     /// golden-replay test asserts.

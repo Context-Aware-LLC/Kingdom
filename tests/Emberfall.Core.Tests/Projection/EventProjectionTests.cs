@@ -110,7 +110,7 @@ namespace Emberfall.Core.Tests.Projection
             }
         }
 
-        // ── the load-bearing onDraw row ──────────────────────────────────────────
+        // ── the load-bearing CardDrawn row ───────────────────────────────────────
 
         [Test]
         public void Draw_Event_Owner_Sees_Card_Opponent_Sees_Sentinel()
@@ -194,7 +194,7 @@ namespace Emberfall.Core.Tests.Projection
             }
         }
 
-        // ── §10 corpus addition — weapon-break onDeath stays public ─────────────
+        // ── §10 corpus addition — weapon-break CardDestroyed stays public ───────
 
         [Test]
         public void Weapon_Break_Death_Event_Resolves_Public_For_Both_Viewers()

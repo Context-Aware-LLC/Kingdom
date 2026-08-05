@@ -112,7 +112,7 @@ namespace Emberfall.Net.Protocol
         public bool VerifyIntegrity() => string.Equals(GameStateHasher.Hash(State), Hash, System.StringComparison.Ordinal);
     }
 
-    /// <summary>The ordered projected D7 batch for one applied command (netcode §3.3).</summary>
+    /// <summary>The ordered projected semantic-event batch for one applied command (netcode §3.3).</summary>
     public sealed record EventsMsg(ulong StateVersion, IReadOnlyList<GameEvent> Events) : NetMessage;
 
     /// <summary>Intent refused; carries the envelope seq of the offending <see cref="IntentMsg"/>.</summary>

@@ -13,7 +13,8 @@ namespace Emberfall.Presentation
     /// call SetupRenderers() first, then Init() after ICardLiveState exists.
     ///
     /// Param ownership (shaders/README.md §3 consolidated table):
-    ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on onDamage/onHeal
+    ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on
+    ///                     DamageApplied/HealthRestored
     ///   _ShroudAmount  → bodyRenderer   SG_Shroud alpha body — tween to 0.6 (not 1; keeps card readable)
     ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frosted change (0.3s)
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) | selection | AttackReadiness.Ready

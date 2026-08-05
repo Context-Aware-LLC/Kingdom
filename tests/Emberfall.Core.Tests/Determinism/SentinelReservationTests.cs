@@ -125,7 +125,7 @@ namespace Emberfall.Core.Tests.Determinism
                 if (e.Kind == GameEventKind.CardBounced && e.Target.HasValue && e.Target.Value.Equals(bounced.Id))
                     eventCarriesNewId = true;
             Assert.That(eventCarriesNewId, Is.True,
-                "Re-mint runs BEFORE the onReturn emit — event and snapshot must agree (§10 finding 4).");
+                "Re-mint runs BEFORE the CardBounced emit — event and snapshot must agree (§10 finding 4).");
         }
 
         [Test]

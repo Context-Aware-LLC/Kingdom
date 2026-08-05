@@ -46,7 +46,8 @@ namespace Emberfall.Core
         /// Deal <paramref name="amount"/> damage to <paramref name="target"/>, using <paramref name="interp"/>
         /// for state/events and to enqueue any on-damage trigger. <paramref name="sourceKeywords"/> is the
         /// keyword set of the dealing character (drives LIFEDRAIN/VENOM); pass null for sourceless damage
-        /// (e.g. fatigue is handled elsewhere). Emits <c>onDamage</c> (with AegisAbsorbed when a shield eats the
+        /// (e.g. fatigue is handled elsewhere). Emits <see cref="GameEventKind.DamageApplied"/>
+        /// (with AegisAbsorbed when a shield eats the
         /// hit) and raises the damaged minion's ON_DAMAGED onto the queue. No-op for non-positive amounts.
         /// </summary>
         public static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
@@ -132,7 +133,8 @@ namespace Emberfall.Core
         /// <summary>
         /// Restore up to <paramref name="amount"/> health to <paramref name="target"/>, clamped to its max,
         /// using <paramref name="interp"/> for events and to enqueue the healed minion's ON_HEAL.
-        /// Emits <c>onHeal</c> with the effective amount healed. Returns the amount actually restored.
+        /// Emits <see cref="GameEventKind.HealthRestored"/> with the effective amount healed.
+        /// Returns the amount actually restored.
         ///
         /// <para><b>EF-015 — ON_HEAL is a SELF trigger on the healed minion, not an observer sweep.</b>
         /// It mirrors ON_DAMAGED at the sibling site exactly: <see cref="EffectInterpreter.RaiseSelf"/> on

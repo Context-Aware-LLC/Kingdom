@@ -290,7 +290,7 @@ namespace Emberfall.Core
 
     /// <summary>
     /// Everything a single primitive needs to apply itself (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.1). The handler mutates
-    /// <see cref="State"/> through the shared pipelines, emits D7 events via <see cref="Events"/>, and may
+    /// <see cref="State"/> through the shared pipelines, emits semantic events via <see cref="Events"/>, and may
     /// enqueue follow-on triggers via the back-reference to the interpreter.
     /// </summary>
     internal readonly struct EffectContext

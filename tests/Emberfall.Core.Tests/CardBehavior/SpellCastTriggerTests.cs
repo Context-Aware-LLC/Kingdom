@@ -216,8 +216,8 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             // Queue order, not just totals: RaiseSelf(ON_CAST) is called before RaiseObservers and the
             // interpreter's queue is FIFO, so the spell lands first and reactions follow. Totals cannot
-            // show this — both effects damage the same hero — so assert on the ordered D7 stream, where
-            // each onDamage carries the instance id of the source that dealt it.
+            // show this — both effects damage the same hero — so assert on the ordered event stream, where
+            // each DamageApplied fact carries the instance id of the source that dealt it.
             var (host, s) = Match(Db(), MixedDeck(), seed: 25UL);
             int seat = s.SeatOf(s.ActivePlayer);
 

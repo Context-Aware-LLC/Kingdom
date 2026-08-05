@@ -27,8 +27,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// sweep runs active-player-first.</para>
     ///
     /// <para>It also pins the BEFORE-THE-DRAW half of the ordering directly, which is the part worth
-    /// looking at: every toll's <c>onDamage</c> sits between that turn's <c>onTurnStart</c> and its
-    /// <c>onDraw</c> (seq 4-6, 9-12, 14-17). Hoisting the raise below <c>DrawOne</c> reorders those rows
+    /// looking at: every toll's <c>DamageApplied</c> sits between that turn's <c>TurnStarted</c> and its
+    /// <c>CardDrawn</c> (seq 4-6, 9-12, 14-17). Hoisting the raise below <c>DrawOne</c> reorders those rows
     /// and fails the fixture. The AFTER-THE-MANA-RESET half is not expressible in a hero-damage stream
     /// — no mana event is emitted — so it is pinned in <c>TurnStartTriggerTests</c> instead
     /// (<c>Turn_Start_Trigger_Fires_After_The_Mana_Reset</c>), as is the lethal case

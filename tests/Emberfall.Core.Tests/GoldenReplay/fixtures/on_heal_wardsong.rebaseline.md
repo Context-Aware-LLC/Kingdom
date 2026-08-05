@@ -26,12 +26,12 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   | seq | event | meaning |
   |---|---|---|
-  | 19 | `onPlay` i28 | the third wardsong joins at full health — the control |
-  | 20 | `onPlay` i24 | the salve is cast; it sweeps all three friendly minions |
-  | 21 | `onHeal` i24→i23 amt **1** | wounded wardsong #1 restored — clamped from the requested 2 |
-  | 22 | `onHeal` i24→i26 amt **1** | wounded wardsong #2 restored — clamped likewise |
-  | 23 | `onDamage` i23→i2 amt 1 | ping from #1's own `ON_HEAL` |
-  | 24 | `onDamage` i26→i2 amt 1 | ping from #2's own `ON_HEAL` — and the stream ends |
+  | 19 | `CardPlayed` i28 | the third wardsong joins at full health — the control |
+  | 20 | `CardPlayed` i24 | the salve is cast; it sweeps all three friendly minions |
+  | 21 | `HealthRestored` i24→i23 amt **1** | wounded wardsong #1 restored — clamped from the requested 2 |
+  | 22 | `HealthRestored` i24→i26 amt **1** | wounded wardsong #2 restored — clamped likewise |
+  | 23 | `DamageApplied` i23→i2 amt 1 | ping from #1's own `ON_HEAL` |
+  | 24 | `DamageApplied` i26→i2 amt 1 | ping from #2's own `ON_HEAL` — and the stream ends |
 
   Those rows are the point of the fixture. They pin three properties that no per-heal unit test can
   reach:
@@ -39,17 +39,17 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   1. **The raise exists.** Rows 23–24 are two minions' own `ON_HEAL` resolving after their health was
      really restored.
   2. **An ineffective heal is not a heal.** The salve swept **three** targets and the stream carries
-     **two** `onHeal` events and **two** pings. i28 was at full health, so `ApplyHeal` returned at its
+     **two** `HealthRestored` events and **two** pings. i28 was at full health, so `ApplyHeal` returned at its
      `healed <= 0` guard — above both the emit and the raise. Moving the raise above that guard
-     produces a third `onDamage` and fails here. This is the heal-side twin of `on_damaged_thorns`'
+     produces a third `DamageApplied` and fails here. This is the heal-side twin of `on_damaged_thorns`'
      Aegis control, and the only fixture that enforces it.
   3. **Enqueue-only — no drain between targets.** Both heals (21, 22) land *before* either ping
      (23, 24). A drain-between-targets implementation interleaves them as
-     `onHeal, onDamage, onHeal, onDamage`, reordering the stream — the ordering decision recorded at
+     `HealthRestored, DamageApplied, HealthRestored, DamageApplied`, reordering the stream — the ordering decision recorded at
      length in `DamagePipeline.cs` and inherited from EF-013.
 
   The clamp is pinned as a side effect worth naming: the salve requests 2 against 1 missing health, and
-  each `onHeal` carries the **effective** 1. Nothing dies anywhere in the log — 3-health minions against
+  each `HealthRestored` carries the **effective** 1. Nothing dies anywhere in the log — 3-health minions against
   a 1-damage volley — so this fixture stays about the heal trigger rather than doubling as a toll
   test (`toll_cascade` owns that). Baked hash:
   `24e4e68b544d280a5a4a71d058d631f2fe1ad8ce7ae5a640c72724ecf17f3a97` (25 events, 11 intents). The match

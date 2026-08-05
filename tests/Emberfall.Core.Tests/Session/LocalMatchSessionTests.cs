@@ -193,7 +193,7 @@ namespace Emberfall.Core.Tests.Session
             Assert.That(drawIdx, Is.Not.Empty, "Turn start must draw.");
             foreach (int i in drawIdx)
             {
-                // onDraw carries the drawn card in Source (CommandProcessor buf.Emit site).
+                // CardDrawn carries the drawn card in Source (CommandProcessor buf.Emit site).
                 Assert.That(drawerBatch[i].Source!.Value.Value, Is.Not.Zero,
                     "The drawer must see their own drawn card id.");
                 Assert.That(opponentBatch![i].Source!.Value.Value, Is.Zero,

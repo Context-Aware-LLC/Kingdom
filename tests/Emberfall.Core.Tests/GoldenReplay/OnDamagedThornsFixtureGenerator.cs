@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// per-hit unit test:
     /// <list type="number">
     /// <item><b>The raise exists.</b> A real hit on a minion fires its own ON_DAMAGED — one
-    ///   <c>onDamage</c> back at the casting hero.</item>
+    ///   <c>DamageApplied</c> back at the casting hero.</item>
     /// <item><b>An Aegis-absorbed hit is not "damaged".</b> The shielded twin is hit by the same volley
     ///   and does <i>not</i> retaliate, because <c>DamagePipeline.ApplyDamage</c> returns at the shield
     ///   before the raise. The volley lands two hits and exactly ONE retaliation comes back.</item>

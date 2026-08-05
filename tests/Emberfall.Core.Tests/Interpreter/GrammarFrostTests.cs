@@ -140,7 +140,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(s.Players[0].Mana.Max, Is.EqualTo(10), "Crystals beyond the cap don't exist.");
             foreach (var ev in r.Events)
                 Assert.That(ev.Kind, Is.Not.EqualTo(GameEventKind.ManaGained),
-                    "A gain that changed nothing emits no onManaGain event.");
+                    "A gain that changed nothing emits no ManaGained event.");
         }
 
         [Test]
