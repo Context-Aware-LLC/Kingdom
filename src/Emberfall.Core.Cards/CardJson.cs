@@ -121,27 +121,43 @@ namespace Emberfall.Core.Cards
             }
 
             TargetSpec? target = null;
-            if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
+            if (e.TryGetProperty("target", out var tgt))
             {
+                if (tgt.ValueKind != JsonValueKind.Object)
+                    throw new FormatException("Card JSON target must be an object.");
                 RejectUnknownProperties(tgt, "target", TargetProperties);
-                string? selector = Str(tgt, "selector");
-                if (selector != null)
+                string selector = RequiredString(tgt, "selector", "target.selector");
+                TargetFilterDef? filter = null;
+                if (tgt.TryGetProperty("filter", out var f))
                 {
-                    TargetFilterDef? filter = null;
-                    if (tgt.TryGetProperty("filter", out var f) && f.ValueKind == JsonValueKind.Object)
+                    if (f.ValueKind != JsonValueKind.Object)
+                        throw new FormatException("Card JSON target.filter must be an object.");
+                    RejectUnknownProperties(f, "target.filter", FilterProperties);
+                    bool? damaged = null;
+                    if (f.TryGetProperty("damaged", out var damagedValue))
                     {
-                        RejectUnknownProperties(f, "target.filter", FilterProperties);
-                        filter = new TargetFilterDef(Bool(f, "damaged"), TryEnum<Tribe>(f, "tribe"));
+                        if (damagedValue.ValueKind != JsonValueKind.True &&
+                            damagedValue.ValueKind != JsonValueKind.False)
+                            throw new FormatException("Card JSON target.filter.damaged must be a boolean.");
+                        damaged = damagedValue.GetBoolean();
                     }
-
-                    target = new TargetSpec(
-                        selector,
-                        TryEnum<TargetChosenBy>(tgt, "chosenBy"),
-                        Int(tgt, "count"),
-                        filter,
-                        Str(tgt, "binding"),
-                        Str(tgt, "distinctFrom"));
+                    Tribe? tribe = null;
+                    if (f.TryGetProperty("tribe", out var tribeValue))
+                    {
+                        if (tribeValue.ValueKind != JsonValueKind.String)
+                            throw new FormatException("Card JSON target.filter.tribe must be a string.");
+                        tribe = (Tribe)System.Enum.Parse(typeof(Tribe), tribeValue.GetString()!, ignoreCase: false);
+                    }
+                    filter = new TargetFilterDef(damaged, tribe);
                 }
+
+                target = new TargetSpec(
+                    selector,
+                    TryEnum<TargetChosenBy>(tgt, "chosenBy"),
+                    Int(tgt, "count"),
+                    filter,
+                    Str(tgt, "binding"),
+                    Str(tgt, "distinctFrom"));
             }
 
             EffectConditionDef? condition = null;
@@ -174,6 +190,13 @@ namespace Emberfall.Core.Cards
         // ── primitive readers ────────────────────────────────────────────────────
         private static string? Str(JsonElement el, string name)
             => el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+        private static string RequiredString(JsonElement el, string name, string path)
+        {
+            if (!el.TryGetProperty(name, out var value) || value.ValueKind != JsonValueKind.String)
+                throw new FormatException($"Card JSON {path} must be a string.");
+            return value.GetString()!;
+        }
 
         private static int? Int(JsonElement el, string name)
             => el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : (int?)null;
