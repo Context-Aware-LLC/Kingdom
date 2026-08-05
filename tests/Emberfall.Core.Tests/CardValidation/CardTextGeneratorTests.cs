@@ -61,6 +61,18 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void Fails_Explicitly_For_An_Unsupported_Trigger_Node()
+        {
+            var rule = new RuleDefinition(new RuleId("unknown_trigger"),
+                new TriggeredActivation((Trigger)999), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new DrawAction(1));
+
+            var ex = Assert.Throws<NotSupportedException>(() => CardTextGenerator.Generate(new[] { rule }));
+
+            Assert.That(ex!.Message, Does.Contain("999"));
+        }
+
+        [Test]
         public void Every_Live_Normalized_Rule_Renders_Readably_And_Deterministically()
         {
             var cards = new List<CardDefinition>();

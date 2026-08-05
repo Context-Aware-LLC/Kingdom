@@ -214,6 +214,8 @@ namespace Emberfall.Core.Cards
                 builder.Append(char.ToUpperInvariant(parts[i][0]));
                 if (parts[i].Length > 1) builder.Append(parts[i].Substring(1).ToLowerInvariant());
             }
+            if (builder.Length == 0)
+                throw new NotSupportedException("Card text generation requires a readable identifier.");
             return builder.ToString();
         }
 
