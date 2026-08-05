@@ -370,7 +370,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnTurnStart_Is_Live_On_An_Equipped_Weapon()
         {
-            var def = WithEffect(CardType.WEAPON, TurnStart(TurnOwner.ANY));
+            var def = WithRule(CardType.WEAPON, TurnStart(TurnOwner.ANY));
 
             var report = Validator().Validate(def, Db(def));
 
