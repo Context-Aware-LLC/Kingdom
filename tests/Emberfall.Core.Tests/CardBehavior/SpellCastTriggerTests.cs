@@ -263,6 +263,33 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
+        public void A_Departed_Observer_Resolves_Its_Snapshot_Once_But_Cannot_Observe_A_Later_Cast()
+        {
+            // The first cast snapshots the echo before its own sweep removes it, so that queued reaction
+            // must still resolve. The second cast is a separate observer raise: now that the same
+            // instance is in the graveyard, it must not be rediscovered as a persistent observer.
+            var db = new FakeCardDatabase()
+                .Register(Minion(Echo, health: 3, rules: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
+                .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
+            var (host, s) = Match(db, MixedDeck(), seed: 281UL);
+
+            var (echo, _) = Play(host, s, Echo);
+            var (_, firstCast) = Play(host, s, Bolt);
+
+            Assert.That(s.Players[s.SeatOf(s.ActivePlayer)].Graveyard, Does.Contain(echo));
+            Assert.That(firstCast.Events.Count(e => e.Kind == GameEventKind.DamageApplied &&
+                e.Source == echo.Id), Is.EqualTo(1),
+                "The queued reaction captured while the echo was alive resolves exactly once.");
+
+            var (_, laterCast) = Play(host, s, Bolt);
+
+            Assert.That(laterCast.Events.Any(e => e.Kind == GameEventKind.DamageApplied &&
+                e.Source == echo.Id), Is.False,
+                "A departed instance must not be observed again by a later spell-cast event.");
+        }
+
+        [Test]
         public void A_Board_With_No_Spell_Cast_Cards_Is_Untouched()
         {
             // The raise must be inert for every card that carries no ON_SPELL_CAST effect — this is what
