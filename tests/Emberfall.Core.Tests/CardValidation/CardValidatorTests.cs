@@ -351,9 +351,8 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-INVALID"));
         }
 
-        [TestCase(CardType.SPELL)]
         [TestCase(CardType.HERO_POWER)]
-        public void OnTurnStart_Is_Rejected_On_Unsupported_Source_Types(CardType type)
+        public void OnTurnStart_Is_Rejected_On_Unsupported_NonSpell_Source_Types(CardType type)
         {
             var def = WithRule(type, TurnStart(TurnOwner.ANY));
 
