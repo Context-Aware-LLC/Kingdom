@@ -75,8 +75,7 @@ namespace Emberfall.Core
         public static IReadOnlyCollection<string> Selectors => TargetSpec.Selectors;
 
         public static bool IsPlayerChosen(TargetSpec? spec)
-            => spec != null && (spec.ChosenBy == TargetChosenBy.PLAYER ||
-                (!spec.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(spec.Selector)));
+            => TargetSpec.IsPlayerChosen(spec);
 
         public static bool RequiresPlayerChoice(CardDefinition def, Trigger trigger)
         {

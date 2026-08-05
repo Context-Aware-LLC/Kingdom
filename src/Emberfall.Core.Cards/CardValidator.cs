@@ -136,7 +136,7 @@ namespace Emberfall.Core.Cards
             foreach (RuleDefinition rule in def.Rules)
             {
                 TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
-                if (target == null || !IsPlayerChosen(target)) continue;
+                if (!TargetSpec.IsPlayerChosen(target)) continue;
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
                 playerChoiceRuleCounts.TryGetValue(trigger, out int count);
                 playerChoiceRuleCounts[trigger] = count + 1;
@@ -266,8 +266,7 @@ namespace Emberfall.Core.Cards
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
                 // through this very rule, because C14 checked the selector without the trigger.
                 else if (target != null &&
-                         (target.ChosenBy == TargetChosenBy.PLAYER ||
-                          (!target.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(target.Selector)))
+                         TargetSpec.IsPlayerChosen(target)
                          && !PlayerTargetedTriggers.Contains(trigger)
                          && !def.RequiresEngineeringPrimitive)
                     Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.action.target.selector",
@@ -284,7 +283,7 @@ namespace Emberfall.Core.Cards
                         "target.count cannot be zero.");
                 if (target != null)
                 {
-                    if (IsPlayerChosen(target) && playerChoiceRuleCounts[trigger] > 1 &&
+                    if (TargetSpec.IsPlayerChosen(target) && playerChoiceRuleCounts[trigger] > 1 &&
                         target.Binding.Length == 0)
                         Err("C14G-TARGET-BINDING-REQUIRED", $"{prefix}.action.target.binding",
                             "each rule in a multi-rule player choice must name its target binding explicitly.");
@@ -326,11 +325,6 @@ namespace Emberfall.Core.Cards
                             $"UNEARTH requires an ON_PLAY or ON_CAST player-command path; '{trigger}' cannot pause for input.");
                 }
             }
-
-            bool IsPlayerChosen(TargetSpec target)
-                => target.ChosenBy == TargetChosenBy.PLAYER ||
-                   (!target.ChosenBy.HasValue &&
-                    TargetSpec.DefaultsToPlayerChoice(target.Selector));
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the
             // shared CardJson parser throws on an unknown value before a CardDefinition can exist,

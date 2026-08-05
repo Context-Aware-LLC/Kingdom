@@ -168,6 +168,9 @@ namespace Emberfall.Core.Cards
 
         public static bool IsKnownSelector(string selector) => KnownSelectors.Contains(selector);
         public static bool DefaultsToPlayerChoice(string selector) => DefaultPlayerSelectors.Contains(selector);
+        public static bool IsPlayerChosen(TargetSpec? target)
+            => target != null && (target.ChosenBy == TargetChosenBy.PLAYER ||
+                (!target.ChosenBy.HasValue && DefaultsToPlayerChoice(target.Selector)));
         public static IReadOnlyCollection<string> Selectors => KnownSelectors;
     }
 
