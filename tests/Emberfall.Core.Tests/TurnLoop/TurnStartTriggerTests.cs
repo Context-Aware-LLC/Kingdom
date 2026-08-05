@@ -42,6 +42,15 @@ namespace Emberfall.Core.Tests.TurnLoop
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
+        private static CardDefinition Weapon(string id, EffectDef[] effects)
+            => new CardDefinition(
+                id: id, name: id, type: CardType.WEAPON, cost: 1,
+                attack: 1, health: null, durability: 3,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: Array.Empty<Keyword>(), effects: effects,
+                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
         /// <summary>A match where both decks are nothing but <paramref name="cardId"/>, already past mulligan.</summary>
         private static (LocalMatchHost host, GameState state) Match(ICardDatabase db, string cardId, ulong seed)
         {
@@ -82,6 +91,20 @@ namespace Emberfall.Core.Tests.TurnLoop
                 Position = ps.Board.Count,
             };
             ps.Board.Add(card);
+            return card;
+        }
+
+        private static CardInstance PutWeapon(GameState s, ICardDatabase db, int seat, string cardId)
+        {
+            var ps = s.Players[seat];
+            var def = db.Get(cardId);
+            var card = new CardInstance(s.NextInstanceId(), cardId, ps.Id)
+            {
+                Zone = Zone.Weapon,
+                CurrentAttack = def.Attack ?? 0,
+                CurrentDurability = def.Durability,
+            };
+            ps.Weapon = card;
             return card;
         }
 
@@ -261,6 +284,66 @@ namespace Emberfall.Core.Tests.TurnLoop
             Assert.That(damage[0].Amount, Is.EqualTo(1));
             Assert.That(damage[1].Source, Is.EqualTo(right.Id));
             Assert.That(damage[1].Amount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Observer_Order_Is_Incoming_Board_Then_Weapon_Then_Other_Board_Then_Weapon()
+        {
+            const string minionId = "ef031_order_minion";
+            const string weaponId = "ef031_order_weapon";
+            EffectDef Toll(int amount) => new EffectDef(Trigger.ON_TURN_START,
+                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount, null, null, null,
+                selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.ANY));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
+                .Register(Minion(minionId, health: 3, effects: new[] { Toll(1) }))
+                .Register(Weapon(weaponId, new[] { Toll(2) }));
+            var (host, s) = Match(db, Vanilla, seed: 233UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance incomingMinion = PutOnBoard(s, db, incoming, minionId);
+            CardInstance incomingWeapon = PutWeapon(s, db, incoming, weaponId);
+            CardInstance outgoingMinion = PutOnBoard(s, db, outgoing, minionId);
+            CardInstance outgoingWeapon = PutWeapon(s, db, outgoing, weaponId);
+
+            CommandResult result = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.That(result.Events.Where(e => e.Kind == GameEventKind.DamageApplied)
+                .Select(e => e.Source), Is.EqualTo(new InstanceId?[]
+                {
+                    incomingMinion.Id,
+                    incomingWeapon.Id,
+                    outgoingMinion.Id,
+                    outgoingWeapon.Id,
+                }));
+        }
+
+        [Test]
+        public void Queued_Damage_Keeps_The_Source_Keyword_Snapshot_After_Silence()
+        {
+            const string sourceId = "ef031_snapshot_source";
+            var silence = new EffectDef(Trigger.ON_TURN_START,
+                Emberfall.Core.Contracts.Action.SILENCE, null, null, null, null,
+                selector: "SELF", condition: OwnerCondition(TurnOwner.CONTROLLER));
+            var damage = new EffectDef(Trigger.ON_TURN_START,
+                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, 3, null, null, null,
+                selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.CONTROLLER));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
+                .Register(Minion(sourceId, health: 3, effects: new[] { silence, damage }));
+            var (host, s) = Match(db, Vanilla, seed: 234UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance source = PutOnBoard(s, db, incoming, sourceId);
+            source.Keywords.Add(Keyword.LIFEDRAIN);
+            s.Players[incoming].Hero.CurrentHealth = 20;
+
+            Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.That(source.Keywords, Does.Not.Contain(Keyword.LIFEDRAIN),
+                "the first queued rule proves the live carrier was silenced");
+            Assert.That(s.Players[incoming].Hero.CurrentHealth, Is.EqualTo(23),
+                "the later queued damage must use the pre-silence rider/controller snapshot");
         }
 
         [Test]

@@ -34,13 +34,16 @@ namespace Emberfall.Core
             for (int i = 0; i < player.Board.Count; i++)
             {
                 CardInstance carrier = player.Board[i];
-                if (carrier.Zone != Zone.Board || carrier.Controller != player.Id) continue;
+                if (carrier.Zone != Zone.Board || carrier.Controller != player.Id ||
+                    carrier.IsSilenced)
+                    continue;
                 AppendCarrierRules(result, carrier, player.Id, database,
                     EffectSourceKind.BoardMinion, CardType.MINION, trigger);
             }
 
             CardInstance? weapon = player.Weapon;
-            if (weapon != null && weapon.Zone == Zone.Weapon && weapon.Controller == player.Id)
+            if (weapon != null && weapon.Zone == Zone.Weapon && weapon.Controller == player.Id &&
+                !weapon.IsSilenced)
             {
                 AppendCarrierRules(result, weapon, player.Id, database,
                     EffectSourceKind.EquippedWeapon, CardType.WEAPON, trigger);

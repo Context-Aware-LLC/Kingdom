@@ -276,6 +276,25 @@ namespace Emberfall.Core.Tests.HeroPower
         }
 
         [Test]
+        public void HeroPower_Uses_The_Hero_As_Its_Source_Without_Minting_A_Throwaway_Instance()
+        {
+            var db = new FakeCardDatabase();
+            db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
+                new[] { Damage(1) }));
+            var s = MainPhase(db);
+            var proc = new CommandProcessor(db);
+            int nextInstanceBefore = s.NextInstanceCounter;
+
+            CommandResult result = proc.Execute(s, new HeroPowerIntent(s.ActivePlayer,
+                new[] { new TargetRef(s.Players[1].Hero.Id) }));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(s.NextInstanceCounter, Is.EqualTo(nextInstanceBefore));
+            Assert.That(result.Events.Single(e => e.Kind == GameEventKind.DamageApplied).Source,
+                Is.EqualTo(s.Players[0].Hero.Id));
+        }
+
+        [Test]
         public void SearingBolt_KillsMinion_DeathCheckRuns()
         {
             var db = new FakeCardDatabase();

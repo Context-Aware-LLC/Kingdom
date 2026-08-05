@@ -42,45 +42,63 @@ namespace Emberfall.Core
         /// already validated; automatic and random target specs resolve later against authoritative state.
         /// </summary>
         public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<TargetRef> chosenTargets,
-            TriggerContext context = default)
+            TriggerEventContext context = default)
         {
             // Do not form new work from a silenced permanent. Already queued work deliberately reaches
             // Drain unchanged: the subscription snapshot was taken before silence and must resolve.
             if (source.IsSilenced) return;
-            var def = _db.Get(source.DefinitionId);
-            var rules = def.Rules;
+            CardDefinition definition = _db.Get(source.DefinitionId);
+            if (!EffectSourceCapabilities.TryForCardType(definition.Type,
+                    out EffectSourceKind sourceKind))
+                return;
+            RaiseSelf(source.Id, source.Controller, definition, sourceKind, source, trigger,
+                chosenTargets, context);
+        }
+
+        /// <summary>Enqueue a carrierless source such as a hero power or future ongoing effect.</summary>
+        public void RaiseSelf(InstanceId identity, PlayerId controller, CardDefinition definition,
+            EffectSourceKind sourceKind, CardInstance? currentCarrier, Trigger trigger,
+            IReadOnlyList<TargetRef> chosenTargets, TriggerEventContext context = default)
+        {
+            if (!EffectSourceCapabilities.Supports(sourceKind, trigger)) return;
+            IReadOnlyList<RuleDefinition> rules = definition.Rules;
             var bindings = new TargetBindingContext();
-            context = context.WithTriggerSource(source.Id);
+            context = context.WithTriggerSource(identity);
             for (int i = 0; i < rules.Count; i++)
                 if (RuleSemantics.ActivatesOn(rules[i], trigger))
-                    _queue.Enqueue(new QueuedEffect(rules[i], source, chosenTargets, bindings, context));
+                {
+                    var source = new EffectSourceContext(identity, controller, definition, rules[i],
+                        sourceKind, currentCarrier);
+                    _queue.Enqueue(new QueuedEffect(source, chosenTargets, bindings, context));
+                }
         }
 
         /// <summary>
-        /// Enqueue every board-minion trigger source's effects subscribed to <paramref name="trigger"/>
-        /// (observer triggers such as ON_FRIENDLY_SUMMON), in canonical order: active player's side first,
-        /// then board left→right by position. This is the single source-enumeration seam; weapons and
-        /// ongoing effects extend it only when their runtime lifecycle and validation land together.
+        /// Enqueue every persistent source subscribed to <paramref name="trigger"/> in the shared
+        /// deterministic board-minion, equipped-weapon, future-ongoing order.
         /// Conditions qualify effects while this snapshot is built, before queue/cap accounting.
         /// </summary>
-        public void RaiseObservers(Trigger trigger, CardInstance? excluded, TriggerContext context = default,
+        public void RaiseObservers(Trigger trigger, CardInstance? excluded,
+            TriggerEventContext context = default,
             InstanceId? triggerSource = null)
         {
-            foreach (var src in OrderedTriggerSources())
+            PlayerId firstPlayer = context.IncomingTurnPlayer ?? _state.ActivePlayer;
+            TriggerEventContext eventContext = triggerSource.HasValue
+                ? context.WithTriggerSource(triggerSource.Value)
+                : context;
+            EffectSourceContext? previous = null;
+            var bindings = new TargetBindingContext();
+            foreach (EffectSourceContext source in OrderedTriggerSources.Snapshot(
+                         _state, _db, firstPlayer, trigger))
             {
-                if (excluded != null && ReferenceEquals(src, excluded)) continue;
-                if (src.IsSilenced) continue;
-                var def = _db.Get(src.DefinitionId);
-                var rules = def.Rules;
-                var bindings = new TargetBindingContext();
-                TriggerContext sourceContext = triggerSource.HasValue
-                    ? context.WithTriggerSource(triggerSource.Value)
-                    : context;
-                for (int i = 0; i < rules.Count; i++)
-                    if (RuleSemantics.ActivatesOn(rules[i], trigger) &&
-                        ConditionEvaluator.Holds(rules[i], src, context))
-                        _queue.Enqueue(new QueuedEffect(rules[i], src, System.Array.Empty<TargetRef>(),
-                            bindings, sourceContext));
+                if (excluded != null && source.Identity == excluded.Id) continue;
+                if (!ConditionEvaluator.Holds(source, context)) continue;
+                if (previous == null || previous.Identity != source.Identity ||
+                    previous.Kind != source.Kind)
+                    bindings = new TargetBindingContext();
+                _queue.Enqueue(new QueuedEffect(source, System.Array.Empty<TargetRef>(), bindings,
+                    eventContext));
+                previous = source;
             }
         }
 
@@ -97,7 +115,7 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(qe.Rule, qe.Source, qe.TriggerContext))
+                if (!ConditionEvaluator.Holds(qe.Source, qe.TriggerEvent))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -116,7 +134,7 @@ namespace Emberfall.Core
         private void ResolveOne(QueuedEffect qe)
         {
             var targets = ResolveTargets(qe);
-            ActionHandlers.Execute(new EffectContext(this, qe.Rule, qe.Source, targets));
+            ActionHandlers.Execute(new EffectContext(this, qe.Source, targets));
         }
 
         // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
@@ -158,13 +176,8 @@ namespace Emberfall.Core
                     _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 
                     var def = _db.Get(minion.DefinitionId);
-                    var rules = def.Rules;
-                    var bindings = new TargetBindingContext();
-                    if (!minion.IsSilenced)
-                        for (int i = 0; i < rules.Count; i++)
-                            if (RuleSemantics.ActivatesOn(rules[i], Trigger.ON_DEATH))
-                                _queue.Enqueue(new QueuedEffect(rules[i], minion, System.Array.Empty<TargetRef>(),
-                                    bindings, TriggerContext.ForSource(minion.Id)));
+                    RaiseSelf(minion, Trigger.ON_DEATH, System.Array.Empty<TargetRef>(),
+                        TriggerEventContext.ForSource(minion.Id));
 
                     // REKINDLE: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
                     if (minion.Keywords.Contains(Keyword.REKINDLE) && !minion.HasUsedRekindle)
@@ -193,19 +206,8 @@ namespace Emberfall.Core
 
         private IReadOnlyList<TargetCandidate> ResolveTargets(QueuedEffect qe)
         {
-            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.Rule, qe.ChosenTargets,
-                qe.Bindings, qe.TriggerContext.TriggerSource);
-        }
-
-        // ── Deterministic trigger-source ordering ────────────────────────────────
-
-        /// <summary>Board-minion sources only: active player's side first, each board left→right.</summary>
-        private IEnumerable<CardInstance> OrderedTriggerSources()
-        {
-            int active = _state.SeatOf(_state.ActivePlayer);
-            int other = active == 0 ? 1 : 0;
-            foreach (var m in _state.Players[active].Board) yield return m;
-            foreach (var m in _state.Players[other].Board) yield return m;
+            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.ChosenTargets,
+                qe.Bindings, qe.TriggerEvent.TriggerSource);
         }
 
         private int DeathOrder(CharacterRef a, CharacterRef b)
@@ -225,52 +227,33 @@ namespace Emberfall.Core
     /// <summary>One effect waiting in the resolution queue, bound to the source that fired it and its targets.</summary>
     internal readonly struct QueuedEffect
     {
-        public readonly RuleDefinition Rule;
-        public readonly CardInstance Source;
+        public readonly EffectSourceContext Source;
         public readonly IReadOnlyList<TargetRef> ChosenTargets;
         public readonly TargetBindingContext Bindings;
-        public readonly TriggerContext TriggerContext;
+        public readonly TriggerEventContext TriggerEvent;
 
-        public QueuedEffect(RuleDefinition rule, CardInstance source, IReadOnlyList<TargetRef> chosenTargets,
-            TargetBindingContext bindings, TriggerContext triggerContext = default)
+        public QueuedEffect(EffectSourceContext source, IReadOnlyList<TargetRef> chosenTargets,
+            TargetBindingContext bindings, TriggerEventContext triggerEvent = default)
         {
-            Rule = rule;
             Source = source;
             ChosenTargets = chosenTargets ?? System.Array.Empty<TargetRef>();
             Bindings = bindings;
-            TriggerContext = triggerContext;
+            TriggerEvent = triggerEvent;
         }
-    }
-
-    /// <summary>Event-specific values conditions can inspect without conflating them with the source.</summary>
-    internal readonly struct TriggerContext
-    {
-        public readonly PlayerId? TurnPlayer;
-        public readonly InstanceId? TriggerSource;
-
-        private TriggerContext(PlayerId? turnPlayer, InstanceId? triggerSource)
-        {
-            TurnPlayer = turnPlayer;
-            TriggerSource = triggerSource;
-        }
-
-        public static TriggerContext ForTurnStart(PlayerId turnPlayer) => new TriggerContext(turnPlayer, null);
-        public static TriggerContext ForSource(InstanceId source) => new TriggerContext(null, source);
-        public TriggerContext WithTriggerSource(InstanceId source) => new TriggerContext(TurnPlayer, source);
     }
 
     /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
     internal static class ConditionEvaluator
     {
-        public static bool Holds(RuleDefinition rule, CardInstance source, TriggerContext context)
+        public static bool Holds(EffectSourceContext source, TriggerEventContext context)
         {
-            switch (rule.Condition)
+            switch (source.Rule.Condition)
             {
                 case AlwaysCondition _:
-                    return RuleSemantics.TriggerOf(rule) != Trigger.ON_TURN_START;
+                    return RuleSemantics.TriggerOf(source.Rule) != Trigger.ON_TURN_START;
                 case TurnOwnerCondition condition:
-                    if (!context.TurnPlayer.HasValue) return false;
-                    bool controllerTurn = source.Controller == context.TurnPlayer.Value;
+                    if (!context.IncomingTurnPlayer.HasValue) return false;
+                    bool controllerTurn = source.Controller == context.IncomingTurnPlayer.Value;
                     switch (condition.Owner)
                     {
                         case TurnOwner.CONTROLLER: return controllerTurn;
@@ -292,19 +275,18 @@ namespace Emberfall.Core
     internal readonly struct EffectContext
     {
         public readonly EffectInterpreter Interpreter;
-        public readonly RuleDefinition Rule;
-        public readonly CardInstance Source;
+        public readonly EffectSourceContext Source;
         public readonly IReadOnlyList<TargetCandidate> Targets;
 
-        public EffectContext(EffectInterpreter interpreter, RuleDefinition rule, CardInstance source,
+        public EffectContext(EffectInterpreter interpreter, EffectSourceContext source,
             IReadOnlyList<TargetCandidate> targets)
         {
             Interpreter = interpreter;
-            Rule = rule;
             Source = source;
             Targets = targets;
         }
 
+        public RuleDefinition Rule => Source.Rule;
         public GameState State => Interpreter.State;
         public ICardDatabase Db => Interpreter.Db;
         public EventBuffer Events => Interpreter.Events;

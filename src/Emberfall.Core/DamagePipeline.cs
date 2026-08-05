@@ -52,6 +52,17 @@ namespace Emberfall.Core
         /// </summary>
         public static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
             InstanceId? source, HashSet<Keyword>? sourceKeywords)
+            => ApplyDamage(interp, target, amount, source, sourceKeywords, null);
+
+        /// <summary>Effect damage consumes only immutable source facts captured at enqueue time.</summary>
+        public static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
+            EffectSourceContext source)
+            => ApplyDamage(interp, target, amount, source.Identity, source.SourceKeywords,
+                source.Controller);
+
+        private static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
+            InstanceId? source, IReadOnlyCollection<Keyword>? sourceKeywords,
+            PlayerId? sourceController)
         {
             if (amount <= 0) return;
 
@@ -89,15 +100,20 @@ namespace Emberfall.Core
             if (sourceKeywords != null && source.HasValue)
             {
                 // Lifedrain: the source's controller hero heals for the damage dealt (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).
-                if (sourceKeywords.Contains(Keyword.LIFEDRAIN) &&
-                    Targeting.TryControllerSeat(state, source.Value, out int healerSeat))
+                int healerSeat;
+                bool hasController = sourceController.HasValue;
+                if (hasController)
+                    healerSeat = state.SeatOf(sourceController!.Value);
+                else
+                    hasController = Targeting.TryControllerSeat(state, source.Value, out healerSeat);
+                if (HasKeyword(sourceKeywords, Keyword.LIFEDRAIN) && hasController)
                 {
                     ApplyHeal(interp, CharacterRef.OfHero(healerSeat, state.Players[healerSeat].Hero),
                         amount, source);
                 }
 
                 // Venom: any damage to a minion is lethal — mark for the batch DeathCheck.
-                if (sourceKeywords.Contains(Keyword.VENOM) && target.IsMinion)
+                if (HasKeyword(sourceKeywords, Keyword.VENOM) && target.IsMinion)
                     target.Minion!.CurrentHealth = 0;
 
                 // Frost: whatever this damaged is frosted (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/balance-guardrails.md §2.1 "Frost",
@@ -113,7 +129,7 @@ namespace Emberfall.Core
                 // rules: an Aegis-absorbed hit returns above before any rider (G0 ruling R-2(c),
                 // "no on-hit riders"), and Overwhelm overflow reaches here with a null
                 // sourceKeywords (CommandProcessor.cs:530), so it cannot carry Frost to the face.
-                if (sourceKeywords.Contains(Keyword.FROST))
+                if (HasKeyword(sourceKeywords, Keyword.FROST))
                 {
                     if (target.IsMinion) target.Minion!.IsFrosted = true;
                     else target.Hero!.IsFrosted = true;
@@ -128,6 +144,13 @@ namespace Emberfall.Core
             // targets still raise here — they were damaged this instant; DeathCheck settles them next drain.
             if (target.IsMinion)
                 interp.RaiseSelf(target.Minion!, Trigger.ON_DAMAGED, System.Array.Empty<TargetRef>());
+        }
+
+        private static bool HasKeyword(IReadOnlyCollection<Keyword> keywords, Keyword expected)
+        {
+            foreach (Keyword keyword in keywords)
+                if (keyword == expected) return true;
+            return false;
         }
 
         /// <summary>

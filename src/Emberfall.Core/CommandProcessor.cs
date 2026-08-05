@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core
@@ -304,7 +305,7 @@ namespace Emberfall.Core
                     // RaiseSelf-then-RaiseObservers shape as the MINION arm above (ON_PLAY → ON_FRIENDLY_SUMMON).
                     //
                     // THE TRAP THIS PLACEMENT EXISTS TO AVOID: hero powers reach the interpreter through an
-                    // ephemeral HERO_POWER CardInstance and raise Trigger.ON_CAST too (ApplyHeroPower below).
+                    // carrierless HERO_POWER source context and raise Trigger.ON_CAST too (ApplyHeroPower below).
                     // Hooking generic ON_CAST would therefore fire spell-cast reactions on every hero power.
                     // Gating the raise to this branch — the only place a CardType.SPELL is cast — is what
                     // keeps "whenever a spell is cast" meaning spells. Any future cast path must decide
@@ -357,16 +358,6 @@ namespace Emberfall.Core
             ps.Mana.Spent += 2;
             ps.HeroPowerUsedThisTurn = true;
 
-            // Ephemeral source for the interpreter: gives it Controller (seat) and DefinitionId (effects).
-            // Never placed in a zone list; just carries identity for the effect queue.
-            var src = new CardInstance(state.NextInstanceId(), ps.Hero.HeroPowerId, ps.Id)
-            {
-                Zone = Zone.Graveyard
-            };
-            // The ephemeral source never enters a zone, so emit-time zone lookup can't classify
-            // it — mark it public explicitly: the hero power's act is public (design §6.1).
-            buf.MarkPublic(src.Id);
-
             buf.Emit(GameEventKind.HeroPowerUsed, source: ps.Hero.Id);
 
             var interp = new EffectInterpreter(state, _db, buf);
@@ -375,7 +366,9 @@ namespace Emberfall.Core
             // ApplyPlayCard's CardType.SPELL arm, so "whenever a spell is cast" excludes hero powers.
             // If a design ruling ever makes hero powers count as spell casts, this is the line to change —
             // and HeroPowerDoesNotFireOnSpellCast in SpellCastTriggerTests is the test that must change with it.
-            interp.RaiseSelf(src, Trigger.ON_CAST, hp.Targets);
+            CardDefinition definition = _db.Get(ps.Hero.HeroPowerId);
+            interp.RaiseSelf(ps.Hero.Id, ps.Id, definition, EffectSourceKind.HeroPower,
+                currentCarrier: null, Trigger.ON_CAST, hp.Targets);
             interp.Drain();
         }
 
@@ -562,10 +555,10 @@ namespace Emberfall.Core
             // The incoming player is explicit event context, separate from each source controller.
             // TurnOwnerCondition then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
             // into trigger/selector names. `excluded: null` because no card causes a turn to start.
-            // The current source seam is board minions, active-side first and left→right; weapon and
-            // ongoing-spell lifecycles are deliberately split follow-ups.
+            // The shared source seam walks incoming board minions left-to-right, equipped weapon,
+            // then the other side in the same category order. Ongoing state is a later slice.
             interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
-                context: TriggerContext.ForTurnStart(player));
+                context: TriggerEventContext.ForIncomingTurn(player));
 
             // The start-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE
             // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is

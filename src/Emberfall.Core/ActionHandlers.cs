@@ -41,20 +41,6 @@ namespace Emberfall.Core
             }
         }
 
-        /// <summary>The effective keyword set of an effect's source — live for a board minion or
-        /// equipped weapon, printed for a spell that has already moved to the graveyard.</summary>
-        internal static HashSet<Keyword> SourceKeywords(in EffectContext ctx)
-        {
-            if (ctx.Source.Zone == Zone.Board || ctx.Source.Zone == Zone.Weapon)
-            {
-                if (ctx.Source.IsSilenced) return new HashSet<Keyword>();
-                return ctx.Source.Keywords;
-            }
-            var set = new HashSet<Keyword>();
-            foreach (var k in ctx.Db.Get(ctx.Source.DefinitionId).Keywords) set.Add(k);
-            return set;
-        }
-
         /// <summary>+1 arcane surge per friendly ARCANE_SURGE minion in play (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
         internal static int SpellDamageBonus(GameState state, PlayerId controller)
         {
@@ -72,13 +58,12 @@ namespace Emberfall.Core
         public void Execute(in EffectContext ctx)
         {
             int amount = ((DamageAction)ctx.Rule.Action).Amount;
-            if (ctx.Db.Get(ctx.Source.DefinitionId).Type == CardType.SPELL)
+            if (ctx.Source.Definition.Type == CardType.SPELL)
                 amount += ActionHandlers.SpellDamageBonus(ctx.State, ctx.Source.Controller);
 
-            var keywords = ActionHandlers.SourceKeywords(in ctx);
             foreach (var t in ctx.Targets)
                 if (t.IsCharacter)
-                    DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, amount, ctx.Source.Id, keywords);
+                    DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, amount, ctx.Source);
         }
     }
 
@@ -90,7 +75,7 @@ namespace Emberfall.Core
             int amount = ((HealAction)ctx.Rule.Action).Amount;
             foreach (var t in ctx.Targets)
                 if (t.IsCharacter)
-                    DamagePipeline.ApplyHeal(ctx.Interpreter, t.Character, amount, ctx.Source.Id);
+                    DamagePipeline.ApplyHeal(ctx.Interpreter, t.Character, amount, ctx.Source.Identity);
         }
     }
 
@@ -141,9 +126,9 @@ namespace Emberfall.Core
                 // The enchantment is the record and the recompute reads it back (EF-017a). Before that
                 // layer this baked `CurrentAttack += atk` and the enchantment was write-only, so nothing
                 // could ever take the buff off again.
-                m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, AttackDelta = atk, HealthDelta = hp });
+                m.Enchantments.Add(new Enchantment { Source = ctx.Source.Identity, AttackDelta = atk, HealthDelta = hp });
                 DerivedStats.Recompute(m, ctx.Db.Get(m.DefinitionId));
-                ctx.Events.Emit(GameEventKind.StatsModified, source: ctx.Source.Id, target: m.Id, amount: atk != 0 ? atk : hp);
+                ctx.Events.Emit(GameEventKind.StatsModified, source: ctx.Source.Identity, target: m.Id, amount: atk != 0 ? atk : hp);
             }
         }
     }
@@ -164,9 +149,9 @@ namespace Emberfall.Core
                 // was also holding up. Recording unconditionally is the fix and it is HASH-CANONICAL —
                 // the enchantment list is serialized — so it belongs in the batched rebaseline, not here.
                 if (m.Keywords.Add(kw))
-                    m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, GrantedKeyword = kw });
+                    m.Enchantments.Add(new Enchantment { Source = ctx.Source.Identity, GrantedKeyword = kw });
                 if (kw == Keyword.AEGIS) m.HasAegisShield = true;
-                ctx.Events.Emit(GameEventKind.KeywordApplied, source: ctx.Source.Id, target: m.Id);
+                ctx.Events.Emit(GameEventKind.KeywordApplied, source: ctx.Source.Identity, target: m.Id);
             }
         }
     }
@@ -253,7 +238,7 @@ namespace Emberfall.Core
                 card.Zone = Zone.Hand;
                 owner.Hand.Add(card);
             }
-            ctx.Events.Emit(GameEventKind.CardBounced, source: ctx.Source.Id, target: card.Id);
+            ctx.Events.Emit(GameEventKind.CardBounced, source: ctx.Source.Identity, target: card.Id);
         }
     }
 
@@ -274,7 +259,7 @@ namespace Emberfall.Core
                 // strips abilities, it never refunds a spent resource.
                 DerivedStats.ResetToSilenced(card, def, preserveDamage: t.IsMinion);
 
-                ctx.Events.Emit(GameEventKind.CardSilenced, source: ctx.Source.Id, target: card.Id);
+                ctx.Events.Emit(GameEventKind.CardSilenced, source: ctx.Source.Identity, target: card.Id);
             }
         }
     }
@@ -305,7 +290,7 @@ namespace Emberfall.Core
                     int filled = ps.Mana.Available + gained;
                     ps.Mana.Available = filled > MatchEngine.MaxMana ? MatchEngine.MaxMana : filled;
                 }
-                ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Id, amount: gained);
+                ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Identity, amount: gained);
                 return;
             }
 
@@ -313,7 +298,7 @@ namespace Emberfall.Core
             ps.Mana.Temporary += amount;
             int avail = ps.Mana.Available + amount;
             ps.Mana.Available = avail > MatchEngine.MaxMana ? MatchEngine.MaxMana : avail;
-            ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Id, amount: amount);
+            ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Identity, amount: amount);
         }
     }
 
@@ -361,7 +346,7 @@ namespace Emberfall.Core
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance || def.Type != CardType.WEAPON) continue;
                     var weaponReplacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, owner.Id);
                     RulesEngine.EnterWeapon(ctx.State, weaponReplacement, def, t.Seat);
-                    ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Id,
+                    ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Identity,
                         target: owner.Weapon.Id);
                     continue;
                 }
@@ -373,7 +358,7 @@ namespace Emberfall.Core
                 ps.Board.RemoveAt(idx);
                 var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
                 RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx);
-                ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Id, target: replacement.Id);
+                ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Identity, target: replacement.Id);
             }
         }
     }
@@ -445,7 +430,7 @@ namespace Emberfall.Core
                 if (t.IsMinion) t.Minion!.IsFrosted = true;
                 else if (t.IsHero) t.Hero!.IsFrosted = true;
                 else continue;
-                ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Id, target: t.Id);
+                ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Identity, target: t.Id);
             }
         }
     }

@@ -68,3 +68,18 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 - **Link to the change:** NOR-31 silence-state implementation; `GameStateSerializer.WalkCard` and `CanonicalStateFixtures` mutation manifest.
 - **cardSetSnapshot changed?** no.
 - **engineContractVersion changed?** no; replay intent/event schema is unchanged.
+
+## NOR-31 effect-source identity rebaseline (2026-08-05)
+
+- **Which rule changed?** Hero powers no longer mint a throwaway `CardInstance`. Their immutable
+  `EffectSourceContext` uses the already-public hero identity, the acting player as controller, the
+  hero-power definition/rule reference, `HeroPower` source kind, and no current carrier.
+- **Why is this correct?** Sequence 14 remains the same one point of Searing Bolt damage with no
+  spell-cast observers. Its source changes from synthetic `i84` to hero `i1`, matching sequence 13's
+  `HeroPowerUsed` fact. The final state also no longer advances `NextInstanceCounter` for an object
+  that never entered canonical state. All other 21 events are byte-for-byte unchanged.
+- **Hashes:** the silence-state baseline `c07361118ec41cdec8bdd646fb668204819900e27a69e2e4c214df4b6ba816c1`
+  changes to the combined digest `99ae8e81ff1fc4c8e8648a542dbe07e4ce93a51b8b335520b2ee8485542d7050`.
+- **Link to the change:** NOR-31 Program step 3, explicit effect-source contexts.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** no; the semantic event shape is unchanged.

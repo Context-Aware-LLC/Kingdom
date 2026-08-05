@@ -100,7 +100,7 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor.ApplyPlayCard raises it from the CardType.SPELL arm only, right after
         // the spell's own ON_CAST (EF-016). Observer trigger: fires on BOTH players' permanents, so it
         // means "whenever ANY spell is cast", not "whenever YOU cast a spell".
-        // TRAP, still true: hero powers also raise ON_CAST through an ephemeral HERO_POWER card, and this
+        // TRAP, still true: hero powers also raise ON_CAST through a carrierless HERO_POWER context, and this
         // trigger is deliberately NOT raised there — a hero power is not a spell cast.
         ON_SPELL_CAST,
 

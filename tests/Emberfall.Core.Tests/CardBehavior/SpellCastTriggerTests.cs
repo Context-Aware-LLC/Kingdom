@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.CardBehavior
     /// L1 — EF-016. <c>ON_SPELL_CAST</c> was declared in the <see cref="Trigger"/> enum and raised nowhere,
     /// so a card carrying it validated, loaded and then did nothing forever. These lock the raise site's
     /// four observable properties: that it fires at all; that a HERO POWER does <b>not</b> fire it (the trap
-    /// — hero powers reach the interpreter as an ephemeral HERO_POWER card raising the same
+    /// — hero powers reach the interpreter as a carrierless HERO_POWER source raising the same
     /// <see cref="Trigger.ON_CAST"/>, so a generic hook would have caught them); that it fires on BOTH
     /// players' casts (the scope decision, matching EF-012's <c>ON_TURN_END</c>); and that it resolves
     /// AFTER the spell's own <c>ON_CAST</c>, so a reaction sees the board the spell left behind.
@@ -144,7 +144,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         [Test]
         public void A_Hero_Power_Does_Not_Fire_OnSpellCast()
         {
-            // THE TRAP. ApplyHeroPower raises Trigger.ON_CAST through an ephemeral HERO_POWER CardInstance,
+            // THE TRAP. ApplyHeroPower raises Trigger.ON_CAST through a carrierless HERO_POWER context,
             // so hooking generic ON_CAST would have fired spell reactions on every hero power. The raise is
             // gated to ApplyPlayCard's CardType.SPELL arm; this is the test that proves the gate holds.
             var (host, s) = Match(Db(), MixedDeck(), seed: 22UL);

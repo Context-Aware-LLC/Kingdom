@@ -116,7 +116,7 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "c07361118ec41cdec8bdd646fb668204819900e27a69e2e4c214df4b6ba816c1",
+    "stateHash": "99ae8e81ff1fc4c8e8648a542dbe07e4ce93a51b8b335520b2ee8485542d7050",
     "eventStream": [
       {
         "seq": 0,
@@ -233,7 +233,7 @@
       {
         "seq": 14,
         "kind": "DamageApplied",
-        "src": "i84",
+        "src": "i1",
         "tgt": "i2",
         "amt": 1,
         "flags": "None"

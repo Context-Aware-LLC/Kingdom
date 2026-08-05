@@ -326,9 +326,10 @@ namespace Emberfall.Core
         }
 
         internal static IReadOnlyList<TargetCandidate> ResolveTargets(GameState state, ICardDatabase db,
-            CardInstance source, RuleDefinition rule, IReadOnlyList<TargetRef> choices,
+            EffectSourceContext source, IReadOnlyList<TargetRef> choices,
             TargetBindingContext bindings, InstanceId? triggerSource)
         {
+            RuleDefinition rule = source.Rule;
             if (!RuleActionCapabilities.ConsumesTargets(rule.Action))
                 return Array.Empty<TargetCandidate>();
 
@@ -342,7 +343,7 @@ namespace Emberfall.Core
             else
             {
                 var candidates = new List<TargetCandidate>(ResolutionCandidates(state, db,
-                    source.Controller, spec, rule.Action, source.Id, triggerSource));
+                    source.Controller, spec, rule.Action, source.Identity, triggerSource));
                 bindings.Exclude(spec.DistinctFrom, candidates);
                 int count = RequiredAutomaticCount(spec, candidates.Count);
                 if (spec.ChosenBy == TargetChosenBy.RANDOM)
