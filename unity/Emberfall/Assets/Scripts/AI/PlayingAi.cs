@@ -224,16 +224,17 @@ namespace Emberfall.AI
 
         private static bool IsHostile(CardDefinition def)
         {
-            foreach (var e in def.Effects)
+            foreach (var rule in def.Rules)
             {
-                switch (e.Action)
+                switch (rule.Action)
                 {
-                    case Emberfall.Core.Contracts.Action.DEAL_DAMAGE:
-                    case Emberfall.Core.Contracts.Action.DESTROY:
-                    case Emberfall.Core.Contracts.Action.FROST:
-                    case Emberfall.Core.Contracts.Action.SILENCE:
-                    case Emberfall.Core.Contracts.Action.RETURN_TO_HAND:
-                    case Emberfall.Core.Contracts.Action.TRANSFORM:
+                    case DamageAction _:
+                    case DestroyAction _:
+                    case FrostAction _:
+                    case SilenceAction _:
+                    case ReturnToHandAction _:
+                    case TransformAction _:
+                    case TakeControlAction _:
                         return true;
                 }
             }
@@ -242,9 +243,9 @@ namespace Emberfall.AI
 
         private static int DamageAmount(CardDefinition def)
         {
-            foreach (var e in def.Effects)
-                if (e.Action == Emberfall.Core.Contracts.Action.DEAL_DAMAGE && e.Amount.HasValue)
-                    return e.Amount.Value;
+            foreach (var rule in def.Rules)
+                if (rule.Action is DamageAction damage)
+                    return damage.Amount;
             return 0;
         }
     }

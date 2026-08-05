@@ -275,10 +275,10 @@ namespace Emberfall.Core.Cards
         {
             if (!ConsumesTargets(action)) return false;
             TargetCandidateKinds selected = selector == "SELF"
-                ? ActionTargetCapabilities.SourceKinds(sourceType, trigger)
+                ? SourceKinds(sourceType, trigger)
                 : selector == "TRIGGER_SOURCE"
-                    ? ActionTargetCapabilities.TriggerSourceKinds(sourceType, trigger)
-                    : ActionTargetCapabilities.SelectorKinds(selector);
+                    ? TriggerSourceKinds(sourceType, trigger)
+                    : SelectorKinds(selector);
             return (AllowedKinds(action) & selected) != 0;
         }
 
@@ -315,6 +315,80 @@ namespace Emberfall.Core.Cards
                 default:
                     throw new InvalidOperationException(
                         $"Rule action '{action.GetType().Name}' is absent from the target capability relation.");
+            }
+        }
+
+        private static TargetCandidateKinds SelectorKinds(string selector)
+        {
+            switch (selector)
+            {
+                case "FRIENDLY_HERO":
+                case "ENEMY_HERO":
+                    return TargetCandidateKinds.Hero;
+                case "FRIENDLY_MINIONS":
+                case "ENEMY_MINIONS":
+                case "ALL_MINIONS":
+                case "ANY_MINION":
+                case "ANY_FRIENDLY_MINION":
+                case "ADJACENT":
+                    return TargetCandidateKinds.Minion;
+                case "ANY_CHARACTER":
+                case "ANY_FRIENDLY":
+                case "ANY_ENEMY":
+                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion;
+                case "FRIENDLY_WEAPON":
+                case "ENEMY_WEAPON":
+                    return TargetCandidateKinds.Weapon;
+                case "FRIENDLY_HAND":
+                case "ENEMY_HAND":
+                case "ANY_HAND_CARD":
+                    return TargetCandidateKinds.HandCard;
+                case "FRIENDLY_DECK":
+                case "ENEMY_DECK":
+                case "ANY_DECK_CARD":
+                    return TargetCandidateKinds.DeckCard;
+                case "FRIENDLY_GRAVEYARD":
+                case "ENEMY_GRAVEYARD":
+                case "ANY_GRAVEYARD_CARD":
+                    return TargetCandidateKinds.GraveyardCard;
+                case "SELF":
+                case "TRIGGER_SOURCE":
+                    return TargetCandidateKinds.Any;
+                default:
+                    return TargetCandidateKinds.None;
+            }
+        }
+
+        private static TargetCandidateKinds SourceKinds(CardType sourceType, Trigger trigger)
+        {
+            if (trigger == Trigger.ON_DEATH) return TargetCandidateKinds.GraveyardCard;
+            switch (sourceType)
+            {
+                case CardType.MINION: return TargetCandidateKinds.Minion;
+                case CardType.WEAPON: return TargetCandidateKinds.Weapon;
+                case CardType.SPELL: return TargetCandidateKinds.GraveyardCard;
+                default: return TargetCandidateKinds.None;
+            }
+        }
+
+        private static TargetCandidateKinds TriggerSourceKinds(CardType sourceType, Trigger trigger)
+        {
+            switch (trigger)
+            {
+                case Trigger.ON_FRIENDLY_SUMMON:
+                case Trigger.ON_DAMAGED:
+                case Trigger.ON_HEAL:
+                    return TargetCandidateKinds.Minion;
+                case Trigger.ON_SPELL_CAST:
+                case Trigger.ON_DEATH:
+                    return TargetCandidateKinds.GraveyardCard;
+                case Trigger.ON_ATTACK:
+                    return TargetCandidateKinds.Weapon;
+                case Trigger.ON_PLAY:
+                case Trigger.ON_CAST:
+                    return SourceKinds(sourceType, trigger);
+                default:
+                    return TargetCandidateKinds.None;
             }
         }
     }
