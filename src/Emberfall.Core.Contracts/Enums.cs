@@ -149,6 +149,63 @@ namespace Emberfall.Core.Contracts
         onUnearth, onTurnStart, onTurnEnd, onHeroPower, onFatigue, onGameWin, onGameOver
     }
 
+    /// <summary>
+    /// Stable semantic facts emitted by the deterministic game engine. These describe what happened;
+    /// presentation is selected separately through <see cref="PresentationCue"/>.
+    /// </summary>
+    public enum GameEventKind
+    {
+        CardPlayed,
+        CardSummoned,
+        AttackDeclared,
+        DamageApplied,
+        HealthRestored,
+        CardDestroyed,
+        StatsModified,
+        KeywordApplied,
+        CardDrawn,
+        CardCreatedInHand,
+        CardSilenced,
+        FrostApplied,
+        CardTransformed,
+        CardBounced,
+        ManaGained,
+        WeaponEquipped,
+        UnearthOffered,
+        TurnStarted,
+        TurnEnded,
+        HeroPowerUsed,
+        FatigueDamage,
+        MatchWon,
+        MatchEnded,
+    }
+
+    /// <summary>Optional presentation instruction carried independently of semantic event identity.</summary>
+    public enum PresentationCue
+    {
+        Play,
+        Summon,
+        Attack,
+        Damage,
+        Heal,
+        Death,
+        Buff,
+        Draw,
+        Silence,
+        Frost,
+        Transform,
+        Return,
+        ManaGain,
+        Equip,
+        Unearth,
+        TurnStart,
+        TurnEnd,
+        HeroPower,
+        Fatigue,
+        GameWin,
+        GameOver,
+    }
+
     /// <summary>Per-event flags carried on a <see cref="GameEvent"/>. M1-guaranteed: AegisAbsorbed, Lethal, Overdraw (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5).</summary>
     [Flags]
     public enum EventFlags

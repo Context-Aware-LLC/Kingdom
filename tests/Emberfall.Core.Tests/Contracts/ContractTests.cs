@@ -28,10 +28,48 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void VfxEvent_Vocabulary_Is_The_Closed_D7_Set_Of_22()
+        public void GameEventKind_Vocabulary_Is_The_Closed_Semantic_Set()
         {
-            // hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2 lists exactly 22 closed D7 events.
-            Assert.That(Enum.GetValues(typeof(VfxEvent)).Length, Is.EqualTo(22));
+            var expected = new[]
+            {
+                "CardPlayed", "CardSummoned", "AttackDeclared", "DamageApplied",
+                "HealthRestored", "CardDestroyed", "StatsModified", "KeywordApplied",
+                "CardDrawn", "CardCreatedInHand", "CardSilenced", "FrostApplied",
+                "CardTransformed", "CardBounced", "ManaGained", "WeaponEquipped",
+                "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
+                "FatigueDamage", "MatchWon", "MatchEnded",
+            };
+
+            Assert.That(Enum.GetNames(typeof(GameEventKind)), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void PresentationCue_Vocabulary_Is_Separate_From_Semantic_Events()
+        {
+            var expected = new[]
+            {
+                "Play", "Summon", "Attack", "Damage", "Heal", "Death", "Buff",
+                "Draw", "Silence", "Frost", "Transform", "Return", "ManaGain",
+                "Equip", "Unearth", "TurnStart", "TurnEnd", "HeroPower", "Fatigue",
+                "GameWin", "GameOver",
+            };
+
+            Assert.That(Enum.GetNames(typeof(PresentationCue)), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Every_Semantic_Event_Has_An_Explicit_Default_Presentation_Cue()
+        {
+            foreach (GameEventKind kind in Enum.GetValues(typeof(GameEventKind)))
+                Assert.That(PresentationCueDefaults.For(kind), Is.TypeOf<PresentationCue>());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(PresentationCueDefaults.For(GameEventKind.StatsModified), Is.EqualTo(PresentationCue.Buff));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.KeywordApplied), Is.EqualTo(PresentationCue.Buff));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.CardDrawn), Is.EqualTo(PresentationCue.Draw));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.CardCreatedInHand), Is.EqualTo(PresentationCue.Draw));
+            });
         }
 
         [Test]
