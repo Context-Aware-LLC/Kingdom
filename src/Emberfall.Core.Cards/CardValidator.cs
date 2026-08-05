@@ -151,7 +151,10 @@ namespace Emberfall.Core.Cards
                 // A new source kind, trigger, or pair is inert until EffectSourceCapabilities tables it.
                 bool knownSource = EffectSourceCapabilities.TryForCardType(def.Type,
                     out EffectSourceKind sourceKind);
-                if (!knownSource || !EffectSourceCapabilities.Supports(sourceKind, trigger))
+                bool ongoingSpellRule = def.Type == CardType.SPELL &&
+                    EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect, trigger);
+                if (!knownSource || (!EffectSourceCapabilities.Supports(sourceKind, trigger) &&
+                    !ongoingSpellRule))
                 {
                     if (!EffectSourceCapabilities.SupportsAny(trigger))
                     {
@@ -200,13 +203,15 @@ namespace Emberfall.Core.Cards
                         "TURN_OWNER is valid only on ON_TURN_START because other triggers carry no incoming-turn context.");
                 }
 
-                // C23 — only one-shot player actions and source-bound observed triggers have a
-                // runtime today. The other lifetime nodes are reserved, typed, and rejected until
-                // their ongoing-state slice lands.
-                if (rule.Lifetime is FiniteLifetime || rule.Lifetime is PermanentLifetime)
+                // C23 — resolved spells may create carrierless future observers. Every other
+                // observed rule remains tied to its live minion/weapon carrier.
+                if (ongoingSpellRule)
                 {
-                    Err("C23-LIFETIME-UNSUPPORTED", $"{prefix}.lifetime",
-                        $"lifetime '{rule.Lifetime.GetType().Name}' requires the ongoing-effect runtime slice.");
+                    if (!(rule.Lifetime is OneShotLifetime) &&
+                        !(rule.Lifetime is FiniteLifetime) &&
+                        !(rule.Lifetime is PermanentLifetime))
+                        Err("C23-LIFETIME-ACTIVATION", $"{prefix}.lifetime",
+                            $"future spell trigger '{trigger}' requires ONE_SHOT, FINITE, or PERMANENT lifetime.");
                 }
                 else
                 {
@@ -215,6 +220,10 @@ namespace Emberfall.Core.Cards
                         (!needsOneShot && !(rule.Lifetime is SourceBoundLifetime)))
                         Err("C23-LIFETIME-ACTIVATION", $"{prefix}.lifetime",
                             $"trigger '{trigger}' requires a {(needsOneShot ? "ONE_SHOT" : "SOURCE_BOUND")} lifetime.");
+                    if ((rule.Lifetime is FiniteLifetime || rule.Lifetime is PermanentLifetime) &&
+                        !needsOneShot)
+                        Err("C23-LIFETIME-UNSUPPORTED", $"{prefix}.lifetime",
+                            $"lifetime '{rule.Lifetime.GetType().Name}' is valid only for a future-trigger SPELL rule.");
                 }
                 if (rule.Lifetime is FiniteLifetime finite && finite.Uses <= 0)
                     Err("C23-FINITE-USES", $"{prefix}.lifetime.uses",

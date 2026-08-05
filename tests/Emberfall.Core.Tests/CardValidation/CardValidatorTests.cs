@@ -509,6 +509,60 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void Future_Spell_Observers_Accept_Only_Explicit_Ongoing_Lifetimes()
+        {
+            RuleLifetime[] accepted =
+            {
+                OneShotLifetime.Instance,
+                new FiniteLifetime(2),
+                PermanentLifetime.Instance,
+            };
+            foreach (RuleLifetime lifetime in accepted)
+            {
+                var rule = new RuleDefinition(new RuleId("future"),
+                    new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                    lifetime, new DrawAction(1));
+                CardDefinition def = WithRule(CardType.SPELL, rule);
+
+                Assert.That(Validator().Validate(def, Db(def)).Ok, Is.True,
+                    $"{lifetime.GetType().Name} should be live on a future-trigger spell rule.");
+            }
+
+            var sourceBound = new RuleDefinition(new RuleId("future"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                SourceBoundLifetime.Instance, new DrawAction(1));
+            CardDefinition invalid = WithRule(CardType.SPELL, sourceBound);
+            Assert.That(Validator().Validate(invalid, Db(invalid)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-ACTIVATION"), Is.True,
+                "A graveyard spell cannot remain a source-bound permanent.");
+        }
+
+        [Test]
+        public void Ongoing_Lifetimes_Fail_Closed_Outside_Future_Spell_Rules()
+        {
+            var finiteMinion = new RuleDefinition(new RuleId("finite_minion"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                new FiniteLifetime(2), new DrawAction(1));
+            CardDefinition minion = WithRule(CardType.MINION, finiteMinion);
+            Assert.That(Validator().Validate(minion, Db(minion)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-UNSUPPORTED"), Is.True);
+
+            var permanentCast = new RuleDefinition(new RuleId("permanent_cast"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                PermanentLifetime.Instance, new DrawAction(1));
+            CardDefinition spell = WithRule(CardType.SPELL, permanentCast);
+            Assert.That(Validator().Validate(spell, Db(spell)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-ACTIVATION"), Is.True);
+
+            var zeroUses = new RuleDefinition(new RuleId("zero_uses"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                new FiniteLifetime(0), new DrawAction(1));
+            CardDefinition zero = WithRule(CardType.SPELL, zeroUses);
+            Assert.That(Validator().Validate(zero, Db(zero)).Issues.Any(i =>
+                i.Code == "C23-FINITE-USES"), Is.True);
+        }
+
+        [Test]
         public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
         {
             RuleDefinition Death() => Rule(Trigger.ON_DEATH, new DrawAction(1));
