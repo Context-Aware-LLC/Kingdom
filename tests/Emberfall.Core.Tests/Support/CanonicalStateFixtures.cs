@@ -87,8 +87,8 @@ namespace Emberfall.Core.Tests.Support
             },
             ["OngoingEffectInstance.RemainingUses"] = s => Ongoing(s).RemainingUses = 3,
 
-            // PendingChoice (seeded non-null — M2 production never populates it, so the seed is
-            // the ONLY coverage of the non-null walk branch until Phase 2; §7 ruling item 7)
+            // PendingChoice (seeded non-null so the canonical mutation sweep covers every field;
+            // runtime behavior and transport order have dedicated Unearth tests).
             ["PendingChoice.Chooser"] = s => s.PendingChoice!.Chooser = s.Players[1].Id,
             ["PendingChoice.Kind"] = s => s.PendingChoice!.Kind = (PendingChoiceKind)1,   // no second member yet (Q1: Unearth-only); the cast perturbs the canonical int
             ["PendingChoice.Source"] = s => s.PendingChoice!.Source = new InstanceId(70),
@@ -239,9 +239,8 @@ namespace Emberfall.Core.Tests.Support
             };
             s.Rng.NextUInt64();   // advance the cursor so RawState ≠ seed (proves the cursor is hashed)
 
-            // A2b: non-null PendingChoice — M2 production always leaves this null, so this seed is
-            // the only exercise of WalkPendingChoice's non-null branch (≥2 options so the count
-            // prefix + list loop are both real; §7 ruling 2026-07-15 item 7).
+            // Non-null PendingChoice with ≥2 options so the canonical count prefix and ordered
+            // list walk are both exercised.
             s.PendingChoice = new PendingChoice
             {
                 Chooser = p0Id,

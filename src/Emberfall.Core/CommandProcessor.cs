@@ -637,7 +637,7 @@ namespace Emberfall.Core
             // TurnOwnerCondition then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
             // into trigger/selector names. `excluded: null` because no card causes a turn to start.
             // The shared source seam walks incoming board minions left-to-right, equipped weapon,
-            // then the other side in the same category order. Ongoing state is a later slice.
+            // then the other side in the same category order, followed by ongoing effects.
             interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
                 context: TriggerEventContext.ForIncomingTurn(player));
 

@@ -235,10 +235,10 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>
-    /// A choice awaiting a player (A2b seam). M2: never populated. The projection redaction class
-    /// per field below is fixed by the §7 ruling (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md)
-    /// and is the BINDING contract for the future GameStateProjector — it is NOT implemented here
-    /// (no projection layer exists in src/ yet). Walk order is fixed as declared.
+    /// An authoritative interactive choice awaiting a player. Unearth populates this record;
+    /// canonical serialization preserves option order, while <c>GameStateProjector</c> exposes the
+    /// complete record only to <see cref="Chooser"/> and default-denies its private fields to the
+    /// opponent. Walk order is fixed as declared.
     /// </summary>
     public sealed class PendingChoice
     {
