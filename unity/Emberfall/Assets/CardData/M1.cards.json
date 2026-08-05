@@ -2002,7 +2002,8 @@
         "amount": 1,
         "target": {
           "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+          "chosenBy": "RANDOM",
+          "binding": "first_hit"
         }
       },
       {
@@ -2011,7 +2012,9 @@
         "amount": 1,
         "target": {
           "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+          "chosenBy": "RANDOM",
+          "binding": "second_hit",
+          "distinctFrom": "first_hit"
         }
       }
     ]

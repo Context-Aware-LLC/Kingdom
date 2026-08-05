@@ -13,6 +13,7 @@ namespace Emberfall.Core.Cards
     public sealed class CardValidator : ICardValidator
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
+        private static readonly Regex TargetBindingPattern = new Regex("^[a-z][a-z0-9_]{0,31}$", RegexOptions.Compiled);
 
         // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
         // call site: CommandProcessor.cs:346/354/386/454 pass the player's `targets`; ON_ATTACK
@@ -183,6 +184,7 @@ namespace Emberfall.Core.Cards
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
             // C9-C11, C13, C14, C17, C21 — per-effect checks
+            var priorTargetBindings = new HashSet<string>();
             for (int i = 0; i < def.Effects.Count; i++)
             {
                 var fx = def.Effects[i];
@@ -306,6 +308,22 @@ namespace Emberfall.Core.Cards
                 if (fx.Target?.Count == 0)
                     Err("C14C-TARGET-COUNT", $"{prefix}.target.count",
                         "target.count cannot be zero.");
+                if (fx.Target != null)
+                {
+                    if (fx.Target.Binding.Length > 0 && !TargetBindingPattern.IsMatch(fx.Target.Binding))
+                        Err("C14D-TARGET-BINDING", $"{prefix}.target.binding",
+                            "target.binding must match ^[a-z][a-z0-9_]{0,31}$.");
+                    if (fx.Target.DistinctFrom.Length > 0)
+                    {
+                        if (!TargetBindingPattern.IsMatch(fx.Target.DistinctFrom))
+                            Err("C14D-TARGET-BINDING", $"{prefix}.target.distinctFrom",
+                                "target.distinctFrom must match ^[a-z][a-z0-9_]{0,31}$.");
+                        else if (!priorTargetBindings.Contains(fx.Target.DistinctFrom))
+                            Err("C14E-TARGET-BINDING-ORDER", $"{prefix}.target.distinctFrom",
+                                $"target.distinctFrom '{fx.Target.DistinctFrom}' must name a binding from an earlier effect.");
+                    }
+                    if (fx.Target.Binding.Length > 0) priorTargetBindings.Add(fx.Target.Binding);
+                }
 
                 // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
                 if (fx.Empty && !fx.Permanent)

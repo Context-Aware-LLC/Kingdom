@@ -80,6 +80,36 @@ namespace Emberfall.Core
         }
 
         /// <summary>
+        /// Candidate intersection for one named choice. Unbound legacy effects share one choice, so
+        /// a candidate must satisfy every unbound player-chosen effect; named bindings isolate
+        /// independent effects.
+        /// </summary>
+        public static IReadOnlyList<TargetCandidate> PlayerChoiceCandidates(GameState state,
+            ICardDatabase db, PlayerId controller, CardDefinition def, Trigger trigger,
+            string? binding = null, InstanceId? source = null)
+        {
+            string key = binding ?? "";
+            List<TargetCandidate>? result = null;
+            foreach (EffectDef effect in def.Effects)
+            {
+                if (effect.Trigger != trigger || !IsPlayerChosen(effect.Target) ||
+                    effect.Target!.Binding != key) continue;
+                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
+                    effect.Target, source);
+                if (result == null)
+                {
+                    result = new List<TargetCandidate>(candidates);
+                    continue;
+                }
+                var allowed = new HashSet<InstanceId>();
+                foreach (TargetCandidate candidate in candidates) allowed.Add(candidate.Instance);
+                for (int i = result.Count - 1; i >= 0; i--)
+                    if (!allowed.Contains(result[i].Instance)) result.RemoveAt(i);
+            }
+            return result ?? (IReadOnlyList<TargetCandidate>)Array.Empty<TargetCandidate>();
+        }
+
+        /// <summary>
         /// Enumerate one target specification for a player. This is the presentation seam: Unity
         /// receives exactly the candidates the server will accept, including damaged/tribe filters
         /// and enemy Shroud exclusion. Hidden opponent zones and ordered decks fail closed.

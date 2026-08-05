@@ -367,11 +367,8 @@ namespace Emberfall.Presentation
                 {
                     if (!ci.Id.Equals(cardId)) continue;
                     if (!_db.TryGet(ci.DefinitionId, out CardDefinition def)) return false;
-                    foreach (EffectDef eff in def.Effects)
-                        if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
-                            && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                            return true;
-                    return false;
+                    Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+                    return Targeting.RequiresPlayerChoice(def, trigger);
                 }
             }
             return false;
@@ -402,10 +399,7 @@ namespace Emberfall.Presentation
             {
                 if (ps.Id != _p0Id) continue;
                 if (!_db.TryGet(ps.Hero.HeroPowerId, out CardDefinition def)) return false;
-                foreach (EffectDef eff in def.Effects)
-                    if (eff.Trigger == Trigger.ON_CAST
-                        && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                        return true;
+                return Targeting.RequiresPlayerChoice(def, Trigger.ON_CAST);
             }
             return false;
         }
@@ -437,43 +431,14 @@ namespace Emberfall.Presentation
             return set;
         }
 
-        // Mirrors CommandProcessor.TargetsSatisfySelectors + the enemy-STEALTH targeting exclusion
-        // (ValidatePlayCard). Courtesy affordance — the validator still rules.
+        // Uses the same headless candidate seam as CommandProcessor and EffectInterpreter.
         private void CollectSelectorTargets(CardDefinition def, HashSet<InstanceId> set)
         {
-            var selectors = new List<string>();
-            foreach (EffectDef eff in def.Effects)
-                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST)
-                    && eff.Selector != null && eff.Selector.StartsWith("ANY_"))
-                    selectors.Add(eff.Selector);
-            if (selectors.Count == 0) return;
-
-            foreach (PlayerState ps in State.Players)
-            {
-                bool friendly = ps.Id == _p0Id;
-                if (SatisfiesSelectors(selectors, isMinion: false, friendly))
-                    set.Add(ps.Hero.Id);
-                foreach (CardInstance m in ps.Board)
-                {
-                    if (!friendly && m.Keywords.Contains(Keyword.STEALTH)) continue;
-                    if (SatisfiesSelectors(selectors, isMinion: true, friendly))
-                        set.Add(m.Id);
-                }
-            }
-        }
-
-        private static bool SatisfiesSelectors(List<string> selectors, bool isMinion, bool friendly)
-        {
-            foreach (string s in selectors)
-                switch (s)
-                {
-                    case "ANY_FRIENDLY":        if (!friendly)              return false; break;
-                    case "ANY_ENEMY":           if (friendly)               return false; break;
-                    case "ANY_MINION":          if (!isMinion)              return false; break;
-                    case "ANY_FRIENDLY_MINION": if (!isMinion || !friendly) return false; break;
-                    // ANY_CHARACTER (and future ANY_*) accepts every live character.
-                }
-            return true;
+            Trigger trigger = def.Type == CardType.SPELL || def.Type == CardType.HERO_POWER
+                ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            foreach (TargetCandidate candidate in Targeting.PlayerChoiceCandidates(
+                         State, _db, _p0Id, def, trigger))
+                set.Add(candidate.Instance);
         }
 
         // Mirrors the defender-side half of CommandProcessor.ValidateAttack: stealth hides, a
