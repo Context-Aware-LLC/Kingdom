@@ -18,6 +18,7 @@ namespace Emberfall.Core.Tests.Combat
         private const string Venomed = "weapon_identity_venomed";
         private const string Froster = "weapon_identity_froster";
         private const string Windfury = "weapon_identity_windfury";
+        private const string RiderStack = "weapon_identity_rider_stack";
         private const string Swapper = "weapon_identity_swapper";
         private const string Toll = "weapon_identity_toll";
         private const string Dummy = "weapon_identity_dummy";
@@ -45,6 +46,10 @@ namespace Emberfall.Core.Tests.Combat
             .Register(Weapon(Venomed, 1, 3, new[] { Keyword.POISONOUS }))
             .Register(Weapon(Froster, 2, 3, new[] { Keyword.FREEZE, Keyword.WINDFURY }))
             .Register(Weapon(Windfury, 1, 3, new[] { Keyword.WINDFURY }))
+            .Register(Weapon(RiderStack, 3, 4, new[]
+            {
+                Keyword.LIFESTEAL, Keyword.POISONOUS, Keyword.FREEZE, Keyword.WINDFURY,
+            }))
             .Register(Weapon(Swapper, 2, 3, new[] { Keyword.WINDFURY },
                 new EffectDef(Trigger.ON_ATTACK, Verb.EQUIP, null, null, Froster, null, null)))
             .Register(Weapon(Toll, 2, 1, new[] { Keyword.DEATHRATTLE },
@@ -204,6 +209,68 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(target.CurrentHealth, Is.EqualTo(12));
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(20),
                 "Aegis returns before the Lifesteal/Venom/Freeze rider block");
+        }
+
+        [Test]
+        public void Unified_Weapon_Pins_The_Full_Aegis_Soak_Lifesteal_Venom_Frost_Rider_Sequence()
+        {
+            // One equipped CardInstance carries every live attack rider. The three swings deliberately
+            // exercise the pipeline in its fixed order: Aegis returns before riders; armor soaks before
+            // Lifesteal; then a minion hit receives Venom before Frost and the subsequent DeathCheck.
+            var db = Db();
+            var state = MainPhase();
+            state.Players[0].Hero.CurrentHealth = 20;
+            var weapon = PlayWeapon(state, db, RiderStack);
+            var warded = OnBoard(state, 1, db.Get(Shielded));
+
+            var absorbed = SwingAt(state, db, warded.Id);
+
+            Assert.That(absorbed.Accepted, Is.True);
+            Assert.That(weapon.Zone, Is.EqualTo(Zone.Weapon));
+            Assert.That(state.Players[0].Weapon, Is.SameAs(weapon));
+            Assert.That(warded.CurrentHealth, Is.EqualTo(12));
+            Assert.That(warded.HasAegisShield, Is.False);
+            Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(20),
+                "Aegis is the first gate: no Lifesteal, Venom, or Frost rider may run.");
+            Assert.That(absorbed.Events.Select(e => e.Kind),
+                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage }));
+            Assert.That(absorbed.Events[1].Flags & EventFlags.AegisAbsorbed, Is.Not.EqualTo(EventFlags.None));
+
+            state.Players[1].Hero.Armor = 2;
+            var soaked = SwingAt(state, db, state.Players[1].Hero.Id);
+
+            Assert.That(soaked.Accepted, Is.True);
+            Assert.That(state.Players[1].Hero.Armor, Is.EqualTo(0));
+            Assert.That(state.Players[1].Hero.CurrentHealth, Is.EqualTo(29),
+                "two armor soaks before the remaining point reaches health.");
+            Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(23),
+                "Lifesteal follows the damage/soak mutation and restores the full dealt amount.");
+            Assert.That(state.Players[1].Hero.IsFrozen, Is.True,
+                "Frost is the final rider, after Lifesteal.");
+            Assert.That(soaked.Events.Select(e => e.Kind),
+                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFreeze }));
+
+            // WIND FURY has spent the two attacks for this turn. Use the actual turn boundary rather than
+            // mutating the attack budget, so the third swing remains a normal unified-weapon command path.
+            var processor = new CommandProcessor(db);
+            Assert.That(processor.Execute(state, new EndTurnIntent(state.Players[0].Id)).Accepted, Is.True);
+            state.Players[1].Deck.Add(new CardInstance(state.NextInstanceId(), Plain, state.Players[1].Id)
+            {
+                Zone = Zone.Deck,
+            });
+            Assert.That(processor.Execute(state, new EndTurnIntent(state.Players[1].Id)).Accepted, Is.True);
+
+            var poisoned = OnBoard(state, 1, db.Get(Dummy));
+            var venomAndFrost = SwingAt(state, db, poisoned.Id);
+
+            Assert.That(venomAndFrost.Accepted, Is.True);
+            Assert.That(poisoned.CurrentHealth, Is.EqualTo(0), "Venom makes the otherwise surviving 3-damage hit lethal.");
+            Assert.That(poisoned.IsFrozen, Is.True, "Frost still runs after Venom marks the minion dead.");
+            Assert.That(state.Players[1].Board, Does.Not.Contain(poisoned), "the following DeathCheck settles Venom.");
+            Assert.That(venomAndFrost.Events.Select(e => e.Kind), Is.EqualTo(new[]
+            {
+                VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFreeze, VfxEvent.onDeath,
+            }));
         }
 
         [Test]
