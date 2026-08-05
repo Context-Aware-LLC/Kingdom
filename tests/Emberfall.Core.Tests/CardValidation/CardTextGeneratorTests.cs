@@ -32,7 +32,39 @@ namespace Emberfall.Core.Tests.CardValidation
             CardDefinition mainspring = CardJson.DeserializeArray(File.ReadAllText(path))
                 .Single(card => card.Id == "rekind_clock_mainspring_halberd");
 
-            Assert.That(CardTextGenerator.Generate(mainspring.Rules), Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(CardTextGenerator.Generate(mainspring), Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(mainspring.Keywords, Is.Empty);
+        }
+
+        [Test]
+        public void Card_Rendering_Includes_Keyword_Only_Carrier_Behaviour()
+        {
+            var card = new CardDefinition("keyword_only", "Keyword Only", CardType.MINION, 1,
+                1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
+                new[] { Keyword.BULWARK, Keyword.LIFEDRAIN }, Array.Empty<RuleDefinition>(),
+                "", "art/keyword_only", SetId.CORE, true, null, "", false);
+
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Lifedrain]"));
+        }
+
+        [Test]
+        public void Card_Rendering_Derives_Trigger_Markers_Without_Duplicating_Them()
+        {
+            var card = new CardDefinition("herald", "Herald", CardType.MINION, 1,
+                1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
+                new[] { Keyword.BULWARK }, new[] { DrawRule(new TriggeredActivation(Trigger.ON_PLAY)) },
+                "", "art/herald", SetId.CORE, true, null, "", false);
+
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Herald] Draw a card."));
+        }
+
+        [Test]
+        public void Strict_Json_Rejects_The_Removed_CardText_Property()
+        {
+            var ex = Assert.Throws<FormatException>(() => CardJson.Deserialize(
+                "{\"id\":\"removed_text\",\"type\":\"SPELL\",\"cost\":0,\"cardText\":\"legacy\"}"));
+
+            Assert.That(ex!.Message, Does.Contain("cardText"));
         }
 
         [TestCase(Trigger.ON_PLAY, "[Herald] Draw a card.")]
@@ -143,7 +175,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Every_Live_Normalized_Rule_Renders_Readably_And_Deterministically()
+        public void Every_Live_Card_Renders_Readably_And_Deterministically()
         {
             var cards = new List<CardDefinition>();
             foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
@@ -153,21 +185,29 @@ namespace Emberfall.Core.Tests.CardValidation
             }
 
             int rendered = 0;
-            foreach (CardDefinition card in cards.Where(card => card.Rules.Count > 0))
+            foreach (CardDefinition card in cards)
             {
-                string first = CardTextGenerator.Generate(card.Rules);
-                string second = CardTextGenerator.Generate(card.Rules);
+                string first = CardTextGenerator.Generate(card);
+                string second = CardTextGenerator.Generate(card);
 
                 Assert.That(first, Is.EqualTo(second), $"{card.Id} did not render deterministically.");
-                Assert.That(first, Is.Not.Empty, $"{card.Id} rendered no rule text.");
+                if (card.Rules.Count == 0 && card.Keywords.Count == 0)
+                {
+                    Assert.That(first, Is.Empty, $"{card.Id} should have no generated text.");
+                    rendered++;
+                    continue;
+                }
+
+                Assert.That(first, Is.Not.Empty, $"{card.Id} rendered no card text.");
                 Assert.That(first, Does.Match("[A-Za-z]"), $"{card.Id} did not render readable words.");
                 Assert.That(first, Does.Not.Contain("_"), $"{card.Id} leaked an identifier spelling.");
-                Assert.That(first, Does.EndWith("."), $"{card.Id} did not render a complete sentence.");
+                if (card.Rules.Count > 0)
+                    Assert.That(first, Does.EndWith("."), $"{card.Id} did not render a complete sentence.");
                 rendered++;
             }
 
             Assert.That(cards.Count, Is.EqualTo(260));
-            Assert.That(rendered, Is.GreaterThan(0));
+            Assert.That(rendered, Is.EqualTo(260));
         }
 
         private static RuleDefinition DrawRule(RuleActivation activation)

@@ -94,7 +94,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 TestRules.Rule("rule_1", trigger,
                     new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION"))),
             },
-            cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+            flavorText: "", artId: "art/x", setId: SetId.CORE,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
 
         private static ValidationReport Validate(CardDefinition def)

@@ -96,7 +96,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { Adjacent() },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
 
             var validator = new CardValidator();
@@ -118,7 +118,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -147,7 +147,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 attack: 1, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -164,7 +164,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -180,7 +180,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: true);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -243,7 +243,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 durability: type == CardType.WEAPON ? 1 : (int?)null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static RuleDefinition Rule(Trigger trigger, RuleAction action,

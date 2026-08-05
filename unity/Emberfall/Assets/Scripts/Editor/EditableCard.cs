@@ -23,7 +23,6 @@ namespace Emberfall.Editor
         public Rarity Rarity = Rarity.COMMON;
         public List<Keyword> Keywords = new List<Keyword>();
         public List<EditableRule> Rules = new List<EditableRule>();
-        public string CardText = "";
         public string FlavorText = "";
         public string ArtId = "";
         public SetId SetId = SetId.CORE;
@@ -45,7 +44,6 @@ namespace Emberfall.Editor
             Rarity = def.Rarity,
             Keywords = new List<Keyword>(def.Keywords),
             Rules = def.Rules.Select(EditableRule.FromDefinition).ToList(),
-            CardText = def.CardText,
             FlavorText = def.FlavorText,
             ArtId = def.ArtId,
             SetId = def.SetId,
@@ -62,7 +60,7 @@ namespace Emberfall.Editor
             durability: HasDurability ? Durability : (int?)null,
             @class: Class, rarity: Rarity,
             keywords: Keywords, rules: Rules.Select(rule => rule.ToDefinition()).ToList(),
-            cardText: CardText, flavorText: FlavorText, artId: ArtId, setId: SetId,
+            flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
             factionId: FactionId, requiresEngineeringPrimitive: RequiresEngineeringPrimitive);
 

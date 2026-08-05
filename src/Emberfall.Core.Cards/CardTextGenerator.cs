@@ -9,11 +9,24 @@ namespace Emberfall.Core.Cards
 {
     /// <summary>
     /// Deterministically renders the normalized rules that a card already owns into player-facing
-    /// text. This is deliberately one-way: authored <see cref="CardDefinition.CardText"/> remains
-    /// untouched until the content and presentation migrations elect to consume generated text.
+    /// text. Carrier keywords and normalized typed rules are the only inputs: trigger labels are
+    /// derived from rule activation, never duplicated as keyword data.
     /// </summary>
     public static class CardTextGenerator
     {
+        /// <summary>Render a complete card face from its effective carrier behaviour and typed rules.</summary>
+        public static string Generate(CardDefinition card)
+        {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+
+            var parts = new List<string>(card.Keywords.Count + card.Rules.Count);
+            foreach (Keyword keyword in card.Keywords)
+                parts.Add("[" + Name(keyword) + "]");
+            foreach (RuleDefinition rule in card.Rules)
+                parts.Add(RenderRule(rule));
+            return string.Join(" ", parts);
+        }
+
         public static string Generate(IReadOnlyList<RuleDefinition> rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));

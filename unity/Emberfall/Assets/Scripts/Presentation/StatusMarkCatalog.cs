@@ -19,8 +19,6 @@ namespace Emberfall.Presentation
             { Keyword.FERVOR,       "icon_kw_fervor"      },
             { Keyword.SKIRMISH,         "icon_kw_skirmish"        },
             { Keyword.AEGIS,"icon_kw_divine_shield"},
-            { Keyword.HERALD,    "icon_kw_herald"   },
-            { Keyword.TOLL,  "icon_kw_toll" },
             { Keyword.LIFEDRAIN,    "icon_kw_lifedrain"   },
             { Keyword.DOUBLESTRIKE,     "icon_kw_doublestrike"    },
             { Keyword.SHROUD,      "icon_kw_shroud"     },

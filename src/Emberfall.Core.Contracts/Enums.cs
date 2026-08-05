@@ -27,18 +27,21 @@ namespace Emberfall.Core.Contracts
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
 
     /// <summary>
-    /// Canonical keyword enum (D3, dev-docs/specs/card-schema.md §4 v1.3). Closed set — 17 keywords, each
+    /// Canonical carrier-behaviour keyword enum. Trigger labels such as Herald and Toll are derived from
+    /// normalized rule activation and deliberately have no enum member. Numeric values after their former
+    /// slots are explicit so their wire spelling/ordering cannot drift.
     /// implemented. ECHO was formally cut by M2 decision 2 (zero implementation, zero cards);
     /// this is a hash-canonical change (GameStateHasher sorts keyword sets by enum int), executed
     /// with the golden-replay gate as witness per hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier b.
     /// </summary>
     public enum Keyword
     {
-        BULWARK, FERVOR, SKIRMISH, AEGIS, HERALD, TOLL, LIFEDRAIN,
-        DOUBLESTRIKE, SHROUD, VENOM, ARCANE_SURGE, SILENCE, FROST, BACKDRAFT,
-        REKINDLE,
-        OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
-        REINFORCE,             // REKINDLING set: Herald — Give a friendly minion +1/+1.
+        BULWARK = 0, FERVOR = 1, SKIRMISH = 2, AEGIS = 3,
+        LIFEDRAIN = 6, DOUBLESTRIKE = 7, SHROUD = 8, VENOM = 9,
+        ARCANE_SURGE = 10, SILENCE = 11, FROST = 12, BACKDRAFT = 13,
+        REKINDLE = 14,
+        OVERWHELM = 15, VANGUARD = 16, // GDD §1e v1.1 — combat resolver handles both
+        REINFORCE = 17,
     }
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).

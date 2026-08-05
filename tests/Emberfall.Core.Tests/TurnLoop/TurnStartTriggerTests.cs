@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static CardDefinition Weapon(string id, RuleDefinition[] rules)

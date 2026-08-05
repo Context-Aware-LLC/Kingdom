@@ -58,8 +58,8 @@ namespace Emberfall.Core.Collection
     /// live is directly unit-testable, and nothing here allocates a clock or a float (ADR-0003).
     ///
     /// <para><b>Free-text is a union across five fields</b> (the spec's phrasing): a token matches when
-    /// it is a case-insensitive substring of the card's <see cref="CardDefinition.Name"/>,
-    /// <see cref="CardDefinition.CardText"/> (rules), any <see cref="CardDefinition.Keywords"/> name,
+    /// it is a case-insensitive substring of the card's <see cref="CardDefinition.Name"/>, generated
+    /// rule text, any <see cref="CardDefinition.Keywords"/> name,
     /// its <see cref="CardDefinition.Type"/> name, or its <see cref="CardDefinition.Tribe"/> name. A
     /// multi-token query is an <b>AND of tokens</b> — every token must land in some field — so "beast
     /// bulwark" finds a Bulwark whose rules read "your Beasts", not only cards literally named that.
@@ -129,7 +129,7 @@ namespace Emberfall.Core.Collection
         {
             var sb = new System.Text.StringBuilder();
             sb.Append(card.Name).Append('\n');
-            sb.Append(card.CardText).Append('\n');
+            sb.Append(CardTextGenerator.Generate(card)).Append('\n');
             foreach (var kw in card.Keywords) sb.Append(kw).Append('\n');
             sb.Append(card.Type).Append('\n');
             sb.Append(card.Tribe ?? Tribe.NONE);

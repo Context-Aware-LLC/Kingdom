@@ -67,8 +67,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Durability, Is.EqualTo(3));
             Assert.That(def.Rarity, Is.EqualTo(Rarity.RARE));
             Assert.That(def.SetId, Is.EqualTo(SetId.REKINDLING));
-            Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.TOLL }));
-            Assert.That(def.CardText, Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(def.Keywords, Is.Empty, "Toll is derived presentation, not a carrier keyword.");
+            Assert.That(CardTextGenerator.Generate(def), Is.EqualTo("[Toll] Draw a card."));
 
             Assert.That(def.Rules.Count, Is.EqualTo(1));
             RuleDefinition rule = def.Rules[0];

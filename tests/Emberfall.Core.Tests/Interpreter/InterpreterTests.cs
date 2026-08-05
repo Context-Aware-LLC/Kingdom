@@ -154,7 +154,6 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, rules: new[] { Damage(Trigger.ON_PLAY, amount: 3) }))
                 .Register(Minion("rattler", 1, 1, 1,
-                    keywords: new[] { Keyword.TOLL },
                     rules: new[] { Summon(Trigger.ON_DEATH, 1, "token_imp") }));
             var s = MainPhase(db);
             var victim = Board(s, 1, db.Get("rattler"));
@@ -176,7 +175,6 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, rules: new[] { Damage(Trigger.ON_PLAY, amount: 3) }))
                 .Register(Minion("pinger", 1, 1, 1,
-                    keywords: new[] { Keyword.TOLL },
                     rules: new[] { Damage(Trigger.ON_DEATH, amount: 2) }));
             var s = MainPhase(db);
             var victim = Board(s, 1, db.Get("pinger"));
@@ -195,7 +193,6 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase()
                 .Register(Minion("vanilla", 0, 1, 1))
                 .Register(Minion("rattler", 1, 1, 1,
-                    keywords: new[] { Keyword.TOLL },
                     rules: new[] { Summon(Trigger.ON_DEATH, 1, "token_imp") }));
             var s = MainPhase(db);
             // Two enemy rattlers already at lethal — the next command must settle BOTH as one batch.
@@ -345,7 +342,6 @@ namespace Emberfall.Core.Tests.Interpreter
                 var db = new FakeCardDatabase()
                     .Register(Minion("bolt", 1, 1, 1, rules: new[] { Damage(Trigger.ON_PLAY, amount: 3) }))
                     .Register(Minion("rattler", 1, 1, 1,
-                        keywords: new[] { Keyword.TOLL },
                         rules: new[] { Summon(Trigger.ON_DEATH, 1, "token_imp") }));
                 var s = MainPhase(db);
                 var victim = Board(s, 1, db.Get("rattler"));

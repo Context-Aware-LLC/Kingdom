@@ -29,7 +29,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: keywords, rules: Array.Empty<RuleDefinition>(),
-                cardText: "", flavorText: "", artId: "art/test_minion", setId: SetId.CORE,
+                flavorText: "", artId: "art/test_minion", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>A minion already on the board, at printed stats, undamaged.</summary>

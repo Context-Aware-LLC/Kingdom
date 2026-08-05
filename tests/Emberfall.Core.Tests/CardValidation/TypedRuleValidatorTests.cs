@@ -113,7 +113,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 durability: type == CardType.WEAPON ? 1 : (int?)null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/typed_validator", setId: SetId.CORE,
+                flavorText: "", artId: "art/typed_validator", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
     }
 }

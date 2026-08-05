@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static CardDefinition Spell(string id, int cost, RuleDefinition[] rules)
@@ -48,7 +48,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static CardDefinition HeroPower(string id, RuleDefinition[] rules)
@@ -57,7 +57,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: false, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <param name="echoDamage">damage the echo deals to the enemy hero on every spell cast.</param>

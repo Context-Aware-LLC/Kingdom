@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.Combat
                 attack: atk, health: null, durability: durability,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static CardDefinition Minion(string id, int atk, int hp)
@@ -48,7 +48,7 @@ namespace Emberfall.Core.Tests.Combat
                 attack: atk, health: hp, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>Toll: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
@@ -241,7 +241,7 @@ namespace Emberfall.Core.Tests.Combat
                 attack: 3, health: null, durability: 1,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false));
             var dummy = OnBoard(s, 1, db.Get("ef020_dummy"));
 

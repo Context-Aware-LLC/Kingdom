@@ -275,7 +275,7 @@ namespace Emberfall.Core.Tests.Combat
                 keywords: System.Array.Empty<Keyword>(),
                 rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
                     new HealAction(2, new TargetSpec("FRIENDLY_HERO"))) },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var db = new Support.FakeCardDatabase().Register(weaponDef);

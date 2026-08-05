@@ -27,7 +27,7 @@ namespace Emberfall.Core.Tests.Collection
             attack: 1, health: 1, durability: null,
             @class: CardClass.NEUTRAL, rarity: rarity,
             keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
-            cardText: "", flavorText: "", artId: "art/" + CardId(set, rarity, i), setId: set,
+            flavorText: "", artId: "art/" + CardId(set, rarity, i), setId: set,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>

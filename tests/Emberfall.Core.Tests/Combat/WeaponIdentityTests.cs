@@ -51,7 +51,7 @@ namespace Emberfall.Core.Tests.Combat
             }))
             .Register(Weapon(Swapper, 2, 3, new[] { Keyword.DOUBLESTRIKE },
                 TestRules.Rule("equip_froster", Trigger.ON_ATTACK, new EquipAction(Froster))))
-            .Register(Weapon(Toll, 2, 1, new[] { Keyword.TOLL },
+            .Register(Weapon(Toll, 2, 1, Array.Empty<Keyword>(),
                 TestRules.Rule("draw_one", Trigger.ON_DEATH, new DrawAction(1))))
             .Register(Minion(Dummy, 0, 12))
             .Register(Minion(Shielded, 0, 12, Keyword.AEGIS));
@@ -171,8 +171,8 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[0].Graveyard, Does.Contain(weapon));
             Assert.That(state.Players[0].Graveyard.Single(c => c.Id == weapon.Id), Is.SameAs(weapon));
             Assert.That(weapon.Zone, Is.EqualTo(Zone.Graveyard));
-            Assert.That(weapon.Keywords, Does.Contain(Keyword.TOLL),
-                "the Toll presentation marker stays on the same card instance");
+            Assert.That(weapon.Keywords, Is.Empty,
+                "Toll is a derived presentation marker, not a card-instance keyword");
             Assert.That(state.Players[0].Hand, Does.Contain(drawn),
                 "the marker is backed by the ON_DEATH rule, which still fires from that instance");
         }
@@ -343,12 +343,10 @@ namespace Emberfall.Core.Tests.Combat
         [TestCase(Keyword.VENOM)]
         [TestCase(Keyword.FROST)]
         [TestCase(Keyword.DOUBLESTRIKE)]
-        [TestCase(Keyword.HERALD)]
-        [TestCase(Keyword.TOLL)]
         [TestCase(Keyword.SILENCE)]
         [TestCase(Keyword.BACKDRAFT)]
         [TestCase(Keyword.REINFORCE)]
-        public void Live_Riders_And_Trigger_Markers_Are_Legal_On_Weapons(Keyword keyword)
+        public void Live_Riders_Are_Legal_On_Weapons(Keyword keyword)
         {
             var def = Weapon("weapon_keyword_legal", 1, 1, new[] { keyword });
             var report = new CardValidator().Validate(def, new FakeCardDatabase().Register(def));
@@ -380,7 +378,7 @@ namespace Emberfall.Core.Tests.Combat
             var supported = new[]
             {
                 Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
-                Keyword.HERALD, Keyword.TOLL, Keyword.SILENCE, Keyword.BACKDRAFT,
+                Keyword.SILENCE, Keyword.BACKDRAFT,
                 Keyword.REINFORCE,
             };
             var unsupported = new[]

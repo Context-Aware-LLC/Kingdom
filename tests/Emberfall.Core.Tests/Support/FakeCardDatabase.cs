@@ -34,7 +34,7 @@ namespace Emberfall.Core.Tests.Support
                     attack: 1, health: 1, durability: null,
                     @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                     keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
-                    cardText: "", flavorText: "", artId: "art/" + cardId, setId: SetId.CORE,
+                    flavorText: "", artId: "art/" + cardId, setId: SetId.CORE,
                     collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
                 _cache[cardId] = d;
             }

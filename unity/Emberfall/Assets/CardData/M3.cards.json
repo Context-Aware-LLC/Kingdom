@@ -8,9 +8,7 @@
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -35,8 +33,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_reclaimed_scout",
-    "cardText": "[Herald] Restore 1 Health to your hero."
+    "artId": "art/rekind_neutral_reclaimed_scout"
   },
   {
     "id": "rekind_neutral_alliance_messenger",
@@ -47,9 +44,7 @@
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -71,8 +66,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_alliance_messenger",
-    "cardText": "[Herald] Draw a card."
+    "artId": "art/rekind_neutral_alliance_messenger"
   },
   {
     "id": "rekind_neutral_restored_bulwark",
@@ -90,8 +84,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_neutral_restored_bulwark",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_neutral_restored_bulwark"
   },
   {
     "id": "rekind_neutral_salvaged_golem",
@@ -109,8 +102,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_neutral_salvaged_golem",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_neutral_salvaged_golem"
   },
   {
     "id": "rekind_neutral_bannerman",
@@ -121,9 +113,7 @@
     "health": 3,
     "class": "NEUTRAL",
     "rarity": "RARE",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -149,8 +139,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_bannerman",
-    "cardText": "[Herald] Give all friendly minions +1/+1."
+    "artId": "art/rekind_neutral_bannerman"
   },
   {
     "id": "rekind_neutral_bridge_warden",
@@ -162,8 +151,7 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -189,8 +177,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_bridge_warden",
-    "cardText": "[Bulwark] [Herald] Restore 4 Health to your hero."
+    "artId": "art/rekind_neutral_bridge_warden"
   },
   {
     "id": "rekind_neutral_truce_pact",
@@ -225,8 +212,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_truce_pact",
-    "cardText": "Give all friendly minions +2/+2."
+    "artId": "art/rekind_neutral_truce_pact"
   },
   {
     "id": "rekind_neutral_aric",
@@ -237,9 +223,7 @@
     "health": 7,
     "class": "NEUTRAL",
     "rarity": "LEGENDARY",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -285,8 +269,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_neutral_aric",
-    "cardText": "[Herald] Give all friendly minions +2/+2. Restore 5 Health to your hero."
+    "artId": "art/rekind_neutral_aric"
   },
   {
     "id": "rekind_ember_vanguard_conscript",
@@ -303,8 +286,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_ember_vanguard_conscript",
-    "cardText": "[Skirmish]"
+    "artId": "art/rekind_ember_vanguard_conscript"
   },
   {
     "id": "rekind_ember_brazier_keeper",
@@ -330,9 +312,7 @@
     "health": 3,
     "class": "EMBERWARD",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -357,8 +337,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_ember_forge_warden",
-    "cardText": "[Herald] Deal 2 damage to a minion."
+    "artId": "art/rekind_ember_forge_warden"
   },
   {
     "id": "rekind_ember_reclaimed_fortress",
@@ -413,8 +392,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_ember_reclaimed_fortress",
-    "cardText": "Give a friendly minion +2/+2 and Bulwark."
+    "artId": "art/rekind_ember_reclaimed_fortress"
   },
   {
     "id": "rekind_ember_coalition_blazer",
@@ -450,8 +428,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/rekind_ember_coalition_blazer",
-    "cardText": "Backdraft: (1)"
+    "artId": "art/rekind_ember_coalition_blazer"
   },
   {
     "id": "rekind_ember_rekindled_flame",
@@ -504,8 +481,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_ember_rekindled_flame",
-    "cardText": "Deal 4 damage to a minion. [Reinforce] a friendly minion."
+    "artId": "art/rekind_ember_rekindled_flame"
   },
   {
     "id": "rekind_ember_pyre_commander",
@@ -516,9 +492,7 @@
     "health": 5,
     "class": "EMBERWARD",
     "rarity": "EPIC",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -562,8 +536,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_ember_pyre_commander",
-    "cardText": "[Herald] Deal 1 damage to all enemy minions. [Reinforce] all friendly minions."
+    "artId": "art/rekind_ember_pyre_commander"
   },
   {
     "id": "rekind_ember_general_kira",
@@ -575,8 +548,7 @@
     "class": "EMBERWARD",
     "rarity": "LEGENDARY",
     "keywords": [
-      "FERVOR",
-      "HERALD"
+      "FERVOR"
     ],
     "rules": [
       {
@@ -622,8 +594,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/rekind_ember_general_kira",
-    "cardText": "[Fervor] [Herald] Deal 3 damage to the enemy hero. [Reinforce] all friendly minions."
+    "artId": "art/rekind_ember_general_kira"
   },
   {
     "id": "rekind_tide_harbinger",
@@ -650,9 +621,7 @@
     "health": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -676,8 +645,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tide_saltshore_scout",
-    "cardText": "[Herald] Frost an enemy."
+    "artId": "art/rekind_tide_saltshore_scout"
   },
   {
     "id": "rekind_tide_reef_reclaimer",
@@ -695,8 +663,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/rekind_tide_reef_reclaimer",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_tide_reef_reclaimer"
   },
   {
     "id": "rekind_tide_channel_mender",
@@ -749,8 +716,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tide_channel_mender",
-    "cardText": "Restore 4 Health to a friendly character. [Reinforce] a friendly minion."
+    "artId": "art/rekind_tide_channel_mender"
   },
   {
     "id": "rekind_tide_tidal_emissary",
@@ -761,9 +727,7 @@
     "health": 4,
     "class": "TIDECALLER",
     "rarity": "RARE",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -806,8 +770,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tide_tidal_emissary",
-    "cardText": "[Herald] Frost an enemy. [Reinforce] a friendly minion."
+    "artId": "art/rekind_tide_tidal_emissary"
   },
   {
     "id": "rekind_tide_shoreline_pact",
@@ -859,8 +822,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tide_shoreline_pact",
-    "cardText": "Return a minion to its owner's hand. [Reinforce] a friendly minion."
+    "artId": "art/rekind_tide_shoreline_pact"
   },
   {
     "id": "rekind_tide_deepwater_alliance",
@@ -912,12 +874,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tide_deepwater_alliance",
-    "cardText": "Frost all enemy minions. [Reinforce] all friendly minions."
+    "artId": "art/rekind_tide_deepwater_alliance"
   },
   {
     "id": "rekind_tide_marens_peacebroker",
-    "name": "Maren's Peacebroker",
+    "name": "Maren\u0027s Peacebroker",
     "type": "MINION",
     "cost": 6,
     "attack": 5,
@@ -925,8 +886,7 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -971,8 +931,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/rekind_tide_marens_peacebroker",
-    "cardText": "[Bulwark] [Herald] Frost all enemy minions. [Reinforce] all friendly minions."
+    "artId": "art/rekind_tide_marens_peacebroker"
   },
   {
     "id": "rekind_grave_memorial_wisp",
@@ -983,9 +942,7 @@
     "health": 1,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "TOLL"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1011,8 +968,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/rekind_grave_memorial_wisp",
-    "cardText": "[Toll] [Reinforce] a random friendly minion."
+    "artId": "art/rekind_grave_memorial_wisp"
   },
   {
     "id": "rekind_grave_tomb_warden",
@@ -1024,8 +980,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK",
-      "TOLL"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -1049,8 +1004,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/rekind_grave_tomb_warden",
-    "cardText": "[Bulwark] [Toll] Draw a card."
+    "artId": "art/rekind_grave_tomb_warden"
   },
   {
     "id": "rekind_grave_last_honor",
@@ -1100,8 +1054,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_grave_last_honor",
-    "cardText": "Destroy a friendly minion. Draw 2 cards."
+    "artId": "art/rekind_grave_last_honor"
   },
   {
     "id": "rekind_grave_grave_builder",
@@ -1112,9 +1065,7 @@
     "health": 4,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1137,8 +1088,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_grave_grave_builder",
-    "cardText": "[Herald] Summon a 1/1 Grave Wisp."
+    "artId": "art/rekind_grave_grave_builder"
   },
   {
     "id": "rekind_grave_pact_of_mourning",
@@ -1191,8 +1141,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_grave_pact_of_mourning",
-    "cardText": "Give a friendly minion Rekindle. [Reinforce] it."
+    "artId": "art/rekind_grave_pact_of_mourning"
   },
   {
     "id": "rekind_grave_risen_champion",
@@ -1231,8 +1180,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/rekind_grave_risen_champion",
-    "cardText": "[Rekindle] [Reinforce] a friendly minion."
+    "artId": "art/rekind_grave_risen_champion"
   },
   {
     "id": "rekind_grave_mass_rebirth",
@@ -1266,8 +1214,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_grave_mass_rebirth",
-    "cardText": "Give all friendly minions Rekindle."
+    "artId": "art/rekind_grave_mass_rebirth"
   },
   {
     "id": "rekind_token_risen_guardian",
@@ -1295,8 +1242,7 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "TOLL"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -1321,8 +1267,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/rekind_grave_caretaker_solen",
-    "cardText": "[Bulwark] [Toll] Summon two 3/3 Risen Guardians."
+    "artId": "art/rekind_grave_caretaker_solen"
   },
   {
     "id": "rekind_verdant_sapling_tender",
@@ -1333,9 +1278,7 @@
     "health": 2,
     "class": "VERDANT",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1361,8 +1304,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/rekind_verdant_sapling_tender",
-    "cardText": "[Herald] Restore 1 Health to your hero."
+    "artId": "art/rekind_verdant_sapling_tender"
   },
   {
     "id": "rekind_verdant_thornsprout_cub",
@@ -1431,8 +1373,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_rebloom_vine",
-    "cardText": "Restore 3 Health to a friendly character. [Reinforce] a friendly minion."
+    "artId": "art/rekind_verdant_rebloom_vine"
   },
   {
     "id": "rekind_verdant_overgrowth_dryad",
@@ -1443,9 +1384,7 @@
     "health": 5,
     "class": "VERDANT",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1470,8 +1409,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_overgrowth_dryad",
-    "cardText": "[Herald] Restore 3 Health to your hero."
+    "artId": "art/rekind_verdant_overgrowth_dryad"
   },
   {
     "id": "rekind_verdant_blossoming_pact",
@@ -1526,8 +1464,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_blossoming_pact",
-    "cardText": "Give a friendly minion +2/+2. Restore 3 Health to your hero."
+    "artId": "art/rekind_verdant_blossoming_pact"
   },
   {
     "id": "rekind_verdant_rootswell_champion",
@@ -1565,8 +1502,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_rootswell_champion",
-    "cardText": "[Bulwark] [Reinforce] all friendly minions."
+    "artId": "art/rekind_verdant_rootswell_champion"
   },
   {
     "id": "rekind_verdant_wildbloom_surge",
@@ -1619,8 +1555,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_wildbloom_surge",
-    "cardText": "[Reinforce] all friendly minions. Restore 4 Health to your hero."
+    "artId": "art/rekind_verdant_wildbloom_surge"
   },
   {
     "id": "rekind_verdant_praxis",
@@ -1633,8 +1568,7 @@
     "rarity": "LEGENDARY",
     "keywords": [
       "BULWARK",
-      "OVERWHELM",
-      "HERALD"
+      "OVERWHELM"
     ],
     "rules": [
       {
@@ -1660,8 +1594,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_verdant_praxis",
-    "cardText": "[Bulwark] [Overwhelm] [Herald] Restore 8 Health to your hero."
+    "artId": "art/rekind_verdant_praxis"
   },
   {
     "id": "rekind_clock_repair_drone",
@@ -1699,8 +1632,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_clock_repair_drone",
-    "cardText": "[Reinforce] a friendly minion."
+    "artId": "art/rekind_clock_repair_drone"
   },
   {
     "id": "rekind_clock_blueprint_archive",
@@ -1711,9 +1643,7 @@
     "health": 3,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1735,12 +1665,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_clock_blueprint_archive",
-    "cardText": "[Herald] Draw a card."
+    "artId": "art/rekind_clock_blueprint_archive"
   },
   {
     "id": "rekind_clock_tinkers_gambit",
-    "name": "Tinker's Gambit",
+    "name": "Tinker\u0027s Gambit",
     "type": "SPELL",
     "cost": 2,
     "class": "CLOCKWRIGHT",
@@ -1786,8 +1715,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_clock_tinkers_gambit",
-    "cardText": "Return a friendly minion to your hand. Draw a card."
+    "artId": "art/rekind_clock_tinkers_gambit"
   },
   {
     "id": "rekind_clock_reconstructed_automaton",
@@ -1805,8 +1733,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_clock_reconstructed_automaton",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_clock_reconstructed_automaton"
   },
   {
     "id": "rekind_clock_assembly_line",
@@ -1857,8 +1784,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_clock_assembly_line",
-    "cardText": "Summon two 1/1 Gear Wisps. [Reinforce] all friendly minions."
+    "artId": "art/rekind_clock_assembly_line"
   },
   {
     "id": "rekind_clock_mainspring_halberd",
@@ -1869,9 +1795,7 @@
     "durability": 3,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
-    "keywords": [
-      "TOLL"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1893,8 +1817,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_clock_mainspring_halberd",
-    "cardText": "[Toll] Draw a card."
+    "artId": "art/rekind_clock_mainspring_halberd"
   },
   {
     "id": "rekind_clock_upgrade_protocol",
@@ -1929,8 +1852,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_clock_upgrade_protocol",
-    "cardText": "Give a friendly minion +3/+3."
+    "artId": "art/rekind_clock_upgrade_protocol"
   },
   {
     "id": "rekind_clock_masterwork_constructor",
@@ -1941,9 +1863,7 @@
     "health": 4,
     "class": "CLOCKWRIGHT",
     "rarity": "EPIC",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1986,8 +1906,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_clock_masterwork_constructor",
-    "cardText": "[Herald] Summon three 1/1 Gear Wisps. [Reinforce] all friendly minions."
+    "artId": "art/rekind_clock_masterwork_constructor"
   },
   {
     "id": "rekind_clock_cogsworth",
@@ -1999,8 +1918,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -2045,8 +1963,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_clock_cogsworth",
-    "cardText": "[Bulwark] [Herald] Give all friendly minions +2/+2. Draw 2 cards."
+    "artId": "art/rekind_clock_cogsworth"
   },
   {
     "id": "rekind_night_shadow_scout",
@@ -2063,8 +1980,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_shadow_scout",
-    "cardText": "[Shroud]"
+    "artId": "art/rekind_night_shadow_scout"
   },
   {
     "id": "rekind_night_ink_viper",
@@ -2083,8 +1999,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/rekind_night_ink_viper",
-    "cardText": "[Venom] [Shroud]"
+    "artId": "art/rekind_night_ink_viper"
   },
   {
     "id": "rekind_night_marked_for_death",
@@ -2118,8 +2033,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_marked_for_death",
-    "cardText": "Deal 3 damage to an enemy."
+    "artId": "art/rekind_night_marked_for_death"
   },
   {
     "id": "rekind_night_veilborn_spy",
@@ -2131,8 +2045,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "SHROUD",
-      "HERALD"
+      "SHROUD"
     ],
     "rules": [
       {
@@ -2158,8 +2071,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_veilborn_spy",
-    "cardText": "[Shroud] [Herald] Deal 2 damage to a minion."
+    "artId": "art/rekind_night_veilborn_spy"
   },
   {
     "id": "rekind_night_contract_kill",
@@ -2209,8 +2121,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_contract_kill",
-    "cardText": "Destroy a minion. Draw a card."
+    "artId": "art/rekind_night_contract_kill"
   },
   {
     "id": "rekind_night_network_operative",
@@ -2248,8 +2159,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_network_operative",
-    "cardText": "[Shroud] [Reinforce] a friendly minion."
+    "artId": "art/rekind_night_network_operative"
   },
   {
     "id": "rekind_night_double_agent",
@@ -2261,8 +2171,7 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [
-      "SHROUD",
-      "TOLL"
+      "SHROUD"
     ],
     "rules": [
       {
@@ -2308,8 +2217,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_double_agent",
-    "cardText": "[Shroud] [Toll] Deal 3 damage to all enemies."
+    "artId": "art/rekind_night_double_agent"
   },
   {
     "id": "rekind_night_seraphine",
@@ -2321,8 +2229,7 @@
     "class": "NIGHTVEIL",
     "rarity": "LEGENDARY",
     "keywords": [
-      "SHROUD",
-      "HERALD"
+      "SHROUD"
     ],
     "rules": [
       {
@@ -2367,8 +2274,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_night_seraphine",
-    "cardText": "[Shroud] [Herald] Give all friendly minions Shroud. [Reinforce] all friendly minions."
+    "artId": "art/rekind_night_seraphine"
   },
   {
     "id": "rekind_stone_stone_layer",
@@ -2386,8 +2292,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_stone_stone_layer",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_stone_stone_layer"
   },
   {
     "id": "rekind_stone_quarry_worker",
@@ -2404,8 +2309,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_quarry_worker",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_stone_quarry_worker"
   },
   {
     "id": "rekind_stone_earthen_rampart",
@@ -2460,8 +2364,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_earthen_rampart",
-    "cardText": "Give a friendly minion +0/+4 and Bulwark."
+    "artId": "art/rekind_stone_earthen_rampart"
   },
   {
     "id": "rekind_stone_boulder_sentinel",
@@ -2473,8 +2376,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -2500,8 +2402,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_boulder_sentinel",
-    "cardText": "[Bulwark] [Herald] Restore 2 Health to your hero."
+    "artId": "art/rekind_stone_boulder_sentinel"
   },
   {
     "id": "rekind_stone_iron_foundation",
@@ -2554,8 +2455,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_iron_foundation",
-    "cardText": "[Reinforce] all friendly minions. Give them Bulwark."
+    "artId": "art/rekind_stone_iron_foundation"
   },
   {
     "id": "rekind_stone_fortified_colossus",
@@ -2572,8 +2472,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_fortified_colossus",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_stone_fortified_colossus"
   },
   {
     "id": "rekind_stone_unbreakable_wall",
@@ -2591,8 +2490,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/rekind_stone_unbreakable_wall",
-    "cardText": "[Bulwark]"
+    "artId": "art/rekind_stone_unbreakable_wall"
   },
   {
     "id": "rekind_stone_aldric",
@@ -2604,8 +2502,7 @@
     "class": "STONEWARDEN",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -2650,8 +2547,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_stone_aldric",
-    "cardText": "[Bulwark] [Herald] [Reinforce] all friendly minions. Give them Bulwark."
+    "artId": "art/rekind_stone_aldric"
   },
   {
     "id": "rekind_tempest_static_wisp",
@@ -2668,8 +2564,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_static_wisp",
-    "cardText": "[Skirmish]"
+    "artId": "art/rekind_tempest_static_wisp"
   },
   {
     "id": "rekind_tempest_galecleaver",
@@ -2704,8 +2599,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_galecleaver",
-    "cardText": "Whenever this attacks, [Backdraft] (2)."
+    "artId": "art/rekind_tempest_galecleaver"
   },
   {
     "id": "rekind_tempest_chain_caller",
@@ -2716,9 +2610,7 @@
     "health": 2,
     "class": "TEMPEST",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -2743,8 +2635,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_chain_caller",
-    "cardText": "[Herald] Deal 1 damage to an enemy."
+    "artId": "art/rekind_tempest_chain_caller"
   },
   {
     "id": "rekind_tempest_lightning_lash",
@@ -2778,8 +2669,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_lightning_lash",
-    "cardText": "Deal 2 damage to all enemy minions."
+    "artId": "art/rekind_tempest_lightning_lash"
   },
   {
     "id": "rekind_tempest_storm_channeler",
@@ -2796,8 +2686,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_storm_channeler",
-    "cardText": "Arcane Surge +1"
+    "artId": "art/rekind_tempest_storm_channeler"
   },
   {
     "id": "rekind_tempest_voltaic_sentinel",
@@ -2809,8 +2698,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK",
-      "TOLL"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -2856,8 +2744,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_voltaic_sentinel",
-    "cardText": "[Bulwark] [Toll] Deal 2 damage to all enemies."
+    "artId": "art/rekind_tempest_voltaic_sentinel"
   },
   {
     "id": "rekind_tempest_thunderstrike",
@@ -2911,12 +2798,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_thunderstrike",
-    "cardText": "Deal 3 damage to a minion. Deal 1 damage to all enemy minions."
+    "artId": "art/rekind_tempest_thunderstrike"
   },
   {
     "id": "rekind_tempest_stormcallers_pact",
-    "name": "Stormcaller's Pact",
+    "name": "Stormcaller\u0027s Pact",
     "type": "SPELL",
     "cost": 5,
     "class": "TEMPEST",
@@ -2985,8 +2871,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/rekind_tempest_stormcallers_pact",
-    "cardText": "Deal 3 damage to all enemies. [Reinforce] all friendly minions."
+    "artId": "art/rekind_tempest_stormcallers_pact"
   },
   {
     "id": "rekind_tempest_vael",
@@ -2998,8 +2883,7 @@
     "class": "TEMPEST",
     "rarity": "LEGENDARY",
     "keywords": [
-      "DOUBLESTRIKE",
-      "HERALD"
+      "DOUBLESTRIKE"
     ],
     "rules": [
       {
@@ -3046,7 +2930,6 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/rekind_tempest_vael",
-    "cardText": "[Doublestrike] [Herald] Deal 2 damage to all enemies."
+    "artId": "art/rekind_tempest_vael"
   }
 ]

@@ -15,8 +15,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_galewind_runner",
-    "cardText": "[Skirmish]"
+    "artId": "art/neutral_galewind_runner"
   },
   {
     "id": "neutral_razorcoil_adder",
@@ -34,8 +33,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_razorcoil_adder",
-    "cardText": "[Venom]"
+    "artId": "art/neutral_razorcoil_adder"
   },
   {
     "id": "neutral_phantom_duelist",
@@ -52,8 +50,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_phantom_duelist",
-    "cardText": "[Shroud]"
+    "artId": "art/neutral_phantom_duelist"
   },
   {
     "id": "neutral_doublestrike_hawk",
@@ -71,8 +68,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_doublestrike_hawk",
-    "cardText": "[Doublestrike]"
+    "artId": "art/neutral_doublestrike_hawk"
   },
   {
     "id": "neutral_lifeclaw_bat",
@@ -91,8 +87,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_lifeclaw_bat",
-    "cardText": "[Skirmish] [Lifedrain]"
+    "artId": "art/neutral_lifeclaw_bat"
   },
   {
     "id": "neutral_spellwarden",
@@ -109,8 +104,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_spellwarden",
-    "cardText": "Arcane Surge +1"
+    "artId": "art/neutral_spellwarden"
   },
   {
     "id": "neutral_ironclad_bulwark",
@@ -129,8 +123,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_ironclad_bulwark",
-    "cardText": "[Bulwark] [Aegis]"
+    "artId": "art/neutral_ironclad_bulwark"
   },
   {
     "id": "neutral_soulbound_revenant",
@@ -141,10 +134,7 @@
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "HERALD",
-      "TOLL"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -185,8 +175,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/neutral_soulbound_revenant",
-    "cardText": "[Herald] Draw a card. [Toll] Summon a 1/1 Wisp."
+    "artId": "art/neutral_soulbound_revenant"
   },
   {
     "id": "neutral_venomscale_drake",
@@ -204,8 +193,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/neutral_venomscale_drake",
-    "cardText": "[Venom]"
+    "artId": "art/neutral_venomscale_drake"
   },
   {
     "id": "neutral_duneborn_construct",
@@ -217,8 +205,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -246,8 +233,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_duneborn_construct",
-    "cardText": "[Bulwark] [Herald] Give your minions +1/+1."
+    "artId": "art/neutral_duneborn_construct"
   },
   {
     "id": "neutral_bog_crawler",
@@ -265,8 +251,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_bog_crawler",
-    "cardText": "[Skirmish]"
+    "artId": "art/neutral_bog_crawler"
   },
   {
     "id": "neutral_searing_quill",
@@ -281,8 +266,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_searing_quill",
-    "cardText": ""
+    "artId": "art/neutral_searing_quill"
   },
   {
     "id": "ember_blazewing",
@@ -300,8 +284,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/ember_blazewing",
-    "cardText": "[Doublestrike]"
+    "artId": "art/ember_blazewing"
   },
   {
     "id": "ember_scalded_striker",
@@ -313,8 +296,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [
-      "SKIRMISH",
-      "HERALD"
+      "SKIRMISH"
     ],
     "rules": [
       {
@@ -340,8 +322,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_scalded_striker",
-    "cardText": "[Skirmish] [Herald] Deal 1 damage to a minion."
+    "artId": "art/ember_scalded_striker"
   },
   {
     "id": "ember_fusillade",
@@ -395,8 +376,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_fusillade",
-    "cardText": "Deal 5 damage to a minion. Deal 2 damage to your hero."
+    "artId": "art/ember_fusillade"
   },
   {
     "id": "ember_cinderplate_golem",
@@ -432,8 +412,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/ember_cinderplate_golem",
-    "cardText": "Backdraft: (2)"
+    "artId": "art/ember_cinderplate_golem"
   },
   {
     "id": "ember_vanguard_drake",
@@ -445,8 +424,7 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [
-      "VANGUARD",
-      "HERALD"
+      "VANGUARD"
     ],
     "rules": [
       {
@@ -473,8 +451,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/ember_vanguard_drake",
-    "cardText": "[Vanguard] [Herald] Deal 2 damage to the enemy hero."
+    "artId": "art/ember_vanguard_drake"
   },
   {
     "id": "ember_scorch_blade",
@@ -510,8 +487,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_scorch_blade",
-    "cardText": "After your hero attacks, deal 1 damage to the enemy hero."
+    "artId": "art/ember_scorch_blade"
   },
   {
     "id": "ember_magmacore_warden",
@@ -529,8 +505,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/ember_magmacore_warden",
-    "cardText": "[Bulwark]"
+    "artId": "art/ember_magmacore_warden"
   },
   {
     "id": "ember_heat_surge",
@@ -581,8 +556,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_heat_surge",
-    "cardText": "Deal 2 damage to all minions. Draw a card."
+    "artId": "art/ember_heat_surge"
   },
   {
     "id": "tide_venomfin",
@@ -600,8 +574,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/tide_venomfin",
-    "cardText": "[Venom]"
+    "artId": "art/tide_venomfin"
   },
   {
     "id": "tide_frostwhisper",
@@ -619,8 +592,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_frostwhisper",
-    "cardText": "[Frost]"
+    "artId": "art/tide_frostwhisper"
   },
   {
     "id": "tide_icescale_whelp",
@@ -638,8 +610,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_icescale_whelp",
-    "cardText": "[Frost]"
+    "artId": "art/tide_icescale_whelp"
   },
   {
     "id": "tide_glacial_echo",
@@ -689,8 +660,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_glacial_echo",
-    "cardText": "Frost a minion. Draw a card."
+    "artId": "art/tide_glacial_echo"
   },
   {
     "id": "tide_icecrown_herald",
@@ -702,8 +672,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -728,8 +697,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_icecrown_herald",
-    "cardText": "[Bulwark] [Herald] Frost an enemy."
+    "artId": "art/tide_icecrown_herald"
   },
   {
     "id": "tide_abyssal_devourer",
@@ -741,8 +709,7 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [
-      "SKIRMISH",
-      "HERALD"
+      "SKIRMISH"
     ],
     "rules": [
       {
@@ -768,12 +735,11 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_abyssal_devourer",
-    "cardText": "[Skirmish] [Herald] Return a minion to its owner's hand."
+    "artId": "art/tide_abyssal_devourer"
   },
   {
     "id": "tide_maren_avatar",
-    "name": "Maren's Avatar",
+    "name": "Maren\u0027s Avatar",
     "type": "MINION",
     "cost": 7,
     "attack": 5,
@@ -781,8 +747,7 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -808,8 +773,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_maren_avatar",
-    "cardText": "[Bulwark] [Herald] Frost all enemy minions."
+    "artId": "art/tide_maren_avatar"
   },
   {
     "id": "tide_deep_channel",
@@ -842,8 +806,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_deep_channel",
-    "cardText": "Return all enemy minions to their owner's hand."
+    "artId": "art/tide_deep_channel"
   },
   {
     "id": "tide_coldsnap_knife",
@@ -854,9 +817,7 @@
     "durability": 2,
     "class": "TIDECALLER",
     "rarity": "RARE",
-    "keywords": [
-      "HERALD"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -880,8 +841,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_coldsnap_knife",
-    "cardText": "[Herald] Frost an enemy."
+    "artId": "art/tide_coldsnap_knife"
   },
   {
     "id": "grave_deathweaver",
@@ -892,9 +852,7 @@
     "health": 2,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "TOLL"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -917,8 +875,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_deathweaver",
-    "cardText": "[Toll] Draw a card."
+    "artId": "art/grave_deathweaver"
   },
   {
     "id": "grave_spectral_wolf",
@@ -930,8 +887,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "SKIRMISH",
-      "TOLL"
+      "SKIRMISH"
     ],
     "rules": [
       {
@@ -958,8 +914,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_spectral_wolf",
-    "cardText": "[Skirmish] [Toll] Restore 3 Health to your hero."
+    "artId": "art/grave_spectral_wolf"
   },
   {
     "id": "grave_boneshield_sentinel",
@@ -978,8 +933,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_boneshield_sentinel",
-    "cardText": "[Bulwark] [Aegis]"
+    "artId": "art/grave_boneshield_sentinel"
   },
   {
     "id": "grave_bone_horde",
@@ -1011,8 +965,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_bone_horde",
-    "cardText": "Summon three 1/1 Grave Wisps."
+    "artId": "art/grave_bone_horde"
   },
   {
     "id": "grave_plague_bringer",
@@ -1024,8 +977,7 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [
-      "VENOM",
-      "TOLL"
+      "VENOM"
     ],
     "rules": [
       {
@@ -1050,8 +1002,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_plague_bringer",
-    "cardText": "[Venom] [Toll] Summon two 1/1 Grave Wisps."
+    "artId": "art/grave_plague_bringer"
   },
   {
     "id": "grave_echoing_knell",
@@ -1086,8 +1037,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_echoing_knell",
-    "cardText": "Give your minions +1/+1."
+    "artId": "art/grave_echoing_knell"
   },
   {
     "id": "grave_warden_of_dusk",
@@ -1099,8 +1049,7 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
-      "HERALD"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -1146,8 +1095,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_warden_of_dusk",
-    "cardText": "[Bulwark] [Herald] Destroy a friendly minion. Restore 10 Health to your hero."
+    "artId": "art/grave_warden_of_dusk"
   },
   {
     "id": "verdant_venomthorn",
@@ -1166,8 +1114,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_venomthorn",
-    "cardText": "[Bulwark] [Venom]"
+    "artId": "art/verdant_venomthorn"
   },
   {
     "id": "verdant_windroot_sprinter",
@@ -1179,8 +1126,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "SKIRMISH",
-      "HERALD"
+      "SKIRMISH"
     ],
     "rules": [
       {
@@ -1207,8 +1153,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_windroot_sprinter",
-    "cardText": "[Skirmish] [Herald] Restore 2 Health to your hero."
+    "artId": "art/verdant_windroot_sprinter"
   },
   {
     "id": "verdant_greatroot_speaker",
@@ -1225,8 +1170,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_greatroot_speaker",
-    "cardText": "Arcane Surge +1"
+    "artId": "art/verdant_greatroot_speaker"
   },
   {
     "id": "verdant_primal_mend",
@@ -1281,8 +1225,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_primal_mend",
-    "cardText": "Restore 6 Health to a friendly character. Give a friendly minion +2/+2."
+    "artId": "art/verdant_primal_mend"
   },
   {
     "id": "verdant_world_titan",
@@ -1300,8 +1243,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_world_titan",
-    "cardText": "[Bulwark] [Overwhelm]"
+    "artId": "art/verdant_world_titan"
   },
   {
     "id": "verdant_thorn_swarm",
@@ -1375,7 +1317,6 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_thorn_swarm",
-    "cardText": "Deal 2 damage to all enemies. Restore 4 Health to your hero."
+    "artId": "art/verdant_thorn_swarm"
   }
 ]

@@ -16,8 +16,9 @@ namespace Emberfall.Core.Cards
         private static readonly HashSet<string> CardProperties = new HashSet<string>(StringComparer.Ordinal)
         {
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
-            "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId", "cardText",
+            "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId",
             "flavorText", "factionId", "keywords", "rules", "_comment"
+        };
         };
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -69,7 +70,6 @@ namespace Emberfall.Core.Cards
             bool collectible = Bool(el, "collectible") ?? true;
             bool reqPrim = Bool(el, "requiresEngineeringPrimitive") ?? false;
             string artId = Str(el, "artId") ?? "";
-            string cardText = Str(el, "cardText") ?? "";
             string flavor = Str(el, "flavorText") ?? "";
             string faction = Str(el, "factionId") ?? "";
 
@@ -84,9 +84,8 @@ namespace Emberfall.Core.Cards
                 if (ruleElements.ValueKind != JsonValueKind.Array)
                     throw new FormatException("Card JSON rules must be an array.");
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
-            }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, rules, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
+                keywords, rules, flavor, artId, setId, collectible, tribe, faction, reqPrim);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)

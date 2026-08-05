@@ -43,8 +43,6 @@ namespace Emberfall.Core.Cards
             [Keyword.FROST] = WeaponKeywordReach.Live,
             [Keyword.DOUBLESTRIKE] = WeaponKeywordReach.Live,
 
-            [Keyword.HERALD] = WeaponKeywordReach.Marker,
-            [Keyword.TOLL] = WeaponKeywordReach.Marker,
             [Keyword.SILENCE] = WeaponKeywordReach.Marker,
             [Keyword.BACKDRAFT] = WeaponKeywordReach.Marker,
             [Keyword.REINFORCE] = WeaponKeywordReach.Marker,
