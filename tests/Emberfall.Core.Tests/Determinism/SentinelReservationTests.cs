@@ -48,7 +48,7 @@ namespace Emberfall.Core.Tests.Determinism
             Array.Empty<Keyword>(),
             new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
                 amount: null, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ANY_MINION") },
+                selector: "ANY_MINION") },
             "", "", "art/bounce", SetId.CORE, true, null, "", false);
 
         private static readonly CardDefinition Vanilla = new CardDefinition(

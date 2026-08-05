@@ -95,7 +95,7 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             // Seedling Rite: "Gain an empty Mana Crystal."
             var rite = Spell("rite", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "FRIENDLY_HERO", permanent: true, empty: true));
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 5);
@@ -113,7 +113,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void GainMana_Permanent_Filled_Raises_Max_And_Available()
         {
             var ramp = Spell("ramp", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "FRIENDLY_HERO", permanent: true, empty: false));
             var db = new FakeCardDatabase().Register(ramp);
             var s = MainPhase(p0Mana: 5);
@@ -129,7 +129,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void GainMana_Permanent_Caps_At_Ten_And_Stays_Silent_When_Nothing_Gained()
         {
             var rite = Spell("rite", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "FRIENDLY_HERO", permanent: true, empty: true));
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 10); // already at the cap
@@ -147,7 +147,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void GainMana_Default_Is_Temporary_Spark_Pattern()
         {
             var coin = Spell("coin", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "FRIENDLY_HERO"));
             var db = new FakeCardDatabase().Register(coin);
             var s = MainPhase(p0Mana: 5);
@@ -166,7 +166,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void PlayCard_With_AnySelector_And_No_Target_Is_Rejected_With_Zero_Mutation()
         {
             var bolt = Spell("bolt", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE,
-                amount: 3, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 3, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "ANY_CHARACTER"));
             var db = new FakeCardDatabase().Register(bolt);
             var s = MainPhase();
@@ -185,7 +185,7 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             // Undertow's ANY_MINION cannot bounce a hero.
             var undertow = Spell("bounce", cost: 2, new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                amount: null, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: null, amount2: null, tokenId: null, grantedKeyword: null,
                 selector: "ANY_MINION"));
             var db = new FakeCardDatabase().Register(undertow);
             var s = MainPhase();
@@ -201,7 +201,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void AnyFriendlyMinion_Selector_Rejects_An_Enemy_Minion_Target()
         {
             var bloom = Spell("bloom", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.BUFF,
-                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null,
                 selector: "ANY_FRIENDLY_MINION"));
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(bloom).Register(vanilla);
@@ -219,7 +219,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void AnyFriendlyMinion_Selector_Accepts_A_Friendly_Minion_Target()
         {
             var bloom = Spell("bloom", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.BUFF,
-                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null, vfxOverride: null,
+                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null,
                 selector: "ANY_FRIENDLY_MINION"));
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(bloom).Register(vanilla);
@@ -244,7 +244,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var cheer = Minion("cheer", cost: 1, atk: 1, hp: 1, new[]
             {
                 new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.BUFF, amount: 1, amount2: 0,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "SELF"),
+                    tokenId: null, grantedKeyword: null, selector: "SELF"),
             });
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(cheer).Register(vanilla);
@@ -266,7 +266,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var trap = Minion("trap", cost: 1, atk: 1, hp: 1, new[]
             {
                 new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: 1, amount2: null,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ADJACENT"),
+                    tokenId: null, grantedKeyword: null, selector: "ADJACENT"),
             });
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(trap).Register(vanilla);

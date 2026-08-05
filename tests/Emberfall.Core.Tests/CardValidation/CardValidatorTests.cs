@@ -87,7 +87,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Adjacent_Selector_Is_Implemented_Without_A_Primitive_Gate()
         {
             EffectDef Adjacent() => new EffectDef(Trigger.ON_PLAY, Action.DEAL_DAMAGE, amount: 1,
-                amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ADJACENT");
+                amount2: null, tokenId: null, grantedKeyword: null, selector: "ADJACENT");
             CardDefinition Card(bool gated) => new CardDefinition(
                 id: "test_adjacent", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
@@ -108,7 +108,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Empty_Without_Permanent_Is_A_Warning_Not_An_Error()
         {
             var effect = new EffectDef(Trigger.ON_CAST, Action.GAIN_MANA, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "FRIENDLY_HERO",
+                tokenId: null, grantedKeyword: null, selector: "FRIENDLY_HERO",
                 permanent: false, empty: true);
             var def = new CardDefinition(
                 id: "test_empty_mana", name: "Test", type: CardType.SPELL, cost: 1,
@@ -156,7 +156,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Summon_Without_TokenId_Is_An_Error()
         {
             var effect = new EffectDef(Trigger.ON_DEATH, Action.SUMMON, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var def = new CardDefinition(
                 id: "test_bad_summon", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
@@ -189,7 +189,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Action_Target_Capability_Rejects_A_Selector_Whose_Objects_The_Handler_Cannot_Affect()
         {
             var effect = new EffectDef(Trigger.ON_CAST, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 target: new TargetSpec("FRIENDLY_WEAPON"));
             CardDefinition def = WithEffect(CardType.SPELL, effect);
 
@@ -205,7 +205,7 @@ namespace Emberfall.Core.Tests.CardValidation
             CardType type, Trigger trigger)
         {
             var effect = new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 target: new TargetSpec("SELF"));
             CardDefinition def = WithEffect(type, effect);
 
@@ -219,7 +219,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void TriggerSource_Capability_Fails_Closed_When_The_Event_Source_Kind_Is_Incompatible()
         {
             var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 target: new TargetSpec("TRIGGER_SOURCE"));
             CardDefinition def = WithEffect(CardType.MINION, effect);
 
@@ -249,7 +249,7 @@ namespace Emberfall.Core.Tests.CardValidation
 
         private static EffectDef TurnStart(TurnOwner? owner)
             => new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 condition: new EffectConditionDef(ConditionType.TURN_OWNER, owner));
 
         [Test]
@@ -260,7 +260,7 @@ namespace Emberfall.Core.Tests.CardValidation
             // went live under it: ON_TURN_START (EF-011), then ON_HEAL (EF-015). AURA is the last one
             // left, so when EF-017b lands this test needs a different subject or a different shape.
             var effect = new EffectDef(Trigger.AURA, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
             Assert.That(report.Ok, Is.False);
             Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
@@ -273,7 +273,7 @@ namespace Emberfall.Core.Tests.CardValidation
             // character whose health was restored, and only a minion can be that character: a SPELL is
             // not a permanent, a WEAPON has no health. So the type gate here is permanent, not staging.
             EffectDef Heal() => new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
 
             var onMinion = Validator().Validate(WithEffect(CardType.MINION, Heal()), Db(WithEffect(CardType.MINION, Heal())));
             Assert.That(onMinion.Ok, Is.True,
@@ -294,7 +294,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnAttack_Is_Dead_On_A_Minion_But_Live_On_A_Weapon()
         {
             EffectDef Attack() => new EffectDef(Trigger.ON_ATTACK, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
 
             var onMinion = Validator().Validate(WithEffect(CardType.MINION, Attack()), Db(WithEffect(CardType.MINION, Attack())));
             Assert.That(onMinion.Ok, Is.False);
@@ -321,7 +321,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnTurnStart_Requires_A_TurnOwner_Condition()
         {
             var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var def = WithEffect(CardType.MINION, effect);
 
             var report = Validator().Validate(def, Db(def));
@@ -369,7 +369,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void TurnOwner_Condition_Is_Rejected_On_Other_Triggers()
         {
             var effect = new EffectDef(Trigger.ON_PLAY, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER));
             var def = WithEffect(CardType.MINION, effect);
 
@@ -419,6 +419,17 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void CardJson_Rejects_The_Removed_Presentation_Override_Field()
+        {
+            const string json = "{\"id\":\"legacy_vfx\",\"type\":\"SPELL\",\"effects\":[{" +
+                "\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"vfxEvent\":\"onDraw\"}]}";
+
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
+
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property 'vfxEvent' in effect."));
+        }
+
+        [Test]
         public void CardJson_Accepts_All_Known_Target_And_Filter_Properties()
         {
             const string json = "{\"id\":\"known_target\",\"type\":\"SPELL\",\"effects\":[{"
@@ -451,7 +462,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnTurnEnd_Is_Live_After_EF012()
         {
             var effect = new EffectDef(Trigger.ON_TURN_END, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var def = WithEffect(CardType.MINION, effect);
 
             var report = Validator().Validate(def, Db(def));
@@ -464,7 +475,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnDamaged_Is_Live_After_EF013()
         {
             var effect = new EffectDef(Trigger.ON_DAMAGED, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var def = WithEffect(CardType.MINION, effect);
 
             var report = Validator().Validate(def, Db(def));
@@ -477,7 +488,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnSpellCast_Is_Live_After_EF016()
         {
             var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
             var def = WithEffect(CardType.MINION, effect);
 
             var report = Validator().Validate(def, Db(def));
@@ -490,7 +501,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
         {
             EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+                tokenId: null, grantedKeyword: null);
 
             var onMinion = Validator().Validate(WithEffect(CardType.MINION, Death()), Db(WithEffect(CardType.MINION, Death())));
             Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion toll.");

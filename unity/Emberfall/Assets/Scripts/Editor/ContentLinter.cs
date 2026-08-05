@@ -28,7 +28,6 @@ namespace Emberfall.Editor
         float ManaValueOf(Action verb, bool aoe);
         int MaxSimultaneousPersistentAuras();
         int PerTurnActionCap();
-        bool IsHeavyTierEvent(VfxEvent e);
         bool IsHighFrequencyTrigger(Trigger t);
     }
 
@@ -65,7 +64,6 @@ namespace Emberfall.Editor
         public float ManaValueOf(Action verb, bool aoe) => aoe ? 1.0f : 1.5f;
         public int MaxSimultaneousPersistentAuras() => 14;
         public int PerTurnActionCap() => 30;
-        public bool IsHeavyTierEvent(VfxEvent e) => false;
         public bool IsHighFrequencyTrigger(Trigger t) => t == Trigger.ON_ATTACK || t == Trigger.ON_DAMAGED;
     }
 

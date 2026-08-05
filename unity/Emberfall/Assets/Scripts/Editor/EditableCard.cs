@@ -82,7 +82,6 @@ namespace Emberfall.Editor
         public bool HasAmount2; public int Amount2;
         public bool HasTokenId; public string TokenId = "";
         public bool HasKeyword; public Keyword Keyword;
-        public bool HasVfxOverride; public VfxEvent VfxOverride;
         public bool HasSelector; public string Selector = "";
         public bool HasCondition; public ConditionType ConditionKind = ConditionType.TURN_OWNER;
         public TurnOwner TurnOwnerScope = TurnOwner.CONTROLLER;
@@ -96,7 +95,6 @@ namespace Emberfall.Editor
             HasAmount2 = fx.Amount2.HasValue, Amount2 = fx.Amount2 ?? 0,
             HasTokenId = !string.IsNullOrEmpty(fx.TokenId), TokenId = fx.TokenId ?? "",
             HasKeyword = fx.GrantedKeyword.HasValue, Keyword = fx.GrantedKeyword ?? default,
-            HasVfxOverride = fx.VfxOverride.HasValue, VfxOverride = fx.VfxOverride ?? default,
             HasSelector = !string.IsNullOrEmpty(fx.Selector), Selector = fx.Selector ?? "",
             HasCondition = fx.Condition != null,
             ConditionKind = fx.Condition?.Type ?? ConditionType.TURN_OWNER,
@@ -110,7 +108,6 @@ namespace Emberfall.Editor
             HasAmount2 ? Amount2 : (int?)null,
             HasTokenId ? TokenId : null,
             HasKeyword ? Keyword : (Keyword?)null,
-            HasVfxOverride ? VfxOverride : (VfxEvent?)null,
             HasSelector ? Selector : null,
             Permanent, Empty,
             HasCondition ? new EffectConditionDef(ConditionKind, TurnOwnerScope) : null);

@@ -285,9 +285,6 @@ namespace Emberfall.Editor
                     else fx.Empty = false;
                 }
 
-                fx.HasVfxOverride = EditorGUILayout.Toggle("override vfxEvent", fx.HasVfxOverride);
-                if (fx.HasVfxOverride) fx.VfxOverride = (VfxEvent)EditorGUILayout.EnumPopup("vfxEvent", fx.VfxOverride);
-
                 int selIndex = fx.HasSelector ? Array.IndexOf(SelectorOptions, fx.Selector) : 0;
                 if (selIndex < 0) selIndex = 0;
                 int newSelIndex = EditorGUILayout.Popup("target.selector", selIndex, SelectorOptions);

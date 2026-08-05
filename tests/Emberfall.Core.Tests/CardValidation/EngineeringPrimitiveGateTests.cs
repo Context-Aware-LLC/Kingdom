@@ -88,7 +88,7 @@ namespace Emberfall.Core.Tests.CardValidation
             effects: new[]
             {
                 new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 1,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ANY_FRIENDLY_MINION"),
+                    tokenId: null, grantedKeyword: null, selector: "ANY_FRIENDLY_MINION"),
             },
             cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);

@@ -274,7 +274,7 @@ namespace Emberfall.Core.Tests.Combat
                 @class: CardClass.VERDANT, rarity: Rarity.RARE,
                 keywords: System.Array.Empty<Keyword>(),
                 effects: new[] { new EffectDef(Trigger.ON_ATTACK, Verb.HEAL, amount: 2, amount2: null,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "FRIENDLY_HERO") },
+                    tokenId: null, grantedKeyword: null, selector: "FRIENDLY_HERO") },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 

@@ -95,7 +95,6 @@ namespace Emberfall.Editor
                         w.WriteString("action", fx.Action.ToString());
                         if (fx.Amount is int a) w.WriteNumber("amount", a);
                         if (fx.Amount2 is int a2) w.WriteNumber("amount2", a2);
-                        if (fx.VfxOverride is { } vfx) w.WriteString("vfxEvent", vfx.ToString());
                         if (!string.IsNullOrEmpty(fx.TokenId) || fx.GrantedKeyword is not null
                             || fx.Permanent || fx.Empty)
                         {

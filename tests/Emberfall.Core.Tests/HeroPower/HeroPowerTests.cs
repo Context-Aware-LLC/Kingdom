@@ -85,7 +85,7 @@ namespace Emberfall.Core.Tests.HeroPower
                 "", "", "art/token_wisp", SetId.CORE, false, null, "", false);
 
         private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? tokenId = null)
-            => new EffectDef(trigger, action, amount, null, tokenId, null, null);
+            => new EffectDef(trigger, action, amount, null, tokenId, null);
 
         private static HeroPowerIntent UseHeroPower(GameState s, IReadOnlyList<TargetRef>? targets = null)
             => new HeroPowerIntent(s.ActivePlayer, targets ?? System.Array.Empty<TargetRef>());
@@ -175,7 +175,7 @@ namespace Emberfall.Core.Tests.HeroPower
             // DEAL_DAMAGE default (enemy face) with mana spent.
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+                new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null,
                                       "ANY_CHARACTER") }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);

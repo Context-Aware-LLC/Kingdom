@@ -70,7 +70,7 @@ namespace Emberfall.Core.Tests.Interpreter
 
         private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, int? amount2 = null,
             string? tokenId = null, Keyword? keyword = null)
-            => new EffectDef(trigger, action, amount, amount2, tokenId, keyword, null);
+            => new EffectDef(trigger, action, amount, amount2, tokenId, keyword);
 
         private static CardDefinition Minion(string id, int cost, int atk, int hp,
             IReadOnlyList<Keyword>? keywords = null, IReadOnlyList<EffectDef>? effects = null)

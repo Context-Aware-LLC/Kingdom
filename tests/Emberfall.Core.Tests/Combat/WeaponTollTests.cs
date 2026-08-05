@@ -55,7 +55,7 @@ namespace Emberfall.Core.Tests.Combat
         /// <summary>Toll: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
         private static EffectDef Rattle(int dmg)
             => new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: dmg, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO");
+                tokenId: null, grantedKeyword: null, selector: "ENEMY_HERO");
 
         private static FakeCardDatabase Db() => new FakeCardDatabase()
             .Register(Weapon(Rattler, atk: 2, durability: 1, Rattle(3)))
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.Combat
             .Register(Weapon(Successor, atk: 4, durability: 2))
             .Register(Weapon(Chainer, atk: 2, durability: 1,
                 new EffectDef(Trigger.ON_DEATH, Verb.EQUIP, amount: null, amount2: null,
-                    tokenId: Successor, grantedKeyword: null, vfxOverride: null)))
+                    tokenId: Successor, grantedKeyword: null)))
             .Register(Minion("ef020_dummy", 0, 10));
 
         private static GameState MainPhase()
@@ -125,7 +125,7 @@ namespace Emberfall.Core.Tests.Combat
             const string empowered = "ef020_empowered";
             var def = Weapon(empowered, atk: 1, durability: 2,
                 new EffectDef(Trigger.ON_ATTACK, Verb.DEAL_DAMAGE, amount: 2, amount2: null,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO"));
+                    tokenId: null, grantedKeyword: null, selector: "ENEMY_HERO"));
             var db = new FakeCardDatabase().Register(def);
             GameState state = MainPhase();
             Equip(state, 0, def);

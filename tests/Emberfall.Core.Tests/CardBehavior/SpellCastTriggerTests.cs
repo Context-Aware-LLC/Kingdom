@@ -32,7 +32,7 @@ namespace Emberfall.Core.Tests.CardBehavior
 
         private static EffectDef Damage(Trigger trigger, int amount, string selector)
             => new EffectDef(trigger, Verb.DEAL_DAMAGE, amount: amount, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null, selector: selector);
+                tokenId: null, grantedKeyword: null, selector: selector);
 
         private static CardDefinition Minion(string id, int health, EffectDef[] effects)
             => new CardDefinition(

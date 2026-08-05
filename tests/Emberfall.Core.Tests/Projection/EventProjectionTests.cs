@@ -61,7 +61,7 @@ namespace Emberfall.Core.Tests.Projection
             "hp_bolt", "hp_bolt", CardType.HERO_POWER, 2, null, null, null,
             CardClass.EMBERWARD, Rarity.COMMON,
             Array.Empty<Keyword>(),
-            new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null, selector: "ENEMY_HERO") },
+            new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, selector: "ENEMY_HERO") },
             "", "", "art/hp_bolt", SetId.CORE, false, null, "", false);
 
         private static readonly CardDefinition Hatchet = new CardDefinition(
@@ -290,7 +290,7 @@ namespace Emberfall.Core.Tests.Projection
                 "bounce", "bounce", CardType.SPELL, 2, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 Array.Empty<Keyword>(),
-                new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND, null, null, null, null, null, selector: "ANY_MINION") },
+                new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND, null, null, null, null, selector: "ANY_MINION") },
                 "", "", "art/bounce", SetId.CORE, true, null, "", false);
             var db = new FakeCardDatabase().Register(bounce);
             var proc = new CommandProcessor(db);

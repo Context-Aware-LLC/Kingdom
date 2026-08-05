@@ -29,7 +29,7 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             var toll = new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                 amount: tollDamage, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ENEMY_HERO", condition: OwnerCondition(owner));
+                selector: "ENEMY_HERO", condition: OwnerCondition(owner));
 
             return new FakeCardDatabase()
                 .Register(Minion(Toller, health: tollerHealth, effects: new[] { toll }))
@@ -109,7 +109,7 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             var invalid = new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                 amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ENEMY_HERO");
+                selector: "ENEMY_HERO");
             var db = new FakeCardDatabase()
                 .Register(Minion(Toller, health: 3, effects: new[] { invalid }));
             var (host, s) = Match(db, Toller, seed: 210UL);
@@ -188,7 +188,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.GAIN_MANA,
                         amount: 2, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, condition: OwnerCondition(TurnOwner.OPPONENT)),
+                        condition: OwnerCondition(TurnOwner.OPPONENT)),
                 }));
             var (host, s) = Match(db, Toller, seed: 222UL);
             int firstSeat = s.SeatOf(s.ActivePlayer);
@@ -242,11 +242,11 @@ namespace Emberfall.Core.Tests.TurnLoop
             const string rightId = "ef011_right";
             var leftEffect = new EffectDef(Trigger.ON_TURN_START,
                 Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
+                grantedKeyword: null, selector: "ENEMY_HERO",
                 condition: OwnerCondition(TurnOwner.CONTROLLER));
             var rightEffect = new EffectDef(Trigger.ON_TURN_START,
                 Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 2, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
+                grantedKeyword: null, selector: "ENEMY_HERO",
                 condition: OwnerCondition(TurnOwner.CONTROLLER));
             var db = new FakeCardDatabase()
                 .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
@@ -276,11 +276,11 @@ namespace Emberfall.Core.Tests.TurnLoop
             const string followerId = "ef011_follower";
             var sweep = new EffectDef(Trigger.ON_TURN_START,
                 Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 5, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ALL_MINIONS",
+                grantedKeyword: null, selector: "ALL_MINIONS",
                 condition: OwnerCondition(TurnOwner.CONTROLLER));
             var follow = new EffectDef(Trigger.ON_TURN_START,
                 Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
+                grantedKeyword: null, selector: "ENEMY_HERO",
                 condition: OwnerCondition(TurnOwner.CONTROLLER));
             var db = new FakeCardDatabase()
                 .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
@@ -310,11 +310,11 @@ namespace Emberfall.Core.Tests.TurnLoop
             var nonMatching = Enumerable.Range(0, MatchEngine.ActionResolutionCap)
                 .Select(_ => new EffectDef(Trigger.ON_TURN_START,
                     Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                    grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
+                    grantedKeyword: null, selector: "ENEMY_HERO",
                     condition: OwnerCondition(TurnOwner.CONTROLLER)));
             var matching = new EffectDef(Trigger.ON_TURN_START,
                 Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
+                grantedKeyword: null, selector: "ENEMY_HERO",
                 condition: OwnerCondition(TurnOwner.OPPONENT));
             var effects = nonMatching.Concat(new[] { matching }).ToArray();
             var db = new FakeCardDatabase()
@@ -346,7 +346,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.GAIN_MANA,
                         amount: 2, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: null, condition: OwnerCondition(TurnOwner.CONTROLLER)),
+                        selector: null, condition: OwnerCondition(TurnOwner.CONTROLLER)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 24UL);
@@ -374,7 +374,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                         amount: 99, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.OPPONENT)),
+                        selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.OPPONENT)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 25UL);
@@ -403,7 +403,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                         amount: 5, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ALL_MINIONS", condition: OwnerCondition(TurnOwner.OPPONENT)),
+                        selector: "ALL_MINIONS", condition: OwnerCondition(TurnOwner.OPPONENT)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 26UL);

@@ -77,7 +77,7 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? selector = null)
-            => new EffectDef(trigger, action, amount, null, null, null, null, selector);
+            => new EffectDef(trigger, action, amount, null, null, null, selector);
 
         private static CardDefinition Minion(string id, int atk, int hp, System.Collections.Generic.IReadOnlyList<EffectDef>? effects = null,
             System.Collections.Generic.IReadOnlyList<Keyword>? keywords = null)

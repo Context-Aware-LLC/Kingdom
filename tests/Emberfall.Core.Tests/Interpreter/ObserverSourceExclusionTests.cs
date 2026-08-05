@@ -55,17 +55,17 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Hidden_Zone_Cards_Never_Observe_Turn_Start_Spell_Cast_Or_Friendly_Summon()
         {
-            var turn = new EffectDef(Trigger.ON_TURN_START, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var turn = new EffectDef(Trigger.ON_TURN_START, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "ENEMY_HERO", condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.ANY));
-            var spellCast = new EffectDef(Trigger.ON_SPELL_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var spellCast = new EffectDef(Trigger.ON_SPELL_CAST, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "ENEMY_HERO");
-            var summon = new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var summon = new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "ENEMY_HERO");
             var db = new FakeCardDatabase()
                 .Register(Minion("hidden_observer", turn, spellCast, summon))
                 .Register(Minion("token"))
                 .Register(Spell("summoning_spell", new EffectDef(Trigger.ON_CAST, Verb.SUMMON, 1,
-                    null, "token", null, null)));
+                    null, "token", null)));
             var state = State();
             var handObserver = PutIn(state, Zone.Hand, "hidden_observer");
             var deckObserver = PutIn(state, Zone.Deck, "hidden_observer");

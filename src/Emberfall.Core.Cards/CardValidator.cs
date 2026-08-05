@@ -338,8 +338,6 @@ namespace Emberfall.Core.Cards
                     Warn("C15-PERMANENT-NON-MANA", $"{prefix}.payload.permanent",
                         $"payload.permanent is only read by GAIN_MANA; it is inert on {fx.Action}.");
 
-                // C17: VfxOverride is already a typed VfxEvent? — enum parsing enforces the closed
-                // vocabulary at load time, so no further check is representable here.
             }
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the

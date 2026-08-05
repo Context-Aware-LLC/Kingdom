@@ -22,7 +22,7 @@ namespace Emberfall.Core.Cards
 
         private static readonly HashSet<string> EffectProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "trigger", "action", "amount", "amount2", "vfxEvent", "payload", "target", "condition"
+            "trigger", "action", "amount", "amount2", "payload", "target", "condition"
         };
 
         private static readonly HashSet<string> PayloadProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -297,8 +297,6 @@ namespace Emberfall.Core.Cards
             Contracts.Action action = ReqEnum<Contracts.Action>(e, "action");
             int? amount = Int(e, "amount");
             int? amount2 = Int(e, "amount2");
-            VfxEvent? vfx = TryEnum<VfxEvent>(e, "vfxEvent");
-
             string? tokenId = null;
             Keyword? grantedKeyword = null;
             bool permanent = false;
@@ -327,7 +325,7 @@ namespace Emberfall.Core.Cards
                 condition = new EffectConditionDef(type, turnOwner);
             }
 
-            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx,
+            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword,
                 permanent: permanent, empty: empty, condition: condition, target: target);
         }
 

@@ -141,14 +141,6 @@ namespace Emberfall.Core.Contracts
         BACKDRAFT, // step 4: locks N crystals at the start of the controller's next turn
     }
 
-    /// <summary>The closed D7 VFX vocabulary (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2). Purely observational.</summary>
-    public enum VfxEvent
-    {
-        onPlay, onSummon, onAttack, onDamage, onHeal, onDeath, onBuff, onDebuff,
-        onDraw, onSilence, onFrost, onTransform, onReturn, onManaGain, onEquip,
-        onUnearth, onTurnStart, onTurnEnd, onHeroPower, onFatigue, onGameWin, onGameOver
-    }
-
     /// <summary>
     /// Stable semantic facts emitted by the deterministic game engine. These describe what happened;
     /// presentation is selected separately through <see cref="PresentationCue"/>.

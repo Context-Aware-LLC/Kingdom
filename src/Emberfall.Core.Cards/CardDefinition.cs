@@ -371,7 +371,6 @@ namespace Emberfall.Core.Cards
         public int? Amount2 { get; }
         public string? TokenId { get; }       // payload.tokenId for SUMMON / ADD_TO_HAND / TRANSFORM
         public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
-        public VfxEvent? VfxOverride { get; }
         public EffectConditionDef? Condition { get; }
         /// <summary>
         /// <c>payload.permanent</c> for GAIN_MANA (dev-docs/specs/card-schema.md §5.2): true = gain permanent
@@ -393,7 +392,7 @@ namespace Emberfall.Core.Cards
         public string? Selector => Target?.Selector;
 
         public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
-                         string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
+                         string? tokenId, Keyword? grantedKeyword,
                          string? selector = null, bool permanent = false, bool empty = false,
                          EffectConditionDef? condition = null, TargetSpec? target = null)
         {
@@ -403,7 +402,6 @@ namespace Emberfall.Core.Cards
             Amount2 = amount2;
             TokenId = tokenId;
             GrantedKeyword = grantedKeyword;
-            VfxOverride = vfxOverride;
             Condition = condition;
             Target = target ?? (selector == null ? null : new TargetSpec(selector));
             Permanent = permanent;

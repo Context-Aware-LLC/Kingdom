@@ -314,7 +314,6 @@ namespace Emberfall.Core
         public EventBuffer Events => Interpreter.Events;
 
         /// <summary>The effect's VFX override if present, else the action's default event (dev-docs/specs/card-schema.md §5.2).</summary>
-        public VfxEvent Vfx(VfxEvent fallback) => Effect.VfxOverride ?? fallback;
     }
 
     /// <summary>One reusable engine primitive — a verb in the closed <see cref="Contracts.Action"/> set.</summary>

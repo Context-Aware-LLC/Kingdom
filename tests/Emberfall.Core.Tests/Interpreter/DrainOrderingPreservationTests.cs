@@ -63,11 +63,11 @@ namespace Emberfall.Core.Tests.Interpreter
             // the deciding tie-breaker. A kills Cascade; the fresh DeathCheck must enqueue Cascade behind
             // already-queued B. FIFO then resolves B, then Cascade, whose lethal damage must CheckWin before
             // a later queued effect could run.
-            var deathA = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var deathA = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "FRIENDLY_MINIONS");
-            var deathB = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var deathB = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "ENEMY_HERO");
-            var deathCascade = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 2, null, null, null, null,
+            var deathCascade = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 2, null, null, null,
                 selector: "ENEMY_HERO");
             var db = new FakeCardDatabase()
                 .Register(Minion("advance", 1))
@@ -108,10 +108,10 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Drain_Stops_Only_When_The_Next_Dequeued_Effect_Exceeds_The_Resolution_Cap()
         {
-            var retaliate = new EffectDef(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, 1, null, null, null, null,
+            var retaliate = new EffectDef(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, 1, null, null, null,
                 selector: "ENEMY_MINIONS");
             var db = new FakeCardDatabase()
-                .Register(Spell("poke", new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null)))
+                .Register(Spell("poke", new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null)))
                 .Register(Minion("echo", 200, retaliate));
             var state = State();
             var left = Board(state, 0, db.Get("echo"));

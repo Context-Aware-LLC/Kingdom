@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             var toll = new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                 amount: tollDamage, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ENEMY_HERO");
+                selector: "ENEMY_HERO");
 
             return new FakeCardDatabase()
                 .Register(Minion(Toller, health: tollerHealth, effects: new[] { toll }))
@@ -141,7 +141,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                         amount: 5, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ALL_MINIONS"),
+                        selector: "ALL_MINIONS"),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 14UL);
@@ -169,7 +169,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 {
                     new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
                         amount: 99, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ENEMY_HERO"),
+                        selector: "ENEMY_HERO"),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 15UL);
