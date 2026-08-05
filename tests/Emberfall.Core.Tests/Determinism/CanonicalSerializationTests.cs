@@ -96,7 +96,9 @@ namespace Emberfall.Core.Tests.Determinism
         // CardInstance instead of the retired four-field WeaponInstance wrapper.
         // Re-pinned 2026-08-05 (NOR-31 silence): CardInstance.IsSilenced is public, projected and
         // hash-canonical because it controls future permanent ability resolution.
-        private const string PinnedSeedDigest = "6a1f4650462d32a0802e3e4ca6256f26080f77a2fa91a4617e59848804d76e18";
+        // EF-017b: Enchantment.IsAura is explicit continuous-effect provenance and therefore
+        // hash-canonical. The seed includes an enchantment so this pin witnesses its walk.
+        private const string PinnedSeedDigest = "2699d236847380c882dace8a68a3f4ffc28425cfcbc82829f9a99f24d5467e2f";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()

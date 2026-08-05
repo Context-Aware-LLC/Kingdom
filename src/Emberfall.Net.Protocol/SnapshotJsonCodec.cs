@@ -129,6 +129,7 @@ namespace Emberfall.Net.Protocol
                 w.Name("grantedKeyword");
                 if (e.GrantedKeyword.HasValue) w.Str(e.GrantedKeyword.Value.ToString());
                 else w.Null();
+                w.Name("isAura"); w.Bool(e.IsAura);
                 w.EndObject();
             }
             w.EndArray();
@@ -348,7 +349,9 @@ namespace Emberfall.Net.Protocol
                     { detail = "bad grantedKeyword"; return false; }
                     granted = gk;
                 }
-                card.Enchantments.Add(new Enchantment { Source = src, AttackDelta = ad, HealthDelta = hd, GrantedKeyword = granted });
+                if (!TryBoolField(item, "isAura", out bool isAura, ref detail)) return false;
+                card.Enchantments.Add(new Enchantment { Source = src, AttackDelta = ad, HealthDelta = hd,
+                    GrantedKeyword = granted, IsAura = isAura });
             }
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;

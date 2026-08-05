@@ -45,7 +45,7 @@ namespace Emberfall.Core.Tests.Support
                 "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id", "IsFrosted", "IsSilenced",
                 "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
             },
-            [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "Source" },
+            [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "IsAura", "Source" },
             [typeof(ManaPool)] = new[] { "Available", "Locked", "Max", "Spent", "Temporary" },
         };
 
@@ -131,6 +131,7 @@ namespace Emberfall.Core.Tests.Support
             ["Enchantment.AttackDelta"] = s => HandCard(s).Enchantments[0].AttackDelta++,
             ["Enchantment.HealthDelta"] = s => HandCard(s).Enchantments[0].HealthDelta++,
             ["Enchantment.GrantedKeyword"] = s => HandCard(s).Enchantments[0].GrantedKeyword = Keyword.SKIRMISH,
+            ["Enchantment.IsAura"] = s => HandCard(s).Enchantments[0].IsAura = !HandCard(s).Enchantments[0].IsAura,
 
             // ManaPool (seat 0)
             ["ManaPool.Max"] = s => s.Players[0].Mana.Max++,

@@ -91,6 +91,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["AttackDelta"] = "PUBLIC",
                 ["HealthDelta"] = "PUBLIC",
                 ["GrantedKeyword"] = "PUBLIC",
+                ["IsAura"] = "PUBLIC",
             },
             [typeof(ManaPool)] = new()
             {

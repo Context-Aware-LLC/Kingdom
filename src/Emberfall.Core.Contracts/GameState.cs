@@ -176,13 +176,18 @@ namespace Emberfall.Core.Contracts
         Unearth = 0,
     }
 
-    /// <summary>A buff/debuff (removed by SILENCE). Integer deltas only.</summary>
+    /// <summary>
+    /// A buff/debuff (removed by SILENCE). <see cref="IsAura"/> is explicit provenance for the
+    /// continuous layer: sources can leave the board and be recomputed without deleting an
+    /// ordinary effect from the same card instance.
+    /// </summary>
     public sealed class Enchantment
     {
         public InstanceId Source;
         public int AttackDelta;
         public int HealthDelta;
         public Keyword? GrantedKeyword;
+        public bool IsAura;
     }
 
     /// <summary>

@@ -102,6 +102,7 @@ namespace Emberfall.Core.Serialization
                 w.I32(e.AttackDelta);
                 w.I32(e.HealthDelta);
                 w.NullableEnum(e.GrantedKeyword);
+                w.Bool(e.IsAura);
             }
 
             w.Bool(c.HasAegisShield);

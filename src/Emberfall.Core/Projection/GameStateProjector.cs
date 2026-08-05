@@ -126,6 +126,7 @@ namespace Emberfall.Core.Projection
                     AttackDelta = e.AttackDelta,
                     HealthDelta = e.HealthDelta,
                     GrantedKeyword = e.GrantedKeyword,
+                    IsAura = e.IsAura,
                 });
             }
             return proj;
