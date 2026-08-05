@@ -360,6 +360,18 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.DoesNotThrow(() => CardJson.Deserialize(json));
         }
 
+        [Test]
+        public void CardJson_Allows_Fixture_Comments_Only_At_The_Card_Root()
+        {
+            Assert.DoesNotThrow(() => CardJson.Deserialize(
+                "{\"_comment\":\"fixture note\",\"id\":\"commented_card\",\"type\":\"SPELL\"}"));
+
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(
+                "{\"id\":\"nested_comment\",\"type\":\"SPELL\",\"effects\":[{\"_comment\":\"not metadata here\",\"trigger\":\"ON_CAST\",\"action\":\"DRAW\"}]}"));
+
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property '_comment' in effect."));
+        }
+
         private static void AssertRejectsUnknownProperty(string json, string schemaLevel)
         {
             var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
