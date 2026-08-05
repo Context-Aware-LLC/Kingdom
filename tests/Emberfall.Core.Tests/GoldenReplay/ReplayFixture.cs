@@ -16,7 +16,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     public sealed class ReplayFixture
     {
         /// <summary>Highest on-disk schema this loader understands (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2).</summary>
-        public const int CurrentSchemaVersion = 2;
+        public const int CurrentSchemaVersion = 3;
 
         /// <summary>
         /// The v1 implicit values — the <see cref="MatchSetup"/> C# defaults that v1 fixtures were
@@ -161,7 +161,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         }
     }
 
-    /// <summary>One expected D7 event row (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2). Compared field-by-field in sequence order.</summary>
+    /// <summary>One expected semantic event row. Compared field-by-field in sequence order.</summary>
     public readonly struct ExpectedEvent
     {
         public readonly ulong Seq;
@@ -179,7 +179,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
         public static ExpectedEvent Parse(JsonElement e)
         {
             ulong seq = e.GetProperty("seq").GetUInt64();
-            var kind = ParseKind(e.GetProperty("kind").GetString()!);
+            string kindValue = e.GetProperty("kind").GetString()!;
+            if (!Enum.TryParse(kindValue, false, out GameEventKind kind)
+                || !Enum.IsDefined(typeof(GameEventKind), kind))
+                throw new FormatException($"Unknown event kind '{kindValue}'.");
             InstanceId? src = InstOrNull(e, "src");
             InstanceId? tgt = InstOrNull(e, "tgt");
             int? amt = e.TryGetProperty("amt", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : (int?)null;
@@ -190,41 +193,6 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
         public static ExpectedEvent From(GameEvent e)
             => new ExpectedEvent(e.Sequence, e.Kind, e.Source, e.Target, e.Amount, e.Flags);
-
-        private static GameEventKind ParseKind(string value)
-        {
-            if (Enum.TryParse(value, false, out GameEventKind semantic)
-                && Enum.IsDefined(typeof(GameEventKind), semantic))
-                return semantic;
-
-            return value switch
-            {
-                "onPlay" => GameEventKind.CardPlayed,
-                "onSummon" => GameEventKind.CardSummoned,
-                "onAttack" => GameEventKind.AttackDeclared,
-                "onDamage" => GameEventKind.DamageApplied,
-                "onHeal" => GameEventKind.HealthRestored,
-                "onDeath" => GameEventKind.CardDestroyed,
-                "onBuff" => GameEventKind.StatsModified,
-                "onDraw" => GameEventKind.CardDrawn,
-                "onSilence" => GameEventKind.CardSilenced,
-                "onFreeze" => GameEventKind.FrostApplied,
-                "onFrost" => GameEventKind.FrostApplied,
-                "onTransform" => GameEventKind.CardTransformed,
-                "onReturn" => GameEventKind.CardBounced,
-                "onManaGain" => GameEventKind.ManaGained,
-                "onEquip" => GameEventKind.WeaponEquipped,
-                "onDiscover" => GameEventKind.UnearthOffered,
-                "onUnearth" => GameEventKind.UnearthOffered,
-                "onTurnStart" => GameEventKind.TurnStarted,
-                "onTurnEnd" => GameEventKind.TurnEnded,
-                "onHeroPower" => GameEventKind.HeroPowerUsed,
-                "onFatigue" => GameEventKind.FatigueDamage,
-                "onGameWin" => GameEventKind.MatchWon,
-                "onGameOver" => GameEventKind.MatchEnded,
-                _ => throw new FormatException($"Unknown event kind '{value}'."),
-            };
-        }
 
         private static InstanceId? InstOrNull(JsonElement e, string name)
             => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String

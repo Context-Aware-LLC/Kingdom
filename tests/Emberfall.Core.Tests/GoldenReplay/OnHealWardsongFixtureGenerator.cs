@@ -164,7 +164,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "on_heal_wardsong",
-                ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
+                ["engineContractVersion"] = "interfaces.v4",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0007",
                 ["p0"] = "P0",

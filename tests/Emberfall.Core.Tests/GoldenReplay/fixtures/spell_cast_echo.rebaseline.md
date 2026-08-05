@@ -50,3 +50,13 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   EF-014 landed its own two fixture-only cards into the same snapshot.
 - **engineContractVersion changed?** no. `Trigger.ON_SPELL_CAST` already existed in the enum;
   EF-016 adds a raise site, not a contract member. Stays `interfaces.v3`.
+
+## NOR-31 semantic-event contract rebaseline (2026-08-05)
+
+- **Which rule changed?** No gameplay rule changed. Expected rows now identify semantic game facts;
+  presentation cues are a separate optional field and are not part of replay comparison.
+- **Why is this correct?** Across all nine fixtures, all 168 rows preserve sequence, source, target,
+  amount, and flags. Event counts and every state hash are unchanged.
+- **Link to the change:** NOR-31, Program step 10.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** yes, to `interfaces.v4`; replay schema changed to v3.

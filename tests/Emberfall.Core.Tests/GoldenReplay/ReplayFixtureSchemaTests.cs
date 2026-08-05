@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using NUnit.Framework;
 using Emberfall.Core.Contracts;
@@ -15,7 +16,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// <c>GameStateSerializer.WalkHero</c> and the second player's hand), but schema v1 never recorded
     /// them and the harness never passed them — so the R1 gate's promise, <i>these recorded inputs
     /// reproduce this hash</i>, was false. v2 records both. Reads DEFAULT to the v1 implicit values, so
-    /// no existing hash moves.
+    /// no existing hash moves. Schema v3 records semantic event kinds independently of presentation.
     /// </summary>
     [TestFixture]
     [Category("GoldenReplay")]
@@ -90,6 +91,24 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Assert.That(ex!.Message, Does.Contain("99"));
         }
 
+        [Test]
+        public void Expected_Event_Rejects_A_Previous_Contract_Kind()
+        {
+            using var document = JsonDocument.Parse("{\"seq\":1,\"kind\":\"onDraw\"}");
+
+            Assert.Throws<FormatException>(() => ExpectedEvent.Parse(document.RootElement));
+        }
+
+        [Test]
+        public void Expected_Event_Parses_A_Semantic_Kind()
+        {
+            using var document = JsonDocument.Parse("{\"seq\":1,\"kind\":\"CardDrawn\"}");
+
+            ExpectedEvent expected = ExpectedEvent.Parse(document.RootElement);
+
+            Assert.That(expected.Kind, Is.EqualTo(GameEventKind.CardDrawn));
+        }
+
         // ── Harness passthrough — the actual C-G1-7 defect ───────────────────────
 
         [Test]
@@ -138,8 +157,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
             // hash-load-bearing input that lives only in a C# default.
             var root = JsonNode.Parse(File.ReadAllText(fixturePath))!.AsObject();
 
-            Assert.That((int?)root["schemaVersion"], Is.EqualTo(2),
-                $"'{Path.GetFileName(fixturePath)}' must declare schemaVersion 2.");
+            Assert.That((int?)root["schemaVersion"], Is.EqualTo(3),
+                $"'{Path.GetFileName(fixturePath)}' must declare schemaVersion 3.");
+            Assert.That((string?)root["engineContractVersion"], Is.EqualTo("interfaces.v4"),
+                $"'{Path.GetFileName(fixturePath)}' must declare engine contract interfaces.v4.");
             Assert.That(root.ContainsKey("heroMaxHealth"), Is.True,
                 $"'{Path.GetFileName(fixturePath)}' must record heroMaxHealth explicitly.");
             Assert.That(root.ContainsKey("sparkTokenId"), Is.True,

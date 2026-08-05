@@ -139,7 +139,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "weapon_identity",
-                ["engineContractVersion"] = "interfaces.v3",
+                ["engineContractVersion"] = "interfaces.v4",
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0009",
                 ["p0"] = "P0",

@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "name": "spell_cast_echo",
-  "engineContractVersion": "interfaces.v3",
+  "engineContractVersion": "interfaces.v4",
   "cardSetSnapshot": "M1.cards.snapshot.json",
   "matchId": "GOLD-0005",
   "p0": "P0",
@@ -120,7 +120,7 @@
     "eventStream": [
       {
         "seq": 0,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -128,7 +128,7 @@
       },
       {
         "seq": 1,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i46",
         "tgt": null,
         "amt": null,
@@ -136,7 +136,7 @@
       },
       {
         "seq": 2,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i43",
         "tgt": null,
         "amt": null,
@@ -144,7 +144,7 @@
       },
       {
         "seq": 3,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -152,7 +152,7 @@
       },
       {
         "seq": 4,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -160,7 +160,7 @@
       },
       {
         "seq": 5,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i67",
         "tgt": null,
         "amt": null,
@@ -168,7 +168,7 @@
       },
       {
         "seq": 6,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i64",
         "tgt": null,
         "amt": null,
@@ -176,7 +176,7 @@
       },
       {
         "seq": 7,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i64",
         "tgt": "i1",
         "amt": 2,
@@ -184,7 +184,7 @@
       },
       {
         "seq": 8,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i43",
         "tgt": "i2",
         "amt": 1,
@@ -192,7 +192,7 @@
       },
       {
         "seq": 9,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i63",
         "tgt": null,
         "amt": null,
@@ -200,7 +200,7 @@
       },
       {
         "seq": 10,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -208,7 +208,7 @@
       },
       {
         "seq": 11,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -216,7 +216,7 @@
       },
       {
         "seq": 12,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i47",
         "tgt": null,
         "amt": null,
@@ -224,7 +224,7 @@
       },
       {
         "seq": 13,
-        "kind": "onHeroPower",
+        "kind": "HeroPowerUsed",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -232,7 +232,7 @@
       },
       {
         "seq": 14,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i84",
         "tgt": "i2",
         "amt": 1,
@@ -240,7 +240,7 @@
       },
       {
         "seq": 15,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -248,7 +248,7 @@
       },
       {
         "seq": 16,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -256,7 +256,7 @@
       },
       {
         "seq": 17,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i68",
         "tgt": null,
         "amt": null,
@@ -264,7 +264,7 @@
       },
       {
         "seq": 18,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i65",
         "tgt": null,
         "amt": null,
@@ -272,7 +272,7 @@
       },
       {
         "seq": 19,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i65",
         "tgt": "i1",
         "amt": 2,
@@ -280,7 +280,7 @@
       },
       {
         "seq": 20,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i63",
         "tgt": "i1",
         "amt": 1,
@@ -288,7 +288,7 @@
       },
       {
         "seq": 21,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i43",
         "tgt": "i2",
         "amt": 1,
