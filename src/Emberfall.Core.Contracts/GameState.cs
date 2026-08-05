@@ -33,6 +33,12 @@ namespace Emberfall.Core.Contracts
         public bool Mulligan1Done;
 
         /// <summary>
+        /// Resolved spell rules that continue observing future game events. Append order is creation
+        /// order; <see cref="OngoingEffectInstance.Id"/> is the stable tie-breaker used by trigger walks.
+        /// </summary>
+        public List<OngoingEffectInstance> OngoingEffects = new List<OngoingEffectInstance>();
+
+        /// <summary>
         /// The pending-choice seam (A2b, decision 3). ALWAYS null in M2 — the shape exists so
         /// Phase 2 adds interpreter machinery only, never a Contracts change. Carries serializable
         /// STATE only, never the continuation/delegate. Redaction contract for the future
@@ -65,6 +71,87 @@ namespace Emberfall.Core.Contracts
         public PlayerState PlayerOf(PlayerId player) => Players[SeatOf(player)];
 
         public InstanceId NextInstanceId() => new InstanceId(NextInstanceCounter++);
+    }
+
+    /// <summary>Runtime lifetime carried by an ongoing effect, independent of its originating spell.</summary>
+    public enum OngoingEffectLifetime
+    {
+        ONE_SHOT = 0,
+        FINITE = 1,
+        PERMANENT = 2,
+    }
+
+    /// <summary>
+    /// One canonical, carrierless ongoing rule created by a resolved spell. Presentation may show
+    /// every public field. The authored rule id is authority-only and is stripped by projection.
+    /// </summary>
+    public sealed class OngoingEffectInstance
+    {
+        public InstanceId Id;
+        public PlayerId Controller;
+        public string SourceDefinitionId = "";
+        public OngoingEffectLifetime Lifetime;
+        public int? RemainingUses;
+
+        // Canonical authority state, intentionally absent from the public presentation contract.
+        // Friend assemblies may walk it for runtime lookup and authority snapshot round-trips.
+        internal string RuleId = "";
+
+        public bool IsExpired => Lifetime != OngoingEffectLifetime.PERMANENT &&
+            (!RemainingUses.HasValue || RemainingUses.Value <= 0);
+
+        public OngoingEffectInstance(InstanceId id, PlayerId controller, string sourceDefinitionId,
+            OngoingEffectLifetime lifetime, int? remainingUses)
+        {
+            if (string.IsNullOrWhiteSpace(sourceDefinitionId))
+                throw new System.ArgumentException("An ongoing effect requires a source definition id.",
+                    nameof(sourceDefinitionId));
+            if (!System.Enum.IsDefined(typeof(OngoingEffectLifetime), lifetime))
+                throw new System.ArgumentOutOfRangeException(nameof(lifetime), lifetime,
+                    "Unknown ongoing-effect lifetime.");
+            if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
+                throw new System.ArgumentException("A permanent ongoing effect has no remaining-use count.",
+                    nameof(remainingUses));
+            if (lifetime != OngoingEffectLifetime.PERMANENT && !remainingUses.HasValue)
+                throw new System.ArgumentException("A bounded ongoing effect requires a remaining-use count.",
+                    nameof(remainingUses));
+            if (remainingUses < 0)
+                throw new System.ArgumentOutOfRangeException(nameof(remainingUses), remainingUses,
+                    "Remaining uses cannot be negative.");
+
+            Id = id;
+            Controller = controller;
+            SourceDefinitionId = sourceDefinitionId;
+            Lifetime = lifetime;
+            RemainingUses = remainingUses;
+        }
+
+        internal static OngoingEffectInstance CreateOneShot(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.ONE_SHOT, 1);
+
+        internal static OngoingEffectInstance CreateFinite(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId, int uses)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.FINITE, uses);
+
+        internal static OngoingEffectInstance CreatePermanent(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.PERMANENT, null);
+
+        internal static OngoingEffectInstance Create(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId, OngoingEffectLifetime lifetime,
+            int? remainingUses)
+        {
+            if (string.IsNullOrWhiteSpace(ruleId))
+                throw new System.ArgumentException("An authoritative ongoing effect requires a rule id.",
+                    nameof(ruleId));
+            var instance = new OngoingEffectInstance(id, controller, sourceDefinitionId, lifetime,
+                remainingUses) { RuleId = ruleId };
+            return instance;
+        }
     }
 
     /// <summary>One player's mutable per-match state. Zone lists are ordered (canonical, hashable).</summary>

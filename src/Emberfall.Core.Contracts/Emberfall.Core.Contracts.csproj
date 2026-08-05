@@ -18,4 +18,11 @@
     <!-- Firewall, layer 1: no Unity engine refs are even available here. -->
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Emberfall.Core" />
+    <InternalsVisibleTo Include="Emberfall.Core.Serialization" />
+    <InternalsVisibleTo Include="Emberfall.Net.Protocol" />
+    <InternalsVisibleTo Include="Emberfall.Core.Tests" />
+  </ItemGroup>
+
 </Project>

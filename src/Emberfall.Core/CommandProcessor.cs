@@ -317,6 +317,23 @@ namespace Emberfall.Core
                     // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
                     interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null, triggerSource: card.Id);
+                    // An ongoing observer becomes live only after the spell and the cast-time
+                    // subscriber snapshot have fully resolved. In particular it cannot observe the
+                    // same cast that created it, and the resolved card remains in the graveyard.
+                    bool hasOngoingRules = false;
+                    for (int i = 0; i < def.Rules.Count; i++)
+                        if (EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect,
+                                RuleSemantics.TriggerOf(def.Rules[i])))
+                        {
+                            hasOngoingRules = true;
+                            break;
+                        }
+                    if (hasOngoingRules)
+                    {
+                        interp.Drain();
+                        if (state.Outcome == MatchOutcome.InProgress)
+                            interp.CreateOngoingEffects(def, card.Controller);
+                    }
                     break;
 
                 case CardType.WEAPON:

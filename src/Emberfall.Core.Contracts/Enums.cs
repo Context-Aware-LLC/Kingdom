@@ -158,6 +158,9 @@ namespace Emberfall.Core.Contracts
         MatchEnded,
         ArmorGained,
         ControlChanged,
+        OngoingEffectCreated,
+        OngoingEffectTriggered,
+        OngoingEffectExpired,
     }
 
     /// <summary>Optional presentation instruction carried independently of semantic event identity.</summary>
@@ -186,6 +189,9 @@ namespace Emberfall.Core.Contracts
         GameOver,
         ArmorGain,
         ControlChange,
+        OngoingEffectCreate,
+        OngoingEffectTrigger,
+        OngoingEffectExpire,
     }
 
     /// <summary>Per-event flags carried on a <see cref="GameEvent"/>. M1-guaranteed: AegisAbsorbed, Lethal, Overdraw (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5).</summary>

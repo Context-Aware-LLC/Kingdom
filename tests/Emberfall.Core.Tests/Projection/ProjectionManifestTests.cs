@@ -38,7 +38,16 @@ namespace Emberfall.Core.Tests.Projection
                 ["NextEventSequence"] = "PUBLIC",
                 ["Mulligan0Done"] = "PUBLIC",
                 ["Mulligan1Done"] = "PUBLIC",
+                ["OngoingEffects"] = "PUBLIC list; authority-only rule id stripped",
                 ["PendingChoice"] = "per-field (OBL-1)",
+            },
+            [typeof(OngoingEffectInstance)] = new()
+            {
+                ["Id"] = "PUBLIC",
+                ["Controller"] = "PUBLIC",
+                ["SourceDefinitionId"] = "PUBLIC",
+                ["Lifetime"] = "PUBLIC",
+                ["RemainingUses"] = "PUBLIC",
             },
             [typeof(PlayerState)] = new()
             {
@@ -144,6 +153,7 @@ namespace Emberfall.Core.Tests.Projection
                 "CardSilenced", "FrostApplied", "CardTransformed", "CardBounced", "ManaGained",
                 "WeaponEquipped", "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
                 "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
+                "OngoingEffectCreated", "OngoingEffectTriggered", "OngoingEffectExpired",
             };
 
             var actual = Enum.GetNames(typeof(GameEventKind));

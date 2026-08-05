@@ -13,8 +13,7 @@ namespace Emberfall.Core
     public static class OrderedTriggerSources
     {
         public static IReadOnlyList<EffectSourceContext> Snapshot(GameState state,
-            ICardDatabase database, PlayerId incomingPlayer, Trigger trigger,
-            IReadOnlyList<EffectSourceContext>? ongoingEffects = null)
+            ICardDatabase database, PlayerId incomingPlayer, Trigger trigger)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (database == null) throw new ArgumentNullException(nameof(database));
@@ -22,14 +21,13 @@ namespace Emberfall.Core
             int incomingSeat = state.SeatOf(incomingPlayer);
             int otherSeat = incomingSeat == 0 ? 1 : 0;
             var result = new List<EffectSourceContext>();
-            AppendSide(result, state.Players[incomingSeat], database, trigger, ongoingEffects);
-            AppendSide(result, state.Players[otherSeat], database, trigger, ongoingEffects);
+            AppendSide(result, state, state.Players[incomingSeat], database, trigger);
+            AppendSide(result, state, state.Players[otherSeat], database, trigger);
             return result;
         }
 
-        private static void AppendSide(List<EffectSourceContext> result, PlayerState player,
-            ICardDatabase database, Trigger trigger,
-            IReadOnlyList<EffectSourceContext>? ongoingEffects)
+        private static void AppendSide(List<EffectSourceContext> result, GameState state,
+            PlayerState player, ICardDatabase database, Trigger trigger)
         {
             for (int i = 0; i < player.Board.Count; i++)
             {
@@ -49,22 +47,37 @@ namespace Emberfall.Core
                     EffectSourceKind.EquippedWeapon, CardType.WEAPON, trigger);
             }
 
-            if (ongoingEffects == null ||
-                !EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect, trigger))
+            if (!EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect, trigger))
                 return;
 
-            var eligible = new List<EffectSourceContext>();
-            for (int i = 0; i < ongoingEffects.Count; i++)
+            var eligible = new List<OngoingEffectInstance>();
+            for (int i = 0; i < state.OngoingEffects.Count; i++)
             {
-                EffectSourceContext source = ongoingEffects[i];
-                if (source != null &&
-                    source.Controller == player.Id &&
-                    source.Kind == EffectSourceKind.OngoingEffect &&
-                    RuleSemantics.ActivatesOn(source.Rule, trigger))
+                OngoingEffectInstance source = state.OngoingEffects[i];
+                if (source.Controller == player.Id && !source.IsExpired)
                     eligible.Add(source);
             }
-            eligible.Sort((left, right) => left.Identity.CompareTo(right.Identity));
-            result.AddRange(eligible);
+            eligible.Sort((left, right) => left.Id.CompareTo(right.Id));
+            for (int i = 0; i < eligible.Count; i++)
+            {
+                OngoingEffectInstance instance = eligible[i];
+                if (!database.TryGet(instance.SourceDefinitionId, out CardDefinition definition) ||
+                    definition.Type != CardType.SPELL || string.IsNullOrEmpty(instance.RuleId))
+                    continue;
+
+                RuleDefinition? rule = null;
+                for (int r = 0; r < definition.Rules.Count; r++)
+                    if (definition.Rules[r].Id.Value == instance.RuleId)
+                    {
+                        rule = definition.Rules[r];
+                        break;
+                    }
+                if (rule == null || !RuleSemantics.ActivatesOn(rule, trigger))
+                    continue;
+
+                result.Add(new EffectSourceContext(instance.Id, instance.Controller, definition,
+                    rule, EffectSourceKind.OngoingEffect, currentCarrier: null));
+            }
         }
 
         private static void AppendCarrierRules(List<EffectSourceContext> result,

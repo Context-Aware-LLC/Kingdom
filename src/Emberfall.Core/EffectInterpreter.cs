@@ -35,6 +35,38 @@ namespace Emberfall.Core
         public ICardDatabase Db => _db;
         public EventBuffer Events => _buf;
 
+        /// <summary>Create one carrierless observer for each future-trigger rule on a resolved spell.</summary>
+        public int CreateOngoingEffects(CardDefinition spell, PlayerId controller)
+        {
+            if (spell.Type != CardType.SPELL) return 0;
+            int created = 0;
+            for (int i = 0; i < spell.Rules.Count; i++)
+            {
+                RuleDefinition rule = spell.Rules[i];
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
+                if (!EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect, trigger))
+                    continue;
+
+                InstanceId id = _state.NextInstanceId();
+                OngoingEffectInstance? instance = rule.Lifetime switch
+                {
+                    OneShotLifetime => OngoingEffectInstance.CreateOneShot(id, controller,
+                        spell.Id, rule.Id.Value),
+                    FiniteLifetime finite when finite.Uses > 0 =>
+                        OngoingEffectInstance.CreateFinite(id, controller, spell.Id,
+                            rule.Id.Value, finite.Uses),
+                    PermanentLifetime => OngoingEffectInstance.CreatePermanent(id, controller,
+                        spell.Id, rule.Id.Value),
+                    _ => null,
+                };
+                if (instance == null) continue; // invalid authored combination fails closed
+                _state.OngoingEffects.Add(instance);
+                _buf.Emit(GameEventKind.OngoingEffectCreated, source: instance.Id);
+                created++;
+            }
+            return created;
+        }
+
         // ── Raising triggers ─────────────────────────────────────────────────────
 
         /// <summary>
@@ -134,7 +166,31 @@ namespace Emberfall.Core
         private void ResolveOne(QueuedEffect qe)
         {
             var targets = ResolveTargets(qe);
+            if (qe.Source.Kind == EffectSourceKind.OngoingEffect)
+                _buf.Emit(GameEventKind.OngoingEffectTriggered, source: qe.Source.Identity);
             ActionHandlers.Execute(new EffectContext(this, qe.Source, targets));
+            if (qe.Source.Kind == EffectSourceKind.OngoingEffect)
+                ConsumeOngoingEffect(qe.Source);
+        }
+
+        private void ConsumeOngoingEffect(EffectSourceContext source)
+        {
+            int index = -1;
+            for (int i = 0; i < _state.OngoingEffects.Count; i++)
+                if (_state.OngoingEffects[i].Id == source.Identity &&
+                    _state.OngoingEffects[i].RuleId == source.RuleReference.RuleId.Value)
+                {
+                    index = i;
+                    break;
+                }
+            if (index < 0) return;
+
+            OngoingEffectInstance instance = _state.OngoingEffects[index];
+            if (instance.Lifetime == OngoingEffectLifetime.PERMANENT) return;
+            instance.RemainingUses = instance.RemainingUses.GetValueOrDefault() - 1;
+            if (!instance.IsExpired) return;
+            _state.OngoingEffects.RemoveAt(index);
+            _buf.Emit(GameEventKind.OngoingEffectExpired, source: instance.Id);
         }
 
         // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─

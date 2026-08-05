@@ -47,6 +47,9 @@ namespace Emberfall.Core.Contracts
                     or GameEventKind.HeroPowerUsed
                     or GameEventKind.ArmorGained
                     or GameEventKind.ControlChanged
+                    or GameEventKind.OngoingEffectCreated
+                    or GameEventKind.OngoingEffectTriggered
+                    or GameEventKind.OngoingEffectExpired
                     or GameEventKind.MatchEnded => EventFlags.None,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown semantic game-event kind."),
             };

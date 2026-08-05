@@ -38,6 +38,7 @@ namespace Emberfall.Core.Tests.Contracts
                 "CardTransformed", "CardBounced", "ManaGained", "WeaponEquipped",
                 "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
                 "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
+                "OngoingEffectCreated", "OngoingEffectTriggered", "OngoingEffectExpired",
             };
 
             Assert.That(Enum.GetNames(typeof(GameEventKind)), Is.EqualTo(expected));
@@ -52,6 +53,7 @@ namespace Emberfall.Core.Tests.Contracts
                 "Draw", "Silence", "Frost", "Transform", "Return", "ManaGain",
                 "Equip", "Unearth", "TurnStart", "TurnEnd", "HeroPower", "Fatigue",
                 "GameWin", "GameOver", "ArmorGain", "ControlChange",
+                "OngoingEffectCreate", "OngoingEffectTrigger", "OngoingEffectExpire",
             };
 
             Assert.That(Enum.GetNames(typeof(PresentationCue)), Is.EqualTo(expected));

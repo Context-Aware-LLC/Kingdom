@@ -115,16 +115,23 @@ namespace Emberfall.Core.Tests.Interpreter
             PutBoard(state, 0, "p0_left", 70);
             PutWeapon(state, 0, "p0_weapon", 60);
 
-            EffectSourceContext[] ongoing =
+            (int id, PlayerId controller, string ruleId)[] ongoing =
             {
-                Ongoing(95, P0, "p0_ongoing_late"),
-                Ongoing(15, P1, "p1_ongoing_early"),
-                Ongoing(85, P0, "p0_ongoing_early"),
-                Ongoing(25, P1, "p1_ongoing_late"),
+                (95, P0, "p0_ongoing_late"),
+                (15, P1, "p1_ongoing_early"),
+                (85, P0, "p0_ongoing_early"),
+                (25, P1, "p1_ongoing_late"),
             };
+            foreach (var item in ongoing)
+            {
+                RuleDefinition rule = Rule(item.ruleId, Trigger.ON_TURN_START);
+                string definitionId = item.ruleId + "_definition";
+                db.Register(Card(definitionId, CardType.SPELL, rule));
+                state.OngoingEffects.Add(OngoingEffectInstance.CreatePermanent(
+                    new InstanceId(item.id), item.controller, definitionId, item.ruleId));
+            }
 
-            var snapshot = OrderedTriggerSources.Snapshot(state, db, P1, Trigger.ON_TURN_START,
-                ongoing);
+            var snapshot = OrderedTriggerSources.Snapshot(state, db, P1, Trigger.ON_TURN_START);
 
             Assert.That(snapshot.Select(s => s.RuleReference.RuleId.Value), Is.EqualTo(new[]
             {
@@ -223,14 +230,6 @@ namespace Emberfall.Core.Tests.Interpreter
                 type == CardType.MINION ? 1 : (int?)null,
                 type == CardType.WEAPON ? 1 : (int?)null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
-
-        private static EffectSourceContext Ongoing(int id, PlayerId controller, string ruleId)
-        {
-            RuleDefinition rule = Rule(ruleId, Trigger.ON_TURN_START);
-            CardDefinition definition = Card(ruleId + "_definition", CardType.SPELL, rule);
-            return new EffectSourceContext(new InstanceId(id), controller, definition, rule,
-                EffectSourceKind.OngoingEffect, null);
-        }
 
         private static GameState State()
             => new GameState(new MatchId("source-context"), new DeterministicRandom(3),

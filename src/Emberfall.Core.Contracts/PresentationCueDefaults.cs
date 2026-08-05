@@ -34,6 +34,9 @@ namespace Emberfall.Core.Contracts
                 GameEventKind.MatchEnded => PresentationCue.GameOver,
                 GameEventKind.ArmorGained => PresentationCue.ArmorGain,
                 GameEventKind.ControlChanged => PresentationCue.ControlChange,
+                GameEventKind.OngoingEffectCreated => PresentationCue.OngoingEffectCreate,
+                GameEventKind.OngoingEffectTriggered => PresentationCue.OngoingEffectTrigger,
+                GameEventKind.OngoingEffectExpired => PresentationCue.OngoingEffectExpire,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown semantic game-event kind."),
             };
         }
