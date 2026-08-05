@@ -365,7 +365,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       },
@@ -385,7 +386,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       }
@@ -453,7 +455,8 @@
           "type": "DAMAGE",
           "amount": 4,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "binding": "damage_target"
           }
         }
       },
@@ -472,7 +475,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "reinforce_target"
           }
         }
       }
@@ -688,7 +692,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "ANY_FRIENDLY"
+            "selector": "ANY_FRIENDLY",
+            "binding": "heal_target"
           }
         }
       },
@@ -707,7 +712,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "reinforce_target"
           }
         }
       }
@@ -742,7 +748,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "binding": "frost_target"
           }
         }
       },
@@ -761,7 +768,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "reinforce_target"
           }
         }
       }
@@ -794,7 +802,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "binding": "bounce_target"
           }
         }
       },
@@ -813,7 +822,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "reinforce_target"
           }
         }
       }
@@ -1113,7 +1123,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "REKINDLE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       },
@@ -1132,7 +1143,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       }
@@ -1344,7 +1356,8 @@
           "type": "HEAL",
           "amount": 3,
           "target": {
-            "selector": "ANY_FRIENDLY"
+            "selector": "ANY_FRIENDLY",
+            "binding": "heal_target"
           }
         }
       },
@@ -1363,7 +1376,8 @@
         "action": {
           "type": "REINFORCE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "reinforce_target"
           }
         }
       }
@@ -2330,7 +2344,8 @@
           "attack": 0,
           "health": 4,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       },
@@ -2350,7 +2365,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       }

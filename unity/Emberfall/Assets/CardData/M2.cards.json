@@ -1195,7 +1195,8 @@
           "type": "HEAL",
           "amount": 6,
           "target": {
-            "selector": "ANY_FRIENDLY"
+            "selector": "ANY_FRIENDLY",
+            "binding": "heal_target"
           }
         }
       },
@@ -1216,7 +1217,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "growth_target"
           }
         }
       }

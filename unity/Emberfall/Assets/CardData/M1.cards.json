@@ -1886,7 +1886,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       },
@@ -1906,7 +1907,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
           }
         }
       }

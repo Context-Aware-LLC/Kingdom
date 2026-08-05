@@ -132,6 +132,15 @@ namespace Emberfall.Core.Cards
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
             // C9-C15, C21-C25 — per-rule checks
+            var playerChoiceRuleCounts = new Dictionary<Trigger, int>();
+            foreach (RuleDefinition rule in def.Rules)
+            {
+                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                if (target == null || !IsPlayerChosen(target)) continue;
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
+                playerChoiceRuleCounts.TryGetValue(trigger, out int count);
+                playerChoiceRuleCounts[trigger] = count + 1;
+            }
             var priorTargetBindings = new HashSet<string>();
             var ruleIds = new HashSet<string>();
             for (int i = 0; i < def.Rules.Count; i++)
@@ -275,6 +284,10 @@ namespace Emberfall.Core.Cards
                         "target.count cannot be zero.");
                 if (target != null)
                 {
+                    if (IsPlayerChosen(target) && playerChoiceRuleCounts[trigger] > 1 &&
+                        target.Binding.Length == 0)
+                        Err("C14G-TARGET-BINDING-REQUIRED", $"{prefix}.action.target.binding",
+                            "each rule in a multi-rule player choice must name its target binding explicitly.");
                     if (target.Binding.Length > 0 && !TargetBindingPattern.IsMatch(target.Binding))
                         Err("C14D-TARGET-BINDING", $"{prefix}.action.target.binding",
                             "target.binding must match ^[a-z][a-z0-9_]{0,31}$.");
@@ -313,6 +326,11 @@ namespace Emberfall.Core.Cards
                             $"UNEARTH requires an ON_PLAY or ON_CAST player-command path; '{trigger}' cannot pause for input.");
                 }
             }
+
+            bool IsPlayerChosen(TargetSpec target)
+                => target.ChosenBy == TargetChosenBy.PLAYER ||
+                   (!target.ChosenBy.HasValue &&
+                    TargetSpec.DefaultsToPlayerChoice(target.Selector));
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the
             // shared CardJson parser throws on an unknown value before a CardDefinition can exist,
