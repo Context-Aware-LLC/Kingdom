@@ -27,6 +27,11 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(result.Accepted, Is.True);
             Assert.That(state.Players[0].Hero.Armor, Is.EqualTo(4));
             Assert.That(state.Players[0].Mana.Available, Is.EqualTo(8));
+            Assert.That(result.Events, Has.Some.Matches<GameEvent>(e =>
+                e.Kind == GameEventKind.ArmorGained &&
+                e.Source == state.Players[0].Hero.Id &&
+                e.Target == state.Players[0].Hero.Id &&
+                e.Amount == 4));
         }
 
         [Test]
@@ -58,6 +63,44 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(state.Players[1].Weapon, Is.Null);
             Assert.That(state.Players[0].Weapon, Is.SameAs(weapon));
             Assert.That(weapon.Controller, Is.EqualTo(P0));
+            Assert.That(result.Events, Has.Some.Matches<GameEvent>(e =>
+                e.Kind == GameEventKind.ControlChanged &&
+                e.Source == spellCard.Id && e.Target == weapon.Id));
+        }
+
+        [Test]
+        public void Typed_TakeControl_Transfers_An_Enemy_Minion_And_Emits_The_Fact()
+        {
+            var take = Rule("seize_minion",
+                new TakeControlAction(new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER)));
+            CardDefinition spell = Card("seize", CardType.SPELL, new[] { take });
+            CardDefinition minionDef = new CardDefinition("guard", "guard", CardType.MINION, 1,
+                2, 3, null, CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
+                System.Array.Empty<RuleDefinition>(), "", "", "art/guard", SetId.CORE,
+                true, null, "", false);
+            var db = new FakeCardDatabase().Register(spell).Register(minionDef);
+            GameState state = State();
+            var spellCard = new CardInstance(state.NextInstanceId(), spell.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(spellCard);
+            var minion = new CardInstance(state.NextInstanceId(), minionDef.Id, P1)
+            {
+                Zone = Zone.Board,
+                CurrentAttack = 2,
+                CurrentHealth = 3,
+                MaxHealth = 3,
+            };
+            state.Players[1].Board.Add(minion);
+
+            CommandResult result = new CommandProcessor(db).Execute(state,
+                new PlayCardIntent(P0, spellCard.Id, 0, new[] { new TargetRef(minion.Id) }));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(state.Players[1].Board, Does.Not.Contain(minion));
+            Assert.That(state.Players[0].Board, Does.Contain(minion));
+            Assert.That(minion.Controller, Is.EqualTo(P0));
+            Assert.That(result.Events, Has.Some.Matches<GameEvent>(e =>
+                e.Kind == GameEventKind.ControlChanged &&
+                e.Source == spellCard.Id && e.Target == minion.Id));
         }
 
         [Test]

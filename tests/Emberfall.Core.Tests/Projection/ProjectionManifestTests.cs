@@ -142,7 +142,7 @@ namespace Emberfall.Core.Tests.Projection
                 "CardDestroyed", "StatsModified", "KeywordApplied", "CardDrawn", "CardCreatedInHand",
                 "CardSilenced", "FrostApplied", "CardTransformed", "CardBounced", "ManaGained",
                 "WeaponEquipped", "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
-                "FatigueDamage", "MatchWon", "MatchEnded",
+                "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
             };
 
             var actual = Enum.GetNames(typeof(GameEventKind));

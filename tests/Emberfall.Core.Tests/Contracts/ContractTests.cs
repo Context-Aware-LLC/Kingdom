@@ -37,7 +37,7 @@ namespace Emberfall.Core.Tests.Contracts
                 "CardDrawn", "CardCreatedInHand", "CardSilenced", "FrostApplied",
                 "CardTransformed", "CardBounced", "ManaGained", "WeaponEquipped",
                 "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
-                "FatigueDamage", "MatchWon", "MatchEnded",
+                "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
             };
 
             Assert.That(Enum.GetNames(typeof(GameEventKind)), Is.EqualTo(expected));
@@ -51,7 +51,7 @@ namespace Emberfall.Core.Tests.Contracts
                 "Play", "Summon", "Attack", "Damage", "Heal", "Death", "Buff",
                 "Draw", "Silence", "Frost", "Transform", "Return", "ManaGain",
                 "Equip", "Unearth", "TurnStart", "TurnEnd", "HeroPower", "Fatigue",
-                "GameWin", "GameOver",
+                "GameWin", "GameOver", "ArmorGain", "ControlChange",
             };
 
             Assert.That(Enum.GetNames(typeof(PresentationCue)), Is.EqualTo(expected));
@@ -69,6 +69,8 @@ namespace Emberfall.Core.Tests.Contracts
                 Assert.That(PresentationCueDefaults.For(GameEventKind.KeywordApplied), Is.EqualTo(PresentationCue.Buff));
                 Assert.That(PresentationCueDefaults.For(GameEventKind.CardDrawn), Is.EqualTo(PresentationCue.Draw));
                 Assert.That(PresentationCueDefaults.For(GameEventKind.CardCreatedInHand), Is.EqualTo(PresentationCue.Draw));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.ArmorGained), Is.EqualTo(PresentationCue.ArmorGain));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.ControlChanged), Is.EqualTo(PresentationCue.ControlChange));
             });
         }
 
