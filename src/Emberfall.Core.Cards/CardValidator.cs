@@ -96,7 +96,7 @@ namespace Emberfall.Core.Cards
                     if (def.Attack is not null || def.Health is not null || def.Durability is not null)
                         Err("C5-SPELL-STATS", "stats", "SPELL must have attack/health/durability == null.");
                     if (def.Rules.Count == 0 && !def.RequiresEngineeringPrimitive)
-                        Err("C5-SPELL-EFFECTS", "rules", "SPELL must have >=1 rule or set requiresEngineeringPrimitive.");
+                        Err("C5-SPELL-RULES", "rules", "SPELL must have >=1 rule or set requiresEngineeringPrimitive.");
                     break;
                 case CardType.WEAPON:
                     if (def.Attack is null || def.Attack < 0)
