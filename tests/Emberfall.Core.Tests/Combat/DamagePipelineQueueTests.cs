@@ -4,7 +4,6 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -75,20 +74,20 @@ namespace Emberfall.Core.Tests.Combat
             return ci;
         }
 
-        private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? selector = null)
-            => new EffectDef(trigger, action, amount, null, null, null, selector);
+        private static RuleDefinition Damage(Trigger trigger, int amount, string? selector = null)
+            => TestRules.Rule("rule_1", trigger, TestRules.Damage(trigger, amount, selector));
 
-        private static CardDefinition Minion(string id, int atk, int hp, IReadOnlyList<EffectDef>? effects = null,
+        private static CardDefinition Minion(string id, int atk, int hp, IReadOnlyList<RuleDefinition>? rules = null,
             IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), effects ?? System.Array.Empty<EffectDef>(),
+                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects,
+                System.Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CommandProcessor Processor(FakeCardDatabase db) => new CommandProcessor(db);
@@ -101,9 +100,9 @@ namespace Emberfall.Core.Tests.Combat
             // A minion whose ON_DAMAGED pings the enemy hero. One spell hit → exactly one retaliatory ping,
             // proving the raise is wired and fires once per hit (not per drain, not zero times).
             var db = new FakeCardDatabase()
-                .Register(Spell("poke", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 1)))
+                .Register(Spell("poke", Damage(Trigger.ON_CAST, amount: 1)))
                 .Register(Minion("stinger", 1, 10,
-                    effects: new[] { Eff(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, amount: 3, selector: "ENEMY_HERO") }));
+                    rules: new[] { Damage(Trigger.ON_DAMAGED, amount: 3, selector: "ENEMY_HERO") }));
             var s = MainPhase();
             var stinger = Board(s, 1, db.Get("stinger"));   // enemy minion, stinger's enemy hero = P0
             var poke = Hand(s, 0, "poke");
@@ -127,9 +126,9 @@ namespace Emberfall.Core.Tests.Combat
             // This is the only place that decision is enforced rather than merely commented. Deleting the
             // early return, or moving the raise above it, makes the enemy hero take 3 and fails here.
             var db = new FakeCardDatabase()
-                .Register(Spell("poke", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 1)))
+                .Register(Spell("poke", Damage(Trigger.ON_CAST, amount: 1)))
                 .Register(Minion("wardstinger", 1, 10,
-                    effects: new[] { Eff(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, amount: 3, selector: "ENEMY_HERO") },
+                    rules: new[] { Damage(Trigger.ON_DAMAGED, amount: 3, selector: "ENEMY_HERO") },
                     keywords: new[] { Keyword.AEGIS }));
             var s = MainPhase();
             var warded = Board(s, 1, db.Get("wardstinger"));   // enemy minion; its enemy hero = P0
@@ -157,9 +156,9 @@ namespace Emberfall.Core.Tests.Combat
             // recursion bound in the engine. Without it this test would recurse/spin without end.
             const int cap = MatchEngine.ActionResolutionCap;
             var db = new FakeCardDatabase()
-                .Register(Spell("poke", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 1)))
+                .Register(Spell("poke", Damage(Trigger.ON_CAST, amount: 1)))
                 .Register(Minion("echo", 1, 200,
-                    effects: new[] { Eff(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, amount: 1, selector: "ENEMY_MINIONS") }));
+                    rules: new[] { Damage(Trigger.ON_DAMAGED, amount: 1, selector: "ENEMY_MINIONS") }));
             var s = MainPhase();
             var x = Board(s, 0, db.Get("echo"));
             var y = Board(s, 1, db.Get("echo"));

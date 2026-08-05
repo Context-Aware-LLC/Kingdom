@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -25,11 +24,11 @@ namespace Emberfall.Core.Tests.Combat
         private const string Shielded = "weapon_identity_shielded";
 
         private static CardDefinition Weapon(string id, int attack, int durability,
-            Keyword[]? keywords = null, params EffectDef[] effects)
+            Keyword[]? keywords = null, params RuleDefinition[] rules)
             => new CardDefinition(
                 id, id, CardType.WEAPON, 1, attack, null, durability,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? Array.Empty<Keyword>(), effects,
+                keywords ?? Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Minion(string id, int attack, int health,
@@ -37,7 +36,7 @@ namespace Emberfall.Core.Tests.Combat
             => new CardDefinition(
                 id, id, CardType.MINION, 1, attack, health, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords, Array.Empty<EffectDef>(),
+                keywords, Array.Empty<RuleDefinition>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static FakeCardDatabase Db() => new FakeCardDatabase()
@@ -51,9 +50,9 @@ namespace Emberfall.Core.Tests.Combat
                 Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
             }))
             .Register(Weapon(Swapper, 2, 3, new[] { Keyword.DOUBLESTRIKE },
-                new EffectDef(Trigger.ON_ATTACK, Verb.EQUIP, null, null, Froster, null, null)))
+                TestRules.Rule("equip_froster", Trigger.ON_ATTACK, new EquipAction(Froster))))
             .Register(Weapon(Toll, 2, 1, new[] { Keyword.TOLL },
-                new EffectDef(Trigger.ON_DEATH, Verb.DRAW, 1, null, null, null, null)))
+                TestRules.Rule("draw_one", Trigger.ON_DEATH, new DrawAction(1))))
             .Register(Minion(Dummy, 0, 12))
             .Register(Minion(Shielded, 0, 12, Keyword.AEGIS));
 

@@ -4,7 +4,7 @@ using NUnit.Framework;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
-using Verb = Emberfall.Core.Contracts.Action;
+using Emberfall.Core.Tests.Support;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -72,7 +72,7 @@ namespace Emberfall.Core.Tests.Combat
         private static CardDefinition Minion(string id, int atk, int hp, params Keyword[] kws)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                kws, System.Array.Empty<EffectDef>(),
+                kws, System.Array.Empty<RuleDefinition>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static AttackIntent Attack(GameState s, InstanceId attacker, InstanceId defender)
@@ -273,8 +273,8 @@ namespace Emberfall.Core.Tests.Combat
                 attack: 2, health: null, durability: 3,
                 @class: CardClass.VERDANT, rarity: Rarity.RARE,
                 keywords: System.Array.Empty<Keyword>(),
-                effects: new[] { new EffectDef(Trigger.ON_ATTACK, Verb.HEAL, amount: 2, amount2: null,
-                    tokenId: null, grantedKeyword: null, selector: "FRIENDLY_HERO") },
+                rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
+                    new HealAction(2, new TargetSpec("FRIENDLY_HERO"))) },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 

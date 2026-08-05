@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -34,12 +33,12 @@ namespace Emberfall.Core.Tests.Combat
         private const string Chainer = "ef020_chainer";   // 2/1 weapon, Toll: equip ef020_plain
         private const string Successor = "ef020_success"; // 4/2 weapon, no effects — what Chainer equips
 
-        private static CardDefinition Weapon(string id, int atk, int durability, params EffectDef[] effects)
+        private static CardDefinition Weapon(string id, int atk, int durability, params RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.WEAPON, cost: 1,
                 attack: atk, health: null, durability: durability,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -48,22 +47,21 @@ namespace Emberfall.Core.Tests.Combat
                 id: id, name: id, type: CardType.MINION, cost: 1,
                 attack: atk, health: hp, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: Array.Empty<EffectDef>(),
+                keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>Toll: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
-        private static EffectDef Rattle(int dmg)
-            => new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: dmg, amount2: null,
-                tokenId: null, grantedKeyword: null, selector: "ENEMY_HERO");
+        private static RuleDefinition Rattle(int dmg)
+            => TestRules.Rule("rattle", Trigger.ON_DEATH,
+                new DamageAction(dmg, new TargetSpec("ENEMY_HERO")));
 
         private static FakeCardDatabase Db() => new FakeCardDatabase()
             .Register(Weapon(Rattler, atk: 2, durability: 1, Rattle(3)))
             .Register(Weapon(Plain, atk: 3, durability: 2))
             .Register(Weapon(Successor, atk: 4, durability: 2))
             .Register(Weapon(Chainer, atk: 2, durability: 1,
-                new EffectDef(Trigger.ON_DEATH, Verb.EQUIP, amount: null, amount2: null,
-                    tokenId: Successor, grantedKeyword: null)))
+                TestRules.Rule("equip_successor", Trigger.ON_DEATH, new EquipAction(Successor))))
             .Register(Minion("ef020_dummy", 0, 10));
 
         private static GameState MainPhase()
@@ -124,8 +122,8 @@ namespace Emberfall.Core.Tests.Combat
         {
             const string empowered = "ef020_empowered";
             var def = Weapon(empowered, atk: 1, durability: 2,
-                new EffectDef(Trigger.ON_ATTACK, Verb.DEAL_DAMAGE, amount: 2, amount2: null,
-                    tokenId: null, grantedKeyword: null, selector: "ENEMY_HERO"));
+                TestRules.Rule("attack_damage", Trigger.ON_ATTACK,
+                    new DamageAction(2, new TargetSpec("ENEMY_HERO"))));
             var db = new FakeCardDatabase().Register(def);
             GameState state = MainPhase();
             Equip(state, 0, def);
@@ -242,7 +240,7 @@ namespace Emberfall.Core.Tests.Combat
                 id: Plain, name: Plain, type: CardType.WEAPON, cost: 1,
                 attack: 3, health: null, durability: 1,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: Array.Empty<EffectDef>(),
+                keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false));
             var dummy = OnBoard(s, 1, db.Get("ef020_dummy"));
