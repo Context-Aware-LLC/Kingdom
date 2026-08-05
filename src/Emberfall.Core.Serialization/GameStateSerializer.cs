@@ -112,14 +112,11 @@ namespace Emberfall.Core.Serialization
             w.I32(c.Position);
         }
 
-        private static void WalkWeapon(ICanonicalWriter w, WeaponInstance? weapon)
+        private static void WalkWeapon(ICanonicalWriter w, CardInstance? weapon)
         {
             if (weapon is null) { w.Bool(false); return; }
             w.Bool(true);
-            w.I32(weapon.Id.Value);
-            w.Str(weapon.DefinitionId);
-            w.I32(weapon.Attack);
-            w.I32(weapon.Durability);
+            WalkCard(w, weapon);
         }
 
         private static void WalkPendingChoice(ICanonicalWriter w, PendingChoice? pc)

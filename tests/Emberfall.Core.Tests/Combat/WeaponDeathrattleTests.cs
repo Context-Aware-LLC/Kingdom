@@ -89,12 +89,11 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         private static void Equip(GameState s, int seat, CardDefinition def)
-            => s.Players[seat].Weapon = new WeaponInstance
+            => s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), def.Id, s.Players[seat].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = def.Id,
-                Attack = def.Attack ?? 0,
-                Durability = def.Durability ?? 1,
+                Zone = Zone.Weapon,
+                CurrentAttack = def.Attack ?? 0,
+                CurrentDurability = def.Durability ?? 1,
             };
 
         private static CardInstance ToHand(GameState s, int seat, CardDefinition def)
@@ -160,7 +159,7 @@ namespace Emberfall.Core.Tests.Combat
                 + "a weapon leaves play by.");
             Assert.That(s.Players[0].Weapon, Is.Not.Null);
             Assert.That(s.Players[0].Weapon!.DefinitionId, Is.EqualTo(Plain), "the new weapon is equipped");
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2),
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2),
                 "the replacement is untouched — the outgoing rattle must not chip it");
         }
 

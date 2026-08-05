@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The derived-stat layer (EF-017a). A minion's live stats are a FUNCTION of its printed base and
+    /// The derived-stat layer (EF-017a). A card's live stats are a FUNCTION of its printed base and
     /// its <see cref="CardInstance.Enchantments"/> list — not an accumulator that effects add into.
     ///
     /// <para><b>Why this exists.</b> Before EF-017a, <c>BuffHandler</c> baked <c>CurrentAttack += atk</c>
@@ -21,12 +21,12 @@ namespace Emberfall.Core
     /// always look up. That choice is what keeps this change OUT of the hash: no field enters
     /// <c>GameState</c>, the serializer is untouched, and the golden replays hold unrebaselined.</para>
     ///
-    /// <para><b>RETIREMENT TRIGGER.</b> If a verb ever changes a minion's PRINTED stats in place without
+    /// <para><b>RETIREMENT TRIGGER.</b> If a verb ever changes a card's PRINTED stats in place without
     /// changing its <c>DefinitionId</c> — a "set base attack to N" effect; no such verb exists today, and
     /// <c>TRANSFORM</c> is declared in the <c>Action</c> enum with no handler — that value stops being
     /// derivable and <c>BaseAttack</c>/<c>BaseMaxHealth</c> must become real <see cref="CardInstance"/>
-    /// fields. That IS a hash-canonical change: follow the six-point touch list on <c>WeaponInstance</c>
-    /// in <c>GameState.cs</c>, and rewrite this paragraph in the same commit.</para>
+    /// fields. That IS a hash-canonical change: update the canonical serializer, projection, snapshot
+    /// codec, field manifest, pinned digest, and affected golden fixtures together.</para>
     /// </summary>
     internal static class DerivedStats
     {
@@ -62,6 +62,26 @@ namespace Emberfall.Core
             int damageTaken = c.MaxHealth - c.CurrentHealth;
             if (damageTaken < 0) damageTaken = 0;
             ApplyStats(c, def, damageTaken);
+        }
+
+        /// <summary>
+        /// Initialize an existing card for the weapon slot without discarding any runtime state it
+        /// already carries. Printed keywords are unioned into the instance, enchantments continue to
+        /// contribute to attack, and a pre-existing durability value is retained. A fresh deck/hand
+        /// card has no durability yet, so that one missing value is seeded from the definition.
+        /// </summary>
+        public static void EnterWeapon(CardInstance c, CardDefinition def)
+        {
+            foreach (var k in def.Keywords) c.Keywords.Add(k);
+            foreach (var e in c.Enchantments)
+                if (e.GrantedKeyword.HasValue) c.Keywords.Add(e.GrantedKeyword.Value);
+
+            int attack = BaseAttack(def);
+            foreach (var e in c.Enchantments) attack += e.AttackDelta;
+            c.CurrentAttack = attack;
+
+            if (!c.CurrentDurability.HasValue)
+                c.CurrentDurability = def.Durability ?? 1;
         }
 
         /// <summary>

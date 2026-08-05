@@ -153,7 +153,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             new CommandProcessor(LiveDb).Execute(s,
                 new PlayCardIntent(s.ActivePlayer, lance.Id, 0, Array.Empty<TargetRef>()));
 
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2),
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2),
                 "the incoming lance keeps its full durability — the outgoing rattle must not touch it.");
         }
 
@@ -182,12 +182,11 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         private static void Equip(GameState s, int seat, CardDefinition def, int? durabilityOverride = null)
-            => s.Players[seat].Weapon = new WeaponInstance
+            => s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), def.Id, s.Players[seat].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = def.Id,
-                Attack = def.Attack ?? 0,
-                Durability = durabilityOverride ?? def.Durability ?? 1,
+                Zone = Zone.Weapon,
+                CurrentAttack = def.Attack ?? 0,
+                CurrentDurability = durabilityOverride ?? def.Durability ?? 1,
             };
 
         private static CardInstance ToHand(GameState s, int seat, CardDefinition def)

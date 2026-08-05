@@ -262,12 +262,11 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             var s = MainPhase();
             // Give P1 a weapon so they could attack
-            s.Players[1].Weapon = new WeaponInstance
+            s.Players[1].Weapon = new CardInstance(s.NextInstanceId(), "ember_cinder_lance", s.Players[1].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = "ember_cinder_lance",
-                Attack = 1,
-                Durability = 2
+                Zone = Zone.Weapon,
+                CurrentAttack = 1,
+                CurrentDurability = 2,
             };
             var spell = InHand(s, 0, "tide_frostbind");
 
@@ -327,8 +326,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             Proc().Execute(s, Play(s, weapon));
 
             Assert.That(s.Players[0].Weapon, Is.Not.Null);
-            Assert.That(s.Players[0].Weapon!.Attack, Is.EqualTo(1));
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2));
+            Assert.That(s.Players[0].Weapon!.CurrentAttack, Is.EqualTo(1));
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2));
         }
 
         // ── Maren's Deep Bargain: draws 2 cards ─────────────────────────────────────

@@ -82,15 +82,7 @@ namespace Emberfall.Core.Projection
             foreach (var c in ps.Graveyard) proj.Graveyard.Add(CloneCard(s, c, viewerSeat, ref max));
 
             if (ps.Weapon != null)
-            {
-                proj.Weapon = new WeaponInstance
-                {
-                    Id = Track(ps.Weapon.Id, ref max),
-                    DefinitionId = ps.Weapon.DefinitionId,
-                    Attack = ps.Weapon.Attack,
-                    Durability = ps.Weapon.Durability,
-                };
-            }
+                proj.Weapon = CloneCard(s, ps.Weapon, viewerSeat, ref max);
 
             proj.Mana.Max = ps.Mana.Max;
             proj.Mana.Available = ps.Mana.Available;

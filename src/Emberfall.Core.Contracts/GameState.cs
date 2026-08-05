@@ -75,7 +75,7 @@ namespace Emberfall.Core.Contracts
         public List<CardInstance> Deck = new List<CardInstance>();      // ordered; top = index 0 = next draw
         public List<CardInstance> Hand = new List<CardInstance>();      // ordered; cap 10 (overdraw burns)
         public List<CardInstance> Board = new List<CardInstance>();     // ordered slots; cap 7; index = position
-        public WeaponInstance? Weapon;                                  // nullable; durability
+        public CardInstance? Weapon;                                    // nullable; the equipped card in Zone.Weapon
         public List<CardInstance> Graveyard = new List<CardInstance>(); // for recursion cards
         public ManaPool Mana = new ManaPool();
         public bool HeroPowerUsedThisTurn;
@@ -180,29 +180,6 @@ namespace Emberfall.Core.Contracts
         public int AttackDelta;
         public int HealthDelta;
         public Keyword? GrantedKeyword;
-    }
-
-    /// <summary>Equipped weapon: attack + durability, no health.</summary>
-    /// <summary>An equipped weapon. Stats only — there is deliberately NO keyword field, which is
-    /// why no weapon can carry Lifedrain, Venom or Frost as an on-hit rider: a hero attacking hands
-    /// DamagePipeline a freshly allocated EMPTY keyword set, and there is nothing here to fill it
-    /// from. CLAUDE.md documents this as a constraint on card authoring.
-    ///
-    /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> Adding a
-    /// field to this type is a HASH-CANONICAL change, not a small patch, because WeaponInstance is
-    /// game state. The same commit must touch all of: GameStateSerializer (the authoritative field
-    /// order, WalkWeapon), CanonicalStateFixtures (BOTH the Manifest dict and a Mutations entry),
-    /// SnapshotJsonCodec (the A5 wire walk), CanonicalSerializationTests.PinnedSeedDigest, the three
-    /// golden fixtures, and the CONTENT of their paired .rebaseline.md files — the harness will not
-    /// rewrite those for you, and tools/ci/rebaseline-guard.sh fails the diff if you skip them.
-    /// It must also update CLAUDE.md's "What a weapon can and cannot do", which becomes false.</para>
-    /// </summary>
-    public sealed class WeaponInstance
-    {
-        public InstanceId Id;
-        public string DefinitionId = "";
-        public int Attack;
-        public int Durability;
     }
 
     /// <summary>

@@ -61,12 +61,11 @@ namespace Emberfall.Core.Tests.Combat
 
         private static void EquipWeapon(GameState s, int seat, int atk, int durability)
         {
-            s.Players[seat].Weapon = new WeaponInstance
+            s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), "weapon", s.Players[seat].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = "weapon",
-                Attack = atk,
-                Durability = durability,
+                Zone = Zone.Weapon,
+                CurrentAttack = atk,
+                CurrentDurability = durability,
             };
         }
 
@@ -262,12 +261,10 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(def.CurrentHealth, Is.EqualTo(2), "hero dealt 4 damage");
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(28), "hero took 2 retaliation");
             Assert.That(s.Players[0].Weapon, Is.Not.Null, "weapon still alive");
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(1), "durability decremented");
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(1), "durability decremented");
         }
 
-        // Regression: WeaponInstance carries no CardInstance of its own, so a weapon's ON_ATTACK
-        // effect (e.g. Grasping Thornvine — "Whenever this attacks, restore 2 Health to your hero")
-        // was silently dead until ApplyAttack learned to wrap it for RaiseSelf.
+        // Regression: a weapon's ON_ATTACK effect resolves from the equipped CardInstance.
         [Test]
         public void Weapon_ON_ATTACK_Effect_Fires_On_Hero_Attack()
         {
@@ -285,12 +282,11 @@ namespace Emberfall.Core.Tests.Combat
             var proc = new CommandProcessor(db);
 
             var s = MainPhase();
-            s.Players[0].Weapon = new WeaponInstance
+            s.Players[0].Weapon = new CardInstance(s.NextInstanceId(), weaponDef.Id, s.Players[0].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = weaponDef.Id,
-                Attack = 2,
-                Durability = 3,
+                Zone = Zone.Weapon,
+                CurrentAttack = 2,
+                CurrentDurability = 3,
             };
             s.Players[0].Hero.CurrentHealth = 20; // below max so the heal is observable
             var def = Board(s, 1, Minion("target", 0, 10)); // 0 attack: no retaliation to muddy the heal
@@ -579,7 +575,7 @@ namespace Emberfall.Core.Tests.Combat
             var r = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, stealthy.Id));
 
             Assert.That(r.Accepted, Is.False, "stealth target is illegal");
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2), "durability untouched");
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2), "durability untouched");
             Assert.That(s.Players[0].HeroAttacksUsedThisTurn, Is.EqualTo(0), "attack budget untouched");
         }
     }

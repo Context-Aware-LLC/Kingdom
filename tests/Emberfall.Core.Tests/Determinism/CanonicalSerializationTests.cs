@@ -92,7 +92,9 @@ namespace Emberfall.Core.Tests.Determinism
         /// </summary>
         // Re-pinned 2026-07-15 (A2b, §7-reviewed): walk gained the PendingChoice tail + the seed
         // state now exercises it non-null. Old pin: abb617ccf5e1c67c7697f4b52b1658c29e63045abda9e990f2561b1bfca439db
-        private const string PinnedSeedDigest = "23b592020596174461142909891e0b33b412929f98e47b3e7ae6d641c3030009";
+        // Re-pinned 2026-08-05 (NOR-31 step 2): PlayerState.Weapon now walks the complete equipped
+        // CardInstance instead of the retired four-field WeaponInstance wrapper.
+        private const string PinnedSeedDigest = "7e02a1ff01d046b2006750b4894faee1f00c27725ddf28c674d3efab63b4a3ca";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()

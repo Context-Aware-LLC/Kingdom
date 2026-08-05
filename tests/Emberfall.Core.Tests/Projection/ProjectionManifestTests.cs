@@ -84,13 +84,6 @@ namespace Emberfall.Core.Tests.Projection
                 ["HasUsedReborn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["Position"] = "PUBLIC (board only; 0 elsewhere)",
             },
-            [typeof(WeaponInstance)] = new()
-            {
-                ["Id"] = "PUBLIC",
-                ["DefinitionId"] = "PUBLIC",
-                ["Attack"] = "PUBLIC",
-                ["Durability"] = "PUBLIC",
-            },
             [typeof(Enchantment)] = new()
             {
                 ["Source"] = "PUBLIC, resolution-guarded (sentinel when referent hidden/unresolvable — design §4)",

@@ -372,16 +372,8 @@ namespace Emberfall.Core
                     break;
 
                 case CardType.WEAPON:
-                    card.Zone = Zone.Graveyard;
-                    ps.Graveyard.Add(card);
                     RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
-                    ps.Weapon = new WeaponInstance
-                    {
-                        Id = state.NextInstanceId(),
-                        DefinitionId = def.Id,
-                        Attack = def.Attack ?? 0,
-                        Durability = def.Durability ?? 1,
-                    };
+                    RulesEngine.EnterWeapon(state, card, def, seat);
                     buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Battlecry
                     break;
@@ -476,7 +468,8 @@ namespace Emberfall.Core
             {
                 if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
                 if (ps.Hero.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
-                if (ps.HeroAttacksUsedThisTurn >= 1) { reason = RejectReason.NoAttacksLeft; return false; }
+                int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
+                if (ps.HeroAttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
             {
@@ -534,11 +527,11 @@ namespace Emberfall.Core
 
             int attackerAtk = attacker.IsMinion
                 ? attacker.Minion!.CurrentAttack
-                : ps.Weapon!.Attack;
+                : ps.Weapon!.CurrentAttack;
 
             var attackerKws = attacker.IsMinion
-                ? attacker.Minion!.Keywords
-                : new HashSet<Keyword>();
+                ? new HashSet<Keyword>(attacker.Minion!.Keywords)
+                : new HashSet<Keyword>(ps.Weapon!.Keywords);
 
             bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
             bool vanguard = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
@@ -552,13 +545,10 @@ namespace Emberfall.Core
 
             buf.Emit(VfxEvent.onAttack, source: attacker.Id, target: defender.Id);
 
-            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal). WeaponInstance
-            // carries no CardInstance of its own, so wrap it in a throwaway one purely for effect lookup.
+            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from
+            // the equipped card itself, preserving its identity and runtime source state.
             if (attacker.IsHero && ps.Weapon != null)
-            {
-                var weaponCard = new CardInstance(ps.Weapon.Id, ps.Weapon.DefinitionId, a.Player);
-                interp.RaiseSelf(weaponCard, Trigger.ON_ATTACK, System.Array.Empty<CharacterRef>());
-            }
+                interp.RaiseSelf(ps.Weapon, Trigger.ON_ATTACK, System.Array.Empty<CharacterRef>());
 
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);
@@ -586,8 +576,8 @@ namespace Emberfall.Core
             // Weapon durability on hero attack
             if (attacker.IsHero && ps.Weapon != null)
             {
-                ps.Weapon.Durability--;
-                if (ps.Weapon.Durability <= 0)
+                ps.Weapon.CurrentDurability--;
+                if (ps.Weapon.CurrentDurability <= 0)
                     RulesEngine.BreakWeapon(interp, seat);   // rattle enqueued; interp.Drain() below resolves it
             }
 

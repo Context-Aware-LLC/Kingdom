@@ -326,13 +326,8 @@ namespace Emberfall.Core
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             int seat = ctx.State.SeatOf(ctx.Source.Controller);
             RulesEngine.BreakWeapon(ctx.Interpreter, seat); // destroy old weapon (rattle enqueued) before equipping new
-            ps.Weapon = new WeaponInstance
-            {
-                Id = ctx.State.NextInstanceId(),
-                DefinitionId = def.Id,
-                Attack = def.Attack ?? 0,
-                Durability = def.Durability ?? 1,
-            };
+            var weapon = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
+            RulesEngine.EnterWeapon(ctx.State, weapon, def, seat);
             ctx.Events.Emit(ctx.Vfx(VfxEvent.onEquip), source: ps.Hero.Id);
         }
     }

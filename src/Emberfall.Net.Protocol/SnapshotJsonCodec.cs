@@ -58,15 +58,7 @@ namespace Emberfall.Net.Protocol
             w.Name("board"); WriteZone(w, p.Board);
             w.Name("weapon");
             if (p.Weapon is null) w.Null();
-            else
-            {
-                w.BeginObject();
-                w.Name("id"); w.Str(WirePrimitives.InstanceToWire(p.Weapon.Id));
-                w.Name("definitionId"); w.Str(p.Weapon.DefinitionId);
-                w.Name("attack"); w.I32(p.Weapon.Attack);
-                w.Name("durability"); w.I32(p.Weapon.Durability);
-                w.EndObject();
-            }
+            else WriteCard(w, p.Weapon);
             w.Name("graveyard"); WriteZone(w, p.Graveyard);
             w.Name("mana");
             w.BeginObject();
@@ -238,12 +230,13 @@ namespace Emberfall.Net.Protocol
             if (!obj.TryGet("weapon", out var wVal)) { detail = "missing weapon"; return false; }
             if (!wVal.IsNull)
             {
-                if (wVal.Kind != JKind.Object) { detail = "weapon is not an object"; return false; }
-                if (!TryInstanceField(wVal, "id", out var wid, ref detail)) return false;
-                if (!TryStrField(wVal, "definitionId", out string wdef, ref detail)) return false;
-                if (!TryI32Field(wVal, "attack", out int watk, ref detail)) return false;
-                if (!TryI32Field(wVal, "durability", out int wdur, ref detail)) return false;
-                player.Weapon = new WeaponInstance { Id = wid, DefinitionId = wdef, Attack = watk, Durability = wdur };
+                if (!TryReadCard(wVal, out var weapon, ref detail)) return false;
+                if (weapon.Zone != Zone.Weapon)
+                {
+                    detail = "weapon card must be in zone Weapon";
+                    return false;
+                }
+                player.Weapon = weapon;
             }
 
             if (!TryReadZone(obj, "graveyard", player.Graveyard, ref detail)) return false;

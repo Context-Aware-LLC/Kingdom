@@ -46,7 +46,6 @@ namespace Emberfall.Core.Tests.Support
                 "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
             },
             [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "Source" },
-            [typeof(WeaponInstance)] = new[] { "Attack", "DefinitionId", "Durability", "Id" },
             [typeof(ManaPool)] = new[] { "Available", "Locked", "Max", "Spent", "Temporary" },
         };
 
@@ -132,12 +131,6 @@ namespace Emberfall.Core.Tests.Support
             ["Enchantment.HealthDelta"] = s => HandCard(s).Enchantments[0].HealthDelta++,
             ["Enchantment.GrantedKeyword"] = s => HandCard(s).Enchantments[0].GrantedKeyword = Keyword.RUSH,
 
-            // WeaponInstance (seat 0's equipped weapon)
-            ["WeaponInstance.Id"] = s => s.Players[0].Weapon!.Id = new InstanceId(55),
-            ["WeaponInstance.DefinitionId"] = s => s.Players[0].Weapon!.DefinitionId = "weapon_other",
-            ["WeaponInstance.Attack"] = s => s.Players[0].Weapon!.Attack++,
-            ["WeaponInstance.Durability"] = s => s.Players[0].Weapon!.Durability++,
-
             // ManaPool (seat 0)
             ["ManaPool.Max"] = s => s.Players[0].Mana.Max++,
             ["ManaPool.Available"] = s => s.Players[0].Mana.Available++,
@@ -198,7 +191,11 @@ namespace Emberfall.Core.Tests.Support
             boardCard.Position = 0;
             p0.Board.Add(boardCard);
             p0.Graveyard.Add(MakeCard(6, p0Id, Zone.Graveyard));
-            p0.Weapon = new WeaponInstance { Id = new InstanceId(7), DefinitionId = "weapon_seed", Attack = 3, Durability = 2 };
+            p0.Weapon = MakeCard(7, p0Id, Zone.Weapon);
+            p0.Weapon.DefinitionId = "weapon_seed";
+            p0.Weapon.CurrentAttack = 3;
+            p0.Weapon.CurrentDurability = 2;
+            p0.Weapon.Keywords.Add(Keyword.LIFESTEAL);
             p0.Mana = new ManaPool { Max = 5, Available = 3, Spent = 2, Locked = 1, Temporary = 1 };
             p0.HeroAttacksUsedThisTurn = 1;
             p0.NextTurnOverloadLock = 2;

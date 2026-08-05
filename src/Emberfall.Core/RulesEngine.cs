@@ -71,6 +71,20 @@ namespace Emberfall.Core
             return true;
         }
 
+        /// <summary>
+        /// Move <paramref name="card"/> into the weapon slot as the same runtime instance. The caller
+        /// breaks any outgoing weapon first so its queued trigger observes the incoming card already
+        /// equipped when the queue later drains.
+        /// </summary>
+        public static void EnterWeapon(GameState state, CardInstance card, CardDefinition def, int seat)
+        {
+            var ps = state.Players[seat];
+            card.Controller = ps.Id;
+            card.Zone = Zone.Weapon;
+            DerivedStats.EnterWeapon(card, def);
+            ps.Weapon = card;
+        }
+
         /// <summary>Re-stamp every minion's <see cref="CardInstance.Position"/> to its slot index after a board edit.</summary>
         public static void Reindex(List<CardInstance> board)
         {
@@ -98,11 +112,10 @@ namespace Emberfall.Core
             var broken = ps.Weapon;
             interp.Events.Emit(VfxEvent.onDeath, source: broken.Id);
             ps.Weapon = null;   // leave the slot BEFORE raising, so the rattle observes an unequipped hero
+            broken.Zone = Zone.Graveyard;
+            ps.Graveyard.Add(broken);
 
-            // WeaponInstance carries no CardInstance of its own, so wrap it in a throwaway one purely for
-            // effect lookup — exactly as CommandProcessor.ApplyAttack does for ON_ATTACK.
-            var weaponCard = new CardInstance(broken.Id, broken.DefinitionId, ps.Id);
-            interp.RaiseSelf(weaponCard, Trigger.ON_DEATH, System.Array.Empty<CharacterRef>());
+            interp.RaiseSelf(broken, Trigger.ON_DEATH, System.Array.Empty<CharacterRef>());
         }
 
         /// <summary>
