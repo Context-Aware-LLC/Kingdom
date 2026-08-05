@@ -108,7 +108,7 @@ namespace Emberfall.Core
             {
                 var token = new CardInstance(ctx.State.NextInstanceId(), def.Id, ctx.Source.Controller);
                 if (!RulesEngine.EnterBoard(ctx.State, token, def, seat, -1)) break; // board full → stop
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onSummon), source: token.Id, flags: EventFlags.IsToken);
+                ctx.Events.Emit(GameEventKind.CardSummoned, source: token.Id, flags: EventFlags.IsToken);
                 ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
                     triggerSource: token.Id);
             }
@@ -133,7 +133,7 @@ namespace Emberfall.Core
                 // could ever take the buff off again.
                 m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, AttackDelta = atk, HealthDelta = hp });
                 DerivedStats.Recompute(m, ctx.Db.Get(m.DefinitionId));
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onBuff), source: ctx.Source.Id, target: m.Id, amount: atk != 0 ? atk : hp);
+                ctx.Events.Emit(GameEventKind.StatsModified, source: ctx.Source.Id, target: m.Id, amount: atk != 0 ? atk : hp);
             }
         }
     }
@@ -158,7 +158,7 @@ namespace Emberfall.Core
                 if (m.Keywords.Add(kw.Value))
                     m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, GrantedKeyword = kw });
                 if (kw.Value == Keyword.AEGIS) m.HasAegisShield = true;
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onBuff), source: ctx.Source.Id, target: m.Id);
+                ctx.Events.Emit(GameEventKind.KeywordApplied, source: ctx.Source.Id, target: m.Id);
             }
         }
     }
@@ -242,7 +242,7 @@ namespace Emberfall.Core
                 card.Zone = Zone.Hand;
                 owner.Hand.Add(card);
             }
-            ctx.Events.Emit(ctx.Vfx(VfxEvent.onReturn), source: ctx.Source.Id, target: card.Id);
+            ctx.Events.Emit(GameEventKind.CardBounced, source: ctx.Source.Id, target: card.Id);
         }
     }
 
@@ -264,7 +264,7 @@ namespace Emberfall.Core
                 // while its enchantments and granted keywords reset to the printed definition.
                 DerivedStats.ResetToPrinted(card, def, preserveDamage: t.IsMinion);
 
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onSilence), source: ctx.Source.Id, target: card.Id);
+                ctx.Events.Emit(GameEventKind.CardSilenced, source: ctx.Source.Id, target: card.Id);
             }
         }
     }
@@ -295,7 +295,7 @@ namespace Emberfall.Core
                     int filled = ps.Mana.Available + gained;
                     ps.Mana.Available = filled > MatchEngine.MaxMana ? MatchEngine.MaxMana : filled;
                 }
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onManaGain), source: ctx.Source.Id, amount: gained);
+                ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Id, amount: gained);
                 return;
             }
 
@@ -303,7 +303,7 @@ namespace Emberfall.Core
             ps.Mana.Temporary += amount;
             int avail = ps.Mana.Available + amount;
             ps.Mana.Available = avail > MatchEngine.MaxMana ? MatchEngine.MaxMana : avail;
-            ctx.Events.Emit(ctx.Vfx(VfxEvent.onManaGain), source: ctx.Source.Id, amount: amount);
+            ctx.Events.Emit(GameEventKind.ManaGained, source: ctx.Source.Id, amount: amount);
         }
     }
 
@@ -321,7 +321,7 @@ namespace Emberfall.Core
                 if (ps.Hand.Count >= MatchEngine.HandCap) break;   // hand full → the created card fizzles
                 var card = new CardInstance(ctx.State.NextInstanceId(), ctx.Effect.TokenId, ps.Id) { Zone = Zone.Hand };
                 ps.Hand.Add(card);
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onDraw), source: card.Id, flags: EventFlags.IsToken);
+                ctx.Events.Emit(GameEventKind.CardCreatedInHand, source: card.Id, flags: EventFlags.IsToken);
             }
         }
     }
@@ -341,7 +341,7 @@ namespace Emberfall.Core
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance || def.Type != CardType.WEAPON) continue;
                     var weaponReplacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, owner.Id);
                     RulesEngine.EnterWeapon(ctx.State, weaponReplacement, def, t.Seat);
-                    ctx.Events.Emit(ctx.Vfx(VfxEvent.onTransform), source: ctx.Source.Id,
+                    ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Id,
                         target: owner.Weapon.Id);
                     continue;
                 }
@@ -353,7 +353,7 @@ namespace Emberfall.Core
                 ps.Board.RemoveAt(idx);
                 var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
                 RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx);
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onTransform), source: ctx.Source.Id, target: replacement.Id);
+                ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Id, target: replacement.Id);
             }
         }
     }
@@ -370,7 +370,7 @@ namespace Emberfall.Core
             RulesEngine.BreakWeapon(ctx.Interpreter, seat); // destroy old weapon (rattle enqueued) before equipping new
             var weapon = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
             RulesEngine.EnterWeapon(ctx.State, weapon, def, seat);
-            ctx.Events.Emit(ctx.Vfx(VfxEvent.onEquip), source: ps.Hero.Id);
+            ctx.Events.Emit(GameEventKind.WeaponEquipped, source: ps.Hero.Id);
         }
     }
 
@@ -395,7 +395,7 @@ namespace Emberfall.Core
                 if (t.IsMinion) t.Minion!.IsFrosted = true;
                 else if (t.IsHero) t.Hero!.IsFrosted = true;
                 else continue;
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onFrost), source: ctx.Source.Id, target: t.Id);
+                ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Id, target: t.Id);
             }
         }
     }

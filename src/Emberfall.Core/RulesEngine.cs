@@ -24,7 +24,7 @@ namespace Emberfall.Core
             {
                 int counter = seat == 0 ? ++state.FatigueCounter0 : ++state.FatigueCounter1;
                 ps.Hero.CurrentHealth -= counter;
-                buf.Emit(VfxEvent.onFatigue, target: ps.Hero.Id, amount: counter, flags: EventFlags.Fatigue);
+                buf.Emit(GameEventKind.FatigueDamage, target: ps.Hero.Id, amount: counter, flags: EventFlags.Fatigue);
                 return;
             }
 
@@ -35,13 +35,13 @@ namespace Emberfall.Core
             {
                 card.Zone = Zone.Graveyard;
                 ps.Graveyard.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id, flags: EventFlags.Overdraw);
+                buf.Emit(GameEventKind.CardDrawn, source: card.Id, flags: EventFlags.Overdraw);
             }
             else
             {
                 card.Zone = Zone.Hand;
                 ps.Hand.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id);
+                buf.Emit(GameEventKind.CardDrawn, source: card.Id);
             }
         }
 
@@ -110,7 +110,7 @@ namespace Emberfall.Core
             if (ps.Weapon is null) return;
 
             var broken = ps.Weapon;
-            interp.Events.Emit(VfxEvent.onDeath, source: broken.Id);
+            interp.Events.Emit(GameEventKind.CardDestroyed, source: broken.Id);
             ps.Weapon = null;   // leave the slot BEFORE raising, so the rattle observes an unequipped hero
             broken.Zone = Zone.Graveyard;
             ps.Graveyard.Add(broken);
@@ -135,11 +135,11 @@ namespace Emberfall.Core
             else state.Outcome = MatchOutcome.Player1Win;
 
             state.Phase = TurnPhase.GameOver;
-            buf.Emit(VfxEvent.onGameOver);
+            buf.Emit(GameEventKind.MatchEnded);
             if (state.Outcome != MatchOutcome.Draw)
             {
                 int winnerSeat = state.Outcome == MatchOutcome.Player0Win ? 0 : 1;
-                buf.Emit(VfxEvent.onGameWin, source: state.Players[winnerSeat].Hero.Id, flags: EventFlags.Lethal);
+                buf.Emit(GameEventKind.MatchWon, source: state.Players[winnerSeat].Hero.Id, flags: EventFlags.Lethal);
             }
         }
     }

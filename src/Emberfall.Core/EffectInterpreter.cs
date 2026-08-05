@@ -156,7 +156,7 @@ namespace Emberfall.Core
                     RulesEngine.Reindex(ps.Board);
                     minion.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(minion);
-                    _buf.Emit(VfxEvent.onDeath, source: minion.Id);
+                    _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 
                     var def = _db.Get(minion.DefinitionId);
                     var effects = def.Effects;
@@ -186,7 +186,7 @@ namespace Emberfall.Core
             if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex)) return;
             copy.CurrentHealth = 1;            // Rekindle returns at 1 health
             copy.HasUsedRekindle = true;         // never rekindles again
-            _buf.Emit(VfxEvent.onSummon, source: copy.Id, flags: EventFlags.IsToken);
+            _buf.Emit(GameEventKind.CardSummoned, source: copy.Id, flags: EventFlags.IsToken);
         }
 
         // ── Target resolution ────────────────────────────────────────────────────

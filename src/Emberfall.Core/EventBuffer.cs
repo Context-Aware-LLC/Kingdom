@@ -48,6 +48,49 @@ namespace Emberfall.Core
             Emit(new GameEvent(kind, _state.NextEventSequence++, source, target, amount, flags));
         }
 
+        /// <summary>
+        /// Semantic event seam. Validation happens before sequence allocation so malformed events
+        /// cannot leave a gap in the deterministic stream.
+        /// </summary>
+        public void Emit(GameEventKind kind, InstanceId? source = null, InstanceId? target = null,
+                         int? amount = null, EventFlags flags = EventFlags.None,
+                         PresentationCue? cueOverride = null)
+        {
+            GameEventPolicy.Validate(kind, amount, flags, cueOverride);
+
+            PresentationCue cue = cueOverride ?? PresentationCueDefaults.For(kind);
+            Emit(new GameEvent(ToLegacyKind(cue), _state.NextEventSequence++, source, target, amount, flags));
+        }
+
+        private static VfxEvent ToLegacyKind(PresentationCue cue)
+        {
+            return cue switch
+            {
+                PresentationCue.Play => VfxEvent.onPlay,
+                PresentationCue.Summon => VfxEvent.onSummon,
+                PresentationCue.Attack => VfxEvent.onAttack,
+                PresentationCue.Damage => VfxEvent.onDamage,
+                PresentationCue.Heal => VfxEvent.onHeal,
+                PresentationCue.Death => VfxEvent.onDeath,
+                PresentationCue.Buff => VfxEvent.onBuff,
+                PresentationCue.Draw => VfxEvent.onDraw,
+                PresentationCue.Silence => VfxEvent.onSilence,
+                PresentationCue.Frost => VfxEvent.onFreeze,
+                PresentationCue.Transform => VfxEvent.onTransform,
+                PresentationCue.Return => VfxEvent.onReturn,
+                PresentationCue.ManaGain => VfxEvent.onManaGain,
+                PresentationCue.Equip => VfxEvent.onEquip,
+                PresentationCue.Unearth => VfxEvent.onDiscover,
+                PresentationCue.TurnStart => VfxEvent.onTurnStart,
+                PresentationCue.TurnEnd => VfxEvent.onTurnEnd,
+                PresentationCue.HeroPower => VfxEvent.onHeroPower,
+                PresentationCue.Fatigue => VfxEvent.onFatigue,
+                PresentationCue.GameWin => VfxEvent.onGameWin,
+                PresentationCue.GameOver => VfxEvent.onGameOver,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(cue), cue, "Unknown presentation cue."),
+            };
+        }
+
         private IdVisibility Classify(InstanceId? idOpt)
         {
             if (!idOpt.HasValue) return IdVisibility.Public;   // null carries nothing; projector passes it through

@@ -62,7 +62,7 @@ namespace Emberfall.Core
             if (target.IsMinion && target.Minion!.HasAegisShield)
             {
                 target.Minion.HasAegisShield = false;
-                buf.Emit(VfxEvent.onDamage, source: source, target: target.Id, amount: 0, flags: EventFlags.AegisAbsorbed);
+                buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: 0, flags: EventFlags.AegisAbsorbed);
                 return;
             }
 
@@ -83,7 +83,7 @@ namespace Emberfall.Core
                 target.Minion!.CurrentHealth -= amount;
             }
 
-            buf.Emit(VfxEvent.onDamage, source: source, target: target.Id, amount: amount);
+            buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: amount);
 
             if (sourceKeywords != null && source.HasValue)
             {
@@ -116,7 +116,7 @@ namespace Emberfall.Core
                 {
                     if (target.IsMinion) target.Minion!.IsFrosted = true;
                     else target.Hero!.IsFrosted = true;
-                    buf.Emit(VfxEvent.onFrost, source: source, target: target.Id);
+                    buf.Emit(GameEventKind.FrostApplied, source: source, target: target.Id);
                 }
             }
 
@@ -176,7 +176,7 @@ namespace Emberfall.Core
             if (target.IsHero) target.Hero!.CurrentHealth = after;
             else target.Minion!.CurrentHealth = after;
 
-            interp.Events.Emit(VfxEvent.onHeal, source: source, target: target.Id, amount: healed);
+            interp.Events.Emit(GameEventKind.HealthRestored, source: source, target: target.Id, amount: healed);
 
             // ON_HEAL (self-trigger, EF-015): a minion that actually gained health fires its own on-heal
             // effects. ENQUEUED only — resolution is deferred to the interpreter's bounded Drain, exactly

@@ -196,7 +196,7 @@ namespace Emberfall.Core
                 ps.Deck.RemoveAt(0);
                 card.Zone = Zone.Hand;
                 ps.Hand.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id);
+                buf.Emit(GameEventKind.CardDrawn, source: card.Id);
             }
 
             // Shuffle the set-aside cards back into the deck (consumes RNG deterministically). An empty
@@ -222,7 +222,7 @@ namespace Emberfall.Core
             var activeSeat = state.SeatOf(state.ActivePlayer);
             var interp = new EffectInterpreter(state, _db, buf);
 
-            buf.Emit(VfxEvent.onTurnEnd, source: state.Players[activeSeat].Hero.Id);
+            buf.Emit(GameEventKind.TurnEnded, source: state.Players[activeSeat].Hero.Id);
             state.Phase = TurnPhase.EndOfTurn;
 
             // EF-012: ON_TURN_END fires here — the active player still owns the turn and the phase is
@@ -255,9 +255,9 @@ namespace Emberfall.Core
             int seat = state.SeatOf(c.Player);
             state.Outcome = seat == 0 ? MatchOutcome.Player1Win : MatchOutcome.Player0Win;
             state.Phase = TurnPhase.GameOver;
-            buf.Emit(VfxEvent.onGameOver);
+            buf.Emit(GameEventKind.MatchEnded);
             int winnerSeat = seat == 0 ? 1 : 0;
-            buf.Emit(VfxEvent.onGameWin, source: state.Players[winnerSeat].Hero.Id);
+            buf.Emit(GameEventKind.MatchWon, source: state.Players[winnerSeat].Hero.Id);
         }
 
         private void ApplyAutoConfirm(GameState state, AutoConfirmIntent a, EventBuffer buf)
@@ -288,7 +288,7 @@ namespace Emberfall.Core
             {
                 case CardType.MINION:
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
-                    buf.Emit(VfxEvent.onPlay, source: card.Id);
+                    buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
                     interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
                         triggerSource: card.Id);
@@ -297,7 +297,7 @@ namespace Emberfall.Core
                 case CardType.SPELL:
                     card.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(card);
-                    buf.Emit(VfxEvent.onPlay, source: card.Id);
+                    buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_CAST, p.Targets);                 // the spell's one-shot effect
                     // EF-016: ON_SPELL_CAST — the observer half of a cast, enqueued AFTER the spell's own
                     // ON_CAST so the spell resolves first and reactions see the board it left behind. Same
@@ -321,7 +321,7 @@ namespace Emberfall.Core
                 case CardType.WEAPON:
                     RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
                     RulesEngine.EnterWeapon(state, card, def, seat);
-                    buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
+                    buf.Emit(GameEventKind.WeaponEquipped, source: ps.Hero.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // weapon Herald
                     break;
             }
@@ -367,7 +367,7 @@ namespace Emberfall.Core
             // it — mark it public explicitly: the hero power's act is public (design §6.1).
             buf.MarkPublic(src.Id);
 
-            buf.Emit(VfxEvent.onHeroPower, source: ps.Hero.Id);
+            buf.Emit(GameEventKind.HeroPowerUsed, source: ps.Hero.Id);
 
             var interp = new EffectInterpreter(state, _db, buf);
             // This ON_CAST is the SECOND raise site for the trigger — a hero power, not a spell. EF-016
@@ -475,7 +475,7 @@ namespace Emberfall.Core
             if (attacker.IsMinion) attacker.Minion!.AttacksUsedThisTurn++;
             else ps.HeroAttacksUsedThisTurn++;
 
-            buf.Emit(VfxEvent.onAttack, source: attacker.Id, target: defender.Id);
+            buf.Emit(GameEventKind.AttackDeclared, source: attacker.Id, target: defender.Id);
 
             // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from
             // the equipped card itself, preserving its identity and runtime source state.
@@ -552,7 +552,7 @@ namespace Emberfall.Core
             ps.HeroAttacksUsedThisTurn = 0;
 
             var interp = new EffectInterpreter(state, _db, buf);
-            buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
+            buf.Emit(GameEventKind.TurnStarted, source: ps.Hero.Id);
 
             // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
             // effect sees the board the turn actually starts on (unfrosted, sickness cleared, mana
