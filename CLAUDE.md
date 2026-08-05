@@ -110,7 +110,7 @@ A hero attacking with a weapon carries **no keywords at all** — `attackerKws` 
 set for a hero, and `WeaponInstance` has no keyword field to read from. **No weapon can carry
 Lifedrain, Venom or Frost as an on-hit rider.** Do not author one.
 
-A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip battlecry),
+A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip herald),
 **`ON_ATTACK` with a static selector** — that trigger fires with an empty target list, so "the
 minion this hits" is not addressable — and **`ON_DEATH`** (EF-020).
 

@@ -34,11 +34,11 @@ namespace Emberfall.Core.Contracts
     /// </summary>
     public enum Keyword
     {
-        TAUNT, CHARGE, RUSH, DIVINE_SHIELD, BATTLECRY, DEATHRATTLE, LIFESTEAL,
+        TAUNT, CHARGE, RUSH, DIVINE_SHIELD, HERALD, DEATHRATTLE, LIFESTEAL,
         WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
         REBORN,
         OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
-        REINFORCE,             // REKINDLING set: Battlecry — Give a friendly minion +1/+1.
+        REINFORCE,             // REKINDLING set: Herald — Give a friendly minion +1/+1.
     }
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).

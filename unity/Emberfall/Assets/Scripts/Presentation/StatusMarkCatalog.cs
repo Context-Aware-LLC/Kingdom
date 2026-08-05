@@ -19,7 +19,7 @@ namespace Emberfall.Presentation
             { Keyword.CHARGE,       "icon_kw_charge"      },
             { Keyword.RUSH,         "icon_kw_rush"        },
             { Keyword.DIVINE_SHIELD,"icon_kw_divine_shield"},
-            { Keyword.BATTLECRY,    "icon_kw_battlecry"   },
+            { Keyword.HERALD,    "icon_kw_herald"   },
             { Keyword.DEATHRATTLE,  "icon_kw_deathrattle" },
             { Keyword.LIFESTEAL,    "icon_kw_lifesteal"   },
             { Keyword.WINDFURY,     "icon_kw_windfury"    },

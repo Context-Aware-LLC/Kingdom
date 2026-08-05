@@ -7,7 +7,7 @@ namespace Emberfall.Core
     /// <summary>
     /// Shared, stateless rules primitives used by BOTH the turn-loop command processor and the effect
     /// interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4 post-mutation checks, §7 mana/fatigue). Keeping draw,
-    /// board-entry, reindexing and the win check here means a deathrattle that draws or a battlecry that
+    /// board-entry, reindexing and the win check here means a deathrattle that draws or a herald that
     /// kills uses the EXACT same code path as the turn loop — no second implementation to drift (R1).
     /// </summary>
     internal static class RulesEngine

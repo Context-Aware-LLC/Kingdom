@@ -74,7 +74,7 @@ namespace Emberfall.Presentation
             Keyword.DIVINE_SHIELD =>
                 "Absorbs the next hit completely, then breaks.",
 
-            Keyword.BATTLECRY =>
+            Keyword.HERALD =>
                 "Does something when you play it from your hand.",
 
             Keyword.DEATHRATTLE =>
@@ -130,7 +130,7 @@ namespace Emberfall.Presentation
 
             // REKINDLING set keyword, per the Keyword enum's own annotation.
             Keyword.REINFORCE =>
-                "Battlecry — give a friendly minion +1/+1.",
+                "Herald — give a friendly minion +1/+1.",
 
             // A keyword added to the enum without copy lands here. CardRevealVerify names it.
             _ => null,

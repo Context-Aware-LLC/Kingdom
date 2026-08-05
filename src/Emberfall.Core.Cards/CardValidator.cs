@@ -64,7 +64,7 @@ namespace Emberfall.Core.Cards
         // table (retirement triggers live in the code, not in a doc).
         private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
         {
-            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:325,348 (battlecry / weapon equip)
+            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:325,348 (herald / weapon equip)
             [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:333,411 (spell / hero power)
             [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
             [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:326, ActionHandlers.cs:108

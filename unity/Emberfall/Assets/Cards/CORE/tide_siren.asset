@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"tide_siren\",      \"name\": \"Hollow Tide Siren\",\"type\":
     \"MINION\", \"cost\": 5, \"attack\": 4, \"health\": 5, \"class\": \"TIDECALLER\",
-    \"rarity\": \"EPIC\", \"keywords\": [\"BATTLECRY\"],\n    \"setId\": \"CORE\",
+    \"rarity\": \"EPIC\", \"keywords\": [\"HERALD\"],\n    \"setId\": \"CORE\",
     \"collectible\": true, \"artId\": \"art/tide_siren\",\n    \"effects\": [ { \"trigger\":
     \"ON_PLAY\", \"action\": \"FREEZE\", \"target\": { \"selector\": \"ENEMY_MINIONS\"
     } } ] }"

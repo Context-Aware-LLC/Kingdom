@@ -88,10 +88,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             return new PlayCardIntent(s.Players[0].Id, card.Id, slot, refs);
         }
 
-        // ── Hollow Acolyte: battlecry draws 1 card ──────────────────────────────────
+        // ── Hollow Acolyte: herald draws 1 card ──────────────────────────────────
 
         [Test]
-        public void HollowAcolyte_Battlecry_Draws_One_Card()
+        public void HollowAcolyte_Herald_Draws_One_Card()
         {
             var s = MainPhase();
             var topCard = new CardInstance(s.NextInstanceId(), "core_stoneback", s.Players[0].Id) { Zone = Zone.Deck };
@@ -206,19 +206,19 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[1].Board[0].CurrentHealth, Is.EqualTo(2));
         }
 
-        // ── Pyra's Wrath: battlecry auto-deals 2 to enemy hero ──────────────────────
+        // ── Pyra's Wrath: herald auto-deals 2 to enemy hero ──────────────────────
 
         [Test]
-        public void PyrasWrath_Battlecry_Deals_Two_To_Enemy_Hero()
+        public void PyrasWrath_Herald_Deals_Two_To_Enemy_Hero()
         {
             var s = MainPhase(p0Mana: 10);
-            var pyra = InHand(s, 0, "ember_pyras_wrath"); // 7-mana 7/5 CHARGE, battlecry deals 2
+            var pyra = InHand(s, 0, "ember_pyras_wrath"); // 7-mana 7/5 CHARGE, herald deals 2
 
             // No targets needed — ENEMY_HERO selector auto-resolves
             var r = Proc().Execute(s, Play(s, pyra));
 
             Assert.That(r.Accepted, Is.True);
-            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28), "Battlecry dealt 2 to enemy hero.");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28), "Herald dealt 2 to enemy hero.");
         }
 
         // ── Frostbind: FREEZE sets IsFrozen on the targeted character ───────────────
@@ -281,10 +281,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[1].Hero.IsFrozen, Is.True, "Hero remains frozen until start of their turn.");
         }
 
-        // ── Hollow Tide Siren: battlecry freezes ALL enemy minions ──────────────────
+        // ── Hollow Tide Siren: herald freezes ALL enemy minions ──────────────────
 
         [Test]
-        public void HollowTideSiren_Battlecry_Freezes_All_Enemy_Minions()
+        public void HollowTideSiren_Herald_Freezes_All_Enemy_Minions()
         {
             var s = MainPhase(p0Mana: 10);
             var m1 = OnBoard(s, 1, "core_stoneback");   // 1/4

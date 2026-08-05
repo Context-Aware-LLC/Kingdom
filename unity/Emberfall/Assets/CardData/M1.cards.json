@@ -211,12 +211,12 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_hollow_acolyte",
-    "cardText": "Battlecry: Draw a card.",
+    "cardText": "Herald: Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -294,12 +294,12 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_grove_mender",
-    "cardText": "Battlecry: Restore 4 Health to a friendly character.",
+    "cardText": "Herald: Restore 4 Health to a friendly character.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -459,13 +459,13 @@
     "rarity": "LEGENDARY",
     "keywords": [
       "CHARGE",
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "CORE",
     "collectible": true,
     "artId": "art/ember_pyras_wrath",
-    "cardText": "Battlecry: Deal 1 damage to the enemy hero.",
+    "cardText": "Herald: Deal 1 damage to the enemy hero.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -531,12 +531,12 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/tide_siren",
-    "cardText": "Battlecry: Freeze all enemy minions.",
+    "cardText": "Herald: Freeze all enemy minions.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -748,7 +748,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_gatewatch_whelp",
-    "cardText": "[Reborn]"
+    "cardText": "Reborn"
   },
   {
     "id": "grave_last_rite",
@@ -794,7 +794,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_sable_watcher",
-    "cardText": "[Taunt] [Deathrattle] Summon a 1/1 Grave Wisp.",
+    "cardText": "Taunt Deathrattle Summon a 1/1 Grave Wisp.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -841,13 +841,13 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_charnel_priest",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps.",
+    "cardText": "Herald Destroy a friendly minion. Summon two 1/1 Grave Wisps.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -882,7 +882,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_ashen_archivist",
-    "cardText": "[Deathrattle] Draw a card.",
+    "cardText": "Deathrattle Draw a card.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -901,13 +901,13 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_custodian",
-    "cardText": "[Battlecry] Add a Grave Wisp to your hand.",
+    "cardText": "Herald Add a Grave Wisp to your hand.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -936,7 +936,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_last_gate_warden",
-    "cardText": "[Taunt] [Deathrattle] Summon two 1/1 Grave Wisps.",
+    "cardText": "Taunt Deathrattle Summon two 1/1 Grave Wisps.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -958,13 +958,13 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_harrower_of_ash",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps. Draw a card.",
+    "cardText": "Herald Destroy a friendly minion. Summon two 1/1 Grave Wisps. Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1003,7 +1003,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_bell_novice",
-    "cardText": "[Deathrattle] Restore 2 Health to your hero.",
+    "cardText": "Deathrattle Restore 2 Health to your hero.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -1031,7 +1031,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_tollkeeper_moth",
-    "cardText": "[Deathrattle] Draw a card.",
+    "cardText": "Deathrattle Draw a card.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -1056,7 +1056,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_chained_revenant",
-    "cardText": "[Battlecry] Deal 2 damage to a minion. [Reborn]",
+    "cardText": "Herald Deal 2 damage to a minion. Reborn",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1130,7 +1130,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_sealed_gate_keeper",
-    "cardText": "[Taunt] [Deathrattle] Summon a 5/5 Revenant with Taunt.",
+    "cardText": "Taunt Deathrattle Summon a 5/5 Revenant with Taunt.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -1252,12 +1252,12 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_canopy_seer",
-    "cardText": "Battlecry: Draw a card.",
+    "cardText": "Herald: Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1373,12 +1373,12 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_rootweaver",
-    "cardText": "[Battlecry] Restore 2 Health to your hero.",
+    "cardText": "Herald Restore 2 Health to your hero.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1400,13 +1400,13 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_mosshide_stag",
-    "cardText": "[Battlecry] Deal 2 damage to a minion.",
+    "cardText": "Herald Deal 2 damage to a minion.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1462,13 +1462,13 @@
     "class": "VERDANT",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_thornfang_matron",
-    "cardText": "[Battlecry] Summon two 1/2 Thorn Cubs.",
+    "cardText": "Herald Summon two 1/2 Thorn Cubs.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1536,7 +1536,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/relic_bound_revenant",
-    "cardText": "[Taunt] [Reborn]"
+    "cardText": "Taunt Reborn"
   },
   {
     "id": "relic_corpse_cart",
@@ -1548,13 +1548,13 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/relic_corpse_cart",
-    "cardText": "[Battlecry] Summon a 1/1 Grave Wisp.",
+    "cardText": "Herald Summon a 1/1 Grave Wisp.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1642,7 +1642,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_slagshell_bulwark",
-    "cardText": "[Taunt]"
+    "cardText": "Taunt"
   },
   {
     "id": "ember_forgeheart_colossus",
@@ -1702,12 +1702,12 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_deepfrost_spear",
-    "cardText": "[Battlecry] Freeze an enemy character.",
+    "cardText": "Herald Freeze an enemy character.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1728,13 +1728,13 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_glacierborn_leviathan",
-    "cardText": "[Battlecry] Deal 3 damage to all enemy minions.",
+    "cardText": "Herald Deal 3 damage to all enemy minions.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1762,7 +1762,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_ashfall_wyrm",
-    "cardText": "[Vanguard]"
+    "cardText": "Vanguard"
   },
   {
     "id": "ember_kiln_warden",
@@ -1781,7 +1781,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_kiln_warden",
-    "cardText": "[Taunt] [Divine Shield]"
+    "cardText": "Taunt [Divine Shield]"
   },
   {
     "id": "ember_emberdrinker",
@@ -1799,7 +1799,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_emberdrinker",
-    "cardText": "[Lifesteal]"
+    "cardText": "Lifesteal"
   },
   {
     "id": "tide_drowned_titan",
@@ -1811,13 +1811,13 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_drowned_titan",
-    "cardText": "[Battlecry] Return a minion to its owner's hand.",
+    "cardText": "Herald Return a minion to its owner's hand.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1845,7 +1845,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_hollowshell_warden",
-    "cardText": "[Taunt] [Deathrattle] Freeze all enemy minions.",
+    "cardText": "Taunt Deathrattle Freeze all enemy minions.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -2032,7 +2032,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_gear_imp",
-    "cardText": "[Toll] Draw a card.",
+    "cardText": "Toll Draw a card.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -2051,13 +2051,13 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_bronze_frame",
-    "cardText": "[Herald] Draw a card.",
+    "cardText": "Herald Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2082,7 +2082,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_spring_coil",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "clock_snap_bolt",
@@ -2118,13 +2118,13 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_assembly_drone",
-    "cardText": "[Herald] Summon a 1/1 Gear Wisp.",
+    "cardText": "Herald Summon a 1/1 Gear Wisp.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2149,13 +2149,13 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_overclocker",
-    "cardText": "[Herald] Give all friendly Constructs +1/+1.",
+    "cardText": "Herald Give all friendly Constructs +1/+1.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2182,13 +2182,13 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_clockwork_sniper",
-    "cardText": "[Herald] Deal 2 damage to any target.",
+    "cardText": "Herald Deal 2 damage to any target.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2273,7 +2273,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_modular_stalker",
-    "cardText": "[Toll] Draw 2 cards.",
+    "cardText": "Toll Draw 2 cards.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -2299,7 +2299,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_chrono_construct",
-    "cardText": "[Vanguard] [Bulwark]"
+    "cardText": "Vanguard Bulwark"
   },
   {
     "id": "clock_mass_recall",
@@ -2336,13 +2336,13 @@
     "keywords": [
       "TAUNT",
       "DIVINE_SHIELD",
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/clock_the_great_mechanism",
-    "cardText": "[Bulwark] [Aegis] [Herald] Draw 2 cards.",
+    "cardText": "Bulwark Aegis Herald Draw 2 cards.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2367,7 +2367,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_lurk_wisp",
-    "cardText": "[Shroud]"
+    "cardText": "Shroud"
   },
   {
     "id": "night_shadow_dart",
@@ -2409,7 +2409,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_viper_fang",
-    "cardText": "[Venom]"
+    "cardText": "Venom"
   },
   {
     "id": "night_shadow_stalker",
@@ -2427,7 +2427,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_shadow_stalker",
-    "cardText": "[Shroud]"
+    "cardText": "Shroud"
   },
   {
     "id": "night_finish_the_job",
@@ -2471,7 +2471,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_venom_asp",
-    "cardText": "[Venom]"
+    "cardText": "Venom"
   },
   {
     "id": "night_shadow_blade",
@@ -2483,12 +2483,12 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_shadow_blade",
-    "cardText": "[Herald] Give a friendly minion [Shroud].",
+    "cardText": "Herald Give a friendly minion Shroud.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2514,7 +2514,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_vanishing_act",
-    "cardText": "Give all friendly minions [Shroud].",
+    "cardText": "Give all friendly minions Shroud.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -2568,7 +2568,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_death_mark",
-    "cardText": "Destroy a minion. Give a random friendly minion [Venom].",
+    "cardText": "Destroy a minion. Give a random friendly minion Venom.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -2624,13 +2624,13 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_void_shriek",
-    "cardText": "[Herald] Deal 2 damage to all enemy minions. Give all friendly minions [Shroud].",
+    "cardText": "Herald Deal 2 damage to all enemy minions. Give all friendly minions Shroud.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2672,7 +2672,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/night_kira_blade_of_shadows",
-    "cardText": "[Shroud] [Venom] [Toll] Deal 4 damage to the enemy hero.",
+    "cardText": "Shroud Venom Toll Deal 4 damage to the enemy hero.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -2700,7 +2700,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_pebble_sentinel",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "ward_stone_throw",
@@ -2742,7 +2742,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_boulderhide",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "ward_earth_barrier",
@@ -2785,7 +2785,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_rock_golem",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "ward_stone_rain",
@@ -2827,7 +2827,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_granite_guardian",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "ward_earthen_blessing",
@@ -2870,7 +2870,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_living_monolith",
-    "cardText": "[Bulwark]"
+    "cardText": "Bulwark"
   },
   {
     "id": "ward_stomp",
@@ -2917,13 +2917,13 @@
     "rarity": "EPIC",
     "keywords": [
       "TAUNT",
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_siege_golem",
-    "cardText": "[Bulwark] [Herald] Give all friendly minions +0/+2.",
+    "cardText": "Bulwark Herald Give all friendly minions +0/+2.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -2954,7 +2954,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_stone_colossus",
-    "cardText": "[Bulwark] [Overwhelm]"
+    "cardText": "Bulwark [Overwhelm]"
   },
   {
     "id": "ward_duras_the_ironmount",
@@ -2967,13 +2967,13 @@
     "rarity": "LEGENDARY",
     "keywords": [
       "TAUNT",
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ward_duras_the_ironmount",
-    "cardText": "[Bulwark] [Herald] Give all friendly minions [Bulwark].",
+    "cardText": "Bulwark Herald Give all friendly minions Bulwark.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -3004,7 +3004,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_spark_imp",
-    "cardText": "[Doublestrike]"
+    "cardText": "Doublestrike"
   },
   {
     "id": "storm_lightning_bolt",
@@ -3019,7 +3019,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_lightning_bolt",
-    "cardText": "Deal 3 damage to a minion. [Backdraft] (1).",
+    "cardText": "Deal 3 damage to a minion. Backdraft 1.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -3053,7 +3053,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_gust_sprite",
-    "cardText": "[Doublestrike]"
+    "cardText": "Doublestrike"
   },
   {
     "id": "storm_wind_rider",
@@ -3071,7 +3071,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_wind_rider",
-    "cardText": "[Skirmish]"
+    "cardText": "Skirmish"
   },
   {
     "id": "storm_chain_lightning",
@@ -3128,7 +3128,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_crackle",
-    "cardText": "Deal 4 damage to a random enemy. [Backdraft] (2).",
+    "cardText": "Deal 4 damage to a random enemy. Backdraft (2).",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -3162,7 +3162,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_tempest_striker",
-    "cardText": "[Doublestrike]"
+    "cardText": "Doublestrike"
   },
   {
     "id": "storm_static_shock",
@@ -3204,7 +3204,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_thunder_hoof",
-    "cardText": "[Skirmish]"
+    "cardText": "Skirmish"
   },
   {
     "id": "storm_static_discharge",
@@ -3219,7 +3219,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_static_discharge",
-    "cardText": "Deal 2 damage to all enemy minions. [Backdraft] (1).",
+    "cardText": "Deal 2 damage to all enemy minions. Backdraft (1).",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -3248,7 +3248,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_hurricane",
-    "cardText": "Give all friendly minions [Doublestrike].",
+    "cardText": "Give all friendly minions Doublestrike.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -3276,7 +3276,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_lightning_storm",
-    "cardText": "Deal 3 damage to all enemy minions and the enemy hero. [Backdraft] (2).",
+    "cardText": "Deal 3 damage to all enemy minions and the enemy hero. Backdraft (2).",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -3313,13 +3313,13 @@
     "rarity": "LEGENDARY",
     "keywords": [
       "WINDFURY",
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/storm_zael_of_the_struck_sky",
-    "cardText": "[Doublestrike] [Herald] Deal 3 damage to the enemy hero.",
+    "cardText": "Doublestrike Herald Deal 3 damage to the enemy hero.",
     "effects": [
       {
         "trigger": "ON_PLAY",

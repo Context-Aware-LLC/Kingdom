@@ -302,7 +302,7 @@ namespace Emberfall.Editor
 
         private static readonly string[] Keywords =
         {
-            "taunt", "charge", "rush", "divine_shield", "battlecry", "deathrattle",
+            "taunt", "charge", "rush", "divine_shield", "herald", "deathrattle",
             "lifesteal", "windfury", "stealth", "poisonous", "spell_damage",
             "freeze", "overload", "echo", "reborn", "silence"
         };
@@ -373,7 +373,7 @@ namespace Emberfall.Editor
                 case "charge":       return "CH";
                 case "rush":         return "RU";
                 case "divine_shield":return "DS";
-                case "battlecry":    return "BC";
+                case "herald":    return "BC";
                 case "deathrattle":  return "DR";
                 case "lifesteal":    return "LS";
                 case "windfury":     return "WF";

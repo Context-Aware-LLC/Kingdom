@@ -14,7 +14,7 @@
 
   { "id": "core_emberling",  "name": "Emberling Pup",   "type": "MINION", "cost": 1, "attack": 2, "health": 1, "class": "NEUTRAL", "rarity": "COMMON", "keywords": ["CHARGE"],        "tribe": "BEAST",    "setId": "CORE", "collectible": true,  "artId": "art/core_emberling" },
   { "id": "core_stoneback",  "name": "Stoneback Sentry","type": "MINION", "cost": 2, "attack": 1, "health": 4, "class": "NEUTRAL", "rarity": "COMMON", "keywords": ["TAUNT"],         "setId": "CORE",     "collectible": true,  "artId": "art/core_stoneback" },
-  { "id": "core_hollow_acolyte", "name": "Hollow Acolyte", "type": "MINION", "cost": 3, "attack": 3, "health": 3, "class": "NEUTRAL", "rarity": "COMMON", "keywords": ["BATTLECRY"],
+  { "id": "core_hollow_acolyte", "name": "Hollow Acolyte", "type": "MINION", "cost": 3, "attack": 3, "health": 3, "class": "NEUTRAL", "rarity": "COMMON", "keywords": ["HERALD"],
     "setId": "CORE", "collectible": true, "artId": "art/core_hollow_acolyte",
     "effects": [ { "trigger": "ON_PLAY", "action": "DRAW", "amount": 1 } ] },
   { "id": "core_lantern_bearer", "name": "Gravelight Lantern-Bearer", "type": "MINION", "cost": 2, "attack": 2, "health": 2, "class": "NEUTRAL", "rarity": "COMMON", "keywords": ["DEATHRATTLE"],
@@ -55,7 +55,7 @@
   { "id": "tide_undertow",   "name": "Undertow",         "type": "SPELL",  "cost": 2, "class": "TIDECALLER", "rarity": "RARE",
     "setId": "CORE", "collectible": true, "artId": "art/tide_undertow",
     "effects": [ { "trigger": "ON_CAST", "action": "RETURN_TO_HAND", "target": { "selector": "ANY_MINION" } } ] },
-  { "id": "tide_siren",      "name": "Hollow Tide Siren","type": "MINION", "cost": 5, "attack": 4, "health": 5, "class": "TIDECALLER", "rarity": "EPIC", "keywords": ["BATTLECRY"],
+  { "id": "tide_siren",      "name": "Hollow Tide Siren","type": "MINION", "cost": 5, "attack": 4, "health": 5, "class": "TIDECALLER", "rarity": "EPIC", "keywords": ["HERALD"],
     "setId": "CORE", "collectible": true, "artId": "art/tide_siren",
     "effects": [ { "trigger": "ON_PLAY", "action": "FREEZE", "target": { "selector": "ENEMY_MINIONS" } } ] },
   { "id": "tide_reefguard",  "name": "Reefguard Wisp",   "type": "MINION", "cost": 2, "attack": 0, "health": 4, "class": "TIDECALLER", "rarity": "COMMON", "keywords": ["TAUNT"], "tribe": "SPIRIT",

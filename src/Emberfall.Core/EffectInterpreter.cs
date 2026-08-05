@@ -42,7 +42,7 @@ namespace Emberfall.Core
         // ── Raising triggers ─────────────────────────────────────────────────────
 
         /// <summary>
-        /// Enqueue a card's OWN effects matching <paramref name="trigger"/> (ON_PLAY battlecry, ON_CAST spell,
+        /// Enqueue a card's OWN effects matching <paramref name="trigger"/> (ON_PLAY herald, ON_CAST spell,
         /// ON_DEATH deathrattle). <paramref name="chosenTargets"/> are the player-resolved targets (empty for
         /// fired triggers, which fall back to verb defaults at resolution time).
         /// </summary>

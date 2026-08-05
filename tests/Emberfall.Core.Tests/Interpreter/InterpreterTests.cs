@@ -12,7 +12,7 @@ namespace Emberfall.Core.Tests.Interpreter
 {
     /// <summary>
     /// L1 — the effect interpreter (M1 Phase B step 1) driven through the real public
-    /// <c>CommandProcessor.Execute</c> door: PlayCard → battlecry/cast → DeathCheck → deathrattle cascade.
+    /// <c>CommandProcessor.Execute</c> door: PlayCard → herald/cast → DeathCheck → deathrattle cascade.
     /// Constructs a Main-phase <see cref="GameState"/> directly so a known card sits in hand, then asserts
     /// on the public state + the ordered D7 event stream.
     /// </summary>
@@ -123,7 +123,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Battlecry_DealDamage_To_Chosen_Target_Kills_Minion()
+        public void Herald_DealDamage_To_Chosen_Target_Kills_Minion()
         {
             var db = new FakeCardDatabase().Register(Minion("bolt", 1, 1, 1,
                 effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }));
@@ -233,7 +233,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Buff_Battlecry_Raises_Target_Stats()
+        public void Buff_Herald_Raises_Target_Stats()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("buffer", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.BUFF, amount: 2, amount2: 3) }));
@@ -282,7 +282,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Lethal_Battlecry_Ends_The_Match()
+        public void Lethal_Herald_Ends_The_Match()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("nuke", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 30) }));

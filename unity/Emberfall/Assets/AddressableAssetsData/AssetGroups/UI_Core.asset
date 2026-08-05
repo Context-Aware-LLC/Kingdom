@@ -201,7 +201,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1dc52688f0c16142a6e765c906d3023
-    m_Address: ui/icon_kw_battlecry
+    m_Address: ui/icon_kw_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

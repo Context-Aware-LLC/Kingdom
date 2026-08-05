@@ -226,7 +226,7 @@ namespace Emberfall.Presentation
         }
 
         // Rules text band (keyword-visual-language decision 2026-07-17: keywords lead the
-        // card text in bold). Keywords the authored text already spells out (Battlecry:,
+        // card text in bold). Keywords the authored text already spells out (Herald:,
         // Spell Damage +1) are skipped so nothing reads twice.
         private void ApplyBodyText()
         {
@@ -257,7 +257,7 @@ namespace Emberfall.Presentation
 
         private static readonly Regex InlineKeywordBracket = new(@"\[([^\]]+)\]", RegexOptions.Compiled);
 
-        // Authored cardText spells keyword triggers inline as "[Battlecry] ..." — bold them in
+        // Authored cardText spells keyword triggers inline as "Herald ..." — bold them in
         // place instead of showing the raw brackets (keyword-visual-language decision 2026-07-17).
         private static string BoldInlineKeywordBrackets(string text) =>
             InlineKeywordBracket.Replace(text, $"<size={FrameRarityCatalog.KeywordLeadPct}%><b>$1</b></size>");

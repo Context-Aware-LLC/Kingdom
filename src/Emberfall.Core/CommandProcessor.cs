@@ -343,7 +343,7 @@ namespace Emberfall.Core
                 case CardType.MINION:
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
                     buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // Battlecry
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // Herald
                     interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card);
                     break;
 
@@ -366,11 +366,11 @@ namespace Emberfall.Core
                         Durability = def.Durability ?? 1,
                     };
                     buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Battlecry
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Herald
                     break;
             }
 
-            interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+            interp.Drain();   // resolve herald/cast, settle deaths + win, cascade deathrattles
         }
 
         private bool ValidateHeroPower(GameState state, HeroPowerIntent hp, out RejectReason? reason)
