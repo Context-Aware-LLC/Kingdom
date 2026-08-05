@@ -35,6 +35,41 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(CardTextGenerator.Generate(mainspring.Rules), Is.EqualTo("[Toll] Draw a card."));
         }
 
+        [TestCase(Trigger.ON_PLAY, "[Herald] Draw a card.")]
+        [TestCase(Trigger.ON_DEATH, "[Toll] Draw a card.")]
+        [TestCase(Trigger.ON_ATTACK, "[Attack] Draw a card.")]
+        [TestCase(Trigger.ON_DAMAGED, "[Damaged] Draw a card.")]
+        [TestCase(Trigger.ON_HEAL, "[Healed] Draw a card.")]
+        [TestCase(Trigger.ON_TURN_START, "[Turn Start] Draw a card.")]
+        [TestCase(Trigger.ON_TURN_END, "[Turn End] Draw a card.")]
+        [TestCase(Trigger.ON_FRIENDLY_SUMMON, "[Friendly Summon] Draw a card.")]
+        [TestCase(Trigger.ON_SPELL_CAST, "[Spell Cast] Draw a card.")]
+        [TestCase(Trigger.ON_CAST, "Draw a card.")]
+        public void Renders_Every_Supported_Triggered_Activation(Trigger trigger, string expected)
+        {
+            Assert.That(CardTextGenerator.Generate(new[] { DrawRule(new TriggeredActivation(trigger)) }),
+                Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Renders_Aura_Activation()
+        {
+            Assert.That(CardTextGenerator.Generate(new[] { DrawRule(AuraActivation.Instance) }),
+                Is.EqualTo("[Aura] Draw a card."));
+        }
+
+        [TestCase(TurnOwner.CONTROLLER, "While it is your turn, Draw a card.")]
+        [TestCase(TurnOwner.OPPONENT, "While it is your opponent's turn, Draw a card.")]
+        [TestCase(TurnOwner.ANY, "On either player's turn, Draw a card.")]
+        public void Renders_Every_Turn_Owner_Condition(TurnOwner owner, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("turn_owner"),
+                new TriggeredActivation(Trigger.ON_TURN_START), new TurnOwnerCondition(owner),
+                SourceBoundLifetime.Instance, new DrawAction(1));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Turn Start] " + expected));
+        }
+
         [Test]
         public void Renders_Target_Policy_And_Filter_As_Readable_Text()
         {
@@ -46,6 +81,41 @@ namespace Emberfall.Core.Tests.CardValidation
 
             Assert.That(CardTextGenerator.Generate(new[] { rule }),
                 Is.EqualTo("Deal 2 damage to a random damaged minion."));
+        }
+
+        [TestCase("SELF", "Deal 1 damage to this.")]
+        [TestCase("TRIGGER_SOURCE", "Deal 1 damage to the trigger source.")]
+        [TestCase("ADJACENT", "Deal 1 damage to all adjacent minions.")]
+        [TestCase("FRIENDLY_WEAPON", "Deal 1 damage to your weapon.")]
+        [TestCase("ENEMY_WEAPON", "Deal 1 damage to the enemy weapon.")]
+        [TestCase("FRIENDLY_HAND", "Deal 1 damage to all cards in your hand.")]
+        [TestCase("ENEMY_HAND", "Deal 1 damage to all cards in the enemy hand.")]
+        [TestCase("ANY_HAND_CARD", "Deal 1 damage to a hand card.")]
+        [TestCase("FRIENDLY_DECK", "Deal 1 damage to all cards in your deck.")]
+        [TestCase("ENEMY_DECK", "Deal 1 damage to all cards in the enemy deck.")]
+        [TestCase("ANY_DECK_CARD", "Deal 1 damage to a deck card.")]
+        [TestCase("FRIENDLY_GRAVEYARD", "Deal 1 damage to all cards in your graveyard.")]
+        [TestCase("ENEMY_GRAVEYARD", "Deal 1 damage to all cards in the enemy graveyard.")]
+        [TestCase("ANY_GRAVEYARD_CARD", "Deal 1 damage to a graveyard card.")]
+        public void Renders_Canonical_Selector_Families(string selector, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("selector_" + selector),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new DamageAction(1, new TargetSpec(selector)));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Renders_Target_Count_And_Distinctness()
+        {
+            var rule = new RuleDefinition(new RuleId("multiple_other_minions"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec("ANY_MINION", count: 2, distinctFrom: "first")));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }),
+                Is.EqualTo("Deal 1 damage to 2 other minions."));
         }
 
         [Test]
@@ -99,5 +169,9 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(cards.Count, Is.EqualTo(260));
             Assert.That(rendered, Is.GreaterThan(0));
         }
+
+        private static RuleDefinition DrawRule(RuleActivation activation)
+            => new RuleDefinition(new RuleId("draw"), activation, AlwaysCondition.Instance,
+                SourceBoundLifetime.Instance, new DrawAction(1));
     }
 }
