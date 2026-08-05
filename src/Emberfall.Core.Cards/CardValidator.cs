@@ -139,6 +139,11 @@ namespace Emberfall.Core.Cards
                 string actionName = ActionName(rule.Action);
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
 
+                if (rule.Activation is AuraActivation && !AuraCapabilities.Supports(def.Type, rule))
+                    Err("C21-AURA-UNSUPPORTED", $"{prefix}.activation",
+                        "AURA currently supports only unsilenced board-minion MODIFY_STATS rules with " +
+                        "ALWAYS, SOURCE_BOUND and automatic minion selectors.");
+
                 // C9 — stable, card-scoped identity. The same syntax as a card id keeps rule ids
                 // portable across JSON, logs and deterministic snapshots.
                 if (!IdPattern.IsMatch(ruleId))

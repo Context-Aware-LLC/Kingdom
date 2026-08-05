@@ -103,7 +103,7 @@ namespace Emberfall.Core
             for (int i = 0; i < count; i++)
             {
                 var token = new CardInstance(ctx.State.NextInstanceId(), def.Id, ctx.Source.Controller);
-                if (!RulesEngine.EnterBoard(ctx.State, token, def, seat, -1)) break; // board full → stop
+                if (!RulesEngine.EnterBoard(ctx.State, token, def, seat, -1, ctx.Db)) break; // board full → stop
                 ctx.Events.Emit(GameEventKind.CardSummoned, source: token.Id, flags: EventFlags.IsToken);
                 ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
                     triggerSource: token.Id);
@@ -205,6 +205,7 @@ namespace Emberfall.Core
                 if (idx < 0) continue;
                 ps.Board.RemoveAt(idx);
                 RulesEngine.Reindex(ps.Board);
+                AuraEngine.Recompute(ctx.State, ctx.Db);
 
                 // Reset to printed form — board-runtime state is dropped on the bounce. The card arrives
                 // in hand whole, so damage is NOT preserved across the zone change (EF-017a).
@@ -260,6 +261,7 @@ namespace Emberfall.Core
                 DerivedStats.ResetToSilenced(card, def, preserveDamage: t.IsMinion);
 
                 ctx.Events.Emit(GameEventKind.CardSilenced, source: ctx.Source.Identity, target: card.Id);
+                AuraEngine.Recompute(ctx.State, ctx.Db);
             }
         }
     }
@@ -360,7 +362,7 @@ namespace Emberfall.Core
                 // Transform is NOT a death — the old minion vanishes without firing its toll.
                 ps.Board.RemoveAt(idx);
                 var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
-                RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx);
+                RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx, ctx.Db);
                 ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Identity, target: replacement.Id);
             }
         }
@@ -386,6 +388,8 @@ namespace Emberfall.Core
                     minion.Controller = destination.Id;
                     minion.Position = destination.Board.Count;
                     destination.Board.Add(minion);
+                    RulesEngine.Reindex(destination.Board);
+                    AuraEngine.Recompute(ctx.State, ctx.Db);
                     ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Identity,
                         target: minion.Id);
                     continue;
@@ -396,6 +400,7 @@ namespace Emberfall.Core
                 owner.Weapon = null;
                 weapon.Controller = destination.Id;
                 destination.Weapon = weapon;
+                AuraEngine.Recompute(ctx.State, ctx.Db);
                 ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Identity,
                     target: weapon.Id);
             }

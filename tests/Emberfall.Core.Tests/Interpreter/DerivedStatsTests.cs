@@ -12,7 +12,8 @@ namespace Emberfall.Core.Tests.Interpreter
     /// enchantment list, so applying and unapplying a contribution are the same operation run twice.
     ///
     /// <para>These reach <c>DerivedStats</c> directly through <c>InternalsVisibleTo</c> because
-    /// <see cref="DerivedStats.RemoveBySource"/> has no in-engine caller until AURA lands (EF-017b).
+    /// <see cref="DerivedStats.RemoveBySource"/> is kept for ordinary source-bound effects; EF-017b
+    /// uses explicit aura provenance so its cleanup cannot delete ordinary effects from the same source.
     /// The behaviour-level consequences — BUFF, SILENCE, bounce, board entry — are covered end-to-end
     /// by CardBehaviorTests and the golden replays, which is why this file sticks to the primitive.</para>
     /// </summary>

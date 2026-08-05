@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         private static CardInstance OnBoard(GameState s, ICardDatabase db, int seat, CardDefinition def)
         {
             var card = new CardInstance(s.NextInstanceId(), def.Id, s.Players[seat].Id);
-            Assert.That(RulesEngine.EnterBoard(s, card, def, seat, -1), Is.True);
+            Assert.That(RulesEngine.EnterBoard(s, card, def, seat, -1, db), Is.True);
             return card;
         }
 

@@ -352,7 +352,7 @@ namespace Emberfall.Core
             switch (def.Type)
             {
                 case CardType.MINION:
-                    RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
+                    RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot, _db);
                     buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
                     interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,

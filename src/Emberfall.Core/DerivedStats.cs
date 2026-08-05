@@ -185,6 +185,21 @@ namespace Emberfall.Core
             return true;
         }
 
+        /// <summary>Remove only continuous aura contributions, preserving ordinary effects even from the same source.</summary>
+        public static bool RemoveAuras(CardInstance c, CardDefinition def)
+        {
+            int removed = 0;
+            for (int i = c.Enchantments.Count - 1; i >= 0; i--)
+                if (c.Enchantments[i].IsAura)
+                {
+                    c.Enchantments.RemoveAt(i);
+                    removed++;
+                }
+            if (removed == 0) return false;
+            Recompute(c, def);
+            return true;
+        }
+
         private static bool IsPrinted(CardDefinition def, Keyword k)
         {
             // def.Keywords is IReadOnlyList<Keyword>; a hand loop keeps this off LINQ, which the core

@@ -69,13 +69,13 @@ run recorded **succeeded**, exit 0.
 It had the right answer in front of it and typed a different one. Having the tool is not the
 safeguard. **Reading its output is the safeguard.**
 
-## Card triggers that are NO-GO until implemented
+## Continuous AURA
 
-**Do not author a card using these.** They are declared in `Enums.cs`'s `Trigger` enum and
-**raised nowhere in the engine**. Rule C21 rejects a card using one before it loads; bypassing
-validation would leave the effect inert forever.
-
-> `AURA`
+**`AURA` is a continuous derived-stat recompute, not a queued event.** It is currently limited
+to unsilenced board minions with `ALWAYS` + `SOURCE_BOUND` `MODIFY_STATS` rules targeting an
+automatic minion set (`SELF`, friendly/enemy/all minions, or adjacent). Player/random choices,
+filters, counts, bindings, non-minion targets, keyword grants, and every other source/action
+shape fail closed in `AuraCapabilities` and `CardValidator`.
 
 **`ON_HEAL` is a SELF trigger on the healed minion, and minion-only** (EF-015) —
 `DamagePipeline.ApplyHeal` raises it with `RaiseSelf`, mirroring `ON_DAMAGED` at the sibling site. It

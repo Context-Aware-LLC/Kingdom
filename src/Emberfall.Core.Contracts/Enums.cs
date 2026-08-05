@@ -46,11 +46,9 @@ namespace Emberfall.Core.Contracts
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. AURA (EF-017b) still has no raise site anywhere in the engine:
-    /// CardValidator rule C21 rejects a card using it before it loads, while bypassing validation would
-    /// leave the effect inert forever. Its former blocker — the absence of a derived-stat recompute
-    /// pass — was cleared by EF-017a; what remains is the raise site itself and the board sweep that
-    /// calls it. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>AURA is live as a continuous board-minion recompute, not an event raise. Its narrow
+    /// capability relation lives in <c>AuraCapabilities</c>; all other source/action/target shapes fail
+    /// closed. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:

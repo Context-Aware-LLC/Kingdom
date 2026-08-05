@@ -73,6 +73,7 @@ namespace Emberfall.Core.Cards
                     Trigger.ON_TURN_END,
                     Trigger.ON_FRIENDLY_SUMMON,
                     Trigger.ON_SPELL_CAST,
+                    Trigger.AURA,
                 },
                 [EffectSourceKind.EquippedWeapon] = new HashSet<Trigger>
                 {

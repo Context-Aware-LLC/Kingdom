@@ -259,17 +259,13 @@ namespace Emberfall.Core.Tests.CardValidation
             => Rule(Trigger.ON_TURN_START, new DrawAction(1), new TurnOwnerCondition(owner));
 
         [Test]
-        public void Dead_Trigger_Is_An_Error()
+        public void Unsupported_Aura_Shape_Is_An_Error()
         {
-            // AURA is declared in the Trigger enum but has no raise site — and cannot get one until a
-            // derived-stat recompute pass exists (EF-017a/b). This probe has migrated twice as triggers
-            // went live under it: ON_TURN_START (EF-011), then ON_HEAL (EF-015). AURA is the last one
-            // left, so when EF-017b lands this test needs a different subject or a different shape.
             var rule = new RuleDefinition(new RuleId("rule_1"), AuraActivation.Instance,
                 AlwaysCondition.Instance, SourceBoundLifetime.Instance, new DrawAction(1));
             var report = Validator().Validate(WithRule(CardType.MINION, rule), Db(WithRule(CardType.MINION, rule)));
             Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
+            Assert.That(report.Issues.Any(i => i.Code == "C21-AURA-UNSUPPORTED"));
         }
 
         [Test]
@@ -583,10 +579,10 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             // Fail-closed only works if every enum member has an explicit live/dead expectation.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
-                               Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
-                               Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
-                               Trigger.ON_HEAL };
-            var dead = new[] { Trigger.AURA };
+                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
+                                Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
+                                Trigger.ON_HEAL, Trigger.AURA };
+            var dead = System.Array.Empty<Trigger>();
             foreach (Trigger trigger in live)
                 Assert.That(EffectSourceCapabilities.SupportsAny(trigger), Is.True,
                     $"{trigger} is expected to have at least one source/raise path.");

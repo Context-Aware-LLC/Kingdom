@@ -52,7 +52,8 @@ namespace Emberfall.Core
         /// The caller emits the entry fact (<see cref="GameEventKind.CardPlayed"/> for a hand-play,
         /// <see cref="GameEventKind.CardSummoned"/> for a token).
         /// </summary>
-        public static bool EnterBoard(GameState state, CardInstance ci, CardDefinition def, int seat, int atIndex)
+        public static bool EnterBoard(GameState state, CardInstance ci, CardDefinition def, int seat, int atIndex,
+            ICardDatabase db)
         {
             var ps = state.Players[seat];
             if (ps.Board.Count >= MatchEngine.BoardCap) return false;
@@ -69,6 +70,7 @@ namespace Emberfall.Core
             int idx = (atIndex < 0 || atIndex > ps.Board.Count) ? ps.Board.Count : atIndex;
             ps.Board.Insert(idx, ci);
             Reindex(ps.Board);
+            AuraEngine.Recompute(state, db);
             return true;
         }
 

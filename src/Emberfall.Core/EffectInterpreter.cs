@@ -229,6 +229,7 @@ namespace Emberfall.Core
                     RulesEngine.Reindex(ps.Board);
                     minion.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(minion);
+                    AuraEngine.Recompute(_state, _db);
                     _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 
                     var def = _db.Get(minion.DefinitionId);
@@ -252,7 +253,7 @@ namespace Emberfall.Core
             if (ps.Board.Count >= MatchEngine.BoardCap) return;
 
             var copy = new CardInstance(_state.NextInstanceId(), def.Id, ps.Id);
-            if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex)) return;
+            if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex, _db)) return;
             copy.CurrentHealth = 1;            // Rekindle returns at 1 health
             copy.HasUsedRekindle = true;         // never rekindles again
             _buf.Emit(GameEventKind.CardSummoned, source: copy.Id, flags: EventFlags.IsToken);
