@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: cinder_drake
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{ "id": "cinder_drake",    "name": "Cinder Drake",    "type": "MINION",
-    "cost": 4, "attack": 4, "health": 4, "class": "EMBERWARD",  "rarity": "RARE",  
-    "keywords": [],         "tribe": "DRAGON", "setId": "EMBERFALL", "collectible":
-    true, "artId": "art/cinder_drake" }'
+  _json: '{"id":"cinder_drake","name":"Cinder Drake","type":"MINION","cost":4,"attack":4,"health":5,"class":"EMBERWARD","rarity":"RARE","keywords":[],"rules":[],"tribe":"DRAGON","setId":"EMBERFALL","collectible":true,"artId":"art/cinder_drake"}'

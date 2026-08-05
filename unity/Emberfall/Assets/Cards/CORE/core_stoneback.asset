@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: core_stoneback
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{ "id": "core_stoneback",  "name": "Stoneback Sentry","type": "MINION",
-    "cost": 2, "attack": 1, "health": 4, "class": "NEUTRAL", "rarity": "COMMON",
-    "keywords": ["BULWARK"],         "setId": "CORE",     "collectible": true,  "artId":
-    "art/core_stoneback" }'
+  _json: '{"id":"core_stoneback","name":"Stoneback Sentry","type":"MINION","cost":2,"attack":1,"health":4,"class":"NEUTRAL","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"setId":"CORE","collectible":true,"artId":"art/core_stoneback"}'

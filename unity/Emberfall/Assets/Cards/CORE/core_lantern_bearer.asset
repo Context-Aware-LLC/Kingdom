@@ -12,9 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: core_lantern_bearer
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: "{ \"id\": \"core_lantern_bearer\", \"name\": \"Gravelight Lantern-Bearer\",
-    \"type\": \"MINION\", \"cost\": 2, \"attack\": 2, \"health\": 2, \"class\": \"NEUTRAL\",
-    \"rarity\": \"COMMON\", \"keywords\": [\"TOLL\"],\n    \"setId\": \"CORE\",
-    \"collectible\": true, \"artId\": \"art/core_lantern_bearer\",\n    \"effects\":
-    [ { \"trigger\": \"ON_DEATH\", \"action\": \"SUMMON\", \"amount\": 1, \"payload\":
-    { \"tokenId\": \"token_wisp_1_1\" } } ] }"
+  _json: '{"id":"core_lantern_bearer","name":"Gravelight Lantern-Bearer","type":"MINION","cost":2,"attack":2,"health":2,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_DEATH"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"SOURCE_BOUND"},"action":{"type":"SUMMON","cardId":"token_wisp_1_1","count":1}}],"setId":"CORE","collectible":true,"artId":"art/core_lantern_bearer"}'

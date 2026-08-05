@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: wandering_scout
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{ "id": "wandering_scout", "name": "Wandering Scout", "type": "MINION",
-    "cost": 1, "attack": 1, "health": 1, "class": "NEUTRAL",    "rarity": "COMMON",
-    "keywords": [],         "tribe": "BEAST", "setId": "EMBERFALL", "collectible":
-    true, "artId": "art/wandering_scout" }'
+  _json: '{"id":"wandering_scout","name":"Wandering Scout","type":"MINION","cost":1,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"tribe":"BEAST","setId":"EMBERFALL","collectible":true,"artId":"art/wandering_scout"}'
