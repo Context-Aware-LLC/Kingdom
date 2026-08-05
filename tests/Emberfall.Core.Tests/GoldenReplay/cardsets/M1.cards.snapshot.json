@@ -1289,5 +1289,77 @@
         }
       }
     ]
+  },
+  {
+    "_comment": "NOR-31 fixture-only resolved spell. Its permanent turn-start observer remains in canonical state after the replay.",
+    "id": "test_ongoing_permanent",
+    "name": "Endless Ember",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_ongoing_permanent",
+    "rules": [
+      {
+        "id": "permanent_tick",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_START"
+        },
+        "condition": {
+          "type": "TURN_OWNER",
+          "owner": "ANY"
+        },
+        "lifetime": {
+          "type": "PERMANENT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "NOR-31 fixture-only resolved spell. Its one-shot observer triggers once and emits expiration.",
+    "id": "test_ongoing_one_shot",
+    "name": "Brief Blaze",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_ongoing_one_shot",
+    "rules": [
+      {
+        "id": "one_shot_tick",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_START"
+        },
+        "condition": {
+          "type": "TURN_OWNER",
+          "owner": "ANY"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
+    ]
   }
 ]

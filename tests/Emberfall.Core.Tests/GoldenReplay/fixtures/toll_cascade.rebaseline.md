@@ -2,6 +2,15 @@
 
 _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty until proven a deliberate rule change._
 
+## NOR-31 ongoing-effect canonical rebaseline (2026-08-05)
+
+- **Which rule changed:** `GameState` gained the canonical `OngoingEffects` tail. Even an empty list writes a deterministic zero count, so every prior final-state digest changes while its event stream remains identical.
+- **Why the new golden is correct:** all nine fixtures replayed with unchanged intents and unchanged semantic events; only the reviewed canonical encoding tail changed. The serializer field manifest, per-field mutation sweep, pinned digest, projected/authority wire bridge, and strict snapshot round-trip are green.
+- **Linked change:** NOR-31 step 4, commit `5742ea5` (`feat(state): serialize and project ongoing effects`).
+- **cardSetSnapshot changed?** no for this rebaseline; the dedicated ongoing fixture appends fixture-only cards separately.
+- **engineContractVersion changed?** no; `interfaces.v4` remains the recorded contract label.
+
+
 - **Which rule changed:** **D-P1 sentinel reservation** (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/multiplayer/state-sync-and-security.md §5.2.1`,
   ruled at the A3 design-pass review `hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a3-projector-design.md` §10, ratified by Sam
   2026-07-15): `InstanceId(0)` is the reserved redaction sentinel and is never minted — the

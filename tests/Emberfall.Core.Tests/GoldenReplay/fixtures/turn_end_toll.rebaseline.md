@@ -2,6 +2,15 @@
 
 _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty until proven a deliberate rule change._
 
+## NOR-31 ongoing-effect canonical rebaseline (2026-08-05)
+
+- **Which rule changed:** `GameState` gained the canonical `OngoingEffects` tail. Even an empty list writes a deterministic zero count, so every prior final-state digest changes while its event stream remains identical.
+- **Why the new golden is correct:** all nine fixtures replayed with unchanged intents and unchanged semantic events; only the reviewed canonical encoding tail changed. The serializer field manifest, per-field mutation sweep, pinned digest, projected/authority wire bridge, and strict snapshot round-trip are green.
+- **Linked change:** NOR-31 step 4, commit `5742ea5` (`feat(state): serialize and project ongoing effects`).
+- **cardSetSnapshot changed?** no for this rebaseline; the dedicated ongoing fixture appends fixture-only cards separately.
+- **engineContractVersion changed?** no; `interfaces.v4` remains the recorded contract label.
+
+
 - **Which rule changed:** none — **this is a NEW fixture, not a re-bake.** Nothing was rebaselined;
   there is no old hash to compare against. It is the golden EF-012 owes under the standing rule
   "no new effect without a golden": `Trigger.ON_TURN_END` was declared in `Enums.cs` and raised
