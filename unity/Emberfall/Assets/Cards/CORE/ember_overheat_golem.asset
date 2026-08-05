@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"ember_overheat_golem\", \"name\": \"Overheat Golem\", \"type\":
     \"MINION\", \"cost\": 3, \"attack\": 5, \"health\": 4, \"class\": \"EMBERWARD\",
-    \"rarity\": \"RARE\", \"keywords\": [\"OVERLOAD\"], \"tribe\": \"CONSTRUCT\",\n   
-    \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/ember_overheat_golem\",\n   
-    \"effects\": [ { \"trigger\": \"ON_PLAY\", \"action\": \"OVERLOAD\", \"amount\":
+    \"rarity\": \"RARE\", \"keywords\": [\"BACKDRAFT\"], \"tribe\": \"CONSTRUCT\",\n
+    \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/ember_overheat_golem\",\n
+    \"effects\": [ { \"trigger\": \"ON_PLAY\", \"action\": \"BACKDRAFT\", \"amount\":
     2 } ] }"

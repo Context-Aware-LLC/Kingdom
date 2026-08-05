@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"core_arclight_adept\", \"name\": \"Arclight Adept\", \"type\":
     \"MINION\", \"cost\": 2, \"attack\": 1, \"health\": 3, \"class\": \"NEUTRAL\",
-    \"rarity\": \"RARE\", \"keywords\": [\"SPELL_DAMAGE\"],\n    \"setId\": \"CORE\",
+    \"rarity\": \"RARE\", \"keywords\": [\"ARCANE_SURGE\"],\n    \"setId\": \"CORE\",
     \"collectible\": true, \"artId\": \"art/core_arclight_adept\" }"

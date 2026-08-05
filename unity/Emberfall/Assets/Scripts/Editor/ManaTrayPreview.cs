@@ -48,7 +48,7 @@ namespace Emberfall.Editor
             new Case("turn04-half-spent", 4,  1, 3, 0, 0),
             new Case("cap-half-spent",   10,  5, 5, 0, 0),
             new Case("all-spent",         6,  0, 6, 0, 0),
-            new Case("overload-2locked",  6,  4, 0, 2, 0),
+            new Case("backdraft-2locked",  6,  4, 0, 2, 0),
             // Temporary is a SUBSET of Available — GAIN_MANA's default branch raises both
             // (ActionHandlers.cs). A rail that counted them separately lit one orb too many.
             new Case("coin-temp",         3,  4, 0, 0, 1),

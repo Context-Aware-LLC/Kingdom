@@ -1,5 +1,5 @@
 // SGF_RimFresnel — UV-distance rim falloff with optional sine pulse.
-// Used by SG_Glow (playable/buff/Spell Damage rim) and SG_Aegis (Divine Shield bubble).
+// Used by SG_Glow (playable/buff/Arcane Surge rim) and SG_Aegis (Aegis bubble).
 //
 // Shader Graph: Custom Function node, File mode.
 //   Source:   Assets/Shaders/Functions/SGF_RimFresnel.hlsl

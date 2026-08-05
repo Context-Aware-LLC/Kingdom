@@ -47,7 +47,7 @@ namespace Emberfall.Editor
             FullStackTapReselect();
             FullStackCancellation();
             FullStackTargetedSpellDirectSelection();
-            FullStackTwoStepBattlecry();
+            FullStackTwoStepHerald();
             OsCanceledDuringDrag();
             OsCanceledDuringArmedTap();
             DragTargetingModelCore();
@@ -341,8 +341,8 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        // Issue #30: two-step targeting for battlecry minions (tap-arm, drop on slot, tap target).
-        private static void FullStackTwoStepBattlecry()
+        // Issue #30: two-step targeting for herald minions (tap-arm, drop on slot, tap target).
+        private static void FullStackTwoStepHerald()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
@@ -353,7 +353,7 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
             Check("tap targeted card arms without submitting", harness.SubmittedIntents.Count == 0);
 
-            // A battlecry minion cannot skip placement by releasing directly on its effect target.
+            // A herald minion cannot skip placement by releasing directly on its effect target.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
             Check("targeted minion released directly on a character submits nothing",
@@ -445,7 +445,7 @@ namespace Emberfall.Editor
             MulliganIsNotTurnGated();
             PressLegality();
             HandCardDrops();
-            TwoStepBattlecry();
+            TwoStepHerald();
             AttackDrops();
             HeroPowerDrops();
             NoAutoPlace();
@@ -482,7 +482,7 @@ namespace Emberfall.Editor
 
             InstanceId hand      = s.Players[0].Hand[0].Id; // Vanilla
             InstanceId aimCard   = s.Players[0].Hand[1].Id; // TargetedSpell
-            InstanceId battlecry = s.Players[0].Hand[2].Id; // TargetedMinion
+            InstanceId herald = s.Players[0].Hand[2].Id; // TargetedMinion
             InstanceId mine    = s.Players[0].Board[0].Id;
             InstanceId theirs  = s.Players[1].Board[0].Id;
 
@@ -492,8 +492,8 @@ namespace Emberfall.Editor
                 !m.BeginSource(PointerSubject.OfCard(hand, P0, Zone.Hand)).NeedsTarget);
             Check("an ANY_* hand card needs a target",
                 m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand)).NeedsTarget);
-            Check("a targeted battlecry minion needs a target",
-                m.BeginSource(PointerSubject.OfCard(battlecry, P0, Zone.Hand)).NeedsTarget);
+            Check("a targeted herald minion needs a target",
+                m.BeginSource(PointerSubject.OfCard(herald, P0, Zone.Hand)).NeedsTarget);
             Check("press on our board minion starts an Attacker drag",
                 m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)).Kind == DragSourceKind.Attacker);
             Check("press on our hero starts an Attacker drag",
@@ -552,8 +552,8 @@ namespace Emberfall.Editor
                                                    && atHero.Targets[0].Instance.Equals(m.HeroIdOf(P1)));
         }
 
-        // Issue #30: a targeted-battlecry minion needs two steps: (1) pick the slot, (2) pick the target.
-        private static void TwoStepBattlecry()
+        // Issue #30: a targeted-herald minion needs two steps: (1) pick the slot, (2) pick the target.
+        private static void TwoStepHerald()
         {
             GameState s = NewState();
             var m = Model(s);
@@ -660,24 +660,24 @@ namespace Emberfall.Editor
             InstanceId mine = s.Players[0].Board[0].Id;
 
             HashSet<InstanceId> plain = m.TargetsFor(m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)));
-            Check("with no taunt, the enemy hero is attackable", plain.Contains(m.HeroIdOf(P1)));
-            Check("with no taunt, an enemy minion is attackable", plain.Contains(s.Players[1].Board[0].Id));
+            Check("with no bulwark, the enemy hero is attackable", plain.Contains(m.HeroIdOf(P1)));
+            Check("with no bulwark, an enemy minion is attackable", plain.Contains(s.Players[1].Board[0].Id));
 
-            // A taunt wall restricts the set to taunts and closes the face.
-            CardInstance taunt = Minion(P1, 20);
-            taunt.Keywords.Add(Keyword.TAUNT);
-            s.Players[1].Board.Add(taunt);
+            // A bulwark wall restricts the set to bulwarks and closes the face.
+            CardInstance bulwark = Minion(P1, 20);
+            bulwark.Keywords.Add(Keyword.BULWARK);
+            s.Players[1].Board.Add(bulwark);
 
             HashSet<InstanceId> walled = m.TargetsFor(m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)));
-            Check("a taunt wall closes the face", !walled.Contains(m.HeroIdOf(P1)));
-            Check("a taunt wall excludes the non-taunt minion", !walled.Contains(s.Players[1].Board[0].Id));
-            Check("a taunt wall includes the taunt", walled.Contains(taunt.Id));
+            Check("a bulwark wall closes the face", !walled.Contains(m.HeroIdOf(P1)));
+            Check("a bulwark wall excludes the non-bulwark minion", !walled.Contains(s.Players[1].Board[0].Id));
+            Check("a bulwark wall includes the bulwark", walled.Contains(bulwark.Id));
 
-            // Stealth hides a minion from targeting entirely.
-            s.Players[1].Board.Remove(taunt);
-            s.Players[1].Board[0].Keywords.Add(Keyword.STEALTH);
+            // Shroud hides a minion from targeting entirely.
+            s.Players[1].Board.Remove(bulwark);
+            s.Players[1].Board[0].Keywords.Add(Keyword.SHROUD);
             HashSet<InstanceId> hidden = m.TargetsFor(m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)));
-            Check("a stealthed enemy minion is not attackable", !hidden.Contains(s.Players[1].Board[0].Id));
+            Check("a shrouded enemy minion is not attackable", !hidden.Contains(s.Players[1].Board[0].Id));
 
             Check("a vanilla hand card asks for no target set",
                 m.TargetsFor(m.BeginSource(PointerSubject.OfCard(s.Players[0].Hand[0].Id, P0, Zone.Hand))) == null);

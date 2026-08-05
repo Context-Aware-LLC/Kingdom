@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"core_bonehound\",  \"name\": \"Ravenous Bonehound\", \"type\":
     \"MINION\", \"cost\": 3, \"attack\": 3, \"health\": 2, \"class\": \"NEUTRAL\",
-    \"rarity\": \"COMMON\", \"keywords\": [\"RUSH\"],    \"tribe\": \"UNDEAD\",\n   
+    \"rarity\": \"COMMON\", \"keywords\": [\"SKIRMISH\"],    \"tribe\": \"UNDEAD\",\n
     \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/core_bonehound\"
     }"

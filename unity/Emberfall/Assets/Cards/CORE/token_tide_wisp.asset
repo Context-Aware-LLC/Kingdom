@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "token_tide_wisp",          "name": "Tide Wisp",    "type": "MINION",    
     "cost": 0, "attack": 0, "health": 2, "class": "TIDECALLER", "rarity": "COMMON",
-    "keywords": ["TAUNT"], "setId": "CORE", "collectible": false, "artId": "art/token_tide_wisp"
+    "keywords": ["BULWARK"], "setId": "CORE", "collectible": false, "artId": "art/token_tide_wisp"
     }'

@@ -17,7 +17,7 @@ namespace Emberfall.Presentation
         private static readonly Color PlateColor   = new Color(0.16f, 0.16f, 0.24f);
         private static readonly Color HpFull       = Color.white;
         private static readonly Color HpDamaged    = new Color(0.90f, 0.20f, 0.20f);
-        private static readonly Color FrozenTint   = new Color(0.40f, 0.60f, 0.95f);
+        private static readonly Color FrostedTint   = new Color(0.40f, 0.60f, 0.95f);
         // Matches CardPresenter.SelectedColor so hero-as-attacker selection reads
         // identically to minion selection.
         private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
@@ -33,7 +33,7 @@ namespace Emberfall.Presentation
         private PlayerId _playerId;
         private bool _selected;
         private bool _targetable;
-        private bool _frozen;
+        private bool _frosted;
 
         private Renderer     _plate;
         private Renderer     _portrait;
@@ -102,12 +102,12 @@ namespace Emberfall.Presentation
             _hpLabel.text  = hero.CurrentHealth.ToString();
             _hpLabel.color = hero.CurrentHealth < hero.MaxHealth ? HpDamaged : HpFull;
 
-            _frozen = hero.IsFrozen;
+            _frosted = hero.IsFrosted;
             ApplyPlateTint();
         }
 
         /// <summary>Hero-as-attacker selection cue — driven by InputRouter, mirrors
-        /// CardPresenter.SetSelectionHighlight. Selection outranks the frozen tint.</summary>
+        /// CardPresenter.SetSelectionHighlight. Selection outranks the frosted tint.</summary>
         public void SetSelected(bool selected)
         {
             _selected = selected;
@@ -115,7 +115,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Valid-target cue while targeting is armed — driven by InputRouter
-        /// (targeting-state visibility). Selection outranks it; it outranks frozen.</summary>
+        /// (targeting-state visibility). Selection outranks it; it outranks frosted.</summary>
         public void SetTargetable(bool targetable)
         {
             _targetable = targetable;
@@ -126,7 +126,7 @@ namespace Emberfall.Presentation
         {
             Tint(_plate, _selected   ? SelectedTint
                        : _targetable ? TargetableTint
-                       : _frozen     ? FrozenTint
+                       : _frosted     ? FrostedTint
                        : PlateColor);
         }
 

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "core_stoneback",  "name": "Stoneback Sentry","type": "MINION",
     "cost": 2, "attack": 1, "health": 4, "class": "NEUTRAL", "rarity": "COMMON",
-    "keywords": ["TAUNT"],         "setId": "CORE",     "collectible": true,  "artId":
+    "keywords": ["BULWARK"],         "setId": "CORE",     "collectible": true,  "artId":
     "art/core_stoneback" }'

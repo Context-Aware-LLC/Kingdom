@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"core_veilstalker\", \"name\": \"Veilstalker\",    \"type\":
     \"MINION\", \"cost\": 3, \"attack\": 3, \"health\": 3, \"class\": \"NEUTRAL\",
-    \"rarity\": \"RARE\",   \"keywords\": [\"STEALTH\"],\n    \"setId\": \"CORE\",
+    \"rarity\": \"RARE\",   \"keywords\": [\"SHROUD\"],\n    \"setId\": \"CORE\",
     \"collectible\": true, \"artId\": \"art/core_veilstalker\" }"

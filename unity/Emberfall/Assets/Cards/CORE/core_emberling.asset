@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "core_emberling",  "name": "Emberling Pup",   "type": "MINION",
     "cost": 1, "attack": 2, "health": 1, "class": "NEUTRAL", "rarity": "COMMON",
-    "keywords": ["CHARGE"],        "tribe": "BEAST",    "setId": "CORE", "collectible":
+    "keywords": ["FERVOR"],        "tribe": "BEAST",    "setId": "CORE", "collectible":
     true,  "artId": "art/core_emberling" }'

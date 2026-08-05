@@ -23,7 +23,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [
-      "CHARGE"
+      "FERVOR"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -91,7 +91,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -144,7 +144,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -161,7 +161,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -178,7 +178,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "CHARGE"
+      "FERVOR"
     ],
     "tribe": "BEAST",
     "setId": "CORE",
@@ -195,7 +195,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "setId": "CORE",
     "collectible": true,
@@ -211,12 +211,12 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_hollow_acolyte",
-    "cardText": "Battlecry: Draw a card.",
+    "cardText": "Herald: Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -235,12 +235,12 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_lantern_bearer",
-    "cardText": "Deathrattle: Summon a 1/1 Wisp.",
+    "cardText": "Toll: Summon a 1/1 Wisp.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -262,7 +262,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "DIVINE_SHIELD"
+      "AEGIS"
     ],
     "setId": "CORE",
     "collectible": true,
@@ -278,7 +278,7 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
     "setId": "CORE",
     "collectible": true,
@@ -294,12 +294,12 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_grove_mender",
-    "cardText": "Battlecry: Restore 4 Health to a friendly character.",
+    "cardText": "Herald: Restore 4 Health to a friendly character.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -321,12 +321,12 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "SPELL_DAMAGE"
+      "ARCANE_SURGE"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_arclight_adept",
-    "cardText": "Spell Damage +1"
+    "cardText": "Arcane Surge +1"
   },
   {
     "id": "core_bonehound",
@@ -338,7 +338,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
     "tribe": "UNDEAD",
     "setId": "CORE",
@@ -355,8 +355,8 @@
     "class": "NEUTRAL",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "REBORN"
+      "BULWARK",
+      "REKINDLE"
     ],
     "tribe": "UNDEAD",
     "setId": "CORE",
@@ -410,17 +410,17 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": true,
     "artId": "art/ember_overheat_golem",
-    "cardText": "Overload: (2)",
+    "cardText": "Backdraft: (2)",
     "effects": [
       {
         "trigger": "ON_PLAY",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 2
       }
     ]
@@ -458,14 +458,14 @@
     "class": "EMBERWARD",
     "rarity": "LEGENDARY",
     "keywords": [
-      "CHARGE",
-      "BATTLECRY"
+      "FERVOR",
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "CORE",
     "collectible": true,
     "artId": "art/ember_pyras_wrath",
-    "cardText": "Battlecry: Deal 1 damage to the enemy hero.",
+    "cardText": "Herald: Deal 1 damage to the enemy hero.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -488,11 +488,11 @@
     "setId": "CORE",
     "collectible": true,
     "artId": "art/tide_frostbind",
-    "cardText": "Freeze an enemy character.",
+    "cardText": "Frost an enemy character.",
     "effects": [
       {
         "trigger": "ON_CAST",
-        "action": "FREEZE",
+        "action": "FROST",
         "target": {
           "selector": "ANY_ENEMY"
         }
@@ -531,16 +531,16 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/tide_siren",
-    "cardText": "Battlecry: Freeze all enemy minions.",
+    "cardText": "Herald: Frost all enemy minions.",
     "effects": [
       {
         "trigger": "ON_PLAY",
-        "action": "FREEZE",
+        "action": "FROST",
         "target": {
           "selector": "ENEMY_MINIONS"
         }
@@ -557,7 +557,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "SPIRIT",
     "setId": "CORE",
@@ -655,7 +655,7 @@
     "setId": "CORE",
     "collectible": false,
     "artId": "art/hero_power_tidal_ward",
-    "cardText": "Summon a 0/2 Tide Wisp with Taunt.",
+    "cardText": "Summon a 0/2 Tide Wisp with Bulwark.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -726,7 +726,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "setId": "CORE",
     "collectible": false,
@@ -742,13 +742,13 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "REBORN"
+      "REKINDLE"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_gatewatch_whelp",
-    "cardText": "[Reborn]"
+    "cardText": "[Rekindle]"
   },
   {
     "id": "grave_last_rite",
@@ -787,14 +787,14 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK",
+      "TOLL"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_sable_watcher",
-    "cardText": "[Taunt] [Deathrattle] Summon a 1/1 Grave Wisp.",
+    "cardText": "[Bulwark] [Toll] Summon a 1/1 Grave Wisp.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -817,7 +817,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_sorrows_blessing",
-    "cardText": "Give a friendly minion Reborn.",
+    "cardText": "Give a friendly minion Rekindle.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -826,7 +826,7 @@
           "selector": "ANY_FRIENDLY_MINION"
         },
         "payload": {
-          "keyword": "REBORN"
+          "keyword": "REKINDLE"
         }
       }
     ]
@@ -841,13 +841,13 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_charnel_priest",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps.",
+    "cardText": "[Herald] Destroy a friendly minion. Summon two 1/1 Grave Wisps.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -876,13 +876,13 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_ashen_archivist",
-    "cardText": "[Deathrattle] Draw a card.",
+    "cardText": "[Toll] Draw a card.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -901,13 +901,13 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_custodian",
-    "cardText": "[Battlecry] Add a Grave Wisp to your hand.",
+    "cardText": "[Herald] Add a Grave Wisp to your hand.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -929,14 +929,14 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK",
+      "TOLL"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_last_gate_warden",
-    "cardText": "[Taunt] [Deathrattle] Summon two 1/1 Grave Wisps.",
+    "cardText": "[Bulwark] [Toll] Summon two 1/1 Grave Wisps.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -958,13 +958,13 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_harrower_of_ash",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps. Draw a card.",
+    "cardText": "[Herald] Destroy a friendly minion. Summon two 1/1 Grave Wisps. Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -998,12 +998,12 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_bell_novice",
-    "cardText": "[Deathrattle] Restore 2 Health to your hero.",
+    "cardText": "[Toll] Restore 2 Health to your hero.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -1025,13 +1025,13 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_tollkeeper_moth",
-    "cardText": "[Deathrattle] Draw a card.",
+    "cardText": "[Toll] Draw a card.",
     "effects": [
       {
         "trigger": "ON_DEATH",
@@ -1050,13 +1050,13 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "REBORN"
+      "REKINDLE"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_chained_revenant",
-    "cardText": "[Battlecry] Deal 2 damage to a minion. [Reborn]",
+    "cardText": "[Herald] Deal 2 damage to a minion. [Rekindle]",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1123,21 +1123,21 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK",
+      "TOLL"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_sealed_gate_keeper",
-    "cardText": "[Taunt] [Deathrattle] Summon a 5/5 Revenant with Taunt.",
+    "cardText": "[Bulwark] [Toll] Summon a 5/5 Revenant with Bulwark.",
     "effects": [
       {
         "trigger": "ON_DEATH",
         "action": "SUMMON",
         "amount": 1,
         "payload": {
-          "tokenId": "token_revenant_5_5_taunt"
+          "tokenId": "token_revenant_5_5_bulwark"
         }
       }
     ]
@@ -1152,7 +1152,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -1196,7 +1196,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1252,12 +1252,12 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_canopy_seer",
-    "cardText": "Battlecry: Draw a card.",
+    "cardText": "Herald: Draw a card.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1276,7 +1276,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1308,7 +1308,7 @@
     "class": "VERDANT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
+      "BULWARK",
       "OVERWHELM"
     ],
     "setId": "EMBERFALL",
@@ -1373,12 +1373,12 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_rootweaver",
-    "cardText": "[Battlecry] Restore 2 Health to your hero.",
+    "cardText": "[Herald] Restore 2 Health to your hero.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1400,13 +1400,13 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_mosshide_stag",
-    "cardText": "[Battlecry] Deal 2 damage to a minion.",
+    "cardText": "[Herald] Deal 2 damage to a minion.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1429,7 +1429,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_wild_bloom",
-    "cardText": "Give a friendly minion +2/+2 and Taunt.",
+    "cardText": "Give a friendly minion +2/+2 and Bulwark.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -1447,7 +1447,7 @@
           "selector": "ANY_FRIENDLY_MINION"
         },
         "payload": {
-          "keyword": "TAUNT"
+          "keyword": "BULWARK"
         }
       }
     ]
@@ -1462,13 +1462,13 @@
     "class": "VERDANT",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_thornfang_matron",
-    "cardText": "[Battlecry] Summon two 1/2 Thorn Cubs.",
+    "cardText": "[Herald] Summon two 1/2 Thorn Cubs.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1512,7 +1512,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "DIVINE_SHIELD"
+      "AEGIS"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -1529,14 +1529,14 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT",
-      "REBORN"
+      "BULWARK",
+      "REKINDLE"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/relic_bound_revenant",
-    "cardText": "[Taunt] [Reborn]"
+    "cardText": "[Bulwark] [Rekindle]"
   },
   {
     "id": "relic_corpse_cart",
@@ -1548,13 +1548,13 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/relic_corpse_cart",
-    "cardText": "[Battlecry] Summon a 1/1 Grave Wisp.",
+    "cardText": "[Herald] Summon a 1/1 Grave Wisp.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1567,7 +1567,7 @@
     ]
   },
   {
-    "id": "token_revenant_5_5_taunt",
+    "id": "token_revenant_5_5_bulwark",
     "name": "Revenant",
     "type": "MINION",
     "cost": 0,
@@ -1576,12 +1576,12 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": false,
-    "artId": "art/token_revenant_5_5_taunt"
+    "artId": "art/token_revenant_5_5_bulwark"
   },
   {
     "id": "token_thorn_cub_1_2",
@@ -1636,13 +1636,13 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_slagshell_bulwark",
-    "cardText": "[Taunt]"
+    "cardText": "[Bulwark]"
   },
   {
     "id": "ember_forgeheart_colossus",
@@ -1654,24 +1654,24 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_forgeheart_colossus",
-    "cardText": "Overload: (2)",
+    "cardText": "Backdraft: (2)",
     "effects": [
       {
         "trigger": "ON_PLAY",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 2
       }
     ]
   },
   {
-    "id": "tide_fathom_crush",
-    "name": "Fathom Crush",
+    "id": "tide_fathom_cskirmish",
+    "name": "Fathom Cskirmish",
     "type": "SPELL",
     "cost": 3,
     "class": "TIDECALLER",
@@ -1679,7 +1679,7 @@
     "keywords": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_fathom_crush",
+    "artId": "art/tide_fathom_cskirmish",
     "cardText": "Deal 4 damage to a minion.",
     "effects": [
       {
@@ -1702,16 +1702,16 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_deepfrost_spear",
-    "cardText": "[Battlecry] Freeze an enemy character.",
+    "cardText": "[Herald] Frost an enemy character.",
     "effects": [
       {
         "trigger": "ON_PLAY",
-        "action": "FREEZE",
+        "action": "FROST",
         "target": {
           "selector": "ANY_ENEMY"
         }
@@ -1728,13 +1728,13 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_glacierborn_leviathan",
-    "cardText": "[Battlecry] Deal 3 damage to all enemy minions.",
+    "cardText": "[Herald] Deal 3 damage to all enemy minions.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1774,14 +1774,14 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT",
-      "DIVINE_SHIELD"
+      "BULWARK",
+      "AEGIS"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_kiln_warden",
-    "cardText": "[Taunt] [Divine Shield]"
+    "cardText": "[Bulwark] [Aegis]"
   },
   {
     "id": "ember_emberdrinker",
@@ -1793,13 +1793,13 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "LIFESTEAL"
+      "LIFEDRAIN"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_emberdrinker",
-    "cardText": "[Lifesteal]"
+    "cardText": "[Lifedrain]"
   },
   {
     "id": "tide_drowned_titan",
@@ -1811,13 +1811,13 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_drowned_titan",
-    "cardText": "[Battlecry] Return a minion to its owner's hand.",
+    "cardText": "[Herald] Return a minion to its owner's hand.",
     "effects": [
       {
         "trigger": "ON_PLAY",
@@ -1838,18 +1838,18 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK",
+      "TOLL"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_hollowshell_warden",
-    "cardText": "[Taunt] [Deathrattle] Freeze all enemy minions.",
+    "cardText": "[Bulwark] [Toll] Frost all enemy minions.",
     "effects": [
       {
         "trigger": "ON_DEATH",
-        "action": "FREEZE",
+        "action": "FROST",
         "target": {
           "selector": "ENEMY_MINIONS"
         }
@@ -1925,7 +1925,7 @@
     "setId": "CORE",
     "collectible": false,
     "artId": "art/hero_power_shadow_mark",
-    "cardText": "Give a friendly minion Stealth.",
+    "cardText": "Give a friendly minion Shroud.",
     "effects": [
       {
         "trigger": "ON_CAST",
@@ -1935,7 +1935,7 @@
           "chosenBy": "PLAYER"
         },
         "payload": {
-          "keyword": "STEALTH"
+          "keyword": "SHROUD"
         }
       }
     ]
@@ -1976,7 +1976,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
@@ -2029,7 +2029,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2054,7 +2054,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2079,7 +2079,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2121,7 +2121,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2152,7 +2152,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2185,7 +2185,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2270,7 +2270,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [
-      "DEATHRATTLE"
+      "TOLL"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2296,7 +2296,7 @@
     "rarity": "EPIC",
     "keywords": [
       "VANGUARD",
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2337,9 +2337,9 @@
     "class": "CLOCKWRIGHT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "DIVINE_SHIELD",
-      "BATTLECRY"
+      "BULWARK",
+      "AEGIS",
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2364,7 +2364,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -2406,7 +2406,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "POISONOUS"
+      "VENOM"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -2424,7 +2424,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -2468,7 +2468,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
-      "POISONOUS"
+      "VENOM"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -2486,7 +2486,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -2501,7 +2501,7 @@
           "chosenBy": "PLAYER"
         },
         "payload": {
-          "keyword": "STEALTH"
+          "keyword": "SHROUD"
         }
       }
     ]
@@ -2527,7 +2527,7 @@
           "count": -1
         },
         "payload": {
-          "keyword": "STEALTH"
+          "keyword": "SHROUD"
         }
       }
     ]
@@ -2589,7 +2589,7 @@
           "chosenBy": "RANDOM"
         },
         "payload": {
-          "keyword": "POISONOUS"
+          "keyword": "VENOM"
         }
       }
     ]
@@ -2627,7 +2627,7 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [
-      "BATTLECRY"
+      "HERALD"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -2652,7 +2652,7 @@
           "count": -1
         },
         "payload": {
-          "keyword": "STEALTH"
+          "keyword": "SHROUD"
         }
       }
     ]
@@ -2667,9 +2667,9 @@
     "class": "NIGHTVEIL",
     "rarity": "LEGENDARY",
     "keywords": [
-      "STEALTH",
-      "POISONOUS",
-      "DEATHRATTLE"
+      "SHROUD",
+      "VENOM",
+      "TOLL"
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -2697,7 +2697,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2739,7 +2739,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2782,7 +2782,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2824,7 +2824,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2867,7 +2867,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2919,8 +2919,8 @@
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
-      "BATTLECRY"
+      "BULWARK",
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2950,7 +2950,7 @@
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
+      "BULWARK",
       "OVERWHELM"
     ],
     "tribe": "CONSTRUCT",
@@ -2969,8 +2969,8 @@
     "class": "STONEWARDEN",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "BATTLECRY"
+      "BULWARK",
+      "HERALD"
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2986,7 +2986,7 @@
           "count": -1
         },
         "payload": {
-          "keyword": "TAUNT"
+          "keyword": "BULWARK"
         }
       }
     ]
@@ -3001,7 +3001,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -3017,7 +3017,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -3035,7 +3035,7 @@
       },
       {
         "trigger": "ON_CAST",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 1
       }
     ]
@@ -3050,7 +3050,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -3068,7 +3068,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -3126,7 +3126,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -3144,7 +3144,7 @@
       },
       {
         "trigger": "ON_CAST",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 2
       }
     ]
@@ -3159,7 +3159,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -3201,7 +3201,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -3210,18 +3210,18 @@
     "cardText": "[Skirmish]"
   },
   {
-    "id": "storm_static_discharge",
-    "name": "Static Discharge",
+    "id": "storm_static_disfervor",
+    "name": "Static Disfervor",
     "type": "SPELL",
     "cost": 3,
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_static_discharge",
+    "artId": "art/storm_static_disfervor",
     "cardText": "Deal 2 damage to all enemy minions. [Backdraft] (1).",
     "effects": [
       {
@@ -3235,7 +3235,7 @@
       },
       {
         "trigger": "ON_CAST",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 1
       }
     ]
@@ -3261,7 +3261,7 @@
           "count": -1
         },
         "payload": {
-          "keyword": "WINDFURY"
+          "keyword": "DOUBLESTRIKE"
         }
       }
     ]
@@ -3274,7 +3274,7 @@
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [
-      "OVERLOAD"
+      "BACKDRAFT"
     ],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -3300,7 +3300,7 @@
       },
       {
         "trigger": "ON_CAST",
-        "action": "OVERLOAD",
+        "action": "BACKDRAFT",
         "amount": 2
       }
     ]
@@ -3315,8 +3315,8 @@
     "class": "TEMPEST",
     "rarity": "LEGENDARY",
     "keywords": [
-      "WINDFURY",
-      "BATTLECRY"
+      "DOUBLESTRIKE",
+      "HERALD"
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",

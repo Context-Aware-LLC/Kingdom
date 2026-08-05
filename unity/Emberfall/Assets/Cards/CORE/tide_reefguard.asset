@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"tide_reefguard\",  \"name\": \"Reefguard Wisp\",   \"type\":
     \"MINION\", \"cost\": 2, \"attack\": 0, \"health\": 4, \"class\": \"TIDECALLER\",
-    \"rarity\": \"COMMON\", \"keywords\": [\"TAUNT\"], \"tribe\": \"SPIRIT\",\n   
+    \"rarity\": \"COMMON\", \"keywords\": [\"BULWARK\"], \"tribe\": \"SPIRIT\",\n
     \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/tide_reefguard\"
     }"

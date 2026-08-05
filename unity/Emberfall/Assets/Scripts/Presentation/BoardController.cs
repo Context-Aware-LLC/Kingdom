@@ -23,8 +23,8 @@ namespace Emberfall.Presentation
         internal const float CardW = 1.17f;
         internal const float CardH = 1.65f;
 
-        // How far a taunted minion steps out of its row toward the centerline.
-        private const float TauntRowOffset = 0.40f;
+        // How far a bulwarked minion steps out of its row toward the centerline.
+        private const float BulwarkRowOffset = 0.40f;
 
         // Hand cards draw above board content and below the match-end banner (sortingOrder 100).
         // Order within the hand is the slot index, so the fan layers left-to-right and the
@@ -327,15 +327,15 @@ namespace Emberfall.Presentation
             // space and zeroes the card into it.
             if (spawned && zone == Zone.Hand) LaunchDrawFlight(presenter.transform, owner);
 
-            // Front-row taunt (decision 2026-07-17): taunted board minions step toward
+            // Front-row bulwark (decision 2026-07-17): bulwarked board minions step toward
             // the centerline so blockers read spatially, not by glow color. Re-applied
-            // every sync — taunt can be gained/lost without a slot change.
+            // every sync — bulwark can be gained/lost without a slot change.
             if (zone == Zone.Board)
             {
                 float toward = (owner == _p0Id) ? 1f : -1f;
-                bool hasTaunt = ci.Keywords.Contains(Keyword.TAUNT);
+                bool hasBulwark = ci.Keywords.Contains(Keyword.BULWARK);
                 presenter.transform.localPosition =
-                    hasTaunt ? new Vector3(0f, toward * TauntRowOffset, 0f) : Vector3.zero;
+                    hasBulwark ? new Vector3(0f, toward * BulwarkRowOffset, 0f) : Vector3.zero;
             }
         }
 
@@ -549,7 +549,7 @@ namespace Emberfall.Presentation
             DestroyObj(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(aegisRenderer, MaterialCatalog.Aegis);
-            // Same as the glow overlay: active GO, disabled renderer (taunt/shield ring
+            // Same as the glow overlay: active GO, disabled renderer (bulwark/shield ring
             // never displayed before this — the binder's enable was a no-op).
             aegisRenderer.enabled = false;
 
@@ -571,14 +571,14 @@ namespace Emberfall.Presentation
             var frameRenderer = MakeSprite(root.transform, "Frame",
                 new Vector3(0f, 0f, -0.006f), new Vector2(CardW, CardH));
 
-            // Frost overlay — the freeze cue (SG_Frost), card-sized, driven by CardMaterialBinder's
+            // Frost overlay — the frost cue (SG_Frost), card-sized, driven by CardMaterialBinder's
             // _FrostAmount. Its own quad because SG_Frost is an overlay shader: it has _FrostOpacity
             // and _RefractStrength and expects something behind it to frost OVER. The body quad
             // wears SG_CardComposite, which does not declare _FrostAmount at all, so pushing the
             // property there wrote it nowhere.
             //
             // Z = -0.008 puts it in FRONT of the art (-0.005) and frame (-0.006) but BEHIND every
-            // TMP label (-0.010) and the gem (-0.012). That is deliberate: a frozen minion still
+            // TMP label (-0.010) and the gem (-0.012). That is deliberate: a frosted minion still
             // has to be readable, so the ice covers the illustration and never the numbers. At
             // -0.02 it sat in front of the labels and, writing depth on the transparent queue,
             // made them vanish entirely while drawing no ice of its own.
@@ -591,7 +591,7 @@ namespace Emberfall.Presentation
             var frostRenderer = frostGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(frostRenderer, MaterialCatalog.Frost);
             // Same pattern as glow and aegis: active GO, disabled renderer. The binder enables it
-            // when AuraSet.Frozen arrives, so an unfrozen card costs no draw call.
+            // when AuraSet.Frosted arrives, so an unfrosted card costs no draw call.
             frostRenderer.enabled = false;
 
             // Rarity gem — bottom-center; sprite (gem_{rarity}) assigned per-rarity by ApplyFrame.

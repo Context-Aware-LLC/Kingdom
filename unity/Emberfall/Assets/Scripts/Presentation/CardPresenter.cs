@@ -34,8 +34,8 @@ namespace Emberfall.Presentation
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
         private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color ShieldColor   = new Color(0.95f, 0.88f, 0.15f);
-        private static readonly Color FrozenColor   = new Color(0.40f, 0.60f, 0.95f);
-        private static readonly Color TauntColor    = new Color(0.80f, 0.50f, 0.10f);
+        private static readonly Color FrostedColor   = new Color(0.40f, 0.60f, 0.95f);
+        private static readonly Color BulwarkColor    = new Color(0.80f, 0.50f, 0.10f);
         private static readonly Color SelectedColor = new Color(1.00f, 0.85f, 0.10f); // gold
         private const float ExhaustedDim = 0.55f;
 
@@ -225,8 +225,8 @@ namespace Emberfall.Presentation
         }
 
         // Rules text band (keyword-visual-language decision 2026-07-17: keywords lead the
-        // card text in bold). Keywords the authored text already spells out (Battlecry:,
-        // Spell Damage +1) are skipped so nothing reads twice.
+        // card text in bold). Keywords the authored text already spells out (Herald:,
+        // Arcane Surge +1) are skipped so nothing reads twice.
         private void ApplyBodyText()
         {
             if (bodyLabel == null) return;
@@ -254,7 +254,7 @@ namespace Emberfall.Presentation
             bodyLabel.gameObject.SetActive(sb.Length > 0);
         }
 
-        // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by
+        // Interim display map (keyword-display backlog): enum IDs stay BULWARK-style by
         // design; humanize for the card face until the full display layer lands.
         private static string KeywordDisplayName(Keyword kw)
         {
@@ -505,9 +505,9 @@ namespace Emberfall.Presentation
 
             Color c;
             if      (_isSelected)                          c = SelectedColor;
-            else if ((_live.Auras & AuraSet.Frozen) != 0) c = FrozenColor;
+            else if ((_live.Auras & AuraSet.Frosted) != 0) c = FrostedColor;
             else if ((_live.Auras & AuraSet.Shield) != 0) c = ShieldColor;
-            else if ((_live.Auras & AuraSet.Taunt)  != 0) c = TauntColor;
+            else if ((_live.Auras & AuraSet.Bulwark)  != 0) c = BulwarkColor;
             else                                           c = NormalColor;
 
             // Exhausted dim (attack affordance): spent/sick minions on your own turn read

@@ -142,7 +142,7 @@ namespace Emberfall.Editor
         /// <summary>
         /// The twelve EMBERWARD/TIDECALLER cards imported 2026-07-26
         /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
-        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFESTEAL on Emberdrinker —
+        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFEDRAIN on Emberdrinker —
         /// so their pill has never rendered, and this sheet is where that shows up or doesn't.
         /// The weapon, Deepfrost Spear, is the highest-risk face in the batch: the engine supports
         /// weapons fully and Unity has never drawn one.
@@ -152,7 +152,7 @@ namespace Emberfall.Editor
         {
             "ember_stoke_the_coals",  "ember_emberdrinker",     "ember_slagshell_bulwark",
             "ember_kiln_warden",      "ember_forgeheart_colossus", "ember_ashfall_wyrm",
-            "tide_hoarfrost_lash",    "tide_fathom_crush",      "tide_deepfrost_spear",
+            "tide_hoarfrost_lash",    "tide_fathom_cskirmish",      "tide_deepfrost_spear",
             "tide_hollowshell_warden","tide_drowned_titan",     "tide_glacierborn_leviathan",
         }, "card_faces_emberward_tidecaller");
 

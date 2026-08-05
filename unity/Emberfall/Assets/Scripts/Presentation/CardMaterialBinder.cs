@@ -14,10 +14,10 @@ namespace Emberfall.Presentation
     ///
     /// Param ownership (shaders/README.md §3 consolidated table):
     ///   _FlashAmount    → bodyRenderer   SG_CardComposite DamageFlash branch — spike/decay on onDamage/onHeal
-    ///   _StealthAmount  → bodyRenderer   SG_Stealth alpha body — tween to 0.6 (not 1; keeps card readable)
-    ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frozen change (0.3s)
-    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (SPELL_DAMAGE) | selection | AttackReadiness.Ready
-    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Taunt is spatial (row offset)
+    ///   _ShroudAmount  → bodyRenderer   SG_Shroud alpha body — tween to 0.6 (not 1; keeps card readable)
+    ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frosted change (0.3s)
+    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) | selection | AttackReadiness.Ready
+    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Bulwark is spatial (row offset)
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
     /// BoardController, because dissolving one renderer out of ~13 dissolves nothing a player can
@@ -39,15 +39,15 @@ namespace Emberfall.Presentation
 
         private Coroutine _flashRoutine;
         private Coroutine _frostRoutine;
-        private Coroutine _stealthRoutine;
+        private Coroutine _shroudRoutine;
         private float _frostCurrent;
-        private float _stealthCurrent;
+        private float _shroudCurrent;
 
         // Durations from hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §5 and shaders/README.md §3.
         private const float FlashDecay    = 0.25f;
         private const float FrostDur      = 0.30f;
-        private const float StealthDur    = 0.40f;
-        private const float StealthTarget = 0.60f; // spec: not full 1 — keeps minion readable under stealth
+        private const float ShroudDur    = 0.40f;
+        private const float ShroudTarget = 0.60f; // spec: not full 1 — keeps minion readable under shroud
 
         // ── Setup (called by BoardController before Init) ──────────────────────────
 
@@ -94,7 +94,7 @@ namespace Emberfall.Presentation
                 ApplyGlow();
         }
 
-        // Glow overlay is shared by three signals: Spell Damage aura, selection highlight,
+        // Glow overlay is shared by three signals: Arcane Surge aura, selection highlight,
         // and can-attack readiness. Any one keeps it on. While targeting is armed
         // (_targetOverride set by BoardController from InputRouter.TargetingChanged) the
         // normal signals are suppressed so ONLY valid targets glow — targeting-state
@@ -122,15 +122,15 @@ namespace Emberfall.Presentation
 
         private void ApplyAuras(AuraSet auras)
         {
-            float frostTarget   = (auras & AuraSet.Frozen)  != 0 ? 1f            : 0f;
-            float stealthTarget = (auras & AuraSet.Stealth) != 0 ? StealthTarget : 0f;
+            float frostTarget   = (auras & AuraSet.Frosted)  != 0 ? 1f            : 0f;
+            float shroudTarget = (auras & AuraSet.Shroud) != 0 ? ShroudTarget : 0f;
 
             // _FrostAmount goes to the FROST renderer, not the body. The body wears M_CardBody
             // (SG_CardComposite), which does not declare the property — pushing it there set
-            // nothing, silently, which is why the freeze cue never appeared.
+            // nothing, silently, which is why the frost cue never appeared.
             //
             // The renderer is enabled for the whole tween including the thaw, and switched off only
-            // once the amount is back to 0; disabling it the moment Frozen clears would pop the ice
+            // once the amount is back to 0; disabling it the moment Frosted clears would pop the ice
             // away instead of melting it.
             if (!Mathf.Approximately(_frostCurrent, frostTarget))
             {
@@ -146,15 +146,15 @@ namespace Emberfall.Presentation
                     _frostCurrent, frostTarget, FrostDur));
             }
 
-            if (!Mathf.Approximately(_stealthCurrent, stealthTarget))
-                Restart(ref _stealthRoutine, TweenFloat(
-                    v => { _stealthCurrent = v; PushFloat(ShaderIds.StealthAmount, v); },
-                    _stealthCurrent, stealthTarget, StealthDur));
+            if (!Mathf.Approximately(_shroudCurrent, shroudTarget))
+                Restart(ref _shroudRoutine, TweenFloat(
+                    v => { _shroudCurrent = v; PushFloat(ShaderIds.ShroudAmount, v); },
+                    _shroudCurrent, shroudTarget, ShroudDur));
 
             // Glow: combined signal (aura / selection / can-attack) — see ApplyGlow().
             ApplyGlow();
 
-            // Aegis underlay: Divine Shield only. Taunt reads spatially (front row,
+            // Aegis underlay: Aegis only. Bulwark reads spatially (front row,
             // decision 2026-07-17) — no keyword glow, so the shared gold bubble
             // unambiguously means Shield.
             if (_aegisRenderer != null)
@@ -231,7 +231,7 @@ namespace Emberfall.Presentation
         private void PushFloat(int propId, float value) => PushFloatTo(_bodyRenderer, propId, value);
 
         // Per-instance, via MaterialPropertyBlock: the shared material asset must never be written,
-        // or every card on the board freezes when one does.
+        // or every card on the board frosts when one does.
         private void PushFloatTo(Renderer target, int propId, float value)
         {
             if (target == null) return;

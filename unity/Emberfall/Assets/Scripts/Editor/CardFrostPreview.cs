@@ -8,18 +8,18 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Renders the freeze cue across its whole parameter range — _FrostAmount at 0, 0.25, 0.5,
+    /// Renders the frost cue across its whole parameter range — _FrostAmount at 0, 0.25, 0.5,
     /// 0.75, 1.0 — over a REAL card built by BoardController's own CreatePresenter path.
     ///
     /// THE SWEEP IS THE POINT. A frost overlay looks plausible at any single sampled amount; what
     /// a sweep catches is a cue that is invisible below 0.5, or opaque enough at 1.0 to bury the
-    /// stats a frozen minion still needs to show. Two scales per step: TRUE board pixel size,
+    /// stats a frosted minion still needs to show. Two scales per step: TRUE board pixel size,
     /// which is how it will actually be seen, and 4x for judging the ice edge.
     ///
     /// THIS HARNESS BUILDS THE OVERLAY QUAD ITSELF, because nothing else does yet. As of
     /// 2026-07-26 CardMaterialBinder pushes _FrostAmount at the BODY renderer, which wears
     /// M_CardBody (SG_CardComposite) — a shader that does not declare _FrostAmount — and no
-    /// renderer anywhere wears M_Frost. So the freeze cue does not appear in game no matter what
+    /// renderer anywhere wears M_Frost. So the frost cue does not appear in game no matter what
     /// this render shows. What this answers is the question that has to come first: what does
     /// SG_Frost actually draw, and is it worth wiring? The quad below is also the shape the fix
     /// takes — a sibling of CreatePresenter's GlowOverlay, one step nearer the camera.
@@ -89,7 +89,7 @@ namespace Emberfall.Editor
                           $"shader={overlay.sharedMaterial.shader.name} " +
                           $"declares _FrostAmount={overlay.sharedMaterial.HasProperty("_FrostAmount")}");
 
-                // One instance, not the project asset: a shared material would make every frozen
+                // One instance, not the project asset: a shared material would make every frosted
                 // minion on the board show the last one's amount.
                 var mpb = new MaterialPropertyBlock();
                 int frostAmount = Shader.PropertyToID("_FrostAmount");   // ShaderIds is internal
@@ -126,13 +126,13 @@ namespace Emberfall.Editor
             if (t == null)
             {
                 Debug.LogError("[CardFrostPreview] the card has no FrostOverlay child — " +
-                               "BoardController.CreatePresenter no longer builds it, so the freeze " +
+                               "BoardController.CreatePresenter no longer builds it, so the frost " +
                                "cue has nowhere to land.");
                 return null;
             }
             var r = t.GetComponent<Renderer>();
             // The harness drives amount directly, so the renderer must be on regardless of what
-            // the binder would have done with AuraSet.Frozen.
+            // the binder would have done with AuraSet.Frosted.
             if (r != null) r.enabled = true;
             return r;
         }

@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"core_hollow_acolyte\", \"name\": \"Hollow Acolyte\", \"type\":
     \"MINION\", \"cost\": 3, \"attack\": 3, \"health\": 3, \"class\": \"NEUTRAL\",
-    \"rarity\": \"COMMON\", \"keywords\": [\"BATTLECRY\"],\n    \"setId\": \"CORE\",
+    \"rarity\": \"COMMON\", \"keywords\": [\"HERALD\"],\n    \"setId\": \"CORE\",
     \"collectible\": true, \"artId\": \"art/core_hollow_acolyte\",\n    \"effects\":
     [ { \"trigger\": \"ON_PLAY\", \"action\": \"DRAW\", \"amount\": 1 } ] }"

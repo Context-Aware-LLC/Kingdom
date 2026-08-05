@@ -33,7 +33,7 @@ namespace Emberfall.Presentation
     ///     synchronous LocalMatchSession, and it can only be proven in-editor at runtime.
     ///
     /// RC-F10: OnConnectionStateChanged → <c>MatchRunner.StopMatch</c> on Dead/Ended — the runner's
-    /// only truth source is the mirror, which a dead socket freezes forever, so death must be pushed
+    /// only truth source is the mirror, which a dead socket frosts forever, so death must be pushed
     /// in from outside.
     /// </summary>
     public sealed class NetworkedGameBootstrap : MonoBehaviour
@@ -110,7 +110,7 @@ namespace Emberfall.Presentation
             // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
             // the mirror holds last-good state (NetworkedMatchSession.cs:260-265) — with no log, no
             // toast and no artifact. On screen that is indistinguishable from "a minion vanished",
-            // which is exactly how the open reborn bug presents, and it is why no offline repro can
+            // which is exactly how the open rekindle bug presents, and it is why no offline repro can
             // ever reach it: offline there is no wire and no verification step.
             //
             // NOTE: ClientOptions.DevCapture is declared but read NOWHERE in production code (only
@@ -374,9 +374,9 @@ namespace Emberfall.Presentation
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware, unlike the hot-seat boot
             };
 
-            // ── §14 step 4 diagnostic (v9 freeze retest): playback-side twin of the [Net] snap
+            // ── §14 step 4 diagnostic (v9 frost retest): playback-side twin of the [Net] snap
             // trail. Diffing the two trails finds where playback falls behind the mirror — a
-            // healthy [Net] trail with no matching [Playback] advance IS the freeze signature. ──
+            // healthy [Net] trail with no matching [Playback] advance IS the frost signature. ──
             matchRunner.OnStateUpdated += s => Debug.Log(
                 $"[Playback] v{s.StateVersion} phase={s.Phase} active={s.ActivePlayer}");
 

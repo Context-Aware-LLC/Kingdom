@@ -15,5 +15,5 @@ MonoBehaviour:
   _json: "{ \"id\": \"tide_frostbind\",  \"name\": \"Frostbind\",        \"type\":
     \"SPELL\",  \"cost\": 1, \"class\": \"TIDECALLER\", \"rarity\": \"COMMON\",\n   
     \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/tide_frostbind\",\n   
-    \"effects\": [ { \"trigger\": \"ON_CAST\", \"action\": \"FREEZE\", \"target\":
+    \"effects\": [ { \"trigger\": \"ON_CAST\", \"action\": \"FROST\", \"target\":
     { \"selector\": \"ANY_ENEMY\" } } ] }"

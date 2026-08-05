@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"ember_pyras_wrath\", \"name\": \"Pyra's Wrath\",   \"type\":
     \"MINION\", \"cost\": 7, \"attack\": 7, \"health\": 5, \"class\": \"EMBERWARD\",
-    \"rarity\": \"LEGENDARY\", \"keywords\": [\"CHARGE\"], \"tribe\": \"ELEMENTAL\",\n   
-    \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/ember_pyras_wrath\",\n   
+    \"rarity\": \"LEGENDARY\", \"keywords\": [\"FERVOR\"], \"tribe\": \"ELEMENTAL\",\n
+    \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/ember_pyras_wrath\",\n
     \"effects\": [ { \"trigger\": \"ON_PLAY\", \"action\": \"DEAL_DAMAGE\", \"amount\":
     2, \"target\": { \"selector\": \"ENEMY_HERO\" } } ] }"

@@ -12,7 +12,7 @@ namespace Emberfall.Presentation
     /// null entries are silently skipped (VFX asset not yet authored). Uses Instantiate + timed
     /// Destroy for M1; replace with ObjectPool<T> in M2 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §3).
     ///
-    /// Persistent auras (Shield / Taunt / Frozen tinting) are handled by CardPresenter.ApplyAuras()
+    /// Persistent auras (Shield / Bulwark / Frosted tinting) are handled by CardPresenter.ApplyAuras()
     /// via ICardLiveState.Changed — no per-frame event required.
     ///
     /// Phase C step 5 scene setup: add VfxDirector MonoBehaviour to the GameBootstrap GameObject

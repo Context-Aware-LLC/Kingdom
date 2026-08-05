@@ -30,7 +30,7 @@ namespace Emberfall.Presentation
         private const int SortOrder = -1000;
 
         // The live plate, so SetVisibleHeight can reach it. A destroyed GameObject compares
-        // equal to null under Unity's overload, so a scene unload clears this on its own and a
+        // equal to null under Unity's backdraft, so a scene unload clears this on its own and a
         // second Create simply replaces it.
         private static Transform s_instance;
 

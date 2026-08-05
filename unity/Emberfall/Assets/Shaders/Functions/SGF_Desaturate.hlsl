@@ -1,5 +1,5 @@
 // SGF_Desaturate — BT.709 luminance-weighted desaturation.
-// Used by SG_Frost (ice overlay desaturates the card beneath) and SG_Stealth (faded body).
+// Used by SG_Frost (ice overlay desaturates the card beneath) and SG_Shroud (faded body).
 //
 // Shader Graph: Custom Function node, File mode.
 //   Source:   Assets/Shaders/Functions/SGF_Desaturate.hlsl
@@ -9,7 +9,7 @@
 //   Color      float3  input RGB (e.g. from SG_CardComposite body sample)
 //   Strength   float   0 = no change, 1 = full greyscale
 //                      For SG_Frost: drive with _FrostAmount * authored constant
-//                      For SG_Stealth: drive with _StealthAmount (already 0..0.6 max)
+//                      For SG_Shroud: drive with _ShroudAmount (already 0..0.6 max)
 // Outputs:
 //   Result     float3  desaturated RGB
 

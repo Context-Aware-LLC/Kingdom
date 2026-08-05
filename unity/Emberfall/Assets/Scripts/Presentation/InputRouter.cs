@@ -138,8 +138,8 @@ namespace Emberfall.Presentation
                 CancelGesture();
                 return;
             }
-            // Refresh the armed-target set on every snapshot — board changes (a taunt dying
-            // to a deathrattle, a minion gaining stealth) can alter what's legal mid-aim.
+            // Refresh the armed-target set on every snapshot — board changes (a bulwark dying
+            // to a toll, a minion gaining shroud) can alter what's legal mid-aim.
             RefreshTargeting();
         }
 
@@ -252,7 +252,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
-        /// we entered AwaitingEffectTarget (two-step battlecry), in which case we stay armed.</summary>
+        /// we entered AwaitingEffectTarget (two-step herald), in which case we stay armed.</summary>
         private bool TryResolve(PointerSubject released)
         {
             PlayerIntent intent = _model.Resolve(_source, released);
@@ -321,7 +321,7 @@ namespace Emberfall.Presentation
             _aim.Hide();
             ClearTargeting();
 
-            // Clear any awaiting-effect-target state (two-step battlecry).
+            // Clear any awaiting-effect-target state (two-step herald).
             if (_model != null)
                 _model.Phase = DragTargetingModel.TargetingPhase.Direct;
         }
@@ -425,7 +425,7 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // If awaiting an effect target (two-step battlecry), show the effect targets instead.
+            // If awaiting an effect target (two-step herald), show the effect targets instead.
             if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
             {
                 HashSet<InstanceId> effectTargets = _model.AwaitingTargets();

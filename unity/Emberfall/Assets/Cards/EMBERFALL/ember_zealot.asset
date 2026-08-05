@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "ember_zealot",    "name": "Ember Zealot",    "type": "MINION",
     "cost": 2, "attack": 3, "health": 2, "class": "EMBERWARD",  "rarity": "COMMON",
-    "keywords": ["CHARGE"], "setId": "EMBERFALL", "collectible": true,  "artId":
+    "keywords": ["FERVOR"], "setId": "EMBERFALL", "collectible": true,  "artId":
     "art/ember_zealot" }'

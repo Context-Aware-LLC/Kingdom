@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "tide_oracle",     "name": "Tide Oracle",     "type": "MINION",
     "cost": 3, "attack": 2, "health": 4, "class": "TIDECALLER", "rarity": "COMMON",
-    "keywords": ["TAUNT"],  "setId": "EMBERFALL", "collectible": true,  "artId":
+    "keywords": ["BULWARK"],  "setId": "EMBERFALL", "collectible": true,  "artId":
     "art/tide_oracle" }'

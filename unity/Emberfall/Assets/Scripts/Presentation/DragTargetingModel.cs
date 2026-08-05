@@ -85,7 +85,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DragTargetingModel
     {
-        /// <summary>Awaiting a second choice: a slot placement followed by a battlecry target.</summary>
+        /// <summary>Awaiting a second choice: a slot placement followed by a herald target.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
         public const string AimBanner = "Drag to a target — Esc cancels";
@@ -239,7 +239,7 @@ namespace Emberfall.Presentation
         {
             if (State == null || !CanAct()) return null;
 
-            // If we're awaiting an effect target (two-step battlecry), handle that instead.
+            // If we're awaiting an effect target (two-step herald), handle that instead.
             if (Phase == TargetingPhase.AwaitingEffectTarget)
                 return ResolveEffectTarget(released);
 
@@ -363,7 +363,7 @@ namespace Emberfall.Presentation
                         // Targeted spells do not place on the board, so a slot release is a miss.
                         if (!HandCardOccupiesBoardSlot(source.Id)) return null;
 
-                        // A targeted minion needs placement before its battlecry choice plan.
+                        // A targeted minion needs placement before its herald choice plan.
                         if (!BeginHandChoicePlan(source.Id, released.SlotIndex)) return null;
                         _phase = TargetingPhase.AwaitingEffectTarget;
                         return null;   // No intent yet; the player still needs to pick a target.
@@ -398,7 +398,7 @@ namespace Emberfall.Presentation
 
         private PlayerIntent ResolveAttack(DragSource source, PointerSubject released)
         {
-            // Illegal picks (friendly fire, a taunt wall in the way) are the engine's to reject; the
+            // Illegal picks (friendly fire, a bulwark wall in the way) are the engine's to reject; the
             // glow set above is the courtesy half. Only OWNERSHIP is filtered here, because dropping
             // on your own board during an attack is unambiguously a miss.
             switch (released.Kind)
@@ -529,14 +529,14 @@ namespace Emberfall.Presentation
             return false;
         }
 
-        // Mirrors the defender-side half of CommandProcessor.ValidateAttack: stealth hides, a
-        // non-stealthed taunt wall restricts to taunts, rush-on-summon-turn can't go face.
+        // Mirrors the defender-side half of CommandProcessor.ValidateAttack: shroud hides, a
+        // non-shrouded bulwark wall restricts to bulwarks, skirmish-on-summon-turn can't go face.
         private HashSet<InstanceId> AttackTargets(InstanceId attackerId)
         {
             var set = new HashSet<InstanceId>();
             if (State == null) return set;
 
-            bool rushBlocksFace = false;
+            bool skirmishBlocksFace = false;
             PlayerState enemy = null;
             foreach (PlayerState ps in State.Players)
             {
@@ -544,25 +544,25 @@ namespace Emberfall.Presentation
                 {
                     foreach (CardInstance m in ps.Board)
                         if (m.Id.Equals(attackerId) && m.SummonedThisTurn
-                            && m.Keywords.Contains(Keyword.RUSH))
-                            rushBlocksFace = true;
+                            && m.Keywords.Contains(Keyword.SKIRMISH))
+                            skirmishBlocksFace = true;
                 }
                 else enemy = ps;
             }
             if (enemy == null) return set;
 
-            bool anyTaunt = false;
+            bool anyBulwark = false;
             foreach (CardInstance m in enemy.Board)
-                if (m.Keywords.Contains(Keyword.TAUNT) && !m.Keywords.Contains(Keyword.STEALTH))
-                { anyTaunt = true; break; }
+                if (m.Keywords.Contains(Keyword.BULWARK) && !m.Keywords.Contains(Keyword.SHROUD))
+                { anyBulwark = true; break; }
 
             foreach (CardInstance m in enemy.Board)
             {
-                if (m.Keywords.Contains(Keyword.STEALTH)) continue;
-                if (anyTaunt && !m.Keywords.Contains(Keyword.TAUNT)) continue;
+                if (m.Keywords.Contains(Keyword.SHROUD)) continue;
+                if (anyBulwark && !m.Keywords.Contains(Keyword.BULWARK)) continue;
                 set.Add(m.Id);
             }
-            if (!anyTaunt && !rushBlocksFace)
+            if (!anyBulwark && !skirmishBlocksFace)
                 set.Add(enemy.Hero.Id);
             return set;
         }

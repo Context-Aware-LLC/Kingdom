@@ -302,9 +302,9 @@ namespace Emberfall.Editor
 
         private static readonly string[] Keywords =
         {
-            "taunt", "charge", "rush", "divine_shield", "battlecry", "deathrattle",
-            "lifesteal", "windfury", "stealth", "poisonous", "spell_damage",
-            "freeze", "overload", "echo", "reborn", "silence"
+            "bulwark", "fervor", "skirmish", "aegis", "herald", "toll",
+            "lifedrain", "doublestrike", "shroud", "venom", "arcane_surge",
+            "frost", "backdraft", "echo", "rekindle", "silence"
         };
 
         private static int GenerateIcons()
@@ -369,21 +369,21 @@ namespace Emberfall.Editor
             // Two-letter abbreviations chosen to be visually distinct.
             switch (keyword)
             {
-                case "taunt":        return "TA";
-                case "charge":       return "CH";
-                case "rush":         return "RU";
-                case "divine_shield":return "DS";
-                case "battlecry":    return "BC";
-                case "deathrattle":  return "DR";
-                case "lifesteal":    return "LS";
-                case "windfury":     return "WF";
-                case "stealth":      return "ST";
-                case "poisonous":    return "PO";
-                case "spell_damage": return "SD";
-                case "freeze":       return "FZ";
-                case "overload":     return "OL";
+                case "bulwark":     return "BU";
+                case "fervor":      return "FE";
+                case "skirmish":    return "SK";
+                case "aegis":       return "AE";
+                case "herald":      return "HE";
+                case "toll":        return "TO";
+                case "lifedrain":   return "LI";
+                case "doublestrike": return "DO";
+                case "shroud":      return "SH";
+                case "venom":       return "VE";
+                case "arcane_surge": return "AS";
+                case "frost":       return "FR";
+                case "backdraft":   return "BA";
                 case "echo":         return "EC";
-                case "reborn":       return "RB";
+                case "rekindle":    return "RE";
                 case "silence":      return "SI";
                 default:             return "??";
             }

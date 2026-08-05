@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: "{ \"id\": \"core_aegis_templar\", \"name\": \"Aegis Templar\", \"type\":
     \"MINION\", \"cost\": 4, \"attack\": 4, \"health\": 3, \"class\": \"NEUTRAL\",
-    \"rarity\": \"COMMON\", \"keywords\": [\"DIVINE_SHIELD\"],\n    \"setId\": \"CORE\",
+    \"rarity\": \"COMMON\", \"keywords\": [\"AEGIS\"],\n    \"setId\": \"CORE\",
     \"collectible\": true, \"artId\": \"art/core_aegis_templar\" }"

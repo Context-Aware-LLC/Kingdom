@@ -100,7 +100,7 @@ namespace Emberfall.Editor
             }
 
             // E5: aura-cap warning — cards that grant a persistent-aura keyword via GIVE_KEYWORD
-            var auraKeywords = new HashSet<Keyword> { Keyword.TAUNT, Keyword.STEALTH, Keyword.DIVINE_SHIELD };
+            var auraKeywords = new HashSet<Keyword> { Keyword.BULWARK, Keyword.SHROUD, Keyword.AEGIS };
             foreach (var fx in def.Effects)
                 if (fx.Action == Action.GIVE_KEYWORD && fx.GrantedKeyword is { } gk && auraKeywords.Contains(gk))
                     Warn("E5-AURA-CAP", "effects", $"grants persistent aura keyword {gk} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
   _json: '{ "id": "stone_sentry",    "name": "Stone Sentry",    "type": "MINION",
     "cost": 2, "attack": 2, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON",
-    "keywords": ["TAUNT"],  "tribe": "CONSTRUCT", "setId": "EMBERFALL", "collectible":
+    "keywords": ["BULWARK"],  "tribe": "CONSTRUCT", "setId": "EMBERFALL", "collectible":
     true, "artId": "art/stone_sentry" }'

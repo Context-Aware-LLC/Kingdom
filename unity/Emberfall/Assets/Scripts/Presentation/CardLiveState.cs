@@ -75,12 +75,12 @@ namespace Emberfall.Presentation
         {
             if (!ownerMayAct) return AttackReadiness.None;
 
-            bool eligible = !ci.IsFrozen
+            bool eligible = !ci.IsFrosted
                 && ci.CurrentAttack > 0
                 && (!ci.SummonedThisTurn
-                    || ci.Keywords.Contains(Keyword.CHARGE)
-                    || ci.Keywords.Contains(Keyword.RUSH))
-                && ci.AttacksUsedThisTurn < (ci.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1);
+                    || ci.Keywords.Contains(Keyword.FERVOR)
+                    || ci.Keywords.Contains(Keyword.SKIRMISH))
+                && ci.AttacksUsedThisTurn < (ci.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1);
 
             return eligible ? AttackReadiness.Ready : AttackReadiness.Exhausted;
         }
@@ -89,10 +89,10 @@ namespace Emberfall.Presentation
         {
             AuraSet a = AuraSet.None;
             if (ci.HasAegisShield)                            a |= AuraSet.Shield;
-            if (ci.IsFrozen)                                  a |= AuraSet.Frozen;
-            if (ci.Keywords.Contains(Keyword.TAUNT))          a |= AuraSet.Taunt;
-            if (ci.Keywords.Contains(Keyword.STEALTH))        a |= AuraSet.Stealth;
-            if (ci.Keywords.Contains(Keyword.SPELL_DAMAGE))   a |= AuraSet.Glow;
+            if (ci.IsFrosted)                                  a |= AuraSet.Frosted;
+            if (ci.Keywords.Contains(Keyword.BULWARK))          a |= AuraSet.Bulwark;
+            if (ci.Keywords.Contains(Keyword.SHROUD))        a |= AuraSet.Shroud;
+            if (ci.Keywords.Contains(Keyword.ARCANE_SURGE))   a |= AuraSet.Glow;
             return a;
         }
     }

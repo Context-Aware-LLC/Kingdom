@@ -141,7 +141,7 @@ namespace Emberfall.Presentation
             RejectReason.WeaponMissing        => "No weapon equipped.",
             RejectReason.HasSummoningSickness => "Can't attack yet this turn.",
             RejectReason.NoAttacksLeft        => "Already attacked this turn.",
-            RejectReason.AttackerFrozen       => "Frozen — can't attack.",
+            RejectReason.AttackerFrosted       => "Frosted — can't attack.",
             RejectReason.AlreadyMulliganed    => "You've already swapped.",
             RejectReason.GameOver             => "The match is over.",
             RejectReason.RateLimited          => "Slow down a moment.",
