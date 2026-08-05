@@ -421,10 +421,60 @@ namespace Emberfall.Core
     // ── UNEARTH ─────────────────────────────────────────────────────────────────
     internal sealed class UnearthHandler : IActionHandler
     {
-        // UNEARTH opens an interactive 3-card choice that pauses the command for a UnearthChoiceIntent
-        // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
-        // is a documented no-op and the card validator (dev-docs/specs/card-schema.md:40) flags any M1 card that uses it.
-        public void Execute(in EffectContext ctx) { }
+        public void Execute(in EffectContext ctx)
+        {
+            var action = (UnearthAction)ctx.Rule.Action;
+            PlayerState chooser = ctx.State.PlayerOf(ctx.Source.Controller);
+
+            // Never overwrite an unresolved choice or open a choice that cannot be completed.
+            // Invalid authored counts and an empty eligible pool fail closed without consuming RNG.
+            if (action.Count <= 0 || ctx.State.PendingChoice != null ||
+                chooser.Hand.Count >= MatchEngine.HandCap)
+                return;
+
+            List<string> remaining = CanonicalEligiblePool(ctx.Db);
+            if (remaining.Count == 0) return;
+
+            int offerCount = System.Math.Min(action.Count, remaining.Count);
+            var pending = new PendingChoice
+            {
+                Chooser = chooser.Id,
+                Kind = PendingChoiceKind.Unearth,
+                Source = ctx.Source.Identity,
+                // The offer event consumes this same cursor value immediately below. This gives
+                // choices a match-wide monotonic correlation id without a second serialized cursor.
+                ChoiceSequence = ctx.State.NextEventSequence,
+            };
+
+            // Sampling is without replacement. The canonical sort happens BEFORE RNG; sampled
+            // order is the player-visible option order and must never be sorted afterward.
+            for (int i = 0; i < offerCount; i++)
+            {
+                int index = ctx.State.Rng.NextInt(remaining.Count);
+                pending.Options.Add(remaining[index]);
+                remaining.RemoveAt(index);
+            }
+
+            ctx.State.PendingChoice = pending;
+            ctx.Events.Emit(GameEventKind.UnearthOffered, source: ctx.Source.Identity);
+        }
+
+        private static List<string> CanonicalEligiblePool(ICardDatabase db)
+        {
+            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (CardDefinition definition in db.AllCollectible())
+            {
+                // AllCollectible implementations promise PoolEligible rows, but this is a trust
+                // boundary for authoritative choice state, so enforce the gate again here.
+                if (definition != null && definition.PoolEligible &&
+                    !string.IsNullOrEmpty(definition.Id))
+                    ids.Add(definition.Id);
+            }
+
+            var canonical = new List<string>(ids);
+            canonical.Sort(System.StringComparer.Ordinal);
+            return canonical;
+        }
     }
 
     // ── FROST ────────────────────────────────────────────────────────────────────

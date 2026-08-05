@@ -9,10 +9,8 @@ namespace Emberfall.Core
     /// there is ZERO mutation and ZERO events. Same <c>(GameState, PlayerIntent)</c> ⇒ same mutation
     /// and same ordered event stream on any machine — the property the golden-replay test proves (R1).
     ///
-    /// M1-foundation subset: <see cref="MulliganIntent"/>, <see cref="EndTurnIntent"/>,
-    /// <see cref="ConcedeIntent"/>, <see cref="AutoConfirmIntent"/> — i.e. the match-start + turn-loop
-    /// spine (coin flip and the deal live in <see cref="MatchEngine"/>). Card-play / attack / hero-power
-    /// land with the effect interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B) and are rejected as NotImplemented here.
+    /// Owns the complete authoritative player-intent allowlist, including interactive Unearth
+    /// continuation. Coin flip and the opening deal live in <see cref="MatchEngine"/>.
     /// </summary>
     public sealed class CommandProcessor : ICommandProcessor, ICommandValidator
     {
@@ -33,6 +31,15 @@ namespace Emberfall.Core
                 return false;
             }
 
+            // An interactive choice is the only legal gameplay continuation until it is resolved.
+            // AutoConfirm remains available to the authoritative timer path.
+            if (state.PendingChoice != null &&
+                intent is not UnearthChoiceIntent && intent is not AutoConfirmIntent)
+            {
+                reason = RejectReason.ChoicePending;
+                return false;
+            }
+
             switch (intent)
             {
                 case MulliganIntent m:
@@ -49,18 +56,8 @@ namespace Emberfall.Core
                     return ValidateAttack(state, a, out reason);
                 case HeroPowerIntent hp:
                     return ValidateHeroPower(state, hp, out reason);
-                // ┌─ SECURITY TRIPWIRE — VULN-001 (LATENT). READ BEFORE DELETING THIS CASE. ─┐
-                // ChosenCardId is the ONLY client-authored string in the shipping intent set
-                // that becomes a card identity. This rejection is the sole reason VULN-001 is
-                // latent; implementing Unearth arms it. An unvalidated id enters authoritative
-                // state, ships to BOTH seats, and throws in the OPPONENT's BoardController —
-                // freezing their client for the rest of the match while the server stays healthy.
-                // Binding rules (TryGet not Get; validate against the OFFERED set, not just the
-                // database) — dev-docs/quality/security.md#latent-vulnerabilities.
-                // └──────────────────────────────────────────────────────────────────────────┘
-                case UnearthChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // Unearth = later
-                    return false;
+                case UnearthChoiceIntent u:
+                    return ValidateUnearthChoice(state, u, out reason);
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (dev-docs/contracts/gameplay-and-session.md:18)
                     return false;
@@ -98,9 +95,22 @@ namespace Emberfall.Core
             return true;
         }
 
-        private static bool ValidateAutoConfirm(GameState state, AutoConfirmIntent a, out RejectReason? reason)
+        private bool ValidateAutoConfirm(GameState state, AutoConfirmIntent a, out RejectReason? reason)
         {
             if (!KnownPlayer(state, a.Player, out reason)) return false;
+            if (state.PendingChoice != null)
+            {
+                PendingChoice pending = state.PendingChoice;
+                if (pending.Kind != PendingChoiceKind.Unearth)
+                { reason = RejectReason.NoPendingChoice; return false; }
+                if (pending.Chooser != a.Player)
+                { reason = RejectReason.NotChoiceOwner; return false; }
+                if (pending.Options.Count == 0 || !_db.TryGet(pending.Options[0], out _))
+                { reason = RejectReason.InvalidChoice; return false; }
+                if (state.PlayerOf(a.Player).Hand.Count >= MatchEngine.HandCap)
+                { reason = RejectReason.HandFull; return false; }
+                return true;
+            }
             int seat = state.SeatOf(a.Player);
             if (state.Phase == TurnPhase.Mulligan)
             {
@@ -110,6 +120,37 @@ namespace Emberfall.Core
             if (state.Phase == TurnPhase.Main && state.ActivePlayer == a.Player) return true;
             reason = RejectReason.WrongPhase;
             return false;
+        }
+
+        private bool ValidateUnearthChoice(GameState state, UnearthChoiceIntent choice,
+            out RejectReason? reason)
+        {
+            if (!KnownPlayer(state, choice.Player, out reason)) return false;
+            PendingChoice? pending = state.PendingChoice;
+            if (pending == null || pending.Kind != PendingChoiceKind.Unearth)
+            { reason = RejectReason.NoPendingChoice; return false; }
+            if (pending.Chooser != choice.Player)
+            { reason = RejectReason.NotChoiceOwner; return false; }
+            if (pending.ChoiceSequence != choice.ChoiceSequence)
+            { reason = RejectReason.StaleChoice; return false; }
+            if (state.PlayerOf(choice.Player).Hand.Count >= MatchEngine.HandCap)
+            { reason = RejectReason.HandFull; return false; }
+
+            bool offered = false;
+            for (int i = 0; i < pending.Options.Count; i++)
+            {
+                if (string.Equals(pending.Options[i], choice.ChosenCardId,
+                        System.StringComparison.Ordinal))
+                {
+                    offered = true;
+                    break;
+                }
+            }
+            if (!offered || !_db.TryGet(choice.ChosenCardId, out _))
+            { reason = RejectReason.InvalidChoice; return false; }
+
+            reason = null;
+            return true;
         }
 
         private bool ValidatePlayCard(GameState state, PlayCardIntent p, out RejectReason? reason)
@@ -165,6 +206,7 @@ namespace Emberfall.Core
                 case PlayCardIntent p: ApplyPlayCard(state, p, buf); break;
                 case AttackIntent ai: ApplyAttack(state, ai, buf); break;
                 case HeroPowerIntent hp: ApplyHeroPower(state, hp, buf); break;
+                case UnearthChoiceIntent u: ApplyUnearthChoice(state, u, buf); break;
                 default: return CommandResult.Rejected(RejectReason.NotImplemented, state.StateVersion);
             }
 
@@ -263,12 +305,34 @@ namespace Emberfall.Core
 
         private void ApplyAutoConfirm(GameState state, AutoConfirmIntent a, EventBuffer buf)
         {
-            // Timer expiry is an ordinary command (dev-docs/contracts/gameplay-and-session.md:38): keep all cards in
-            // mulligan, or end the turn in Main.
-            if (state.Phase == TurnPhase.Mulligan)
+            // Timer expiry is an ordinary command (dev-docs/contracts/gameplay-and-session.md:38):
+            // choose the first offered option, keep all cards in mulligan, or end the turn in Main.
+            if (state.PendingChoice != null)
+            {
+                PendingChoice pending = state.PendingChoice;
+                ApplyUnearthChoice(state,
+                    new UnearthChoiceIntent(a.Player, pending.Options[0], pending.ChoiceSequence), buf);
+            }
+            else if (state.Phase == TurnPhase.Mulligan)
                 ApplyMulligan(state, new MulliganIntent(a.Player, System.Array.Empty<InstanceId>()), buf);
             else
                 ApplyEndTurn(state, new EndTurnIntent(a.Player), buf);
+        }
+
+        private void ApplyUnearthChoice(GameState state, UnearthChoiceIntent choice, EventBuffer buf)
+        {
+            PlayerState chooser = state.PlayerOf(choice.Player);
+            CardDefinition definition = _db.Get(choice.ChosenCardId);
+            var created = new CardInstance(state.NextInstanceId(), definition.Id, chooser.Id)
+            {
+                Zone = Zone.Hand,
+            };
+            chooser.Hand.Add(created);
+            state.PendingChoice = null;
+
+            // The newly minted instance id is the immutable event identity. Emit after the card
+            // enters hand so EventBuffer captures owner-only visibility at the point of truth.
+            buf.Emit(GameEventKind.CardCreatedInHand, source: created.Id, flags: EventFlags.IsToken);
         }
 
         private void ApplyPlayCard(GameState state, PlayCardIntent p, EventBuffer buf)
