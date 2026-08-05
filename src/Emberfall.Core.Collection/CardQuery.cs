@@ -62,7 +62,7 @@ namespace Emberfall.Core.Collection
     /// <see cref="CardDefinition.CardText"/> (rules), any <see cref="CardDefinition.Keywords"/> name,
     /// its <see cref="CardDefinition.Type"/> name, or its <see cref="CardDefinition.Tribe"/> name. A
     /// multi-token query is an <b>AND of tokens</b> — every token must land in some field — so "beast
-    /// taunt" finds a Taunt whose rules read "your Beasts", not only cards literally named that.
+    /// bulwark" finds a Bulwark whose rules read "your Beasts", not only cards literally named that.
     /// Flavour text and id are deliberately excluded: neither is what a builder is searching by.</para>
     /// </summary>
     public static class CardQuery

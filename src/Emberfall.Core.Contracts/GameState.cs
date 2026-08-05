@@ -80,7 +80,7 @@ namespace Emberfall.Core.Contracts
         public ManaPool Mana = new ManaPool();
         public bool HeroPowerUsedThisTurn;
         public int HeroAttacksUsedThisTurn;
-        public int NextTurnOverloadLock; // crystals to lock at next start-of-turn
+        public int NextTurnBackdraftLock; // crystals to lock at next start-of-turn
 
         public PlayerState(PlayerId id, HeroInstance hero)
         {
@@ -99,7 +99,7 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int Armor;
         public string HeroPowerId = "";
-        public bool IsFrozen; // set by FREEZE verb; cleared at start of controller's next turn
+        public bool IsFrosted; // set by FROST verb; cleared at start of controller's next turn
 
         public HeroInstance(InstanceId id, PlayerId controller, CardClass @class, int maxHealth)
         {
@@ -130,10 +130,10 @@ namespace Emberfall.Core.Contracts
         public HashSet<Keyword> Keywords = new HashSet<Keyword>();
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
-        public bool IsFrozen;
+        public bool IsFrosted;
         public bool SummonedThisTurn;
         public int AttacksUsedThisTurn;
-        public bool HasUsedReborn;
+        public bool HasUsedRekindle;
         public int Position; // board slot
 
         public CardInstance(InstanceId id, string definitionId, PlayerId controller)
@@ -154,23 +154,23 @@ namespace Emberfall.Core.Contracts
     {
         /// <summary>UNREDACTED — the visibility key; both seats see who is choosing.</summary>
         public PlayerId Chooser;
-        /// <summary>UNREDACTED — opponent sees "opponent is Discovering"; the trigger is already public.</summary>
+        /// <summary>UNREDACTED — opponent sees "opponent is Unearthing"; the trigger is already public.</summary>
         public PendingChoiceKind Kind;
         /// <summary>REDACTED (default-deny) — the already-minted instance/effect that raised the choice.</summary>
         public InstanceId Source;
         /// <summary>REDACTED — the hidden information. CardDefinition ids (candidates are never
         /// minted as instances). Phase-2 canonical population order = deterministic RNG roll order
-        /// of the Discover pool (OBL-3); no consumer may re-sort.</summary>
+        /// of the Unearth pool (OBL-3); no consumer may re-sort.</summary>
         public List<string> Options = new List<string>();
         /// <summary>REDACTED (default-deny; OBL-5 revisit). Deterministic resume/timer correlation id.</summary>
         public ulong ChoiceSequence;
     }
 
     /// <summary>Kinds of mid-command pending choice. Hash-canonical — extend only via a §7
-    /// tail-append when a real mechanic lands (Discover-only per the 2026-07-15 ruling, Q1).</summary>
+    /// tail-append when a real mechanic lands (Unearth-only per the 2026-07-15 ruling, Q1).</summary>
     public enum PendingChoiceKind
     {
-        Discover = 0,
+        Unearth = 0,
     }
 
     /// <summary>A buff/debuff (removed by SILENCE). Integer deltas only.</summary>
@@ -191,7 +191,7 @@ namespace Emberfall.Core.Contracts
         public int Max;        // crystals earned (cap 10)
         public int Available;  // currently spendable
         public int Spent;      // used this turn
-        public int Locked;     // overload-locked this turn
+        public int Locked;     // backdraft-locked this turn
         public int Temporary;  // one-turn extra crystals
     }
 }

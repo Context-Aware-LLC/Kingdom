@@ -61,7 +61,7 @@ namespace Emberfall.Core.Projection
                 CurrentHealth = ps.Hero.CurrentHealth,   // PUBLIC (all hero fields)
                 Armor = ps.Hero.Armor,
                 HeroPowerId = ps.Hero.HeroPowerId,
-                IsFrozen = ps.Hero.IsFrozen,
+                IsFrosted = ps.Hero.IsFrosted,
             };
 
             var proj = new PlayerState(ps.Id, hero);
@@ -91,7 +91,7 @@ namespace Emberfall.Core.Projection
             proj.Mana.Temporary = ps.Mana.Temporary;
             proj.HeroPowerUsedThisTurn = ps.HeroPowerUsedThisTurn;
             proj.HeroAttacksUsedThisTurn = ps.HeroAttacksUsedThisTurn;
-            proj.NextTurnOverloadLock = ps.NextTurnOverloadLock;
+            proj.NextTurnBackdraftLock = ps.NextTurnBackdraftLock;
 
             return proj;
         }
@@ -106,10 +106,10 @@ namespace Emberfall.Core.Projection
                 MaxHealth = c.MaxHealth,
                 CurrentDurability = c.CurrentDurability,
                 HasAegisShield = c.HasAegisShield,
-                IsFrozen = c.IsFrozen,
+                IsFrosted = c.IsFrosted,
                 SummonedThisTurn = c.SummonedThisTurn,
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,
-                HasUsedReborn = c.HasUsedReborn,
+                HasUsedRekindle = c.HasUsedRekindle,
                 Position = c.Position,
             };
             foreach (var k in c.Keywords) proj.Keywords.Add(k);
@@ -189,10 +189,10 @@ namespace Emberfall.Core.Projection
             InstanceId? tgt = Redact(e.Target, vis.Target, viewerSeat);
 
             // OBL-8 Amount column: P for every classified kind except the two sentinel rows —
-            // onDebuff (no emitter exists; pre-classified conservatively, D-OQ3) and onDiscover
+            // onDebuff (no emitter exists; pre-classified conservatively, D-OQ3) and onUnearth
             // (the pool-size magnitude channel; Phase 2 wires the chooser's unredacted copy via
-            // PendingChoice context when Discover actually lands — until then default-deny).
-            int? amount = (e.Kind == VfxEvent.onDebuff || e.Kind == VfxEvent.onDiscover) ? null : e.Amount;
+            // PendingChoice context when Unearth actually lands — until then default-deny).
+            int? amount = (e.Kind == VfxEvent.onDebuff || e.Kind == VfxEvent.onUnearth) ? null : e.Amount;
 
             // OBL-8 Flags column: P for every classified kind (incl. Overdraw/IsToken on onDraw).
             return new GameEvent(e.Kind, e.Sequence, src, tgt, amount, e.Flags);

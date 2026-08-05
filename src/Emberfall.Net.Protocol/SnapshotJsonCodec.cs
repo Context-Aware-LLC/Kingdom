@@ -70,7 +70,7 @@ namespace Emberfall.Net.Protocol
             w.EndObject();
             w.Name("heroPowerUsedThisTurn"); w.Bool(p.HeroPowerUsedThisTurn);
             w.Name("heroAttacksUsedThisTurn"); w.I32(p.HeroAttacksUsedThisTurn);
-            w.Name("nextTurnOverloadLock"); w.I32(p.NextTurnOverloadLock);
+            w.Name("nextTurnBackdraftLock"); w.I32(p.NextTurnBackdraftLock);
             w.EndObject();
         }
 
@@ -84,7 +84,7 @@ namespace Emberfall.Net.Protocol
             w.Name("maxHealth"); w.I32(h.MaxHealth);
             w.Name("armor"); w.I32(h.Armor);
             w.Name("heroPowerId"); w.Str(h.HeroPowerId);
-            w.Name("isFrozen"); w.Bool(h.IsFrozen);
+            w.Name("isFrosted"); w.Bool(h.IsFrosted);
             w.EndObject();
         }
 
@@ -134,10 +134,10 @@ namespace Emberfall.Net.Protocol
             w.EndArray();
 
             w.Name("hasAegisShield"); w.Bool(c.HasAegisShield);
-            w.Name("isFrozen"); w.Bool(c.IsFrozen);
+            w.Name("isFrosted"); w.Bool(c.IsFrosted);
             w.Name("summonedThisTurn"); w.Bool(c.SummonedThisTurn);
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
-            w.Name("hasUsedReborn"); w.Bool(c.HasUsedReborn);
+            w.Name("hasUsedRekindle"); w.Bool(c.HasUsedRekindle);
             w.Name("position"); w.I32(c.Position);
             w.EndObject();
         }
@@ -148,7 +148,7 @@ namespace Emberfall.Net.Protocol
             w.Name("chooser"); w.Str(pc.Chooser.Value);
             w.Name("kind"); w.Str(pc.Kind.ToString());
             w.Name("source"); w.Str(WirePrimitives.InstanceToWire(pc.Source));
-            // Order-PRESERVING only — the list order is the deterministic Discover roll order
+            // Order-PRESERVING only — the list order is the deterministic Unearth roll order
             // (OBL-3); the codec never re-sorts it.
             w.Name("options");
             w.BeginArray();
@@ -251,10 +251,10 @@ namespace Emberfall.Net.Protocol
 
             if (!TryBoolField(obj, "heroPowerUsedThisTurn", out bool hpUsed, ref detail)) return false;
             if (!TryI32Field(obj, "heroAttacksUsedThisTurn", out int heroAtks, ref detail)) return false;
-            if (!TryI32Field(obj, "nextTurnOverloadLock", out int overload, ref detail)) return false;
+            if (!TryI32Field(obj, "nextTurnBackdraftLock", out int backdraft, ref detail)) return false;
             player.HeroPowerUsedThisTurn = hpUsed;
             player.HeroAttacksUsedThisTurn = heroAtks;
-            player.NextTurnOverloadLock = overload;
+            player.NextTurnBackdraftLock = backdraft;
             return true;
         }
 
@@ -269,14 +269,14 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "maxHealth", out int maxHp, ref detail)) return false;
             if (!TryI32Field(obj, "armor", out int armor, ref detail)) return false;
             if (!TryStrField(obj, "heroPowerId", out string hpId, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrozen", out bool frozen, ref detail)) return false;
+            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
 
             hero = new HeroInstance(id, new PlayerId(controller), cls, maxHp)
             {
                 CurrentHealth = curHp,
                 Armor = armor,
                 HeroPowerId = hpId,
-                IsFrozen = frozen,
+                IsFrosted = frosted,
             };
             return true;
         }
@@ -351,16 +351,16 @@ namespace Emberfall.Net.Protocol
             }
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrozen", out bool frozen, ref detail)) return false;
+            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
             if (!TryBoolField(obj, "summonedThisTurn", out bool summoned, ref detail)) return false;
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
-            if (!TryBoolField(obj, "hasUsedReborn", out bool reborn, ref detail)) return false;
+            if (!TryBoolField(obj, "hasUsedRekindle", out bool rekindle, ref detail)) return false;
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
             card.HasAegisShield = aegis;
-            card.IsFrozen = frozen;
+            card.IsFrosted = frosted;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;
-            card.HasUsedReborn = reborn;
+            card.HasUsedRekindle = rekindle;
             card.Position = position;
             return true;
         }

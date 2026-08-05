@@ -26,11 +26,11 @@ namespace Emberfall.Core.Cards
         };
 
         // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
-        // verbs actually present in the Action enum/M1 data (OVERLOAD, FREEZE) that doc predates.
+        // verbs actually present in the Action enum/M1 data (BACKDRAFT, FROST) that doc predates.
         private static readonly HashSet<Action> AmountRequiredActions = new HashSet<Action>
         {
             Action.DEAL_DAMAGE, Action.HEAL, Action.DRAW, Action.SUMMON, Action.BUFF,
-            Action.GAIN_MANA, Action.DISCOVER, Action.ADD_TO_HAND, Action.OVERLOAD,
+            Action.GAIN_MANA, Action.UNEARTH, Action.ADD_TO_HAND, Action.BACKDRAFT,
         };
 
         /// <summary>Whether a <see cref="Trigger"/> has a raise site in the engine (C21).</summary>
@@ -60,7 +60,7 @@ namespace Emberfall.Core.Cards
         // each Dead or type-scoped row is its retirement trigger.
         private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
         {
-            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (battlecry / weapon equip)
+            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (herald / weapon equip)
             [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:354,454 (spell / hero power)
             [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
             [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
@@ -91,24 +91,24 @@ namespace Emberfall.Core.Cards
         // comes from effect/trigger data; they are already legal on shipped weapons.
         private static readonly Dictionary<Keyword, WeaponKeywordReach> WeaponKeywordTable = new()
         {
-            [Keyword.LIFESTEAL] = WeaponKeywordReach.Live,
-            [Keyword.POISONOUS] = WeaponKeywordReach.Live,
-            [Keyword.FREEZE] = WeaponKeywordReach.Live,
-            [Keyword.WINDFURY] = WeaponKeywordReach.Live,
+            [Keyword.LIFEDRAIN] = WeaponKeywordReach.Live,
+            [Keyword.VENOM] = WeaponKeywordReach.Live,
+            [Keyword.FROST] = WeaponKeywordReach.Live,
+            [Keyword.DOUBLESTRIKE] = WeaponKeywordReach.Live,
 
-            [Keyword.BATTLECRY] = WeaponKeywordReach.Marker,
-            [Keyword.DEATHRATTLE] = WeaponKeywordReach.Marker,
+            [Keyword.HERALD] = WeaponKeywordReach.Marker,
+            [Keyword.TOLL] = WeaponKeywordReach.Marker,
             [Keyword.SILENCE] = WeaponKeywordReach.Marker,
-            [Keyword.OVERLOAD] = WeaponKeywordReach.Marker,
+            [Keyword.BACKDRAFT] = WeaponKeywordReach.Marker,
             [Keyword.REINFORCE] = WeaponKeywordReach.Marker,
 
-            [Keyword.TAUNT] = WeaponKeywordReach.Unsupported,
-            [Keyword.CHARGE] = WeaponKeywordReach.Unsupported,
-            [Keyword.RUSH] = WeaponKeywordReach.Unsupported,
-            [Keyword.DIVINE_SHIELD] = WeaponKeywordReach.Unsupported,
-            [Keyword.STEALTH] = WeaponKeywordReach.Unsupported,
-            [Keyword.SPELL_DAMAGE] = WeaponKeywordReach.Unsupported,
-            [Keyword.REBORN] = WeaponKeywordReach.Unsupported,
+            [Keyword.BULWARK] = WeaponKeywordReach.Unsupported,
+            [Keyword.FERVOR] = WeaponKeywordReach.Unsupported,
+            [Keyword.SKIRMISH] = WeaponKeywordReach.Unsupported,
+            [Keyword.AEGIS] = WeaponKeywordReach.Unsupported,
+            [Keyword.SHROUD] = WeaponKeywordReach.Unsupported,
+            [Keyword.ARCANE_SURGE] = WeaponKeywordReach.Unsupported,
+            [Keyword.REKINDLE] = WeaponKeywordReach.Unsupported,
             [Keyword.OVERWHELM] = WeaponKeywordReach.Unsupported,
             [Keyword.VANGUARD] = WeaponKeywordReach.Unsupported,
         };
@@ -221,7 +221,7 @@ namespace Emberfall.Core.Cards
                                 : "."));
                         break;
                 }
-                // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave
+                // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-TOLL) until EF-020 gave
                 // RulesEngine.BreakWeapon a raise site. It is now live on BOTH card types, so the gate is
                 // gone rather than relaxed — there is no weapon-shaped exception left to express.
 

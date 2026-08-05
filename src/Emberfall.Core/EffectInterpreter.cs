@@ -86,7 +86,7 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Settle the board: resolve any pending deaths from the primary mutation, then drain queued effects
-        /// breadth-first — each effect followed by a fresh DeathCheck + WinCheck so chained deathrattles
+        /// breadth-first — each effect followed by a fresh DeathCheck + WinCheck so chained tolls
         /// cascade deterministically. Bounded by <see cref="MatchEngine.ActionResolutionCap"/>.
         /// </summary>
         public void Drain()
@@ -114,18 +114,18 @@ namespace Emberfall.Core
         private void ResolveOne(QueuedEffect qe)
         {
             if (!Handlers.TryGetValue(qe.Effect.Action, out var handler))
-                return; // unimplemented verb (e.g. DISCOVER pending its choice flow) — graceful no-op
+                return; // unimplemented verb (e.g. UNEARTH pending its choice flow) — graceful no-op
 
             var targets = ResolveTargets(qe);
             handler.Execute(new EffectContext(this, qe.Effect, qe.Source, targets));
         }
 
-        // ── Death resolution (the deathrattle cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
+        // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
 
         /// <summary>
         /// Resolve all minions currently at ≤0 health as a single batch in deterministic death order, firing
-        /// each one's ON_DEATH (deathrattle) onto the queue and resummoning REBORN copies. Repeats until no
-        /// fresh corpses remain in this settle; queued deathrattles themselves drain back in <see cref="Drain"/>.
+        /// each one's ON_DEATH (toll) onto the queue and resummoning REKINDLE copies. Repeats until no
+        /// fresh corpses remain in this settle; queued tolls themselves drain back in <see cref="Drain"/>.
         /// </summary>
         private void DeathCheck()
         {
@@ -166,14 +166,14 @@ namespace Emberfall.Core
                             _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<TargetRef>(),
                                 bindings, TriggerContext.ForSource(minion.Id)));
 
-                    // REBORN: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
-                    if (minion.Keywords.Contains(Keyword.REBORN) && !minion.HasUsedReborn)
+                    // REKINDLE: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
+                    if (minion.Keywords.Contains(Keyword.REKINDLE) && !minion.HasUsedRekindle)
                     {
-                        minion.HasUsedReborn = true; // mark original consumed; copy gets its own flag in Resummon
+                        minion.HasUsedRekindle = true; // mark original consumed; copy gets its own flag in Resummon
                         Resummon(seat, def, idx);
                     }
                 }
-                // loop: REBORN copies / chained kills may have produced fresh corpses to settle
+                // loop: REKINDLE copies / chained kills may have produced fresh corpses to settle
             }
         }
 
@@ -184,8 +184,8 @@ namespace Emberfall.Core
 
             var copy = new CardInstance(_state.NextInstanceId(), def.Id, ps.Id);
             if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex)) return;
-            copy.CurrentHealth = 1;            // Reborn returns at 1 health
-            copy.HasUsedReborn = true;         // never reborns again
+            copy.CurrentHealth = 1;            // Rekindle returns at 1 health
+            copy.HasUsedRekindle = true;         // never rekindles again
             _buf.Emit(VfxEvent.onSummon, source: copy.Id, flags: EventFlags.IsToken);
         }
 

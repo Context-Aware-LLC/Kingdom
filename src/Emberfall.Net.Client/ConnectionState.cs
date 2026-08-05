@@ -4,8 +4,8 @@ namespace Emberfall.Net.Client
     /// The B3 connection lifecycle (dev-docs/contracts/wire-protocol.md:16). Terminal reasons ride
     /// <see cref="DeadReason"/>. <c>NetworkedGameBootstrap</c> subscribes
     /// <see cref="NetworkedMatchSession.OnConnectionStateChanged"/> and stops the runner on
-    /// <see cref="Dead"/>/<see cref="Ended"/> (RC-F10 — the runner cannot discover death itself,
-    /// its only truth source is the mirror that death freezes).
+    /// <see cref="Dead"/>/<see cref="Ended"/> (RC-F10 — the runner cannot unearth death itself,
+    /// its only truth source is the mirror that death frosts).
     /// </summary>
     public enum ConnectionState
     {

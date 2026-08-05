@@ -34,11 +34,11 @@ namespace Emberfall.Core.Contracts
     /// </summary>
     public enum Keyword
     {
-        TAUNT, CHARGE, RUSH, DIVINE_SHIELD, BATTLECRY, DEATHRATTLE, LIFESTEAL,
-        WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
-        REBORN,
+        BULWARK, FERVOR, SKIRMISH, AEGIS, HERALD, TOLL, LIFEDRAIN,
+        DOUBLESTRIKE, SHROUD, VENOM, ARCANE_SURGE, SILENCE, FROST, BACKDRAFT,
+        REKINDLE,
         OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
-        REINFORCE,             // REKINDLING set: Battlecry — Give a friendly minion +1/+1.
+        REINFORCE,             // REKINDLING set: Herald — Give a friendly minion +1/+1.
     }
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
@@ -62,7 +62,7 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor.
         ON_PLAY,
 
-        // LIVE on BOTH card types. Minions: EffectInterpreter.DeathCheck (the deathrattle cascade).
+        // LIVE on BOTH card types. Minions: EffectInterpreter.DeathCheck (the toll cascade).
         // Weapons: RulesEngine.BreakWeapon, on durability exhaustion AND on equip-replacement (EF-020).
         // A weapon's rattle ENQUEUES like a minion's, so on a replacement the NEW weapon is already
         // equipped when it resolves — an ON_DEATH that equips will break the replacement, not itself.
@@ -80,7 +80,7 @@ namespace Emberfall.Core.Contracts
         // actually restored (EF-015). SELF trigger, mirroring ON_DAMAGED: "whenever THIS minion is
         // healed", never "whenever anything is healed". Two silences are deliberate and permanent:
         // an overheal raises nothing (nothing was restored), and a HERO heal raises nothing (heroes
-        // carry no card effects) — which is why the reentrant LIFESTEAL heal inside ApplyDamage,
+        // carry no card effects) — which is why the reentrant LIFEDRAIN heal inside ApplyDamage,
         // whose target is always a hero, fires this on nobody. Dead on SPELL/WEAPON: neither has
         // health to restore, so the minion-only classification here is not a staging step.
         ON_HEAL,
@@ -136,17 +136,17 @@ namespace Emberfall.Core.Contracts
     public enum Action
     {
         DEAL_DAMAGE, HEAL, DRAW, SUMMON, BUFF, GIVE_KEYWORD, DESTROY, RETURN_TO_HAND,
-        SILENCE, DISCOVER, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND,
-        FREEZE,   // step 4: sets IsFrozen on the target character (minion or hero)
-        OVERLOAD, // step 4: locks N crystals at the start of the controller's next turn
+        SILENCE, UNEARTH, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND,
+        FROST,   // step 4: sets IsFrosted on the target character (minion or hero)
+        BACKDRAFT, // step 4: locks N crystals at the start of the controller's next turn
     }
 
     /// <summary>The closed D7 VFX vocabulary (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2). Purely observational.</summary>
     public enum VfxEvent
     {
         onPlay, onSummon, onAttack, onDamage, onHeal, onDeath, onBuff, onDebuff,
-        onDraw, onSilence, onFreeze, onTransform, onReturn, onManaGain, onEquip,
-        onDiscover, onTurnStart, onTurnEnd, onHeroPower, onFatigue, onGameWin, onGameOver
+        onDraw, onSilence, onFrost, onTransform, onReturn, onManaGain, onEquip,
+        onUnearth, onTurnStart, onTurnEnd, onHeroPower, onFatigue, onGameWin, onGameOver
     }
 
     /// <summary>Per-event flags carried on a <see cref="GameEvent"/>. M1-guaranteed: AegisAbsorbed, Lethal, Overdraw (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5).</summary>
@@ -162,7 +162,7 @@ namespace Emberfall.Core.Contracts
         NotYourTurn, WrongPhase, NotEnoughMana, IllegalTarget, NotInHand,
         BoardFull, HeroPowerAlreadyUsed, WeaponMissing, UnknownIntent,
         NotImplemented, AlreadyMulliganed, GameOver,
-        HasSummoningSickness, NoAttacksLeft, AttackerFrozen,
+        HasSummoningSickness, NoAttacksLeft, AttackerFrosted,
         /// <summary>Session-layer only (B1 policy gate, dev-docs/contracts/wire-protocol.md:37):
         /// the token bucket refused the intent. Never minted by <c>CommandProcessor</c>.</summary>
         RateLimited,

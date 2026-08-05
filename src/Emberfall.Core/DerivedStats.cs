@@ -47,9 +47,9 @@ namespace Emberfall.Core
         ///
         /// <para><b>Stats only — this touches neither the keyword set nor
         /// <see cref="CardInstance.HasAegisShield"/>, and that is deliberate.</b> Both carry state that is
-        /// SPENT rather than derived: an Aegis is consumed by absorbing a hit, and STEALTH is stripped when
+        /// SPENT rather than derived: an Aegis is consumed by absorbing a hit, and SHROUD is stripped when
         /// the minion attacks (<c>CommandProcessor</c>). Re-seeding either from the definition here would
-        /// silently refund a spent shield, or restore stealth, every time the minion was buffed. Only the
+        /// silently refund a spent shield, or restore shroud, every time the minion was buffed. Only the
         /// full-reset path (<see cref="ResetToPrinted"/>) re-seeds, and only because a silence or a bounce
         /// genuinely does return the card to its printed form.</para>
         ///
@@ -87,7 +87,7 @@ namespace Emberfall.Core
         /// <summary>
         /// Return <paramref name="c"/> to its printed form: enchantments dropped, keywords re-seeded from
         /// the definition, stats recomputed, Aegis restored to whatever the printed keyword set implies,
-        /// freeze cleared.
+        /// frost cleared.
         ///
         /// <para><paramref name="preserveDamage"/> is the whole difference between the callers. A SILENCE
         /// keeps the wounds — a buffed body falling away can leave the printed one already dead, which is a
@@ -110,8 +110,8 @@ namespace Emberfall.Core
 
             ApplyStats(c, def, damageTaken);
 
-            c.HasAegisShield = c.Keywords.Contains(Keyword.DIVINE_SHIELD);
-            c.IsFrozen = false;
+            c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
+            c.IsFrosted = false;
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace Emberfall.Core
         /// <para>Keywords are SUBTRACTED, never re-seeded: a keyword is removed only if the departing
         /// source granted it and no surviving enchantment grants it — and never if the printed definition
         /// carries it, because that one was never the source's to give. Subtracting rather than rebuilding
-        /// is what keeps this from restoring stealth that combat has already broken.</para>
+        /// is what keeps this from restoring shroud that combat has already broken.</para>
         ///
         /// <para>Returns true if anything was removed, so a caller sweeping a board can skip the recompute
         /// bookkeeping on minions the source never touched.</para>
@@ -151,7 +151,7 @@ namespace Emberfall.Core
                     if (IsPrinted(def, k)) continue;                     // printed: not the source's to take
                     if (StillGranted(c, k)) continue;                    // another enchantment holds it up
                     c.Keywords.Remove(k);
-                    if (k == Keyword.DIVINE_SHIELD) c.HasAegisShield = false;
+                    if (k == Keyword.AEGIS) c.HasAegisShield = false;
                 }
             }
 

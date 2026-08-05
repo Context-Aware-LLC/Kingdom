@@ -22,8 +22,8 @@ namespace Emberfall.Core
                 new DealDamageHandler(), new HealHandler(), new DrawHandler(), new SummonHandler(),
                 new BuffHandler(), new GiveKeywordHandler(), new DestroyHandler(), new ReturnToHandHandler(),
                 new SilenceHandler(), new GainManaHandler(), new AddToHandHandler(), new TransformHandler(),
-                new EquipHandler(), new DiscoverHandler(),
-                new FreezeHandler(), new OverloadHandler(),
+                new EquipHandler(), new UnearthHandler(),
+                new FrostHandler(), new BackdraftHandler(),
             };
             var map = new Dictionary<Verb, IActionHandler>(handlers.Length);
             foreach (var h in handlers) map[h.Verb] = h;
@@ -41,13 +41,13 @@ namespace Emberfall.Core
             return set;
         }
 
-        /// <summary>+1 spell damage per friendly SPELL_DAMAGE minion in play (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
+        /// <summary>+1 arcane surge per friendly ARCANE_SURGE minion in play (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
         internal static int SpellDamageBonus(GameState state, PlayerId controller)
         {
             var board = state.PlayerOf(controller).Board;
             int bonus = 0;
             for (int i = 0; i < board.Count; i++)
-                if (board[i].Keywords.Contains(Keyword.SPELL_DAMAGE)) bonus++;
+                if (board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
             return bonus;
         }
     }
@@ -157,7 +157,7 @@ namespace Emberfall.Core
                 // the enchantment list is serialized — so it belongs in the batched rebaseline, not here.
                 if (m.Keywords.Add(kw.Value))
                     m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, GrantedKeyword = kw });
-                if (kw.Value == Keyword.DIVINE_SHIELD) m.HasAegisShield = true;
+                if (kw.Value == Keyword.AEGIS) m.HasAegisShield = true;
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onBuff), source: ctx.Source.Id, target: m.Id);
             }
         }
@@ -220,7 +220,7 @@ namespace Emberfall.Core
                 DerivedStats.ResetToPrinted(m, def, preserveDamage: false);
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
-                m.HasUsedReborn = false;
+                m.HasUsedRekindle = false;
 
                 MoveCardToHand(ctx, ps, m, wasPublic: true);
             }
@@ -349,7 +349,7 @@ namespace Emberfall.Core
                 var ps = ctx.State.Players[t.Seat];
                 int idx = ps.Board.IndexOf(t.Minion!);
                 if (idx < 0) continue;
-                // Transform is NOT a death — the old minion vanishes without firing its deathrattle.
+                // Transform is NOT a death — the old minion vanishes without firing its toll.
                 ps.Board.RemoveAt(idx);
                 var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
                 RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx);
@@ -374,43 +374,43 @@ namespace Emberfall.Core
         }
     }
 
-    // ── DISCOVER ─────────────────────────────────────────────────────────────────
-    internal sealed class DiscoverHandler : IActionHandler
+    // ── UNEARTH ─────────────────────────────────────────────────────────────────
+    internal sealed class UnearthHandler : IActionHandler
     {
-        public Verb Verb => Verb.DISCOVER;
-        // DISCOVER opens an interactive 3-card choice that pauses the command for a DiscoverChoiceIntent
+        public Verb Verb => Verb.UNEARTH;
+        // UNEARTH opens an interactive 3-card choice that pauses the command for a UnearthChoiceIntent
         // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
         // is a documented no-op and the card validator (dev-docs/specs/card-schema.md:40) flags any M1 card that uses it.
         public void Execute(in EffectContext ctx) { }
     }
 
-    // ── FREEZE ────────────────────────────────────────────────────────────────────
-    internal sealed class FreezeHandler : IActionHandler
+    // ── FROST ────────────────────────────────────────────────────────────────────
+    internal sealed class FrostHandler : IActionHandler
     {
-        public Verb Verb => Verb.FREEZE;
+        public Verb Verb => Verb.FROST;
         public void Execute(in EffectContext ctx)
         {
             foreach (var t in ctx.Targets)
             {
-                if (t.IsMinion) t.Minion!.IsFrozen = true;
-                else if (t.IsHero) t.Hero!.IsFrozen = true;
+                if (t.IsMinion) t.Minion!.IsFrosted = true;
+                else if (t.IsHero) t.Hero!.IsFrosted = true;
                 else continue;
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onFreeze), source: ctx.Source.Id, target: t.Id);
+                ctx.Events.Emit(ctx.Vfx(VfxEvent.onFrost), source: ctx.Source.Id, target: t.Id);
             }
         }
     }
 
-    // ── OVERLOAD ──────────────────────────────────────────────────────────────────
-    internal sealed class OverloadHandler : IActionHandler
+    // ── BACKDRAFT ──────────────────────────────────────────────────────────────────
+    internal sealed class BackdraftHandler : IActionHandler
     {
-        public Verb Verb => Verb.OVERLOAD;
+        public Verb Verb => Verb.BACKDRAFT;
         public void Execute(in EffectContext ctx)
         {
             int amount = ctx.Effect.Amount ?? 0;
             if (amount <= 0) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
-            ps.NextTurnOverloadLock += amount;
-            // Overload is a crystal-lock; no VFX event in M1 (the mana tray handles the visual).
+            ps.NextTurnBackdraftLock += amount;
+            // Backdraft is a crystal-lock; no VFX event in M1 (the mana tray handles the visual).
         }
     }
 }

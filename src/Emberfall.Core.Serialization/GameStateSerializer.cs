@@ -56,7 +56,7 @@ namespace Emberfall.Core.Serialization
             WalkMana(w, p.Mana);
             w.Bool(p.HeroPowerUsedThisTurn);
             w.I32(p.HeroAttacksUsedThisTurn);
-            w.I32(p.NextTurnOverloadLock);
+            w.I32(p.NextTurnBackdraftLock);
         }
 
         private static void WalkHero(ICanonicalWriter w, HeroInstance h)
@@ -68,7 +68,7 @@ namespace Emberfall.Core.Serialization
             w.I32(h.MaxHealth);
             w.I32(h.Armor);
             w.Str(h.HeroPowerId);
-            w.Bool(h.IsFrozen); // added step 4 — hero freeze state is determinism-relevant
+            w.Bool(h.IsFrosted); // added step 4 — hero frost state is determinism-relevant
         }
 
         private static void WalkZone(ICanonicalWriter w, List<CardInstance> zone)
@@ -105,10 +105,10 @@ namespace Emberfall.Core.Serialization
             }
 
             w.Bool(c.HasAegisShield);
-            w.Bool(c.IsFrozen);
+            w.Bool(c.IsFrosted);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);
-            w.Bool(c.HasUsedReborn);
+            w.Bool(c.HasUsedRekindle);
             w.I32(c.Position);
         }
 
@@ -128,7 +128,7 @@ namespace Emberfall.Core.Serialization
             w.I32(pc.Source.Value);
             w.I32(pc.Options.Count);                    // count prefix, then list order (§4.1).
             // Phase-2 ringfence (OBL-3): list order MUST be the deterministic RNG roll order of
-            // the Discover pool — the walk is order-PRESERVING only, never an ordering source.
+            // the Unearth pool — the walk is order-PRESERVING only, never an ordering source.
             foreach (var id in pc.Options) w.Str(id);
             w.U64(pc.ChoiceSequence);
         }

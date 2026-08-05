@@ -20,7 +20,7 @@ namespace Emberfall.Net.Protocol
         public const string HeroPower = "hero_power";
         public const string EndTurn = "end_turn";
         public const string Mulligan = "mulligan";
-        public const string DiscoverChoice = "discover_choice";
+        public const string UnearthChoice = "unearth_choice";
         public const string Concede = "concede";
         public const string AutoConfirm = "auto_confirm";
 
@@ -28,7 +28,7 @@ namespace Emberfall.Net.Protocol
         /// [ReplayTag]-annotated subtype set).</summary>
         public static IReadOnlyList<string> KnownTags { get; } = new[]
         {
-            PlayCard, Attack, HeroPower, EndTurn, Mulligan, DiscoverChoice, Concede, AutoConfirm,
+            PlayCard, Attack, HeroPower, EndTurn, Mulligan, UnearthChoice, Concede, AutoConfirm,
         };
 
         public static bool TryTagOf(PlayerIntent intent, out string tag)
@@ -40,7 +40,7 @@ namespace Emberfall.Net.Protocol
                 case HeroPowerIntent _: tag = HeroPower; return true;
                 case EndTurnIntent _: tag = EndTurn; return true;
                 case MulliganIntent _: tag = Mulligan; return true;
-                case DiscoverChoiceIntent _: tag = DiscoverChoice; return true;
+                case UnearthChoiceIntent _: tag = UnearthChoice; return true;
                 case ConcedeIntent _: tag = Concede; return true;
                 case AutoConfirmIntent _: tag = AutoConfirm; return true;
                 default: tag = ""; return false;
@@ -75,7 +75,7 @@ namespace Emberfall.Net.Protocol
                     foreach (var id in mu.ToReplace) w.Str(WirePrimitives.InstanceToWire(id));
                     w.EndArray();
                     break;
-                case DiscoverChoiceIntent dc:
+                case UnearthChoiceIntent dc:
                     w.Name("chosenCardId"); w.Str(dc.ChosenCardId);
                     break;
                     // EndTurn / Concede / AutoConfirm carry only $type + player.
@@ -161,11 +161,11 @@ namespace Emberfall.Net.Protocol
                         intent = new MulliganIntent(player, toReplace);
                         return Success(out error);
                     }
-                case DiscoverChoice:
+                case UnearthChoice:
                     {
                         if (!obj.TryGet("chosenCardId", out var ccVal) || !ccVal.TryStr(out string chosen))
                         { detail = "missing chosenCardId"; return false; }
-                        intent = new DiscoverChoiceIntent(player, chosen);
+                        intent = new UnearthChoiceIntent(player, chosen);
                         return Success(out error);
                     }
                 default:

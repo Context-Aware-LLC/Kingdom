@@ -7,7 +7,7 @@ namespace Emberfall.Core
     /// <summary>
     /// Shared, stateless rules primitives used by BOTH the turn-loop command processor and the effect
     /// interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4 post-mutation checks, §7 mana/fatigue). Keeping draw,
-    /// board-entry, reindexing and the win check here means a deathrattle that draws or a battlecry that
+    /// board-entry, reindexing and the win check here means a toll that draws or a herald that
     /// kills uses the EXACT same code path as the turn loop — no second implementation to drift (R1).
     /// </summary>
     internal static class RulesEngine
@@ -58,12 +58,12 @@ namespace Emberfall.Core
 
             ci.Controller = ps.Id;
             ci.Zone = Zone.Board;
-            // Stats, keywords, Aegis and freeze all come off the printed form (EF-017a). A card entering
+            // Stats, keywords, Aegis and frost all come off the printed form (EF-017a). A card entering
             // the board arrives whole, so no damage is carried in from whatever it was doing before.
             DerivedStats.ResetToPrinted(ci, def, preserveDamage: false);
-            ci.SummonedThisTurn = true;     // summoning sickness; CHARGE/RUSH override in combat (step 2)
+            ci.SummonedThisTurn = true;     // summoning sickness; FERVOR/SKIRMISH override in combat (step 2)
             ci.AttacksUsedThisTurn = 0;
-            ci.HasUsedReborn = false;
+            ci.HasUsedRekindle = false;
 
             int idx = (atIndex < 0 || atIndex > ps.Board.Count) ? ps.Board.Count : atIndex;
             ps.Board.Insert(idx, ci);
@@ -94,14 +94,14 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Destroy the equipped weapon for <paramref name="seat"/>, emitting onDeath and raising the weapon's
-        /// ON_DEATH deathrattle onto <paramref name="interp"/>'s queue (EF-020). No-op if no weapon. Called
+        /// ON_DEATH toll onto <paramref name="interp"/>'s queue (EF-020). No-op if no weapon. Called
         /// before equipping a new weapon and by combat when durability reaches zero.
         ///
-        /// <para>Takes the interpreter rather than (state, buf) because a weapon deathrattle has to enqueue,
+        /// <para>Takes the interpreter rather than (state, buf) because a weapon toll has to enqueue,
         /// and every caller already holds one — same shape as <see cref="DamagePipeline.ApplyDamage"/>. The
-        /// deathrattle ENQUEUES, it does not resolve here: it drains with everything else, so on an equip
+        /// toll ENQUEUES, it does not resolve here: it drains with everything else, so on an equip
         /// replacement the new weapon is already in the slot by the time the old one's rattle runs. That
-        /// mirrors minion deathrattles (a board has already moved on when theirs resolve) and keeps the
+        /// mirrors minion tolls (a board has already moved on when theirs resolve) and keeps the
         /// resolution order the single deterministic one the golden-replay gate pins.</para>
         /// </summary>
         public static void BreakWeapon(EffectInterpreter interp, int seat)

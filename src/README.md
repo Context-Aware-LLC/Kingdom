@@ -42,7 +42,7 @@ EMBERFALL_REBASELINE=<name> dotnet test --filter Category=GoldenReplay   # delib
 ## What's intentionally NOT here yet (M1 Phase B)
 
 The **effect interpreter, combat, and the ~20 card behaviors** (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md §3 Phase B`) — and with
-them the `deathrattle_cascade` golden fixture (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7`). The processor rejects
+them the `toll_cascade` golden fixture (`hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §7`). The processor rejects
 `PlayCard`/`Attack`/`HeroPower` with `NotImplemented` until that lands. This drop deliberately scopes to
 the determinism spine so the R1 gate and CI firewall are green from commit one, per the kickoff's
 "front-load R1" mandate. `IMatchHost.DeltaSince`/`StateDelta` (reconnection) are likewise M2.

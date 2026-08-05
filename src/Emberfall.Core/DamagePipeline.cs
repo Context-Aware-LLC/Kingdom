@@ -6,7 +6,7 @@ namespace Emberfall.Core
     /// <summary>
     /// The single damage/heal door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §7 combat, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1 keyword
     /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality
-    /// → Frost freeze</b>.
+    /// → Frost frost</b>.
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
     /// the keyword interactions resolve identically and deterministically. Integer-only. Death is NOT
     /// resolved here — characters dropped to ≤0 are settled as a batch by the interpreter's DeathCheck.
@@ -16,7 +16,7 @@ namespace Emberfall.Core
     /// <c>(GameState, EventBuffer)</c>, so a hit can raise a follow-on trigger (ON_DAMAGED, EF-014;
     /// ON_HEAL, EF-015) by <b>enqueuing</b> it onto the interpreter's shared queue. It never drains that
     /// queue itself. That matters most for ON_HEAL, which is raised <b>reentrantly inside
-    /// <see cref="ApplyDamage"/></b> on the LIFESTEAL path below — enqueue-only is what keeps a heal
+    /// <see cref="ApplyDamage"/></b> on the LIFEDRAIN path below — enqueue-only is what keeps a heal
     /// raised mid-hit from resolving before the hit that caused it has finished landing.</para>
     ///
     /// <para><b>Decision: observers do NOT drain between hits (enqueue-only).</b> A single command can fire
@@ -25,7 +25,7 @@ namespace Emberfall.Core
     /// ahead of one <c>interp.Drain()</c>, and a <c>DEAL_DAMAGE</c> AoE sweeps every target in
     /// <c>DealDamageHandler</c> before control returns to the drain loop. In both cases every hit lands first;
     /// the queued on-damage triggers resolve afterwards, together, at the existing command boundary. The
-    /// rejected alternative — draining after each hit — would let an on-damage Divine Shield gained from hit #1
+    /// rejected alternative — draining after each hit — would let an on-damage Aegis gained from hit #1
     /// retroactively absorb hit #2 of the same volley. Three reasons it loses:
     /// <list type="number">
     /// <item>It matches neither today's ordering nor standard TCG semantics (an AoE volley strikes every
@@ -45,7 +45,7 @@ namespace Emberfall.Core
         /// <summary>
         /// Deal <paramref name="amount"/> damage to <paramref name="target"/>, using <paramref name="interp"/>
         /// for state/events and to enqueue any on-damage trigger. <paramref name="sourceKeywords"/> is the
-        /// keyword set of the dealing character (drives LIFESTEAL/POISONOUS); pass null for sourceless damage
+        /// keyword set of the dealing character (drives LIFEDRAIN/VENOM); pass null for sourceless damage
         /// (e.g. fatigue is handled elsewhere). Emits <c>onDamage</c> (with AegisAbsorbed when a shield eats the
         /// hit) and raises the damaged minion's ON_DAMAGED onto the queue. No-op for non-positive amounts.
         /// </summary>
@@ -57,7 +57,7 @@ namespace Emberfall.Core
             var state = interp.State;
             var buf = interp.Events;
 
-            // Aegis (DIVINE_SHIELD) absorbs the whole hit, then clears — no health lost, no on-hit riders,
+            // Aegis (AEGIS) absorbs the whole hit, then clears — no health lost, no on-hit riders,
             // and (returning here) no ON_DAMAGED: an absorbed hit is not "damaged" (R-2(c) no-riders precedent).
             if (target.IsMinion && target.Minion!.HasAegisShield)
             {
@@ -88,7 +88,7 @@ namespace Emberfall.Core
             if (sourceKeywords != null && source.HasValue)
             {
                 // Lifedrain: the source's controller hero heals for the damage dealt (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).
-                if (sourceKeywords.Contains(Keyword.LIFESTEAL) &&
+                if (sourceKeywords.Contains(Keyword.LIFEDRAIN) &&
                     Targeting.TryControllerSeat(state, source.Value, out int healerSeat))
                 {
                     ApplyHeal(interp, CharacterRef.OfHero(healerSeat, state.Players[healerSeat].Hero),
@@ -96,27 +96,27 @@ namespace Emberfall.Core
                 }
 
                 // Venom: any damage to a minion is lethal — mark for the batch DeathCheck.
-                if (sourceKeywords.Contains(Keyword.POISONOUS) && target.IsMinion)
+                if (sourceKeywords.Contains(Keyword.VENOM) && target.IsMinion)
                     target.Minion!.CurrentHealth = 0;
 
-                // Frost: whatever this damaged is frozen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/balance-guardrails.md §2.1 "Frost",
+                // Frost: whatever this damaged is frosted (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/balance-guardrails.md §2.1 "Frost",
                 // ~1 mana — "denies one attack from whatever it damages"). Applies to HEROES as
                 // well as minions, unlike Venom above: freezing a hero denies a weapon swing, and
-                // the FREEZE *action* (FreezeHandler) already treats both the same way, so the
+                // the FROST *action* (FrostHandler) already treats both the same way, so the
                 // keyword and the action must not disagree. Last in the fixed order because it is
                 // the only rider that cannot change whether the target dies — Venom must have
-                // already run, and freezing a corpse is harmless (RulesEngine clears IsFrozen when
+                // already run, and freezing a corpse is harmless (RulesEngine clears IsFrosted when
                 // an instance leaves the board).
                 //
-                // Two cases deliberately do NOT freeze, both by existing precedent rather than new
+                // Two cases deliberately do NOT frost, both by existing precedent rather than new
                 // rules: an Aegis-absorbed hit returns above before any rider (G0 ruling R-2(c),
                 // "no on-hit riders"), and Overwhelm overflow reaches here with a null
                 // sourceKeywords (CommandProcessor.cs:530), so it cannot carry Frost to the face.
-                if (sourceKeywords.Contains(Keyword.FREEZE))
+                if (sourceKeywords.Contains(Keyword.FROST))
                 {
-                    if (target.IsMinion) target.Minion!.IsFrozen = true;
-                    else target.Hero!.IsFrozen = true;
-                    buf.Emit(VfxEvent.onFreeze, source: source, target: target.Id);
+                    if (target.IsMinion) target.Minion!.IsFrosted = true;
+                    else target.Hero!.IsFrosted = true;
+                    buf.Emit(VfxEvent.onFrost, source: source, target: target.Id);
                 }
             }
 
@@ -145,8 +145,8 @@ namespace Emberfall.Core
         ///   A heal arriving through the same door and fanning out to every permanent instead would make
         ///   the two halves of one pipeline mean different things by the same kind of name.</item>
         /// <item><b>Reentrancy cost.</b> This method is called from inside <see cref="ApplyDamage"/> on the
-        ///   LIFESTEAL path. An observer sweep there would enqueue one effect per permanent on BOTH boards
-        ///   for every lifesteal swing — a fan-out the queue bound (<see cref="MatchEngine.ActionResolutionCap"/>)
+        ///   LIFEDRAIN path. An observer sweep there would enqueue one effect per permanent on BOTH boards
+        ///   for every lifedrain swing — a fan-out the queue bound (<see cref="MatchEngine.ActionResolutionCap"/>)
         ///   would then have to absorb, on a path no card asked for.</item>
         /// <item><b>Direction of travel.</b> Widening later is additive — a distinct observer trigger
         ///   ("whenever any character is healed") can be added beside this one. Narrowing an observer
@@ -157,7 +157,7 @@ namespace Emberfall.Core
         /// at max health — returns at the <c>healed &lt;= 0</c> guard below, before the raise: nothing was
         /// restored, so nothing was healed (the same "the no-op is not the event" precedent as an
         /// Aegis-absorbed hit in <see cref="ApplyDamage"/>). And a <b>hero</b> heal raises nothing, because
-        /// heroes carry no card effects — which is why LIFESTEAL, whose heal always targets the source's
+        /// heroes carry no card effects — which is why LIFEDRAIN, whose heal always targets the source's
         /// own hero, fires no ON_HEAL today despite being the reentrant path.</para>
         /// </summary>
         public static int ApplyHeal(EffectInterpreter interp, CharacterRef target, int amount, InstanceId? source)

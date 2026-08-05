@@ -51,14 +51,14 @@ namespace Emberfall.Core
                 // ┌─ SECURITY TRIPWIRE — VULN-001 (LATENT). READ BEFORE DELETING THIS CASE. ─┐
                 // ChosenCardId is the ONLY client-authored string in the shipping intent set
                 // that becomes a card identity. This rejection is the sole reason VULN-001 is
-                // latent; implementing Discover arms it. An unvalidated id enters authoritative
+                // latent; implementing Unearth arms it. An unvalidated id enters authoritative
                 // state, ships to BOTH seats, and throws in the OPPONENT's BoardController —
                 // freezing their client for the rest of the match while the server stays healthy.
                 // Binding rules (TryGet not Get; validate against the OFFERED set, not just the
                 // database) — dev-docs/quality/security.md#latent-vulnerabilities.
                 // └──────────────────────────────────────────────────────────────────────────┘
-                case DiscoverChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // Discover = later
+                case UnearthChoiceIntent _:
+                    reason = RejectReason.NotImplemented;   // Unearth = later
                     return false;
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (dev-docs/contracts/gameplay-and-session.md:18)
@@ -236,7 +236,7 @@ namespace Emberfall.Core
             // left→right sweep, which is what makes this replay-stable.
             interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
 
-            // The end-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE the seat
+            // The end-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE the seat
             // flip and the incoming StartTurnSequence, whose thaw loop resets SummonedThisTurn /
             // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade. CheckWin
             // is called explicitly because Drain only win-checks while its queue is non-empty (the same
@@ -289,7 +289,7 @@ namespace Emberfall.Core
                 case CardType.MINION:
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
                     buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Battlecry
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
                     interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
                         triggerSource: card.Id);
                     break;
@@ -322,11 +322,11 @@ namespace Emberfall.Core
                     RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
                     RulesEngine.EnterWeapon(state, card, def, seat);
                     buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // weapon Battlecry
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // weapon Herald
                     break;
             }
 
-            interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+            interp.Drain();   // resolve herald/cast, settle deaths + win, cascade tolls
         }
 
         private bool ValidateHeroPower(GameState state, HeroPowerIntent hp, out RejectReason? reason)
@@ -399,20 +399,20 @@ namespace Emberfall.Core
             if (attacker.IsHero)
             {
                 if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
-                if (ps.Hero.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
-                int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
+                if (ps.Hero.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
+                int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
                 if (ps.HeroAttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
             {
                 var m = attacker.Minion!;
-                if (m.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
+                if (m.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
                 if (m.CurrentAttack <= 0) { reason = RejectReason.IllegalTarget; return false; }
-                bool hasCharge = m.Keywords.Contains(Keyword.CHARGE);
-                bool hasRush = m.Keywords.Contains(Keyword.RUSH);
-                if (m.SummonedThisTurn && !hasCharge && !hasRush)
+                bool hasFervor = m.Keywords.Contains(Keyword.FERVOR);
+                bool hasSkirmish = m.Keywords.Contains(Keyword.SKIRMISH);
+                if (m.SummonedThisTurn && !hasFervor && !hasSkirmish)
                 { reason = RejectReason.HasSummoningSickness; return false; }
-                int maxAttacks = m.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
+                int maxAttacks = m.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
                 if (m.AttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
 
@@ -422,25 +422,25 @@ namespace Emberfall.Core
             if (defender.Seat == seat)
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // RUSH can only target minions during summoning turn
+            // SKIRMISH can only target minions during summoning turn
             if (attacker.IsMinion && attacker.Minion!.SummonedThisTurn
-                && attacker.Minion.Keywords.Contains(Keyword.RUSH) && defender.IsHero)
+                && attacker.Minion.Keywords.Contains(Keyword.SKIRMISH) && defender.IsHero)
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // STEALTH blocks targeting (even a stealthed taunter hides its taunt)
-            if (defender.IsMinion && defender.Minion!.Keywords.Contains(Keyword.STEALTH))
+            // SHROUD blocks targeting (even a shrouded bulwarker hides its bulwark)
+            if (defender.IsMinion && defender.Minion!.Keywords.Contains(Keyword.SHROUD))
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // TAUNT enforcement: must attack a non-stealthed taunter if one exists
+            // BULWARK enforcement: must attack a non-shrouded bulwarker if one exists
             var foeBoard = state.Players[foe].Board;
-            bool anyTaunt = false;
+            bool anyBulwark = false;
             for (int i = 0; i < foeBoard.Count; i++)
             {
                 var fm = foeBoard[i];
-                if (fm.Keywords.Contains(Keyword.TAUNT) && !fm.Keywords.Contains(Keyword.STEALTH))
-                { anyTaunt = true; break; }
+                if (fm.Keywords.Contains(Keyword.BULWARK) && !fm.Keywords.Contains(Keyword.SHROUD))
+                { anyBulwark = true; break; }
             }
-            if (anyTaunt && (!defender.IsMinion || !defender.Minion!.Keywords.Contains(Keyword.TAUNT)))
+            if (anyBulwark && (!defender.IsMinion || !defender.Minion!.Keywords.Contains(Keyword.BULWARK)))
             { reason = RejectReason.IllegalTarget; return false; }
 
             return true;
@@ -468,8 +468,8 @@ namespace Emberfall.Core
             bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
             bool vanguard = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
 
-            // Stealth breaks the moment the attacker declares
-            if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.STEALTH);
+            // Shroud breaks the moment the attacker declares
+            if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.SHROUD);
 
             // Increment attack budget (before damage — canonical ordering)
             if (attacker.IsMinion) attacker.Minion!.AttacksUsedThisTurn++;
@@ -486,7 +486,7 @@ namespace Emberfall.Core
             DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);
 
             // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only).
-            // Riders (LIFESTEAL/POISONOUS) attach to the primary hit only — G0 ruling R-2(c),
+            // Riders (LIFEDRAIN/VENOM) attach to the primary hit only — G0 ruling R-2(c),
             // Sam 2026-07-14: overflow carries damage, not keywords (matches the Aegis
             // no-riders precedent; keeps Lifedrain heal ≤ attack value).
             if (overwhelm && defender.IsMinion && defender.Minion!.CurrentHealth < 0)
@@ -513,7 +513,7 @@ namespace Emberfall.Core
                     RulesEngine.BreakWeapon(interp, seat);   // rattle enqueued; interp.Drain() below resolves it
             }
 
-            // Settle deaths, deathrattles, win-check.
+            // Settle deaths, tolls, win-check.
             // CheckWin is also called here because Drain only invokes it inside the effect-queue loop —
             // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
             interp.Drain();
@@ -531,20 +531,20 @@ namespace Emberfall.Core
             state.TurnNumber++;
             state.ActionResolutionsThisTurn = 0;
 
-            // Mana: +1 max (cap 10) → apply overload locks → refill.
+            // Mana: +1 max (cap 10) → apply backdraft locks → refill.
             ps.Mana.Max = System.Math.Min(ps.Mana.Max + 1, MatchEngine.MaxMana);
-            int locked = ps.NextTurnOverloadLock;
-            ps.NextTurnOverloadLock = 0;
+            int locked = ps.NextTurnBackdraftLock;
+            ps.NextTurnBackdraftLock = 0;
             ps.Mana.Locked = locked;
             ps.Mana.Spent = 0;
             ps.Mana.Temporary = 0;
             ps.Mana.Available = System.Math.Max(0, ps.Mana.Max - locked);
 
             // Thaw + reset summoning sickness / attack budget / hero power.
-            ps.Hero.IsFrozen = false;
+            ps.Hero.IsFrosted = false;
             foreach (var m in ps.Board)
             {
-                m.IsFrozen = false;
+                m.IsFrosted = false;
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
             }
@@ -555,7 +555,7 @@ namespace Emberfall.Core
             buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
 
             // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
-            // effect sees the board the turn actually starts on (unfrozen, sickness cleared, mana
+            // effect sees the board the turn actually starts on (unfrosted, sickness cleared, mana
             // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
             // alive. Draining after DrawOne would let a corpse draw fatigue.
             //
@@ -567,7 +567,7 @@ namespace Emberfall.Core
             interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
                 context: TriggerContext.ForTurnStart(player));
 
-            // The start-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE
+            // The start-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE
             // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is
             // non-empty, and a start-of-turn toll that kills its own controller must end the match here
             // rather than draw a card into a finished game.
