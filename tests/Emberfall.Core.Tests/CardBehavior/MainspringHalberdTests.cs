@@ -8,7 +8,6 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Collection;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.CardBehavior
 {
@@ -71,15 +70,12 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.TOLL }));
             Assert.That(def.CardText, Is.EqualTo("[Toll] Draw a card."));
 
-            Assert.That(def.Effects.Count, Is.EqualTo(1));
-            var fx = def.Effects[0];
-            Assert.That(fx.Trigger, Is.EqualTo(Trigger.ON_DEATH),
+            Assert.That(def.Rules.Count, Is.EqualTo(1));
+            RuleDefinition rule = def.Rules[0];
+            Assert.That(RuleSemantics.TriggerOf(rule), Is.EqualTo(Trigger.ON_DEATH),
                 "ON_DEATH is the only trigger that reaches a weapon leaving play (RulesEngine.BreakWeapon, EF-020).");
-            Assert.That(fx.Action, Is.EqualTo(Verb.DRAW));
-            Assert.That(fx.Amount, Is.EqualTo(1));
-            Assert.That(fx.Selector, Is.Null.Or.Empty,
-                "DrawHandler resolves the seat off Source.Controller — a selector here would be noise, and an "
-                + "ANY_* one would throw on a trigger the player never targets.");
+            Assert.That(rule.Action, Is.TypeOf<DrawAction>());
+            Assert.That(((DrawAction)rule.Action).Count, Is.EqualTo(1));
         }
 
         [Test]

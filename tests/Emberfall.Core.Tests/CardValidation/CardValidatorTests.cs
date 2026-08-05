@@ -62,17 +62,20 @@ namespace Emberfall.Core.Tests.CardValidation
             const string json = @"{
               ""id"":""target_shape"", ""name"":""Target Shape"", ""type"":""SPELL"", ""cost"":1,
               ""class"":""NIGHTVEIL"", ""rarity"":""COMMON"", ""keywords"":[], ""setId"":""CORE"",
-              ""effects"":[{
-                ""trigger"":""ON_CAST"", ""action"":""DESTROY"",
-                ""target"":{
+              ""rules"":[{
+                ""id"":""destroy_two"",
+                ""activation"":{""type"":""TRIGGERED"",""trigger"":""ON_CAST""},
+                ""condition"":{""type"":""ALWAYS""},
+                ""lifetime"":{""type"":""ONE_SHOT""},
+                ""action"":{""type"":""DESTROY"",""target"":{
                   ""selector"":""ANY_MINION"", ""chosenBy"":""PLAYER"", ""count"":2,
                   ""binding"":""victims"", ""distinctFrom"":""first"",
                   ""filter"":{""damaged"":true,""tribe"":""CONSTRUCT""}
-                }
+                }}
               }]
             }";
 
-            TargetSpec target = CardJson.Deserialize(json).Effects[0].Target!;
+            TargetSpec target = ((DestroyAction)CardJson.Deserialize(json).Rules[0].Action).Target;
 
             Assert.That(target.Selector, Is.EqualTo("ANY_MINION"));
             Assert.That(target.ChosenBy, Is.EqualTo(TargetChosenBy.PLAYER));
@@ -86,13 +89,13 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Adjacent_Selector_Is_Implemented_Without_A_Primitive_Gate()
         {
-            EffectDef Adjacent() => new EffectDef(Trigger.ON_PLAY, Action.DEAL_DAMAGE, amount: 1,
-                amount2: null, tokenId: null, grantedKeyword: null, selector: "ADJACENT");
+            RuleDefinition Adjacent() => Rule(Trigger.ON_PLAY,
+                new DamageAction(1, new TargetSpec("ADJACENT")));
             CardDefinition Card(bool gated) => new CardDefinition(
                 id: "test_adjacent", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { Adjacent() },
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { Adjacent() },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
 
@@ -143,7 +146,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 id: "test_bad_minion", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: System.Array.Empty<EffectDef>(),
+                keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -155,13 +158,12 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Summon_Without_TokenId_Is_An_Error()
         {
-            var effect = new EffectDef(Trigger.ON_DEATH, Action.SUMMON, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
+            RuleDefinition rule = Rule(Trigger.ON_DEATH, new SummonAction("", 1));
             var def = new CardDefinition(
                 id: "test_bad_summon", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -177,7 +179,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 id: "test_primitive", name: "Test", type: CardType.SPELL, cost: 1,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: System.Array.Empty<EffectDef>(),
+                keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: true);
 
@@ -188,10 +190,9 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Action_Target_Capability_Rejects_A_Selector_Whose_Objects_The_Handler_Cannot_Affect()
         {
-            var effect = new EffectDef(Trigger.ON_CAST, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null,
-                target: new TargetSpec("FRIENDLY_WEAPON"));
-            CardDefinition def = WithEffect(CardType.SPELL, effect);
+            RuleDefinition rule = Rule(Trigger.ON_CAST,
+                new ModifyStatsAction(1, 0, new TargetSpec("FRIENDLY_WEAPON")));
+            CardDefinition def = WithRule(CardType.SPELL, rule);
 
             ValidationReport report = Validator().Validate(def, Db(def));
 
@@ -204,10 +205,9 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Self_Capability_Uses_The_Source_Lifecycle_Instead_Of_An_AnyKind_Wildcard(
             CardType type, Trigger trigger)
         {
-            var effect = new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null,
-                target: new TargetSpec("SELF"));
-            CardDefinition def = WithEffect(type, effect);
+            RuleDefinition rule = Rule(trigger,
+                new ModifyStatsAction(1, 0, new TargetSpec("SELF")));
+            CardDefinition def = WithRule(type, rule);
 
             ValidationReport report = Validator().Validate(def, Db(def));
 
@@ -218,10 +218,9 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void TriggerSource_Capability_Fails_Closed_When_The_Event_Source_Kind_Is_Incompatible()
         {
-            var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.BUFF, amount: 1, amount2: 0,
-                tokenId: null, grantedKeyword: null,
-                target: new TargetSpec("TRIGGER_SOURCE"));
-            CardDefinition def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_SPELL_CAST,
+                new ModifyStatsAction(1, 0, new TargetSpec("TRIGGER_SOURCE")));
+            CardDefinition def = WithRule(CardType.MINION, rule);
 
             ValidationReport report = Validator().Validate(def, Db(def));
 
@@ -236,21 +235,28 @@ namespace Emberfall.Core.Tests.CardValidation
         private static CardValidator Validator() => new CardValidator();
         private static JsonCardDatabaseTestDouble Db(CardDefinition d) => new JsonCardDatabaseTestDouble(new[] { d });
 
-        private static CardDefinition WithEffect(CardType type, EffectDef effect)
+        private static CardDefinition WithRule(CardType type, RuleDefinition rule)
             => new CardDefinition(
                 id: "test_c21", name: "Test", type: type, cost: 1,
                 attack: type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
                 health: type == CardType.MINION ? 1 : (int?)null,
                 durability: type == CardType.WEAPON ? 1 : (int?)null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static EffectDef TurnStart(TurnOwner? owner)
-            => new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null,
-                condition: new EffectConditionDef(ConditionType.TURN_OWNER, owner));
+        private static RuleDefinition Rule(Trigger trigger, RuleAction action,
+            RuleCondition? condition = null)
+            => new RuleDefinition(new RuleId("rule_1"), new TriggeredActivation(trigger),
+                condition ?? AlwaysCondition.Instance,
+                trigger == Trigger.ON_PLAY || trigger == Trigger.ON_CAST
+                    ? (RuleLifetime)OneShotLifetime.Instance
+                    : SourceBoundLifetime.Instance,
+                action);
+
+        private static RuleDefinition TurnStart(TurnOwner owner)
+            => Rule(Trigger.ON_TURN_START, new DrawAction(1), new TurnOwnerCondition(owner));
 
         [Test]
         public void Dead_Trigger_Is_An_Error()
@@ -259,9 +265,9 @@ namespace Emberfall.Core.Tests.CardValidation
             // derived-stat recompute pass exists (EF-017a/b). This probe has migrated twice as triggers
             // went live under it: ON_TURN_START (EF-011), then ON_HEAL (EF-015). AURA is the last one
             // left, so when EF-017b lands this test needs a different subject or a different shape.
-            var effect = new EffectDef(Trigger.AURA, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
-            var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
+            var rule = new RuleDefinition(new RuleId("rule_1"), AuraActivation.Instance,
+                AlwaysCondition.Instance, SourceBoundLifetime.Instance, new DrawAction(1));
+            var report = Validator().Validate(WithRule(CardType.MINION, rule), Db(WithRule(CardType.MINION, rule)));
             Assert.That(report.Ok, Is.False);
             Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
         }
@@ -272,10 +278,9 @@ namespace Emberfall.Core.Tests.CardValidation
             // EF-015 flipped ON_HEAL from Dead to MinionOnly. DamagePipeline.ApplyHeal raises it on the
             // character whose health was restored, and only a minion can be that character: a SPELL is
             // not a permanent, a WEAPON has no health. So the type gate here is permanent, not staging.
-            EffectDef Heal() => new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
+            RuleDefinition Heal() => Rule(Trigger.ON_HEAL, new DrawAction(1));
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Heal()), Db(WithEffect(CardType.MINION, Heal())));
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Heal()), Db(WithRule(CardType.MINION, Heal())));
             Assert.That(onMinion.Ok, Is.True,
                 "a minion 'whenever this is healed' effect has a runtime raise site (DamagePipeline.ApplyHeal).");
             Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"), Is.False,
@@ -283,7 +288,7 @@ namespace Emberfall.Core.Tests.CardValidation
 
             foreach (var type in new[] { CardType.SPELL, CardType.WEAPON })
             {
-                var report = Validator().Validate(WithEffect(type, Heal()), Db(WithEffect(type, Heal())));
+                var report = Validator().Validate(WithRule(type, Heal()), Db(WithRule(type, Heal())));
                 Assert.That(report.Ok, Is.False, $"ON_HEAL on a {type} is inert — nothing there can be healed.");
                 Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"), Is.True,
                     $"ON_HEAL on a {type} must be rejected as minion-only.");
@@ -293,14 +298,13 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnAttack_Is_Dead_On_A_Minion_But_Live_On_A_Weapon()
         {
-            EffectDef Attack() => new EffectDef(Trigger.ON_ATTACK, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
+            RuleDefinition Attack() => Rule(Trigger.ON_ATTACK, new DrawAction(1));
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Attack()), Db(WithEffect(CardType.MINION, Attack())));
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Attack()), Db(WithRule(CardType.MINION, Attack())));
             Assert.That(onMinion.Ok, Is.False);
             Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-WEAPON-ONLY"));
 
-            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Attack()), Db(WithEffect(CardType.WEAPON, Attack())));
+            var onWeapon = Validator().Validate(WithRule(CardType.WEAPON, Attack()), Db(WithRule(CardType.WEAPON, Attack())));
             Assert.That(onWeapon.Ok, Is.True, "ON_ATTACK is raised for weapons — a weapon 'whenever this attacks' effect is legal.");
         }
 
@@ -309,7 +313,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase(TurnOwner.ANY)]
         public void OnTurnStart_Is_Live_On_A_Minion_With_Explicit_Turn_Ownership(TurnOwner owner)
         {
-            var def = WithEffect(CardType.MINION, TurnStart(owner));
+            var def = WithRule(CardType.MINION, TurnStart(owner));
 
             var report = Validator().Validate(def, Db(def));
 
@@ -320,9 +324,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnTurnStart_Requires_A_TurnOwner_Condition()
         {
-            var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_TURN_START, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -344,7 +347,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnTurnStart_Rejects_An_Invalid_TurnOwner_Value()
         {
-            var def = WithEffect(CardType.MINION, TurnStart((TurnOwner)999));
+            var def = WithRule(CardType.MINION, TurnStart((TurnOwner)999));
 
             var report = Validator().Validate(def, Db(def));
 
@@ -357,7 +360,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase(CardType.HERO_POWER)]
         public void OnTurnStart_Is_Rejected_On_Unsupported_Source_Types(CardType type)
         {
-            var def = WithEffect(type, TurnStart(TurnOwner.ANY));
+            var def = WithRule(type, TurnStart(TurnOwner.ANY));
 
             var report = Validator().Validate(def, Db(def));
 
@@ -368,10 +371,9 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void TurnOwner_Condition_Is_Rejected_On_Other_Triggers()
         {
-            var effect = new EffectDef(Trigger.ON_PLAY, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null,
-                condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER));
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_PLAY, new DrawAction(1),
+                new TurnOwnerCondition(TurnOwner.CONTROLLER));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -384,15 +386,15 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             const string json = "{\"id\":\"turn_probe\",\"name\":\"Turn Probe\",\"type\":\"MINION\",\"cost\":1,"
                 + "\"attack\":1,\"health\":1,\"class\":\"NEUTRAL\",\"rarity\":\"COMMON\",\"keywords\":[],"
-                + "\"setId\":\"CORE\",\"collectible\":false,\"artId\":\"art/turn_probe\",\"effects\":[{"
-                + "\"trigger\":\"ON_TURN_START\",\"condition\":{\"type\":\"TURN_OWNER\",\"value\":\"OPPONENT\"},"
-                + "\"action\":\"DRAW\",\"amount\":1}]}";
+                + "\"setId\":\"CORE\",\"collectible\":false,\"artId\":\"art/turn_probe\",\"rules\":[{"
+                + "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_TURN_START\"},"
+                + "\"condition\":{\"type\":\"TURN_OWNER\",\"owner\":\"OPPONENT\"},"
+                + "\"lifetime\":{\"type\":\"SOURCE_BOUND\"},\"action\":{\"type\":\"DRAW\",\"count\":1}}]}";
 
             var def = CardJson.Deserialize(json);
 
-            Assert.That(def.Effects[0].Condition, Is.Not.Null);
-            Assert.That(def.Effects[0].Condition!.Type, Is.EqualTo(ConditionType.TURN_OWNER));
-            Assert.That(def.Effects[0].Condition!.TurnOwner, Is.EqualTo(TurnOwner.OPPONENT));
+            Assert.That(def.Rules[0].Condition, Is.TypeOf<TurnOwnerCondition>());
+            Assert.That(((TurnOwnerCondition)def.Rules[0].Condition).Owner, Is.EqualTo(TurnOwner.OPPONENT));
         }
 
         [Test]
@@ -401,40 +403,35 @@ namespace Emberfall.Core.Tests.CardValidation
             AssertRejectsUnknownProperty(
                 "{\"id\":\"unknown_root\",\"type\":\"SPELL\",\"unexpected\":true}",
                 "card");
-            AssertRejectsUnknownProperty(
-                "{\"id\":\"unknown_effect\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"unexpected\":true}]}",
-                "effect");
-            AssertRejectsUnknownProperty(
-                "{\"id\":\"unknown_payload\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"SUMMON\",\"payload\":{\"tokenId\":\"token\",\"unexpected\":true}}]}",
-                "payload");
-            AssertRejectsUnknownProperty(
-                "{\"id\":\"unknown_target\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"FRIENDLY_HERO\",\"unexpected\":true}}]}",
+            AssertRejectsUnknownProperty(NormalizedRuleJson(
+                "\"unexpected\":true,", "{\"type\":\"DRAW\",\"count\":1}"), "rule");
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DRAW\",\"count\":1,\"unexpected\":true}"), "rule.action DRAW");
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\",\"unexpected\":true}}"),
                 "target");
-            AssertRejectsUnknownProperty(
-                "{\"id\":\"unknown_filter\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"ANY_MINION\",\"filter\":{\"damaged\":true,\"unexpected\":true}}}]}",
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\",\"filter\":{\"damaged\":true,\"unexpected\":true}}}"),
                 "target.filter");
-            AssertRejectsUnknownProperty(
-                "{\"id\":\"unknown_condition\",\"type\":\"SPELL\",\"effects\":[{\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"condition\":{\"type\":\"TURN_OWNER\",\"value\":\"ANY\",\"unexpected\":true}}]}",
-                "condition");
         }
 
         [Test]
         public void CardJson_Rejects_The_Removed_Presentation_Override_Field()
         {
-            const string json = "{\"id\":\"legacy_vfx\",\"type\":\"SPELL\",\"effects\":[{" +
-                "\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"vfxEvent\":\"onDraw\"}]}";
+            string json = NormalizedRuleJson("\"vfxEvent\":\"onDraw\",",
+                "{\"type\":\"DRAW\",\"count\":1}");
 
             var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
 
-            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property 'vfxEvent' in effect."));
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property 'vfxEvent' in rule."));
         }
 
         [Test]
         public void CardJson_Accepts_All_Known_Target_And_Filter_Properties()
         {
-            const string json = "{\"id\":\"known_target\",\"type\":\"SPELL\",\"effects\":[{"
-                + "\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":{\"selector\":\"ANY_MINION\","
-                + "\"chosenBy\":\"RANDOM\",\"count\":-1,\"filter\":{\"damaged\":true,\"tribe\":\"CONSTRUCT\"}}}]}";
+            string json = NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\","
+                + "\"chosenBy\":\"RANDOM\",\"count\":-1,\"filter\":{\"damaged\":true,\"tribe\":\"CONSTRUCT\"}}}");
 
             Assert.DoesNotThrow(() => CardJson.Deserialize(json));
         }
@@ -446,10 +443,17 @@ namespace Emberfall.Core.Tests.CardValidation
                 "{\"_comment\":\"fixture note\",\"id\":\"commented_card\",\"type\":\"SPELL\"}"));
 
             var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(
-                "{\"id\":\"nested_comment\",\"type\":\"SPELL\",\"effects\":[{\"_comment\":\"not metadata here\",\"trigger\":\"ON_CAST\",\"action\":\"DRAW\"}]}"));
+                NormalizedRuleJson("\"_comment\":\"not metadata here\",",
+                    "{\"type\":\"DRAW\",\"count\":1}")));
 
-            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property '_comment' in effect."));
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property '_comment' in rule."));
         }
+
+        private static string NormalizedRuleJson(string rulePrefix, string action)
+            => "{\"id\":\"typed_json\",\"type\":\"SPELL\",\"rules\":[{" + rulePrefix
+                + "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_CAST\"},"
+                + "\"condition\":{\"type\":\"ALWAYS\"},\"lifetime\":{\"type\":\"ONE_SHOT\"},"
+                + "\"action\":" + action + "}]}";
 
         private static void AssertRejectsUnknownProperty(string json, string schemaLevel)
         {
@@ -461,9 +465,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnTurnEnd_Is_Live_After_EF012()
         {
-            var effect = new EffectDef(Trigger.ON_TURN_END, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_TURN_END, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -474,9 +477,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnDamaged_Is_Live_After_EF013()
         {
-            var effect = new EffectDef(Trigger.ON_DAMAGED, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_DAMAGED, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -487,9 +489,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnSpellCast_Is_Live_After_EF016()
         {
-            var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_SPELL_CAST, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -500,13 +501,12 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
         {
-            EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null);
+            RuleDefinition Death() => Rule(Trigger.ON_DEATH, new DrawAction(1));
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Death()), Db(WithEffect(CardType.MINION, Death())));
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Death()), Db(WithRule(CardType.MINION, Death())));
             Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion toll.");
 
-            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Death()), Db(WithEffect(CardType.WEAPON, Death())));
+            var onWeapon = Validator().Validate(WithRule(CardType.WEAPON, Death()), Db(WithRule(CardType.WEAPON, Death())));
             Assert.That(onWeapon.Ok, Is.True,
                 "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon toll is legal — "
                 + "C21-WEAPON-TOLL is retired and must not come back.");

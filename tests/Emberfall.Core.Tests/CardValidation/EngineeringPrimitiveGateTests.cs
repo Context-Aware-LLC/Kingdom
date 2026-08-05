@@ -62,12 +62,14 @@ namespace Emberfall.Core.Tests.CardValidation
             foreach (var def in LiveCards())
             {
                 if (!def.PoolEligible) continue;
-                foreach (var fx in def.Effects)
+                foreach (var rule in def.Rules)
                 {
-                    if (fx.Target == null) continue;            // DefaultTargets handles it
-                    if (PlayerTargeted.Contains(fx.Trigger)) continue;
-                    if (!Targeting.IsPlayerChosen(fx.Target)) continue;
-                    offenders.Add($"{def.Id}: {fx.Trigger} {fx.Action} -> '{fx.Selector}'");
+                    TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                    if (target == null) continue;
+                    Trigger trigger = RuleSemantics.TriggerOf(rule);
+                    if (PlayerTargeted.Contains(trigger)) continue;
+                    if (!Targeting.IsPlayerChosen(target)) continue;
+                    offenders.Add($"{def.Id}: {trigger} {rule.Action.GetType().Name} -> '{target.Selector}'");
                 }
             }
 
@@ -85,10 +87,10 @@ namespace Emberfall.Core.Tests.CardValidation
             attack: 1, health: 1, durability: null,
             @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
             keywords: System.Array.Empty<Keyword>(),
-            effects: new[]
+            rules: new[]
             {
-                new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 1,
-                    tokenId: null, grantedKeyword: null, selector: "ANY_FRIENDLY_MINION"),
+                TestRules.Rule("rule_1", trigger,
+                    new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION"))),
             },
             cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);

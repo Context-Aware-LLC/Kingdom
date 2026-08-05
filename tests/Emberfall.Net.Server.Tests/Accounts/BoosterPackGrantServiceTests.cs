@@ -82,7 +82,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                         name: $"{rarity} {i}", type: CardType.MINION, cost: 1,
                         attack: 1, health: 1, durability: null,
                         @class: CardClass.NEUTRAL, rarity: rarity,
-                        keywords: Array.Empty<Keyword>(), effects: Array.Empty<EffectDef>(),
+                        keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                         cardText: "", flavorText: "", artId: "art", setId: i % 3 == 0 ? SetId.CORE : SetId.EMBERFALL,
                         collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false));
             return new StubCardDatabase(cards);

@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 id: "test_minion", name: "Test Minion", type: CardType.MINION, cost: 1,
                 attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: keywords, effects: Array.Empty<EffectDef>(),
+                keywords: keywords, rules: Array.Empty<RuleDefinition>(),
                 cardText: "", flavorText: "", artId: "art/test_minion", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 

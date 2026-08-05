@@ -247,7 +247,7 @@ namespace Emberfall.Core.Tests.Collection
         private static CardDefinition Card(string id, string name, string cardText, string flavorText)
             => new CardDefinition(id, name, CardType.SPELL, cost: 1, attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: Array.Empty<EffectDef>(),
+                keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 cardText: cardText, flavorText: flavorText, artId: "", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
