@@ -34,6 +34,13 @@ namespace Emberfall.Editor
             "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
         };
 
+        private static readonly Keyword[] CarrierKeywordOptions =
+            Enum.GetValues(typeof(Keyword)).Cast<Keyword>()
+                .Where(KeywordSemantics.IsCarrierBehavior).ToArray();
+
+        private static readonly string[] CarrierKeywordNames =
+            CarrierKeywordOptions.Select(keyword => keyword.ToString()).ToArray();
+
         [MenuItem("Emberfall/Card Authoring Tool")]
         public static void Open() => GetWindow<CardAuthoringWindow>("Card Authoring");
 
@@ -229,7 +236,7 @@ namespace Emberfall.Editor
 
         private void DrawKeywords(EditableCard card)
         {
-            foreach (Keyword kw in Enum.GetValues(typeof(Keyword)))
+            foreach (Keyword kw in CarrierKeywordOptions)
             {
                 bool has = card.Keywords.Contains(kw);
                 bool now = EditorGUILayout.ToggleLeft(kw.ToString(), has);
@@ -317,10 +324,18 @@ namespace Emberfall.Editor
                 rule.CardId = EditorGUILayout.TextField("action.cardId", rule.CardId);
 
             if (rule.ActionKind == EditableRuleActionKind.GrantKeyword)
-                rule.Keyword = (Keyword)EditorGUILayout.EnumPopup("action.keyword", rule.Keyword);
+                rule.Keyword = DrawCarrierKeywordPopup("action.keyword", rule.Keyword);
             if (rule.ActionKind == EditableRuleActionKind.GainMana)
                 rule.ManaKind = (ManaGainKind)EditorGUILayout.EnumPopup("action.manaKind", rule.ManaKind);
             if (rule.IsTargeted) DrawTarget(rule.Target);
+        }
+
+        private static Keyword DrawCarrierKeywordPopup(string label, Keyword current)
+        {
+            int selected = Array.IndexOf(CarrierKeywordOptions, current);
+            if (selected < 0) selected = 0;
+            selected = EditorGUILayout.Popup(label, selected, CarrierKeywordNames);
+            return CarrierKeywordOptions[selected];
         }
 
         private static void DrawTarget(EditableTarget target)

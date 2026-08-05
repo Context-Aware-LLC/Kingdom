@@ -27,9 +27,11 @@ namespace Emberfall.Core.Contracts
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
 
     /// <summary>
-    /// Canonical carrier-behaviour keyword enum. Trigger labels such as Herald and Toll are derived from
-    /// normalized rule activation and deliberately have no enum member. Numeric values after their former
-    /// slots are explicit so their wire spelling/ordering cannot drift.
+    /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized
+    /// rule activation and deliberately have no enum member. SILENCE, BACKDRAFT, and REINFORCE remain
+    /// reserved legacy slots for ordinal compatibility, but authoring/runtime semantics treat them as
+    /// action-derived markers rather than carrier behavior. Numeric values after removed slots are explicit
+    /// so their wire spelling/ordering cannot drift.
     /// implemented. ECHO was formally cut by M2 decision 2 (zero implementation, zero cards);
     /// this is a hash-canonical change (GameStateHasher sorts keyword sets by enum int), executed
     /// with the golden-replay gate as witness per hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier b.

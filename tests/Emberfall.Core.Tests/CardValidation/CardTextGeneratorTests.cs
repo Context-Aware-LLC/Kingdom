@@ -59,6 +59,63 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void Action_Markers_Are_Derived_Exactly_Once_Even_For_Legacy_Carrier_Data()
+        {
+            var rows = new (Keyword marker, RuleAction action, string expected)[]
+            {
+                (Keyword.BACKDRAFT, new BackdraftAction(2), "[Backdraft] (2)."),
+                (Keyword.REINFORCE,
+                    new ReinforceAction(new TargetSpec("ANY_FRIENDLY_MINION")),
+                    "[Reinforce] a friendly minion."),
+                (Keyword.SILENCE,
+                    new SilenceAction(new TargetSpec("ANY_MINION")),
+                    "[Silence] a minion."),
+            };
+
+            foreach (var row in rows)
+            {
+                var rule = new RuleDefinition(new RuleId("marker_action"),
+                    new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                    OneShotLifetime.Instance, row.action);
+                var card = new CardDefinition("legacy_marker", "Legacy Marker", CardType.SPELL, 1,
+                    null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
+                    new[] { row.marker }, new[] { rule }, "", "art/legacy_marker", SetId.CORE,
+                    true, null, "", false);
+
+                Assert.That(CardTextGenerator.Generate(card), Is.EqualTo(row.expected), row.marker.ToString());
+            }
+        }
+
+        [Test]
+        public void All_260_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
+        {
+            var cards = LoadAllCards();
+            var markers = new HashSet<Keyword>
+            {
+                Keyword.BACKDRAFT,
+                Keyword.REINFORCE,
+                Keyword.SILENCE,
+            };
+
+            var authored = cards
+                .Where(card => card.Keywords.Any(markers.Contains))
+                .Select(card => card.Id)
+                .ToList();
+
+            Assert.That(cards, Has.Count.EqualTo(260));
+            Assert.That(authored, Is.Empty,
+                "action-derived presentation markers must not also be authored as carrier keywords");
+
+            foreach (CardDefinition card in cards)
+            {
+                string text = CardTextGenerator.Generate(card);
+                AssertMarkerCount(card, text, "Backdraft", rule => rule.Action is BackdraftAction);
+                AssertMarkerCount(card, text, "Reinforce", rule => rule.Action is ReinforceAction);
+                AssertMarkerCount(card, text, "Silence", rule => rule.Action is SilenceAction);
+            }
+        }
+
+        [Test]
         public void Strict_Json_Rejects_The_Removed_CardText_Property()
         {
             var ex = Assert.Throws<FormatException>(() => CardJson.Deserialize(
@@ -177,12 +234,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Every_Live_Card_Renders_Readably_And_Deterministically()
         {
-            var cards = new List<CardDefinition>();
-            foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
-            {
-                string path = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file);
-                cards.AddRange(CardJson.DeserializeArray(File.ReadAllText(path)));
-            }
+            List<CardDefinition> cards = LoadAllCards();
 
             int rendered = 0;
             foreach (CardDefinition card in cards)
@@ -208,6 +260,29 @@ namespace Emberfall.Core.Tests.CardValidation
 
             Assert.That(cards.Count, Is.EqualTo(260));
             Assert.That(rendered, Is.EqualTo(260));
+        }
+
+        private static List<CardDefinition> LoadAllCards()
+        {
+            var cards = new List<CardDefinition>();
+            foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
+            {
+                string path = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file);
+                cards.AddRange(CardJson.DeserializeArray(File.ReadAllText(path)));
+            }
+            return cards;
+        }
+
+        private static void AssertMarkerCount(CardDefinition card, string text, string marker,
+            Func<RuleDefinition, bool> isMarkerAction)
+        {
+            int expected = card.Rules.Count(isMarkerAction);
+            int actual = 0;
+            string token = "[" + marker + "]";
+            for (int offset = 0; (offset = text.IndexOf(token, offset, StringComparison.Ordinal)) >= 0;
+                offset += token.Length)
+                actual++;
+            Assert.That(actual, Is.EqualTo(expected), card.Id + " marker count for " + marker);
         }
 
         private static RuleDefinition DrawRule(RuleActivation activation)

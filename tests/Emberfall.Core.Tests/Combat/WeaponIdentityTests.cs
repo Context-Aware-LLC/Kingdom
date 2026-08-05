@@ -341,15 +341,26 @@ namespace Emberfall.Core.Tests.Combat
         [TestCase(Keyword.VENOM)]
         [TestCase(Keyword.FROST)]
         [TestCase(Keyword.DOUBLESTRIKE)]
-        [TestCase(Keyword.SILENCE)]
-        [TestCase(Keyword.BACKDRAFT)]
-        [TestCase(Keyword.REINFORCE)]
         public void Live_Riders_Are_Legal_On_Weapons(Keyword keyword)
         {
             var def = Weapon("weapon_keyword_legal", 1, 1, new[] { keyword });
             var report = new CardValidator().Validate(def, new FakeCardDatabase().Register(def));
 
             Assert.That(report.Issues.Any(i => i.Code == "C6-WEAPON-KEYWORD-DEAD"), Is.False);
+        }
+
+        [TestCase(Keyword.SILENCE)]
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        public void Printed_Action_Markers_Do_Not_Enter_Weapon_Runtime_State(Keyword marker)
+        {
+            CardDefinition definition = Weapon("legacy_marker_weapon", 1, 2, new[] { marker });
+            var db = new FakeCardDatabase().Register(definition);
+            GameState state = MainPhase();
+
+            CardInstance weapon = PlayWeapon(state, db, definition.Id);
+
+            Assert.That(weapon.Keywords, Does.Not.Contain(marker));
         }
 
         [TestCase(Keyword.BULWARK)]
@@ -376,8 +387,10 @@ namespace Emberfall.Core.Tests.Combat
             var supported = new[]
             {
                 Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
-                Keyword.SILENCE, Keyword.BACKDRAFT,
-                Keyword.REINFORCE,
+            };
+            var actionMarkers = new[]
+            {
+                Keyword.SILENCE, Keyword.BACKDRAFT, Keyword.REINFORCE,
             };
             var unsupported = new[]
             {
@@ -386,7 +399,7 @@ namespace Emberfall.Core.Tests.Combat
                 Keyword.VANGUARD,
             };
 
-            Assert.That(supported.Concat(unsupported).Distinct(),
+            Assert.That(supported.Concat(actionMarkers).Concat(unsupported).Distinct(),
                 Is.EquivalentTo(Enum.GetValues(typeof(Keyword)).Cast<Keyword>()));
         }
     }

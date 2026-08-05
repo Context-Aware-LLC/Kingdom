@@ -387,9 +387,7 @@
     "health": 3,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",

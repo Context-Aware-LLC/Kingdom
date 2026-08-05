@@ -482,9 +482,7 @@
     "health": 4,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -2169,9 +2167,7 @@
     "health": 6,
     "class": "EMBERWARD",
     "rarity": "EPIC",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -3975,9 +3971,7 @@
     "cost": 1,
     "class": "TEMPEST",
     "rarity": "COMMON",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -4142,9 +4136,7 @@
     "cost": 2,
     "class": "TEMPEST",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -4267,9 +4259,7 @@
     "cost": 3,
     "class": "TEMPEST",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -4356,9 +4346,7 @@
     "cost": 5,
     "class": "TEMPEST",
     "rarity": "EPIC",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Tests.Contracts
@@ -89,11 +90,11 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void Keyword_Enum_Has_The_16_Carrier_Behaviour_Keywords()
+        public void Keyword_Enum_Keeps_The_16_Stable_Wire_Slots()
         {
             // dev-docs/specs/card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
-            // REKINDLING set (M3) adds REINFORCE. Herald and Toll are derived trigger labels,
-            // leaving 16 actual carrier behaviours.
+            // Herald and Toll were removed before the later explicit ordinals. SILENCE, BACKDRAFT,
+            // and REINFORCE now remain as reserved action-marker slots rather than runtime keywords.
             Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(16));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
@@ -113,6 +114,12 @@ namespace Emberfall.Core.Tests.Contracts
                 Assert.That((int)Keyword.OVERWHELM, Is.EqualTo(15));
                 Assert.That((int)Keyword.VANGUARD, Is.EqualTo(16));
                 Assert.That((int)Keyword.REINFORCE, Is.EqualTo(17));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.SILENCE), Is.False);
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.BACKDRAFT), Is.False);
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.REINFORCE), Is.False);
             });
         }
 

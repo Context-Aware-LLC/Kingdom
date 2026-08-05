@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
@@ -269,6 +270,45 @@ namespace Emberfall.Core.Tests.Interpreter
 
             Assert.That(ally.Keywords, Does.Contain(Keyword.AEGIS));
             Assert.That(ally.HasAegisShield, Is.True);
+        }
+
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void GiveKeyword_Fails_Closed_For_Action_Only_Markers(Keyword marker)
+        {
+            var db = new FakeCardDatabase()
+                .Register(Minion("marker_granter", 1, 1, 1,
+                    rules: new[] { GrantKeyword(Trigger.ON_PLAY, marker) }));
+            GameState state = MainPhase(db);
+            CardInstance ally = Board(state, 0, Minion("ally", 1, 1, 1));
+            CardInstance source = Hand(state, 0, "marker_granter");
+
+            CommandResult result = Processor(db).Execute(state, new PlayCardIntent(
+                state.Players[0].Id, source.Id, 1, new[] { new TargetRef(ally.Id) }));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(ally.Keywords, Does.Not.Contain(marker));
+            Assert.That(ally.Enchantments, Is.Empty);
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.KeywordApplied), Is.False);
+        }
+
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void Printed_Action_Markers_Do_Not_Enter_Minion_Runtime_State(Keyword marker)
+        {
+            CardDefinition definition = Minion("legacy_marker_minion", 1, 1, 1,
+                keywords: new[] { marker });
+            var db = new FakeCardDatabase().Register(definition);
+            GameState state = MainPhase(db);
+            CardInstance source = Hand(state, 0, definition.Id);
+
+            CommandResult result = Processor(db).Execute(state, new PlayCardIntent(
+                state.Players[0].Id, source.Id, 0, System.Array.Empty<TargetRef>()));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(state.Players[0].Board.Single().Keywords, Does.Not.Contain(marker));
         }
 
         [Test]

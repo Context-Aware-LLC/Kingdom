@@ -258,6 +258,42 @@ namespace Emberfall.Core.Tests.CardValidation
         private static RuleDefinition TurnStart(TurnOwner owner)
             => Rule(Trigger.ON_TURN_START, new DrawAction(1), new TurnOwnerCondition(owner));
 
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void Action_Marker_Keywords_Cannot_Be_Authored_As_Carrier_Behavior(Keyword marker)
+        {
+            var def = new CardDefinition(
+                id: "marker_carrier", name: "Marker Carrier", type: CardType.MINION, cost: 1,
+                attack: 1, health: 1, durability: null,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: new[] { marker }, rules: System.Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "art/marker", setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C25-ACTION-MARKER-KEYWORD" &&
+                i.Field == "keywords"), Is.True);
+        }
+
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void Action_Marker_Keywords_Cannot_Be_Granted(Keyword marker)
+        {
+            CardDefinition def = WithRule(CardType.MINION,
+                Rule(Trigger.ON_PLAY,
+                    new GrantKeywordAction(marker, new TargetSpec("SELF"))));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C25-ACTION-MARKER-GRANT" &&
+                i.Field == "rules[0].action.keyword"), Is.True);
+        }
+
         [TestCase(-1)]
         [TestCase(0)]
         public void Unearth_Requires_A_Positive_Offer_Count(int count)

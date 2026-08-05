@@ -139,6 +139,7 @@ namespace Emberfall.Core
         public void Execute(in EffectContext ctx)
         {
             Keyword kw = ((GrantKeywordAction)ctx.Rule.Action).Keyword;
+            if (!KeywordSemantics.IsCarrierBehavior(kw)) return;
             foreach (var t in ctx.Targets)
             {
                 if (!t.IsMinion) continue;

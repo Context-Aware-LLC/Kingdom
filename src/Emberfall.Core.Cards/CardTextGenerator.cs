@@ -21,7 +21,8 @@ namespace Emberfall.Core.Cards
 
             var parts = new List<string>(card.Keywords.Count + card.Rules.Count);
             foreach (Keyword keyword in card.Keywords)
-                parts.Add("[" + Name(keyword) + "]");
+                if (!KeywordSemantics.IsActionMarker(keyword))
+                    parts.Add("[" + Name(keyword) + "]");
             foreach (RuleDefinition rule in card.Rules)
                 parts.Add(RenderRule(rule));
             return string.Join(" ", parts);
@@ -106,7 +107,7 @@ namespace Emberfall.Core.Cards
                 case GrantKeywordAction a: return $"Give {Target(a.Target)} {Name(a.Keyword)}.";
                 case DestroyAction a: return $"Destroy {Target(a.Target)}.";
                 case ReturnToHandAction a: return $"Return {Target(a.Target)} to hand.";
-                case SilenceAction a: return $"Silence {Target(a.Target)}.";
+                case SilenceAction a: return $"[Silence] {Target(a.Target)}.";
                 case TransformAction a: return $"Transform {Target(a.Target)} into {Name(a.CardId)}.";
                 case FrostAction a: return $"Frost {Target(a.Target)}.";
                 case TakeControlAction a: return $"Take control of {Target(a.Target)}.";

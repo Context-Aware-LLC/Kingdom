@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The shared, headless card-legality validator (C1-C24, dev-docs/pipelines/card-authoring-and-import.md:20).
+    /// The shared, headless card-legality validator (C1-C25, dev-docs/pipelines/card-authoring-and-import.md:20).
     /// Runs identically at server/client load and inside the editor (dev-docs/pipelines/card-authoring-and-import.md:20) — this
     /// assembly has zero UnityEngine references, so this type is safe to run on the dedicated server.
     /// Content/art/budget lint (the E-series) is a separate, editor-only IContentLinter — never here.
@@ -29,23 +29,18 @@ namespace Emberfall.Core.Cards
         private enum WeaponKeywordReach
         {
             Live,
-            Marker,
             Unsupported,
         }
 
         // C6 — fail-closed carrier policy. A keyword absent from this table is unsupported until
-        // its weapon behavior and tests land. Marker rows are presentation labels whose behavior
-        // comes from effect/trigger data; they are already legal on shipped weapons.
+        // its weapon behavior and tests land. Action-derived markers are rejected centrally by C25
+        // before this carrier-specific table is consulted.
         private static readonly Dictionary<Keyword, WeaponKeywordReach> WeaponKeywordTable = new()
         {
             [Keyword.LIFEDRAIN] = WeaponKeywordReach.Live,
             [Keyword.VENOM] = WeaponKeywordReach.Live,
             [Keyword.FROST] = WeaponKeywordReach.Live,
             [Keyword.DOUBLESTRIKE] = WeaponKeywordReach.Live,
-
-            [Keyword.SILENCE] = WeaponKeywordReach.Marker,
-            [Keyword.BACKDRAFT] = WeaponKeywordReach.Marker,
-            [Keyword.REINFORCE] = WeaponKeywordReach.Marker,
 
             [Keyword.BULWARK] = WeaponKeywordReach.Unsupported,
             [Keyword.FERVOR] = WeaponKeywordReach.Unsupported,
@@ -81,6 +76,13 @@ namespace Emberfall.Core.Cards
             if (string.IsNullOrEmpty(def.Name) || def.Name.Length < 1 || def.Name.Length > 32)
                 Err("C3-NAME-LENGTH", "name", "name must be 1-32 characters.");
 
+            // C25 — these enum members remain solely to preserve historic numeric ordinals.
+            // Runtime behavior and player-facing markers come from their typed actions.
+            foreach (Keyword keyword in def.Keywords)
+                if (KeywordSemantics.IsActionMarker(keyword))
+                    Err("C25-ACTION-MARKER-KEYWORD", "keywords",
+                        $"'{keyword}' is action-derived and cannot be authored as a carrier keyword.");
+
             // C4 / C5 / C6 — per-type stat shape (dev-docs/specs/card-schema.md §2.1)
             switch (def.Type)
             {
@@ -107,6 +109,7 @@ namespace Emberfall.Core.Cards
                         Err("C6-WEAPON-HEALTH", "health", "WEAPON must have health == null.");
                     foreach (var keyword in def.Keywords)
                     {
+                        if (KeywordSemantics.IsActionMarker(keyword)) continue; // reported by C25
                         if (!WeaponKeywordTable.TryGetValue(keyword, out var reach))
                             reach = WeaponKeywordReach.Unsupported;
                         if (reach == WeaponKeywordReach.Unsupported)
@@ -128,7 +131,7 @@ namespace Emberfall.Core.Cards
             if (def.Durability is int dur && (dur < 1 || dur > 8))
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
-            // C9-C14, C21-C23 — per-rule checks
+            // C9-C15, C21-C25 — per-rule checks
             var priorTargetBindings = new HashSet<string>();
             var ruleIds = new HashSet<string>();
             for (int i = 0; i < def.Rules.Count; i++)
@@ -301,6 +304,11 @@ namespace Emberfall.Core.Cards
                     !System.Enum.IsDefined(typeof(ManaGainKind), mana.Kind))
                     Err("C15-MANA-KIND", $"{prefix}.action.kind",
                         $"mana kind '{mana.Kind}' is not implemented.");
+
+                if (rule.Action is GrantKeywordAction grant &&
+                    KeywordSemantics.IsActionMarker(grant.Keyword))
+                    Err("C25-ACTION-MARKER-GRANT", $"{prefix}.action.keyword",
+                        $"'{grant.Keyword}' is an action-derived marker and cannot be granted as runtime keyword state.");
 
                 // C24 — interactive choices need a positive offer and a command path that is
                 // already waiting for player input. Observer cascades cannot suspend and resume

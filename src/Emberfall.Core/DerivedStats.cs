@@ -75,9 +75,12 @@ namespace Emberfall.Core
             // Equipping starts a fresh weapon zone-life. A bounced silenced weapon may retain spent
             // durability, but it never carries the removable silence state into the new life.
             c.IsSilenced = false;
-            foreach (var k in def.Keywords) c.Keywords.Add(k);
+            foreach (var k in def.Keywords)
+                if (KeywordSemantics.IsCarrierBehavior(k)) c.Keywords.Add(k);
             foreach (var e in c.Enchantments)
-                if (e.GrantedKeyword.HasValue) c.Keywords.Add(e.GrantedKeyword.Value);
+                if (e.GrantedKeyword.HasValue &&
+                    KeywordSemantics.IsCarrierBehavior(e.GrantedKeyword.Value))
+                    c.Keywords.Add(e.GrantedKeyword.Value);
 
             int attack = BaseAttack(def);
             foreach (var e in c.Enchantments) attack += e.AttackDelta;
@@ -109,7 +112,8 @@ namespace Emberfall.Core
 
             c.Enchantments.Clear();
             c.Keywords.Clear();
-            foreach (var k in def.Keywords) c.Keywords.Add(k);
+            foreach (var k in def.Keywords)
+                if (KeywordSemantics.IsCarrierBehavior(k)) c.Keywords.Add(k);
 
             ApplyStats(c, def, damageTaken);
 
@@ -202,6 +206,7 @@ namespace Emberfall.Core
 
         private static bool IsPrinted(CardDefinition def, Keyword k)
         {
+            if (!KeywordSemantics.IsCarrierBehavior(k)) return false;
             // def.Keywords is IReadOnlyList<Keyword>; a hand loop keeps this off LINQ, which the core
             // avoids so the netstandard2.1 surface Unity consumes stays allocation-predictable.
             for (int i = 0; i < def.Keywords.Count; i++)

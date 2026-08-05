@@ -403,9 +403,7 @@
     "health": 4,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -1153,8 +1151,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "REKINDLE",
-      "REINFORCE"
+      "REKINDLE"
     ],
     "rules": [
       {
@@ -1476,8 +1473,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK",
-      "REINFORCE"
+      "BULWARK"
     ],
     "rules": [
       {
@@ -1605,9 +1601,7 @@
     "health": 2,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
-    "keywords": [
-      "REINFORCE"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
@@ -2133,8 +2127,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
-      "SHROUD",
-      "REINFORCE"
+      "SHROUD"
     ],
     "rules": [
       {
@@ -2575,9 +2568,7 @@
     "durability": 2,
     "class": "TEMPEST",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "rules": [
       {
         "id": "rule_1",
