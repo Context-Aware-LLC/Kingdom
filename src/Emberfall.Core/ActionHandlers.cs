@@ -169,6 +169,14 @@ namespace Emberfall.Core
                 else if (t.IsHero) t.Hero!.CurrentHealth = 0;
                 else if (t.Kind == TargetCandidateKind.Weapon)
                     RulesEngine.BreakWeapon(ctx.Interpreter, t.Seat);
+                else if (t.Kind == TargetCandidateKind.HandCard && t.Card != null)
+                {
+                    PlayerState owner = ctx.State.Players[t.Seat];
+                    if (!owner.Hand.Remove(t.Card)) continue;
+                    t.Card.Zone = Zone.Graveyard;
+                    owner.Graveyard.Add(t.Card);
+                    ctx.Events.Emit(GameEventKind.CardDestroyed, source: t.Card.Id);
+                }
             }
         }
     }

@@ -294,7 +294,8 @@ namespace Emberfall.Core.Cards
                 case GrantKeywordAction _:
                     return TargetCandidateKinds.Minion;
                 case DestroyAction _:
-                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon;
+                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion |
+                           TargetCandidateKinds.Weapon | TargetCandidateKinds.HandCard;
                 case ReturnToHandAction _:
                     return TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon |
                            TargetCandidateKinds.DeckCard | TargetCandidateKinds.GraveyardCard;

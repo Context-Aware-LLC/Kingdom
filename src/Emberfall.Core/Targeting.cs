@@ -239,6 +239,12 @@ namespace Emberfall.Core
             for (int i = result.Count - 1; i >= 0; i--)
             {
                 TargetCandidate candidate = result[i];
+                if (source.HasValue && candidate.Kind == TargetCandidateKind.HandCard &&
+                    candidate.Instance == source.Value)
+                {
+                    result.RemoveAt(i);
+                    continue;
+                }
                 if (forPlayerChoice && IsHiddenEnemyMinion(state, friendly, candidate))
                 {
                     result.RemoveAt(i);
