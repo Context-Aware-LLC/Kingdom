@@ -281,7 +281,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             var state = MainState(13UL);
             for (int i = 0; i < MatchEngine.HandCap; i++)
                 state.Players[0].Hand.Add(new CardInstance(state.NextInstanceId(), $"filler_{i}", P0)
-                    { Zone = Zone.Hand });
+                { Zone = Zone.Hand });
             state.PendingChoice = new PendingChoice
             {
                 Chooser = P0,

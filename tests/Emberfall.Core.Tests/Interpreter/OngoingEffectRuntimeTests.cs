@@ -134,9 +134,9 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase().Register(definition).Register(Minion(Vanilla));
             GameState state = EmptyState();
             var p0Spell = new CardInstance(new InstanceId(3), OngoingSpell, state.Players[0].Id)
-                { Zone = Zone.Hand };
+            { Zone = Zone.Hand };
             var p1Spell = new CardInstance(new InstanceId(4), OngoingSpell, state.Players[1].Id)
-                { Zone = Zone.Hand };
+            { Zone = Zone.Hand };
             state.Players[0].Hand.Add(p0Spell);
             state.Players[1].Hand.Add(p1Spell);
             state.NextInstanceCounter = 5;
@@ -250,7 +250,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase().Register(def);
             GameState state = EmptyState();
             var resolvedSpell = new CardInstance(new InstanceId(10), OngoingSpell, state.Players[0].Id)
-                { Zone = Zone.Graveyard };
+            { Zone = Zone.Graveyard };
             state.Players[0].Graveyard.Add(resolvedSpell);
             state.OngoingEffects.Add(OngoingEffectInstance.CreatePermanent(
                 new InstanceId(11), state.Players[0].Id, OngoingSpell, "future"));
@@ -293,13 +293,14 @@ namespace Emberfall.Core.Tests.Interpreter
             foreach (CardDefinition definition in additional) db.Register(definition);
             GameState state = EmptyState();
             var spell = new CardInstance(new InstanceId(3), spellDefinition.Id, state.Players[0].Id)
-                { Zone = Zone.Hand };
+            { Zone = Zone.Hand };
             state.Players[0].Hand.Add(spell);
             int nextId = 4;
             foreach (CardDefinition definition in additional)
             {
                 state.Players[0].Hand.Add(new CardInstance(new InstanceId(nextId++), definition.Id,
-                    state.Players[0].Id) { Zone = Zone.Hand });
+                    state.Players[0].Id)
+                { Zone = Zone.Hand });
             }
             state.NextInstanceCounter = nextId;
             return (state, new CommandProcessor(db), spell);

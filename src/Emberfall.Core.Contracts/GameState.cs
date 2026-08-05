@@ -149,7 +149,8 @@ namespace Emberfall.Core.Contracts
                 throw new System.ArgumentException("An authoritative ongoing effect requires a rule id.",
                     nameof(ruleId));
             var instance = new OngoingEffectInstance(id, controller, sourceDefinitionId, lifetime,
-                remainingUses) { RuleId = ruleId };
+                remainingUses)
+            { RuleId = ruleId };
             return instance;
         }
     }

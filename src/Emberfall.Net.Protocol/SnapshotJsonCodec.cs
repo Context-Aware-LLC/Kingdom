@@ -382,8 +382,14 @@ namespace Emberfall.Net.Protocol
                     granted = gk;
                 }
                 if (!TryBoolField(item, "isAura", out bool isAura, ref detail)) return false;
-                card.Enchantments.Add(new Enchantment { Source = src, AttackDelta = ad, HealthDelta = hd,
-                    GrantedKeyword = granted, IsAura = isAura });
+                card.Enchantments.Add(new Enchantment
+                {
+                    Source = src,
+                    AttackDelta = ad,
+                    HealthDelta = hd,
+                    GrantedKeyword = granted,
+                    IsAura = isAura
+                });
             }
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
@@ -462,7 +468,8 @@ namespace Emberfall.Net.Protocol
             { detail = "one-shot ongoing effect must have one remaining use"; return false; }
 
             effect = new OngoingEffectInstance(id, new PlayerId(controller), definitionId,
-                lifetime, remainingUses) { RuleId = ruleId };
+                lifetime, remainingUses)
+            { RuleId = ruleId };
             return true;
         }
 

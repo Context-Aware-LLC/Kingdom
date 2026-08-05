@@ -250,7 +250,8 @@ namespace Emberfall.Core.Tests.Interpreter
 
         private static void PutWeapon(GameState state, int seat, string definitionId, int id)
             => state.Players[seat].Weapon = new CardInstance(new InstanceId(id), definitionId,
-                state.Players[seat].Id) { Zone = Zone.Weapon };
+                state.Players[seat].Id)
+            { Zone = Zone.Weapon };
 
         private static void PutZone(System.Collections.Generic.List<CardInstance> zone,
             PlayerId controller, string definitionId, Zone cardZone, int id)
