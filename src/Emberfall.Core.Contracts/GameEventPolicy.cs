@@ -15,6 +15,7 @@ namespace Emberfall.Core.Contracts
                 || kind == GameEventKind.HealthRestored
                 || kind == GameEventKind.StatsModified
                 || kind == GameEventKind.ManaGained
+                || kind == GameEventKind.ArmorGained
                 || kind == GameEventKind.FatigueDamage;
         }
 
@@ -44,6 +45,8 @@ namespace Emberfall.Core.Contracts
                     or GameEventKind.TurnStarted
                     or GameEventKind.TurnEnded
                     or GameEventKind.HeroPowerUsed
+                    or GameEventKind.ArmorGained
+                    or GameEventKind.ControlChanged
                     or GameEventKind.MatchEnded => EventFlags.None,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown semantic game-event kind."),
             };

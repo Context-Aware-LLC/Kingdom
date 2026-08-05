@@ -309,7 +309,10 @@ namespace Emberfall.Core
         {
             int amount = ((GainArmorAction)ctx.Rule.Action).Amount;
             if (amount <= 0) return;
-            ctx.State.PlayerOf(ctx.Source.Controller).Hero.Armor += amount;
+            HeroInstance hero = ctx.State.PlayerOf(ctx.Source.Controller).Hero;
+            hero.Armor += amount;
+            ctx.Events.Emit(GameEventKind.ArmorGained, source: hero.Id, target: hero.Id,
+                amount: amount);
         }
     }
 
@@ -383,6 +386,8 @@ namespace Emberfall.Core
                     minion.Controller = destination.Id;
                     minion.Position = destination.Board.Count;
                     destination.Board.Add(minion);
+                    ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Id,
+                        target: minion.Id);
                     continue;
                 }
                 if (target.Kind != TargetCandidateKind.Weapon || destination.Weapon != null ||
@@ -391,6 +396,8 @@ namespace Emberfall.Core
                 owner.Weapon = null;
                 weapon.Controller = destination.Id;
                 destination.Weapon = weapon;
+                ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Id,
+                    target: weapon.Id);
             }
         }
     }

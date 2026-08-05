@@ -153,6 +153,8 @@ namespace Emberfall.Core.Contracts
         FatigueDamage,
         MatchWon,
         MatchEnded,
+        ArmorGained,
+        ControlChanged,
     }
 
     /// <summary>Optional presentation instruction carried independently of semantic event identity.</summary>
@@ -179,6 +181,8 @@ namespace Emberfall.Core.Contracts
         Fatigue,
         GameWin,
         GameOver,
+        ArmorGain,
+        ControlChange,
     }
 
     /// <summary>Per-event flags carried on a <see cref="GameEvent"/>. M1-guaranteed: AegisAbsorbed, Lethal, Overdraw (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5).</summary>

@@ -32,6 +32,8 @@ namespace Emberfall.Core.Contracts
                 GameEventKind.FatigueDamage => PresentationCue.Fatigue,
                 GameEventKind.MatchWon => PresentationCue.GameWin,
                 GameEventKind.MatchEnded => PresentationCue.GameOver,
+                GameEventKind.ArmorGained => PresentationCue.ArmorGain,
+                GameEventKind.ControlChanged => PresentationCue.ControlChange,
                 _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown semantic game-event kind."),
             };
         }
