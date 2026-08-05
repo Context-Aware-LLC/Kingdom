@@ -335,8 +335,8 @@ namespace Emberfall.Core
                 {
                     var owner = ctx.State.Players[t.Seat];
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance || def.Type != CardType.WEAPON) continue;
-                    var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, owner.Id);
-                    RulesEngine.EnterWeapon(ctx.State, replacement, def, t.Seat);
+                    var weaponReplacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, owner.Id);
+                    RulesEngine.EnterWeapon(ctx.State, weaponReplacement, def, t.Seat);
                     ctx.Events.Emit(ctx.Vfx(VfxEvent.onTransform), source: ctx.Source.Id,
                         target: owner.Weapon.Id);
                     continue;
