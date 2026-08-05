@@ -386,7 +386,7 @@ namespace Emberfall.Core
                     minion.Controller = destination.Id;
                     minion.Position = destination.Board.Count;
                     destination.Board.Add(minion);
-                    ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Id,
+                    ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Identity,
                         target: minion.Id);
                     continue;
                 }
@@ -396,7 +396,7 @@ namespace Emberfall.Core
                 owner.Weapon = null;
                 weapon.Controller = destination.Id;
                 destination.Weapon = weapon;
-                ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Id,
+                ctx.Events.Emit(GameEventKind.ControlChanged, source: ctx.Source.Identity,
                     target: weapon.Id);
             }
         }
