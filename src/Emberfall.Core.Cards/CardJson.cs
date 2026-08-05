@@ -32,7 +32,7 @@ namespace Emberfall.Core.Cards
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "selector", "chosenBy", "count", "filter"
+            "selector", "chosenBy", "count", "filter", "binding", "distinctFrom"
         };
 
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -120,13 +120,28 @@ namespace Emberfall.Core.Cards
                 empty = Bool(payload, "empty") ?? false;
             }
 
-            string? selector = null;
+            TargetSpec? target = null;
             if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
             {
                 RejectUnknownProperties(tgt, "target", TargetProperties);
-                if (tgt.TryGetProperty("filter", out var filter) && filter.ValueKind == JsonValueKind.Object)
-                    RejectUnknownProperties(filter, "target.filter", FilterProperties);
-                selector = Str(tgt, "selector");
+                string? selector = Str(tgt, "selector");
+                if (selector != null)
+                {
+                    TargetFilterDef? filter = null;
+                    if (tgt.TryGetProperty("filter", out var f) && f.ValueKind == JsonValueKind.Object)
+                    {
+                        RejectUnknownProperties(f, "target.filter", FilterProperties);
+                        filter = new TargetFilterDef(Bool(f, "damaged"), TryEnum<Tribe>(f, "tribe"));
+                    }
+
+                    target = new TargetSpec(
+                        selector,
+                        TryEnum<TargetChosenBy>(tgt, "chosenBy"),
+                        Int(tgt, "count"),
+                        filter,
+                        Str(tgt, "binding"),
+                        Str(tgt, "distinctFrom"));
+                }
             }
 
             EffectConditionDef? condition = null;
@@ -140,8 +155,8 @@ namespace Emberfall.Core.Cards
                 condition = new EffectConditionDef(type, turnOwner);
             }
 
-            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector,
-                permanent, empty, condition);
+            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx,
+                permanent: permanent, empty: empty, condition: condition, target: target);
         }
 
         private static void RejectUnknownProperties(JsonElement el, string schemaLevel, HashSet<string> allowed)

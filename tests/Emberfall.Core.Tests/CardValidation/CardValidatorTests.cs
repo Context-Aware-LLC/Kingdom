@@ -57,6 +57,33 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void CardJson_Preserves_The_Complete_Target_Object()
+        {
+            const string json = @"{
+              ""id"":""target_shape"", ""name"":""Target Shape"", ""type"":""SPELL"", ""cost"":1,
+              ""class"":""NIGHTVEIL"", ""rarity"":""COMMON"", ""keywords"":[], ""setId"":""CORE"",
+              ""effects"":[{
+                ""trigger"":""ON_CAST"", ""action"":""DESTROY"",
+                ""target"":{
+                  ""selector"":""ANY_MINION"", ""chosenBy"":""PLAYER"", ""count"":2,
+                  ""binding"":""victims"", ""distinctFrom"":""first"",
+                  ""filter"":{""damaged"":true,""tribe"":""CONSTRUCT""}
+                }
+              }]
+            }";
+
+            TargetSpec target = CardJson.Deserialize(json).Effects[0].Target!;
+
+            Assert.That(target.Selector, Is.EqualTo("ANY_MINION"));
+            Assert.That(target.ChosenBy, Is.EqualTo(TargetChosenBy.PLAYER));
+            Assert.That(target.Count, Is.EqualTo(2));
+            Assert.That(target.Binding, Is.EqualTo("victims"));
+            Assert.That(target.DistinctFrom, Is.EqualTo("first"));
+            Assert.That(target.Filter!.Damaged, Is.True);
+            Assert.That(target.Filter.Tribe, Is.EqualTo(Tribe.CONSTRUCT));
+        }
+
+        [Test]
         public void Unimplemented_Selector_Requires_The_Primitive_Gate()
         {
             // ADJACENT is schema-valid but the interpreter cannot resolve it (and now throws instead

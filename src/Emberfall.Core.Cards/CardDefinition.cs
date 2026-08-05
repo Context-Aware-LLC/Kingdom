@@ -99,6 +99,52 @@ namespace Emberfall.Core.Cards
         }
     }
 
+    /// <summary>Who supplies the targets selected from a <see cref="TargetSpec"/> candidate set.</summary>
+    public enum TargetChosenBy
+    {
+        PLAYER,
+        RANDOM,
+    }
+
+    /// <summary>Optional predicates applied after selector candidate enumeration.</summary>
+    public sealed class TargetFilterDef
+    {
+        public bool? Damaged { get; }
+        public Tribe? Tribe { get; }
+
+        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null)
+        {
+            Damaged = damaged;
+            Tribe = tribe;
+        }
+    }
+
+    /// <summary>
+    /// The complete authored <c>target</c> object. A null <see cref="ChosenBy"/> preserves the
+    /// established selector defaults: <c>ANY_*</c> is chosen by the player and set/fixed selectors
+    /// resolve automatically. <c>Count == -1</c> means every candidate.
+    /// </summary>
+    public sealed class TargetSpec
+    {
+        public string Selector { get; }
+        public TargetChosenBy? ChosenBy { get; }
+        public int? Count { get; }
+        public TargetFilterDef? Filter { get; }
+        public string Binding { get; }
+        public string DistinctFrom { get; }
+
+        public TargetSpec(string selector, TargetChosenBy? chosenBy = null, int? count = null,
+            TargetFilterDef? filter = null, string? binding = null, string? distinctFrom = null)
+        {
+            Selector = selector;
+            ChosenBy = chosenBy;
+            Count = count;
+            Filter = filter;
+            Binding = binding ?? "";
+            DistinctFrom = distinctFrom ?? "";
+        }
+    }
+
     /// <summary>
     /// One entry in <c>effects[]</c> (dev-docs/specs/card-schema.md §5). The interpreter (Phase B) tree-walks these;
     /// for the determinism foundation they are carried as immutable data only.
@@ -125,18 +171,19 @@ namespace Emberfall.Core.Cards
         /// false/absent = the crystal is also spendable immediately. Meaningless without Permanent.
         /// </summary>
         public bool Empty { get; }
+        public TargetSpec? Target { get; }
         /// <summary>
         /// Optional target selector from <c>target.selector</c> in the card JSON (dev-docs/specs/card-schema.md §5.3).
         /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
         /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
         /// auto-targeted battlecries). Player-chosen targets always take precedence.
         /// </summary>
-        public string? Selector { get; }
+        public string? Selector => Target?.Selector;
 
         public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
                          string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
                          string? selector = null, bool permanent = false, bool empty = false,
-                         EffectConditionDef? condition = null)
+                         EffectConditionDef? condition = null, TargetSpec? target = null)
         {
             Trigger = trigger;
             Action = action;
@@ -146,7 +193,7 @@ namespace Emberfall.Core.Cards
             GrantedKeyword = grantedKeyword;
             VfxOverride = vfxOverride;
             Condition = condition;
-            Selector = selector;
+            Target = target ?? (selector == null ? null : new TargetSpec(selector));
             Permanent = permanent;
             Empty = empty;
         }
