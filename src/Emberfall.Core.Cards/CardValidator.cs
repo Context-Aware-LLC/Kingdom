@@ -104,6 +104,41 @@ namespace Emberfall.Core.Cards
             [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
         };
 
+        /// <summary>Whether a keyword has meaningful behavior on an equipped weapon.</summary>
+        private enum WeaponKeywordReach
+        {
+            Live,
+            Marker,
+            Unsupported,
+        }
+
+        // C6 — fail-closed carrier policy. A keyword absent from this table is unsupported until
+        // its weapon behavior and tests land. Marker rows are presentation labels whose behavior
+        // comes from effect/trigger data; they are already legal on shipped weapons.
+        private static readonly Dictionary<Keyword, WeaponKeywordReach> WeaponKeywordTable = new()
+        {
+            [Keyword.LIFESTEAL] = WeaponKeywordReach.Live,
+            [Keyword.POISONOUS] = WeaponKeywordReach.Live,
+            [Keyword.FREEZE] = WeaponKeywordReach.Live,
+            [Keyword.WINDFURY] = WeaponKeywordReach.Live,
+
+            [Keyword.BATTLECRY] = WeaponKeywordReach.Marker,
+            [Keyword.DEATHRATTLE] = WeaponKeywordReach.Marker,
+            [Keyword.SILENCE] = WeaponKeywordReach.Marker,
+            [Keyword.OVERLOAD] = WeaponKeywordReach.Marker,
+            [Keyword.REINFORCE] = WeaponKeywordReach.Marker,
+
+            [Keyword.TAUNT] = WeaponKeywordReach.Unsupported,
+            [Keyword.CHARGE] = WeaponKeywordReach.Unsupported,
+            [Keyword.RUSH] = WeaponKeywordReach.Unsupported,
+            [Keyword.DIVINE_SHIELD] = WeaponKeywordReach.Unsupported,
+            [Keyword.STEALTH] = WeaponKeywordReach.Unsupported,
+            [Keyword.SPELL_DAMAGE] = WeaponKeywordReach.Unsupported,
+            [Keyword.REBORN] = WeaponKeywordReach.Unsupported,
+            [Keyword.OVERWHELM] = WeaponKeywordReach.Unsupported,
+            [Keyword.VANGUARD] = WeaponKeywordReach.Unsupported,
+        };
+
         public ValidationReport Validate(CardDefinition def, ICardDatabase db)
         {
             var issues = new List<ValidationIssue>();
@@ -151,6 +186,14 @@ namespace Emberfall.Core.Cards
                         Err("C6-WEAPON-DURABILITY", "durability", "WEAPON requires durability >= 1.");
                     if (def.Health is not null)
                         Err("C6-WEAPON-HEALTH", "health", "WEAPON must have health == null.");
+                    foreach (var keyword in def.Keywords)
+                    {
+                        if (!WeaponKeywordTable.TryGetValue(keyword, out var reach))
+                            reach = WeaponKeywordReach.Unsupported;
+                        if (reach == WeaponKeywordReach.Unsupported)
+                            Err("C6-WEAPON-KEYWORD-DEAD", "keywords",
+                                $"keyword '{keyword}' has no behavior on an equipped weapon.");
+                    }
                     break;
             }
 
