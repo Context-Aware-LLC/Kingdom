@@ -62,7 +62,8 @@ namespace Emberfall.Core
 
             var keywords = ActionHandlers.SourceKeywords(in ctx);
             foreach (var t in ctx.Targets)
-                DamagePipeline.ApplyDamage(ctx.Interpreter, t, amount, ctx.Source.Id, keywords);
+                if (t.IsCharacter)
+                    DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, amount, ctx.Source.Id, keywords);
         }
     }
 
@@ -74,7 +75,8 @@ namespace Emberfall.Core
         {
             int amount = ctx.Effect.Amount ?? 0;
             foreach (var t in ctx.Targets)
-                DamagePipeline.ApplyHeal(ctx.Interpreter, t, amount, ctx.Source.Id);
+                if (t.IsCharacter)
+                    DamagePipeline.ApplyHeal(ctx.Interpreter, t.Character, amount, ctx.Source.Id);
         }
     }
 
@@ -105,7 +107,8 @@ namespace Emberfall.Core
                 var token = new CardInstance(ctx.State.NextInstanceId(), def.Id, ctx.Source.Controller);
                 if (!RulesEngine.EnterBoard(ctx.State, token, def, seat, -1)) break; // board full → stop
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onSummon), source: token.Id, flags: EventFlags.IsToken);
-                ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token);
+                ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
+                    triggerSource: token.Id);
             }
         }
     }
@@ -168,7 +171,9 @@ namespace Emberfall.Core
             foreach (var t in ctx.Targets)
             {
                 if (t.IsMinion) t.Minion!.CurrentHealth = 0;
-                else t.Hero!.CurrentHealth = 0;
+                else if (t.IsHero) t.Hero!.CurrentHealth = 0;
+                else if (t.Kind == TargetCandidateKind.Weapon)
+                    RulesEngine.BreakWeapon(ctx.Interpreter, t.Seat);
             }
         }
     }
@@ -181,6 +186,24 @@ namespace Emberfall.Core
         {
             foreach (var t in ctx.Targets)
             {
+                if (t.Kind == TargetCandidateKind.Weapon)
+                {
+                    var owner = ctx.State.Players[t.Seat];
+                    if (owner.Weapon == null || owner.Weapon.Id != t.Instance) continue;
+                    CardInstance weapon = owner.Weapon;
+                    owner.Weapon = null;
+                    MoveCardToHand(ctx, owner, weapon, wasPublic: true);
+                    continue;
+                }
+                if (t.Card != null && t.Kind != TargetCandidateKind.Minion)
+                {
+                    var owner = ctx.State.Players[t.Seat];
+                    if (t.Kind == TargetCandidateKind.HandCard) continue;
+                    if (t.Kind == TargetCandidateKind.DeckCard) owner.Deck.Remove(t.Card);
+                    else if (t.Kind == TargetCandidateKind.GraveyardCard) owner.Graveyard.Remove(t.Card);
+                    MoveCardToHand(ctx, owner, t.Card, wasPublic: t.Kind == TargetCandidateKind.GraveyardCard);
+                    continue;
+                }
                 if (!t.IsMinion) continue;          // heroes/weapons can't be bounced
                 var m = t.Minion!;
                 var ps = ctx.State.Players[t.Seat];
@@ -197,22 +220,27 @@ namespace Emberfall.Core
                 m.AttacksUsedThisTurn = 0;
                 m.HasUsedReborn = false;
 
-                if (ps.Hand.Count >= MatchEngine.HandCap)
-                {
-                    m.Zone = Zone.Graveyard;        // hand full → the bounced card is burned
-                    ps.Graveyard.Add(m);            // graveyard is public: the id stays (D-OQ1 scope)
-                }
-                else
-                {
-                    // D-OQ1 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/multiplayer/state-sync-and-security.md §5.2.1): a publicly-known id is retired
-                    // when its card enters a hidden zone — re-mint BEFORE the emit so the owner's
-                    // event and snapshot agree. The opponent's projection sentinels it anyway.
-                    m.Id = ctx.State.NextInstanceId();
-                    m.Zone = Zone.Hand;
-                    ps.Hand.Add(m);
-                }
-                ctx.Events.Emit(ctx.Vfx(VfxEvent.onReturn), source: ctx.Source.Id, target: m.Id);
+                MoveCardToHand(ctx, ps, m, wasPublic: true);
             }
+        }
+
+        private static void MoveCardToHand(in EffectContext ctx, PlayerState owner, CardInstance card,
+            bool wasPublic)
+        {
+            if (owner.Hand.Count >= MatchEngine.HandCap)
+            {
+                card.Zone = Zone.Graveyard;
+                owner.Graveyard.Add(card);
+            }
+            else
+            {
+                // A publicly-known id is retired on entry to a hidden zone. A card selected from the
+                // already-hidden deck retains its identity.
+                if (wasPublic) card.Id = ctx.State.NextInstanceId();
+                card.Zone = Zone.Hand;
+                owner.Hand.Add(card);
+            }
+            ctx.Events.Emit(ctx.Vfx(VfxEvent.onReturn), source: ctx.Source.Id, target: card.Id);
         }
     }
 
@@ -303,6 +331,16 @@ namespace Emberfall.Core
             if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
             foreach (var t in ctx.Targets)
             {
+                if (t.Kind == TargetCandidateKind.Weapon)
+                {
+                    var owner = ctx.State.Players[t.Seat];
+                    if (owner.Weapon == null || owner.Weapon.Id != t.Instance || def.Type != CardType.WEAPON) continue;
+                    var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, owner.Id);
+                    RulesEngine.EnterWeapon(ctx.State, replacement, def, t.Seat);
+                    ctx.Events.Emit(ctx.Vfx(VfxEvent.onTransform), source: ctx.Source.Id,
+                        target: owner.Weapon.Id);
+                    continue;
+                }
                 if (!t.IsMinion) continue;
                 var ps = ctx.State.Players[t.Seat];
                 int idx = ps.Board.IndexOf(t.Minion!);
@@ -351,7 +389,8 @@ namespace Emberfall.Core
             foreach (var t in ctx.Targets)
             {
                 if (t.IsMinion) t.Minion!.IsFrozen = true;
-                else t.Hero!.IsFrozen = true;
+                else if (t.IsHero) t.Hero!.IsFrozen = true;
+                else continue;
                 ctx.Events.Emit(ctx.Vfx(VfxEvent.onFreeze), source: ctx.Source.Id, target: t.Id);
             }
         }

@@ -14,25 +14,6 @@ namespace Emberfall.Core.Cards
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
 
-        // Selector is a closed vocabulary (dev-docs/specs/card-schema.md §5.3) but carried as a plain string
-        // on EffectDef today rather than a structured TargetSpec/enum — validate against the list.
-        // ANY_MINION / ANY_FRIENDLY_MINION canonized in the M2 Phase 0 grammar freeze (tier a).
-        private static readonly HashSet<string> ValidSelectors = new HashSet<string>
-        {
-            "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
-            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
-        };
-
-        // Schema-valid selectors the EffectInterpreter cannot resolve yet (no adjacency/trigger-source
-        // plumbing). The interpreter now throws on them instead of silently mistargeting, so a row that
-        // authors one must declare requiresEngineeringPrimitive — the documented gate for grammar the
-        // engine hasn't grown (dev-docs/specs/card-schema.md:40). Keep in sync with EffectInterpreter.SelectorTargets.
-        private static readonly HashSet<string> UnimplementedSelectors = new HashSet<string>
-        {
-            "ADJACENT", "TRIGGER_SOURCE",
-        };
-
         // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
         // call site: CommandProcessor.cs:346/354/386/454 pass the player's `targets`; ON_ATTACK
         // (CommandProcessor.cs:560), ON_DAMAGED (DamagePipeline.cs:128), the weapon ON_DEATH
@@ -41,14 +22,6 @@ namespace Emberfall.Core.Cards
         private static readonly HashSet<Trigger> PlayerTargetedTriggers = new HashSet<Trigger>
         {
             Trigger.ON_PLAY, Trigger.ON_CAST,
-        };
-
-        // Explicit-choice selectors: they mean "the PLAYER picks", so they resolve only from a
-        // player intent. On any other trigger `ChosenTargets` is empty, `SelectorTargets` is
-        // consulted, and it throws — the card is a live crash the moment it fires (C14b).
-        private static readonly HashSet<string> PlayerChosenSelectors = new HashSet<string>
-        {
-            "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION", "ANY_FRIENDLY_MINION",
         };
 
         // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
@@ -310,17 +283,15 @@ namespace Emberfall.Core.Cards
                 }
 
                 // C14
-                if (!string.IsNullOrEmpty(fx.Selector) && !ValidSelectors.Contains(fx.Selector!))
+                if (!string.IsNullOrEmpty(fx.Selector) && !TargetSpec.IsKnownSelector(fx.Selector!))
                     Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
-                else if (!string.IsNullOrEmpty(fx.Selector) && UnimplementedSelectors.Contains(fx.Selector!)
-                         && !def.RequiresEngineeringPrimitive)
-                    Err("C14-SELECTOR-UNIMPLEMENTED", $"{prefix}.target.selector",
-                        $"'{fx.Selector}' is schema-valid but the engine cannot resolve it yet (the interpreter rejects it at runtime) — set requiresEngineeringPrimitive to hold the row for the primitive.");
                 // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
                 // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
                 // through this very rule, because C14 checked the selector without the trigger.
-                else if (!string.IsNullOrEmpty(fx.Selector) && PlayerChosenSelectors.Contains(fx.Selector!)
+                else if (fx.Target != null &&
+                         (fx.Target.ChosenBy == TargetChosenBy.PLAYER ||
+                          (!fx.Target.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(fx.Target.Selector)))
                          && !PlayerTargetedTriggers.Contains(fx.Trigger)
                          && !def.RequiresEngineeringPrimitive)
                     Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.target.selector",
@@ -328,6 +299,13 @@ namespace Emberfall.Core.Cards
                         "the interpreter throws on it at runtime. Use an auto-resolvable selector " +
                         "(SELF / FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
                         "or set requiresEngineeringPrimitive to hold the row out of every pool until the primitive lands.");
+
+                if (fx.Target?.Count is int targetCount && targetCount < -1)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.target.count",
+                        "target.count must be positive or -1 for every candidate.");
+                if (fx.Target?.Count == 0)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.target.count",
+                        "target.count cannot be zero.");
 
                 // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
                 if (fx.Empty && !fx.Permanent)

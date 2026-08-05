@@ -86,7 +86,18 @@ namespace Emberfall.Net.Protocol
         private static void WriteTargets(JsonWriter w, IReadOnlyList<TargetRef> targets)
         {
             w.BeginArray();
-            foreach (var t in targets) w.Str(WirePrimitives.InstanceToWire(t.Instance));
+            foreach (var t in targets)
+            {
+                if (t.Binding.Length == 0)
+                {
+                    w.Str(WirePrimitives.InstanceToWire(t.Instance));
+                    continue;
+                }
+                w.BeginObject();
+                w.Name("instance"); w.Str(WirePrimitives.InstanceToWire(t.Instance));
+                w.Name("binding"); w.Str(t.Binding);
+                w.EndObject();
+            }
             w.EndArray();
         }
 
@@ -188,9 +199,19 @@ namespace Emberfall.Net.Protocol
             if (tVal.Kind != JKind.Array) { detail = "targets is not an array"; return false; }
             foreach (var item in tVal.Items!)
             {
-                if (!item.TryStr(out string s) || !WirePrimitives.TryInstance(s, out var id))
+                if (item.TryStr(out string s) && WirePrimitives.TryInstance(s, out var legacyId))
+                {
+                    targets.Add(new TargetRef(legacyId));
+                    continue;
+                }
+                if (item.Kind != JKind.Object ||
+                    !item.TryGet("instance", out var instanceVal) ||
+                    !instanceVal.TryStr(out string instanceText) ||
+                    !WirePrimitives.TryInstance(instanceText, out var id) ||
+                    !item.TryGet("binding", out var bindingVal) ||
+                    !bindingVal.TryStr(out string binding) || string.IsNullOrEmpty(binding))
                 { detail = "bad target entry"; return false; }
-                targets.Add(new TargetRef(id));
+                targets.Add(new TargetRef(id, binding));
             }
             return true;
         }

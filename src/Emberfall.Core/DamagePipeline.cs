@@ -127,7 +127,7 @@ namespace Emberfall.Core
             // so only minions raise; the Aegis-absorbed path returned above, so absorbed ≠ damaged. Poisoned
             // targets still raise here — they were damaged this instant; DeathCheck settles them next drain.
             if (target.IsMinion)
-                interp.RaiseSelf(target.Minion!, Trigger.ON_DAMAGED, System.Array.Empty<CharacterRef>());
+                interp.RaiseSelf(target.Minion!, Trigger.ON_DAMAGED, System.Array.Empty<TargetRef>());
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace Emberfall.Core
             // already restored when the effect resolves. Heroes do not raise (no card effects); an
             // overheal returned above (nothing restored is not "healed").
             if (target.IsMinion)
-                interp.RaiseSelf(target.Minion!, Trigger.ON_HEAL, System.Array.Empty<CharacterRef>());
+                interp.RaiseSelf(target.Minion!, Trigger.ON_HEAL, System.Array.Empty<TargetRef>());
 
             return healed;
         }

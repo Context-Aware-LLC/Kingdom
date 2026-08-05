@@ -126,6 +126,23 @@ namespace Emberfall.Core.Cards
     /// </summary>
     public sealed class TargetSpec
     {
+        private static readonly HashSet<string> KnownSelectors = new HashSet<string>
+        {
+            "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
+            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
+            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
+            "FRIENDLY_WEAPON", "ENEMY_WEAPON",
+            "FRIENDLY_HAND", "ENEMY_HAND", "ANY_HAND_CARD",
+            "FRIENDLY_DECK", "ENEMY_DECK", "ANY_DECK_CARD",
+            "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
+        };
+
+        private static readonly HashSet<string> DefaultPlayerSelectors = new HashSet<string>
+        {
+            "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION", "ANY_FRIENDLY_MINION",
+            "ANY_HAND_CARD", "ANY_DECK_CARD", "ANY_GRAVEYARD_CARD",
+        };
+
         public string Selector { get; }
         public TargetChosenBy? ChosenBy { get; }
         public int? Count { get; }
@@ -143,6 +160,10 @@ namespace Emberfall.Core.Cards
             Binding = binding ?? "";
             DistinctFrom = distinctFrom ?? "";
         }
+
+        public static bool IsKnownSelector(string selector) => KnownSelectors.Contains(selector);
+        public static bool DefaultsToPlayerChoice(string selector) => DefaultPlayerSelectors.Contains(selector);
+        public static IReadOnlyCollection<string> Selectors => KnownSelectors;
     }
 
     /// <summary>

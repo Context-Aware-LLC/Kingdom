@@ -234,7 +234,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(friendly.CurrentHealth, Is.EqualTo(3));
         }
 
-        // ── SELF resolves; unimplemented selectors throw ─────────────────────────
+        // ── SELF and contextual selectors resolve through the shared seam ────────
 
         [Test]
         public void Self_Selector_On_A_Fired_Trigger_Buffs_The_Source()
@@ -259,10 +259,10 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Unresolvable_Selector_On_A_Fired_Trigger_Throws_Instead_Of_Mistargeting()
+        public void Adjacent_On_A_Departed_Death_Source_Resolves_To_No_Targets()
         {
-            // A deathrattle authored with ADJACENT (schema-valid, engine-unimplemented) must fail
-            // loudly at resolution — the pre-freeze silent fallback aimed it at the enemy hero.
+            // Once the source has left the board it has no live neighbors. The selector therefore
+            // resolves to an empty set instead of falling through to the damage default.
             var trap = Minion("trap", cost: 1, atk: 1, hp: 1, new[]
             {
                 new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: 1, amount2: null,
@@ -275,8 +275,10 @@ namespace Emberfall.Core.Tests.Interpreter
             doomed.CurrentHealth = 0; // next Drain's DeathCheck fires the deathrattle
             var card = Hand(s, 0, "vanilla");
 
-            Assert.Throws<System.InvalidOperationException>(
-                () => new CommandProcessor(db).Execute(s, Play(s, card)));
+            var result = new CommandProcessor(db).Execute(s, Play(s, card));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(30));
         }
     }
 }

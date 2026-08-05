@@ -1,0 +1,481 @@
+using System;
+using System.Collections.Generic;
+using Emberfall.Core.Cards;
+using Emberfall.Core.Contracts;
+
+namespace Emberfall.Core
+{
+    /// <summary>The runtime shape of one selectable game object.</summary>
+    public enum TargetCandidateKind
+    {
+        Hero,
+        Minion,
+        Weapon,
+        HandCard,
+        DeckCard,
+        GraveyardCard,
+    }
+
+    /// <summary>
+    /// Public, Unity-free target candidate. Instance identity is the authoritative reference; kind,
+    /// controller and zone let a client present candidates without learning engine-private objects.
+    /// </summary>
+    public readonly struct TargetCandidate : IEquatable<TargetCandidate>
+    {
+        public InstanceId Instance { get; }
+        public InstanceId Id => Instance;
+        public PlayerId Controller { get; }
+        public TargetCandidateKind Kind { get; }
+        public Zone Zone { get; }
+
+        internal CharacterRef Character { get; }
+        internal string DefinitionId { get; }
+        internal CardInstance? Card { get; }
+        internal int Seat { get; }
+        internal bool IsCharacter => Kind == TargetCandidateKind.Hero || Kind == TargetCandidateKind.Minion;
+        internal bool IsHero => Kind == TargetCandidateKind.Hero;
+        internal bool IsMinion => Kind == TargetCandidateKind.Minion;
+        internal HeroInstance? Hero => Character.Hero;
+        internal CardInstance? Minion => Character.Minion;
+
+        internal TargetCandidate(InstanceId instance, PlayerId controller, TargetCandidateKind kind,
+            Zone zone, CharacterRef character = default, string? definitionId = null,
+            CardInstance? card = null, int seat = -1)
+        {
+            Instance = instance;
+            Controller = controller;
+            Kind = kind;
+            Zone = zone;
+            Character = character;
+            DefinitionId = definitionId ?? "";
+            Card = card;
+            Seat = seat;
+        }
+
+        public bool Equals(TargetCandidate other) => Instance.Equals(other.Instance);
+        public override bool Equals(object? obj) => obj is TargetCandidate other && Equals(other);
+        public override int GetHashCode() => Instance.GetHashCode();
+        public override string ToString() => $"{Kind}:{Instance}";
+    }
+
+    /// <summary>
+    /// The one target-policy seam used by intent validation, effect resolution and client targeting.
+    /// Candidate order is canonical: controller side before opponent side; heroes before board
+    /// minions; board and card zones in list order.
+    /// </summary>
+    public static class Targeting
+    {
+        public static IReadOnlyCollection<string> Selectors => TargetSpec.Selectors;
+
+        public static bool IsPlayerChosen(TargetSpec? spec)
+            => spec != null && (spec.ChosenBy == TargetChosenBy.PLAYER ||
+                (!spec.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(spec.Selector)));
+
+        public static bool RequiresPlayerChoice(CardDefinition def, Trigger trigger)
+        {
+            foreach (EffectDef effect in def.Effects)
+                if (effect.Trigger == trigger && IsPlayerChosen(effect.Target))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Enumerate one target specification for a player. This is the presentation seam: Unity
+        /// receives exactly the candidates the server will accept, including damaged/tribe filters
+        /// and enemy Shroud exclusion. Hidden opponent zones and ordered decks fail closed.
+        /// </summary>
+        public static IReadOnlyList<TargetCandidate> Candidates(GameState state, ICardDatabase db,
+            PlayerId controller, TargetSpec spec, InstanceId? source = null,
+            InstanceId? triggerSource = null)
+            => EnumerateCandidates(state, db, controller, spec, source, triggerSource,
+                forPlayerChoice: true, allowHiddenZones: false);
+
+        internal static IReadOnlyList<TargetCandidate> ResolutionCandidates(GameState state,
+            ICardDatabase db, PlayerId controller, TargetSpec spec, InstanceId? source = null,
+            InstanceId? triggerSource = null)
+            => EnumerateCandidates(state, db, controller, spec, source, triggerSource,
+                forPlayerChoice: false, allowHiddenZones: true);
+
+        private static IReadOnlyList<TargetCandidate> EnumerateCandidates(GameState state, ICardDatabase db,
+            PlayerId controller, TargetSpec spec, InstanceId? source,
+            InstanceId? triggerSource, bool forPlayerChoice, bool allowHiddenZones)
+        {
+            int friendly = state.SeatOf(controller);
+            int enemy = friendly == 0 ? 1 : 0;
+            var result = new List<TargetCandidate>();
+
+            switch (spec.Selector)
+            {
+                case "SELF": AddById(state, source, result); break;
+                case "TRIGGER_SOURCE": AddById(state, triggerSource, result); break;
+                case "ADJACENT": AddAdjacent(state, source, result); break;
+                case "FRIENDLY_HERO": AddHero(state, friendly, result); break;
+                case "ENEMY_HERO": AddHero(state, enemy, result); break;
+                case "FRIENDLY_MINIONS": AddMinions(state, friendly, result); break;
+                case "ENEMY_MINIONS": AddMinions(state, enemy, result); break;
+                case "ALL_MINIONS": AddMinions(state, friendly, result); AddMinions(state, enemy, result); break;
+                case "ANY_CHARACTER": AddCharacters(state, friendly, result); AddCharacters(state, enemy, result); break;
+                case "ANY_FRIENDLY": AddCharacters(state, friendly, result); break;
+                case "ANY_ENEMY": AddCharacters(state, enemy, result); break;
+                case "ANY_MINION": AddMinions(state, friendly, result); AddMinions(state, enemy, result); break;
+                case "ANY_FRIENDLY_MINION": AddMinions(state, friendly, result); break;
+                case "FRIENDLY_WEAPON": AddWeapon(state, friendly, result); break;
+                case "ENEMY_WEAPON": AddWeapon(state, enemy, result); break;
+                case "FRIENDLY_HAND": AddCards(state, friendly, Zone.Hand, result); break;
+                case "ENEMY_HAND": if (allowHiddenZones) AddCards(state, enemy, Zone.Hand, result); break;
+                case "ANY_HAND_CARD":
+                    AddCards(state, friendly, Zone.Hand, result);
+                    if (allowHiddenZones) AddCards(state, enemy, Zone.Hand, result);
+                    break;
+                case "FRIENDLY_DECK": if (allowHiddenZones) AddCards(state, friendly, Zone.Deck, result); break;
+                case "ENEMY_DECK": if (allowHiddenZones) AddCards(state, enemy, Zone.Deck, result); break;
+                case "ANY_DECK_CARD":
+                    if (allowHiddenZones)
+                    {
+                        AddCards(state, friendly, Zone.Deck, result);
+                        AddCards(state, enemy, Zone.Deck, result);
+                    }
+                    break;
+                case "FRIENDLY_GRAVEYARD": AddCards(state, friendly, Zone.Graveyard, result); break;
+                case "ENEMY_GRAVEYARD": AddCards(state, enemy, Zone.Graveyard, result); break;
+                case "ANY_GRAVEYARD_CARD": AddCards(state, friendly, Zone.Graveyard, result); AddCards(state, enemy, Zone.Graveyard, result); break;
+                default: throw new InvalidOperationException($"Unknown target selector '{spec.Selector}'.");
+            }
+
+            for (int i = result.Count - 1; i >= 0; i--)
+            {
+                TargetCandidate candidate = result[i];
+                if (forPlayerChoice && IsHiddenEnemyMinion(state, friendly, candidate))
+                {
+                    result.RemoveAt(i);
+                    continue;
+                }
+                if (!PassesFilter(candidate, spec.Filter, db))
+                    result.RemoveAt(i);
+            }
+            return result;
+        }
+
+        /// <summary>Validate every player-authored target before any state mutation or event emission.</summary>
+        public static bool ValidatePlayerChoices(GameState state, ICardDatabase db, PlayerId controller,
+            CardDefinition def, Trigger trigger, IReadOnlyList<TargetRef> choices, InstanceId? source = null)
+        {
+            var playerEffects = new List<EffectDef>();
+            bool hasAnyTargetSpec = false;
+            foreach (EffectDef effect in def.Effects)
+            {
+                if (effect.Trigger != trigger) continue;
+                hasAnyTargetSpec |= effect.Target != null;
+                if (IsPlayerChosen(effect.Target)) playerEffects.Add(effect);
+            }
+
+            // Compatibility for pre-TargetSpec unit/content behavior: an explicit live character can
+            // still feed a selector-less play effect. Authored RANDOM/automatic specs never accept a
+            // client override.
+            if (playerEffects.Count == 0)
+            {
+                if (choices.Count == 0) return true;
+                if (hasAnyTargetSpec) return false;
+                foreach (TargetRef choice in choices)
+                    if (!TryCandidate(state, choice.Instance, out TargetCandidate candidate) ||
+                        !candidate.IsCharacter || IsHiddenEnemyMinion(state, state.SeatOf(controller), candidate))
+                        return false;
+                return Distinct(choices);
+            }
+
+            var consumed = new bool[choices.Count];
+            foreach (EffectDef effect in playerEffects)
+            {
+                TargetSpec spec = effect.Target!;
+                IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller, spec, source);
+                var candidateIds = new HashSet<InstanceId>();
+                foreach (TargetCandidate candidate in candidates) candidateIds.Add(candidate.Instance);
+
+                var selected = new List<TargetRef>();
+                for (int i = 0; i < choices.Count; i++)
+                {
+                    bool belongs = spec.Binding.Length == 0
+                        ? choices[i].Binding.Length == 0
+                        : choices[i].Binding == spec.Binding;
+                    if (!belongs) continue;
+                    consumed[i] = true;
+                    selected.Add(choices[i]);
+                }
+
+                int required = RequiredPlayerCount(spec, candidates.Count);
+                if (selected.Count != required || !Distinct(selected)) return false;
+                foreach (TargetRef choice in selected)
+                    if (!candidateIds.Contains(choice.Instance)) return false;
+            }
+
+            for (int i = 0; i < consumed.Length; i++)
+                if (!consumed[i]) return false;
+
+            foreach (EffectDef effect in playerEffects)
+            {
+                TargetSpec spec = effect.Target!;
+                if (spec.DistinctFrom.Length == 0) continue;
+                foreach (TargetRef a in choices)
+                    if (a.Binding == spec.Binding)
+                        foreach (TargetRef b in choices)
+                            if (b.Binding == spec.DistinctFrom && a.Instance == b.Instance)
+                                return false;
+            }
+            return true;
+        }
+
+        internal static IReadOnlyList<TargetCandidate> ResolveTargets(GameState state, ICardDatabase db,
+            CardInstance source, EffectDef effect, IReadOnlyList<TargetRef> choices,
+            TargetBindingContext bindings, InstanceId? triggerSource)
+        {
+            TargetSpec? spec = effect.Target;
+            if (spec == null)
+            {
+                if (choices.Count > 0) return ChoiceCandidates(state, choices, "");
+                return DefaultTargets(state, source, effect);
+            }
+
+            IReadOnlyList<TargetCandidate> selected;
+            if (IsPlayerChosen(spec))
+            {
+                selected = ChoiceCandidates(state, choices, spec.Binding);
+            }
+            else
+            {
+                var candidates = new List<TargetCandidate>(ResolutionCandidates(state, db,
+                    source.Controller, spec, source.Id, triggerSource));
+                bindings.Exclude(spec.DistinctFrom, candidates);
+                int count = RequiredAutomaticCount(spec, candidates.Count);
+                if (spec.ChosenBy == TargetChosenBy.RANDOM)
+                {
+                    var random = new List<TargetCandidate>(count);
+                    while (random.Count < count && candidates.Count > 0)
+                    {
+                        int index = state.Rng.NextInt(candidates.Count);
+                        random.Add(candidates[index]);
+                        candidates.RemoveAt(index);
+                    }
+                    selected = random;
+                }
+                else
+                {
+                    selected = count == candidates.Count ? candidates : candidates.GetRange(0, count);
+                }
+            }
+
+            bindings.Record(spec.Binding, selected);
+            return selected;
+        }
+
+        private static int RequiredPlayerCount(TargetSpec spec, int candidateCount)
+            => spec.Count == -1 ? candidateCount : spec.Count ?? 1;
+
+        private static int RequiredAutomaticCount(TargetSpec spec, int candidateCount)
+        {
+            if (spec.Count == -1) return candidateCount;
+            if (spec.Count.HasValue) return Math.Min(spec.Count.Value, candidateCount);
+            return spec.ChosenBy == TargetChosenBy.RANDOM ? Math.Min(1, candidateCount) : candidateCount;
+        }
+
+        private static IReadOnlyList<TargetCandidate> ChoiceCandidates(GameState state,
+            IReadOnlyList<TargetRef> choices, string binding)
+        {
+            var result = new List<TargetCandidate>();
+            foreach (TargetRef choice in choices)
+                if (choice.Binding == binding && TryCandidate(state, choice.Instance, out TargetCandidate candidate))
+                    result.Add(candidate);
+            return result;
+        }
+
+        private static IReadOnlyList<TargetCandidate> DefaultTargets(GameState state,
+            CardInstance source, EffectDef effect)
+        {
+            int friendly = state.SeatOf(source.Controller);
+            int enemy = friendly == 0 ? 1 : 0;
+            switch (effect.Action)
+            {
+                case Contracts.Action.DEAL_DAMAGE:
+                    return new[] { HeroCandidate(state, enemy) };
+                case Contracts.Action.HEAL:
+                    return new[] { HeroCandidate(state, friendly) };
+                case Contracts.Action.BUFF:
+                case Contracts.Action.GIVE_KEYWORD:
+                    if (source.Zone == Zone.Board)
+                        return new[] { MinionCandidate(friendly, source) };
+                    break;
+            }
+            return Array.Empty<TargetCandidate>();
+        }
+
+        private static bool Distinct(IReadOnlyList<TargetRef> choices)
+        {
+            var seen = new HashSet<InstanceId>();
+            foreach (TargetRef choice in choices)
+                if (!seen.Add(choice.Instance)) return false;
+            return true;
+        }
+
+        private static bool PassesFilter(TargetCandidate candidate, TargetFilterDef? filter, ICardDatabase db)
+        {
+            if (filter == null) return true;
+            if (filter.Damaged.HasValue)
+            {
+                if (!candidate.IsCharacter) return false;
+                bool damaged = candidate.Character.IsHero
+                    ? candidate.Character.Hero!.CurrentHealth < candidate.Character.Hero.MaxHealth
+                    : candidate.Character.Minion!.CurrentHealth < candidate.Character.Minion.MaxHealth;
+                if (damaged != filter.Damaged.Value) return false;
+            }
+            if (filter.Tribe.HasValue)
+            {
+                if (candidate.DefinitionId.Length == 0 ||
+                    !db.TryGet(candidate.DefinitionId, out CardDefinition def) ||
+                    def.Tribe != filter.Tribe.Value) return false;
+            }
+            return true;
+        }
+
+        private static bool IsHiddenEnemyMinion(GameState state, int friendlySeat, TargetCandidate candidate)
+            => candidate.Kind == TargetCandidateKind.Minion &&
+               candidate.Character.Seat != friendlySeat &&
+               candidate.Character.Minion!.Keywords.Contains(Keyword.STEALTH);
+
+        private static void AddCharacters(GameState state, int seat, List<TargetCandidate> result)
+        {
+            AddHero(state, seat, result);
+            AddMinions(state, seat, result);
+        }
+
+        private static void AddHero(GameState state, int seat, List<TargetCandidate> result)
+        {
+            PlayerState player = state.Players[seat];
+            result.Add(HeroCandidate(state, seat));
+        }
+
+        private static void AddMinions(GameState state, int seat, List<TargetCandidate> result)
+        {
+            PlayerState player = state.Players[seat];
+            foreach (CardInstance minion in player.Board)
+                result.Add(MinionCandidate(seat, minion));
+        }
+
+        private static void AddWeapon(GameState state, int seat, List<TargetCandidate> result)
+        {
+            PlayerState player = state.Players[seat];
+            if (player.Weapon != null)
+                result.Add(new TargetCandidate(player.Weapon.Id, player.Id, TargetCandidateKind.Weapon,
+                    Zone.Weapon, definitionId: player.Weapon.DefinitionId, card: player.Weapon, seat: seat));
+        }
+
+        private static void AddCards(GameState state, int seat, Zone zone, List<TargetCandidate> result)
+        {
+            PlayerState player = state.Players[seat];
+            IReadOnlyList<CardInstance> cards = zone == Zone.Hand ? player.Hand
+                : zone == Zone.Deck ? player.Deck : player.Graveyard;
+            TargetCandidateKind kind = zone == Zone.Hand ? TargetCandidateKind.HandCard
+                : zone == Zone.Deck ? TargetCandidateKind.DeckCard : TargetCandidateKind.GraveyardCard;
+            foreach (CardInstance card in cards)
+                result.Add(new TargetCandidate(card.Id, player.Id, kind, zone,
+                    definitionId: card.DefinitionId, card: card, seat: seat));
+        }
+
+        private static void AddAdjacent(GameState state, InstanceId? source, List<TargetCandidate> result)
+        {
+            if (!source.HasValue || !Characters.TryFind(state, source.Value, out CharacterRef character) ||
+                !character.IsMinion) return;
+            List<CardInstance> board = state.Players[character.Seat].Board;
+            int index = board.IndexOf(character.Minion!);
+            if (index > 0)
+            {
+                CardInstance left = board[index - 1];
+                result.Add(MinionCandidate(character.Seat, left));
+            }
+            if (index >= 0 && index + 1 < board.Count)
+            {
+                CardInstance right = board[index + 1];
+                result.Add(MinionCandidate(character.Seat, right));
+            }
+        }
+
+        private static void AddById(GameState state, InstanceId? id, List<TargetCandidate> result)
+        {
+            if (id.HasValue && TryCandidate(state, id.Value, out TargetCandidate candidate)) result.Add(candidate);
+        }
+
+        private static bool TryCandidate(GameState state, InstanceId id, out TargetCandidate candidate)
+        {
+            if (Characters.TryFind(state, id, out CharacterRef character))
+            {
+                PlayerId controller = state.Players[character.Seat].Id;
+                candidate = new TargetCandidate(id, controller,
+                    character.IsHero ? TargetCandidateKind.Hero : TargetCandidateKind.Minion,
+                    Zone.Board, character, character.IsMinion ? character.Minion!.DefinitionId : null,
+                    card: character.Minion, seat: character.Seat);
+                return true;
+            }
+            for (int seat = 0; seat < 2; seat++)
+            {
+                PlayerState player = state.Players[seat];
+                if (player.Weapon != null && player.Weapon.Id == id)
+                {
+                    candidate = new TargetCandidate(id, player.Id, TargetCandidateKind.Weapon,
+                        Zone.Weapon, definitionId: player.Weapon.DefinitionId,
+                        card: player.Weapon, seat: seat);
+                    return true;
+                }
+                if (TryCard(player.Hand, id, player.Id, TargetCandidateKind.HandCard, Zone.Hand, seat, out candidate) ||
+                    TryCard(player.Deck, id, player.Id, TargetCandidateKind.DeckCard, Zone.Deck, seat, out candidate) ||
+                    TryCard(player.Graveyard, id, player.Id, TargetCandidateKind.GraveyardCard, Zone.Graveyard, seat, out candidate))
+                    return true;
+            }
+            candidate = default;
+            return false;
+        }
+
+        private static bool TryCard(IReadOnlyList<CardInstance> cards, InstanceId id, PlayerId controller,
+            TargetCandidateKind kind, Zone zone, int seat, out TargetCandidate candidate)
+        {
+            foreach (CardInstance card in cards)
+                if (card.Id == id)
+                {
+                    candidate = new TargetCandidate(id, controller, kind, zone,
+                        definitionId: card.DefinitionId, card: card, seat: seat);
+                    return true;
+                }
+            candidate = default;
+            return false;
+        }
+
+        private static TargetCandidate HeroCandidate(GameState state, int seat)
+        {
+            PlayerState player = state.Players[seat];
+            return new TargetCandidate(player.Hero.Id, player.Id, TargetCandidateKind.Hero,
+                Zone.Board, CharacterRef.OfHero(seat, player.Hero), seat: seat);
+        }
+
+        private static TargetCandidate MinionCandidate(int seat, CardInstance minion)
+            => new TargetCandidate(minion.Id, minion.Controller, TargetCandidateKind.Minion,
+                Zone.Board, CharacterRef.OfMinion(seat, minion), minion.DefinitionId,
+                card: minion, seat: seat);
+    }
+
+    internal sealed class TargetBindingContext
+    {
+        private readonly Dictionary<string, HashSet<InstanceId>> _bindings = new Dictionary<string, HashSet<InstanceId>>();
+
+        public void Record(string binding, IReadOnlyList<TargetCandidate> targets)
+        {
+            if (binding.Length == 0) return;
+            var ids = new HashSet<InstanceId>();
+            foreach (TargetCandidate target in targets) ids.Add(target.Instance);
+            _bindings[binding] = ids;
+        }
+
+        public void Exclude(string binding, List<TargetCandidate> candidates)
+        {
+            if (binding.Length == 0 || !_bindings.TryGetValue(binding, out HashSet<InstanceId>? ids)) return;
+            for (int i = candidates.Count - 1; i >= 0; i--)
+                if (ids.Contains(candidates[i].Instance)) candidates.RemoveAt(i);
+        }
+    }
+}

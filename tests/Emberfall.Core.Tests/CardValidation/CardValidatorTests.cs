@@ -84,10 +84,8 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Unimplemented_Selector_Requires_The_Primitive_Gate()
+        public void Adjacent_Selector_Is_Implemented_Without_A_Primitive_Gate()
         {
-            // ADJACENT is schema-valid but the interpreter cannot resolve it (and now throws instead
-            // of silently mistargeting) — so authoring it without requiresEngineeringPrimitive is an error.
             EffectDef Adjacent() => new EffectDef(Trigger.ON_PLAY, Action.DEAL_DAMAGE, amount: 1,
                 amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ADJACENT");
             CardDefinition Card(bool gated) => new CardDefinition(
@@ -100,11 +98,10 @@ namespace Emberfall.Core.Tests.CardValidation
 
             var validator = new CardValidator();
             var ungated = validator.Validate(Card(gated: false), new JsonCardDatabaseTestDouble(new[] { Card(false) }));
-            Assert.That(ungated.Ok, Is.False);
-            Assert.That(ungated.Issues.Any(i => i.Code == "C14-SELECTOR-UNIMPLEMENTED"));
+            Assert.That(ungated.Ok, Is.True);
 
             var gated = validator.Validate(Card(gated: true), new JsonCardDatabaseTestDouble(new[] { Card(true) }));
-            Assert.That(gated.Ok, Is.True, "requiresEngineeringPrimitive is the documented gate for unimplemented grammar.");
+            Assert.That(gated.Ok, Is.True);
         }
 
         [Test]

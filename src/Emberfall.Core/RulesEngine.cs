@@ -115,7 +115,7 @@ namespace Emberfall.Core
             broken.Zone = Zone.Graveyard;
             ps.Graveyard.Add(broken);
 
-            interp.RaiseSelf(broken, Trigger.ON_DEATH, System.Array.Empty<CharacterRef>());
+            interp.RaiseSelf(broken, Trigger.ON_DEATH, System.Array.Empty<TargetRef>());
         }
 
         /// <summary>

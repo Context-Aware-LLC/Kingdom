@@ -128,62 +128,10 @@ namespace Emberfall.Core
             if (def.Type == CardType.MINION && ps.Board.Count >= MatchEngine.BoardCap)
             { reason = RejectReason.BoardFull; return false; }
 
-            // Explicit-choice (ANY_*) selectors require a player-chosen target — mirrors the
-            // ValidateHeroPower gate. Without it a targeted play silently fell through to the verb
-            // defaults (enemy face for damage, own face for heal): mana spent, wrong effect, no
-            // rejection the UI could surface. The interpreter now throws in that case, so this gate
-            // is also what keeps a target-less client submit from faulting the match.
-            if (p.Targets.Count == 0 && RequiresChosenTarget(def))
+            Trigger playTrigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            if (!Targeting.ValidatePlayerChoices(state, _db, p.Player, def, playTrigger, p.Targets,
+                    ps.Hand[handIdx].Id))
             { reason = RejectReason.IllegalTarget; return false; }
-
-            // Target legality for any targets the intent supplies (M1 targeting model: EffectInterpreter
-            // doc). Each must name a live character; an enemy STEALTH minion can't be singled out by a
-            // play; and each must satisfy the card's explicit-choice selector shape (a minion-only
-            // selector can't be aimed at a hero, a friendly-only selector at an enemy).
-            foreach (var tr in p.Targets)
-            {
-                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
-                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
-                { reason = RejectReason.IllegalTarget; return false; }
-                if (!TargetsSatisfySelectors(def, ch, seat))
-                { reason = RejectReason.IllegalTarget; return false; }
-            }
-            return true;
-        }
-
-        // ── Explicit-choice (ANY_*) selector legality ────────────────────────────
-
-        private static bool IsExplicitChoice(string? selector)
-            => selector != null && selector.StartsWith("ANY_");
-
-        /// <summary>True when any play-trigger effect declares an explicit-choice (ANY_*) selector.</summary>
-        private static bool RequiresChosenTarget(Cards.CardDefinition def)
-        {
-            foreach (var eff in def.Effects)
-                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST) && IsExplicitChoice(eff.Selector))
-                    return true;
-            return false;
-        }
-
-        /// <summary>
-        /// A chosen target must fit the shape of every play-trigger ANY_* selector on the card (the M1
-        /// targeting model shares one chosen-target list across all of a card's effects).
-        /// </summary>
-        private static bool TargetsSatisfySelectors(Cards.CardDefinition def, CharacterRef ch, int casterSeat)
-        {
-            foreach (var eff in def.Effects)
-            {
-                if (eff.Trigger != Trigger.ON_PLAY && eff.Trigger != Trigger.ON_CAST) continue;
-                if (!IsExplicitChoice(eff.Selector)) continue;
-                switch (eff.Selector)
-                {
-                    case "ANY_FRIENDLY": if (ch.Seat != casterSeat) return false; break;
-                    case "ANY_ENEMY": if (ch.Seat == casterSeat) return false; break;
-                    case "ANY_MINION": if (!ch.IsMinion) return false; break;
-                    case "ANY_FRIENDLY_MINION": if (!ch.IsMinion || ch.Seat != casterSeat) return false; break;
-                        // ANY_CHARACTER (and any future ANY_*) accepts every live character.
-                }
-            }
             return true;
         }
 
@@ -336,22 +284,21 @@ namespace Emberfall.Core
             ps.Hand.RemoveAt(handIdx);
 
             var interp = new EffectInterpreter(state, _db, buf);
-            var targets = ResolveTargets(state, p.Targets);
-
             switch (def.Type)
             {
                 case CardType.MINION:
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
                     buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // Battlecry
-                    interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card);
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Battlecry
+                    interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
+                        triggerSource: card.Id);
                     break;
 
                 case CardType.SPELL:
                     card.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(card);
                     buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_CAST, targets);                 // the spell's one-shot effect
+                    interp.RaiseSelf(card, Trigger.ON_CAST, p.Targets);                 // the spell's one-shot effect
                     // EF-016: ON_SPELL_CAST — the observer half of a cast, enqueued AFTER the spell's own
                     // ON_CAST so the spell resolves first and reactions see the board it left behind. Same
                     // RaiseSelf-then-RaiseObservers shape as the MINION arm above (ON_PLAY → ON_FRIENDLY_SUMMON).
@@ -368,14 +315,14 @@ namespace Emberfall.Core
                     // observer sweep, so a controller filter here would be a new, unspecified rule.
                     // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
-                    interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null);
+                    interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null, triggerSource: card.Id);
                     break;
 
                 case CardType.WEAPON:
                     RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
                     RulesEngine.EnterWeapon(state, card, def, seat);
                     buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Battlecry
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // weapon Battlecry
                     break;
             }
 
@@ -395,23 +342,9 @@ namespace Emberfall.Core
             if (ps.HeroPowerUsedThisTurn) { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
             if (ps.Mana.Available < 2) { reason = RejectReason.NotEnoughMana; return false; }
 
-            // Explicit-choice selectors (ANY_*) require a player-chosen target. Without this gate a
-            // targeted hero power silently falls through to the verb defaults (enemy face for damage,
-            // own face for heal) — mana spent, wrong effect, no rejection the UI could surface.
             var hpDef = _db.Get(ps.Hero.HeroPowerId);
-            if (hp.Targets.Count == 0 && RequiresChosenTarget(hpDef))
+            if (!Targeting.ValidatePlayerChoices(state, _db, hp.Player, hpDef, Trigger.ON_CAST, hp.Targets))
             { reason = RejectReason.IllegalTarget; return false; }
-
-            // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for
-            // non-attacks; chosen targets must fit the power's explicit-choice selector shape).
-            foreach (var tr in hp.Targets)
-            {
-                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
-                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
-                { reason = RejectReason.IllegalTarget; return false; }
-                if (!TargetsSatisfySelectors(hpDef, ch, seat))
-                { reason = RejectReason.IllegalTarget; return false; }
-            }
             return true;
         }
 
@@ -437,13 +370,12 @@ namespace Emberfall.Core
             buf.Emit(VfxEvent.onHeroPower, source: ps.Hero.Id);
 
             var interp = new EffectInterpreter(state, _db, buf);
-            var targets = ResolveTargets(state, hp.Targets);
             // This ON_CAST is the SECOND raise site for the trigger — a hero power, not a spell. EF-016
             // deliberately does NOT follow it with RaiseObservers(ON_SPELL_CAST): that raise lives only in
             // ApplyPlayCard's CardType.SPELL arm, so "whenever a spell is cast" excludes hero powers.
             // If a design ruling ever makes hero powers count as spell casts, this is the line to change —
             // and HeroPowerDoesNotFireOnSpellCast in SpellCastTriggerTests is the test that must change with it.
-            interp.RaiseSelf(src, Trigger.ON_CAST, targets);
+            interp.RaiseSelf(src, Trigger.ON_CAST, hp.Targets);
             interp.Drain();
         }
 
@@ -548,7 +480,7 @@ namespace Emberfall.Core
             // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from
             // the equipped card itself, preserving its identity and runtime source state.
             if (attacker.IsHero && ps.Weapon != null)
-                interp.RaiseSelf(ps.Weapon, Trigger.ON_ATTACK, System.Array.Empty<CharacterRef>());
+                interp.RaiseSelf(ps.Weapon, Trigger.ON_ATTACK, System.Array.Empty<TargetRef>());
 
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);
@@ -586,15 +518,6 @@ namespace Emberfall.Core
             // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
-        }
-
-        private static IReadOnlyList<CharacterRef> ResolveTargets(GameState state, IReadOnlyList<TargetRef> refs)
-        {
-            if (refs == null || refs.Count == 0) return System.Array.Empty<CharacterRef>();
-            var list = new List<CharacterRef>(refs.Count);
-            foreach (var r in refs)
-                if (Characters.TryFind(state, r.Instance, out var ch)) list.Add(ch);
-            return list;
         }
 
         // ── Turn sequence (GDD §1b / ARCHITECTURE §5) ─────────────────────────────

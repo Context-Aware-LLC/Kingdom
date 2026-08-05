@@ -23,11 +23,16 @@ namespace Emberfall.Core.Contracts
     public readonly struct TargetRef : IEquatable<TargetRef>
     {
         public readonly InstanceId Instance;
-        public TargetRef(InstanceId instance) => Instance = instance;
-        public bool Equals(TargetRef other) => Instance.Equals(other.Instance);
+        public readonly string Binding;
+        public TargetRef(InstanceId instance, string? binding = null)
+        {
+            Instance = instance;
+            Binding = binding ?? "";
+        }
+        public bool Equals(TargetRef other) => Instance.Equals(other.Instance) && Binding == other.Binding;
         public override bool Equals(object? obj) => obj is TargetRef o && Equals(o);
-        public override int GetHashCode() => Instance.GetHashCode();
-        public override string ToString() => Instance.ToString();
+        public override int GetHashCode() => (Instance, Binding).GetHashCode();
+        public override string ToString() => Binding.Length == 0 ? Instance.ToString() : $"{Binding}:{Instance}";
     }
 
     /// <summary>Tier-1 raw intent from a source (UI / AI / network). May be illegal until validated.</summary>

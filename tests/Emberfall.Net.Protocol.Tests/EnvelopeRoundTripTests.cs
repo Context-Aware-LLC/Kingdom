@@ -48,6 +48,22 @@ namespace Emberfall.Net.Protocol.Tests
         }
 
         [Test]
+        public void Intent_With_Named_PerEffect_Targets_RoundTrips()
+        {
+            var intent = new PlayCardIntent(new PlayerId("p0"), new InstanceId(5), 0,
+                new[]
+                {
+                    new TargetRef(new InstanceId(9), "first"),
+                    new TargetRef(new InstanceId(10), "second"),
+                });
+
+            var message = RoundTrip<IntentMsg>(new IntentMsg(7, intent));
+            var roundTripped = (PlayCardIntent)message.Intent;
+
+            Assert.That(roundTripped.Targets, Is.EqualTo(intent.Targets));
+        }
+
+        [Test]
         public void Ack_Heartbeat_Reconnect_Resync_RoundTrip()
         {
             Assert.That(RoundTrip<AckMsg>(new AckMsg(99)).Version, Is.EqualTo(99UL));

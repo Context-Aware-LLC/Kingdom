@@ -46,13 +46,16 @@ namespace Emberfall.Core
         /// ON_DEATH deathrattle). <paramref name="chosenTargets"/> are the player-resolved targets (empty for
         /// fired triggers, which fall back to verb defaults at resolution time).
         /// </summary>
-        public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<CharacterRef> chosenTargets)
+        public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<TargetRef> chosenTargets,
+            TriggerContext context = default)
         {
             var def = _db.Get(source.DefinitionId);
             var effects = def.Effects;
+            var bindings = new TargetBindingContext();
+            context = context.WithTriggerSource(source.Id);
             for (int i = 0; i < effects.Count; i++)
                 if (effects[i].Trigger == trigger)
-                    _queue.Enqueue(new QueuedEffect(effects[i], source, chosenTargets));
+                    _queue.Enqueue(new QueuedEffect(effects[i], source, chosenTargets, bindings, context));
         }
 
         /// <summary>
@@ -62,17 +65,23 @@ namespace Emberfall.Core
         /// ongoing effects extend it only when their runtime lifecycle and validation land together.
         /// Conditions qualify effects while this snapshot is built, before queue/cap accounting.
         /// </summary>
-        public void RaiseObservers(Trigger trigger, CardInstance? excluded, TriggerContext context = default)
+        public void RaiseObservers(Trigger trigger, CardInstance? excluded, TriggerContext context = default,
+            InstanceId? triggerSource = null)
         {
             foreach (var src in OrderedTriggerSources())
             {
                 if (excluded != null && ReferenceEquals(src, excluded)) continue;
                 var def = _db.Get(src.DefinitionId);
                 var effects = def.Effects;
+                var bindings = new TargetBindingContext();
+                TriggerContext sourceContext = triggerSource.HasValue
+                    ? context.WithTriggerSource(triggerSource.Value)
+                    : context;
                 for (int i = 0; i < effects.Count; i++)
                     if (effects[i].Trigger == trigger &&
                         ConditionEvaluator.Holds(effects[i], src, context))
-                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<CharacterRef>(), context));
+                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<TargetRef>(),
+                            bindings, sourceContext));
             }
         }
 
@@ -154,9 +163,11 @@ namespace Emberfall.Core
 
                     var def = _db.Get(minion.DefinitionId);
                     var effects = def.Effects;
+                    var bindings = new TargetBindingContext();
                     for (int i = 0; i < effects.Count; i++)
                         if (effects[i].Trigger == Trigger.ON_DEATH)
-                            _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<CharacterRef>()));
+                            _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<TargetRef>(),
+                                bindings, TriggerContext.ForSource(minion.Id)));
 
                     // REBORN: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
                     if (minion.Keywords.Contains(Keyword.REBORN) && !minion.HasUsedReborn)
@@ -183,87 +194,10 @@ namespace Emberfall.Core
 
         // ── Target resolution ────────────────────────────────────────────────────
 
-        private IReadOnlyList<CharacterRef> ResolveTargets(QueuedEffect qe)
+        private IReadOnlyList<TargetCandidate> ResolveTargets(QueuedEffect qe)
         {
-            if (qe.ChosenTargets.Count > 0) return qe.ChosenTargets;
-            if (qe.Effect.Selector != null) return SelectorTargets(qe.Effect, qe.Source);
-            return DefaultTargets(qe.Effect, qe.Source);
-        }
-
-        /// <summary>
-        /// Auto-resolve targets from the effect's declared selector (dev-docs/specs/card-schema.md §5.3). Activated only
-        /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS), unconditional
-        /// auto-targets (ENEMY_HERO), and SELF. Explicit-choice (ANY_*) selectors are never auto-resolved:
-        /// CommandProcessor validation rejects a player intent that omits their target, so reaching here
-        /// with one means a fired trigger authored an ANY_* selector — a data bug, and it throws.
-        /// Unimplemented selectors (ADJACENT, TRIGGER_SOURCE) and unknown strings also throw: the M2
-        /// Phase 0 grammar-freeze ruling — silent fallback was silent mistargeting.
-        /// </summary>
-        private IReadOnlyList<CharacterRef> SelectorTargets(EffectDef eff, CardInstance source)
-        {
-            int seat = _state.SeatOf(source.Controller);
-            int foe = seat == 0 ? 1 : 0;
-            switch (eff.Selector)
-            {
-                case "SELF":
-                    return source.Zone == Zone.Board
-                        ? new[] { CharacterRef.OfMinion(seat, source) }
-                        : (IReadOnlyList<CharacterRef>)System.Array.Empty<CharacterRef>();
-                case "ENEMY_MINIONS":
-                    {
-                        var board = _state.Players[foe].Board;
-                        var refs = new CharacterRef[board.Count];
-                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(foe, board[i]);
-                        return refs;
-                    }
-                case "FRIENDLY_MINIONS":
-                    {
-                        var board = _state.Players[seat].Board;
-                        var refs = new CharacterRef[board.Count];
-                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(seat, board[i]);
-                        return refs;
-                    }
-                case "ALL_MINIONS":
-                    {
-                        var list = new List<CharacterRef>();
-                        var b0 = _state.Players[seat].Board;
-                        var b1 = _state.Players[foe].Board;
-                        for (int i = 0; i < b0.Count; i++) list.Add(CharacterRef.OfMinion(seat, b0[i]));
-                        for (int i = 0; i < b1.Count; i++) list.Add(CharacterRef.OfMinion(foe, b1[i]));
-                        return list;
-                    }
-                case "ENEMY_HERO":
-                    return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
-                case "FRIENDLY_HERO":
-                    return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
-                default:
-                    throw new System.InvalidOperationException(
-                        $"Card '{source.DefinitionId}': effect {eff.Action} declares selector '{eff.Selector}' " +
-                        "which the interpreter cannot auto-resolve (explicit-choice ANY_* selectors require " +
-                        "player-chosen targets; ADJACENT/TRIGGER_SOURCE are unimplemented). Fix the card row " +
-                        "or gate it behind requiresEngineeringPrimitive — silent fallback is mistargeting.");
-            }
-        }
-
-        private IReadOnlyList<CharacterRef> DefaultTargets(EffectDef eff, CardInstance source)
-        {
-            int seat = _state.SeatOf(source.Controller);
-            int foe = seat == 0 ? 1 : 0;
-            switch (eff.Action)
-            {
-                case Contracts.Action.DEAL_DAMAGE:
-                    return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
-                case Contracts.Action.HEAL:
-                    return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
-                case Contracts.Action.BUFF:
-                case Contracts.Action.GIVE_KEYWORD:
-                    return source.Zone == Zone.Board
-                        ? new[] { CharacterRef.OfMinion(seat, source) }
-                        : System.Array.Empty<CharacterRef>();
-                default:
-                    // DESTROY / RETURN_TO_HAND / SILENCE / TRANSFORM need an explicit target; none → no-op.
-                    return System.Array.Empty<CharacterRef>();
-            }
+            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.Effect, qe.ChosenTargets,
+                qe.Bindings, qe.TriggerContext.TriggerSource);
         }
 
         // ── Deterministic trigger-source ordering ────────────────────────────────
@@ -296,15 +230,17 @@ namespace Emberfall.Core
     {
         public readonly EffectDef Effect;
         public readonly CardInstance Source;
-        public readonly IReadOnlyList<CharacterRef> ChosenTargets;
+        public readonly IReadOnlyList<TargetRef> ChosenTargets;
+        public readonly TargetBindingContext Bindings;
         public readonly TriggerContext TriggerContext;
 
-        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<CharacterRef> chosenTargets,
-            TriggerContext triggerContext = default)
+        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<TargetRef> chosenTargets,
+            TargetBindingContext bindings, TriggerContext triggerContext = default)
         {
             Effect = effect;
             Source = source;
-            ChosenTargets = chosenTargets ?? System.Array.Empty<CharacterRef>();
+            ChosenTargets = chosenTargets ?? System.Array.Empty<TargetRef>();
+            Bindings = bindings;
             TriggerContext = triggerContext;
         }
     }
@@ -313,10 +249,17 @@ namespace Emberfall.Core
     internal readonly struct TriggerContext
     {
         public readonly PlayerId? TurnPlayer;
+        public readonly InstanceId? TriggerSource;
 
-        private TriggerContext(PlayerId? turnPlayer) => TurnPlayer = turnPlayer;
+        private TriggerContext(PlayerId? turnPlayer, InstanceId? triggerSource)
+        {
+            TurnPlayer = turnPlayer;
+            TriggerSource = triggerSource;
+        }
 
-        public static TriggerContext ForTurnStart(PlayerId turnPlayer) => new TriggerContext(turnPlayer);
+        public static TriggerContext ForTurnStart(PlayerId turnPlayer) => new TriggerContext(turnPlayer, null);
+        public static TriggerContext ForSource(InstanceId source) => new TriggerContext(null, source);
+        public TriggerContext WithTriggerSource(InstanceId source) => new TriggerContext(TurnPlayer, source);
     }
 
     /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
@@ -358,10 +301,10 @@ namespace Emberfall.Core
         public readonly EffectInterpreter Interpreter;
         public readonly EffectDef Effect;
         public readonly CardInstance Source;
-        public readonly IReadOnlyList<CharacterRef> Targets;
+        public readonly IReadOnlyList<TargetCandidate> Targets;
 
         public EffectContext(EffectInterpreter interpreter, EffectDef effect, CardInstance source,
-            IReadOnlyList<CharacterRef> targets)
+            IReadOnlyList<TargetCandidate> targets)
         {
             Interpreter = interpreter;
             Effect = effect;
