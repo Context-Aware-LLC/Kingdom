@@ -85,14 +85,12 @@ namespace Emberfall.Core.Tests.Interpreter
             IReadOnlyList<Keyword>? keywords = null, IReadOnlyList<RuleDefinition>? rules = null)
             => new CardDefinition(id, id, CardType.MINION, cost, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Spell(string id, int cost, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, cost, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CommandProcessor Processor(FakeCardDatabase db) => new CommandProcessor(db);
 

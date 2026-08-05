@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.Interpreter
             CardDefinition spell = Card("seize", CardType.SPELL, new[] { take });
             CardDefinition weaponDef = new CardDefinition("blade", "blade", CardType.WEAPON, 1,
                 2, null, 2, CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<RuleDefinition>(), "", "", "art/blade", SetId.CORE,
+                System.Array.Empty<RuleDefinition>(), "", "art/blade", SetId.CORE,
                 true, null, "", false);
             var db = new FakeCardDatabase().Register(spell).Register(weaponDef);
             GameState state = State();
@@ -121,7 +121,7 @@ namespace Emberfall.Core.Tests.Interpreter
         private static CardDefinition Card(string id, CardType type, RuleDefinition[] rules)
             => new CardDefinition(id, id, type, type == CardType.HERO_POWER ? 2 : 1,
                 null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules, "", "", "art/" + id, SetId.CORE,
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE,
                 true, null, "", false);
 
         private static GameState State()

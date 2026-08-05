@@ -14,13 +14,11 @@ namespace Emberfall.Core.Tests.Interpreter
     {
         private static CardDefinition Minion(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.MINION, 0, 0, 1, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static GameState State()
         {

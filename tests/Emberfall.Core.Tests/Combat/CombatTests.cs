@@ -72,8 +72,7 @@ namespace Emberfall.Core.Tests.Combat
         private static CardDefinition Minion(string id, int atk, int hp, params Keyword[] kws)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                kws, System.Array.Empty<RuleDefinition>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                kws, System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static AttackIntent Attack(GameState s, InstanceId attacker, InstanceId defender)
             => new AttackIntent(s.ActivePlayer, attacker, new TargetRef(defender));

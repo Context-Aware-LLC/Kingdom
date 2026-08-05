@@ -222,8 +222,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
                 type == CardType.MINION ? 1 : (int?)null,
                 type == CardType.WEAPON ? 1 : (int?)null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static EffectSourceContext Ongoing(int id, PlayerId controller, string ruleId)
         {

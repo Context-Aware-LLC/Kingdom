@@ -19,7 +19,6 @@ namespace Emberfall.Core.Cards
             "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId",
             "flavorText", "factionId", "keywords", "rules", "_comment"
         };
-        };
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -84,6 +83,7 @@ namespace Emberfall.Core.Cards
                 if (ruleElements.ValueKind != JsonValueKind.Array)
                     throw new FormatException("Card JSON rules must be an array.");
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
+            }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
                 keywords, rules, flavor, artId, setId, collectible, tribe, faction, reqPrim);
         }

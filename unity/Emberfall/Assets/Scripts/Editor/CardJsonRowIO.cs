@@ -73,7 +73,6 @@ namespace Emberfall.Editor
                 w.WriteString("setId", def.SetId.ToString());
                 w.WriteBoolean("collectible", def.Collectible);
                 w.WriteString("artId", def.ArtId);
-                if (!string.IsNullOrEmpty(def.CardText)) w.WriteString("cardText", def.CardText);
                 if (!string.IsNullOrEmpty(def.FlavorText)) w.WriteString("flavorText", def.FlavorText);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
                 if (def.RequiresEngineeringPrimitive) w.WriteBoolean("requiresEngineeringPrimitive", true);

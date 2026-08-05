@@ -62,13 +62,13 @@ namespace Emberfall.Core.Tests.Projection
             Array.Empty<Keyword>(),
             new[] { TestRules.Rule("bolt", Trigger.ON_CAST,
                 TestRules.Damage(Trigger.ON_CAST, 1, "ENEMY_HERO")) },
-            "", "", "art/hp_bolt", SetId.CORE, false, null, "", false);
+            "", "art/hp_bolt", SetId.CORE, false, null, "", false);
 
         private static readonly CardDefinition Hatchet = new CardDefinition(
             "hatchet", "hatchet", CardType.WEAPON, 1, 2, null, 2,
             CardClass.NEUTRAL, Rarity.COMMON,
             Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
-            "", "", "art/hatchet", SetId.CORE, true, null, "", false);
+            "", "art/hatchet", SetId.CORE, true, null, "", false);
 
         private static (IReadOnlyList<GameEvent> events, IReadOnlyList<EventVisibility> vis)
             Exec(CommandProcessor proc, GameState s, PlayerIntent intent)
@@ -292,7 +292,7 @@ namespace Emberfall.Core.Tests.Projection
                 Array.Empty<Keyword>(),
                 new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
                     new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
-                "", "", "art/bounce", SetId.CORE, true, null, "", false);
+                "", "art/bounce", SetId.CORE, true, null, "", false);
             var db = new FakeCardDatabase().Register(bounce);
             var proc = new CommandProcessor(db);
             var s = MainPhase();

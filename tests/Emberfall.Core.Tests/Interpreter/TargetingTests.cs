@@ -34,19 +34,17 @@ namespace Emberfall.Core.Tests.Interpreter
         private static CardDefinition Minion(string id, Tribe? tribe = null)
             => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<RuleDefinition>(), "", "", "art/" + id, SetId.CORE, true,
+                System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true,
                 tribe, "", false);
 
         private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Weapon(string id, int attack = 2, int durability = 2,
             params Keyword[] keywords)
             => new CardDefinition(id, id, CardType.WEAPON, 1, attack, null, durability,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, System.Array.Empty<RuleDefinition>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardInstance Board(GameState state, int seat, CardDefinition def)
         {

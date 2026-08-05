@@ -68,20 +68,18 @@ namespace Emberfall.Core.Tests.HeroPower
             IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), System.Array.Empty<RuleDefinition>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords ?? System.Array.Empty<Keyword>(), System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition HeroPower(string id, CardClass cls, IReadOnlyList<RuleDefinition> rules)
             => new CardDefinition(id, id, CardType.HERO_POWER, 2, null, null, null,
                 cls, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules,
-                "", "", "art/" + id, SetId.CORE, false, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, false, null, "", false);
 
         private static CardDefinition WispDef()
             => new CardDefinition("token_wisp", "Wisp", CardType.MINION, 0, 0, 2, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK }, System.Array.Empty<RuleDefinition>(),
-                "", "", "art/token_wisp", SetId.CORE, false, null, "", false);
+                "", "art/token_wisp", SetId.CORE, false, null, "", false);
 
         private static RuleDefinition Damage(int amount)
             => TestRules.Rule("rule_1", Trigger.ON_CAST,

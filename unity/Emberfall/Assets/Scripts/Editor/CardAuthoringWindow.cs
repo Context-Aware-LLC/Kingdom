@@ -188,7 +188,7 @@ namespace Emberfall.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
-            card.CardText = EditorGUILayout.TextField("cardText", card.CardText);
+            EditorGUILayout.LabelField("generatedText", CardTextGenerator.Generate(card.ToDefinition()), EditorStyles.wordWrappedLabel);
             card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
 

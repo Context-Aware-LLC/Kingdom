@@ -22,19 +22,16 @@ namespace Emberfall.Core.Tests.CardBehavior
         private static CardDefinition Minion(string id, int attack, int health, Keyword[] keywords,
             params RuleDefinition[] rules) => new CardDefinition(
                 id, id, CardType.MINION, 0, attack, health, null,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Weapon(string id, int attack, int durability, Keyword[] keywords,
             params RuleDefinition[] rules) => new CardDefinition(
                 id, id, CardType.WEAPON, 0, attack, null, durability,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Spell(string id, params RuleDefinition[] rules) => new CardDefinition(
             id, id, CardType.SPELL, 0, null, null, null,
-            CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
-            "", "", "art/" + id, SetId.CORE, true, null, "", false);
+            CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static GameState State()
         {

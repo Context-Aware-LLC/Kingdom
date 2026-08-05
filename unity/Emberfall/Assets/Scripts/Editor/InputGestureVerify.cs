@@ -754,7 +754,7 @@ namespace Emberfall.Editor
             => new CardDefinition(id, id, type, 1, 2, 3, null,
                                   CardClass.NEUTRAL, Rarity.COMMON,
                                   System.Array.Empty<Keyword>(), rules,
-                                  "", "", "", SetId.CORE, true, null, "", false);
+                                  "", "", SetId.CORE, true, null, "", false);
 
         private static void Check(string what, bool ok)
         {

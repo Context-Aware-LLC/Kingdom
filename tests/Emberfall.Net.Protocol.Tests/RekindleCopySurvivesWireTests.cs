@@ -27,13 +27,13 @@ namespace Emberfall.Net.Protocol.Tests
             => new CardDefinition("core_throneless_king", "Throneless King", CardType.MINION, 6, 6, 6, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK, Keyword.REKINDLE }, Array.Empty<RuleDefinition>(),
-                "", "", "art/core_throneless_king", SetId.CORE, true, null, "", false);
+                "", "art/core_throneless_king", SetId.CORE, true, null, "", false);
 
         private static CardDefinition Bruiser()
             => new CardDefinition("bruiser", "Bruiser", CardType.MINION, 6, 6, 8, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
-                "", "", "art/bruiser", SetId.CORE, true, null, "", false);
+                "", "art/bruiser", SetId.CORE, true, null, "", false);
 
         private static CardInstance PutOnBoard(GameState s, int seat, CardDefinition def)
         {

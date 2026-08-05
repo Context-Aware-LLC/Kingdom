@@ -103,18 +103,10 @@ namespace Emberfall.Editor
                 if (rule.Action is GrantKeywordAction grant && auraKeywords.Contains(grant.Keyword))
                     Warn("E5-AURA-CAP", "rules", $"grants persistent aura keyword {grant.Keyword} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");
 
-            // E6: cardText token consistency
-            if (!string.IsNullOrEmpty(def.CardText))
-            {
-                if (def.CardText.Contains("$dmg") && !def.Rules.Any(rule => rule.Action is DamageAction))
-                    Warn("E6-TEXT-TOKEN", "cardText", "cardText references $dmg but no DAMAGE rule is present.");
-                if (def.CardText.Contains("$heal") && !def.Rules.Any(rule => rule.Action is HealAction))
-                    Warn("E6-TEXT-TOKEN", "cardText", "cardText references $heal but no HEAL rule is present.");
-            }
-
-            // E7: length caps
-            if (def.CardText.Length > 140)
-                Warn("E7-TEXT-LENGTH", "cardText", "cardText must be <=140 characters.");
+            // E7: generated card text is the sole presentation text source.
+            string generatedText = CardTextGenerator.Generate(def);
+            if (generatedText.Length > 140)
+                Warn("E7-TEXT-LENGTH", "generatedText", "generated card text must be <=140 characters.");
             if (def.FlavorText.Length > 160)
                 Warn("E7-TEXT-LENGTH", "flavorText", "flavorText must be <=160 characters.");
 
