@@ -104,5 +104,14 @@
     "id": "test_heal_wardsong",       "name": "Wardsong",     "type": "MINION",     "cost": 1, "attack": 1, "health": 3, "class": "NEUTRAL",    "rarity": "COMMON", "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_heal_wardsong",
     "effects": [ { "trigger": "ON_HEAL", "action": "DEAL_DAMAGE", "amount": 1, "target": { "selector": "ENEMY_HERO" } } ] },
   { "id": "test_heal_salve",          "name": "Mending Salve","type": "SPELL",      "cost": 1, "class": "NEUTRAL",    "rarity": "COMMON", "setId": "CORE", "collectible": false, "artId": "art/test_heal_salve",
-    "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 2, "target": { "selector": "FRIENDLY_MINIONS" } } ] }
+    "effects": [ { "trigger": "ON_CAST", "action": "HEAL", "amount": 2, "target": { "selector": "FRIENDLY_MINIONS" } } ] },
+
+  { "_comment": "NOR-31 weapon-identity fixture cards. Fixture-only and appended: the blade is the first weapon exercised by GoldenReplay, so it covers the populated canonical weapon branch and all four behaviorally valid carrier keywords.",
+    "id": "test_rider_blade", "name": "Rider Blade", "type": "WEAPON", "cost": 1, "attack": 2, "durability": 3, "class": "NEUTRAL", "rarity": "COMMON",
+    "keywords": ["LIFESTEAL", "WINDFURY", "POISONOUS", "FREEZE"], "setId": "CORE", "collectible": false, "artId": "art/test_rider_blade" },
+  { "id": "test_rider_brute", "name": "Rider Brute", "type": "MINION", "cost": 1, "attack": 0, "health": 6, "class": "NEUTRAL", "rarity": "COMMON",
+    "keywords": [], "setId": "CORE", "collectible": false, "artId": "art/test_rider_brute" },
+  { "_comment": "Aegis control: identical to test_rider_brute except for DIVINE_SHIELD. Its absorbed hit must carry none of the weapon riders.",
+    "id": "test_rider_aegis", "name": "Rider Aegis", "type": "MINION", "cost": 1, "attack": 0, "health": 6, "class": "NEUTRAL", "rarity": "COMMON",
+    "keywords": ["DIVINE_SHIELD"], "setId": "CORE", "collectible": false, "artId": "art/test_rider_aegis" }
 ]
