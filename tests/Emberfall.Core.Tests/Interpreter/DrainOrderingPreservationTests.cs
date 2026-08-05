@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Interpreter
 {
@@ -13,14 +12,14 @@ namespace Emberfall.Core.Tests.Interpreter
     [Category("Unit")]
     public sealed class DrainOrderingPreservationTests
     {
-        private static CardDefinition Minion(string id, int health, params EffectDef[] effects)
+        private static CardDefinition Minion(string id, int health, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.MINION, 0, 0, health, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardInstance Board(GameState state, int seat, CardDefinition def)
@@ -63,12 +62,12 @@ namespace Emberfall.Core.Tests.Interpreter
             // the deciding tie-breaker. A kills Cascade; the fresh DeathCheck must enqueue Cascade behind
             // already-queued B. FIFO then resolves B, then Cascade, whose lethal damage must CheckWin before
             // a later queued effect could run.
-            var deathA = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "FRIENDLY_MINIONS");
-            var deathB = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "ENEMY_HERO");
-            var deathCascade = new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 2, null, null, null,
-                selector: "ENEMY_HERO");
+            RuleDefinition deathA = TestRules.Rule("death_a", Trigger.ON_DEATH,
+                new DamageAction(1, new TargetSpec("FRIENDLY_MINIONS")));
+            RuleDefinition deathB = TestRules.Rule("death_b", Trigger.ON_DEATH,
+                new DamageAction(1, new TargetSpec("ENEMY_HERO")));
+            RuleDefinition deathCascade = TestRules.Rule("death_cascade", Trigger.ON_DEATH,
+                new DamageAction(2, new TargetSpec("ENEMY_HERO")));
             var db = new FakeCardDatabase()
                 .Register(Minion("advance", 1))
                 .Register(Minion("a", 1, deathA))
@@ -108,10 +107,11 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Drain_Stops_Only_When_The_Next_Dequeued_Effect_Exceeds_The_Resolution_Cap()
         {
-            var retaliate = new EffectDef(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "ENEMY_MINIONS");
+            RuleDefinition retaliate = TestRules.Rule("retaliate", Trigger.ON_DAMAGED,
+                new DamageAction(1, new TargetSpec("ENEMY_MINIONS")));
             var db = new FakeCardDatabase()
-                .Register(Spell("poke", new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null)))
+                .Register(Spell("poke", TestRules.Rule("poke", Trigger.ON_CAST,
+                    new DamageAction(1, new TargetSpec("ANY_CHARACTER")))))
                 .Register(Minion("echo", 200, retaliate));
             var state = State();
             var left = Board(state, 0, db.Get("echo"));

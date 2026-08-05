@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.HeroPower
 {
@@ -69,23 +68,27 @@ namespace Emberfall.Core.Tests.HeroPower
             IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), System.Array.Empty<EffectDef>(),
+                keywords ?? System.Array.Empty<Keyword>(), System.Array.Empty<RuleDefinition>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition HeroPower(string id, CardClass cls, IReadOnlyList<EffectDef> effects)
+        private static CardDefinition HeroPower(string id, CardClass cls, IReadOnlyList<RuleDefinition> rules)
             => new CardDefinition(id, id, CardType.HERO_POWER, 2, null, null, null,
                 cls, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects,
+                System.Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, false, null, "", false);
 
         private static CardDefinition WispDef()
             => new CardDefinition("token_wisp", "Wisp", CardType.MINION, 0, 0, 2, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                new[] { Keyword.BULWARK }, System.Array.Empty<EffectDef>(),
+                new[] { Keyword.BULWARK }, System.Array.Empty<RuleDefinition>(),
                 "", "", "art/token_wisp", SetId.CORE, false, null, "", false);
 
-        private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? tokenId = null)
-            => new EffectDef(trigger, action, amount, null, tokenId, null);
+        private static RuleDefinition Damage(int amount)
+            => TestRules.Rule("rule_1", Trigger.ON_CAST,
+                new DamageAction(amount, new TargetSpec("ANY_CHARACTER")));
+
+        private static RuleDefinition Summon(int count, string cardId)
+            => TestRules.Rule("rule_1", Trigger.ON_CAST, new SummonAction(cardId, count));
 
         private static HeroPowerIntent UseHeroPower(GameState s, IReadOnlyList<TargetRef>? targets = null)
             => new HeroPowerIntent(s.ActivePlayer, targets ?? System.Array.Empty<TargetRef>());
@@ -126,7 +129,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
@@ -176,8 +179,7 @@ namespace Emberfall.Core.Tests.HeroPower
             // DEAL_DAMAGE default (enemy face) with mana spent.
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null,
-                                      "ANY_CHARACTER") }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
@@ -196,7 +198,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
@@ -212,7 +214,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var minionDef = Minion("dummy", 2, 3);
             db.Register(minionDef);
             var s = MainPhase(db);
@@ -230,7 +232,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
@@ -245,7 +247,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db, p0Mana: 5);
             var proc = new CommandProcessor(db);
 
@@ -261,7 +263,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
@@ -278,7 +280,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var fragile = Minion("fragile", 1, 1);
             db.Register(fragile);
             var s = MainPhase(db);
@@ -300,7 +302,7 @@ namespace Emberfall.Core.Tests.HeroPower
             var wispDef = WispDef();
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_tidal_ward", CardClass.TIDECALLER,
-                new[] { Eff(Trigger.ON_CAST, Verb.SUMMON, 1, tokenId: "token_wisp") }));
+                new[] { Summon(1, "token_wisp") }));
             db.Register(wispDef);
             var s = MainPhase(db);
             // P1 turn — swap active player so we test Tidecaller's hero power
@@ -323,7 +325,7 @@ namespace Emberfall.Core.Tests.HeroPower
             var wispDef = WispDef();
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_tidal_ward", CardClass.TIDECALLER,
-                new[] { Eff(Trigger.ON_CAST, Verb.SUMMON, 1, tokenId: "token_wisp") }));
+                new[] { Summon(1, "token_wisp") }));
             db.Register(wispDef);
             var s = MainPhase(db);
             s.ActivePlayer = s.Players[1].Id;
@@ -342,7 +344,7 @@ namespace Emberfall.Core.Tests.HeroPower
         {
             var db = new FakeCardDatabase();
             db.Register(HeroPower("hp_searing_bolt", CardClass.EMBERWARD,
-                new[] { Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1) }));
+                new[] { Damage(1) }));
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 

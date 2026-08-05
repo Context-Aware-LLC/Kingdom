@@ -4,7 +4,6 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
 using Emberfall.Presentation;
 using NUnit.Framework;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Interpreter
 {
@@ -21,12 +20,12 @@ namespace Emberfall.Core.Tests.Interpreter
             var body = Minion("body");
             var spell = Spell("split", new[]
             {
-                new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                    target: new TargetSpec("ANY_CHARACTER", TargetChosenBy.PLAYER,
-                        count: 2, binding: "first")),
-                new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                    target: new TargetSpec("ANY_CHARACTER", TargetChosenBy.PLAYER,
-                        binding: "second", distinctFrom: "first")),
+                TestRules.Rule("first_hit", Trigger.ON_CAST,
+                    new DamageAction(1, new TargetSpec("ANY_CHARACTER", TargetChosenBy.PLAYER,
+                        count: 2, binding: "first"))),
+                TestRules.Rule("second_hit", Trigger.ON_CAST,
+                    new DamageAction(1, new TargetSpec("ANY_CHARACTER", TargetChosenBy.PLAYER,
+                        binding: "second", distinctFrom: "first"))),
             });
             var db = new FakeCardDatabase().Register(body).Register(spell);
             GameState state = State();
@@ -101,12 +100,12 @@ namespace Emberfall.Core.Tests.Interpreter
         private static CardDefinition Minion(string id)
             => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<EffectDef>(), "", "", "art/" + id, SetId.CORE,
+                System.Array.Empty<RuleDefinition>(), "", "", "art/" + id, SetId.CORE,
                 true, null, "", false);
 
-        private static CardDefinition Spell(string id, EffectDef[] effects)
+        private static CardDefinition Spell(string id, RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
     }
 }

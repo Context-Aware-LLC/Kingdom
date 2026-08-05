@@ -6,7 +6,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.CardBehavior
 {
@@ -30,34 +29,34 @@ namespace Emberfall.Core.Tests.CardBehavior
 
         // ── card scaffolding ──────────────────────────────────────────────────────
 
-        private static EffectDef Damage(Trigger trigger, int amount, string selector)
-            => new EffectDef(trigger, Verb.DEAL_DAMAGE, amount: amount, amount2: null,
-                tokenId: null, grantedKeyword: null, selector: selector);
+        private static RuleDefinition Damage(Trigger trigger, int amount, string selector)
+            => TestRules.Rule("rule_1", trigger,
+                new DamageAction(amount, new TargetSpec(selector)));
 
-        private static CardDefinition Minion(string id, int health, EffectDef[] effects)
+        private static CardDefinition Minion(string id, int health, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.MINION, cost: 1,
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static CardDefinition Spell(string id, int cost, EffectDef[] effects)
+        private static CardDefinition Spell(string id, int cost, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.SPELL, cost: cost,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static CardDefinition HeroPower(string id, EffectDef[] effects)
+        private static CardDefinition HeroPower(string id, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.HERO_POWER, cost: 2,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: false, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -65,8 +64,8 @@ namespace Emberfall.Core.Tests.CardBehavior
         private static FakeCardDatabase Db(int echoDamage = 1, int echoHealth = 3)
             => new FakeCardDatabase()
                 .Register(Minion(Echo, echoHealth, new[] { Damage(Trigger.ON_SPELL_CAST, echoDamage, "ENEMY_HERO") }))
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Spell(Bolt, cost: 0, effects: new[] { Damage(Trigger.ON_CAST, 2, "ENEMY_HERO") }))
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 2, "ENEMY_HERO") }))
                 // The hero power deals damage too — the SAME verb the echo uses — so "the echo did not
                 // fire" cannot be confused with "the hero power did nothing".
                 .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
@@ -245,8 +244,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             // card designer will assume works the other way. Making it "only living subscribers react"
             // is a design ruling on RaiseObservers, not a fix to this raise site.
             var db = new FakeCardDatabase()
-                .Register(Minion(Echo, health: 3, effects: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
-                .Register(Spell(Bolt, cost: 0, effects: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
+                .Register(Minion(Echo, health: 3, rules: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
                 .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
 
             var (host, s) = Match(db, MixedDeck(), seed: 28UL);

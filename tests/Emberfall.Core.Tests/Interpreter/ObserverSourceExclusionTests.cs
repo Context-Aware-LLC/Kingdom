@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Interpreter
 {
@@ -13,14 +12,14 @@ namespace Emberfall.Core.Tests.Interpreter
     [Category("Unit")]
     public sealed class ObserverSourceExclusionTests
     {
-        private static CardDefinition Minion(string id, params EffectDef[] effects)
+        private static CardDefinition Minion(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.MINION, 0, 0, 1, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static GameState State()
@@ -55,17 +54,17 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Hidden_Zone_Cards_Never_Observe_Turn_Start_Spell_Cast_Or_Friendly_Summon()
         {
-            var turn = new EffectDef(Trigger.ON_TURN_START, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "ENEMY_HERO", condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.ANY));
-            var spellCast = new EffectDef(Trigger.ON_SPELL_CAST, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "ENEMY_HERO");
-            var summon = new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.DEAL_DAMAGE, 1, null, null, null,
-                selector: "ENEMY_HERO");
+            RuleDefinition turn = TestRules.Rule("turn", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.ANY), new DamageAction(1, new TargetSpec("ENEMY_HERO")));
+            RuleDefinition spellCast = TestRules.Rule("spell_cast", Trigger.ON_SPELL_CAST,
+                new DamageAction(1, new TargetSpec("ENEMY_HERO")));
+            RuleDefinition summon = TestRules.Rule("summon", Trigger.ON_FRIENDLY_SUMMON,
+                new DamageAction(1, new TargetSpec("ENEMY_HERO")));
             var db = new FakeCardDatabase()
                 .Register(Minion("hidden_observer", turn, spellCast, summon))
                 .Register(Minion("token"))
-                .Register(Spell("summoning_spell", new EffectDef(Trigger.ON_CAST, Verb.SUMMON, 1,
-                    null, "token", null)));
+                .Register(Spell("summoning_spell", TestRules.Rule("summon_token", Trigger.ON_CAST,
+                    new SummonAction("token", 1))));
             var state = State();
             var handObserver = PutIn(state, Zone.Hand, "hidden_observer");
             var deckObserver = PutIn(state, Zone.Deck, "hidden_observer");
