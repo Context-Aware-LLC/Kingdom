@@ -1,33 +1,44 @@
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core
 {
     /// <summary>
     /// The closed set of reusable engine primitives — one <see cref="IActionHandler"/> per
-    /// <see cref="Contracts.Action"/> verb (dev-docs/specs/card-schema.md:36). There is no per-card code: a card is
+    /// typed <see cref="RuleAction"/> node. There is no per-card code: a card is
     /// data that composes these verbs. The set grows ONLY through the <c>requiresEngineeringPrimitive</c>
     /// gate (dev-docs/specs/card-schema.md:40), never per-card. Built once into an immutable, order-independent registry.
     /// </summary>
     internal static class ActionHandlers
     {
-        public static readonly IReadOnlyDictionary<Verb, IActionHandler> Registry = Build();
-
-        private static IReadOnlyDictionary<Verb, IActionHandler> Build()
+        public static void Execute(in EffectContext context)
         {
-            var handlers = new IActionHandler[]
+            switch (context.Rule.Action)
             {
-                new DealDamageHandler(), new HealHandler(), new DrawHandler(), new SummonHandler(),
-                new BuffHandler(), new GiveKeywordHandler(), new DestroyHandler(), new ReturnToHandHandler(),
-                new SilenceHandler(), new GainManaHandler(), new AddToHandHandler(), new TransformHandler(),
-                new EquipHandler(), new UnearthHandler(),
-                new FrostHandler(), new BackdraftHandler(),
-            };
-            var map = new Dictionary<Verb, IActionHandler>(handlers.Length);
-            foreach (var h in handlers) map[h.Verb] = h;
-            return map;
+                case DamageAction _: new DealDamageHandler().Execute(context); return;
+                case HealAction _: new HealHandler().Execute(context); return;
+                case DrawAction _: new DrawHandler().Execute(context); return;
+                case SummonAction _: new SummonHandler().Execute(context); return;
+                case ModifyStatsAction _:
+                case ReinforceAction _: new BuffHandler().Execute(context); return;
+                case GrantKeywordAction _: new GiveKeywordHandler().Execute(context); return;
+                case DestroyAction _: new DestroyHandler().Execute(context); return;
+                case ReturnToHandAction _: new ReturnToHandHandler().Execute(context); return;
+                case SilenceAction _: new SilenceHandler().Execute(context); return;
+                case GainManaAction _: new GainManaHandler().Execute(context); return;
+                case GainArmorAction _: new GainArmorHandler().Execute(context); return;
+                case AddToHandAction _: new AddToHandHandler().Execute(context); return;
+                case TransformAction _: new TransformHandler().Execute(context); return;
+                case TakeControlAction _: new TakeControlHandler().Execute(context); return;
+                case EquipAction _: new EquipHandler().Execute(context); return;
+                case UnearthAction _: new UnearthHandler().Execute(context); return;
+                case FrostAction _: new FrostHandler().Execute(context); return;
+                case BackdraftAction _: new BackdraftHandler().Execute(context); return;
+                default:
+                    throw new System.InvalidOperationException(
+                        $"Rule action '{context.Rule.Action.GetType().Name}' has no runtime handler.");
+            }
         }
 
         /// <summary>The effective keyword set of an effect's source — live for a board minion or
@@ -55,10 +66,9 @@ namespace Emberfall.Core
     // ── DEAL_DAMAGE ──────────────────────────────────────────────────────────────
     internal sealed class DealDamageHandler : IActionHandler
     {
-        public Verb Verb => Verb.DEAL_DAMAGE;
         public void Execute(in EffectContext ctx)
         {
-            int amount = ctx.Effect.Amount ?? 0;
+            int amount = ((DamageAction)ctx.Rule.Action).Amount;
             if (ctx.Db.Get(ctx.Source.DefinitionId).Type == CardType.SPELL)
                 amount += ActionHandlers.SpellDamageBonus(ctx.State, ctx.Source.Controller);
 
@@ -72,10 +82,9 @@ namespace Emberfall.Core
     // ── HEAL ─────────────────────────────────────────────────────────────────────
     internal sealed class HealHandler : IActionHandler
     {
-        public Verb Verb => Verb.HEAL;
         public void Execute(in EffectContext ctx)
         {
-            int amount = ctx.Effect.Amount ?? 0;
+            int amount = ((HealAction)ctx.Rule.Action).Amount;
             foreach (var t in ctx.Targets)
                 if (t.IsCharacter)
                     DamagePipeline.ApplyHeal(ctx.Interpreter, t.Character, amount, ctx.Source.Id);
@@ -85,10 +94,9 @@ namespace Emberfall.Core
     // ── DRAW ─────────────────────────────────────────────────────────────────────
     internal sealed class DrawHandler : IActionHandler
     {
-        public Verb Verb => Verb.DRAW;
         public void Execute(in EffectContext ctx)
         {
-            int count = ctx.Effect.Amount ?? 1;
+            int count = ((DrawAction)ctx.Rule.Action).Count;
             int seat = ctx.State.SeatOf(ctx.Source.Controller);
             for (int i = 0; i < count; i++)
                 RulesEngine.DrawOne(ctx.State, seat, ctx.Events);
@@ -98,11 +106,11 @@ namespace Emberfall.Core
     // ── SUMMON ───────────────────────────────────────────────────────────────────
     internal sealed class SummonHandler : IActionHandler
     {
-        public Verb Verb => Verb.SUMMON;
         public void Execute(in EffectContext ctx)
         {
-            if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
-            int count = ctx.Effect.Amount ?? 1;
+            var action = (SummonAction)ctx.Rule.Action;
+            if (!ctx.Db.TryGet(action.CardId, out var def)) return;
+            int count = action.Count;
             int seat = ctx.State.SeatOf(ctx.Source.Controller);
             for (int i = 0; i < count; i++)
             {
@@ -118,11 +126,10 @@ namespace Emberfall.Core
     // ── BUFF ─────────────────────────────────────────────────────────────────────
     internal sealed class BuffHandler : IActionHandler
     {
-        public Verb Verb => Verb.BUFF;
         public void Execute(in EffectContext ctx)
         {
-            int atk = ctx.Effect.Amount ?? 0;
-            int hp = ctx.Effect.Amount2 ?? 0;
+            int atk = ctx.Rule.Action is ReinforceAction ? 1 : ((ModifyStatsAction)ctx.Rule.Action).AttackDelta;
+            int hp = ctx.Rule.Action is ReinforceAction ? 1 : ((ModifyStatsAction)ctx.Rule.Action).HealthDelta;
             if (atk == 0 && hp == 0) return;
             foreach (var t in ctx.Targets)
             {
@@ -141,11 +148,9 @@ namespace Emberfall.Core
     // ── GIVE_KEYWORD ─────────────────────────────────────────────────────────────
     internal sealed class GiveKeywordHandler : IActionHandler
     {
-        public Verb Verb => Verb.GIVE_KEYWORD;
         public void Execute(in EffectContext ctx)
         {
-            var kw = ctx.Effect.GrantedKeyword;
-            if (kw == null) return;
+            Keyword kw = ((GrantKeywordAction)ctx.Rule.Action).Keyword;
             foreach (var t in ctx.Targets)
             {
                 if (!t.IsMinion) continue;
@@ -155,9 +160,9 @@ namespace Emberfall.Core
                 // auras can grant keywords, that makes "aura leaves" strip a keyword a permanent grant
                 // was also holding up. Recording unconditionally is the fix and it is HASH-CANONICAL —
                 // the enchantment list is serialized — so it belongs in the batched rebaseline, not here.
-                if (m.Keywords.Add(kw.Value))
+                if (m.Keywords.Add(kw))
                     m.Enchantments.Add(new Enchantment { Source = ctx.Source.Id, GrantedKeyword = kw });
-                if (kw.Value == Keyword.AEGIS) m.HasAegisShield = true;
+                if (kw == Keyword.AEGIS) m.HasAegisShield = true;
                 ctx.Events.Emit(GameEventKind.KeywordApplied, source: ctx.Source.Id, target: m.Id);
             }
         }
@@ -166,7 +171,6 @@ namespace Emberfall.Core
     // ── DESTROY ──────────────────────────────────────────────────────────────────
     internal sealed class DestroyHandler : IActionHandler
     {
-        public Verb Verb => Verb.DESTROY;
         public void Execute(in EffectContext ctx)
         {
             // Mark lethal; the batch DeathCheck (minions) / WinCheck (heroes) resolves and emits.
@@ -183,7 +187,6 @@ namespace Emberfall.Core
     // ── RETURN_TO_HAND ───────────────────────────────────────────────────────────
     internal sealed class ReturnToHandHandler : IActionHandler
     {
-        public Verb Verb => Verb.RETURN_TO_HAND;
         public void Execute(in EffectContext ctx)
         {
             foreach (var t in ctx.Targets)
@@ -249,7 +252,6 @@ namespace Emberfall.Core
     // ── SILENCE ──────────────────────────────────────────────────────────────────
     internal sealed class SilenceHandler : IActionHandler
     {
-        public Verb Verb => Verb.SILENCE;
         public void Execute(in EffectContext ctx)
         {
             foreach (var t in ctx.Targets)
@@ -272,14 +274,14 @@ namespace Emberfall.Core
     // ── GAIN_MANA ────────────────────────────────────────────────────────────────
     internal sealed class GainManaHandler : IActionHandler
     {
-        public Verb Verb => Verb.GAIN_MANA;
         public void Execute(in EffectContext ctx)
         {
-            int amount = ctx.Effect.Amount ?? 0;
+            var action = (GainManaAction)ctx.Rule.Action;
+            int amount = action.Amount;
             if (amount <= 0) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
 
-            if (ctx.Effect.Permanent)
+            if (action.Kind != ManaGainKind.TEMPORARY)
             {
                 // payload.permanent (dev-docs/specs/card-schema.md §5.2): earn real crystals, capped at 10. Crystals
                 // beyond the cap simply don't exist — a gain that changed nothing emits no event.
@@ -290,7 +292,7 @@ namespace Emberfall.Core
                 ps.Mana.Max = max > MatchEngine.MaxMana ? MatchEngine.MaxMana : max;
                 int gained = ps.Mana.Max - before;
                 if (gained <= 0) return;
-                if (!ctx.Effect.Empty)
+                if (action.Kind != ManaGainKind.PERMANENT_EMPTY)
                 {
                     int filled = ps.Mana.Available + gained;
                     ps.Mana.Available = filled > MatchEngine.MaxMana ? MatchEngine.MaxMana : filled;
@@ -307,19 +309,29 @@ namespace Emberfall.Core
         }
     }
 
+    // ── GAIN_ARMOR ──────────────────────────────────────────────────────────────
+    internal sealed class GainArmorHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            int amount = ((GainArmorAction)ctx.Rule.Action).Amount;
+            if (amount <= 0) return;
+            ctx.State.PlayerOf(ctx.Source.Controller).Hero.Armor += amount;
+        }
+    }
+
     // ── ADD_TO_HAND ──────────────────────────────────────────────────────────────
     internal sealed class AddToHandHandler : IActionHandler
     {
-        public Verb Verb => Verb.ADD_TO_HAND;
         public void Execute(in EffectContext ctx)
         {
-            if (ctx.Effect.TokenId == null) return;
-            int count = ctx.Effect.Amount ?? 1;
+            var action = (AddToHandAction)ctx.Rule.Action;
+            int count = action.Count;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             for (int i = 0; i < count; i++)
             {
                 if (ps.Hand.Count >= MatchEngine.HandCap) break;   // hand full → the created card fizzles
-                var card = new CardInstance(ctx.State.NextInstanceId(), ctx.Effect.TokenId, ps.Id) { Zone = Zone.Hand };
+                var card = new CardInstance(ctx.State.NextInstanceId(), action.CardId, ps.Id) { Zone = Zone.Hand };
                 ps.Hand.Add(card);
                 ctx.Events.Emit(GameEventKind.CardCreatedInHand, source: card.Id, flags: EventFlags.IsToken);
             }
@@ -329,10 +341,10 @@ namespace Emberfall.Core
     // ── TRANSFORM ────────────────────────────────────────────────────────────────
     internal sealed class TransformHandler : IActionHandler
     {
-        public Verb Verb => Verb.TRANSFORM;
         public void Execute(in EffectContext ctx)
         {
-            if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
+            var action = (TransformAction)ctx.Rule.Action;
+            if (!ctx.Db.TryGet(action.CardId, out var def)) return;
             foreach (var t in ctx.Targets)
             {
                 if (t.Kind == TargetCandidateKind.Weapon)
@@ -358,13 +370,45 @@ namespace Emberfall.Core
         }
     }
 
+    // ── TAKE_CONTROL ────────────────────────────────────────────────────────────
+    internal sealed class TakeControlHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            int destinationSeat = ctx.State.SeatOf(ctx.Source.Controller);
+            PlayerState destination = ctx.State.Players[destinationSeat];
+            foreach (TargetCandidate target in ctx.Targets)
+            {
+                if (target.Seat == destinationSeat) continue;
+                PlayerState owner = ctx.State.Players[target.Seat];
+                if (target.IsMinion)
+                {
+                    if (destination.Board.Count >= MatchEngine.BoardCap) continue;
+                    CardInstance minion = target.Minion!;
+                    if (!owner.Board.Remove(minion)) continue;
+                    RulesEngine.Reindex(owner.Board);
+                    minion.Controller = destination.Id;
+                    minion.Position = destination.Board.Count;
+                    destination.Board.Add(minion);
+                    continue;
+                }
+                if (target.Kind != TargetCandidateKind.Weapon || destination.Weapon != null ||
+                    owner.Weapon == null || owner.Weapon.Id != target.Instance) continue;
+                CardInstance weapon = owner.Weapon;
+                owner.Weapon = null;
+                weapon.Controller = destination.Id;
+                destination.Weapon = weapon;
+            }
+        }
+    }
+
     // ── EQUIP ────────────────────────────────────────────────────────────────────
     internal sealed class EquipHandler : IActionHandler
     {
-        public Verb Verb => Verb.EQUIP;
         public void Execute(in EffectContext ctx)
         {
-            if (ctx.Effect.TokenId == null || !ctx.Db.TryGet(ctx.Effect.TokenId, out var def)) return;
+            var action = (EquipAction)ctx.Rule.Action;
+            if (!ctx.Db.TryGet(action.CardId, out var def)) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             int seat = ctx.State.SeatOf(ctx.Source.Controller);
             RulesEngine.BreakWeapon(ctx.Interpreter, seat); // destroy old weapon (rattle enqueued) before equipping new
@@ -377,7 +421,6 @@ namespace Emberfall.Core
     // ── UNEARTH ─────────────────────────────────────────────────────────────────
     internal sealed class UnearthHandler : IActionHandler
     {
-        public Verb Verb => Verb.UNEARTH;
         // UNEARTH opens an interactive 3-card choice that pauses the command for a UnearthChoiceIntent
         // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §3.1). That pending-choice flow is a later step; until then this verb
         // is a documented no-op and the card validator (dev-docs/specs/card-schema.md:40) flags any M1 card that uses it.
@@ -387,7 +430,6 @@ namespace Emberfall.Core
     // ── FROST ────────────────────────────────────────────────────────────────────
     internal sealed class FrostHandler : IActionHandler
     {
-        public Verb Verb => Verb.FROST;
         public void Execute(in EffectContext ctx)
         {
             foreach (var t in ctx.Targets)
@@ -403,10 +445,9 @@ namespace Emberfall.Core
     // ── BACKDRAFT ──────────────────────────────────────────────────────────────────
     internal sealed class BackdraftHandler : IActionHandler
     {
-        public Verb Verb => Verb.BACKDRAFT;
         public void Execute(in EffectContext ctx)
         {
-            int amount = ctx.Effect.Amount ?? 0;
+            int amount = ((BackdraftAction)ctx.Rule.Action).Amount;
             if (amount <= 0) return;
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             ps.NextTurnBackdraftLock += amount;

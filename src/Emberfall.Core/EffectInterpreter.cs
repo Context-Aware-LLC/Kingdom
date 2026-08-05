@@ -5,7 +5,7 @@ using Emberfall.Core.Cards;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The runtime tree-walking interpreter over <see cref="EffectDef"/> data (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3 — chosen
+    /// The runtime tree-walking interpreter over <see cref="RuleDefinition"/> data (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3 — chosen
     /// over codegen so balance is a data patch, not a rebuild). One instance is created per command; it owns
     /// the deterministic effect queue and drains it to a fixed point, running the three post-mutation checks
     /// (DeathCheck / CapCheck / WinCheck) after every step. Ordering is part of the determinism contract and
@@ -19,8 +19,6 @@ namespace Emberfall.Core
     /// </summary>
     internal sealed class EffectInterpreter
     {
-        private static readonly IReadOnlyDictionary<Contracts.Action, IActionHandler> Handlers = ActionHandlers.Registry;
-
         private readonly GameState _state;
         private readonly ICardDatabase _db;
         private readonly EventBuffer _buf;
@@ -47,12 +45,12 @@ namespace Emberfall.Core
             TriggerContext context = default)
         {
             var def = _db.Get(source.DefinitionId);
-            var effects = def.Effects;
+            var rules = def.Rules;
             var bindings = new TargetBindingContext();
             context = context.WithTriggerSource(source.Id);
-            for (int i = 0; i < effects.Count; i++)
-                if (effects[i].Trigger == trigger)
-                    _queue.Enqueue(new QueuedEffect(effects[i], source, chosenTargets, bindings, context));
+            for (int i = 0; i < rules.Count; i++)
+                if (RuleSemantics.ActivatesOn(rules[i], trigger))
+                    _queue.Enqueue(new QueuedEffect(rules[i], source, chosenTargets, bindings, context));
         }
 
         /// <summary>
@@ -69,15 +67,15 @@ namespace Emberfall.Core
             {
                 if (excluded != null && ReferenceEquals(src, excluded)) continue;
                 var def = _db.Get(src.DefinitionId);
-                var effects = def.Effects;
+                var rules = def.Rules;
                 var bindings = new TargetBindingContext();
                 TriggerContext sourceContext = triggerSource.HasValue
                     ? context.WithTriggerSource(triggerSource.Value)
                     : context;
-                for (int i = 0; i < effects.Count; i++)
-                    if (effects[i].Trigger == trigger &&
-                        ConditionEvaluator.Holds(effects[i], src, context))
-                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<TargetRef>(),
+                for (int i = 0; i < rules.Count; i++)
+                    if (RuleSemantics.ActivatesOn(rules[i], trigger) &&
+                        ConditionEvaluator.Holds(rules[i], src, context))
+                        _queue.Enqueue(new QueuedEffect(rules[i], src, System.Array.Empty<TargetRef>(),
                             bindings, sourceContext));
             }
         }
@@ -95,7 +93,7 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(qe.Effect, qe.Source, qe.TriggerContext))
+                if (!ConditionEvaluator.Holds(qe.Rule, qe.Source, qe.TriggerContext))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -113,11 +111,8 @@ namespace Emberfall.Core
 
         private void ResolveOne(QueuedEffect qe)
         {
-            if (!Handlers.TryGetValue(qe.Effect.Action, out var handler))
-                return; // unimplemented verb (e.g. UNEARTH pending its choice flow) — graceful no-op
-
             var targets = ResolveTargets(qe);
-            handler.Execute(new EffectContext(this, qe.Effect, qe.Source, targets));
+            ActionHandlers.Execute(new EffectContext(this, qe.Rule, qe.Source, targets));
         }
 
         // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
@@ -159,11 +154,11 @@ namespace Emberfall.Core
                     _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 
                     var def = _db.Get(minion.DefinitionId);
-                    var effects = def.Effects;
+                    var rules = def.Rules;
                     var bindings = new TargetBindingContext();
-                    for (int i = 0; i < effects.Count; i++)
-                        if (effects[i].Trigger == Trigger.ON_DEATH)
-                            _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<TargetRef>(),
+                    for (int i = 0; i < rules.Count; i++)
+                        if (RuleSemantics.ActivatesOn(rules[i], Trigger.ON_DEATH))
+                            _queue.Enqueue(new QueuedEffect(rules[i], minion, System.Array.Empty<TargetRef>(),
                                 bindings, TriggerContext.ForSource(minion.Id)));
 
                     // REKINDLE: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
@@ -193,7 +188,7 @@ namespace Emberfall.Core
 
         private IReadOnlyList<TargetCandidate> ResolveTargets(QueuedEffect qe)
         {
-            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.Effect, qe.ChosenTargets,
+            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.Rule, qe.ChosenTargets,
                 qe.Bindings, qe.TriggerContext.TriggerSource);
         }
 
@@ -225,16 +220,16 @@ namespace Emberfall.Core
     /// <summary>One effect waiting in the resolution queue, bound to the source that fired it and its targets.</summary>
     internal readonly struct QueuedEffect
     {
-        public readonly EffectDef Effect;
+        public readonly RuleDefinition Rule;
         public readonly CardInstance Source;
         public readonly IReadOnlyList<TargetRef> ChosenTargets;
         public readonly TargetBindingContext Bindings;
         public readonly TriggerContext TriggerContext;
 
-        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<TargetRef> chosenTargets,
+        public QueuedEffect(RuleDefinition rule, CardInstance source, IReadOnlyList<TargetRef> chosenTargets,
             TargetBindingContext bindings, TriggerContext triggerContext = default)
         {
-            Effect = effect;
+            Rule = rule;
             Source = source;
             ChosenTargets = chosenTargets ?? System.Array.Empty<TargetRef>();
             Bindings = bindings;
@@ -262,20 +257,16 @@ namespace Emberfall.Core
     /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
     internal static class ConditionEvaluator
     {
-        public static bool Holds(EffectDef effect, CardInstance source, TriggerContext context)
+        public static bool Holds(RuleDefinition rule, CardInstance source, TriggerContext context)
         {
-            var condition = effect.Condition;
-            if (condition == null)
-                return effect.Trigger != Trigger.ON_TURN_START; // invalid card data fails closed at runtime too
-
-            switch (condition.Type)
+            switch (rule.Condition)
             {
-                case ConditionType.TURN_OWNER:
-                    if (!condition.TurnOwner.HasValue || !context.TurnPlayer.HasValue)
-                        return false;
-
+                case AlwaysCondition _:
+                    return RuleSemantics.TriggerOf(rule) != Trigger.ON_TURN_START;
+                case TurnOwnerCondition condition:
+                    if (!context.TurnPlayer.HasValue) return false;
                     bool controllerTurn = source.Controller == context.TurnPlayer.Value;
-                    switch (condition.TurnOwner.Value)
+                    switch (condition.Owner)
                     {
                         case TurnOwner.CONTROLLER: return controllerTurn;
                         case TurnOwner.OPPONENT: return !controllerTurn;
@@ -296,15 +287,15 @@ namespace Emberfall.Core
     internal readonly struct EffectContext
     {
         public readonly EffectInterpreter Interpreter;
-        public readonly EffectDef Effect;
+        public readonly RuleDefinition Rule;
         public readonly CardInstance Source;
         public readonly IReadOnlyList<TargetCandidate> Targets;
 
-        public EffectContext(EffectInterpreter interpreter, EffectDef effect, CardInstance source,
+        public EffectContext(EffectInterpreter interpreter, RuleDefinition rule, CardInstance source,
             IReadOnlyList<TargetCandidate> targets)
         {
             Interpreter = interpreter;
-            Effect = effect;
+            Rule = rule;
             Source = source;
             Targets = targets;
         }
@@ -313,13 +304,11 @@ namespace Emberfall.Core
         public ICardDatabase Db => Interpreter.Db;
         public EventBuffer Events => Interpreter.Events;
 
-        /// <summary>The effect's VFX override if present, else the action's default event (dev-docs/specs/card-schema.md §5.2).</summary>
     }
 
-    /// <summary>One reusable engine primitive — a verb in the closed <see cref="Contracts.Action"/> set.</summary>
+    /// <summary>One reusable engine primitive for a closed typed <see cref="RuleAction"/> node.</summary>
     internal interface IActionHandler
     {
-        Contracts.Action Verb { get; }
         void Execute(in EffectContext ctx);
     }
 }

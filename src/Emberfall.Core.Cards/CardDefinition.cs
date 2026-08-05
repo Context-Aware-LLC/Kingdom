@@ -123,7 +123,7 @@ namespace Emberfall.Core.Cards
         private static TargetCandidateKinds Flag(TargetCandidateKind kind)
             => (TargetCandidateKinds)(1 << (int)kind);
 
-        private static TargetCandidateKinds SourceKinds(CardType sourceType, Trigger trigger)
+        internal static TargetCandidateKinds SourceKinds(CardType sourceType, Trigger trigger)
         {
             if (trigger == Trigger.ON_DEATH) return TargetCandidateKinds.GraveyardCard;
             switch (sourceType)
@@ -135,7 +135,7 @@ namespace Emberfall.Core.Cards
             }
         }
 
-        private static TargetCandidateKinds TriggerSourceKinds(CardType sourceType, Trigger trigger)
+        internal static TargetCandidateKinds TriggerSourceKinds(CardType sourceType, Trigger trigger)
         {
             switch (trigger)
             {

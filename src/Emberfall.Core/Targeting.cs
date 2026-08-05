@@ -80,8 +80,9 @@ namespace Emberfall.Core
 
         public static bool RequiresPlayerChoice(CardDefinition def, Trigger trigger)
         {
-            foreach (EffectDef effect in def.Effects)
-                if (effect.Trigger == trigger && IsPlayerChosen(effect.Target))
+            foreach (RuleDefinition rule in def.Rules)
+                if (RuleSemantics.ActivatesOn(rule, trigger) &&
+                    IsPlayerChosen(RuleSemantics.TargetOf(rule.Action)))
                     return true;
             return false;
         }
@@ -96,12 +97,13 @@ namespace Emberfall.Core
         {
             var groups = new List<ChoiceGroup>();
             var byBinding = new Dictionary<string, ChoiceGroup>();
-            foreach (EffectDef effect in def.Effects)
+            foreach (RuleDefinition rule in def.Rules)
             {
-                if (effect.Trigger != trigger || !IsPlayerChosen(effect.Target)) continue;
-                TargetSpec spec = effect.Target!;
+                TargetSpec? candidateTarget = RuleSemantics.TargetOf(rule.Action);
+                if (!RuleSemantics.ActivatesOn(rule, trigger) || !IsPlayerChosen(candidateTarget)) continue;
+                TargetSpec spec = candidateTarget!;
                 IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
-                    spec, effect.Action, source);
+                    spec, rule.Action, source);
                 int required = RequiredPlayerCount(spec, candidates.Count);
                 if (!byBinding.TryGetValue(spec.Binding, out ChoiceGroup? group))
                 {
@@ -175,21 +177,21 @@ namespace Emberfall.Core
         /// and enemy Shroud exclusion. Hidden opponent zones and ordered decks fail closed.
         /// </summary>
         public static IReadOnlyList<TargetCandidate> Candidates(GameState state, ICardDatabase db,
-            PlayerId controller, TargetSpec spec, Contracts.Action? action = null,
+            PlayerId controller, TargetSpec spec, RuleAction? action = null,
             InstanceId? source = null,
             InstanceId? triggerSource = null)
             => EnumerateCandidates(state, db, controller, spec, action, source, triggerSource,
                 forPlayerChoice: true, allowHiddenZones: false);
 
         internal static IReadOnlyList<TargetCandidate> ResolutionCandidates(GameState state,
-            ICardDatabase db, PlayerId controller, TargetSpec spec, Contracts.Action? action = null,
+            ICardDatabase db, PlayerId controller, TargetSpec spec, RuleAction? action = null,
             InstanceId? source = null,
             InstanceId? triggerSource = null)
             => EnumerateCandidates(state, db, controller, spec, action, source, triggerSource,
                 forPlayerChoice: false, allowHiddenZones: true);
 
         private static IReadOnlyList<TargetCandidate> EnumerateCandidates(GameState state, ICardDatabase db,
-            PlayerId controller, TargetSpec spec, Contracts.Action? action, InstanceId? source,
+            PlayerId controller, TargetSpec spec, RuleAction? action, InstanceId? source,
             InstanceId? triggerSource, bool forPlayerChoice, bool allowHiddenZones)
         {
             int friendly = state.SeatOf(controller);
@@ -242,7 +244,7 @@ namespace Emberfall.Core
                     result.RemoveAt(i);
                     continue;
                 }
-                if (action.HasValue && !ActionTargetCapabilities.Allows(action.Value, candidate.Kind))
+                if (action != null && !RuleActionCapabilities.Allows(action, candidate.Kind))
                 {
                     result.RemoveAt(i);
                     continue;
@@ -257,19 +259,20 @@ namespace Emberfall.Core
         public static bool ValidatePlayerChoices(GameState state, ICardDatabase db, PlayerId controller,
             CardDefinition def, Trigger trigger, IReadOnlyList<TargetRef> choices, InstanceId? source = null)
         {
-            var playerEffects = new List<EffectDef>();
+            var playerRules = new List<RuleDefinition>();
             bool hasAnyTargetSpec = false;
-            foreach (EffectDef effect in def.Effects)
+            foreach (RuleDefinition rule in def.Rules)
             {
-                if (effect.Trigger != trigger) continue;
-                hasAnyTargetSpec |= effect.Target != null;
-                if (IsPlayerChosen(effect.Target)) playerEffects.Add(effect);
+                if (!RuleSemantics.ActivatesOn(rule, trigger)) continue;
+                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                hasAnyTargetSpec |= target != null;
+                if (IsPlayerChosen(target)) playerRules.Add(rule);
             }
 
             // Compatibility for pre-TargetSpec unit/content behavior: an explicit live character can
             // still feed a selector-less play effect. Authored RANDOM/automatic specs never accept a
             // client override.
-            if (playerEffects.Count == 0)
+            if (playerRules.Count == 0)
             {
                 if (choices.Count == 0) return true;
                 if (hasAnyTargetSpec) return false;
@@ -281,11 +284,11 @@ namespace Emberfall.Core
             }
 
             var consumed = new bool[choices.Count];
-            foreach (EffectDef effect in playerEffects)
+            foreach (RuleDefinition rule in playerRules)
             {
-                TargetSpec spec = effect.Target!;
+                TargetSpec spec = ((TargetedRuleAction)rule.Action).Target;
                 IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller, spec,
-                    effect.Action, source);
+                    rule.Action, source);
                 var candidateIds = new HashSet<InstanceId>();
                 foreach (TargetCandidate candidate in candidates) candidateIds.Add(candidate.Instance);
 
@@ -309,9 +312,9 @@ namespace Emberfall.Core
             for (int i = 0; i < consumed.Length; i++)
                 if (!consumed[i]) return false;
 
-            foreach (EffectDef effect in playerEffects)
+            foreach (RuleDefinition rule in playerRules)
             {
-                TargetSpec spec = effect.Target!;
+                TargetSpec spec = ((TargetedRuleAction)rule.Action).Target;
                 if (spec.DistinctFrom.Length == 0) continue;
                 foreach (TargetRef a in choices)
                     if (a.Binding == spec.Binding)
@@ -323,28 +326,23 @@ namespace Emberfall.Core
         }
 
         internal static IReadOnlyList<TargetCandidate> ResolveTargets(GameState state, ICardDatabase db,
-            CardInstance source, EffectDef effect, IReadOnlyList<TargetRef> choices,
+            CardInstance source, RuleDefinition rule, IReadOnlyList<TargetRef> choices,
             TargetBindingContext bindings, InstanceId? triggerSource)
         {
-            if (!ActionTargetCapabilities.ConsumesTargets(effect.Action))
+            if (!RuleActionCapabilities.ConsumesTargets(rule.Action))
                 return Array.Empty<TargetCandidate>();
 
-            TargetSpec? spec = effect.Target;
-            if (spec == null)
-            {
-                if (choices.Count > 0) return ChoiceCandidates(state, choices, "");
-                return DefaultTargets(state, source, effect);
-            }
+            TargetSpec spec = ((TargetedRuleAction)rule.Action).Target;
 
             IReadOnlyList<TargetCandidate> selected;
             if (IsPlayerChosen(spec))
             {
-                selected = ChoiceCandidates(state, choices, spec.Binding, effect.Action);
+                selected = ChoiceCandidates(state, choices, spec.Binding, rule.Action);
             }
             else
             {
                 var candidates = new List<TargetCandidate>(ResolutionCandidates(state, db,
-                    source.Controller, spec, effect.Action, source.Id, triggerSource));
+                    source.Controller, spec, rule.Action, source.Id, triggerSource));
                 bindings.Exclude(spec.DistinctFrom, candidates);
                 int count = RequiredAutomaticCount(spec, candidates.Count);
                 if (spec.ChosenBy == TargetChosenBy.RANDOM)
@@ -379,34 +377,14 @@ namespace Emberfall.Core
         }
 
         private static IReadOnlyList<TargetCandidate> ChoiceCandidates(GameState state,
-            IReadOnlyList<TargetRef> choices, string binding, Contracts.Action? action = null)
+            IReadOnlyList<TargetRef> choices, string binding, RuleAction action)
         {
             var result = new List<TargetCandidate>();
             foreach (TargetRef choice in choices)
                 if (choice.Binding == binding && TryCandidate(state, choice.Instance, out TargetCandidate candidate) &&
-                    (!action.HasValue || ActionTargetCapabilities.Allows(action.Value, candidate.Kind)))
+                    RuleActionCapabilities.Allows(action, candidate.Kind))
                     result.Add(candidate);
             return result;
-        }
-
-        private static IReadOnlyList<TargetCandidate> DefaultTargets(GameState state,
-            CardInstance source, EffectDef effect)
-        {
-            int friendly = state.SeatOf(source.Controller);
-            int enemy = friendly == 0 ? 1 : 0;
-            switch (effect.Action)
-            {
-                case Contracts.Action.DEAL_DAMAGE:
-                    return new[] { HeroCandidate(state, enemy) };
-                case Contracts.Action.HEAL:
-                    return new[] { HeroCandidate(state, friendly) };
-                case Contracts.Action.BUFF:
-                case Contracts.Action.GIVE_KEYWORD:
-                    if (source.Zone == Zone.Board)
-                        return new[] { MinionCandidate(friendly, source) };
-                    break;
-            }
-            return Array.Empty<TargetCandidate>();
         }
 
         private static bool Distinct(IReadOnlyList<TargetRef> choices)

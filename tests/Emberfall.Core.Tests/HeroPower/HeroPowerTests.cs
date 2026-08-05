@@ -130,8 +130,9 @@ namespace Emberfall.Core.Tests.HeroPower
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
-            proc.Execute(s, UseHeroPower(s));                   // first use — should succeed
-            var r = proc.Execute(s, UseHeroPower(s));           // second use — should fail
+            var target = new[] { new TargetRef(s.Players[1].Hero.Id) };
+            proc.Execute(s, UseHeroPower(s, target));           // first use — should succeed
+            var r = proc.Execute(s, UseHeroPower(s, target));   // second use — should fail
 
             Assert.That(r.Accepted, Is.False);
             Assert.That(r.Reason, Is.EqualTo(RejectReason.HeroPowerAlreadyUsed));
@@ -233,7 +234,8 @@ namespace Emberfall.Core.Tests.HeroPower
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
-            proc.Execute(s, UseHeroPower(s));
+            proc.Execute(s, UseHeroPower(s,
+                new[] { new TargetRef(s.Players[1].Hero.Id) }));
 
             Assert.That(s.Players[0].HeroPowerUsedThisTurn, Is.True);
         }
@@ -247,7 +249,8 @@ namespace Emberfall.Core.Tests.HeroPower
             var s = MainPhase(db, p0Mana: 5);
             var proc = new CommandProcessor(db);
 
-            proc.Execute(s, UseHeroPower(s));
+            proc.Execute(s, UseHeroPower(s,
+                new[] { new TargetRef(s.Players[1].Hero.Id) }));
 
             Assert.That(s.Players[0].Mana.Available, Is.EqualTo(3));
             Assert.That(s.Players[0].Mana.Spent, Is.EqualTo(2));
@@ -343,7 +346,8 @@ namespace Emberfall.Core.Tests.HeroPower
             var s = MainPhase(db);
             var proc = new CommandProcessor(db);
 
-            proc.Execute(s, UseHeroPower(s));
+            proc.Execute(s, UseHeroPower(s,
+                new[] { new TargetRef(s.Players[1].Hero.Id) }));
             Assert.That(s.Players[0].HeroPowerUsedThisTurn, Is.True);
 
             proc.Execute(s, new EndTurnIntent(s.ActivePlayer));

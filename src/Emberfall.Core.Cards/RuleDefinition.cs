@@ -245,6 +245,80 @@ namespace Emberfall.Core.Cards
         public UnearthAction(int count) => Count = count;
     }
 
+    /// <summary>Exhaustive semantics shared by validation, runtime targeting and presentation.</summary>
+    public static class RuleSemantics
+    {
+        public static Trigger TriggerOf(RuleDefinition rule)
+        {
+            if (rule.Activation is TriggeredActivation triggered) return triggered.Trigger;
+            if (rule.Activation is AuraActivation) return Trigger.AURA;
+            throw new InvalidOperationException(
+                $"Unknown activation node '{rule.Activation.GetType().Name}'.");
+        }
+
+        public static bool ActivatesOn(RuleDefinition rule, Trigger trigger)
+            => TriggerOf(rule) == trigger;
+
+        public static TargetSpec? TargetOf(RuleAction action)
+            => action is TargetedRuleAction targeted ? targeted.Target : null;
+    }
+
+    public static class RuleActionCapabilities
+    {
+        public static bool ConsumesTargets(RuleAction action) => action is TargetedRuleAction;
+
+        public static bool Allows(RuleAction action, TargetCandidateKind kind)
+            => (AllowedKinds(action) & (TargetCandidateKinds)(1 << (int)kind)) != 0;
+
+        public static bool HasCompatibleTarget(RuleAction action, string selector,
+            CardType sourceType, Trigger trigger)
+        {
+            if (!ConsumesTargets(action)) return false;
+            TargetCandidateKinds selected = selector == "SELF"
+                ? ActionTargetCapabilities.SourceKinds(sourceType, trigger)
+                : selector == "TRIGGER_SOURCE"
+                    ? ActionTargetCapabilities.TriggerSourceKinds(sourceType, trigger)
+                    : ActionTargetCapabilities.SelectorKinds(selector);
+            return (AllowedKinds(action) & selected) != 0;
+        }
+
+        public static TargetCandidateKinds AllowedKinds(RuleAction action)
+        {
+            switch (action)
+            {
+                case DamageAction _:
+                case HealAction _:
+                case FrostAction _:
+                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion;
+                case ModifyStatsAction _:
+                case ReinforceAction _:
+                case GrantKeywordAction _:
+                    return TargetCandidateKinds.Minion;
+                case DestroyAction _:
+                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon;
+                case ReturnToHandAction _:
+                    return TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon |
+                           TargetCandidateKinds.DeckCard | TargetCandidateKinds.GraveyardCard;
+                case SilenceAction _:
+                case TransformAction _:
+                case TakeControlAction _:
+                    return TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon;
+                case DrawAction _:
+                case SummonAction _:
+                case AddToHandAction _:
+                case EquipAction _:
+                case GainManaAction _:
+                case GainArmorAction _:
+                case BackdraftAction _:
+                case UnearthAction _:
+                    return TargetCandidateKinds.None;
+                default:
+                    throw new InvalidOperationException(
+                        $"Rule action '{action.GetType().Name}' is absent from the target capability relation.");
+            }
+        }
+    }
+
     /// <summary>
     /// Transitional runtime boundary. Typed rules are canonical; existing interpreter code may
     /// consume the projected EffectDef until its handlers move to RuleAction directly.
@@ -307,15 +381,19 @@ namespace Emberfall.Core.Cards
         {
             switch (effect.Action)
             {
-                case Verb.DEAL_DAMAGE: return new DamageAction(effect.Amount ?? 0, RequireTarget(effect));
-                case Verb.HEAL: return new HealAction(effect.Amount ?? 0, RequireTarget(effect));
+                case Verb.DEAL_DAMAGE: return new DamageAction(effect.Amount ?? 0,
+                    LegacyTarget(effect, "ANY_CHARACTER", "ENEMY_HERO"));
+                case Verb.HEAL: return new HealAction(effect.Amount ?? 0,
+                    LegacyTarget(effect, "ANY_CHARACTER", "FRIENDLY_HERO"));
                 case Verb.DRAW: return new DrawAction(effect.Amount ?? 1);
                 case Verb.SUMMON: return new SummonAction(effect.TokenId ?? "", effect.Amount ?? 1);
-                case Verb.BUFF: return new ModifyStatsAction(effect.Amount ?? 0, effect.Amount2 ?? 0, RequireTarget(effect));
+                case Verb.BUFF: return new ModifyStatsAction(effect.Amount ?? 0, effect.Amount2 ?? 0,
+                    LegacyTarget(effect, "ANY_MINION", "SELF"));
                 case Verb.GIVE_KEYWORD:
                     if (!effect.GrantedKeyword.HasValue)
                         throw new InvalidOperationException("GIVE_KEYWORD requires a keyword before typed adaptation.");
-                    return new GrantKeywordAction(effect.GrantedKeyword.Value, RequireTarget(effect));
+                    return new GrantKeywordAction(effect.GrantedKeyword.Value,
+                        LegacyTarget(effect, "ANY_MINION", "SELF"));
                 case Verb.DESTROY: return new DestroyAction(RequireTarget(effect));
                 case Verb.RETURN_TO_HAND: return new ReturnToHandAction(RequireTarget(effect));
                 case Verb.SILENCE: return new SilenceAction(RequireTarget(effect));
@@ -338,6 +416,12 @@ namespace Emberfall.Core.Cards
         private static TargetSpec RequireTarget(EffectDef effect)
             => effect.Target ?? throw new InvalidOperationException(
                 $"{effect.Action} requires an explicit target before typed adaptation.");
+
+        private static TargetSpec LegacyTarget(EffectDef effect, string playerSelector,
+            string automaticSelector)
+            => effect.Target ?? new TargetSpec(
+                effect.Trigger == Trigger.ON_PLAY || effect.Trigger == Trigger.ON_CAST
+                    ? playerSelector : automaticSelector);
 
         private static EffectDef ToLegacyEffect(Trigger trigger, EffectConditionDef? condition,
             RuleAction action)
