@@ -13,6 +13,38 @@ namespace Emberfall.Core.Cards
     /// </summary>
     public static class CardJson
     {
+        private static readonly HashSet<string> CardProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
+            "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId", "cardText",
+            "flavorText", "factionId", "keywords", "effects", "_comment"
+        };
+
+        private static readonly HashSet<string> EffectProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "trigger", "action", "amount", "amount2", "vfxEvent", "payload", "target", "condition"
+        };
+
+        private static readonly HashSet<string> PayloadProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "tokenId", "keyword", "permanent", "empty"
+        };
+
+        private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "selector", "chosenBy", "count", "filter"
+        };
+
+        private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "damaged", "tribe"
+        };
+
+        private static readonly HashSet<string> ConditionProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "type", "value"
+        };
+
         public static CardDefinition Deserialize(string json)
         {
             using var doc = JsonDocument.Parse(json);
@@ -31,6 +63,8 @@ namespace Emberfall.Core.Cards
 
         public static CardDefinition FromElement(JsonElement el)
         {
+            RejectUnknownProperties(el, "card", CardProperties);
+
             string id = Str(el, "id") ?? throw new FormatException("Card row missing 'id'.");
             string name = Str(el, "name") ?? id;
             CardType type = ReqEnum<CardType>(el, "type");
@@ -65,6 +99,8 @@ namespace Emberfall.Core.Cards
 
         private static EffectDef EffectFromElement(JsonElement e)
         {
+            RejectUnknownProperties(e, "effect", EffectProperties);
+
             Trigger trigger = ReqEnum<Trigger>(e, "trigger");
             Contracts.Action action = ReqEnum<Contracts.Action>(e, "action");
             int? amount = Int(e, "amount");
@@ -77,6 +113,7 @@ namespace Emberfall.Core.Cards
             bool empty = false;
             if (e.TryGetProperty("payload", out var payload) && payload.ValueKind == JsonValueKind.Object)
             {
+                RejectUnknownProperties(payload, "payload", PayloadProperties);
                 tokenId = Str(payload, "tokenId");
                 grantedKeyword = TryEnum<Keyword>(payload, "keyword");
                 permanent = Bool(payload, "permanent") ?? false;
@@ -85,11 +122,17 @@ namespace Emberfall.Core.Cards
 
             string? selector = null;
             if (e.TryGetProperty("target", out var tgt) && tgt.ValueKind == JsonValueKind.Object)
+            {
+                RejectUnknownProperties(tgt, "target", TargetProperties);
+                if (tgt.TryGetProperty("filter", out var filter) && filter.ValueKind == JsonValueKind.Object)
+                    RejectUnknownProperties(filter, "target.filter", FilterProperties);
                 selector = Str(tgt, "selector");
+            }
 
             EffectConditionDef? condition = null;
             if (e.TryGetProperty("condition", out var gate) && gate.ValueKind == JsonValueKind.Object)
             {
+                RejectUnknownProperties(gate, "condition", ConditionProperties);
                 var type = ReqEnum<ConditionType>(gate, "type");
                 TurnOwner? turnOwner = type == ConditionType.TURN_OWNER
                     ? TryEnum<TurnOwner>(gate, "value")
@@ -99,6 +142,18 @@ namespace Emberfall.Core.Cards
 
             return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx, selector,
                 permanent, empty, condition);
+        }
+
+        private static void RejectUnknownProperties(JsonElement el, string schemaLevel, HashSet<string> allowed)
+        {
+            if (el.ValueKind != JsonValueKind.Object)
+                throw new FormatException($"Card JSON {schemaLevel} must be an object.");
+
+            foreach (var property in el.EnumerateObject())
+            {
+                if (!allowed.Contains(property.Name))
+                    throw new FormatException($"Unknown card JSON property '{property.Name}' in {schemaLevel}.");
+            }
         }
 
         // ── primitive readers ────────────────────────────────────────────────────
