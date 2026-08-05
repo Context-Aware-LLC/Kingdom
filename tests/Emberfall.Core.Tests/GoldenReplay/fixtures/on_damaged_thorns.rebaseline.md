@@ -74,3 +74,11 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 - **Link to the change:** NOR-31, Program step 10.
 - **cardSetSnapshot changed?** no.
 - **engineContractVersion changed?** yes, to `interfaces.v4`; replay schema changed to v3.
+
+## NOR-31 silence-state hash rebaseline (2026-08-05)
+
+- **Which rule changed?** `CardInstance.IsSilenced` is now canonical state, serialized and projected.
+- **Why is this correct?** This fixture never applies SILENCE; its event stream and gameplay state are unchanged. The new false boolean participates in every card's canonical walk, so only the expected digest changes.
+- **Link to the change:** NOR-31 silence-state implementation; `GameStateSerializer.WalkCard` and `CanonicalStateFixtures` mutation manifest.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** no; replay intent/event schema is unchanged.
