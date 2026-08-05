@@ -115,30 +115,12 @@ namespace Emberfall.Core.Contracts
         AURA
     }
 
-    /// <summary>
-    /// Closed condition vocabulary for <c>EffectDef.condition</c>. Conditions gate resolution and are
-    /// deliberately separate from target selectors so adding a gate does not multiply selector names.
-    /// </summary>
-    public enum ConditionType
-    {
-        TURN_OWNER,
-    }
-
     /// <summary>How an effect source relates to the player whose turn is beginning.</summary>
     public enum TurnOwner
     {
         CONTROLLER,
         OPPONENT,
         ANY,
-    }
-
-    /// <summary>The primitive verbs (dev-docs/specs/card-schema.md §5.2). Closed; grows only via the requiresEngineeringPrimitive gate.</summary>
-    public enum Action
-    {
-        DEAL_DAMAGE, HEAL, DRAW, SUMMON, BUFF, GIVE_KEYWORD, DESTROY, RETURN_TO_HAND,
-        SILENCE, UNEARTH, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND,
-        FROST,   // step 4: sets IsFrosted on the target character (minion or hero)
-        BACKDRAFT, // step 4: locks N crystals at the start of the controller's next turn
     }
 
     /// <summary>

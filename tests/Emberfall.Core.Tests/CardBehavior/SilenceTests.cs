@@ -7,7 +7,6 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.CardBehavior
 {
@@ -21,25 +20,21 @@ namespace Emberfall.Core.Tests.CardBehavior
     public sealed class SilenceTests
     {
         private static CardDefinition Minion(string id, int attack, int health, Keyword[] keywords,
-            params EffectDef[] effects) => new CardDefinition(
+            params RuleDefinition[] rules) => new CardDefinition(
                 id, id, CardType.MINION, 0, attack, health, null,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, effects,
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Weapon(string id, int attack, int durability, Keyword[] keywords,
-            params EffectDef[] effects) => new CardDefinition(
+            params RuleDefinition[] rules) => new CardDefinition(
                 id, id, CardType.WEAPON, 0, attack, null, durability,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, effects,
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects) => new CardDefinition(
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules) => new CardDefinition(
             id, id, CardType.SPELL, 0, null, null, null,
-            CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), effects,
+            CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
             "", "", "art/" + id, SetId.CORE, true, null, "", false);
-
-        private static EffectDef Effect(Trigger trigger, Verb verb, int? amount = null,
-            string? selector = null)
-            => new EffectDef(trigger, verb, amount, null, null, null, selector);
 
         private static GameState State()
         {
@@ -88,11 +83,15 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Silenced_Minion_Loses_All_Abilities_But_Already_Queued_Trigger_Still_Resolves()
         {
             var witness = Minion("witness", 2, 5, new[] { Keyword.AEGIS, Keyword.LIFEDRAIN },
-                Effect(Trigger.ON_SPELL_CAST, Verb.DEAL_DAMAGE, 2, "ENEMY_HERO"),
-                Effect(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, 4, "ENEMY_HERO"));
-            var silence = Spell("silence", Effect(Trigger.ON_CAST, Verb.SILENCE, selector: "ANY_MINION"));
+                TestRules.Rule("spell_witness", Trigger.ON_SPELL_CAST,
+                    TestRules.Damage(Trigger.ON_SPELL_CAST, 2)),
+                TestRules.Rule("death_burst", Trigger.ON_DEATH,
+                    TestRules.Damage(Trigger.ON_DEATH, 4)));
+            var silence = Spell("silence", TestRules.Rule("silence", Trigger.ON_CAST,
+                new SilenceAction(new TargetSpec("ANY_MINION"))));
             var blank = Spell("blank");
-            var destroy = Spell("destroy", Effect(Trigger.ON_CAST, Verb.DESTROY, selector: "ANY_MINION"));
+            var destroy = Spell("destroy", TestRules.Rule("destroy", Trigger.ON_CAST,
+                new DestroyAction(new TargetSpec("ANY_MINION"))));
             var db = new FakeCardDatabase().Register(witness).Register(silence).Register(blank).Register(destroy);
             var s = State();
             var minion = OnBoard(s, db, 1, witness);
@@ -128,8 +127,10 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Silenced_Weapon_Keeps_Spent_Durability_But_Loses_Riders_And_Self_Triggers()
         {
             var blade = Weapon("blade", 2, 3, new[] { Keyword.LIFEDRAIN, Keyword.DOUBLESTRIKE },
-                Effect(Trigger.ON_ATTACK, Verb.DEAL_DAMAGE, 1, "ENEMY_HERO"));
-            var silence = Spell("silence", Effect(Trigger.ON_CAST, Verb.SILENCE, selector: "FRIENDLY_WEAPON"));
+                TestRules.Rule("attack_ping", Trigger.ON_ATTACK,
+                    TestRules.Damage(Trigger.ON_ATTACK, 1)));
+            var silence = Spell("silence", TestRules.Rule("silence", Trigger.ON_CAST,
+                new SilenceAction(new TargetSpec("FRIENDLY_WEAPON"))));
             var db = new FakeCardDatabase().Register(blade).Register(silence);
             var s = State();
             var equipped = ToHand(s, 0, blade.Id);
@@ -161,10 +162,12 @@ namespace Emberfall.Core.Tests.CardBehavior
             var body = Minion("body", 2, 3, new[] { Keyword.BULWARK });
             var replacement = Minion("replacement", 4, 4, Array.Empty<Keyword>());
             var blade = Weapon("blade", 2, 3, new[] { Keyword.LIFEDRAIN });
-            var bounce = Spell("bounce", Effect(Trigger.ON_CAST, Verb.RETURN_TO_HAND, selector: "ANY_FRIENDLY_MINION"));
-            var bounceWeapon = Spell("bounce_weapon", Effect(Trigger.ON_CAST, Verb.RETURN_TO_HAND, selector: "FRIENDLY_WEAPON"));
-            var transform = Spell("transform", new EffectDef(Trigger.ON_CAST, Verb.TRANSFORM,
-                null, null, replacement.Id, null, "ANY_FRIENDLY_MINION"));
+            var bounce = Spell("bounce", TestRules.Rule("bounce", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("ANY_FRIENDLY_MINION"))));
+            var bounceWeapon = Spell("bounce_weapon", TestRules.Rule("bounce_weapon", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("FRIENDLY_WEAPON"))));
+            var transform = Spell("transform", TestRules.Rule("transform", Trigger.ON_CAST,
+                new TransformAction(replacement.Id, new TargetSpec("ANY_FRIENDLY_MINION"))));
             var db = new FakeCardDatabase().Register(body).Register(replacement).Register(blade)
                 .Register(bounce).Register(bounceWeapon).Register(transform);
             var s = State();

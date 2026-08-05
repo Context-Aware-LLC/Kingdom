@@ -560,7 +560,7 @@ namespace Emberfall.Core
             // alive. Draining after DrawOne would let a corpse draw fatigue.
             //
             // The incoming player is explicit event context, separate from each source controller.
-            // EffectConditionDef then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
+            // TurnOwnerCondition then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
             // into trigger/selector names. `excluded: null` because no card causes a turn to start.
             // The current source seam is board minions, active-side first and left→right; weapon and
             // ongoing-spell lifecycles are deliberately split follow-ups.

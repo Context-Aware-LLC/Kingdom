@@ -17,17 +17,7 @@ namespace Emberfall.Core.Cards
         {
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId", "cardText",
-            "flavorText", "factionId", "keywords", "effects", "rules", "_comment"
-        };
-
-        private static readonly HashSet<string> EffectProperties = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "trigger", "action", "amount", "amount2", "payload", "target", "condition"
-        };
-
-        private static readonly HashSet<string> PayloadProperties = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "tokenId", "keyword", "permanent", "empty"
+            "flavorText", "factionId", "keywords", "rules", "_comment"
         };
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -38,11 +28,6 @@ namespace Emberfall.Core.Cards
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
         {
             "damaged", "tribe"
-        };
-
-        private static readonly HashSet<string> ConditionProperties = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "type", "value"
         };
 
         private static readonly HashSet<string> RuleProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -93,30 +78,15 @@ namespace Emberfall.Core.Cards
                 foreach (var k in kw.EnumerateArray())
                     keywords.Add((Keyword)Enum.Parse(typeof(Keyword), k.GetString()!, ignoreCase: false));
 
-            bool hasEffects = el.TryGetProperty("effects", out var fx);
-            bool hasRules = el.TryGetProperty("rules", out var ruleElements);
-            if (hasEffects && hasRules)
-                throw new FormatException("Card JSON cannot declare both 'effects' and 'rules'.");
-
-            if (hasRules)
+            var rules = new List<RuleDefinition>();
+            if (el.TryGetProperty("rules", out var ruleElements))
             {
                 if (ruleElements.ValueKind != JsonValueKind.Array)
                     throw new FormatException("Card JSON rules must be an array.");
-                var rules = new List<RuleDefinition>();
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
-                return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                    keywords, rules, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
-            }
-
-            var effects = new List<EffectDef>();
-            if (hasEffects)
-            {
-                if (fx.ValueKind != JsonValueKind.Array)
-                    throw new FormatException("Card JSON effects must be an array.");
-                foreach (var e in fx.EnumerateArray()) effects.Add(EffectFromElement(e));
             }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, effects, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
+                keywords, rules, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)
@@ -287,46 +257,6 @@ namespace Emberfall.Core.Cards
                 !value.TryGetInt32(out int result))
                 throw new FormatException($"Card JSON {path} must be an integer.");
             return result;
-        }
-
-        private static EffectDef EffectFromElement(JsonElement e)
-        {
-            RejectUnknownProperties(e, "effect", EffectProperties);
-
-            Trigger trigger = ReqEnum<Trigger>(e, "trigger");
-            Contracts.Action action = ReqEnum<Contracts.Action>(e, "action");
-            int? amount = Int(e, "amount");
-            int? amount2 = Int(e, "amount2");
-            string? tokenId = null;
-            Keyword? grantedKeyword = null;
-            bool permanent = false;
-            bool empty = false;
-            if (e.TryGetProperty("payload", out var payload) && payload.ValueKind == JsonValueKind.Object)
-            {
-                RejectUnknownProperties(payload, "payload", PayloadProperties);
-                tokenId = Str(payload, "tokenId");
-                grantedKeyword = TryEnum<Keyword>(payload, "keyword");
-                permanent = Bool(payload, "permanent") ?? false;
-                empty = Bool(payload, "empty") ?? false;
-            }
-
-            TargetSpec? target = null;
-            if (e.TryGetProperty("target", out var tgt))
-                target = TargetFromElement(tgt);
-
-            EffectConditionDef? condition = null;
-            if (e.TryGetProperty("condition", out var gate) && gate.ValueKind == JsonValueKind.Object)
-            {
-                RejectUnknownProperties(gate, "condition", ConditionProperties);
-                var type = ReqEnum<ConditionType>(gate, "type");
-                TurnOwner? turnOwner = type == ConditionType.TURN_OWNER
-                    ? TryEnum<TurnOwner>(gate, "value")
-                    : null;
-                condition = new EffectConditionDef(type, turnOwner);
-            }
-
-            return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword,
-                permanent: permanent, empty: empty, condition: condition, target: target);
         }
 
         private static TargetSpec TargetFromElement(JsonElement owner)

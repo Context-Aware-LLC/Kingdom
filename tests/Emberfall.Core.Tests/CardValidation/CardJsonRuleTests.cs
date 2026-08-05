@@ -84,19 +84,16 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Card_Cannot_Declare_Both_Intermediate_Effects_And_Normalized_Rules()
+        public void Rejects_Removed_Effects_Property()
         {
             const string json = """
-                {"id":"mixed","type":"SPELL",
-                 "effects":[{"trigger":"ON_CAST","action":"DRAW","amount":1}],
-                 "rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},
-                   "condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},
-                   "action":{"type":"DRAW","count":1}}]}
+                {"id":"legacy","type":"SPELL",
+                 "effects":[{"trigger":"ON_CAST","action":"DRAW","amount":1}]}
                 """;
 
             var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
 
-            Assert.That(ex!.Message, Does.Contain("both 'effects' and 'rules'"));
+            Assert.That(ex!.Message, Does.Contain("Unknown card JSON property 'effects'"));
         }
     }
 }

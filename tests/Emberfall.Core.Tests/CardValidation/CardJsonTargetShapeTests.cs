@@ -17,8 +17,12 @@ namespace Emberfall.Core.Tests.CardValidation
             "target.filter.tribe must be a string")]
         public void Rejects_Malformed_Target_And_Filter_Shapes(string target, string message)
         {
-            string json = "{\"id\":\"malformed_target\",\"type\":\"SPELL\",\"effects\":[{" +
-                "\"trigger\":\"ON_CAST\",\"action\":\"DRAW\",\"target\":" + target + "}]}";
+            string json = "{\"id\":\"malformed_target\",\"type\":\"SPELL\",\"rules\":[{" +
+                "\"id\":\"malformed\"," +
+                "\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_CAST\"}," +
+                "\"condition\":{\"type\":\"ALWAYS\"}," +
+                "\"lifetime\":{\"type\":\"ONE_SHOT\"}," +
+                "\"action\":{\"type\":\"DAMAGE\",\"amount\":1,\"target\":" + target + "}}]}";
 
             var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
 
