@@ -10,7 +10,7 @@
 // Model: the tray is 10 ORBS derived procedurally from UV.x (no mask texture),
 // each a carved socket with a gem seated in it. Each orb is colored by
 // cumulative bands, left→right:
-//   Available (blue) → Spent (dim) → Locked (overload) → Temporary → Empty.
+//   Available (blue) → Spent (dim) → Locked (backdraft) → Temporary → Empty.
 // Each level is a 0..1 ratio (count / cap) pushed per-instance via MPB.
 //
 // Round, not rectangular: hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 specifies "~0.32Ø" — a diameter,
@@ -29,7 +29,7 @@ Shader "Emberfall/SG_ManaFill"
         [HDR] _FilledColor ("Filled (Available)", Color) = (0.056, 0.248, 0.792, 1)
         _EmptyColor  ("Empty Socket", Color)   = (0.12, 0.12, 0.14, 1)
         _SpentColor  ("Spent", Color)          = (0.25, 0.25, 0.35, 1)
-        [HDR] _LockedColor ("Locked (Overload)", Color) = (0.55, 0.18, 0.20, 1)
+        [HDR] _LockedColor ("Locked (Backdraft)", Color) = (0.55, 0.18, 0.20, 1)
         [HDR] _TempColor   ("Temporary", Color)         = (0.30, 0.85, 0.45, 1)
         _SocketColor ("Socket Stone", Color)   = (0.165, 0.152, 0.138, 1)
 

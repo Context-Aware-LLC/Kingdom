@@ -27,19 +27,19 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// <para>That one sweep pins three properties of EF-015's raise site that no per-heal unit test reaches:
     /// <list type="number">
     /// <item><b>The raise exists.</b> A minion whose health was really restored fires its own ON_HEAL — one
-    ///   <c>onDamage</c> back at the healing hero.</item>
+    ///   <c>DamageApplied</c> back at the healing hero.</item>
     /// <item><b>An ineffective heal is not a heal.</b> The fresh third wardsong is swept by the same salve
     ///   and does <i>not</i> ping, because <c>DamagePipeline.ApplyHeal</c> returns at its <c>healed &lt;= 0</c>
     ///   guard before the raise. Three targets healed, exactly TWO pings back. This is the heal-side twin of
     ///   <c>on_damaged_thorns</c>' Aegis control, and the only fixture that enforces it.</item>
-    /// <item><b>Enqueue-only: no drain between targets.</b> Both <c>onHeal</c> events appear in the stream
+    /// <item><b>Enqueue-only: no drain between targets.</b> Both <c>HealthRestored</c> facts appear in the stream
     ///   <i>before</i> either ping. A drain-between-targets implementation would interleave them — the
     ///   ordering decision recorded in <c>DamagePipeline.cs</c> and inherited from EF-013.</item>
     /// </list></para>
     ///
-    /// <para>The heal is 2 against 1 missing health, so it also pins the clamp: each <c>onHeal</c> carries the
+    /// <para>The heal is 2 against 1 missing health, so it also pins the clamp: each <c>HealthRestored</c> carries the
     /// <i>effective</i> 1, not the requested 2. Nothing dies anywhere in the log — 3-health minions against a
-    /// 1-damage volley — keeping this fixture about the heal trigger and not a second deathrattle test.</para>
+    /// 1-damage volley — keeping this fixture about the heal trigger and not a second toll test.</para>
     /// </summary>
     [TestFixture]
     public sealed class OnHealWardsongFixtureGenerator
@@ -164,7 +164,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "on_heal_wardsong",
-                ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
+                ["engineContractVersion"] = "interfaces.v4",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0007",
                 ["p0"] = "P0",

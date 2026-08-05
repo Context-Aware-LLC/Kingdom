@@ -20,7 +20,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// </code>
     ///
     /// <para>Scenario: the first player lands <c>test_thornback</c> (1/5, "deal 1 to the enemy hero when
-    /// this is damaged") and then <c>test_aegis_thornback</c> — the same card plus DIVINE_SHIELD. The
+    /// this is damaged") and then <c>test_aegis_thornback</c> — the same card plus AEGIS. The
     /// second player then casts <c>frost_ripple</c>, a 1-damage sweep over <c>ENEMY_MINIONS</c>, catching
     /// both in a single volley.</para>
     ///
@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// per-hit unit test:
     /// <list type="number">
     /// <item><b>The raise exists.</b> A real hit on a minion fires its own ON_DAMAGED — one
-    ///   <c>onDamage</c> back at the casting hero.</item>
+    ///   <c>DamageApplied</c> back at the casting hero.</item>
     /// <item><b>An Aegis-absorbed hit is not "damaged".</b> The shielded twin is hit by the same volley
     ///   and does <i>not</i> retaliate, because <c>DamagePipeline.ApplyDamage</c> returns at the shield
     ///   before the raise. The volley lands two hits and exactly ONE retaliation comes back.</item>
@@ -38,8 +38,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// </list></para>
     ///
     /// <para>Both minions are 5-health against a 1-damage volley so nothing dies: this fixture pins the
-    /// damage trigger, and keeping death out of the log keeps it from doubling as a deathrattle test
-    /// (<c>deathrattle_cascade</c> already owns that).</para>
+    /// damage trigger, and keeping death out of the log keeps it from doubling as a toll test
+    /// (<c>toll_cascade</c> already owns that).</para>
     /// </summary>
     [TestFixture]
     public sealed class OnDamagedThornsFixtureGenerator
@@ -155,7 +155,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "on_damaged_thorns",
-                ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
+                ["engineContractVersion"] = "interfaces.v4",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0005",
                 ["p0"] = "P0",

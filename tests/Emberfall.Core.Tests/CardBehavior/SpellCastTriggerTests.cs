@@ -6,7 +6,6 @@ using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.CardBehavior
 {
@@ -14,7 +13,7 @@ namespace Emberfall.Core.Tests.CardBehavior
     /// L1 — EF-016. <c>ON_SPELL_CAST</c> was declared in the <see cref="Trigger"/> enum and raised nowhere,
     /// so a card carrying it validated, loaded and then did nothing forever. These lock the raise site's
     /// four observable properties: that it fires at all; that a HERO POWER does <b>not</b> fire it (the trap
-    /// — hero powers reach the interpreter as an ephemeral HERO_POWER card raising the same
+    /// — hero powers reach the interpreter as a carrierless HERO_POWER source raising the same
     /// <see cref="Trigger.ON_CAST"/>, so a generic hook would have caught them); that it fires on BOTH
     /// players' casts (the scope decision, matching EF-012's <c>ON_TURN_END</c>); and that it resolves
     /// AFTER the spell's own <c>ON_CAST</c>, so a reaction sees the board the spell left behind.
@@ -30,43 +29,43 @@ namespace Emberfall.Core.Tests.CardBehavior
 
         // ── card scaffolding ──────────────────────────────────────────────────────
 
-        private static EffectDef Damage(Trigger trigger, int amount, string selector)
-            => new EffectDef(trigger, Verb.DEAL_DAMAGE, amount: amount, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null, selector: selector);
+        private static RuleDefinition Damage(Trigger trigger, int amount, string selector)
+            => TestRules.Rule("rule_1", trigger,
+                new DamageAction(amount, new TargetSpec(selector)));
 
-        private static CardDefinition Minion(string id, int health, EffectDef[] effects)
+        private static CardDefinition Minion(string id, int health, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.MINION, cost: 1,
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                keywords: Array.Empty<Keyword>(), rules: rules,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static CardDefinition Spell(string id, int cost, EffectDef[] effects)
+        private static CardDefinition Spell(string id, int cost, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.SPELL, cost: cost,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                keywords: Array.Empty<Keyword>(), rules: rules,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static CardDefinition HeroPower(string id, EffectDef[] effects)
+        private static CardDefinition HeroPower(string id, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.HERO_POWER, cost: 2,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                keywords: Array.Empty<Keyword>(), rules: rules,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: false, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <param name="echoDamage">damage the echo deals to the enemy hero on every spell cast.</param>
         private static FakeCardDatabase Db(int echoDamage = 1, int echoHealth = 3)
             => new FakeCardDatabase()
                 .Register(Minion(Echo, echoHealth, new[] { Damage(Trigger.ON_SPELL_CAST, echoDamage, "ENEMY_HERO") }))
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Spell(Bolt, cost: 0, effects: new[] { Damage(Trigger.ON_CAST, 2, "ENEMY_HERO") }))
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 2, "ENEMY_HERO") }))
                 // The hero power deals damage too — the SAME verb the echo uses — so "the echo did not
                 // fire" cannot be confused with "the hero power did nothing".
                 .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
@@ -145,7 +144,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         [Test]
         public void A_Hero_Power_Does_Not_Fire_OnSpellCast()
         {
-            // THE TRAP. ApplyHeroPower raises Trigger.ON_CAST through an ephemeral HERO_POWER CardInstance,
+            // THE TRAP. ApplyHeroPower raises Trigger.ON_CAST through a carrierless HERO_POWER context,
             // so hooking generic ON_CAST would have fired spell reactions on every hero power. The raise is
             // gated to ApplyPlayCard's CardType.SPELL arm; this is the test that proves the gate holds.
             var (host, s) = Match(Db(), MixedDeck(), seed: 22UL);
@@ -216,15 +215,15 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             // Queue order, not just totals: RaiseSelf(ON_CAST) is called before RaiseObservers and the
             // interpreter's queue is FIFO, so the spell lands first and reactions follow. Totals cannot
-            // show this — both effects damage the same hero — so assert on the ordered D7 stream, where
-            // each onDamage carries the instance id of the source that dealt it.
+            // show this — both effects damage the same hero — so assert on the ordered event stream, where
+            // each DamageApplied fact carries the instance id of the source that dealt it.
             var (host, s) = Match(Db(), MixedDeck(), seed: 25UL);
             int seat = s.SeatOf(s.ActivePlayer);
 
             var (echo, _) = Play(host, s, Echo);
             var (bolt, cast) = Play(host, s, Bolt);
 
-            var damage = cast.Events.Where(e => e.Kind == VfxEvent.onDamage).ToList();
+            var damage = cast.Events.Where(e => e.Kind == GameEventKind.DamageApplied).ToList();
             Assert.That(damage, Has.Count.EqualTo(2), "One hit from the spell, one from the echo.");
             Assert.That(damage[0].Source, Is.EqualTo(bolt.Id),
                 "The spell's own ON_CAST must resolve first — it was enqueued first.");
@@ -245,8 +244,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             // card designer will assume works the other way. Making it "only living subscribers react"
             // is a design ruling on RaiseObservers, not a fix to this raise site.
             var db = new FakeCardDatabase()
-                .Register(Minion(Echo, health: 3, effects: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
-                .Register(Spell(Bolt, cost: 0, effects: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
+                .Register(Minion(Echo, health: 3, rules: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
                 .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
 
             var (host, s) = Match(db, MixedDeck(), seed: 28UL);
@@ -261,6 +260,33 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[seat].Board, Is.Empty, "The bolt's 5-damage sweep kills the echo.");
             Assert.That(s.Players[foe].Hero.CurrentHealth, Is.EqualTo(foeHero - 1),
                 "The echo was enqueued while it was alive, so its reaction still resolves after it dies.");
+        }
+
+        [Test]
+        public void A_Departed_Observer_Resolves_Its_Snapshot_Once_But_Cannot_Observe_A_Later_Cast()
+        {
+            // The first cast snapshots the echo before its own sweep removes it, so that queued reaction
+            // must still resolve. The second cast is a separate observer raise: now that the same
+            // instance is in the graveyard, it must not be rediscovered as a persistent observer.
+            var db = new FakeCardDatabase()
+                .Register(Minion(Echo, health: 3, rules: new[] { Damage(Trigger.ON_SPELL_CAST, 1, "ENEMY_HERO") }))
+                .Register(Spell(Bolt, cost: 0, rules: new[] { Damage(Trigger.ON_CAST, 5, "ALL_MINIONS") }))
+                .Register(HeroPower(HeroPowerId, new[] { Damage(Trigger.ON_CAST, 1, "ENEMY_HERO") }));
+            var (host, s) = Match(db, MixedDeck(), seed: 281UL);
+
+            var (echo, _) = Play(host, s, Echo);
+            var (_, firstCast) = Play(host, s, Bolt);
+
+            Assert.That(s.Players[s.SeatOf(s.ActivePlayer)].Graveyard, Does.Contain(echo));
+            Assert.That(firstCast.Events.Count(e => e.Kind == GameEventKind.DamageApplied &&
+                e.Source == echo.Id), Is.EqualTo(1),
+                "The queued reaction captured while the echo was alive resolves exactly once.");
+
+            var (_, laterCast) = Play(host, s, Bolt);
+
+            Assert.That(laterCast.Events.Any(e => e.Kind == GameEventKind.DamageApplied &&
+                e.Source == echo.Id), Is.False,
+                "A departed instance must not be observed again by a later spell-cast event.");
         }
 
         [Test]

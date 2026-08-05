@@ -6,7 +6,6 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Projection;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Projection
 {
@@ -61,14 +60,15 @@ namespace Emberfall.Core.Tests.Projection
             "hp_bolt", "hp_bolt", CardType.HERO_POWER, 2, null, null, null,
             CardClass.EMBERWARD, Rarity.COMMON,
             Array.Empty<Keyword>(),
-            new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null, selector: "ENEMY_HERO") },
-            "", "", "art/hp_bolt", SetId.CORE, false, null, "", false);
+            new[] { TestRules.Rule("bolt", Trigger.ON_CAST,
+                TestRules.Damage(Trigger.ON_CAST, 1, "ENEMY_HERO")) },
+            "", "art/hp_bolt", SetId.CORE, false, null, "", false);
 
         private static readonly CardDefinition Hatchet = new CardDefinition(
             "hatchet", "hatchet", CardType.WEAPON, 1, 2, null, 2,
             CardClass.NEUTRAL, Rarity.COMMON,
-            Array.Empty<Keyword>(), Array.Empty<EffectDef>(),
-            "", "", "art/hatchet", SetId.CORE, true, null, "", false);
+            Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
+            "", "art/hatchet", SetId.CORE, true, null, "", false);
 
         private static (IReadOnlyList<GameEvent> events, IReadOnlyList<EventVisibility> vis)
             Exec(CommandProcessor proc, GameState s, PlayerIntent intent)
@@ -82,12 +82,10 @@ namespace Emberfall.Core.Tests.Projection
 
         private static List<GameEvent> ProjectAll(IReadOnlyList<GameEvent> events,
             IReadOnlyList<EventVisibility> vis, int viewerSeat)
-        {
-            var outp = new List<GameEvent>(events.Count);
-            for (int i = 0; i < events.Count; i++)
-                outp.Add(GameStateProjector.ProjectEvent(events[i], viewerSeat, vis[i]));
-            return outp;
-        }
+            => new List<GameEvent>(GameStateProjector.ProjectEvents(events, vis, viewerSeat));
+
+        private static GameEvent ProjectOne(GameEvent e, int viewerSeat, EventVisibility vis)
+            => GameStateProjector.ProjectEvents(new[] { e }, new[] { vis }, viewerSeat)[0];
 
         // ── never dropped, sequences identical (§5.3) ────────────────────────────
 
@@ -112,7 +110,7 @@ namespace Emberfall.Core.Tests.Projection
             }
         }
 
-        // ── the load-bearing onDraw row ──────────────────────────────────────────
+        // ── the load-bearing CardDrawn row ───────────────────────────────────────
 
         [Test]
         public void Draw_Event_Owner_Sees_Card_Opponent_Sees_Sentinel()
@@ -125,11 +123,11 @@ namespace Emberfall.Core.Tests.Projection
 
             int drawIdx = -1;
             for (int i = 0; i < events.Count; i++)
-                if (events[i].Kind == VfxEvent.onDraw) drawIdx = i;
+                if (events[i].Kind == GameEventKind.CardDrawn) drawIdx = i;
             Assert.That(drawIdx, Is.GreaterThanOrEqualTo(0), "Turn start must have drawn.");
 
-            var forOwner = GameStateProjector.ProjectEvent(events[drawIdx], 1, vis[drawIdx]);
-            var forOpponent = GameStateProjector.ProjectEvent(events[drawIdx], 0, vis[drawIdx]);
+            var forOwner = ProjectOne(events[drawIdx], 1, vis[drawIdx]);
+            var forOpponent = ProjectOne(events[drawIdx], 0, vis[drawIdx]);
 
             Assert.That(forOwner.Source!.Value.Value, Is.EqualTo(planted.Id.Value),
                 "The drawing player sees their own card.");
@@ -159,10 +157,10 @@ namespace Emberfall.Core.Tests.Projection
             int draws = 0;
             for (int i = 0; i < events.Count; i++)
             {
-                if (events[i].Kind != VfxEvent.onDraw) continue;
+                if (events[i].Kind != GameEventKind.CardDrawn) continue;
                 draws++;
-                var own = GameStateProjector.ProjectEvent(events[i], 0, vis[i]);
-                var opp = GameStateProjector.ProjectEvent(events[i], 1, vis[i]);
+                var own = ProjectOne(events[i], 0, vis[i]);
+                var opp = ProjectOne(events[i], 1, vis[i]);
                 Assert.That(own.Source!.Value.Value, Is.Not.Zero, "Owner sees each replacement draw.");
                 Assert.That(opp.Source!.Value.Value, Is.Zero, "Opponent gets a sentinel per draw — count stays public.");
             }
@@ -182,12 +180,12 @@ namespace Emberfall.Core.Tests.Projection
 
             int dmgIdx = -1;
             for (int i = 0; i < events.Count; i++)
-                if (events[i].Kind == VfxEvent.onDamage) dmgIdx = i;
+                if (events[i].Kind == GameEventKind.DamageApplied) dmgIdx = i;
             Assert.That(dmgIdx, Is.GreaterThanOrEqualTo(0), "The bolt must have dealt damage.");
 
             foreach (int seat in new[] { 0, 1 })
             {
-                var p = GameStateProjector.ProjectEvent(events[dmgIdx], seat, vis[dmgIdx]);
+                var p = ProjectOne(events[dmgIdx], seat, vis[dmgIdx]);
                 Assert.That(p.Source!.Value.Value, Is.Not.Zero,
                     "The ephemeral hero-power source is public (its act is public) — the emit-time " +
                     "MarkPublic covers what post-state resolution never could (§10 finding 2).");
@@ -196,7 +194,7 @@ namespace Emberfall.Core.Tests.Projection
             }
         }
 
-        // ── §10 corpus addition — weapon-break onDeath stays public ─────────────
+        // ── §10 corpus addition — weapon-break CardDestroyed stays public ───────
 
         [Test]
         public void Weapon_Break_Death_Event_Resolves_Public_For_Both_Viewers()
@@ -215,13 +213,13 @@ namespace Emberfall.Core.Tests.Projection
 
             int deathIdx = -1;
             for (int i = 0; i < events.Count; i++)
-                if (events[i].Kind == VfxEvent.onDeath) deathIdx = i;
+                if (events[i].Kind == GameEventKind.CardDestroyed) deathIdx = i;
             Assert.That(deathIdx, Is.GreaterThanOrEqualTo(0), "Equipping over must break the old weapon.");
             Assert.That(events[deathIdx].Source!.Value.Value, Is.EqualTo(oldWeaponId));
 
             foreach (int seat in new[] { 0, 1 })
             {
-                var p = GameStateProjector.ProjectEvent(events[deathIdx], seat, vis[deathIdx]);
+                var p = ProjectOne(events[deathIdx], seat, vis[deathIdx]);
                 Assert.That(p.Source!.Value.Value, Is.EqualTo(oldWeaponId),
                     "The weapon was equipped (public) at emit time; post-state nulls it — emit-time capture wins.");
             }
@@ -230,22 +228,57 @@ namespace Emberfall.Core.Tests.Projection
         // ── §7.1 test 10 — numeric side-channels (OBL-8 Amount sentinels) ───────
 
         [Test]
-        public void OBL8_Amount_Sentinel_Rows_Are_Enforced()
+        public void Projection_Uses_Explicit_Field_Policy_And_Drops_Invalid_Cue()
         {
-            // No emitter exists for either kind — synthesize the events the way a future emitter
-            // would and assert the projector sentinels Amount regardless of viewer (D-OQ3 posture;
-            // onDiscover chooser-side unredaction is Phase-2 wiring).
-            var debuff = new GameEvent(VfxEvent.onDebuff, 7, new InstanceId(4), new InstanceId(5), 3, EventFlags.None);
-            var discover = new GameEvent(VfxEvent.onDiscover, 8, new InstanceId(4), null, 3, EventFlags.None);
+            var e = new GameEvent(
+                GameEventKind.UnearthOffered,
+                7,
+                new InstanceId(4),
+                new InstanceId(5),
+                3,
+                EventFlags.Lethal,
+                (PresentationCue)int.MaxValue);
             var vis = new EventVisibility(IdVisibility.Public, IdVisibility.Public);
 
             foreach (int seat in new[] { 0, 1 })
             {
-                Assert.That(GameStateProjector.ProjectEvent(debuff, seat, vis).Amount, Is.Null,
-                    "onDebuff Amount is sentineled until a real emitter classifies it (D-OQ3).");
-                Assert.That(GameStateProjector.ProjectEvent(discover, seat, vis).Amount, Is.Null,
-                    "onDiscover Amount is the pool-size magnitude channel (OBL-8).");
+                var projected = ProjectOne(e, seat, vis);
+                Assert.Multiple(() =>
+                {
+                    Assert.That(projected.Amount, Is.Null, "Unearth does not disclose a pool-size magnitude.");
+                    Assert.That(projected.Flags, Is.EqualTo(EventFlags.None));
+                    Assert.That(projected.CueOverride, Is.Null, "Unknown cues fall back to the semantic default.");
+                });
             }
+        }
+
+        [Test]
+        public void Projection_Rejects_An_Unknown_Semantic_Kind_For_The_Whole_Batch()
+        {
+            var events = new[]
+            {
+                new GameEvent(GameEventKind.CardPlayed, 1, null, null, null, EventFlags.None),
+                new GameEvent((GameEventKind)int.MaxValue, 2, null, null, null, EventFlags.None),
+            };
+            var visibility = new[]
+            {
+                new EventVisibility(IdVisibility.Public, IdVisibility.Public),
+                new EventVisibility(IdVisibility.Public, IdVisibility.Public),
+            };
+
+            Assert.That(
+                () => GameStateProjector.ProjectEvents(events, visibility, 0),
+                Throws.TypeOf<ArgumentException>());
+        }
+
+        [Test]
+        public void Projection_Rejects_A_Nonparallel_Visibility_Batch()
+        {
+            var events = new[] { new GameEvent(GameEventKind.CardPlayed, 1, null, null, null, EventFlags.None) };
+
+            Assert.That(
+                () => GameStateProjector.ProjectEvents(events, Array.Empty<EventVisibility>(), 0),
+                Throws.TypeOf<ArgumentException>());
         }
 
         // ── D-OQ1 — bounce event: owner sees the re-minted id, opponent sentinel ─
@@ -257,8 +290,9 @@ namespace Emberfall.Core.Tests.Projection
                 "bounce", "bounce", CardType.SPELL, 2, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 Array.Empty<Keyword>(),
-                new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND, null, null, null, null, null, selector: "ANY_MINION") },
-                "", "", "art/bounce", SetId.CORE, true, null, "", false);
+                new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
+                    new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
+                "", "art/bounce", SetId.CORE, true, null, "", false);
             var db = new FakeCardDatabase().Register(bounce);
             var proc = new CommandProcessor(db);
             var s = MainPhase();
@@ -279,12 +313,12 @@ namespace Emberfall.Core.Tests.Projection
 
             int retIdx = -1;
             for (int i = 0; i < events.Count; i++)
-                if (events[i].Kind == VfxEvent.onReturn) retIdx = i;
+                if (events[i].Kind == GameEventKind.CardBounced) retIdx = i;
             Assert.That(retIdx, Is.GreaterThanOrEqualTo(0));
 
             int newHandId = s.Players[1].Hand[0].Id.Value;
-            var forOwner = GameStateProjector.ProjectEvent(events[retIdx], 1, vis[retIdx]);
-            var forCaster = GameStateProjector.ProjectEvent(events[retIdx], 0, vis[retIdx]);
+            var forOwner = ProjectOne(events[retIdx], 1, vis[retIdx]);
+            var forCaster = ProjectOne(events[retIdx], 0, vis[retIdx]);
 
             Assert.That(forOwner.Target!.Value.Value, Is.EqualTo(newHandId),
                 "Owner's event carries the re-minted id — event and snapshot agree (D-OQ1 ordering).");

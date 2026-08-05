@@ -96,8 +96,8 @@ namespace Emberfall.AI
                 if (play != null) return play;
             }
 
-            // 2. Attack. Minions trade first — the validator, not this loop, enforces taunt and
-            //    stealth — then the hero swings if a weapon is equipped.
+            // 2. Attack. Minions trade first — the validator, not this loop, enforces bulwark and
+            //    shroud — then the hero swings if a weapon is equipped.
             foreach (var attacker in ps.Board)
             {
                 var atk = TryAttack(state, attacker.Id, foe, preferFace: false);
@@ -107,7 +107,7 @@ namespace Emberfall.AI
             if (ps.Weapon != null)
             {
                 // Face first for the hero: swinging into a minion means taking its attack back, and
-                // the weapon spends durability either way. Taunt still forces the trade.
+                // the weapon spends durability either way. Bulwark still forces the trade.
                 var swing = TryAttack(state, ps.Hero.Id, foe, preferFace: true);
                 if (swing != null) return swing;
             }
@@ -224,16 +224,17 @@ namespace Emberfall.AI
 
         private static bool IsHostile(CardDefinition def)
         {
-            foreach (var e in def.Effects)
+            foreach (var rule in def.Rules)
             {
-                switch (e.Action)
+                switch (rule.Action)
                 {
-                    case Emberfall.Core.Contracts.Action.DEAL_DAMAGE:
-                    case Emberfall.Core.Contracts.Action.DESTROY:
-                    case Emberfall.Core.Contracts.Action.FREEZE:
-                    case Emberfall.Core.Contracts.Action.SILENCE:
-                    case Emberfall.Core.Contracts.Action.RETURN_TO_HAND:
-                    case Emberfall.Core.Contracts.Action.TRANSFORM:
+                    case DamageAction _:
+                    case DestroyAction _:
+                    case FrostAction _:
+                    case SilenceAction _:
+                    case ReturnToHandAction _:
+                    case TransformAction _:
+                    case TakeControlAction _:
                         return true;
                 }
             }
@@ -242,9 +243,9 @@ namespace Emberfall.AI
 
         private static int DamageAmount(CardDefinition def)
         {
-            foreach (var e in def.Effects)
-                if (e.Action == Emberfall.Core.Contracts.Action.DEAL_DAMAGE && e.Amount.HasValue)
-                    return e.Amount.Value;
+            foreach (var rule in def.Rules)
+                if (rule.Action is DamageAction damage)
+                    return damage.Amount;
             return 0;
         }
     }

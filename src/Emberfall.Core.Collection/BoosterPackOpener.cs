@@ -168,7 +168,7 @@ namespace Emberfall.Core.Collection
             Rarity.LEGENDARY, Rarity.EPIC, Rarity.RARE, Rarity.COMMON,
         };
 
-        /// <summary>Open one pack against a database. See the overload for the algorithm.</summary>
+        /// <summary>Open one pack against a database. See the backdraft for the algorithm.</summary>
         public static PackOpenResult Open(BoosterPack pack, ICardDatabase db, IOwnedCardCounts owned,
                                           PackPityState pity, ulong seed, int packIndex)
         {
@@ -180,7 +180,7 @@ namespace Emberfall.Core.Collection
         /// Open one pack against an explicit pool.
         ///
         /// <para><b>The pool must already be in a deterministic order</b> — <see cref="BoosterPack.Pool"/>
-        /// sorts by card id and this overload trusts that, because re-sorting on every open would cost a
+        /// sorts by card id and this backdraft trusts that, because re-sorting on every open would cost a
         /// sort per pack for a list the caller can hoist. Handing an unsorted pool in produces a result
         /// that is stable on one machine and different on the next, which no test here can catch for
         /// you.</para>
@@ -354,7 +354,7 @@ namespace Emberfall.Core.Collection
         /// A rolled rarity the pool cannot honour falls back to the nearest rarity it can — down first,
         /// then up. Degenerate by construction (a pairing with no Legendaries), but the alternative is
         /// an index-out-of-range in the pick phase on a content gap, which is the worst possible place
-        /// to discover one.
+        /// to find one.
         /// </summary>
         private static Rarity Substitute(Rarity rolled, Dictionary<Rarity, List<CardDefinition>> byRarity)
         {

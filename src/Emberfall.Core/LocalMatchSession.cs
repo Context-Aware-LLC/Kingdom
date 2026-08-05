@@ -11,7 +11,7 @@ namespace Emberfall.Core
     /// In-process match construction — the ONLY blessed way to stand up a local match above the
     /// core (dev-docs/contracts/gameplay-and-session.md:5). Creates the host + processor, runs BeginMatch, and
     /// returns one <see cref="IMatchSession"/> per viewer seat. Nothing this returns can reach
-    /// raw authoritative state: both sessions deliver projections only, which is what discharges
+    /// raw authoritative state: both sessions deliver projections only, which is what closes
     /// the a3 §9.2 honest-AI gap (dev-docs/architecture/determinism-and-projection.md:25).
     /// </summary>
     public static class LocalMatch
@@ -86,10 +86,7 @@ namespace Emberfall.Core
                 var projected = new IReadOnlyList<GameEvent>[_sessions.Length];
                 for (int seat = 0; seat < _sessions.Length; seat++)
                 {
-                    var list = new List<GameEvent>(raw.Events.Count);
-                    for (int i = 0; i < raw.Events.Count; i++)
-                        list.Add(GameStateProjector.ProjectEvent(raw.Events[i], seat, vis[i]));
-                    projected[seat] = list;
+                    projected[seat] = GameStateProjector.ProjectEvents(raw.Events, vis, seat);
                 }
 
                 foreach (var s in _sessions)

@@ -154,7 +154,7 @@ namespace Emberfall.Core.Tests.Collection
             foreach (var c in Pool())
             {
                 var nameWords = Tokens(c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var rulesOnly = Tokens(c.CardText).FirstOrDefault(
+                var rulesOnly = Tokens(CardTextGenerator.Generate(c)).FirstOrDefault(
                     w => w.Length >= 4 && !nameWords.Contains(w));
                 if (rulesOnly != null) { found = c; chosen = rulesOnly; break; }
             }
@@ -201,7 +201,7 @@ namespace Emberfall.Core.Tests.Collection
                 {
                     string name = kw.ToString();
                     bool inName = c.Name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
-                    bool inRules = c.CardText.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
+                    bool inRules = CardTextGenerator.Generate(c).IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!inName && !inRules) { found = c; chosen = kw; break; }
                 }
             Assume.That(found, Is.Not.Null, "every keyworded card also spells the keyword in its name/rules.");
@@ -230,7 +230,7 @@ namespace Emberfall.Core.Tests.Collection
             // synthetically so the proof does not depend on the live set happening to contain a
             // flavour-only word.
             var card = Card("zzid-quibbleflux", "Cinder Sprite",
-                            cardText: "Deal 2 damage.", flavorText: "The wispwort blooms at dusk.");
+                            flavorText: "The wispwort blooms at dusk.");
             var pool = new[] { card };
 
             Assert.That(CardQuery.Search(pool, new CardFilter { Text = "wispwort" }).Count, Is.EqualTo(0),
@@ -244,11 +244,16 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         /// <summary>A minimal spell for the synthetic exclusion test — only the searched fields vary.</summary>
-        private static CardDefinition Card(string id, string name, string cardText, string flavorText)
+        private static CardDefinition Card(string id, string name, string flavorText)
             => new CardDefinition(id, name, CardType.SPELL, cost: 1, attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: Array.Empty<EffectDef>(),
-                cardText: cardText, flavorText: flavorText, artId: "", setId: SetId.CORE,
+                keywords: Array.Empty<Keyword>(), rules: new[]
+                {
+                    new RuleDefinition(new RuleId("damage"), new TriggeredActivation(Trigger.ON_CAST),
+                        AlwaysCondition.Instance, OneShotLifetime.Instance,
+                        new DamageAction(2, new TargetSpec("ENEMY_HERO")))
+                },
+                flavorText: flavorText, artId: "", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         // ── sort ──────────────────────────────────────────────────────────────────

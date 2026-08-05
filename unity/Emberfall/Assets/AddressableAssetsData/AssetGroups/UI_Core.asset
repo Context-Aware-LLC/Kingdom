@@ -36,7 +36,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b5c6747e55f12d45886f3ea23d10570
-    m_Address: ui/icon_kw_windfury
+    m_Address: ui/icon_kw_doublestrike
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -56,12 +56,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3a23482b6746d41429b75dbd1d31ded1
-    m_Address: ui/icon_kw_poisonous
+    m_Address: ui/icon_kw_venom
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b672eb5215660941bc2412e4dcd0601
-    m_Address: ui/icon_kw_overload
+    m_Address: ui/icon_kw_backdraft
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56e97580955deed40941dd8c1ac003ee
-    m_Address: ui/icon_kw_lifesteal
+    m_Address: ui/icon_kw_lifedrain
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 651b448b86cd447418ebe9054159240b
-    m_Address: ui/icon_kw_rush
+    m_Address: ui/icon_kw_skirmish
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -136,7 +136,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a836a9dcb061c4141a928ab1c9bce539
-    m_Address: ui/icon_kw_deathrattle
+    m_Address: ui/icon_kw_toll
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -146,7 +146,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b12c842c1b7d505418f6f99bf0634ff4
-    m_Address: ui/icon_kw_reborn
+    m_Address: ui/icon_kw_rekindle
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -166,17 +166,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bebea12dec66f984684d62e4461c72d7
-    m_Address: ui/icon_kw_charge
+    m_Address: ui/icon_kw_fervor
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3bead3581cffc8438902a5f9cfc6407
-    m_Address: ui/icon_kw_stealth
+    m_Address: ui/icon_kw_shroud
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c40ed17f4e5b2364ba85328a61cffcd6
-    m_Address: ui/icon_kw_freeze
+    m_Address: ui/icon_kw_frost
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -191,7 +191,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c9c2333b21be26540ac954bc8c6c8883
-    m_Address: ui/icon_kw_taunt
+    m_Address: ui/icon_kw_bulwark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -201,7 +201,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1dc52688f0c16142a6e765c906d3023
-    m_Address: ui/icon_kw_battlecry
+    m_Address: ui/icon_kw_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

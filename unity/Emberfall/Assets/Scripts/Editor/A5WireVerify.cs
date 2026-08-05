@@ -28,8 +28,8 @@ namespace Emberfall.Editor
                 CurrentHealth = 3,
                 MaxHealth = 3,
             };
-            hand.Keywords.Add(Keyword.TAUNT);
-            hand.Keywords.Add(Keyword.STEALTH);
+            hand.Keywords.Add(Keyword.BULWARK);
+            hand.Keywords.Add(Keyword.SHROUD);
             p0.Hand.Add(hand);
             var s = new GameState(new MatchId("m-unity-verify"), new DeterministicRandom(42UL), p0, p1)
             {

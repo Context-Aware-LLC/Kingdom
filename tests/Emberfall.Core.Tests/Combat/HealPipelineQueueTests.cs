@@ -3,7 +3,6 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Combat
 {
@@ -17,7 +16,7 @@ namespace Emberfall.Core.Tests.Combat
     ///   the same precedent as an Aegis-absorbed hit not counting as "damaged";</item>
     /// <item>it is a <b>SELF</b> trigger, not an observer sweep: a bystander minion subscribed to ON_HEAL
     ///   does not react to somebody else being healed;</item>
-    /// <item>the <b>reentrant LIFESTEAL heal inside ApplyDamage</b> raises nothing, because its target is
+    /// <item>the <b>reentrant LIFEDRAIN heal inside ApplyDamage</b> raises nothing, because its target is
     ///   always a hero and heroes carry no card effects.</item>
     /// </list>
     /// Driven through the public <c>CommandProcessor.Execute</c> door; no golden fixtures. Cross-target
@@ -71,30 +70,31 @@ namespace Emberfall.Core.Tests.Combat
                 Position = ps.Board.Count,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            ci.HasAegisShield = ci.Keywords.Contains(Keyword.DIVINE_SHIELD);
+            ci.HasAegisShield = ci.Keywords.Contains(Keyword.AEGIS);
             ps.Board.Add(ci);
             return ci;
         }
 
-        private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? selector = null)
-            => new EffectDef(trigger, action, amount, null, null, null, null, selector);
+        private static RuleDefinition Damage(Trigger trigger, int amount, string? selector = null)
+            => TestRules.Rule("rule_1", trigger, TestRules.Damage(trigger, amount, selector));
 
-        private static CardDefinition Minion(string id, int atk, int hp, System.Collections.Generic.IReadOnlyList<EffectDef>? effects = null,
+        private static RuleDefinition Heal(Trigger trigger, int amount, string? selector = null)
+            => TestRules.Rule("rule_1", trigger, TestRules.Heal(trigger, amount, selector));
+
+        private static CardDefinition Minion(string id, int atk, int hp, System.Collections.Generic.IReadOnlyList<RuleDefinition>? rules = null,
             System.Collections.Generic.IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), effects ?? System.Array.Empty<EffectDef>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         /// <summary>A minion that pings the enemy hero for 3 whenever THIS minion is healed.</summary>
         private static CardDefinition Wardsong() => Minion("wardsong", 1, 10,
-            effects: new[] { Eff(Trigger.ON_HEAL, Verb.DEAL_DAMAGE, amount: 3, selector: "ENEMY_HERO") });
+            rules: new[] { Damage(Trigger.ON_HEAL, amount: 3, selector: "ENEMY_HERO") });
 
         private static CommandProcessor Processor(FakeCardDatabase db) => new CommandProcessor(db);
 
@@ -106,7 +106,7 @@ namespace Emberfall.Core.Tests.Combat
             // The raise exists. A wounded minion is topped up by one spell and pings back exactly once —
             // not zero times (no raise site), not once per drain step.
             var db = new FakeCardDatabase()
-                .Register(Spell("salve", Eff(Trigger.ON_CAST, Verb.HEAL, amount: 4)))
+                .Register(Spell("salve", Heal(Trigger.ON_CAST, amount: 4)))
                 .Register(Wardsong());
             var s = MainPhase();
             var ward = Board(s, 0, db.Get("wardsong"), currentHealth: 6);   // friendly, wounded 6/10
@@ -129,7 +129,7 @@ namespace Emberfall.Core.Tests.Combat
             // nothing was restored — so nothing was healed, and no ping comes back. This is the heal-side
             // twin of "an Aegis-absorbed hit is not damaged", and the only place it is enforced.
             var db = new FakeCardDatabase()
-                .Register(Spell("salve", Eff(Trigger.ON_CAST, Verb.HEAL, amount: 4)))
+                .Register(Spell("salve", Heal(Trigger.ON_CAST, amount: 4)))
                 .Register(Wardsong());
             var s = MainPhase();
             var ward = Board(s, 0, db.Get("wardsong"));   // friendly, untouched 10/10
@@ -152,7 +152,7 @@ namespace Emberfall.Core.Tests.Combat
             // ON_TURN_END use) would ping twice, because the bystander subscribes to the same trigger.
             // Rewriting the raise as RaiseObservers fails here and nowhere else.
             var db = new FakeCardDatabase()
-                .Register(Spell("salve", Eff(Trigger.ON_CAST, Verb.HEAL, amount: 4)))
+                .Register(Spell("salve", Heal(Trigger.ON_CAST, amount: 4)))
                 .Register(Wardsong());
             var s = MainPhase();
             var healed = Board(s, 0, db.Get("wardsong"), currentHealth: 6);
@@ -170,18 +170,18 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Lifesteal_Heal_Inside_ApplyDamage_Raises_No_ON_HEAL()
+        public void Lifedrain_Heal_Inside_ApplyDamage_Raises_No_ON_HEAL()
         {
             // The reentrant path the EF-015 brief flags: ApplyHeal is called from INSIDE ApplyDamage when
-            // the damage source has LIFESTEAL. Under self semantics that heal targets a HERO, and heroes
+            // the damage source has LIFEDRAIN. Under self semantics that heal targets a HERO, and heroes
             // carry no card effects — so the reentrancy raises nothing at all today. Pinned explicitly
             // rather than left implied: it is the difference between "deliberately silent" and "forgot".
             //
             // Setup: P0's hero is wounded so the drain has something to restore; a friendly wardsong
             // watches from the board and must stay silent, proving no ON_HEAL leaked out of the hero heal.
             var db = new FakeCardDatabase()
-                .Register(Spell("drainbolt", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 4)))
-                .Register(Minion("vampire", 1, 10, keywords: new[] { Keyword.LIFESTEAL }))
+                .Register(Spell("drainbolt", Damage(Trigger.ON_CAST, amount: 4)))
+                .Register(Minion("vampire", 1, 10, keywords: new[] { Keyword.LIFEDRAIN }))
                 .Register(Wardsong());
             var s = MainPhase();
             s.Players[0].Hero.CurrentHealth = 20;
@@ -189,7 +189,7 @@ namespace Emberfall.Core.Tests.Combat
             var watcher = Board(s, 0, db.Get("wardsong"), currentHealth: 6);
             var victim = Board(s, 1, db.Get("vampire"));
 
-            // The spell itself is sourceless of keywords; drive LIFESTEAL through the minion instead by
+            // The spell itself is sourceless of keywords; drive LIFEDRAIN through the minion instead by
             // attacking with it — that is the only path that carries attacker keywords into ApplyDamage.
             vampire.SummonedThisTurn = false;
             var r = Processor(db).Execute(s, new AttackIntent(s.Players[0].Id, vampire.Id, new TargetRef(victim.Id)));
@@ -197,7 +197,7 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(r.Accepted, Is.True, $"attack rejected: {r.Reason}");
             Assert.That(victim.CurrentHealth, Is.EqualTo(9), "the vampire's 1 attack landed.");
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(21),
-                "LIFESTEAL restored 1 to the attacker's hero — the reentrant ApplyHeal really ran.");
+                "LIFEDRAIN restored 1 to the attacker's hero — the reentrant ApplyHeal really ran.");
             Assert.That(watcher.CurrentHealth, Is.EqualTo(6),
                 "precondition: the watcher was never healed itself.");
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(30),

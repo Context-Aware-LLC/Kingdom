@@ -140,6 +140,9 @@ namespace Emberfall.Presentation
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
             }
 
+            var ongoingEffects = OngoingEffectsView.Create(p0Id, db);
+            matchRunner.OnStateUpdated += ongoingEffects.OnStateUpdated;
+
             // ── Input router subscription ─────────────────────────────────────────
             if (inputRouter != null)
             {

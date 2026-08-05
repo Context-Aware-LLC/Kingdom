@@ -133,9 +133,6 @@ async function openCard(id) {
   let html = rows.map(([label, val]) => `
     <div><div class="field-label">${label}</div><div class="field-value">${val ?? '—'}</div></div>
   `).join('');
-  if (c.cardText) {
-    html += `<div class="full-row"><div class="field-label">Card text (not part of the prompt — reference only)</div><div class="field-value">${c.cardText}</div></div>`;
-  }
   info.innerHTML = html;
 
   document.getElementById('promptText').value = data.text;

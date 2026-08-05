@@ -6,12 +6,11 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.GoldenReplay;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Interpreter
 {
     /// <summary>
-    /// L1 — the M2 Phase 0 grammar-freeze rulings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier a):
+    /// L1 — the M2 Phase 0 grammar-frost rulings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier a):
     /// (1) GAIN_MANA permanent/empty payload semantics (the Quicken / Seedling Rite ramp primitive),
     /// (2) explicit-choice (ANY_*) selectors require a player-chosen target at the PlayCard door too,
     /// (3) chosen targets must fit the selector's shape (ANY_MINION can't aim at a hero),
@@ -19,7 +18,7 @@ namespace Emberfall.Core.Tests.Interpreter
     /// </summary>
     [TestFixture]
     [Category("Unit")]
-    public sealed class GrammarFreezeTests
+    public sealed class GrammarFrostTests
     {
         // ── scenario scaffolding (mirrors InterpreterTests) ──────────────────────
 
@@ -69,17 +68,15 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         private static CardDefinition Minion(string id, int cost, int atk, int hp,
-            IReadOnlyList<EffectDef>? effects = null)
+            IReadOnlyList<RuleDefinition>? rules = null)
             => new CardDefinition(id, id, CardType.MINION, cost, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects ?? System.Array.Empty<EffectDef>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
-        private static CardDefinition Spell(string id, int cost, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, int cost, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, cost, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), effects,
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static PlayCardIntent Play(GameState s, CardInstance card, params InstanceId[] targets)
         {
@@ -94,9 +91,8 @@ namespace Emberfall.Core.Tests.Interpreter
         public void GainMana_Permanent_Empty_Raises_Max_But_Not_Available()
         {
             // Seedling Rite: "Gain an empty Mana Crystal."
-            var rite = Spell("rite", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "FRIENDLY_HERO", permanent: true, empty: true));
+            var rite = Spell("rite", cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.PERMANENT_EMPTY)));
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 5);
             var card = Hand(s, 0, "rite");
@@ -112,9 +108,8 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void GainMana_Permanent_Filled_Raises_Max_And_Available()
         {
-            var ramp = Spell("ramp", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "FRIENDLY_HERO", permanent: true, empty: false));
+            var ramp = Spell("ramp", cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.PERMANENT_FILLED)));
             var db = new FakeCardDatabase().Register(ramp);
             var s = MainPhase(p0Mana: 5);
             var card = Hand(s, 0, "ramp");
@@ -128,9 +123,8 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void GainMana_Permanent_Caps_At_Ten_And_Stays_Silent_When_Nothing_Gained()
         {
-            var rite = Spell("rite", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "FRIENDLY_HERO", permanent: true, empty: true));
+            var rite = Spell("rite", cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.PERMANENT_EMPTY)));
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 10); // already at the cap
             var card = Hand(s, 0, "rite");
@@ -139,16 +133,15 @@ namespace Emberfall.Core.Tests.Interpreter
 
             Assert.That(s.Players[0].Mana.Max, Is.EqualTo(10), "Crystals beyond the cap don't exist.");
             foreach (var ev in r.Events)
-                Assert.That(ev.Kind, Is.Not.EqualTo(VfxEvent.onManaGain),
-                    "A gain that changed nothing emits no onManaGain event.");
+                Assert.That(ev.Kind, Is.Not.EqualTo(GameEventKind.ManaGained),
+                    "A gain that changed nothing emits no ManaGained event.");
         }
 
         [Test]
         public void GainMana_Default_Is_Temporary_Spark_Pattern()
         {
-            var coin = Spell("coin", cost: 0, new EffectDef(Trigger.ON_CAST, Verb.GAIN_MANA,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "FRIENDLY_HERO"));
+            var coin = Spell("coin", cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.TEMPORARY)));
             var db = new FakeCardDatabase().Register(coin);
             var s = MainPhase(p0Mana: 5);
             var card = Hand(s, 0, "coin");
@@ -165,9 +158,8 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void PlayCard_With_AnySelector_And_No_Target_Is_Rejected_With_Zero_Mutation()
         {
-            var bolt = Spell("bolt", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE,
-                amount: 3, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "ANY_CHARACTER"));
+            var bolt = Spell("bolt", cost: 1, TestRules.Rule("damage", Trigger.ON_CAST,
+                new DamageAction(3, new TargetSpec("ANY_CHARACTER"))));
             var db = new FakeCardDatabase().Register(bolt);
             var s = MainPhase();
             var card = Hand(s, 0, "bolt");
@@ -184,9 +176,8 @@ namespace Emberfall.Core.Tests.Interpreter
         public void AnyMinion_Selector_Rejects_A_Hero_Target()
         {
             // Undertow's ANY_MINION cannot bounce a hero.
-            var undertow = Spell("bounce", cost: 2, new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                amount: null, amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "ANY_MINION"));
+            var undertow = Spell("bounce", cost: 2, TestRules.Rule("return", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("ANY_MINION"))));
             var db = new FakeCardDatabase().Register(undertow);
             var s = MainPhase();
             var card = Hand(s, 0, "bounce");
@@ -200,9 +191,8 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void AnyFriendlyMinion_Selector_Rejects_An_Enemy_Minion_Target()
         {
-            var bloom = Spell("bloom", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.BUFF,
-                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "ANY_FRIENDLY_MINION"));
+            var bloom = Spell("bloom", cost: 1, TestRules.Rule("modify", Trigger.ON_CAST,
+                new ModifyStatsAction(2, 2, new TargetSpec("ANY_FRIENDLY_MINION"))));
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(bloom).Register(vanilla);
             var s = MainPhase();
@@ -218,9 +208,8 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void AnyFriendlyMinion_Selector_Accepts_A_Friendly_Minion_Target()
         {
-            var bloom = Spell("bloom", cost: 1, new EffectDef(Trigger.ON_CAST, Verb.BUFF,
-                amount: 2, amount2: 2, tokenId: null, grantedKeyword: null, vfxOverride: null,
-                selector: "ANY_FRIENDLY_MINION"));
+            var bloom = Spell("bloom", cost: 1, TestRules.Rule("modify", Trigger.ON_CAST,
+                new ModifyStatsAction(2, 2, new TargetSpec("ANY_FRIENDLY_MINION"))));
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(bloom).Register(vanilla);
             var s = MainPhase();
@@ -234,17 +223,17 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(friendly.CurrentHealth, Is.EqualTo(3));
         }
 
-        // ── SELF resolves; unimplemented selectors throw ─────────────────────────
+        // ── SELF and contextual selectors resolve through the shared seam ────────
 
         [Test]
         public void Self_Selector_On_A_Fired_Trigger_Buffs_The_Source()
         {
             // ON_FRIENDLY_SUMMON observer with SELF selector: the observer buffs itself, never
-            // the verb-default. (Before the grammar freeze SELF silently fell into DefaultTargets.)
+            // the verb-default. (Before the grammar frost SELF silently fell into DefaultTargets.)
             var cheer = Minion("cheer", cost: 1, atk: 1, hp: 1, new[]
             {
-                new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.BUFF, amount: 1, amount2: 0,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "SELF"),
+                TestRules.Rule("modify_self", Trigger.ON_FRIENDLY_SUMMON,
+                    new ModifyStatsAction(1, 0, new TargetSpec("SELF"))),
             });
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(cheer).Register(vanilla);
@@ -259,24 +248,26 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Unresolvable_Selector_On_A_Fired_Trigger_Throws_Instead_Of_Mistargeting()
+        public void Adjacent_On_A_Departed_Death_Source_Resolves_To_No_Targets()
         {
-            // A deathrattle authored with ADJACENT (schema-valid, engine-unimplemented) must fail
-            // loudly at resolution — the pre-freeze silent fallback aimed it at the enemy hero.
+            // Once the source has left the board it has no live neighbors. The selector therefore
+            // resolves to an empty set instead of falling through to the damage default.
             var trap = Minion("trap", cost: 1, atk: 1, hp: 1, new[]
             {
-                new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: 1, amount2: null,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ADJACENT"),
+                TestRules.Rule("damage_adjacent", Trigger.ON_DEATH,
+                    new DamageAction(1, new TargetSpec("ADJACENT"))),
             });
             var vanilla = Minion("vanilla", cost: 1, atk: 1, hp: 1);
             var db = new FakeCardDatabase().Register(trap).Register(vanilla);
             var s = MainPhase();
             var doomed = Board(s, 1, trap);
-            doomed.CurrentHealth = 0; // next Drain's DeathCheck fires the deathrattle
+            doomed.CurrentHealth = 0; // next Drain's DeathCheck fires the toll
             var card = Hand(s, 0, "vanilla");
 
-            Assert.Throws<System.InvalidOperationException>(
-                () => new CommandProcessor(db).Execute(s, Play(s, card)));
+            var result = new CommandProcessor(db).Execute(s, Play(s, card));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(30));
         }
     }
 }

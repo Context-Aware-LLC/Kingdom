@@ -34,8 +34,8 @@ namespace Emberfall.Presentation
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
         private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color ShieldColor   = new Color(0.95f, 0.88f, 0.15f);
-        private static readonly Color FrozenColor   = new Color(0.40f, 0.60f, 0.95f);
-        private static readonly Color TauntColor    = new Color(0.80f, 0.50f, 0.10f);
+        private static readonly Color FrostedColor   = new Color(0.40f, 0.60f, 0.95f);
+        private static readonly Color BulwarkColor    = new Color(0.80f, 0.50f, 0.10f);
         private static readonly Color SelectedColor = new Color(1.00f, 0.85f, 0.10f); // gold
         private const float ExhaustedDim = 0.55f;
 
@@ -224,50 +224,16 @@ namespace Emberfall.Presentation
             ApplyAuras();
         }
 
-        // Rules text band (keyword-visual-language decision 2026-07-17: keywords lead the
-        // card text in bold). Keywords the authored text already spells out (Battlecry:,
-        // Spell Damage +1) are skipped so nothing reads twice.
+        // Rules text band. Presentation is derived from the immutable card definition,
+        // so trigger markers are never carried as duplicate keyword data.
         private void ApplyBodyText()
         {
             if (bodyLabel == null) return;
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
-            // _kwScratch (printed + live-granted, rebuilt by RebuildKeywords before every call
-            // here) rather than _def.Keywords alone — with the icon strip retired on painted
-            // frames, this text lead is where a gained keyword shows up.
-            var sb = new StringBuilder();
-            foreach (Keyword kw in _kwScratch)
-            {
-                string display = KeywordDisplayName(kw);
-                if (_def.CardText.IndexOf(display, System.StringComparison.OrdinalIgnoreCase) >= 0)
-                    continue;
-                sb.Append(sb.Length > 0 ? ", " : $"<size={FrameRarityCatalog.KeywordLeadPct}%><b>")
-                  .Append(display);
-            }
-            if (sb.Length > 0) sb.Append("</b></size>");
-            if (!string.IsNullOrEmpty(_def.CardText))
-            {
-                if (sb.Length > 0) sb.Append('\n');
-                sb.Append(_def.CardText);
-            }
-            bodyLabel.text = sb.ToString();
-            bodyLabel.gameObject.SetActive(sb.Length > 0);
-        }
-
-        // Interim display map (keyword-display backlog): enum IDs stay TAUNT-style by
-        // design; humanize for the card face until the full display layer lands.
-        private static string KeywordDisplayName(Keyword kw)
-        {
-            string[] parts = kw.ToString().Split('_');
-            var sb = new StringBuilder();
-            foreach (string p in parts)
-            {
-                if (p.Length == 0) continue;
-                if (sb.Length > 0) sb.Append(' ');
-                sb.Append(char.ToUpperInvariant(p[0]));
-                if (p.Length > 1) sb.Append(p.Substring(1).ToLowerInvariant());
-            }
-            return sb.ToString();
+            string generatedText = CardTextGenerator.Generate(_def);
+            bodyLabel.text = generatedText;
+            bodyLabel.gameObject.SetActive(generatedText.Length > 0);
         }
 
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
@@ -505,9 +471,9 @@ namespace Emberfall.Presentation
 
             Color c;
             if      (_isSelected)                          c = SelectedColor;
-            else if ((_live.Auras & AuraSet.Frozen) != 0) c = FrozenColor;
+            else if ((_live.Auras & AuraSet.Frosted) != 0) c = FrostedColor;
             else if ((_live.Auras & AuraSet.Shield) != 0) c = ShieldColor;
-            else if ((_live.Auras & AuraSet.Taunt)  != 0) c = TauntColor;
+            else if ((_live.Auras & AuraSet.Bulwark)  != 0) c = BulwarkColor;
             else                                           c = NormalColor;
 
             // Exhausted dim (attack affordance): spent/sick minions on your own turn read

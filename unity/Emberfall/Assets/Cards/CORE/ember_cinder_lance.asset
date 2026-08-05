@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: ember_cinder_lance
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: "{ \"id\": \"ember_cinder_lance\", \"name\": \"Cinder Lance\",  \"type\":
-    \"WEAPON\", \"cost\": 1, \"attack\": 1, \"durability\": 2, \"class\": \"EMBERWARD\",
-    \"rarity\": \"COMMON\",\n    \"setId\": \"CORE\", \"collectible\": true, \"artId\":
-    \"art/ember_cinder_lance\" }"
+  _json: '{"id":"ember_cinder_lance","name":"Cinder Lance","type":"WEAPON","cost":1,"attack":1,"durability":2,"class":"EMBERWARD","rarity":"COMMON","keywords":[],"rules":[],"setId":"CORE","collectible":true,"artId":"art/ember_cinder_lance"}'

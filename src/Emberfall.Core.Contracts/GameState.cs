@@ -33,11 +33,15 @@ namespace Emberfall.Core.Contracts
         public bool Mulligan1Done;
 
         /// <summary>
-        /// The pending-choice seam (A2b, decision 3). ALWAYS null in M2 — the shape exists so
-        /// Phase 2 adds interpreter machinery only, never a Contracts change. Carries serializable
-        /// STATE only, never the continuation/delegate. Redaction contract for the future
-        /// GameStateProjector is documented per-field on <see cref="PendingChoice"/> (§7 review
-        /// 2026-07-15, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md — OBL-1).
+        /// Resolved spell rules that continue observing future game events. Append order is creation
+        /// order; <see cref="OngoingEffectInstance.Id"/> is the stable tie-breaker used by trigger walks.
+        /// </summary>
+        public List<OngoingEffectInstance> OngoingEffects = new List<OngoingEffectInstance>();
+
+        /// <summary>
+        /// Authoritative state for a pending player choice (currently Unearth). Carries serializable
+        /// state only, never a continuation or delegate. <see cref="GameStateProjector"/> redacts
+        /// choices per field for the chooser and opponent.
         /// </summary>
         public PendingChoice? PendingChoice;
 
@@ -67,6 +71,88 @@ namespace Emberfall.Core.Contracts
         public InstanceId NextInstanceId() => new InstanceId(NextInstanceCounter++);
     }
 
+    /// <summary>Runtime lifetime carried by an ongoing effect, independent of its originating spell.</summary>
+    public enum OngoingEffectLifetime
+    {
+        ONE_SHOT = 0,
+        FINITE = 1,
+        PERMANENT = 2,
+    }
+
+    /// <summary>
+    /// One canonical, carrierless ongoing rule created by a resolved spell. Presentation may show
+    /// every public field. The authored rule id is authority-only and is stripped by projection.
+    /// </summary>
+    public sealed class OngoingEffectInstance
+    {
+        public InstanceId Id;
+        public PlayerId Controller;
+        public string SourceDefinitionId = "";
+        public OngoingEffectLifetime Lifetime;
+        public int? RemainingUses;
+
+        // Canonical authority state, intentionally absent from the public presentation contract.
+        // Friend assemblies may walk it for runtime lookup and authority snapshot round-trips.
+        internal string RuleId = "";
+
+        public bool IsExpired => Lifetime != OngoingEffectLifetime.PERMANENT &&
+            (!RemainingUses.HasValue || RemainingUses.Value <= 0);
+
+        public OngoingEffectInstance(InstanceId id, PlayerId controller, string sourceDefinitionId,
+            OngoingEffectLifetime lifetime, int? remainingUses)
+        {
+            if (string.IsNullOrWhiteSpace(sourceDefinitionId))
+                throw new System.ArgumentException("An ongoing effect requires a source definition id.",
+                    nameof(sourceDefinitionId));
+            if (!System.Enum.IsDefined(typeof(OngoingEffectLifetime), lifetime))
+                throw new System.ArgumentOutOfRangeException(nameof(lifetime), lifetime,
+                    "Unknown ongoing-effect lifetime.");
+            if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
+                throw new System.ArgumentException("A permanent ongoing effect has no remaining-use count.",
+                    nameof(remainingUses));
+            if (lifetime != OngoingEffectLifetime.PERMANENT && !remainingUses.HasValue)
+                throw new System.ArgumentException("A bounded ongoing effect requires a remaining-use count.",
+                    nameof(remainingUses));
+            if (remainingUses < 0)
+                throw new System.ArgumentOutOfRangeException(nameof(remainingUses), remainingUses,
+                    "Remaining uses cannot be negative.");
+
+            Id = id;
+            Controller = controller;
+            SourceDefinitionId = sourceDefinitionId;
+            Lifetime = lifetime;
+            RemainingUses = remainingUses;
+        }
+
+        internal static OngoingEffectInstance CreateOneShot(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.ONE_SHOT, 1);
+
+        internal static OngoingEffectInstance CreateFinite(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId, int uses)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.FINITE, uses);
+
+        internal static OngoingEffectInstance CreatePermanent(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId)
+            => Create(id, controller, sourceDefinitionId, ruleId,
+                OngoingEffectLifetime.PERMANENT, null);
+
+        internal static OngoingEffectInstance Create(InstanceId id, PlayerId controller,
+            string sourceDefinitionId, string ruleId, OngoingEffectLifetime lifetime,
+            int? remainingUses)
+        {
+            if (string.IsNullOrWhiteSpace(ruleId))
+                throw new System.ArgumentException("An authoritative ongoing effect requires a rule id.",
+                    nameof(ruleId));
+            var instance = new OngoingEffectInstance(id, controller, sourceDefinitionId, lifetime,
+                remainingUses)
+            { RuleId = ruleId };
+            return instance;
+        }
+    }
+
     /// <summary>One player's mutable per-match state. Zone lists are ordered (canonical, hashable).</summary>
     public sealed class PlayerState
     {
@@ -75,12 +161,12 @@ namespace Emberfall.Core.Contracts
         public List<CardInstance> Deck = new List<CardInstance>();      // ordered; top = index 0 = next draw
         public List<CardInstance> Hand = new List<CardInstance>();      // ordered; cap 10 (overdraw burns)
         public List<CardInstance> Board = new List<CardInstance>();     // ordered slots; cap 7; index = position
-        public WeaponInstance? Weapon;                                  // nullable; durability
+        public CardInstance? Weapon;                                    // nullable; the equipped card in Zone.Weapon
         public List<CardInstance> Graveyard = new List<CardInstance>(); // for recursion cards
         public ManaPool Mana = new ManaPool();
         public bool HeroPowerUsedThisTurn;
         public int HeroAttacksUsedThisTurn;
-        public int NextTurnOverloadLock; // crystals to lock at next start-of-turn
+        public int NextTurnBackdraftLock; // crystals to lock at next start-of-turn
 
         public PlayerState(PlayerId id, HeroInstance hero)
         {
@@ -99,7 +185,7 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int Armor;
         public string HeroPowerId = "";
-        public bool IsFrozen; // set by FREEZE verb; cleared at start of controller's next turn
+        public bool IsFrosted; // set by FROST verb; cleared at start of controller's next turn
 
         public HeroInstance(InstanceId id, PlayerId controller, CardClass @class, int maxHealth)
         {
@@ -130,10 +216,13 @@ namespace Emberfall.Core.Contracts
         public HashSet<Keyword> Keywords = new HashSet<Keyword>();
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
-        public bool IsFrozen;
+        public bool IsFrosted;
+        /// <summary>True while this live permanent has had its printed and granted abilities removed.
+        /// A zone-life reset clears this flag; it is canonical because it changes future resolution.</summary>
+        public bool IsSilenced;
         public bool SummonedThisTurn;
         public int AttacksUsedThisTurn;
-        public bool HasUsedReborn;
+        public bool HasUsedRekindle;
         public int Position; // board slot
 
         public CardInstance(InstanceId id, string definitionId, PlayerId controller)
@@ -145,64 +234,46 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>
-    /// A choice awaiting a player (A2b seam). M2: never populated. The projection redaction class
-    /// per field below is fixed by the §7 ruling (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md)
-    /// and is the BINDING contract for the future GameStateProjector — it is NOT implemented here
-    /// (no projection layer exists in src/ yet). Walk order is fixed as declared.
+    /// An authoritative interactive choice awaiting a player. Unearth populates this record;
+    /// canonical serialization preserves option order, while <c>GameStateProjector</c> exposes the
+    /// complete record only to <see cref="Chooser"/> and default-denies its private fields to the
+    /// opponent. Walk order is fixed as declared.
     /// </summary>
     public sealed class PendingChoice
     {
         /// <summary>UNREDACTED — the visibility key; both seats see who is choosing.</summary>
         public PlayerId Chooser;
-        /// <summary>UNREDACTED — opponent sees "opponent is Discovering"; the trigger is already public.</summary>
+        /// <summary>UNREDACTED — opponent sees "opponent is Unearthing"; the trigger is already public.</summary>
         public PendingChoiceKind Kind;
         /// <summary>REDACTED (default-deny) — the already-minted instance/effect that raised the choice.</summary>
         public InstanceId Source;
         /// <summary>REDACTED — the hidden information. CardDefinition ids (candidates are never
         /// minted as instances). Phase-2 canonical population order = deterministic RNG roll order
-        /// of the Discover pool (OBL-3); no consumer may re-sort.</summary>
+        /// of the Unearth pool (OBL-3); no consumer may re-sort.</summary>
         public List<string> Options = new List<string>();
         /// <summary>REDACTED (default-deny; OBL-5 revisit). Deterministic resume/timer correlation id.</summary>
         public ulong ChoiceSequence;
     }
 
     /// <summary>Kinds of mid-command pending choice. Hash-canonical — extend only via a §7
-    /// tail-append when a real mechanic lands (Discover-only per the 2026-07-15 ruling, Q1).</summary>
+    /// tail-append when a real mechanic lands (Unearth-only per the 2026-07-15 ruling, Q1).</summary>
     public enum PendingChoiceKind
     {
-        Discover = 0,
+        Unearth = 0,
     }
 
-    /// <summary>A buff/debuff (removed by SILENCE). Integer deltas only.</summary>
+    /// <summary>
+    /// A buff/debuff (removed by SILENCE). <see cref="IsAura"/> is explicit provenance for the
+    /// continuous layer: sources can leave the board and be recomputed without deleting an
+    /// ordinary effect from the same card instance.
+    /// </summary>
     public sealed class Enchantment
     {
         public InstanceId Source;
         public int AttackDelta;
         public int HealthDelta;
         public Keyword? GrantedKeyword;
-    }
-
-    /// <summary>Equipped weapon: attack + durability, no health.</summary>
-    /// <summary>An equipped weapon. Stats only — there is deliberately NO keyword field, which is
-    /// why no weapon can carry Lifedrain, Venom or Frost as an on-hit rider: a hero attacking hands
-    /// DamagePipeline a freshly allocated EMPTY keyword set, and there is nothing here to fill it
-    /// from. CLAUDE.md documents this as a constraint on card authoring.
-    ///
-    /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> Adding a
-    /// field to this type is a HASH-CANONICAL change, not a small patch, because WeaponInstance is
-    /// game state. The same commit must touch all of: GameStateSerializer (the authoritative field
-    /// order, WalkWeapon), CanonicalStateFixtures (BOTH the Manifest dict and a Mutations entry),
-    /// SnapshotJsonCodec (the A5 wire walk), CanonicalSerializationTests.PinnedSeedDigest, the three
-    /// golden fixtures, and the CONTENT of their paired .rebaseline.md files — the harness will not
-    /// rewrite those for you, and tools/ci/rebaseline-guard.sh fails the diff if you skip them.
-    /// It must also update CLAUDE.md's "What a weapon can and cannot do", which becomes false.</para>
-    /// </summary>
-    public sealed class WeaponInstance
-    {
-        public InstanceId Id;
-        public string DefinitionId = "";
-        public int Attack;
-        public int Durability;
+        public bool IsAura;
     }
 
     /// <summary>
@@ -214,7 +285,7 @@ namespace Emberfall.Core.Contracts
         public int Max;        // crystals earned (cap 10)
         public int Available;  // currently spendable
         public int Spent;      // used this turn
-        public int Locked;     // overload-locked this turn
+        public int Locked;     // backdraft-locked this turn
         public int Temporary;  // one-turn extra crystals
     }
 }

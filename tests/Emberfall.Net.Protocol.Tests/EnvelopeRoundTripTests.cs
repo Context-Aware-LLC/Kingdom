@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Emberfall.Core.Contracts;
+using Emberfall.Core.Projection;
+using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.Support;
 using Emberfall.Net.Protocol;
 
@@ -48,6 +50,22 @@ namespace Emberfall.Net.Protocol.Tests
         }
 
         [Test]
+        public void Intent_With_Named_PerEffect_Targets_RoundTrips()
+        {
+            var intent = new PlayCardIntent(new PlayerId("p0"), new InstanceId(5), 0,
+                new[]
+                {
+                    new TargetRef(new InstanceId(9), "first"),
+                    new TargetRef(new InstanceId(10), "second"),
+                });
+
+            var message = RoundTrip<IntentMsg>(new IntentMsg(7, intent));
+            var roundTripped = (PlayCardIntent)message.Intent;
+
+            Assert.That(roundTripped.Targets, Is.EqualTo(intent.Targets));
+        }
+
+        [Test]
         public void Ack_Heartbeat_Reconnect_Resync_RoundTrip()
         {
             Assert.That(RoundTrip<AckMsg>(new AckMsg(99)).Version, Is.EqualTo(99UL));
@@ -67,6 +85,64 @@ namespace Emberfall.Net.Protocol.Tests
             var m = RoundTrip<SnapshotMsg>(SnapshotMsg.Of(s));
             Assert.That(m.StateVersion, Is.EqualTo(s.StateVersion));
             Assert.That(m.VerifyIntegrity(), Is.True);
+            Assert.That(m.State.PendingChoice, Is.Not.Null);
+            Assert.That(m.State.PendingChoice!.Options, Is.EqualTo(s.PendingChoice!.Options),
+                "the RNG offer order must survive snapshot transport exactly");
+            Assert.That((m.State.PendingChoice.Chooser, m.State.PendingChoice.Kind,
+                    m.State.PendingChoice.Source, m.State.PendingChoice.ChoiceSequence),
+                Is.EqualTo((s.PendingChoice.Chooser, s.PendingChoice.Kind,
+                    s.PendingChoice.Source, s.PendingChoice.ChoiceSequence)));
+            Assert.That(GameStateHasher.Hash(m.State), Is.EqualTo(GameStateHasher.Hash(s)));
+        }
+
+        [Test]
+        public void Projected_Ongoing_Effect_RoundTrips_Without_Leaking_Its_Rule_Id()
+        {
+            GameState authority = CanonicalStateFixtures.BuildSeedState();
+            GameState projected = GameStateProjector.Project(authority, authority.Players[0].Id);
+
+            byte[] bytes = ProtocolCodec.Encode(SnapshotMsg.Of(projected), projected.Id, Seq);
+            string json = Encoding.UTF8.GetString(bytes);
+            DecodeResult decoded = ProtocolCodec.Decode(bytes);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(json, Does.Not.Contain("turn_end_echo"));
+                Assert.That(json, Does.Contain("\"ruleId\":\"\""),
+                    "The projected authority key is an empty sentinel, never hidden truth.");
+                Assert.That(decoded.Ok, Is.True, $"{decoded.Error} {decoded.Detail}");
+            });
+            var snapshot = (SnapshotMsg)decoded.Message!;
+            Assert.That(snapshot.State.OngoingEffects, Has.Count.EqualTo(1));
+            Assert.That(snapshot.State.OngoingEffects[0].SourceDefinitionId,
+                Is.EqualTo("ongoing_seed"));
+            Assert.That(snapshot.State.OngoingEffects[0].RemainingUses, Is.EqualTo(2));
+            Assert.That(snapshot.VerifyIntegrity(), Is.True);
+        }
+
+        [Test]
+        public void Snapshot_Strictly_Rejects_Invalid_Or_Missing_Ongoing_Lifetime_State()
+        {
+            GameState state = CanonicalStateFixtures.BuildSeedState();
+            string json = Encoding.UTF8.GetString(
+                ProtocolCodec.Encode(SnapshotMsg.Of(state), state.Id, Seq));
+
+            DecodeResult permanentWithUses = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"lifetime\":\"FINITE\"", "\"lifetime\":\"PERMANENT\"")));
+            DecodeResult oneShotWithTwoUses = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"lifetime\":\"FINITE\"", "\"lifetime\":\"ONE_SHOT\"")));
+            DecodeResult missingList = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"ongoingEffects\"", "\"unknownOngoingEffects\"")));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(permanentWithUses.Ok, Is.False);
+                Assert.That(permanentWithUses.Error, Is.EqualTo(ProtocolError.BadField));
+                Assert.That(oneShotWithTwoUses.Ok, Is.False);
+                Assert.That(oneShotWithTwoUses.Error, Is.EqualTo(ProtocolError.BadField));
+                Assert.That(missingList.Ok, Is.False);
+                Assert.That(missingList.Error, Is.EqualTo(ProtocolError.BadField));
+            });
         }
 
         [Test]
@@ -74,9 +150,9 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var events = new List<GameEvent>
             {
-                new GameEvent(VfxEvent.onDamage, 7, new InstanceId(3), new InstanceId(4), 5, EventFlags.Lethal),
-                new GameEvent(VfxEvent.onDraw, 8, null, new InstanceId(6), null, EventFlags.Overdraw | EventFlags.IsToken),
-                new GameEvent(VfxEvent.onTurnEnd, 9, null, null, null, EventFlags.None),
+                new GameEvent(GameEventKind.DamageApplied, 7, new InstanceId(3), new InstanceId(4), 5, EventFlags.Lethal, PresentationCue.Frost),
+                new GameEvent(GameEventKind.CardCreatedInHand, 8, null, new InstanceId(6), null, EventFlags.IsToken),
+                new GameEvent(GameEventKind.TurnEnded, 9, null, null, null, EventFlags.None),
             };
             var m = RoundTrip<EventsMsg>(new EventsMsg(21, events));
             Assert.That(m.StateVersion, Is.EqualTo(21UL));
@@ -89,7 +165,59 @@ namespace Emberfall.Net.Protocol.Tests
                 Assert.That(m.Events[i].Target, Is.EqualTo(events[i].Target));
                 Assert.That(m.Events[i].Amount, Is.EqualTo(events[i].Amount));
                 Assert.That(m.Events[i].Flags, Is.EqualTo(events[i].Flags));
+                Assert.That(m.Events[i].CueOverride, Is.EqualTo(events[i].CueOverride));
             }
+        }
+
+        [Test]
+        public void Unknown_Event_Kind_Rejects_The_Whole_Events_Batch()
+        {
+            var events = new[]
+            {
+                new GameEvent(GameEventKind.CardPlayed, 1, null, null, null, EventFlags.None),
+                new GameEvent(GameEventKind.TurnEnded, 2, null, null, null, EventFlags.None),
+            };
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, events), M, Seq))
+                .Replace("\"kind\":\"TurnEnded\"", "\"kind\":\"FutureSemanticFact\"");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Ok, Is.False);
+                Assert.That(result.Message, Is.Null, "No prefix of the batch may escape.");
+                Assert.That(result.Error, Is.EqualTo(ProtocolError.UnknownEventKind));
+            });
+        }
+
+        [Test]
+        public void Unknown_Presentation_Cue_Falls_Back_Without_Rejecting_The_Event()
+        {
+            var e = new GameEvent(
+                GameEventKind.DamageApplied, 1, null, null, 2, EventFlags.None, PresentationCue.Frost);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, new[] { e }), M, Seq))
+                .Replace("\"cue\":\"Frost\"", "\"cue\":\"FutureSpark\"");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.That(result.Ok, Is.True, $"{result.Error} {result.Detail}");
+            var decoded = (EventsMsg)result.Message!;
+            Assert.That(decoded.Events[0].CueOverride, Is.Null);
+            Assert.That(PresentationCueDefaults.For(decoded.Events[0].Kind), Is.EqualTo(PresentationCue.Damage));
+        }
+
+        [Test]
+        public void NonString_Presentation_Cue_Is_A_Bad_Field()
+        {
+            var e = new GameEvent(
+                GameEventKind.DamageApplied, 1, null, null, 2, EventFlags.None, PresentationCue.Frost);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, new[] { e }), M, Seq))
+                .Replace("\"cue\":\"Frost\"", "\"cue\":7");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.That(result.Ok, Is.False);
+            Assert.That(result.Error, Is.EqualTo(ProtocolError.BadField));
         }
 
         [Test]
@@ -109,12 +237,12 @@ namespace Emberfall.Net.Protocol.Tests
         public void MatchStart_RoundTrips_And_Never_Carries_A_Seed()
         {
             var s = CanonicalStateFixtures.BuildSeedState();
-            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v3",
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v4",
                 new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
                 ReconnectToken: "tok-3f9a");
             var m = RoundTrip<MatchStartMsg>(msg);
             Assert.That(m.Seat, Is.EqualTo(0));
-            Assert.That(m.EngineContractVersion, Is.EqualTo("interfaces.v3"));
+            Assert.That(m.EngineContractVersion, Is.EqualTo("interfaces.v4"));
             Assert.That(m.Opponent.DisplayName, Is.EqualTo("Rival"));
             Assert.That(m.Snapshot.VerifyIntegrity(), Is.True);
             Assert.That(m.ReconnectToken, Is.EqualTo("tok-3f9a"),
@@ -126,7 +254,7 @@ namespace Emberfall.Net.Protocol.Tests
         {
             // Forward-compat (A5 §8): a pre-B1 encoder omits the field; decode must not fail.
             var s = CanonicalStateFixtures.BuildSeedState();
-            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v3",
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v4",
                 new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
                 ReconnectToken: "tok-strip-me");
             string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(msg, M, 1))

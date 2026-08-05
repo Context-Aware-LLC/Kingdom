@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: ember_zealot
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{ "id": "ember_zealot",    "name": "Ember Zealot",    "type": "MINION",
-    "cost": 2, "attack": 3, "health": 2, "class": "EMBERWARD",  "rarity": "COMMON",
-    "keywords": ["CHARGE"], "setId": "EMBERFALL", "collectible": true,  "artId":
-    "art/ember_zealot" }'
+  _json: '{"id":"ember_zealot","name":"Ember Zealot","type":"MINION","cost":2,"attack":2,"health":2,"class":"EMBERWARD","rarity":"COMMON","keywords":["FERVOR"],"rules":[],"setId":"EMBERFALL","collectible":true,"artId":"art/ember_zealot"}'

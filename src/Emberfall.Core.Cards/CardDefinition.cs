@@ -3,6 +3,30 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Cards
 {
+    /// <summary>The runtime object categories selectors can produce.</summary>
+    public enum TargetCandidateKind
+    {
+        Hero,
+        Minion,
+        Weapon,
+        HandCard,
+        DeckCard,
+        GraveyardCard,
+    }
+
+    [System.Flags]
+    public enum TargetCandidateKinds
+    {
+        None = 0,
+        Hero = 1 << 0,
+        Minion = 1 << 1,
+        Weapon = 1 << 2,
+        HandCard = 1 << 3,
+        DeckCard = 1 << 4,
+        GraveyardCard = 1 << 5,
+        Any = Hero | Minion | Weapon | HandCard | DeckCard | GraveyardCard,
+    }
+
     /// <summary>
     /// 1:1 mapping of the D1 §2 card row (dev-docs/specs/card-schema.md:5). <b>Immutable after load</b> — runtime
     /// mutable state lives on the <see cref="CardInstance"/>, never on the definition.
@@ -19,8 +43,7 @@ namespace Emberfall.Core.Cards
         public CardClass Class { get; }
         public Rarity Rarity { get; }
         public IReadOnlyList<Keyword> Keywords { get; }
-        public IReadOnlyList<EffectDef> Effects { get; }
-        public string CardText { get; }
+        public IReadOnlyList<RuleDefinition> Rules { get; }
         public string FlavorText { get; }
         public string ArtId { get; }
         public SetId SetId { get; }
@@ -56,8 +79,8 @@ namespace Emberfall.Core.Cards
             string id, string name, CardType type, int cost,
             int? attack, int? health, int? durability,
             CardClass @class, Rarity rarity,
-            IReadOnlyList<Keyword> keywords, IReadOnlyList<EffectDef> effects,
-            string cardText, string flavorText, string artId, SetId setId,
+            IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
+            string flavorText, string artId, SetId setId,
             bool collectible, Tribe? tribe, string factionId, bool requiresEngineeringPrimitive)
         {
             Id = id;
@@ -70,8 +93,7 @@ namespace Emberfall.Core.Cards
             Class = @class;
             Rarity = rarity;
             Keywords = keywords ?? System.Array.Empty<Keyword>();
-            Effects = effects ?? System.Array.Empty<EffectDef>();
-            CardText = cardText ?? "";
+            Rules = rules ?? System.Array.Empty<RuleDefinition>();
             FlavorText = flavorText ?? "";
             ArtId = artId ?? "";
             SetId = setId;
@@ -82,73 +104,74 @@ namespace Emberfall.Core.Cards
         }
     }
 
-    /// <summary>
-    /// One optional gate on an <see cref="EffectDef"/>. The shape is intentionally typed and extensible:
-    /// each <see cref="ConditionType"/> owns the value fields it understands, while validation rejects
-    /// incomplete or contextless combinations before a card can load into a match.
-    /// </summary>
-    public sealed class EffectConditionDef
+    /// <summary>Who supplies the targets selected from a <see cref="TargetSpec"/> candidate set.</summary>
+    public enum TargetChosenBy
     {
-        public ConditionType Type { get; }
-        public TurnOwner? TurnOwner { get; }
+        PLAYER,
+        RANDOM,
+    }
 
-        public EffectConditionDef(ConditionType type, TurnOwner? turnOwner)
+    /// <summary>Optional predicates applied after selector candidate enumeration.</summary>
+    public sealed class TargetFilterDef
+    {
+        public bool? Damaged { get; }
+        public Tribe? Tribe { get; }
+
+        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null)
         {
-            Type = type;
-            TurnOwner = turnOwner;
+            Damaged = damaged;
+            Tribe = tribe;
         }
     }
 
     /// <summary>
-    /// One entry in <c>effects[]</c> (dev-docs/specs/card-schema.md §5). The interpreter (Phase B) tree-walks these;
-    /// for the determinism foundation they are carried as immutable data only.
+    /// The complete authored <c>target</c> object. A null <see cref="ChosenBy"/> preserves the
+    /// established selector defaults: <c>ANY_*</c> is chosen by the player and set/fixed selectors
+    /// resolve automatically. <c>Count == -1</c> means every candidate.
     /// </summary>
-    public sealed class EffectDef
+    public sealed class TargetSpec
     {
-        public Trigger Trigger { get; }
-        public Action Action { get; }
-        public int? Amount { get; }
-        public int? Amount2 { get; }
-        public string? TokenId { get; }       // payload.tokenId for SUMMON / ADD_TO_HAND / TRANSFORM
-        public Keyword? GrantedKeyword { get; } // payload.keyword for GIVE_KEYWORD
-        public VfxEvent? VfxOverride { get; }
-        public EffectConditionDef? Condition { get; }
-        /// <summary>
-        /// <c>payload.permanent</c> for GAIN_MANA (dev-docs/specs/card-schema.md §5.2): true = gain permanent
-        /// crystals (raises <c>Mana.Max</c>, capped at 10 — the Quicken / Seedling Rite ramp
-        /// primitive); false/absent = this-turn temporary crystals (the Spark/Coin pattern).
-        /// </summary>
-        public bool Permanent { get; }
-        /// <summary>
-        /// <c>payload.empty</c> for GAIN_MANA with <c>permanent:true</c>: true = the new crystal
-        /// arrives unfilled this turn ("Gain an empty Mana Crystal" — Wild-Growth-style ramp);
-        /// false/absent = the crystal is also spendable immediately. Meaningless without Permanent.
-        /// </summary>
-        public bool Empty { get; }
-        /// <summary>
-        /// Optional target selector from <c>target.selector</c> in the card JSON (dev-docs/specs/card-schema.md §5.3).
-        /// When set and the player provides no explicit targets, the interpreter auto-resolves the target
-        /// list via <c>SelectorTargets</c> (e.g. "ENEMY_MINIONS" for AoE sweeps, "ENEMY_HERO" for
-        /// auto-targeted battlecries). Player-chosen targets always take precedence.
-        /// </summary>
-        public string? Selector { get; }
-
-        public EffectDef(Trigger trigger, Action action, int? amount, int? amount2,
-                         string? tokenId, Keyword? grantedKeyword, VfxEvent? vfxOverride,
-                         string? selector = null, bool permanent = false, bool empty = false,
-                         EffectConditionDef? condition = null)
+        private static readonly HashSet<string> KnownSelectors = new HashSet<string>
         {
-            Trigger = trigger;
-            Action = action;
-            Amount = amount;
-            Amount2 = amount2;
-            TokenId = tokenId;
-            GrantedKeyword = grantedKeyword;
-            VfxOverride = vfxOverride;
-            Condition = condition;
+            "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
+            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
+            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
+            "FRIENDLY_WEAPON", "ENEMY_WEAPON",
+            "FRIENDLY_HAND", "ENEMY_HAND", "ANY_HAND_CARD",
+            "FRIENDLY_DECK", "ENEMY_DECK", "ANY_DECK_CARD",
+            "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
+        };
+
+        private static readonly HashSet<string> DefaultPlayerSelectors = new HashSet<string>
+        {
+            "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION", "ANY_FRIENDLY_MINION",
+            "ANY_HAND_CARD", "ANY_DECK_CARD", "ANY_GRAVEYARD_CARD",
+        };
+
+        public string Selector { get; }
+        public TargetChosenBy? ChosenBy { get; }
+        public int? Count { get; }
+        public TargetFilterDef? Filter { get; }
+        public string Binding { get; }
+        public string DistinctFrom { get; }
+
+        public TargetSpec(string selector, TargetChosenBy? chosenBy = null, int? count = null,
+            TargetFilterDef? filter = null, string? binding = null, string? distinctFrom = null)
+        {
             Selector = selector;
-            Permanent = permanent;
-            Empty = empty;
+            ChosenBy = chosenBy;
+            Count = count;
+            Filter = filter;
+            Binding = binding ?? "";
+            DistinctFrom = distinctFrom ?? "";
         }
+
+        public static bool IsKnownSelector(string selector) => KnownSelectors.Contains(selector);
+        public static bool DefaultsToPlayerChoice(string selector) => DefaultPlayerSelectors.Contains(selector);
+        public static bool IsPlayerChosen(TargetSpec? target)
+            => target != null && (target.ChosenBy == TargetChosenBy.PLAYER ||
+                (!target.ChosenBy.HasValue && DefaultsToPlayerChoice(target.Selector)));
+        public static IReadOnlyCollection<string> Selectors => KnownSelectors;
     }
+
 }

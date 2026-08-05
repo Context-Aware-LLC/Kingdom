@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.CardBehavior
     /// L2 — end-to-end behavior tests for every distinct mechanic in the D4 20-card set
     /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/sample-cards.md). Uses the real <see cref="JsonCardDatabase"/> loaded from the pinned
     /// M1 snapshot so the cards under test are identical to what the golden-replay fixtures see.
-    /// One test per non-trivial mechanic. Keyword-only cards (TAUNT, RUSH, etc.) are covered by the
+    /// One test per non-trivial mechanic. Keyword-only cards (BULWARK, SKIRMISH, etc.) are covered by the
     /// existing CombatTests; these tests focus on effect verbs.
     /// </summary>
     [TestFixture]
@@ -73,7 +73,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 Position = ps.Board.Count,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            if (ci.Keywords.Contains(Keyword.DIVINE_SHIELD)) ci.HasAegisShield = true;
+            if (ci.Keywords.Contains(Keyword.AEGIS)) ci.HasAegisShield = true;
             ps.Board.Add(ci);
             return ci;
         }
@@ -88,10 +88,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             return new PlayCardIntent(s.Players[0].Id, card.Id, slot, refs);
         }
 
-        // ── Hollow Acolyte: battlecry draws 1 card ──────────────────────────────────
+        // ── Hollow Acolyte: herald draws 1 card ──────────────────────────────────
 
         [Test]
-        public void HollowAcolyte_Battlecry_Draws_One_Card()
+        public void HollowAcolyte_Herald_Draws_One_Card()
         {
             var s = MainPhase();
             var topCard = new CardInstance(s.NextInstanceId(), "core_stoneback", s.Players[0].Id) { Zone = Zone.Deck };
@@ -104,10 +104,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[0].Board, Has.Count.EqualTo(1), "Acolyte is on board.");
         }
 
-        // ── Gravelight Lantern-Bearer: deathrattle summons Wisp ─────────────────────
+        // ── Gravelight Lantern-Bearer: toll summons Wisp ─────────────────────
 
         [Test]
-        public void LanternBearer_Deathrattle_Summons_Wisp()
+        public void LanternBearer_Toll_Summons_Wisp()
         {
             var s = MainPhase();
             // Enemy has a 3-damage bolt minion; we'll use InterpreterTests approach manually.
@@ -117,8 +117,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             var bearer = OnBoard(s, 1, "core_lantern_bearer");
             bearer.CurrentHealth = 1;
 
-            // Kill it with a CHARGE minion from hand
-            var attacker = OnBoard(s, 0, "core_emberling"); // 2/1 CHARGE
+            // Kill it with a FERVOR minion from hand
+            var attacker = OnBoard(s, 0, "core_emberling"); // 2/1 FERVOR
             attacker.SummonedThisTurn = false; // already thawed
 
             var r = Proc().Execute(s, new AttackIntent(s.Players[0].Id, attacker.Id,
@@ -126,17 +126,17 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Assert.That(r.Accepted, Is.True);
             Assert.That(s.Players[1].Graveyard, Has.Count.EqualTo(1), "Bearer died.");
-            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "Wisp summoned by deathrattle.");
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "Wisp summoned by toll.");
             Assert.That(s.Players[1].Board[0].DefinitionId, Is.EqualTo("token_wisp_1_1"));
         }
 
-        // ── Arclight Adept: +1 spell damage bonus ───────────────────────────────────
+        // ── Arclight Adept: +1 arcane surge bonus ───────────────────────────────────
 
         [Test]
         public void ArclightAdept_Boosts_Scorch_Damage_By_One()
         {
             var s = MainPhase();
-            OnBoard(s, 0, "core_arclight_adept"); // SPELL_DAMAGE in play
+            OnBoard(s, 0, "core_arclight_adept"); // ARCANE_SURGE in play
 
             // Enemy minion with 3 HP — normally Scorch (3 dmg) just kills it; with +1 it definitely kills,
             // so use a 4 HP target to prove the bonus is applied.
@@ -145,18 +145,18 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Proc().Execute(s, Play(s, scorch, 0, victim.Id));
 
-            Assert.That(victim.CurrentHealth, Is.EqualTo(0), "3 + 1 spell damage kills the 1/4.");
+            Assert.That(victim.CurrentHealth, Is.EqualTo(0), "3 + 1 arcane surge kills the 1/4.");
             Assert.That(s.Players[1].Board, Is.Empty);
         }
 
-        // ── Throneless King: REBORN returns at 1 HP ─────────────────────────────────
+        // ── Throneless King: REKINDLE returns at 1 HP ─────────────────────────────────
 
         [Test]
-        public void ThronelessKing_Reborn_Returns_At_One_HP()
+        public void ThronelessKing_Rekindle_Returns_At_One_HP()
         {
             var s = MainPhase();
             // Pre-set the king at lethal HP; any subsequent PlayCardIntent triggers Drain → DeathCheck
-            var king = OnBoard(s, 1, "core_throneless_king"); // 6/6 TAUNT REBORN
+            var king = OnBoard(s, 1, "core_throneless_king"); // 6/6 BULWARK REKINDLE
             king.CurrentHealth = 0; // already lethal — DeathCheck will pick it up on next Drain
 
             // Play any 0-cost card to trigger the command cycle (Drain is called inside ApplyPlayCard)
@@ -166,23 +166,23 @@ namespace Emberfall.Core.Tests.CardBehavior
             var r = Proc().Execute(s, Play(s, vanilla));
 
             Assert.That(r.Accepted, Is.True);
-            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "REBORN copy survived.");
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "REKINDLE copy survived.");
             var copy = s.Players[1].Board[0];
-            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REBORN copy returns at 1 HP.");
+            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REKINDLE copy returns at 1 HP.");
             Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), "Copy is still a Throneless King.");
         }
 
-        // ── Overheat Golem: OVERLOAD locks 2 crystals next turn ─────────────────────
+        // ── Overheat Golem: BACKDRAFT locks 2 crystals next turn ─────────────────────
 
         [Test]
-        public void OverheatGolem_Overload_Locks_Two_Crystals_Next_Turn()
+        public void OverheatGolem_Backdraft_Locks_Two_Crystals_Next_Turn()
         {
             var s = MainPhase(p0Mana: 5);
-            var golem = InHand(s, 0, "ember_overheat_golem"); // 3-mana, OVERLOAD 2
+            var golem = InHand(s, 0, "ember_overheat_golem"); // 3-mana, BACKDRAFT 2
 
             Proc().Execute(s, Play(s, golem));
 
-            Assert.That(s.Players[0].NextTurnOverloadLock, Is.EqualTo(2), "2 crystals locked for next turn.");
+            Assert.That(s.Players[0].NextTurnBackdraftLock, Is.EqualTo(2), "2 crystals locked for next turn.");
             Assert.That(s.Players[0].Mana.Available, Is.EqualTo(2), "Only mana cost paid this turn.");
         }
 
@@ -206,96 +206,95 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[1].Board[0].CurrentHealth, Is.EqualTo(2));
         }
 
-        // ── Pyra's Wrath: battlecry auto-deals 2 to enemy hero ──────────────────────
+        // ── Pyra's Wrath: herald auto-deals 2 to enemy hero ──────────────────────
 
         [Test]
-        public void PyrasWrath_Battlecry_Deals_Two_To_Enemy_Hero()
+        public void PyrasWrath_Herald_Deals_Two_To_Enemy_Hero()
         {
             var s = MainPhase(p0Mana: 10);
-            var pyra = InHand(s, 0, "ember_pyras_wrath"); // 7-mana 7/5 CHARGE, battlecry deals 2
+            var pyra = InHand(s, 0, "ember_pyras_wrath"); // 7-mana 7/5 FERVOR, herald deals 2
 
             // No targets needed — ENEMY_HERO selector auto-resolves
             var r = Proc().Execute(s, Play(s, pyra));
 
             Assert.That(r.Accepted, Is.True);
-            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28), "Battlecry dealt 2 to enemy hero.");
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28), "Herald dealt 2 to enemy hero.");
         }
 
-        // ── Frostbind: FREEZE sets IsFrozen on the targeted character ───────────────
+        // ── Frostbind: FROST sets IsFrosted on the targeted character ───────────────
 
         [Test]
-        public void Frostbind_Freezes_Targeted_Minion()
+        public void Frostbind_Frosts_Targeted_Minion()
         {
             var s = MainPhase(); // P0 is active
             var victim = OnBoard(s, 1, "core_stoneback"); // 1/4 on P1's board
-            var spell = InHand(s, 0, "tide_frostbind");   // 1-mana FREEZE
+            var spell = InHand(s, 0, "tide_frostbind");   // 1-mana FROST
 
             Proc().Execute(s, Play(s, spell, 0, victim.Id));
 
-            Assert.That(victim.IsFrozen, Is.True, "Frostbind sets IsFrozen on the target.");
+            Assert.That(victim.IsFrosted, Is.True, "Frostbind sets IsFrosted on the target.");
         }
 
-        // ── Freeze engine: frozen minion cannot attack on its controller's turn ──────
+        // ── Frost engine: frosted minion cannot attack on its controller's turn ──────
 
         [Test]
-        public void Frozen_Minion_Cannot_Attack()
+        public void Frosted_Minion_Cannot_Attack()
         {
-            // The freeze verb is verified above; this verifies the AttackerFrozen gate in ValidateAttack.
-            // We freeze a P0 minion directly (simulating any freeze source) and confirm P0 can't attack with it.
+            // The frost verb is verified above; this verifies the AttackerFrosted gate in ValidateAttack.
+            // We frost a P0 minion directly (simulating any frost source) and confirm P0 can't attack with it.
             var s = MainPhase();
             var blocker = OnBoard(s, 1, "core_stoneback"); // gives P0 a legal target
-            var attacker = OnBoard(s, 0, "core_emberling"); // 2/1 CHARGE (no sickness)
+            var attacker = OnBoard(s, 0, "core_emberling"); // 2/1 FERVOR (no sickness)
             attacker.SummonedThisTurn = false;
-            attacker.IsFrozen = true; // frozen by any prior effect
+            attacker.IsFrosted = true; // frosted by any prior effect
 
             var r = Proc().Execute(s, new AttackIntent(s.Players[0].Id, attacker.Id,
                 new TargetRef(blocker.Id)));
 
             Assert.That(r.Accepted, Is.False);
-            Assert.That(r.Reason, Is.EqualTo(RejectReason.AttackerFrozen));
+            Assert.That(r.Reason, Is.EqualTo(RejectReason.AttackerFrosted));
         }
 
-        // ── Frostbind: FREEZE the enemy hero blocks weapon attack ───────────────────
+        // ── Frostbind: FROST the enemy hero blocks weapon attack ───────────────────
 
         [Test]
-        public void Frostbind_Freezes_Enemy_Hero_Blocking_Attack()
+        public void Frostbind_Frosts_Enemy_Hero_Blocking_Attack()
         {
             var s = MainPhase();
             // Give P1 a weapon so they could attack
-            s.Players[1].Weapon = new WeaponInstance
+            s.Players[1].Weapon = new CardInstance(s.NextInstanceId(), "ember_cinder_lance", s.Players[1].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = "ember_cinder_lance",
-                Attack = 1,
-                Durability = 2
+                Zone = Zone.Weapon,
+                CurrentAttack = 1,
+                CurrentDurability = 2,
             };
             var spell = InHand(s, 0, "tide_frostbind");
 
             Proc().Execute(s, Play(s, spell, 0, s.Players[1].Hero.Id));
 
-            Assert.That(s.Players[1].Hero.IsFrozen, Is.True);
+            Assert.That(s.Players[1].Hero.IsFrosted, Is.True);
             // P1 tries to attack — should be rejected
             var r = Proc().Execute(s, new AttackIntent(s.Players[1].Id, s.Players[1].Hero.Id,
                 new TargetRef(s.Players[0].Hero.Id)));
-            // Not P1's turn but AttackerFrozen is checked after NotYourTurn, so just verify frozen state
-            Assert.That(s.Players[1].Hero.IsFrozen, Is.True, "Hero remains frozen until start of their turn.");
+            // Not P1's turn but AttackerFrosted is checked after NotYourTurn, so just verify frosted state
+            Assert.That(s.Players[1].Hero.IsFrosted, Is.True, "Hero remains frosted until start of their turn.");
         }
 
-        // ── Hollow Tide Siren: battlecry freezes ALL enemy minions ──────────────────
+        // ── Hollow Tide Siren: herald frosts ALL enemy minions ──────────────────
 
         [Test]
-        public void HollowTideSiren_Battlecry_Freezes_All_Enemy_Minions()
+        public void HollowTideSiren_Herald_Frosts_All_Enemy_Minions()
         {
             var s = MainPhase(p0Mana: 10);
             var m1 = OnBoard(s, 1, "core_stoneback");   // 1/4
             var m2 = OnBoard(s, 1, "core_bonehound");   // 3/2
 
-            var siren = InHand(s, 0, "tide_siren"); // 5-mana, FREEZE ENEMY_MINIONS
+            var siren = InHand(s, 0, "tide_siren"); // 5-mana, FROST ENEMY_MINIONS
 
             Proc().Execute(s, Play(s, siren));
 
-            Assert.That(m1.IsFrozen, Is.True);
-            Assert.That(m2.IsFrozen, Is.True);
+            Assert.That(m1.IsFrosted, Is.True);
+            Assert.That(m2.IsFrosted, Is.True);
         }
 
         // ── Undertow: returns a minion to its owner's hand ──────────────────────────
@@ -327,8 +326,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             Proc().Execute(s, Play(s, weapon));
 
             Assert.That(s.Players[0].Weapon, Is.Not.Null);
-            Assert.That(s.Players[0].Weapon!.Attack, Is.EqualTo(1));
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2));
+            Assert.That(s.Players[0].Weapon!.CurrentAttack, Is.EqualTo(1));
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2));
         }
 
         // ── Maren's Deep Bargain: draws 2 cards ─────────────────────────────────────

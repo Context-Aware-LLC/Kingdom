@@ -80,7 +80,7 @@ namespace Emberfall.Net.Client
 
         /// <summary>The contract version this client was built against, sent in the hello so the
         /// server can compare (it previously never learned the client's).</summary>
-        public string ContractVersion { get; init; } = "interfaces.v3";
+        public string ContractVersion { get; init; } = "interfaces.v4";
 
         public IClientClock Clock { get; init; } = new SystemClientClock();
 

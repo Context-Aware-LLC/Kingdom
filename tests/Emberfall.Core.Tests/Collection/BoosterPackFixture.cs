@@ -26,8 +26,8 @@ namespace Emberfall.Core.Tests.Collection
             id: CardId(set, rarity, i), name: CardId(set, rarity, i), type: CardType.MINION, cost: 1,
             attack: 1, health: 1, durability: null,
             @class: CardClass.NEUTRAL, rarity: rarity,
-            keywords: System.Array.Empty<Keyword>(), effects: System.Array.Empty<EffectDef>(),
-            cardText: "", flavorText: "", artId: "art/" + CardId(set, rarity, i), setId: set,
+            keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
+            flavorText: "", artId: "art/" + CardId(set, rarity, i), setId: set,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>

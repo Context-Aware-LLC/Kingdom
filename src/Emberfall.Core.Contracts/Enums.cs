@@ -27,27 +27,30 @@ namespace Emberfall.Core.Contracts
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
 
     /// <summary>
-    /// Canonical keyword enum (D3, dev-docs/specs/card-schema.md §4 v1.3). Closed set — 17 keywords, each
+    /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized
+    /// rule activation and deliberately have no enum member. SILENCE, BACKDRAFT, and REINFORCE remain
+    /// reserved legacy slots for ordinal compatibility, but authoring/runtime semantics treat them as
+    /// action-derived markers rather than carrier behavior. Numeric values after removed slots are explicit
+    /// so their wire spelling/ordering cannot drift.
     /// implemented. ECHO was formally cut by M2 decision 2 (zero implementation, zero cards);
     /// this is a hash-canonical change (GameStateHasher sorts keyword sets by enum int), executed
     /// with the golden-replay gate as witness per hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier b.
     /// </summary>
     public enum Keyword
     {
-        TAUNT, CHARGE, RUSH, DIVINE_SHIELD, BATTLECRY, DEATHRATTLE, LIFESTEAL,
-        WINDFURY, STEALTH, POISONOUS, SPELL_DAMAGE, SILENCE, FREEZE, OVERLOAD,
-        REBORN,
-        OVERWHELM, VANGUARD,   // GDD §1e v1.1 — combat resolver handles both (requiresEngineeringPrimitive lifted by step 2)
-        REINFORCE,             // REKINDLING set: Battlecry — Give a friendly minion +1/+1.
+        BULWARK = 0, FERVOR = 1, SKIRMISH = 2, AEGIS = 3,
+        LIFEDRAIN = 6, DOUBLESTRIKE = 7, SHROUD = 8, VENOM = 9,
+        ARCANE_SURGE = 10, SILENCE = 11, FROST = 12, BACKDRAFT = 13,
+        REKINDLE = 14,
+        OVERWHELM = 15, VANGUARD = 16, // GDD §1e v1.1 — combat resolver handles both
+        REINFORCE = 17,
     }
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).
     ///
-    /// <para>DECLARED IS NOT LIVE. AURA (EF-017b) still has no raise site anywhere in the engine:
-    /// CardValidator rule C21 rejects a card using it before it loads, while bypassing validation would
-    /// leave the effect inert forever. Its former blocker — the absence of a derived-stat recompute
-    /// pass — was cleared by EF-017a; what remains is the raise site itself and the board sweep that
-    /// calls it. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// <para>AURA is live as a continuous board-minion recompute, not an event raise. Its narrow
+    /// capability relation lives in <c>AuraCapabilities</c>; all other source/action/target shapes fail
+    /// closed. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
     /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
@@ -62,7 +65,7 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor.
         ON_PLAY,
 
-        // LIVE on BOTH card types. Minions: EffectInterpreter.DeathCheck (the deathrattle cascade).
+        // LIVE on BOTH card types. Minions: EffectInterpreter.DeathCheck (the toll cascade).
         // Weapons: RulesEngine.BreakWeapon, on durability exhaustion AND on equip-replacement (EF-020).
         // A weapon's rattle ENQUEUES like a minion's, so on a replacement the NEW weapon is already
         // equipped when it resolves — an ON_DEATH that equips will break the replacement, not itself.
@@ -80,17 +83,19 @@ namespace Emberfall.Core.Contracts
         // actually restored (EF-015). SELF trigger, mirroring ON_DAMAGED: "whenever THIS minion is
         // healed", never "whenever anything is healed". Two silences are deliberate and permanent:
         // an overheal raises nothing (nothing was restored), and a HERO heal raises nothing (heroes
-        // carry no card effects) — which is why the reentrant LIFESTEAL heal inside ApplyDamage,
+        // carry no card effects) — which is why the reentrant LIFEDRAIN heal inside ApplyDamage,
         // whose target is always a hero, fires this on nobody. Dead on SPELL/WEAPON: neither has
         // health to restore, so the minion-only classification here is not a staging step.
         ON_HEAL,
 
-        // LIVE FOR BOARD MINIONS — CommandProcessor.StartTurnSequence raises it after the thaw/mana
-        // reset and before the draw (EF-011). Every effect declares a TURN_OWNER condition so controller,
-        // opponent and any-turn behavior are explicit. Weapons and ongoing spells are tracked follow-ups.
+        // LIVE FOR BOARD MINIONS, EQUIPPED WEAPONS, AND ONGOING EFFECTS —
+        // CommandProcessor.StartTurnSequence raises it after the thaw/mana/attack reset and before
+        // the draw (EF-011 / NOR-31). Every rule declares a TURN_OWNER condition so controller,
+        // opponent, and any-turn behavior are explicit. Resolved spell observers participate through
+        // their canonical OngoingEffectInstance rather than through a card zone.
         ON_TURN_START,
 
-        // LIVE — CommandProcessor.ApplyEndTurn raises it after the onTurnEnd VFX emit and before the
+        // LIVE — CommandProcessor.ApplyEndTurn raises it after the TurnEnded fact and before the
         // seat flip (EF-012). Fires for BOTH players' permanents, not just the active player's.
         ON_TURN_END,
 
@@ -100,28 +105,18 @@ namespace Emberfall.Core.Contracts
         // LIVE — CommandProcessor.ApplyPlayCard raises it from the CardType.SPELL arm only, right after
         // the spell's own ON_CAST (EF-016). Observer trigger: fires on BOTH players' permanents, so it
         // means "whenever ANY spell is cast", not "whenever YOU cast a spell".
-        // TRAP, still true: hero powers also raise ON_CAST through an ephemeral HERO_POWER card, and this
+        // TRAP, still true: hero powers also raise ON_CAST through a carrierless HERO_POWER context, and this
         // trigger is deliberately NOT raised there — a hero power is not a spell cast.
         ON_SPELL_CAST,
 
         // LIVE — CommandProcessor, for spells AND hero powers.
         ON_CAST,
 
-        // DEAD, and not an event at all: it needs a raise site plus a sweep that reapplies it as the
-        // board changes, and neither exists in src/. Its OTHER half is now built — EF-017a made stats
-        // a fold over CardInstance.Enchantments (DerivedStats), so DerivedStats.RemoveBySource can take
-        // an aura's contribution back off when its source leaves. That method has no in-engine caller
-        // until this trigger gets one; EF-017b is where they meet.
+        // LIVE AS CONTINUOUS RECOMPUTATION, not as an emitted event. AuraEngine removes prior
+        // aura-derived enchantments and reapplies live, unsilenced board-minion sources after board
+        // topology, silence, transform, and control changes. AuraCapabilities owns the deliberately
+        // narrow fail-closed source/condition/lifetime/action/target relation.
         AURA
-    }
-
-    /// <summary>
-    /// Closed condition vocabulary for <c>EffectDef.condition</c>. Conditions gate resolution and are
-    /// deliberately separate from target selectors so adding a gate does not multiply selector names.
-    /// </summary>
-    public enum ConditionType
-    {
-        TURN_OWNER,
     }
 
     /// <summary>How an effect source relates to the player whose turn is beginning.</summary>
@@ -132,21 +127,71 @@ namespace Emberfall.Core.Contracts
         ANY,
     }
 
-    /// <summary>The primitive verbs (dev-docs/specs/card-schema.md §5.2). Closed; grows only via the requiresEngineeringPrimitive gate.</summary>
-    public enum Action
+    /// <summary>
+    /// Stable semantic facts emitted by the deterministic game engine. These describe what happened;
+    /// presentation is selected separately through <see cref="PresentationCue"/>.
+    /// </summary>
+    public enum GameEventKind
     {
-        DEAL_DAMAGE, HEAL, DRAW, SUMMON, BUFF, GIVE_KEYWORD, DESTROY, RETURN_TO_HAND,
-        SILENCE, DISCOVER, TRANSFORM, EQUIP, GAIN_MANA, ADD_TO_HAND,
-        FREEZE,   // step 4: sets IsFrozen on the target character (minion or hero)
-        OVERLOAD, // step 4: locks N crystals at the start of the controller's next turn
+        CardPlayed,
+        CardSummoned,
+        AttackDeclared,
+        DamageApplied,
+        HealthRestored,
+        CardDestroyed,
+        StatsModified,
+        KeywordApplied,
+        CardDrawn,
+        CardCreatedInHand,
+        CardSilenced,
+        FrostApplied,
+        CardTransformed,
+        CardBounced,
+        ManaGained,
+        WeaponEquipped,
+        UnearthOffered,
+        TurnStarted,
+        TurnEnded,
+        HeroPowerUsed,
+        FatigueDamage,
+        MatchWon,
+        MatchEnded,
+        ArmorGained,
+        ControlChanged,
+        OngoingEffectCreated,
+        OngoingEffectTriggered,
+        OngoingEffectExpired,
     }
 
-    /// <summary>The closed D7 VFX vocabulary (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2). Purely observational.</summary>
-    public enum VfxEvent
+    /// <summary>Optional presentation instruction carried independently of semantic event identity.</summary>
+    public enum PresentationCue
     {
-        onPlay, onSummon, onAttack, onDamage, onHeal, onDeath, onBuff, onDebuff,
-        onDraw, onSilence, onFreeze, onTransform, onReturn, onManaGain, onEquip,
-        onDiscover, onTurnStart, onTurnEnd, onHeroPower, onFatigue, onGameWin, onGameOver
+        Play,
+        Summon,
+        Attack,
+        Damage,
+        Heal,
+        Death,
+        Buff,
+        Draw,
+        Silence,
+        Frost,
+        Transform,
+        Return,
+        ManaGain,
+        Equip,
+        Unearth,
+        TurnStart,
+        TurnEnd,
+        HeroPower,
+        Fatigue,
+        GameWin,
+        GameOver,
+        ArmorGain,
+        ControlChange,
+        OngoingEffectCreate,
+        OngoingEffectTrigger,
+        OngoingEffectExpire,
     }
 
     /// <summary>Per-event flags carried on a <see cref="GameEvent"/>. M1-guaranteed: AegisAbsorbed, Lethal, Overdraw (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5).</summary>
@@ -162,7 +207,8 @@ namespace Emberfall.Core.Contracts
         NotYourTurn, WrongPhase, NotEnoughMana, IllegalTarget, NotInHand,
         BoardFull, HeroPowerAlreadyUsed, WeaponMissing, UnknownIntent,
         NotImplemented, AlreadyMulliganed, GameOver,
-        HasSummoningSickness, NoAttacksLeft, AttackerFrozen,
+        HasSummoningSickness, NoAttacksLeft, AttackerFrosted,
+        ChoicePending, NoPendingChoice, NotChoiceOwner, StaleChoice, InvalidChoice, HandFull,
         /// <summary>Session-layer only (B1 policy gate, dev-docs/contracts/wire-protocol.md:37):
         /// the token bucket refused the intent. Never minted by <c>CommandProcessor</c>.</summary>
         RateLimited,

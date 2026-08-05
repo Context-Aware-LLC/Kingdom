@@ -233,7 +233,7 @@ namespace Emberfall.Net.Server.Telemetry
         //
         // Mapped explicitly rather than via ToString(). Two reasons: the spec's spellings are
         // lowercase/snake and the C# members are not, and an explicit map means adding or renaming
-        // an enum member cannot silently re-spell a field that §5 has frozen as additive-only.
+        // an enum member cannot silently re-spell a field that §5 has frosted as additive-only.
 
         private static string Timestamp(DateTimeOffset t) =>
             t.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", CultureInfo.InvariantCulture);

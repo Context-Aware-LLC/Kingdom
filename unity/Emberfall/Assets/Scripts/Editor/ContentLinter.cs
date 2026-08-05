@@ -25,10 +25,9 @@ namespace Emberfall.Editor
     public interface IBalanceGuardrails
     {
         int VanillaStatBudget(int cost);
-        float ManaValueOf(Action verb, bool aoe);
+        float ManaValueOf(RuleAction action, bool aoe);
         int MaxSimultaneousPersistentAuras();
         int PerTurnActionCap();
-        bool IsHeavyTierEvent(VfxEvent e);
         bool IsHighFrequencyTrigger(Trigger t);
     }
 
@@ -62,10 +61,9 @@ namespace Emberfall.Editor
     public sealed class StubBalanceGuardrails : IBalanceGuardrails
     {
         public int VanillaStatBudget(int cost) => cost * 2 + 1;
-        public float ManaValueOf(Action verb, bool aoe) => aoe ? 1.0f : 1.5f;
+        public float ManaValueOf(RuleAction action, bool aoe) => aoe ? 1.0f : 1.5f;
         public int MaxSimultaneousPersistentAuras() => 14;
         public int PerTurnActionCap() => 30;
-        public bool IsHeavyTierEvent(VfxEvent e) => false;
         public bool IsHighFrequencyTrigger(Trigger t) => t == Trigger.ON_ATTACK || t == Trigger.ON_DAMAGED;
     }
 
@@ -90,7 +88,7 @@ namespace Emberfall.Editor
 
             // E3: stat-budget deviation — only meaningful for vanilla (no keyword/effect) minions
             if (def.Type == CardType.MINION && def.Attack is int atk && def.Health is int hp
-                && def.Keywords.Count == 0 && def.Effects.Count == 0)
+                && def.Keywords.Count == 0 && def.Rules.Count == 0)
             {
                 int budget = guardrails.VanillaStatBudget(def.Cost);
                 int actual = atk + hp;
@@ -100,23 +98,15 @@ namespace Emberfall.Editor
             }
 
             // E5: aura-cap warning — cards that grant a persistent-aura keyword via GIVE_KEYWORD
-            var auraKeywords = new HashSet<Keyword> { Keyword.TAUNT, Keyword.STEALTH, Keyword.DIVINE_SHIELD };
-            foreach (var fx in def.Effects)
-                if (fx.Action == Action.GIVE_KEYWORD && fx.GrantedKeyword is { } gk && auraKeywords.Contains(gk))
-                    Warn("E5-AURA-CAP", "effects", $"grants persistent aura keyword {gk} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");
+            var auraKeywords = new HashSet<Keyword> { Keyword.BULWARK, Keyword.SHROUD, Keyword.AEGIS };
+            foreach (var rule in def.Rules)
+                if (rule.Action is GrantKeywordAction grant && auraKeywords.Contains(grant.Keyword))
+                    Warn("E5-AURA-CAP", "rules", $"grants persistent aura keyword {grant.Keyword} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");
 
-            // E6: cardText token consistency
-            if (!string.IsNullOrEmpty(def.CardText))
-            {
-                if (def.CardText.Contains("$dmg") && !def.Effects.Any(e => e.Action == Action.DEAL_DAMAGE))
-                    Warn("E6-TEXT-TOKEN", "cardText", "cardText references $dmg but no DEAL_DAMAGE effect is present.");
-                if (def.CardText.Contains("$heal") && !def.Effects.Any(e => e.Action == Action.HEAL))
-                    Warn("E6-TEXT-TOKEN", "cardText", "cardText references $heal but no HEAL effect is present.");
-            }
-
-            // E7: length caps
-            if (def.CardText.Length > 140)
-                Warn("E7-TEXT-LENGTH", "cardText", "cardText must be <=140 characters.");
+            // E7: generated card text is the sole presentation text source.
+            string generatedText = CardTextGenerator.Generate(def);
+            if (generatedText.Length > 140)
+                Warn("E7-TEXT-LENGTH", "generatedText", "generated card text must be <=140 characters.");
             if (def.FlavorText.Length > 160)
                 Warn("E7-TEXT-LENGTH", "flavorText", "flavorText must be <=160 characters.");
 

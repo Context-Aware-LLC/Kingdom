@@ -4,13 +4,13 @@ using NUnit.Framework;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
-using Verb = Emberfall.Core.Contracts.Action;
+using Emberfall.Core.Tests.Support;
 
 namespace Emberfall.Core.Tests.Combat
 {
     /// <summary>
     /// L1 unit tests for M1 Phase B step 2: Attack command — legality checks, mutual damage,
-    /// weapon combat, VANGUARD, OVERWHELM, STEALTH/TAUNT enforcement.
+    /// weapon combat, VANGUARD, OVERWHELM, SHROUD/BULWARK enforcement.
     /// Driven through the public <c>CommandProcessor.Execute</c> door; no golden fixtures.
     /// </summary>
     [TestFixture]
@@ -54,27 +54,25 @@ namespace Emberfall.Core.Tests.Combat
                 SummonedThisTurn = summonedThisTurn,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            if (ci.Keywords.Contains(Keyword.DIVINE_SHIELD)) ci.HasAegisShield = true;
+            if (ci.Keywords.Contains(Keyword.AEGIS)) ci.HasAegisShield = true;
             ps.Board.Add(ci);
             return ci;
         }
 
         private static void EquipWeapon(GameState s, int seat, int atk, int durability)
         {
-            s.Players[seat].Weapon = new WeaponInstance
+            s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), "weapon", s.Players[seat].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = "weapon",
-                Attack = atk,
-                Durability = durability,
+                Zone = Zone.Weapon,
+                CurrentAttack = atk,
+                CurrentDurability = durability,
             };
         }
 
         private static CardDefinition Minion(string id, int atk, int hp, params Keyword[] kws)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                kws, System.Array.Empty<EffectDef>(),
-                "", "", "art/" + id, SetId.CORE, true, null, "", false);
+                kws, System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static AttackIntent Attack(GameState s, InstanceId attacker, InstanceId defender)
             => new AttackIntent(s.ActivePlayer, attacker, new TargetRef(defender));
@@ -97,10 +95,10 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void CHARGE_Bypasses_Summoning_Sickness()
+        public void FERVOR_Bypasses_Summoning_Sickness()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("charger", 3, 4, Keyword.CHARGE), summonedThisTurn: true);
+            var atk = Board(s, 0, Minion("fervorr", 3, 4, Keyword.FERVOR), summonedThisTurn: true);
             var def = Board(s, 1, Minion("target", 2, 3));
 
             var r = Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -109,32 +107,32 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(def.CurrentHealth, Is.EqualTo(0), "defender took 3 damage");
         }
 
-        // Regression: REBORN must trigger on a COMBAT death, not only on effect/Drain death.
-        // The existing ThronelessKing_Reborn_Returns_At_One_HP kills via effect damage; a live
+        // Regression: REKINDLE must trigger on a COMBAT death, not only on effect/Drain death.
+        // The existing ThronelessKing_Rekindle_Returns_At_One_HP kills via effect damage; a live
         // networked match killed the king in combat and (reported) no 1-HP copy returned. This
         // exercises the combat path (ApplyAttack → Drain → DeathCheck → Resummon).
         [Test]
-        public void REBORN_Triggers_On_Combat_Death()
+        public void REKINDLE_Triggers_On_Combat_Death()
         {
             var s = MainPhase();
             var attacker = Board(s, 0, Minion("bruiser", 6, 8));          // survives retaliation
-            var king = Board(s, 1, Minion("core_throneless_king", 6, 6, Keyword.TAUNT, Keyword.REBORN));
+            var king = Board(s, 1, Minion("core_throneless_king", 6, 6, Keyword.BULWARK, Keyword.REKINDLE));
 
             var r = Proc().Execute(s, Attack(s, attacker.Id, king.Id));
 
             Assert.That(r.Accepted, Is.True, "attack resolved");
             Assert.That(s.Players[1].Board, Has.Count.EqualTo(1),
-                "REBORN copy should remain on the board after a combat death");
+                "REKINDLE copy should remain on the board after a combat death");
             var copy = s.Players[1].Board[0];
-            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REBORN copy returns at 1 HP");
+            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REKINDLE copy returns at 1 HP");
             Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), "copy is still a Throneless King");
         }
 
         [Test]
-        public void RUSH_Can_Attack_Enemy_Minion_But_Not_Hero_On_Summon_Turn()
+        public void SKIRMISH_Can_Attack_Enemy_Minion_But_Not_Hero_On_Summon_Turn()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rusher", 3, 4, Keyword.RUSH), summonedThisTurn: true);
+            var atk = Board(s, 0, Minion("skirmisher", 3, 4, Keyword.SKIRMISH), summonedThisTurn: true);
             var def = Board(s, 1, Minion("target", 2, 3));
 
             // Can attack enemy minion
@@ -148,24 +146,24 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Frozen_Minion_Cannot_Attack()
+        public void Frosted_Minion_Cannot_Attack()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("frozen", 3, 4));
-            atk.IsFrozen = true;
+            var atk = Board(s, 0, Minion("frosted", 3, 4));
+            atk.IsFrosted = true;
             var def = Board(s, 1, Minion("target", 2, 3));
 
             var r = Proc().CanExecute(s, Attack(s, atk.Id, def.Id), out var reason);
 
             Assert.That(r, Is.False);
-            Assert.That(reason, Is.EqualTo(RejectReason.AttackerFrozen));
+            Assert.That(reason, Is.EqualTo(RejectReason.AttackerFrosted));
         }
 
         [Test]
-        public void WINDFURY_Allows_Two_Attacks_Third_Rejected()
+        public void DOUBLESTRIKE_Allows_Two_Attacks_Third_Rejected()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("windfury", 2, 8, Keyword.WINDFURY));
+            var atk = Board(s, 0, Minion("doublestrike", 2, 8, Keyword.DOUBLESTRIKE));
             var def = Board(s, 1, Minion("target", 1, 20));
 
             var p = Proc();
@@ -178,49 +176,49 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void TAUNT_Enforces_Must_Attack_Taunter()
+        public void BULWARK_Enforces_Must_Attack_Bulwarker()
         {
             var s = MainPhase();
             var atk = Board(s, 0, Minion("attacker", 3, 4));
-            var taunter = Board(s, 1, Minion("taunter", 1, 5, Keyword.TAUNT));
+            var bulwarker = Board(s, 1, Minion("bulwarker", 1, 5, Keyword.BULWARK));
             var freeTarget = Board(s, 1, Minion("free", 2, 3));
 
-            // Must attack the taunter
-            Assert.That(Proc().CanExecute(s, Attack(s, atk.Id, taunter.Id), out _), Is.True);
+            // Must attack the bulwarker
+            Assert.That(Proc().CanExecute(s, Attack(s, atk.Id, bulwarker.Id), out _), Is.True);
 
-            // Cannot skip the taunter
+            // Cannot skip the bulwarker
             var r = Proc().CanExecute(s, Attack(s, atk.Id, freeTarget.Id), out var reason);
             Assert.That(r, Is.False);
             Assert.That(reason, Is.EqualTo(RejectReason.IllegalTarget));
         }
 
         [Test]
-        public void STEALTH_Blocks_Targeting_And_Breaks_When_Attacker_Swings()
+        public void SHROUD_Blocks_Targeting_And_Breaks_When_Attacker_Swings()
         {
             var s = MainPhase();
-            var stealthy = Board(s, 1, Minion("ghost", 2, 3, Keyword.STEALTH));
+            var shroudy = Board(s, 1, Minion("ghost", 2, 3, Keyword.SHROUD));
             var atk = Board(s, 0, Minion("attacker", 3, 4));
 
-            // Cannot target stealthed enemy
-            var r = Proc().CanExecute(s, Attack(s, atk.Id, stealthy.Id), out var reason);
+            // Cannot target shrouded enemy
+            var r = Proc().CanExecute(s, Attack(s, atk.Id, shroudy.Id), out var reason);
             Assert.That(r, Is.False);
             Assert.That(reason, Is.EqualTo(RejectReason.IllegalTarget));
 
-            // But after the stealth minion itself attacks, it loses stealth
-            stealthy.Keywords.Remove(Keyword.STEALTH); // manually break for this check
-            Assert.That(Proc().CanExecute(s, Attack(s, atk.Id, stealthy.Id), out _), Is.True);
+            // But after the shroud minion itself attacks, it loses shroud
+            shroudy.Keywords.Remove(Keyword.SHROUD); // manually break for this check
+            Assert.That(Proc().CanExecute(s, Attack(s, atk.Id, shroudy.Id), out _), Is.True);
         }
 
         [Test]
-        public void STEALTH_Breaks_When_Stealthy_Minion_Attacks()
+        public void SHROUD_Breaks_When_Shroudy_Minion_Attacks()
         {
             var s = MainPhase();
-            var ghost = Board(s, 0, Minion("ghost", 2, 5, Keyword.STEALTH));
+            var ghost = Board(s, 0, Minion("ghost", 2, 5, Keyword.SHROUD));
             var target = Board(s, 1, Minion("target", 1, 10));
 
-            Assert.That(ghost.Keywords.Contains(Keyword.STEALTH), Is.True, "has stealth before attack");
+            Assert.That(ghost.Keywords.Contains(Keyword.SHROUD), Is.True, "has shroud before attack");
             Proc().Execute(s, Attack(s, ghost.Id, target.Id));
-            Assert.That(ghost.Keywords.Contains(Keyword.STEALTH), Is.False, "stealth removed on attack");
+            Assert.That(ghost.Keywords.Contains(Keyword.SHROUD), Is.False, "shroud removed on attack");
         }
 
         [Test]
@@ -262,12 +260,10 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(def.CurrentHealth, Is.EqualTo(2), "hero dealt 4 damage");
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(28), "hero took 2 retaliation");
             Assert.That(s.Players[0].Weapon, Is.Not.Null, "weapon still alive");
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(1), "durability decremented");
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(1), "durability decremented");
         }
 
-        // Regression: WeaponInstance carries no CardInstance of its own, so a weapon's ON_ATTACK
-        // effect (e.g. Grasping Thornvine — "Whenever this attacks, restore 2 Health to your hero")
-        // was silently dead until ApplyAttack learned to wrap it for RaiseSelf.
+        // Regression: a weapon's ON_ATTACK effect resolves from the equipped CardInstance.
         [Test]
         public void Weapon_ON_ATTACK_Effect_Fires_On_Hero_Attack()
         {
@@ -276,21 +272,20 @@ namespace Emberfall.Core.Tests.Combat
                 attack: 2, health: null, durability: 3,
                 @class: CardClass.VERDANT, rarity: Rarity.RARE,
                 keywords: System.Array.Empty<Keyword>(),
-                effects: new[] { new EffectDef(Trigger.ON_ATTACK, Verb.HEAL, amount: 2, amount2: null,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "FRIENDLY_HERO") },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
+                    new HealAction(2, new TargetSpec("FRIENDLY_HERO"))) },
+                flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var db = new Support.FakeCardDatabase().Register(weaponDef);
             var proc = new CommandProcessor(db);
 
             var s = MainPhase();
-            s.Players[0].Weapon = new WeaponInstance
+            s.Players[0].Weapon = new CardInstance(s.NextInstanceId(), weaponDef.Id, s.Players[0].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = weaponDef.Id,
-                Attack = 2,
-                Durability = 3,
+                Zone = Zone.Weapon,
+                CurrentAttack = 2,
+                CurrentDurability = 3,
             };
             s.Players[0].Hero.CurrentHealth = 20; // below max so the heal is observable
             var def = Board(s, 1, Minion("target", 0, 10)); // 0 attack: no retaliation to muddy the heal
@@ -311,7 +306,7 @@ namespace Emberfall.Core.Tests.Combat
             var result = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, def.Id));
 
             Assert.That(s.Players[0].Weapon, Is.Null, "weapon broken");
-            Assert.That(result.Events.Any(e => e.Kind == VfxEvent.onDeath), Is.True, "weapon-break death event");
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.CardDestroyed), Is.True, "weapon-break death event");
         }
 
         [Test]
@@ -380,26 +375,26 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void REBORN_Original_Cannot_Reborn_Again_After_Resurrection()
+        public void REKINDLE_Original_Cannot_Rekindle_Again_After_Resurrection()
         {
             var s = MainPhase();
-            // Place a REBORN minion; kill it so it resurrects; verify original.HasUsedReborn = true
-            var rebornDef = Minion("reborn", 2, 1, Keyword.REBORN);
-            var rebornMinion = Board(s, 0, rebornDef);
+            // Place a REKINDLE minion; kill it so it resurrects; verify original.HasUsedRekindle = true
+            var rekindleDef = Minion("rekindle", 2, 1, Keyword.REKINDLE);
+            var rekindleMinion = Board(s, 0, rekindleDef);
 
-            // Kill it via retaliation: attack a 5/5 → reborn minion dies, should spawn 1-hp copy
+            // Kill it via retaliation: attack a 5/5 → rekindle minion dies, should spawn 1-hp copy
             var killer = Board(s, 1, Minion("big", 5, 5));
-            Proc().Execute(s, Attack(s, rebornMinion.Id, killer.Id));
+            Proc().Execute(s, Attack(s, rekindleMinion.Id, killer.Id));
 
-            // Original should be in graveyard with HasUsedReborn = true
-            Assert.That(rebornMinion.Zone, Is.EqualTo(Zone.Graveyard));
-            Assert.That(rebornMinion.HasUsedReborn, Is.True, "original REBORN charge consumed");
+            // Original should be in graveyard with HasUsedRekindle = true
+            Assert.That(rekindleMinion.Zone, Is.EqualTo(Zone.Graveyard));
+            Assert.That(rekindleMinion.HasUsedRekindle, Is.True, "original REKINDLE fervor consumed");
 
-            // Board should have one copy (the REBORN resurrection)
+            // Board should have one copy (the REKINDLE resurrection)
             Assert.That(s.Players[0].Board, Has.Count.EqualTo(1));
             var copy = s.Players[0].Board[0];
-            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REBORN copy at 1 hp");
-            Assert.That(copy.HasUsedReborn, Is.True, "copy's charge also consumed");
+            Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REKINDLE copy at 1 hp");
+            Assert.That(copy.HasUsedRekindle, Is.True, "copy's fervor also consumed");
         }
 
         // ── keyword edge interactions (M2 C2 hardening — pipeline-order behavior) ──
@@ -422,7 +417,7 @@ namespace Emberfall.Core.Tests.Combat
         {
             var s = MainPhase();
             var atk = Board(s, 0, Minion("crusher", 7, 6, Keyword.OVERWHELM));
-            var def = Board(s, 1, Minion("shielded", 1, 3, Keyword.DIVINE_SHIELD));
+            var def = Board(s, 1, Minion("shielded", 1, 3, Keyword.AEGIS));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
@@ -433,11 +428,11 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Aegis_Absorb_Skips_POISONOUS_Rider()
+        public void Aegis_Absorb_Skips_VENOM_Rider()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("viper", 1, 4, Keyword.POISONOUS));
-            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.DIVINE_SHIELD));
+            var atk = Board(s, 0, Minion("viper", 1, 4, Keyword.VENOM));
+            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.AEGIS));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
@@ -447,10 +442,10 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void POISONOUS_Kills_Regardless_Of_Health()
+        public void VENOM_Kills_Regardless_Of_Health()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("viper", 1, 1, Keyword.POISONOUS));
+            var atk = Board(s, 0, Minion("viper", 1, 1, Keyword.VENOM));
             var def = Board(s, 1, Minion("giant", 10, 10));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -460,12 +455,12 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void LIFESTEAL_Plus_OVERWHELM_Heals_Primary_Hit_Only()
+        public void LIFEDRAIN_Plus_OVERWHELM_Heals_Primary_Hit_Only()
         {
             // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
             var s = MainPhase();
             s.Players[0].Hero.CurrentHealth = 10;
-            var atk = Board(s, 0, Minion("drain-crusher", 7, 6, Keyword.LIFESTEAL, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("drain-crusher", 7, 6, Keyword.LIFEDRAIN, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -475,64 +470,64 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void FREEZE_Rider_Freezes_The_Minion_It_Damages()
+        public void FROST_Rider_Frosts_The_Minion_It_Damages()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FROST));
             var def = Board(s, 1, Minion("tank", 1, 10));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
             Assert.That(def.CurrentHealth, Is.EqualTo(7), "damage still applied normally");
-            Assert.That(def.IsFrozen, Is.True, "Frost rider froze what it damaged");
-            Assert.That(atk.IsFrozen, Is.False, "the attacker does not freeze itself");
+            Assert.That(def.IsFrosted, Is.True, "Frost rider froze what it damaged");
+            Assert.That(atk.IsFrosted, Is.False, "the attacker does not frost itself");
         }
 
         [Test]
-        public void FREEZE_Rider_Freezes_A_Hero_Too()
+        public void FROST_Rider_Frosts_A_Hero_Too()
         {
             // Unlike Venom (minion-only), Frost applies to heroes — it denies a weapon swing,
-            // and the FREEZE action already treats hero and minion identically.
+            // and the FROST action already treats hero and minion identically.
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FROST));
 
             Proc().Execute(s, Attack(s, atk.Id, s.Players[1].Hero.Id));
 
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(27), "damage still applied");
-            Assert.That(s.Players[1].Hero.IsFrozen, Is.True, "Frost rider froze the hero it damaged");
+            Assert.That(s.Players[1].Hero.IsFrosted, Is.True, "Frost rider froze the hero it damaged");
         }
 
         [Test]
-        public void Aegis_Absorb_Skips_FREEZE_Rider()
+        public void Aegis_Absorb_Skips_FROST_Rider()
         {
-            // Same precedent as Aegis_Absorb_Skips_POISONOUS_Rider — G0 R-2(c), no on-hit riders.
+            // Same precedent as Aegis_Absorb_Skips_VENOM_Rider — G0 R-2(c), no on-hit riders.
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FREEZE));
-            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.DIVINE_SHIELD));
+            var atk = Board(s, 0, Minion("rimefang", 3, 6, Keyword.FROST));
+            var def = Board(s, 1, Minion("shielded", 2, 5, Keyword.AEGIS));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
             Assert.That(def.HasAegisShield, Is.False, "shield consumed");
             Assert.That(def.CurrentHealth, Is.EqualTo(5), "no health lost behind the shield");
-            Assert.That(def.IsFrozen, Is.False, "Frost never applied — absorb returns before riders");
+            Assert.That(def.IsFrosted, Is.False, "Frost never applied — absorb returns before riders");
         }
 
         [Test]
-        public void FREEZE_Plus_OVERWHELM_Does_Not_Freeze_The_Face()
+        public void FROST_Plus_OVERWHELM_Does_Not_Frost_The_Face()
         {
             // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rime-crusher", 7, 6, Keyword.FREEZE, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("rime-crusher", 7, 6, Keyword.FROST, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26), "overflow damage still carries");
-            Assert.That(s.Players[1].Hero.IsFrozen, Is.False, "overflow must not carry the Frost rider");
+            Assert.That(s.Players[1].Hero.IsFrosted, Is.False, "overflow must not carry the Frost rider");
         }
 
         [Test]
-        public void No_FREEZE_Keyword_Means_No_Freeze()
+        public void No_FROST_Keyword_Means_No_Frost()
         {
             var s = MainPhase();
             var atk = Board(s, 0, Minion("plain", 3, 6));
@@ -540,15 +535,15 @@ namespace Emberfall.Core.Tests.Combat
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
-            Assert.That(def.IsFrozen, Is.False, "ordinary damage does not freeze");
+            Assert.That(def.IsFrosted, Is.False, "ordinary damage does not frost");
         }
 
         [Test]
-        public void LIFESTEAL_Attack_Heals_Controller_Hero()
+        public void LIFEDRAIN_Attack_Heals_Controller_Hero()
         {
             var s = MainPhase();
             s.Players[0].Hero.CurrentHealth = 20;
-            var atk = Board(s, 0, Minion("drainer", 4, 6, Keyword.LIFESTEAL));
+            var atk = Board(s, 0, Minion("drainer", 4, 6, Keyword.LIFEDRAIN));
             var def = Board(s, 1, Minion("tank", 1, 10));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -574,12 +569,12 @@ namespace Emberfall.Core.Tests.Combat
         {
             var s = MainPhase();
             EquipWeapon(s, 0, atk: 4, durability: 2);
-            var stealthy = Board(s, 1, Minion("ghost", 2, 3, Keyword.STEALTH));
+            var shroudy = Board(s, 1, Minion("ghost", 2, 3, Keyword.SHROUD));
 
-            var r = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, stealthy.Id));
+            var r = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, shroudy.Id));
 
-            Assert.That(r.Accepted, Is.False, "stealth target is illegal");
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2), "durability untouched");
+            Assert.That(r.Accepted, Is.False, "shroud target is illegal");
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2), "durability untouched");
             Assert.That(s.Players[0].HeroAttacksUsedThisTurn, Is.EqualTo(0), "attack budget untouched");
         }
     }

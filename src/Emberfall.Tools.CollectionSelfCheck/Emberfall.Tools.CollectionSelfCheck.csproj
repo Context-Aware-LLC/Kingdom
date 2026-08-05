@@ -3,7 +3,7 @@
   <!--
     Emberfall.Tools.CollectionSelfCheck — the EF-046 DONE-WHEN harness.
 
-    Discharges "a scripted self-check creates a character, builds a legal 30-card deck, saves,
+    Satisfies "a scripted self-check creates a character, builds a legal 30-card deck, saves,
     reloads it from disk in a fresh session, and reports queue-eligible" without a Unity seat.
 
     Deliberately pure Emberfall.Core.Collection: it exercises the exact stores, validator and

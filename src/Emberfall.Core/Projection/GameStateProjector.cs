@@ -7,7 +7,7 @@ namespace Emberfall.Core.Projection
     /// The hidden-information line (M2 WS A3; <c>decisions/ADR-0006</c>,
     /// <c>dev-docs/architecture/determinism-and-projection.md:20</c>).
     /// One redaction module, two entry points: <see cref="Project"/> for snapshots,
-    /// <see cref="ProjectEvent"/> for the D7 stream. Pure — the authoritative graph is never
+    /// <see cref="ProjectEvents"/> for the semantic event stream. Pure — the authoritative graph is never
     /// touched; every projected object is freshly allocated, and redacted values are constructed
     /// as sentinels directly so hidden truth never exists in the projected graph, even transiently.
     ///
@@ -48,6 +48,15 @@ namespace Emberfall.Core.Projection
                 PendingChoice = ProjectPendingChoice(s.PendingChoice, viewer, viewerSeat, ref maxVisibleId),
             };
 
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+            {
+                // Definition/controller/lifetime are public presentation facts. The internal authored
+                // rule id is deliberately not copied into the projected graph (default deny).
+                proj.OngoingEffects.Add(new OngoingEffectInstance(
+                    Track(effect.Id, ref maxVisibleId), effect.Controller,
+                    effect.SourceDefinitionId, effect.Lifetime, effect.RemainingUses));
+            }
+
             // NextInstanceCounter: REDACTED — normalized to a pure function of what THIS viewer
             // sees (max visible id + 1), killing the hidden-mint gap channel (§5.2/§5.2.1).
             proj.NextInstanceCounter = maxVisibleId + 1;
@@ -61,7 +70,7 @@ namespace Emberfall.Core.Projection
                 CurrentHealth = ps.Hero.CurrentHealth,   // PUBLIC (all hero fields)
                 Armor = ps.Hero.Armor,
                 HeroPowerId = ps.Hero.HeroPowerId,
-                IsFrozen = ps.Hero.IsFrozen,
+                IsFrosted = ps.Hero.IsFrosted,
             };
 
             var proj = new PlayerState(ps.Id, hero);
@@ -82,15 +91,7 @@ namespace Emberfall.Core.Projection
             foreach (var c in ps.Graveyard) proj.Graveyard.Add(CloneCard(s, c, viewerSeat, ref max));
 
             if (ps.Weapon != null)
-            {
-                proj.Weapon = new WeaponInstance
-                {
-                    Id = Track(ps.Weapon.Id, ref max),
-                    DefinitionId = ps.Weapon.DefinitionId,
-                    Attack = ps.Weapon.Attack,
-                    Durability = ps.Weapon.Durability,
-                };
-            }
+                proj.Weapon = CloneCard(s, ps.Weapon, viewerSeat, ref max);
 
             proj.Mana.Max = ps.Mana.Max;
             proj.Mana.Available = ps.Mana.Available;
@@ -99,7 +100,7 @@ namespace Emberfall.Core.Projection
             proj.Mana.Temporary = ps.Mana.Temporary;
             proj.HeroPowerUsedThisTurn = ps.HeroPowerUsedThisTurn;
             proj.HeroAttacksUsedThisTurn = ps.HeroAttacksUsedThisTurn;
-            proj.NextTurnOverloadLock = ps.NextTurnOverloadLock;
+            proj.NextTurnBackdraftLock = ps.NextTurnBackdraftLock;
 
             return proj;
         }
@@ -114,10 +115,11 @@ namespace Emberfall.Core.Projection
                 MaxHealth = c.MaxHealth,
                 CurrentDurability = c.CurrentDurability,
                 HasAegisShield = c.HasAegisShield,
-                IsFrozen = c.IsFrozen,
+                IsFrosted = c.IsFrosted,
+                IsSilenced = c.IsSilenced,
                 SummonedThisTurn = c.SummonedThisTurn,
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,
-                HasUsedReborn = c.HasUsedReborn,
+                HasUsedRekindle = c.HasUsedRekindle,
                 Position = c.Position,
             };
             foreach (var k in c.Keywords) proj.Keywords.Add(k);
@@ -133,6 +135,7 @@ namespace Emberfall.Core.Projection
                     AttackDelta = e.AttackDelta,
                     HealthDelta = e.HealthDelta,
                     GrantedKeyword = e.GrantedKeyword,
+                    IsAura = e.IsAura,
                 });
             }
             return proj;
@@ -181,29 +184,45 @@ namespace Emberfall.Core.Projection
         // ── Event entry point ────────────────────────────────────────────────────
 
         /// <summary>
-        /// Per-viewer copy of one D7 event. Never dropped, only value-redacted — both viewers see
-        /// the same event count and <see cref="GameEvent.Sequence"/> values (§5.3). <paramref name="vis"/>
-        /// is the emit-time sidecar captured by <c>EventBuffer</c>.
+        /// Atomically project a complete per-viewer batch. Events are never dropped, only
+        /// value-redacted, so both viewers retain identical counts, order and sequence values.
+        /// Unknown semantic kinds reject the whole batch before any projected value is returned.
         /// </summary>
-        public static GameEvent ProjectEvent(in GameEvent e, int viewerSeat, in EventVisibility vis)
+        public static IReadOnlyList<GameEvent> ProjectEvents(
+            IReadOnlyList<GameEvent> events,
+            IReadOnlyList<EventVisibility> visibility,
+            int viewerSeat)
         {
-            // OBL-8 unlisted-kind backstop: a Kind outside the classified vocabulary is fully
-            // sentineled for every viewer. (All 22 current members are classified; this catches
-            // enum members added without an OBL-8 row, alongside the CI row-coverage test.)
-            if (!KindIsClassified(e.Kind))
-                return new GameEvent(e.Kind, e.Sequence, Sentinel, Sentinel, null, EventFlags.None);
+            if (events is null) throw new System.ArgumentNullException(nameof(events));
+            if (visibility is null) throw new System.ArgumentNullException(nameof(visibility));
+            if (events.Count != visibility.Count)
+                throw new System.ArgumentException("Event and visibility batches must be index-parallel.", nameof(visibility));
+            if (viewerSeat != 0 && viewerSeat != 1)
+                throw new System.ArgumentOutOfRangeException(nameof(viewerSeat), viewerSeat, "Viewer seat must be 0 or 1.");
+
+            for (int i = 0; i < events.Count; i++)
+                if (!GameEventPolicy.IsKnown(events[i].Kind))
+                    throw new System.ArgumentException($"Unknown semantic game-event kind '{events[i].Kind}'.", nameof(events));
+
+            var projected = new List<GameEvent>(events.Count);
+            for (int i = 0; i < events.Count; i++)
+                projected.Add(ProjectEvent(events[i], viewerSeat, visibility[i]));
+            return projected;
+        }
+
+        private static GameEvent ProjectEvent(in GameEvent e, int viewerSeat, in EventVisibility vis)
+        {
 
             InstanceId? src = Redact(e.Source, vis.Source, viewerSeat);
             InstanceId? tgt = Redact(e.Target, vis.Target, viewerSeat);
 
-            // OBL-8 Amount column: P for every classified kind except the two sentinel rows —
-            // onDebuff (no emitter exists; pre-classified conservatively, D-OQ3) and onDiscover
-            // (the pool-size magnitude channel; Phase 2 wires the chooser's unredacted copy via
-            // PendingChoice context when Discover actually lands — until then default-deny).
-            int? amount = (e.Kind == VfxEvent.onDebuff || e.Kind == VfxEvent.onDiscover) ? null : e.Amount;
+            int? amount = GameEventPolicy.AllowsAmount(e.Kind) ? e.Amount : null;
+            EventFlags flags = e.Flags & GameEventPolicy.AllowedFlags(e.Kind);
+            PresentationCue? cue = e.CueOverride.HasValue && GameEventPolicy.IsKnown(e.CueOverride.Value)
+                ? e.CueOverride
+                : null;
 
-            // OBL-8 Flags column: P for every classified kind (incl. Overdraw/IsToken on onDraw).
-            return new GameEvent(e.Kind, e.Sequence, src, tgt, amount, e.Flags);
+            return new GameEvent(e.Kind, e.Sequence, src, tgt, amount, flags, cue);
         }
 
         private static InstanceId? Redact(InstanceId? id, IdVisibility vis, int viewerSeat)
@@ -219,9 +238,6 @@ namespace Emberfall.Core.Projection
             IdVisibility.Owner1 => viewerSeat == 1,
             _ => false,
         };
-
-        private static bool KindIsClassified(VfxEvent kind)
-            => kind >= VfxEvent.onPlay && kind <= VfxEvent.onGameOver;
 
         // ── Shared zone classification (snapshot Enchantment.Source + EventBuffer capture) ──
 
@@ -242,6 +258,8 @@ namespace Emberfall.Core.Projection
                 foreach (var c in ps.Hand) if (c.Id.Equals(id)) return seat == 0 ? IdVisibility.Owner0 : IdVisibility.Owner1;
                 foreach (var c in ps.Deck) if (c.Id.Equals(id)) return IdVisibility.Hidden;
             }
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+                if (effect.Id.Equals(id)) return IdVisibility.Public;
             return IdVisibility.Hidden;
         }
     }

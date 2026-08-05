@@ -109,7 +109,7 @@ def prompt_core(md: str, art_id: str) -> tuple[str, str]:
         if len(cells) == 3 and cells[0].strip("`") == art_id:
             # §6's header line reads "artId — Name (stats/type) → prompt core",
             # so the Card cell carries "Throneless King (6/6, 6, Legendary,
-            # Taunt+Reborn)". The parenthetical is card data, not art
+            # Bulwark+Rekindle)". The parenthetical is card data, not art
             # direction — and feeding literal numerals to an image model
             # invites the numerals onto the canvas, which §2's negative list
             # forbids. Name only.

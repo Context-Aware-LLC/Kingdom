@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "name": "on_heal_wardsong",
-  "engineContractVersion": "interfaces.v3",
+  "engineContractVersion": "interfaces.v4",
   "cardSetSnapshot": "M1.cards.snapshot.json",
   "matchId": "GOLD-0007",
   "p0": "P0",
@@ -100,11 +100,11 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "24e4e68b544d280a5a4a71d058d631f2fe1ad8ce7ae5a640c72724ecf17f3a97",
+    "stateHash": "b690968742e54c4b5213e844fa0d4c0569441baab9fb45d66d8d01733e0e85d7",
     "eventStream": [
       {
         "seq": 0,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -112,7 +112,7 @@
       },
       {
         "seq": 1,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i26",
         "tgt": null,
         "amt": null,
@@ -120,7 +120,7 @@
       },
       {
         "seq": 2,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i23",
         "tgt": null,
         "amt": null,
@@ -128,7 +128,7 @@
       },
       {
         "seq": 3,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -136,7 +136,7 @@
       },
       {
         "seq": 4,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -144,7 +144,7 @@
       },
       {
         "seq": 5,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i37",
         "tgt": null,
         "amt": null,
@@ -152,7 +152,7 @@
       },
       {
         "seq": 6,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -160,7 +160,7 @@
       },
       {
         "seq": 7,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -168,7 +168,7 @@
       },
       {
         "seq": 8,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i27",
         "tgt": null,
         "amt": null,
@@ -176,7 +176,7 @@
       },
       {
         "seq": 9,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i26",
         "tgt": null,
         "amt": null,
@@ -184,7 +184,7 @@
       },
       {
         "seq": 10,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -192,7 +192,7 @@
       },
       {
         "seq": 11,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -200,7 +200,7 @@
       },
       {
         "seq": 12,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i38",
         "tgt": null,
         "amt": null,
@@ -208,7 +208,7 @@
       },
       {
         "seq": 13,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i34",
         "tgt": null,
         "amt": null,
@@ -216,7 +216,7 @@
       },
       {
         "seq": 14,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i34",
         "tgt": "i23",
         "amt": 1,
@@ -224,7 +224,7 @@
       },
       {
         "seq": 15,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i34",
         "tgt": "i26",
         "amt": 1,
@@ -232,7 +232,7 @@
       },
       {
         "seq": 16,
-        "kind": "onTurnEnd",
+        "kind": "TurnEnded",
         "src": "i2",
         "tgt": null,
         "amt": null,
@@ -240,7 +240,7 @@
       },
       {
         "seq": 17,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -248,7 +248,7 @@
       },
       {
         "seq": 18,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i28",
         "tgt": null,
         "amt": null,
@@ -256,7 +256,7 @@
       },
       {
         "seq": 19,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i28",
         "tgt": null,
         "amt": null,
@@ -264,7 +264,7 @@
       },
       {
         "seq": 20,
-        "kind": "onPlay",
+        "kind": "CardPlayed",
         "src": "i24",
         "tgt": null,
         "amt": null,
@@ -272,7 +272,7 @@
       },
       {
         "seq": 21,
-        "kind": "onHeal",
+        "kind": "HealthRestored",
         "src": "i24",
         "tgt": "i23",
         "amt": 1,
@@ -280,7 +280,7 @@
       },
       {
         "seq": 22,
-        "kind": "onHeal",
+        "kind": "HealthRestored",
         "src": "i24",
         "tgt": "i26",
         "amt": 1,
@@ -288,7 +288,7 @@
       },
       {
         "seq": 23,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i23",
         "tgt": "i2",
         "amt": 1,
@@ -296,7 +296,7 @@
       },
       {
         "seq": 24,
-        "kind": "onDamage",
+        "kind": "DamageApplied",
         "src": "i26",
         "tgt": "i2",
         "amt": 1,

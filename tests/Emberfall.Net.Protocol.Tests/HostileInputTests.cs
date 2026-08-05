@@ -35,6 +35,8 @@ namespace Emberfall.Net.Protocol.Tests
             ("u64 overflow", "{\"v\":1,\"matchId\":\"m\",\"seq\":99999999999999999999,\"type\":\"heartbeat\",\"body\":{}}", ProtocolError.Malformed),
             ("negative seq", "{\"v\":1,\"matchId\":\"m\",\"seq\":-1,\"type\":\"heartbeat\",\"body\":{}}", ProtocolError.Malformed),
             ("bad instance id", "{\"v\":1,\"matchId\":\"m\",\"seq\":1,\"type\":\"intent\",\"body\":{\"lastVersion\":0,\"intent\":{\"$type\":\"attack\",\"player\":\"p0\",\"attacker\":\"x5\",\"defender\":\"i1\"}}}", ProtocolError.BadField),
+            ("unearth choice missing sequence", "{\"v\":1,\"matchId\":\"m\",\"seq\":1,\"type\":\"intent\",\"body\":{\"lastVersion\":0,\"intent\":{\"$type\":\"unearth_choice\",\"player\":\"p0\",\"chosenCardId\":\"card_x\"}}}", ProtocolError.BadField),
+            ("unearth choice negative sequence", "{\"v\":1,\"matchId\":\"m\",\"seq\":1,\"type\":\"intent\",\"body\":{\"lastVersion\":0,\"intent\":{\"$type\":\"unearth_choice\",\"player\":\"p0\",\"chosenCardId\":\"card_x\",\"choiceSequence\":-1}}}", ProtocolError.BadField),
             ("bad escape", "{\"v\":1,\"matchId\":\"\\q\",\"seq\":1,\"type\":\"heartbeat\",\"body\":{}}", ProtocolError.Malformed),
         };
 

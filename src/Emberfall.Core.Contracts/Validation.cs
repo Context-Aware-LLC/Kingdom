@@ -8,7 +8,7 @@ namespace Emberfall.Core.Contracts
         public readonly Severity Severity;
         /// <summary>Stable machine id, e.g. "S-MINION-NEEDS-HEALTH", "E1-ART-MISSING".</summary>
         public readonly string Code;
-        /// <summary>JSON-pointer-style path: "effects[2].payload.tokenId"; "" = card-level.</summary>
+        /// <summary>JSON-pointer-style path: "rules[2].action.cardId"; "" = card-level.</summary>
         public readonly string Field;
         public readonly string Message;
         /// <summary>Owning card (batch validation context).</summary>

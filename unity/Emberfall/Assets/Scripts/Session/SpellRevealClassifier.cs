@@ -26,8 +26,8 @@ namespace Emberfall.Session
     }
 
     /// <summary>
-    /// Presentation-only add-on (not part of the D7 vocabulary): a played card the opponent casts
-    /// has no visible tell today — VfxEvent.onPlay fires identically for a minion (which announces
+    /// Presentation-only add-on: a played card the opponent casts has no visible tell today —
+    /// CardPlayed fires identically for a minion (which announces
     /// itself by appearing on the board) and a spell (which just resolves). This distinguishes the
     /// two by resolving the played card's CardDefinition and checking Type == SPELL, so
     /// MatchRunner can hold the whole entry for a reveal beat without needing to know card types
@@ -38,9 +38,10 @@ namespace Emberfall.Session
     /// </summary>
     public static class SpellRevealClassifier
     {
-        /// <summary>The first spell-cast onPlay in this entry's batch, or null if there isn't one.
+        /// <summary>The first spell-cast <see cref="GameEventKind.CardPlayed"/> in this entry's batch,
+        /// or null if there isn't one.
         /// Only the first — a command resolves one played card at a time in this M1 slice, so a
-        /// second onPlay in the same batch isn't a case that exists yet.</summary>
+        /// second CardPlayed fact in the same batch isn't a case that exists yet.</summary>
         public static SpellReveal? Classify(GameState snapshot, IReadOnlyList<GameEvent> events,
                                             ICardDatabase db, float holdSeconds)
         {
@@ -49,7 +50,7 @@ namespace Emberfall.Session
             for (int i = 0; i < events.Count; i++)
             {
                 GameEvent e = events[i];
-                if (e.Kind != VfxEvent.onPlay || !e.Source.HasValue) continue;
+                if (e.Kind != GameEventKind.CardPlayed || !e.Source.HasValue) continue;
 
                 CardInstance played = FindInstance(snapshot, e.Source.Value);
                 if (played == null) continue;
@@ -69,7 +70,7 @@ namespace Emberfall.Session
         }
 
         // The spell has already moved to Graveyard by the time this runs (CommandProcessor sets
-        // Zone before emitting onPlay), but this checks Board/Hand too rather than assume — the
+        // Zone before emitting CardPlayed), but this checks Board/Hand too rather than assume — the
         // snapshot is the only source of truth for where an instance actually landed.
         private static CardInstance FindInstance(GameState state, InstanceId id)
         {

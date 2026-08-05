@@ -134,10 +134,10 @@ namespace Emberfall.Core.Tests.TurnLoop
             {
                 var r = host.Submit(new EndTurnIntent(s.ActivePlayer));
                 foreach (var e in r.Events)
-                    if (e.Kind == VfxEvent.onFatigue) sawFatigue = true;
+                    if (e.Kind == GameEventKind.FatigueDamage) sawFatigue = true;
             }
 
-            Assert.That(sawFatigue, Is.True, "Drawing from an empty deck must emit onFatigue.");
+            Assert.That(sawFatigue, Is.True, "Drawing from an empty deck must emit FatigueDamage.");
             Assert.That(s.Outcome, Is.AnyOf(MatchOutcome.Player0Win, MatchOutcome.Player1Win, MatchOutcome.Draw));
             Assert.That(s.Phase, Is.EqualTo(TurnPhase.GameOver));
         }

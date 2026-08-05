@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Determinism
 {
@@ -46,16 +45,15 @@ namespace Emberfall.Core.Tests.Determinism
             "bounce", "bounce", CardType.SPELL, 2, null, null, null,
             CardClass.NEUTRAL, Rarity.COMMON,
             Array.Empty<Keyword>(),
-            new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                amount: null, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ANY_MINION") },
-            "", "", "art/bounce", SetId.CORE, true, null, "", false);
+            new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
+            "", "art/bounce", SetId.CORE, true, null, "", false);
 
         private static readonly CardDefinition Vanilla = new CardDefinition(
             "vanilla", "vanilla", CardType.MINION, 1, 2, 2, null,
             CardClass.NEUTRAL, Rarity.COMMON,
-            Array.Empty<Keyword>(), Array.Empty<EffectDef>(),
-            "", "", "art/vanilla", SetId.CORE, true, null, "", false);
+            Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
+            "", "art/vanilla", SetId.CORE, true, null, "", false);
 
         private static GameState MainPhase(FakeCardDatabase db)
         {
@@ -122,10 +120,10 @@ namespace Emberfall.Core.Tests.Determinism
 
             bool eventCarriesNewId = false;
             foreach (var e in r.Events)
-                if (e.Kind == VfxEvent.onReturn && e.Target.HasValue && e.Target.Value.Equals(bounced.Id))
+                if (e.Kind == GameEventKind.CardBounced && e.Target.HasValue && e.Target.Value.Equals(bounced.Id))
                     eventCarriesNewId = true;
             Assert.That(eventCarriesNewId, Is.True,
-                "Re-mint runs BEFORE the onReturn emit — event and snapshot must agree (§10 finding 4).");
+                "Re-mint runs BEFORE the CardBounced emit — event and snapshot must agree (§10 finding 4).");
         }
 
         [Test]

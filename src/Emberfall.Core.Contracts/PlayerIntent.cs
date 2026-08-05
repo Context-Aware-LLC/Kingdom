@@ -16,18 +16,23 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>
-    /// A reference to a target character/permanent within a play/attack/hero-power intent.
+    /// A reference to a targetable game object within a play/attack/hero-power intent.
     /// Resolved and legality-checked up front (dev-docs/contracts/gameplay-and-session.md:18) so resolution stays
     /// server-authoritative and deterministic.
     /// </summary>
     public readonly struct TargetRef : IEquatable<TargetRef>
     {
         public readonly InstanceId Instance;
-        public TargetRef(InstanceId instance) => Instance = instance;
-        public bool Equals(TargetRef other) => Instance.Equals(other.Instance);
+        public readonly string Binding;
+        public TargetRef(InstanceId instance, string? binding = null)
+        {
+            Instance = instance;
+            Binding = binding ?? "";
+        }
+        public bool Equals(TargetRef other) => Instance.Equals(other.Instance) && Binding == other.Binding;
         public override bool Equals(object? obj) => obj is TargetRef o && Equals(o);
-        public override int GetHashCode() => Instance.GetHashCode();
-        public override string ToString() => Instance.ToString();
+        public override int GetHashCode() => (Instance, Binding).GetHashCode();
+        public override string ToString() => Binding.Length == 0 ? Instance.ToString() : $"{Binding}:{Instance}";
     }
 
     /// <summary>Tier-1 raw intent from a source (UI / AI / network). May be illegal until validated.</summary>
@@ -51,8 +56,9 @@ namespace Emberfall.Core.Contracts
     [ReplayTag("mulligan")]
     public sealed record MulliganIntent(PlayerId Player, IReadOnlyList<InstanceId> ToReplace) : PlayerIntent(Player);
 
-    [ReplayTag("discover_choice")]
-    public sealed record DiscoverChoiceIntent(PlayerId Player, string ChosenCardId) : PlayerIntent(Player);
+    [ReplayTag("unearth_choice")]
+    public sealed record UnearthChoiceIntent(PlayerId Player, string ChosenCardId, ulong ChoiceSequence)
+        : PlayerIntent(Player);
 
     [ReplayTag("concede")]
     public sealed record ConcedeIntent(PlayerId Player) : PlayerIntent(Player);

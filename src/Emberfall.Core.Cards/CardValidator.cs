@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The shared, headless card-legality validator (C1-C21, dev-docs/pipelines/card-authoring-and-import.md:20).
+    /// The shared, headless card-legality validator (C1-C25, dev-docs/pipelines/card-authoring-and-import.md:20).
     /// Runs identically at server/client load and inside the editor (dev-docs/pipelines/card-authoring-and-import.md:20) — this
     /// assembly has zero UnityEngine references, so this type is safe to run on the dedicated server.
     /// Content/art/budget lint (the E-series) is a separate, editor-only IContentLinter — never here.
@@ -13,25 +13,7 @@ namespace Emberfall.Core.Cards
     public sealed class CardValidator : ICardValidator
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
-
-        // Selector is a closed vocabulary (dev-docs/specs/card-schema.md §5.3) but carried as a plain string
-        // on EffectDef today rather than a structured TargetSpec/enum — validate against the list.
-        // ANY_MINION / ANY_FRIENDLY_MINION canonized in the M2 Phase 0 grammar freeze (tier a).
-        private static readonly HashSet<string> ValidSelectors = new HashSet<string>
-        {
-            "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
-            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
-        };
-
-        // Schema-valid selectors the EffectInterpreter cannot resolve yet (no adjacency/trigger-source
-        // plumbing). The interpreter now throws on them instead of silently mistargeting, so a row that
-        // authors one must declare requiresEngineeringPrimitive — the documented gate for grammar the
-        // engine hasn't grown (dev-docs/specs/card-schema.md:40). Keep in sync with EffectInterpreter.SelectorTargets.
-        private static readonly HashSet<string> UnimplementedSelectors = new HashSet<string>
-        {
-            "ADJACENT", "TRIGGER_SOURCE",
-        };
+        private static readonly Regex TargetBindingPattern = new Regex("^[a-z][a-z0-9_]{0,31}$", RegexOptions.Compiled);
 
         // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
         // call site: CommandProcessor.cs:346/354/386/454 pass the player's `targets`; ON_ATTACK
@@ -43,65 +25,32 @@ namespace Emberfall.Core.Cards
             Trigger.ON_PLAY, Trigger.ON_CAST,
         };
 
-        // Explicit-choice selectors: they mean "the PLAYER picks", so they resolve only from a
-        // player intent. On any other trigger `ChosenTargets` is empty, `SelectorTargets` is
-        // consulted, and it throws — the card is a live crash the moment it fires (C14b).
-        private static readonly HashSet<string> PlayerChosenSelectors = new HashSet<string>
+        /// <summary>Whether a keyword has meaningful behavior on an equipped weapon.</summary>
+        private enum WeaponKeywordReach
         {
-            "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION", "ANY_FRIENDLY_MINION",
-        };
-
-        // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
-        // verbs actually present in the Action enum/M1 data (OVERLOAD, FREEZE) that doc predates.
-        private static readonly HashSet<Action> AmountRequiredActions = new HashSet<Action>
-        {
-            Action.DEAL_DAMAGE, Action.HEAL, Action.DRAW, Action.SUMMON, Action.BUFF,
-            Action.GAIN_MANA, Action.DISCOVER, Action.ADD_TO_HAND, Action.OVERLOAD,
-        };
-
-        /// <summary>Whether a <see cref="Trigger"/> has a raise site in the engine (C21).</summary>
-        private enum TriggerLiveness
-        {
-            /// <summary>Has a raise site in the engine; type-specific exceptions are gated separately.</summary>
             Live,
-            /// <summary>Raised for weapons only (<c>ON_ATTACK</c>, CommandProcessor.cs:557-560):
-            /// valid on a WEAPON, dead on a MINION/SPELL/HERO_POWER.</summary>
-            WeaponOnly,
-            /// <summary>Raised on board minions only — either observed from them (<c>ON_TURN_START</c>,
-            /// pending a weapon/spell source lifecycle) or self-raised on one (<c>ON_HEAL</c>, permanently:
-            /// nothing else has health to restore). Read the row's comment for which.</summary>
-            MinionOnly,
-            /// <summary>Declared in the <see cref="Trigger"/> enum but raised NOWHERE in src/ today —
-            /// a card on it parses, validates, loads, and does nothing forever, silently.</summary>
-            Dead,
+            Unsupported,
         }
 
-        // C21 — trigger liveness. THE authoritative guard against a dead trigger; it replaces the
-        // prose list in CLAUDE.md, which is exactly the kind of guard that rots. Every Trigger enum
-        // member MUST appear here (a member with no row is treated as Dead — fail closed).
-        //
-        // HARD RULE: UPDATE THIS TABLE as each trigger source lifecycle lands — assign the exact
-        // liveness classification in the SAME commit that adds its raise site. Do not promote a
-        // type-scoped row to Live until every accepted type has a runtime path. The issue pointer on
-        // each Dead or type-scoped row is its retirement trigger.
-        private static readonly Dictionary<Trigger, TriggerLiveness> TriggerLivenessTable = new()
+        // C6 — fail-closed carrier policy. A keyword absent from this table is unsupported until
+        // its weapon behavior and tests land. Action-derived markers are rejected centrally by C25
+        // before this carrier-specific table is consulted.
+        private static readonly Dictionary<Keyword, WeaponKeywordReach> WeaponKeywordTable = new()
         {
-            [Trigger.ON_PLAY] = TriggerLiveness.Live, // CommandProcessor.cs:346,386 (battlecry / weapon equip)
-            [Trigger.ON_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:354,454 (spell / hero power)
-            [Trigger.ON_DEATH] = TriggerLiveness.Live, // EffectInterpreter.cs:153 (minion) + RulesEngine.BreakWeapon (weapon, EF-020)
-            [Trigger.ON_FRIENDLY_SUMMON] = TriggerLiveness.Live, // CommandProcessor.cs:347, ActionHandlers.cs:108
-            [Trigger.ON_ATTACK] = TriggerLiveness.WeaponOnly, // CommandProcessor.cs:560 (weapons only)
-            [Trigger.ON_DAMAGED] = TriggerLiveness.Live, // DamagePipeline.cs:128 (minion self-trigger)
-            // RETIREMENT TRIGGER: #34/#35 must widen this classification and update CLAUDE.md's
-            // ON_TURN_START source restriction in the same change.
-            [Trigger.ON_TURN_START] = TriggerLiveness.MinionOnly, // CommandProcessor.StartTurnSequence (explicit turn owner, after reset, before draw — EF-011)
-            [Trigger.ON_TURN_END] = TriggerLiveness.Live, // CommandProcessor.cs:289 (both sides, before the seat flip)
-            // NO retirement trigger, unlike ON_TURN_START above: this row is minion-only permanently,
-            // not pending a lifecycle. A SPELL is not a permanent and a WEAPON has no health to restore,
-            // so neither can ever be the character DamagePipeline.ApplyHeal raises this on.
-            [Trigger.ON_HEAL] = TriggerLiveness.MinionOnly, // DamagePipeline.ApplyHeal (healed-minion self-trigger — EF-015)
-            [Trigger.ON_SPELL_CAST] = TriggerLiveness.Live, // CommandProcessor.cs:371 (CardType.SPELL arm only — not hero powers)
-            [Trigger.AURA] = TriggerLiveness.Dead, // EF-017b
+            [Keyword.LIFEDRAIN] = WeaponKeywordReach.Live,
+            [Keyword.VENOM] = WeaponKeywordReach.Live,
+            [Keyword.FROST] = WeaponKeywordReach.Live,
+            [Keyword.DOUBLESTRIKE] = WeaponKeywordReach.Live,
+
+            [Keyword.BULWARK] = WeaponKeywordReach.Unsupported,
+            [Keyword.FERVOR] = WeaponKeywordReach.Unsupported,
+            [Keyword.SKIRMISH] = WeaponKeywordReach.Unsupported,
+            [Keyword.AEGIS] = WeaponKeywordReach.Unsupported,
+            [Keyword.SHROUD] = WeaponKeywordReach.Unsupported,
+            [Keyword.ARCANE_SURGE] = WeaponKeywordReach.Unsupported,
+            [Keyword.REKINDLE] = WeaponKeywordReach.Unsupported,
+            [Keyword.OVERWHELM] = WeaponKeywordReach.Unsupported,
+            [Keyword.VANGUARD] = WeaponKeywordReach.Unsupported,
         };
 
         public ValidationReport Validate(CardDefinition def, ICardDatabase db)
@@ -127,6 +76,13 @@ namespace Emberfall.Core.Cards
             if (string.IsNullOrEmpty(def.Name) || def.Name.Length < 1 || def.Name.Length > 32)
                 Err("C3-NAME-LENGTH", "name", "name must be 1-32 characters.");
 
+            // C25 — these enum members remain solely to preserve historic numeric ordinals.
+            // Runtime behavior and player-facing markers come from their typed actions.
+            foreach (Keyword keyword in def.Keywords)
+                if (KeywordSemantics.IsActionMarker(keyword))
+                    Err("C25-ACTION-MARKER-KEYWORD", "keywords",
+                        $"'{keyword}' is action-derived and cannot be authored as a carrier keyword.");
+
             // C4 / C5 / C6 — per-type stat shape (dev-docs/specs/card-schema.md §2.1)
             switch (def.Type)
             {
@@ -141,8 +97,8 @@ namespace Emberfall.Core.Cards
                 case CardType.SPELL:
                     if (def.Attack is not null || def.Health is not null || def.Durability is not null)
                         Err("C5-SPELL-STATS", "stats", "SPELL must have attack/health/durability == null.");
-                    if (def.Effects.Count == 0 && !def.RequiresEngineeringPrimitive)
-                        Err("C5-SPELL-EFFECTS", "effects", "SPELL must have >=1 effect or set requiresEngineeringPrimitive.");
+                    if (def.Rules.Count == 0 && !def.RequiresEngineeringPrimitive)
+                        Err("C5-SPELL-RULES", "rules", "SPELL must have >=1 rule or set requiresEngineeringPrimitive.");
                     break;
                 case CardType.WEAPON:
                     if (def.Attack is null || def.Attack < 0)
@@ -151,6 +107,15 @@ namespace Emberfall.Core.Cards
                         Err("C6-WEAPON-DURABILITY", "durability", "WEAPON requires durability >= 1.");
                     if (def.Health is not null)
                         Err("C6-WEAPON-HEALTH", "health", "WEAPON must have health == null.");
+                    foreach (var keyword in def.Keywords)
+                    {
+                        if (KeywordSemantics.IsActionMarker(keyword)) continue; // reported by C25
+                        if (!WeaponKeywordTable.TryGetValue(keyword, out var reach))
+                            reach = WeaponKeywordReach.Unsupported;
+                        if (reach == WeaponKeywordReach.Unsupported)
+                            Err("C6-WEAPON-KEYWORD-DEAD", "keywords",
+                                $"keyword '{keyword}' has no behavior on an equipped weapon.");
+                    }
                     break;
             }
 
@@ -166,136 +131,199 @@ namespace Emberfall.Core.Cards
             if (def.Durability is int dur && (dur < 1 || dur > 8))
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
-            // C9-C11, C13, C14, C17, C21 — per-effect checks
-            for (int i = 0; i < def.Effects.Count; i++)
+            // C9-C15, C21-C25 — per-rule checks
+            var playerChoiceRuleCounts = new Dictionary<Trigger, int>();
+            foreach (RuleDefinition rule in def.Rules)
             {
-                var fx = def.Effects[i];
-                string prefix = $"effects[{i}]";
+                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                if (!TargetSpec.IsPlayerChosen(target)) continue;
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
+                playerChoiceRuleCounts.TryGetValue(trigger, out int count);
+                playerChoiceRuleCounts[trigger] = count + 1;
+            }
+            var priorTargetBindings = new HashSet<string>();
+            var ruleIds = new HashSet<string>();
+            for (int i = 0; i < def.Rules.Count; i++)
+            {
+                RuleDefinition rule = def.Rules[i];
+                string prefix = $"rules[{i}]";
+                string ruleId = rule.Id.Value ?? "";
+                string actionName = ActionName(rule.Action);
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
 
-                // C9: Action is a known verb — guaranteed by the enum type system (CardJson throws on
-                // an unrecognized string), kept as a defensive no-op check for POCOs built by hand.
+                if (rule.Activation is AuraActivation && !AuraCapabilities.Supports(def.Type, rule))
+                    Err("C21-AURA-UNSUPPORTED", $"{prefix}.activation",
+                        "AURA currently supports only unsilenced board-minion MODIFY_STATS rules with " +
+                        "ALWAYS, SOURCE_BOUND and automatic minion selectors.");
 
-                // C21 — trigger liveness (see TriggerLivenessTable). A card on a trigger with no raise
-                // site parses, validates, loads and does nothing, forever, with no error at runtime;
-                // this is the only place that catches it.
-                if (!TriggerLivenessTable.TryGetValue(fx.Trigger, out var liveness))
-                    liveness = TriggerLiveness.Dead; // fail closed: a new enum member is dead until tabled live
-                switch (liveness)
+                // C9 — stable, card-scoped identity. The same syntax as a card id keeps rule ids
+                // portable across JSON, logs and deterministic snapshots.
+                if (!IdPattern.IsMatch(ruleId))
+                    Err("C9-RULE-ID-FORMAT", $"{prefix}.id", "rule id must match ^[a-z0-9_]+$.");
+                if (!ruleIds.Add(ruleId))
+                    Err("C9-RULE-ID-DUPLICATE", $"{prefix}.id",
+                        $"rule id '{ruleId}' appears more than once on this card.");
+
+                // C21 — the runtime enumerator and validation share this exact fail-closed relation.
+                // A new source kind, trigger, or pair is inert until EffectSourceCapabilities tables it.
+                bool knownSource = EffectSourceCapabilities.TryForCardType(def.Type,
+                    out EffectSourceKind sourceKind);
+                bool ongoingSpellRule = RuleLifetimeCapabilities.IsOngoingSpellRule(def.Type, trigger);
+                if (!knownSource || (!EffectSourceCapabilities.Supports(sourceKind, trigger) &&
+                    !ongoingSpellRule))
                 {
-                    case TriggerLiveness.Dead:
-                        Err("C21-TRIGGER-DEAD", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
-                        break;
-                    case TriggerLiveness.WeaponOnly when def.Type != CardType.WEAPON:
-                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
-                        break;
-                    case TriggerLiveness.MinionOnly when def.Type != CardType.MINION:
-                        // The tail differs per trigger and is load-bearing: ON_TURN_START is minion-only
-                        // *pending* a weapon/spell lifecycle, so pointing at that is a real lead;
-                        // ON_HEAL is minion-only permanently (nothing else has health to restore), and
-                        // telling an author to wait for a lifecycle that will never come is worse than
-                        // saying nothing.
-                        Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is raised on board minions only — it is dead on a {def.Type}"
-                            + (fx.Trigger == Trigger.ON_TURN_START
-                                ? " until that source lifecycle is implemented."
-                                : "."));
-                        break;
+                    if (!EffectSourceCapabilities.SupportsAny(trigger))
+                    {
+                        Err("C21-TRIGGER-DEAD", $"{prefix}.activation",
+                            $"trigger '{trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
+                    }
+                    else if (trigger == Trigger.ON_ATTACK)
+                    {
+                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.activation",
+                            $"trigger '{trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
+                    }
+                    else if (trigger == Trigger.ON_HEAL)
+                    {
+                        Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.activation",
+                            $"trigger '{trigger}' is raised on board minions only — it is dead on a {def.Type}.");
+                    }
+                    else
+                    {
+                        Err("C21-TRIGGER-SOURCE-UNSUPPORTED", $"{prefix}.activation",
+                            $"trigger '{trigger}' has no runtime path from a {sourceKind} source.");
+                    }
                 }
-                // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-DEATHRATTLE) until EF-020 gave
+                // ON_DEATH on a WEAPON was rejected here (C21-WEAPON-TOLL) until EF-020 gave
                 // RulesEngine.BreakWeapon a raise site. It is now live on BOTH card types, so the gate is
                 // gone rather than relaxed — there is no weapon-shaped exception left to express.
 
                 // C22 — the first reusable condition seam. Turn ownership is mandatory and explicit
                 // for ON_TURN_START; on every other trigger it lacks a turn-event context and would be
                 // an inert authoring error, so fail closed rather than silently skipping forever.
-                if (fx.Condition != null
-                    && !System.Enum.IsDefined(typeof(ConditionType), fx.Condition.Type))
+                if (trigger == Trigger.ON_TURN_START)
                 {
-                    Err("C22-CONDITION-UNKNOWN", $"{prefix}.condition.type",
-                        $"condition type '{fx.Condition.Type}' is not implemented.");
-                }
-                else if (fx.Trigger == Trigger.ON_TURN_START)
-                {
-                    if (fx.Condition == null
-                        || fx.Condition.Type != ConditionType.TURN_OWNER
-                        || !fx.Condition.TurnOwner.HasValue)
+                    if (!(rule.Condition is TurnOwnerCondition turnOwner))
                     {
                         Err("C22-TURN-OWNER-REQUIRED", $"{prefix}.condition",
-                            "ON_TURN_START requires condition.type TURN_OWNER with value CONTROLLER, OPPONENT, or ANY.");
+                            "ON_TURN_START requires a TURN_OWNER condition with owner CONTROLLER, OPPONENT, or ANY.");
                     }
-                    else if (!System.Enum.IsDefined(typeof(TurnOwner), fx.Condition.TurnOwner.Value))
+                    else if (!System.Enum.IsDefined(typeof(TurnOwner), turnOwner.Owner))
                     {
-                        Err("C22-TURN-OWNER-INVALID", $"{prefix}.condition.value",
-                            $"turn owner '{fx.Condition.TurnOwner.Value}' is not CONTROLLER, OPPONENT, or ANY.");
+                        Err("C22-TURN-OWNER-INVALID", $"{prefix}.condition.owner",
+                            $"turn owner '{turnOwner.Owner}' is not CONTROLLER, OPPONENT, or ANY.");
                     }
                 }
-                else if (fx.Condition != null && fx.Condition.Type == ConditionType.TURN_OWNER)
+                else if (rule.Condition is TurnOwnerCondition)
                 {
                     Err("C22-TURN-OWNER-TRIGGER", $"{prefix}.condition",
                         "TURN_OWNER is valid only on ON_TURN_START because other triggers carry no incoming-turn context.");
                 }
 
-                // C10
-                if (AmountRequiredActions.Contains(fx.Action) && fx.Amount is null)
-                    Err("C10-AMOUNT-REQUIRED", $"{prefix}.amount", $"{fx.Action} requires 'amount'.");
+                // C23 — this policy is also the only path that creates and consumes a carrierless
+                // observer at runtime, so validity cannot drift from execution semantics.
+                if (!RuleLifetimeCapabilities.Allows(def.Type, trigger, rule.Lifetime))
+                    Err("C23-LIFETIME-ACTIVATION", $"{prefix}.lifetime",
+                        ongoingSpellRule
+                            ? $"future spell trigger '{trigger}' requires " +
+                              $"{RuleLifetimeCapabilities.RequiredLifetimeDescription(def.Type, trigger)} lifetime."
+                            : $"trigger '{trigger}' requires a " +
+                              $"{RuleLifetimeCapabilities.RequiredLifetimeDescription(def.Type, trigger)} lifetime.");
+                if (!ongoingSpellRule && RuleLifetimeCapabilities.IsOngoingOnly(rule.Lifetime) &&
+                    !RuleLifetimeCapabilities.RequiresOneShotLifetime(trigger))
+                    Err("C23-LIFETIME-UNSUPPORTED", $"{prefix}.lifetime",
+                        $"lifetime '{rule.Lifetime.GetType().Name}' is valid only for a future-trigger SPELL rule.");
+                if (!RuleLifetimeCapabilities.HasValidFiniteUses(rule.Lifetime))
+                    Err("C23-FINITE-USES", $"{prefix}.lifetime.uses",
+                        "FINITE lifetime uses must be greater than zero.");
 
-                // C11
-                switch (fx.Action)
+                // C11-C13 — payload presence is structural in the typed action classes. String ids
+                // can still be empty in hand-built definitions, and referenced cards must resolve.
+                string? referencedCardId = ReferencedCardId(rule.Action);
+                if (referencedCardId != null)
                 {
-                    case Action.SUMMON:
-                    case Action.ADD_TO_HAND:
-                    case Action.TRANSFORM:
-                    case Action.EQUIP:
-                        if (string.IsNullOrEmpty(fx.TokenId))
-                            Err("C11-PAYLOAD-REQUIRED", $"{prefix}.payload.tokenId", $"{fx.Action} requires payload.tokenId.");
-                        break;
-                    case Action.GIVE_KEYWORD:
-                        if (fx.GrantedKeyword is null)
-                            Err("C11-PAYLOAD-REQUIRED", $"{prefix}.payload.keyword", "GIVE_KEYWORD requires payload.keyword.");
-                        break;
-                }
-
-                // C12 / C13
-                if (!string.IsNullOrEmpty(fx.TokenId))
-                {
-                    if (db is null || !db.TryGet(fx.TokenId!, out var token))
-                        Err("C12-TOKEN-UNRESOLVED", $"{prefix}.payload.tokenId", $"'{fx.TokenId}' does not resolve in the card database.");
-                    else if (fx.Action == Action.SUMMON && token.Collectible)
-                        Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.payload.tokenId", $"SUMMON token '{fx.TokenId}' is collectible:true — tokens are usually collectible:false.");
+                    if (string.IsNullOrEmpty(referencedCardId))
+                        Err("C11-PAYLOAD-REQUIRED", $"{prefix}.action.cardId",
+                            $"{actionName} requires action.cardId.");
+                    else if (db is null || !db.TryGet(referencedCardId, out var token))
+                        Err("C12-TOKEN-UNRESOLVED", $"{prefix}.action.cardId",
+                            $"'{referencedCardId}' does not resolve in the card database.");
+                    else if (rule.Action is SummonAction && token.Collectible)
+                        Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.action.cardId",
+                            $"SUMMON token '{referencedCardId}' is collectible:true — tokens are usually collectible:false.");
                 }
 
                 // C14
-                if (!string.IsNullOrEmpty(fx.Selector) && !ValidSelectors.Contains(fx.Selector!))
-                    Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
-                else if (!string.IsNullOrEmpty(fx.Selector) && UnimplementedSelectors.Contains(fx.Selector!)
-                         && !def.RequiresEngineeringPrimitive)
-                    Err("C14-SELECTOR-UNIMPLEMENTED", $"{prefix}.target.selector",
-                        $"'{fx.Selector}' is schema-valid but the engine cannot resolve it yet (the interpreter rejects it at runtime) — set requiresEngineeringPrimitive to hold the row for the primitive.");
+                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                if (target != null && !TargetSpec.IsKnownSelector(target.Selector))
+                    Err("C14-SELECTOR-INVALID", $"{prefix}.action.target.selector", $"'{target.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
+                else if (target != null &&
+                         !RuleActionCapabilities.HasCompatibleTarget(
+                             rule.Action, target.Selector, def.Type, trigger))
+                    Err("C14F-ACTION-TARGET-INCOMPATIBLE", $"{prefix}.action.target.selector",
+                        $"{actionName} cannot affect any target kind produced by '{target.Selector}'.");
                 // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
                 // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
                 // through this very rule, because C14 checked the selector without the trigger.
-                else if (!string.IsNullOrEmpty(fx.Selector) && PlayerChosenSelectors.Contains(fx.Selector!)
-                         && !PlayerTargetedTriggers.Contains(fx.Trigger)
+                else if (target != null &&
+                         TargetSpec.IsPlayerChosen(target)
+                         && !PlayerTargetedTriggers.Contains(trigger)
                          && !def.RequiresEngineeringPrimitive)
-                    Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.target.selector",
-                        $"'{fx.Selector}' is an explicit-choice selector, but {fx.Trigger} fires with no player choosing — " +
+                    Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.action.target.selector",
+                        $"'{target.Selector}' is an explicit-choice selector, but {trigger} fires with no player choosing — " +
                         "the interpreter throws on it at runtime. Use an auto-resolvable selector " +
                         "(SELF / FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
                         "or set requiresEngineeringPrimitive to hold the row out of every pool until the primitive lands.");
 
-                // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
-                if (fx.Empty && !fx.Permanent)
-                    Warn("C15-EMPTY-WITHOUT-PERMANENT", $"{prefix}.payload.empty",
-                        "payload.empty has no meaning without payload.permanent — temporary crystals are always filled.");
-                if (fx.Permanent && fx.Action != Action.GAIN_MANA)
-                    Warn("C15-PERMANENT-NON-MANA", $"{prefix}.payload.permanent",
-                        $"payload.permanent is only read by GAIN_MANA; it is inert on {fx.Action}.");
+                if (target?.Count is int targetCount && targetCount < -1)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.action.target.count",
+                        "target.count must be positive or -1 for every candidate.");
+                if (target?.Count == 0)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.action.target.count",
+                        "target.count cannot be zero.");
+                if (target != null)
+                {
+                    if (TargetSpec.IsPlayerChosen(target) && playerChoiceRuleCounts[trigger] > 1 &&
+                        target.Binding.Length == 0)
+                        Err("C14G-TARGET-BINDING-REQUIRED", $"{prefix}.action.target.binding",
+                            "each rule in a multi-rule player choice must name its target binding explicitly.");
+                    if (target.Binding.Length > 0 && !TargetBindingPattern.IsMatch(target.Binding))
+                        Err("C14D-TARGET-BINDING", $"{prefix}.action.target.binding",
+                            "target.binding must match ^[a-z][a-z0-9_]{0,31}$.");
+                    if (target.DistinctFrom.Length > 0)
+                    {
+                        if (!TargetBindingPattern.IsMatch(target.DistinctFrom))
+                            Err("C14D-TARGET-BINDING", $"{prefix}.action.target.distinctFrom",
+                                "target.distinctFrom must match ^[a-z][a-z0-9_]{0,31}$.");
+                        else if (!priorTargetBindings.Contains(target.DistinctFrom))
+                            Err("C14E-TARGET-BINDING-ORDER", $"{prefix}.action.target.distinctFrom",
+                                $"target.distinctFrom '{target.DistinctFrom}' must name a binding from an earlier rule.");
+                    }
+                    if (target.Binding.Length > 0) priorTargetBindings.Add(target.Binding);
+                }
 
-                // C17: VfxOverride is already a typed VfxEvent? — enum parsing enforces the closed
-                // vocabulary at load time, so no further check is representable here.
+                if (rule.Action is GainManaAction mana &&
+                    !System.Enum.IsDefined(typeof(ManaGainKind), mana.Kind))
+                    Err("C15-MANA-KIND", $"{prefix}.action.kind",
+                        $"mana kind '{mana.Kind}' is not implemented.");
+
+                if (rule.Action is GrantKeywordAction grant &&
+                    KeywordSemantics.IsActionMarker(grant.Keyword))
+                    Err("C25-ACTION-MARKER-GRANT", $"{prefix}.action.keyword",
+                        $"'{grant.Keyword}' is an action-derived marker and cannot be granted as runtime keyword state.");
+
+                // C24 — interactive choices need a positive offer and a command path that is
+                // already waiting for player input. Observer cascades cannot suspend and resume
+                // the interpreter, so authoring Unearth there would continue past an open choice.
+                if (rule.Action is UnearthAction unearth)
+                {
+                    if (unearth.Count <= 0)
+                        Err("C24-UNEARTH-COUNT", $"{prefix}.action.count",
+                            "UNEARTH count must be greater than zero.");
+                    if (!PlayerTargetedTriggers.Contains(trigger))
+                        Err("C24-UNEARTH-TRIGGER", $"{prefix}.action",
+                            $"UNEARTH requires an ON_PLAY or ON_CAST player-command path; '{trigger}' cannot pause for input.");
+                }
             }
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the
@@ -311,6 +339,47 @@ namespace Emberfall.Core.Cards
                 if (issue.Severity == Severity.Error) { ok = false; break; }
 
             return new ValidationReport(ok, issues, requiresPrimitive);
+        }
+
+        private static string? ReferencedCardId(RuleAction action)
+        {
+            switch (action)
+            {
+                case SummonAction a: return a.CardId;
+                case AddToHandAction a: return a.CardId;
+                case EquipAction a: return a.CardId;
+                case TransformAction a: return a.CardId;
+                default: return null;
+            }
+        }
+
+        private static string ActionName(RuleAction action)
+        {
+            switch (action)
+            {
+                case DamageAction _: return "DAMAGE";
+                case HealAction _: return "HEAL";
+                case ModifyStatsAction _: return "MODIFY_STATS";
+                case ReinforceAction _: return "REINFORCE";
+                case GrantKeywordAction _: return "GRANT_KEYWORD";
+                case DestroyAction _: return "DESTROY";
+                case ReturnToHandAction _: return "RETURN_TO_HAND";
+                case SilenceAction _: return "SILENCE";
+                case TransformAction _: return "TRANSFORM";
+                case FrostAction _: return "FROST";
+                case TakeControlAction _: return "TAKE_CONTROL";
+                case DrawAction _: return "DRAW";
+                case SummonAction _: return "SUMMON";
+                case AddToHandAction _: return "ADD_TO_HAND";
+                case EquipAction _: return "EQUIP";
+                case GainManaAction _: return "GAIN_MANA";
+                case GainArmorAction _: return "GAIN_ARMOR";
+                case BackdraftAction _: return "BACKDRAFT";
+                case UnearthAction _: return "UNEARTH";
+                default:
+                    throw new System.InvalidOperationException(
+                        $"Rule action '{action.GetType().Name}' is absent from validator semantics.");
+            }
         }
 
         /// <summary>

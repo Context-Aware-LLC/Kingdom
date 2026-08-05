@@ -494,10 +494,10 @@
     "promotedFromAssetID": "",
     "promotedFromCategoryName": "",
     "promotedOrdering": -1,
-    "m_Name": "Stealth Amount",
+    "m_Name": "Shroud Amount",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "StealthAmount",
-    "m_DefaultReferenceName": "_StealthAmount",
+    "m_RefNameGeneratedByDisplayName": "ShroudAmount",
+    "m_DefaultReferenceName": "_ShroudAmount",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -527,7 +527,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "0 = normal, 1 = fully stealthed (faded+grey). Tweened on stealth gain/loss. Driven by AuraSet.Stealth via MaterialPropertyBlock (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md sec 5.2); the binder tweens toward a target of ~0.6-1.0, not necessarily full 1, so the minion stays readable to its owner."
+    "tooltip": "0 = normal, 1 = fully shrouded (faded+grey). Tweened on shroud gain/loss. Driven by AuraSet.Shroud via MaterialPropertyBlock (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md sec 5.2); the binder tweens toward a target of ~0.6-1.0, not necessarily full 1, so the minion stays readable to its owner."
 }
 
 {
@@ -573,7 +573,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "How grey full stealth gets. Less than 1 keeps some color. Artist per-material constant (not MaterialPropertyBlock-driven)."
+    "tooltip": "How grey full shroud gets. Less than 1 keeps some color. Artist per-material constant (not MaterialPropertyBlock-driven)."
 }
 
 {
@@ -586,10 +586,10 @@
     "promotedFromAssetID": "",
     "promotedFromCategoryName": "",
     "promotedOrdering": -1,
-    "m_Name": "Stealth Min Alpha",
+    "m_Name": "Shroud Min Alpha",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "StealthMinAlpha",
-    "m_DefaultReferenceName": "_StealthMinAlpha",
+    "m_RefNameGeneratedByDisplayName": "ShroudMinAlpha",
+    "m_DefaultReferenceName": "_ShroudMinAlpha",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -619,7 +619,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "Opacity at full stealth. Kept readable for the owner (spec QA checklist: desaturated + ~55% alpha at full stealth). Artist per-material constant."
+    "tooltip": "Opacity at full shroud. Kept readable for the owner (spec QA checklist: desaturated + ~55% alpha at full shroud). Artist per-material constant."
 }
 
 {
@@ -665,7 +665,7 @@
     "m_EnumValues": [
         0
     ],
-    "tooltip": "Phase-shimmer edge band strength; scales _StealthAmount into the SGF_DissolveCore Amount input. Artist per-material constant."
+    "tooltip": "Phase-shimmer edge band strength; scales _ShroudAmount into the SGF_DissolveCore Amount input. Artist per-material constant."
 }
 
 {
@@ -796,7 +796,7 @@
     "isHDR": false,
     "m_Modifiable": true,
     "m_DefaultType": 0,
-    "tooltip": "Card albedo/illustration texture to desaturate and fade for the stealth look."
+    "tooltip": "Card albedo/illustration texture to desaturate and fade for the shroud look."
 }
 
 {
@@ -809,10 +809,10 @@
     "promotedFromAssetID": "",
     "promotedFromCategoryName": "",
     "promotedOrdering": -1,
-    "m_Name": "Stealth Edge Color",
+    "m_Name": "Shroud Edge Color",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "StealthEdgeColor",
-    "m_DefaultReferenceName": "_StealthEdgeColor",
+    "m_RefNameGeneratedByDisplayName": "ShroudEdgeColor",
+    "m_DefaultReferenceName": "_ShroudEdgeColor",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -1216,7 +1216,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "3d59ecdb469d4026bd333eeb00a8a96c",
     "m_Id": 0,
-    "m_DisplayName": "Stealth Amount",
+    "m_DisplayName": "Shroud Amount",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_HideConnector": false,
@@ -1635,7 +1635,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "11ecb4d3ef7b445b8692f07c33172588",
     "m_Id": 0,
-    "m_DisplayName": "Stealth Amount",
+    "m_DisplayName": "Shroud Amount",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_HideConnector": false,
@@ -2220,7 +2220,7 @@
     "m_Type": "UnityEditor.ShaderGraph.ColorRGBMaterialSlot",
     "m_ObjectId": "9e63875f1b564e568bfc1bdd4acb83dd",
     "m_Id": 0,
-    "m_DisplayName": "Stealth Edge Color",
+    "m_DisplayName": "Shroud Edge Color",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_HideConnector": false,
@@ -2605,7 +2605,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "3f77767ff86c464eb659ce541afba6ba",
     "m_Id": 0,
-    "m_DisplayName": "Stealth Amount",
+    "m_DisplayName": "Shroud Amount",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_HideConnector": false,
@@ -2659,7 +2659,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "8d1c9ba710144517a22313dc8a08bc91",
     "m_Id": 0,
-    "m_DisplayName": "Stealth Min Alpha",
+    "m_DisplayName": "Shroud Min Alpha",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_HideConnector": false,

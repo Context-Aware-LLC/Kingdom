@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The derived-stat layer (EF-017a). A minion's live stats are a FUNCTION of its printed base and
+    /// The derived-stat layer (EF-017a). A card's live stats are a FUNCTION of its printed base and
     /// its <see cref="CardInstance.Enchantments"/> list — not an accumulator that effects add into.
     ///
     /// <para><b>Why this exists.</b> Before EF-017a, <c>BuffHandler</c> baked <c>CurrentAttack += atk</c>
@@ -21,12 +21,12 @@ namespace Emberfall.Core
     /// always look up. That choice is what keeps this change OUT of the hash: no field enters
     /// <c>GameState</c>, the serializer is untouched, and the golden replays hold unrebaselined.</para>
     ///
-    /// <para><b>RETIREMENT TRIGGER.</b> If a verb ever changes a minion's PRINTED stats in place without
+    /// <para><b>RETIREMENT TRIGGER.</b> If a verb ever changes a card's PRINTED stats in place without
     /// changing its <c>DefinitionId</c> — a "set base attack to N" effect; no such verb exists today, and
     /// <c>TRANSFORM</c> is declared in the <c>Action</c> enum with no handler — that value stops being
     /// derivable and <c>BaseAttack</c>/<c>BaseMaxHealth</c> must become real <see cref="CardInstance"/>
-    /// fields. That IS a hash-canonical change: follow the six-point touch list on <c>WeaponInstance</c>
-    /// in <c>GameState.cs</c>, and rewrite this paragraph in the same commit.</para>
+    /// fields. That IS a hash-canonical change: update the canonical serializer, projection, snapshot
+    /// codec, field manifest, pinned digest, and affected golden fixtures together.</para>
     /// </summary>
     internal static class DerivedStats
     {
@@ -47,9 +47,9 @@ namespace Emberfall.Core
         ///
         /// <para><b>Stats only — this touches neither the keyword set nor
         /// <see cref="CardInstance.HasAegisShield"/>, and that is deliberate.</b> Both carry state that is
-        /// SPENT rather than derived: an Aegis is consumed by absorbing a hit, and STEALTH is stripped when
+        /// SPENT rather than derived: an Aegis is consumed by absorbing a hit, and SHROUD is stripped when
         /// the minion attacks (<c>CommandProcessor</c>). Re-seeding either from the definition here would
-        /// silently refund a spent shield, or restore stealth, every time the minion was buffed. Only the
+        /// silently refund a spent shield, or restore shroud, every time the minion was buffed. Only the
         /// full-reset path (<see cref="ResetToPrinted"/>) re-seeds, and only because a silence or a bounce
         /// genuinely does return the card to its printed form.</para>
         ///
@@ -65,9 +65,35 @@ namespace Emberfall.Core
         }
 
         /// <summary>
+        /// Initialize an existing card for the weapon slot without discarding any runtime state it
+        /// already carries. Printed keywords are unioned into the instance, enchantments continue to
+        /// contribute to attack, and a pre-existing durability value is retained. A fresh deck/hand
+        /// card has no durability yet, so that one missing value is seeded from the definition.
+        /// </summary>
+        public static void EnterWeapon(CardInstance c, CardDefinition def)
+        {
+            // Equipping starts a fresh weapon zone-life. A bounced silenced weapon may retain spent
+            // durability, but it never carries the removable silence state into the new life.
+            c.IsSilenced = false;
+            foreach (var k in def.Keywords)
+                if (KeywordSemantics.IsCarrierBehavior(k)) c.Keywords.Add(k);
+            foreach (var e in c.Enchantments)
+                if (e.GrantedKeyword.HasValue &&
+                    KeywordSemantics.IsCarrierBehavior(e.GrantedKeyword.Value))
+                    c.Keywords.Add(e.GrantedKeyword.Value);
+
+            int attack = BaseAttack(def);
+            foreach (var e in c.Enchantments) attack += e.AttackDelta;
+            c.CurrentAttack = attack;
+
+            if (!c.CurrentDurability.HasValue)
+                c.CurrentDurability = def.Durability ?? 1;
+        }
+
+        /// <summary>
         /// Return <paramref name="c"/> to its printed form: enchantments dropped, keywords re-seeded from
         /// the definition, stats recomputed, Aegis restored to whatever the printed keyword set implies,
-        /// freeze cleared.
+        /// frost cleared.
         ///
         /// <para><paramref name="preserveDamage"/> is the whole difference between the callers. A SILENCE
         /// keeps the wounds — a buffed body falling away can leave the printed one already dead, which is a
@@ -86,12 +112,36 @@ namespace Emberfall.Core
 
             c.Enchantments.Clear();
             c.Keywords.Clear();
-            foreach (var k in def.Keywords) c.Keywords.Add(k);
+            foreach (var k in def.Keywords)
+                if (KeywordSemantics.IsCarrierBehavior(k)) c.Keywords.Add(k);
 
             ApplyStats(c, def, damageTaken);
 
-            c.HasAegisShield = c.Keywords.Contains(Keyword.DIVINE_SHIELD);
-            c.IsFrozen = false;
+            c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
+            c.IsFrosted = false;
+            c.IsSilenced = false;
+        }
+
+        /// <summary>
+        /// Apply the full SILENCE reset. Stats return to printed values while a minion's wounds survive;
+        /// all ability-bearing state is removed, including printed keywords. Weapon durability is
+        /// intentionally untouched: silence must not refund spent durability.
+        /// </summary>
+        public static void ResetToSilenced(CardInstance c, CardDefinition def, bool preserveDamage)
+        {
+            int damageTaken = 0;
+            if (preserveDamage)
+            {
+                damageTaken = c.MaxHealth - c.CurrentHealth;
+                if (damageTaken < 0) damageTaken = 0;
+            }
+
+            c.Enchantments.Clear();
+            c.Keywords.Clear();
+            ApplyStats(c, def, damageTaken);
+            c.HasAegisShield = false;
+            c.IsFrosted = false;
+            c.IsSilenced = true;
         }
 
         /// <summary>
@@ -103,7 +153,7 @@ namespace Emberfall.Core
         /// <para>Keywords are SUBTRACTED, never re-seeded: a keyword is removed only if the departing
         /// source granted it and no surviving enchantment grants it — and never if the printed definition
         /// carries it, because that one was never the source's to give. Subtracting rather than rebuilding
-        /// is what keeps this from restoring stealth that combat has already broken.</para>
+        /// is what keeps this from restoring shroud that combat has already broken.</para>
         ///
         /// <para>Returns true if anything was removed, so a caller sweeping a board can skip the recompute
         /// bookkeeping on minions the source never touched.</para>
@@ -131,7 +181,7 @@ namespace Emberfall.Core
                     if (IsPrinted(def, k)) continue;                     // printed: not the source's to take
                     if (StillGranted(c, k)) continue;                    // another enchantment holds it up
                     c.Keywords.Remove(k);
-                    if (k == Keyword.DIVINE_SHIELD) c.HasAegisShield = false;
+                    if (k == Keyword.AEGIS) c.HasAegisShield = false;
                 }
             }
 
@@ -139,8 +189,24 @@ namespace Emberfall.Core
             return true;
         }
 
+        /// <summary>Remove only continuous aura contributions, preserving ordinary effects even from the same source.</summary>
+        public static bool RemoveAuras(CardInstance c, CardDefinition def)
+        {
+            int removed = 0;
+            for (int i = c.Enchantments.Count - 1; i >= 0; i--)
+                if (c.Enchantments[i].IsAura)
+                {
+                    c.Enchantments.RemoveAt(i);
+                    removed++;
+                }
+            if (removed == 0) return false;
+            Recompute(c, def);
+            return true;
+        }
+
         private static bool IsPrinted(CardDefinition def, Keyword k)
         {
+            if (!KeywordSemantics.IsCarrierBehavior(k)) return false;
             // def.Keywords is IReadOnlyList<Keyword>; a hand loop keeps this off LINQ, which the core
             // avoids so the netstandard2.1 surface Unity consumes stays allocation-predictable.
             for (int i = 0; i < def.Keywords.Count; i++)

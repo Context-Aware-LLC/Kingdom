@@ -9,13 +9,11 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
-    /// EF-032a — <c>requiresEngineeringPrimitive</c> is a real gate, and C14b keeps the pool
-    /// crash-free.
+    /// EF-032a — C14b keeps the pool free of fired effects that still require a player choice.
     ///
     /// <para>The defect these tests exist for: a card declared an <c>ON_DEATH</c> effect on an
-    /// explicit-choice (<c>ANY_*</c>) selector. A Deathrattle fires with no player choosing, so
-    /// <c>EffectInterpreter.SelectorTargets</c> threw by design — and 6 of 64 balance-matrix
-    /// cells crashed, every matchup whose generated pool drew the row.</para>
+    /// explicit-choice (<c>ANY_*</c>) selector. A Toll fires with no player choosing — and
+    /// 6 of 64 balance-matrix cells crashed, every matchup whose generated pool drew the row.</para>
     ///
     /// <para>Two guards had failed. C14 checked the selector without the trigger, so the row
     /// validated clean. And the flag both error messages told authors to reach for was inert:
@@ -32,12 +30,6 @@ namespace Emberfall.Core.Tests.CardValidation
     [Category("CardValidation")]
     public sealed class EngineeringPrimitiveGateTests
     {
-        // Mirrors EffectInterpreter.SelectorTargets — the exhaustive auto-resolvable set.
-        private static readonly HashSet<string> AutoResolvable = new HashSet<string>
-        {
-            "SELF", "ENEMY_MINIONS", "FRIENDLY_MINIONS", "ALL_MINIONS", "ENEMY_HERO", "FRIENDLY_HERO",
-        };
-
         private static readonly HashSet<Trigger> PlayerTargeted = new HashSet<Trigger>
         {
             Trigger.ON_PLAY, Trigger.ON_CAST,
@@ -57,34 +49,6 @@ namespace Emberfall.Core.Tests.CardValidation
             return all;
         }
 
-        // ── The gate is real ─────────────────────────────────────────────────────
-
-        [Test]
-        public void Gated_Row_Is_Held_Out_Of_The_Pool_But_Still_Resolves_By_Id()
-        {
-            var cards = LiveCards();
-            var db = new JsonCardDatabaseTestDouble(cards);
-
-            var gated = cards.Where(c => c.RequiresEngineeringPrimitive).ToList();
-            Assert.That(gated, Is.Not.Empty,
-                "No live row sets requiresEngineeringPrimitive — this test would pass vacuously. " +
-                "This is a TEMPORARY quarantine (Sam, 2026-08-03): if the last held row was cleared, " +
-                "delete this test, PoolEligible's retirement-trigger doc, and the whole gate with it.");
-
-            foreach (var def in gated)
-            {
-                Assert.That(def.PoolEligible, Is.False,
-                    $"'{def.Id}' holds a primitive reservation, so it must not be pool-eligible.");
-                Assert.That(db.AllCollectible().Any(c => c.Id == def.Id), Is.False,
-                    $"'{def.Id}' reached AllCollectible() — the gate is inert again, which is the whole EF-032a defect.");
-
-                // Held out of the POOL, not out of the DATABASE: replays, tokens and set counts
-                // must all still resolve the row by id.
-                Assert.That(db.TryGet(def.Id, out var found), Is.True, $"'{def.Id}' must still resolve by id.");
-                Assert.That(found.Id, Is.EqualTo(def.Id));
-            }
-        }
-
         // ── The pool it protects ─────────────────────────────────────────────────
 
         [Test]
@@ -98,12 +62,14 @@ namespace Emberfall.Core.Tests.CardValidation
             foreach (var def in LiveCards())
             {
                 if (!def.PoolEligible) continue;
-                foreach (var fx in def.Effects)
+                foreach (var rule in def.Rules)
                 {
-                    if (fx.Selector == null) continue;          // DefaultTargets handles it
-                    if (PlayerTargeted.Contains(fx.Trigger)) continue;
-                    if (AutoResolvable.Contains(fx.Selector)) continue;
-                    offenders.Add($"{def.Id}: {fx.Trigger} {fx.Action} -> '{fx.Selector}'");
+                    TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                    if (target == null) continue;
+                    Trigger trigger = RuleSemantics.TriggerOf(rule);
+                    if (PlayerTargeted.Contains(trigger)) continue;
+                    if (!Targeting.IsPlayerChosen(target)) continue;
+                    offenders.Add($"{def.Id}: {trigger} {rule.Action.GetType().Name} -> '{target.Selector}'");
                 }
             }
 
@@ -117,16 +83,18 @@ namespace Emberfall.Core.Tests.CardValidation
         // A throwaway fixture, not a live card — these tests exercise the RULE, not any specific
         // row, so they stay valid no matter how the live set changes.
         private static CardDefinition FiredAnySelectorCard(Trigger trigger, bool gated) => new CardDefinition(
-            id: "test_fired_any_selector", name: "Test", type: CardType.MINION, cost: 1,
-            attack: 1, health: 1, durability: null,
+            id: "test_fired_any_selector", name: "Test",
+            type: trigger == Trigger.ON_CAST ? CardType.SPELL : CardType.MINION, cost: 1,
+            attack: trigger == Trigger.ON_CAST ? null : (int?)1,
+            health: trigger == Trigger.ON_CAST ? null : (int?)1, durability: null,
             @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
             keywords: System.Array.Empty<Keyword>(),
-            effects: new[]
+            rules: new[]
             {
-                new EffectDef(trigger, Action.BUFF, amount: 1, amount2: 1,
-                    tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ANY_FRIENDLY_MINION"),
+                TestRules.Rule("rule_1", trigger,
+                    new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION"))),
             },
-            cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+            flavorText: "", artId: "art/x", setId: SetId.CORE,
             collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
 
         private static ValidationReport Validate(CardDefinition def)

@@ -142,7 +142,7 @@ namespace Emberfall.Editor
         /// <summary>
         /// The twelve EMBERWARD/TIDECALLER cards imported 2026-07-26
         /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
-        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFESTEAL on Emberdrinker —
+        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFEDRAIN on Emberdrinker —
         /// so their pill has never rendered, and this sheet is where that shows up or doesn't.
         /// The weapon, Deepfrost Spear, is the highest-risk face in the batch: the engine supports
         /// weapons fully and Unity has never drawn one.
@@ -183,8 +183,8 @@ namespace Emberfall.Editor
             var byLength = new List<CardDefinition>(all);
             byLength.Sort((a, b) =>
             {
-                int la = a.Name.Length + a.CardText.Length;
-                int lb = b.Name.Length + b.CardText.Length;
+                int la = a.Name.Length + CardTextGenerator.Generate(a).Length;
+                int lb = b.Name.Length + CardTextGenerator.Generate(b).Length;
                 return la == lb ? string.CompareOrdinal(a.Id, b.Id) : lb.CompareTo(la);
             });
             foreach (CardDefinition d in byLength) Take(d);

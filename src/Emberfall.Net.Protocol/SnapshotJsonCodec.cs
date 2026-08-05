@@ -45,6 +45,11 @@ namespace Emberfall.Net.Protocol
             w.Name("pendingChoice");
             if (s.PendingChoice is null) w.Null();
             else WritePendingChoice(w, s.PendingChoice);
+            w.Name("ongoingEffects");
+            w.BeginArray();
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+                WriteOngoingEffect(w, effect);
+            w.EndArray();
             w.EndObject();
         }
 
@@ -58,15 +63,7 @@ namespace Emberfall.Net.Protocol
             w.Name("board"); WriteZone(w, p.Board);
             w.Name("weapon");
             if (p.Weapon is null) w.Null();
-            else
-            {
-                w.BeginObject();
-                w.Name("id"); w.Str(WirePrimitives.InstanceToWire(p.Weapon.Id));
-                w.Name("definitionId"); w.Str(p.Weapon.DefinitionId);
-                w.Name("attack"); w.I32(p.Weapon.Attack);
-                w.Name("durability"); w.I32(p.Weapon.Durability);
-                w.EndObject();
-            }
+            else WriteCard(w, p.Weapon);
             w.Name("graveyard"); WriteZone(w, p.Graveyard);
             w.Name("mana");
             w.BeginObject();
@@ -78,7 +75,7 @@ namespace Emberfall.Net.Protocol
             w.EndObject();
             w.Name("heroPowerUsedThisTurn"); w.Bool(p.HeroPowerUsedThisTurn);
             w.Name("heroAttacksUsedThisTurn"); w.I32(p.HeroAttacksUsedThisTurn);
-            w.Name("nextTurnOverloadLock"); w.I32(p.NextTurnOverloadLock);
+            w.Name("nextTurnBackdraftLock"); w.I32(p.NextTurnBackdraftLock);
             w.EndObject();
         }
 
@@ -92,7 +89,7 @@ namespace Emberfall.Net.Protocol
             w.Name("maxHealth"); w.I32(h.MaxHealth);
             w.Name("armor"); w.I32(h.Armor);
             w.Name("heroPowerId"); w.Str(h.HeroPowerId);
-            w.Name("isFrozen"); w.Bool(h.IsFrozen);
+            w.Name("isFrosted"); w.Bool(h.IsFrosted);
             w.EndObject();
         }
 
@@ -137,15 +134,17 @@ namespace Emberfall.Net.Protocol
                 w.Name("grantedKeyword");
                 if (e.GrantedKeyword.HasValue) w.Str(e.GrantedKeyword.Value.ToString());
                 else w.Null();
+                w.Name("isAura"); w.Bool(e.IsAura);
                 w.EndObject();
             }
             w.EndArray();
 
             w.Name("hasAegisShield"); w.Bool(c.HasAegisShield);
-            w.Name("isFrozen"); w.Bool(c.IsFrozen);
+            w.Name("isFrosted"); w.Bool(c.IsFrosted);
+            w.Name("isSilenced"); w.Bool(c.IsSilenced);
             w.Name("summonedThisTurn"); w.Bool(c.SummonedThisTurn);
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
-            w.Name("hasUsedReborn"); w.Bool(c.HasUsedReborn);
+            w.Name("hasUsedRekindle"); w.Bool(c.HasUsedRekindle);
             w.Name("position"); w.I32(c.Position);
             w.EndObject();
         }
@@ -156,13 +155,29 @@ namespace Emberfall.Net.Protocol
             w.Name("chooser"); w.Str(pc.Chooser.Value);
             w.Name("kind"); w.Str(pc.Kind.ToString());
             w.Name("source"); w.Str(WirePrimitives.InstanceToWire(pc.Source));
-            // Order-PRESERVING only — the list order is the deterministic Discover roll order
+            // Order-PRESERVING only — the list order is the deterministic Unearth roll order
             // (OBL-3); the codec never re-sorts it.
             w.Name("options");
             w.BeginArray();
             foreach (var o in pc.Options) w.Str(o);
             w.EndArray();
             w.Name("choiceSequence"); w.U64(pc.ChoiceSequence);
+            w.EndObject();
+        }
+
+        private static void WriteOngoingEffect(JsonWriter w, OngoingEffectInstance effect)
+        {
+            w.BeginObject();
+            w.Name("id"); w.Str(WirePrimitives.InstanceToWire(effect.Id));
+            w.Name("controller"); w.Str(effect.Controller.Value);
+            w.Name("sourceDefinitionId"); w.Str(effect.SourceDefinitionId);
+            // Authority snapshots need this key to resume deterministic execution. Projected
+            // snapshots carry the empty sentinel because GameStateProjector never copies it.
+            w.Name("ruleId"); w.Str(effect.RuleId);
+            w.Name("lifetime"); w.Str(effect.Lifetime.ToString());
+            w.Name("remainingUses");
+            if (effect.RemainingUses.HasValue) w.I32(effect.RemainingUses.Value);
+            else w.Null();
             w.EndObject();
         }
 
@@ -199,6 +214,16 @@ namespace Emberfall.Net.Protocol
             if (!obj.TryGet("pendingChoice", out var pcVal)) { detail = "missing pendingChoice"; return false; }
             if (!pcVal.IsNull && !TryReadPendingChoice(pcVal, out pendingChoice, ref detail)) return false;
 
+            if (!obj.TryGet("ongoingEffects", out var ongoingVal) || ongoingVal.Kind != JKind.Array)
+            { detail = "missing/bad ongoingEffects"; return false; }
+            var ongoingEffects = new List<OngoingEffectInstance>();
+            foreach (JVal item in ongoingVal.Items!)
+            {
+                if (!TryReadOngoingEffect(item, out OngoingEffectInstance effect, ref detail))
+                    return false;
+                ongoingEffects.Add(effect);
+            }
+
             var rng = new DeterministicRandom(0UL);
             rng.SetRawState(rngRaw);
 
@@ -218,6 +243,7 @@ namespace Emberfall.Net.Protocol
                 Mulligan1Done = mull1,
                 PendingChoice = pendingChoice,
             };
+            state.OngoingEffects.AddRange(ongoingEffects);
             return true;
         }
 
@@ -238,12 +264,13 @@ namespace Emberfall.Net.Protocol
             if (!obj.TryGet("weapon", out var wVal)) { detail = "missing weapon"; return false; }
             if (!wVal.IsNull)
             {
-                if (wVal.Kind != JKind.Object) { detail = "weapon is not an object"; return false; }
-                if (!TryInstanceField(wVal, "id", out var wid, ref detail)) return false;
-                if (!TryStrField(wVal, "definitionId", out string wdef, ref detail)) return false;
-                if (!TryI32Field(wVal, "attack", out int watk, ref detail)) return false;
-                if (!TryI32Field(wVal, "durability", out int wdur, ref detail)) return false;
-                player.Weapon = new WeaponInstance { Id = wid, DefinitionId = wdef, Attack = watk, Durability = wdur };
+                if (!TryReadCard(wVal, out var weapon, ref detail)) return false;
+                if (weapon.Zone != Zone.Weapon)
+                {
+                    detail = "weapon card must be in zone Weapon";
+                    return false;
+                }
+                player.Weapon = weapon;
             }
 
             if (!TryReadZone(obj, "graveyard", player.Graveyard, ref detail)) return false;
@@ -258,10 +285,10 @@ namespace Emberfall.Net.Protocol
 
             if (!TryBoolField(obj, "heroPowerUsedThisTurn", out bool hpUsed, ref detail)) return false;
             if (!TryI32Field(obj, "heroAttacksUsedThisTurn", out int heroAtks, ref detail)) return false;
-            if (!TryI32Field(obj, "nextTurnOverloadLock", out int overload, ref detail)) return false;
+            if (!TryI32Field(obj, "nextTurnBackdraftLock", out int backdraft, ref detail)) return false;
             player.HeroPowerUsedThisTurn = hpUsed;
             player.HeroAttacksUsedThisTurn = heroAtks;
-            player.NextTurnOverloadLock = overload;
+            player.NextTurnBackdraftLock = backdraft;
             return true;
         }
 
@@ -276,14 +303,14 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "maxHealth", out int maxHp, ref detail)) return false;
             if (!TryI32Field(obj, "armor", out int armor, ref detail)) return false;
             if (!TryStrField(obj, "heroPowerId", out string hpId, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrozen", out bool frozen, ref detail)) return false;
+            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
 
             hero = new HeroInstance(id, new PlayerId(controller), cls, maxHp)
             {
                 CurrentHealth = curHp,
                 Armor = armor,
                 HeroPowerId = hpId,
-                IsFrozen = frozen,
+                IsFrosted = frosted,
             };
             return true;
         }
@@ -354,20 +381,30 @@ namespace Emberfall.Net.Protocol
                     { detail = "bad grantedKeyword"; return false; }
                     granted = gk;
                 }
-                card.Enchantments.Add(new Enchantment { Source = src, AttackDelta = ad, HealthDelta = hd, GrantedKeyword = granted });
+                if (!TryBoolField(item, "isAura", out bool isAura, ref detail)) return false;
+                card.Enchantments.Add(new Enchantment
+                {
+                    Source = src,
+                    AttackDelta = ad,
+                    HealthDelta = hd,
+                    GrantedKeyword = granted,
+                    IsAura = isAura
+                });
             }
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrozen", out bool frozen, ref detail)) return false;
+            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
+            if (!TryBoolField(obj, "isSilenced", out bool silenced, ref detail)) return false;
             if (!TryBoolField(obj, "summonedThisTurn", out bool summoned, ref detail)) return false;
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
-            if (!TryBoolField(obj, "hasUsedReborn", out bool reborn, ref detail)) return false;
+            if (!TryBoolField(obj, "hasUsedRekindle", out bool rekindle, ref detail)) return false;
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
             card.HasAegisShield = aegis;
-            card.IsFrozen = frozen;
+            card.IsFrosted = frosted;
+            card.IsSilenced = silenced;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;
-            card.HasUsedReborn = reborn;
+            card.HasUsedRekindle = rekindle;
             card.Position = position;
             return true;
         }
@@ -396,6 +433,43 @@ namespace Emberfall.Net.Protocol
                 result.Options.Add(o);
             }
             pc = result;
+            return true;
+        }
+
+        private static bool TryReadOngoingEffect(JVal obj, out OngoingEffectInstance effect,
+            ref string detail)
+        {
+            effect = null!;
+            if (obj.Kind != JKind.Object)
+            { detail = "ongoing effect is not an object"; return false; }
+            if (!TryInstanceField(obj, "id", out InstanceId id, ref detail)) return false;
+            if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
+            if (!TryStrField(obj, "sourceDefinitionId", out string definitionId, ref detail)) return false;
+            if (!TryStrField(obj, "ruleId", out string ruleId, ref detail)) return false;
+            if (!TryEnumField(obj, "lifetime", out OngoingEffectLifetime lifetime, ref detail)) return false;
+            if (!obj.TryGet("remainingUses", out JVal remainingVal))
+            { detail = "missing/bad 'remainingUses'"; return false; }
+            int? remainingUses = null;
+            if (!remainingVal.IsNull)
+            {
+                if (!remainingVal.TryI32(out int uses))
+                { detail = "bad remainingUses"; return false; }
+                remainingUses = uses;
+            }
+
+            if (string.IsNullOrWhiteSpace(definitionId))
+            { detail = "empty sourceDefinitionId"; return false; }
+            if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
+            { detail = "permanent ongoing effect cannot carry remainingUses"; return false; }
+            if (lifetime != OngoingEffectLifetime.PERMANENT &&
+                (!remainingUses.HasValue || remainingUses.Value <= 0))
+            { detail = "bounded ongoing effect requires positive remainingUses"; return false; }
+            if (lifetime == OngoingEffectLifetime.ONE_SHOT && remainingUses != 1)
+            { detail = "one-shot ongoing effect must have one remaining use"; return false; }
+
+            effect = new OngoingEffectInstance(id, new PlayerId(controller), definitionId,
+                lifetime, remainingUses)
+            { RuleId = ruleId };
             return true;
         }
 

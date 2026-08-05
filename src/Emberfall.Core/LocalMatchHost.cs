@@ -48,7 +48,7 @@ namespace Emberfall.Core
         /// <see cref="OnEvents"/> are AUTHORITY-side surfaces (server, golden-replay harness):
         /// since WS A4 every in-process consumer binds to <c>IMatchSession</c> via
         /// <c>LocalMatch.Start</c> and receives only projected state/events (the a3 §9.2
-        /// honest-AI gap is discharged — §7.1 test 6 lives in Session/LocalMatchSessionTests).
+        /// honest-AI gap is closed — §7.1 test 6 lives in Session/LocalMatchSessionTests).
         /// </summary>
         public GameState Snapshot(PlayerId viewer)
             => Projection.GameStateProjector.Project(State, viewer);

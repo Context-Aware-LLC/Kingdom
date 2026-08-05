@@ -41,7 +41,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void All_M1_Cards_Pass_Core_Validation()
         {
             // ANY_MINION / ANY_FRIENDLY_MINION were canonized into the Selector vocabulary by the
-            // M2 Phase 0 grammar freeze (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
+            // M2 Phase 0 grammar frost (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
             // one known-bad row — now validates clean along with everything else.
             var (cards, db) = LoadM1Set();
             var validator = new CardValidator();
@@ -57,46 +57,73 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Unimplemented_Selector_Requires_The_Primitive_Gate()
+        public void CardJson_Preserves_The_Complete_Target_Object()
         {
-            // ADJACENT is schema-valid but the interpreter cannot resolve it (and now throws instead
-            // of silently mistargeting) — so authoring it without requiresEngineeringPrimitive is an error.
-            EffectDef Adjacent() => new EffectDef(Trigger.ON_PLAY, Action.DEAL_DAMAGE, amount: 1,
-                amount2: null, tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ADJACENT");
+            const string json = @"{
+              ""id"":""target_shape"", ""name"":""Target Shape"", ""type"":""SPELL"", ""cost"":1,
+              ""class"":""NIGHTVEIL"", ""rarity"":""COMMON"", ""keywords"":[], ""setId"":""CORE"",
+              ""rules"":[{
+                ""id"":""destroy_two"",
+                ""activation"":{""type"":""TRIGGERED"",""trigger"":""ON_CAST""},
+                ""condition"":{""type"":""ALWAYS""},
+                ""lifetime"":{""type"":""ONE_SHOT""},
+                ""action"":{""type"":""DESTROY"",""target"":{
+                  ""selector"":""ANY_MINION"", ""chosenBy"":""PLAYER"", ""count"":2,
+                  ""binding"":""victims"", ""distinctFrom"":""first"",
+                  ""filter"":{""damaged"":true,""tribe"":""CONSTRUCT""}
+                }}
+              }]
+            }";
+
+            TargetSpec target = ((DestroyAction)CardJson.Deserialize(json).Rules[0].Action).Target;
+
+            Assert.That(target.Selector, Is.EqualTo("ANY_MINION"));
+            Assert.That(target.ChosenBy, Is.EqualTo(TargetChosenBy.PLAYER));
+            Assert.That(target.Count, Is.EqualTo(2));
+            Assert.That(target.Binding, Is.EqualTo("victims"));
+            Assert.That(target.DistinctFrom, Is.EqualTo("first"));
+            Assert.That(target.Filter!.Damaged, Is.True);
+            Assert.That(target.Filter.Tribe, Is.EqualTo(Tribe.CONSTRUCT));
+        }
+
+        [Test]
+        public void Adjacent_Selector_Is_Implemented_Without_A_Primitive_Gate()
+        {
+            RuleDefinition Adjacent() => Rule(Trigger.ON_PLAY,
+                new DamageAction(1, new TargetSpec("ADJACENT")));
             CardDefinition Card(bool gated) => new CardDefinition(
                 id: "test_adjacent", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { Adjacent() },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { Adjacent() },
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
 
             var validator = new CardValidator();
             var ungated = validator.Validate(Card(gated: false), new JsonCardDatabaseTestDouble(new[] { Card(false) }));
-            Assert.That(ungated.Ok, Is.False);
-            Assert.That(ungated.Issues.Any(i => i.Code == "C14-SELECTOR-UNIMPLEMENTED"));
+            Assert.That(ungated.Ok, Is.True);
 
             var gated = validator.Validate(Card(gated: true), new JsonCardDatabaseTestDouble(new[] { Card(true) }));
-            Assert.That(gated.Ok, Is.True, "requiresEngineeringPrimitive is the documented gate for unimplemented grammar.");
+            Assert.That(gated.Ok, Is.True);
         }
 
         [Test]
-        public void Empty_Without_Permanent_Is_A_Warning_Not_An_Error()
+        public void GainMana_Rejects_An_Unknown_Typed_Kind()
         {
-            var effect = new EffectDef(Trigger.ON_CAST, Action.GAIN_MANA, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "FRIENDLY_HERO",
-                permanent: false, empty: true);
+            var rule = new RuleDefinition(new RuleId("gain_mana"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new GainManaAction(1, (ManaGainKind)999));
             var def = new CardDefinition(
                 id: "test_empty_mana", name: "Test", type: CardType.SPELL, cost: 1,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
-            Assert.That(report.Ok, Is.True);
-            Assert.That(report.Issues.Any(i => i.Code == "C15-EMPTY-WITHOUT-PERMANENT" && i.Severity == Severity.Warning));
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C15-MANA-KIND" && i.Severity == Severity.Error));
         }
 
         [Test]
@@ -119,8 +146,8 @@ namespace Emberfall.Core.Tests.CardValidation
                 id: "test_bad_minion", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: System.Array.Empty<EffectDef>(),
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -131,14 +158,13 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Summon_Without_TokenId_Is_An_Error()
         {
-            var effect = new EffectDef(Trigger.ON_DEATH, Action.SUMMON, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            RuleDefinition rule = Rule(Trigger.ON_DEATH, new SummonAction("", 1));
             var def = new CardDefinition(
                 id: "test_bad_summon", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -153,12 +179,53 @@ namespace Emberfall.Core.Tests.CardValidation
                 id: "test_primitive", name: "Test", type: CardType.SPELL, cost: 1,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: System.Array.Empty<EffectDef>(),
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: true);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
             Assert.That(report.RequiresEngineeringPrimitive, Is.True);
+        }
+
+        [Test]
+        public void Action_Target_Capability_Rejects_A_Selector_Whose_Objects_The_Handler_Cannot_Affect()
+        {
+            RuleDefinition rule = Rule(Trigger.ON_CAST,
+                new ModifyStatsAction(1, 0, new TargetSpec("FRIENDLY_WEAPON")));
+            CardDefinition def = WithRule(CardType.SPELL, rule);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i =>
+                i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE" && i.Severity == Severity.Error), Is.True);
+        }
+
+        [TestCase(CardType.WEAPON, Trigger.ON_PLAY)]
+        [TestCase(CardType.SPELL, Trigger.ON_CAST)]
+        public void Self_Capability_Uses_The_Source_Lifecycle_Instead_Of_An_AnyKind_Wildcard(
+            CardType type, Trigger trigger)
+        {
+            RuleDefinition rule = Rule(trigger,
+                new ModifyStatsAction(1, 0, new TargetSpec("SELF")));
+            CardDefinition def = WithRule(type, rule);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE"), Is.True,
+                $"BUFF cannot affect the actual {type} SELF carrier at {trigger}.");
+        }
+
+        [Test]
+        public void TriggerSource_Capability_Fails_Closed_When_The_Event_Source_Kind_Is_Incompatible()
+        {
+            RuleDefinition rule = Rule(Trigger.ON_SPELL_CAST,
+                new ModifyStatsAction(1, 0, new TargetSpec("TRIGGER_SOURCE")));
+            CardDefinition def = WithRule(CardType.MINION, rule);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14F-ACTION-TARGET-INCOMPATIBLE"), Is.True,
+                "ON_SPELL_CAST's trigger source is a graveyard card, not a BUFF-capable minion.");
         }
 
         // ── C21 — trigger liveness ───────────────────────────────────────────────────
@@ -168,34 +235,137 @@ namespace Emberfall.Core.Tests.CardValidation
         private static CardValidator Validator() => new CardValidator();
         private static JsonCardDatabaseTestDouble Db(CardDefinition d) => new JsonCardDatabaseTestDouble(new[] { d });
 
-        private static CardDefinition WithEffect(CardType type, EffectDef effect)
+        private static CardDefinition WithRule(CardType type, RuleDefinition rule)
             => new CardDefinition(
                 id: "test_c21", name: "Test", type: type, cost: 1,
                 attack: type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
                 health: type == CardType.MINION ? 1 : (int?)null,
                 durability: type == CardType.WEAPON ? 1 : (int?)null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
-                cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        private static EffectDef TurnStart(TurnOwner? owner)
-            => new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
-                condition: new EffectConditionDef(ConditionType.TURN_OWNER, owner));
+        private static RuleDefinition Rule(Trigger trigger, RuleAction action,
+            RuleCondition? condition = null)
+            => new RuleDefinition(new RuleId("rule_1"), new TriggeredActivation(trigger),
+                condition ?? AlwaysCondition.Instance,
+                trigger == Trigger.ON_PLAY || trigger == Trigger.ON_CAST
+                    ? (RuleLifetime)OneShotLifetime.Instance
+                    : SourceBoundLifetime.Instance,
+                action);
+
+        private static RuleDefinition TurnStart(TurnOwner owner)
+            => Rule(Trigger.ON_TURN_START, new DrawAction(1), new TurnOwnerCondition(owner));
+
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void Action_Marker_Keywords_Cannot_Be_Authored_As_Carrier_Behavior(Keyword marker)
+        {
+            var def = new CardDefinition(
+                id: "marker_carrier", name: "Marker Carrier", type: CardType.MINION, cost: 1,
+                attack: 1, health: 1, durability: null,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: new[] { marker }, rules: System.Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "art/marker", setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C25-ACTION-MARKER-KEYWORD" &&
+                i.Field == "keywords"), Is.True);
+        }
+
+        [TestCase(Keyword.BACKDRAFT)]
+        [TestCase(Keyword.REINFORCE)]
+        [TestCase(Keyword.SILENCE)]
+        public void Action_Marker_Keywords_Cannot_Be_Granted(Keyword marker)
+        {
+            CardDefinition def = WithRule(CardType.MINION,
+                Rule(Trigger.ON_PLAY,
+                    new GrantKeywordAction(marker, new TargetSpec("SELF"))));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C25-ACTION-MARKER-GRANT" &&
+                i.Field == "rules[0].action.keyword"), Is.True);
+        }
+
+        [TestCase(-1)]
+        [TestCase(0)]
+        public void Unearth_Requires_A_Positive_Offer_Count(int count)
+        {
+            CardDefinition def = WithRule(CardType.SPELL,
+                Rule(Trigger.ON_CAST, new UnearthAction(count)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-COUNT" &&
+                i.Field == "rules[0].action.count"), Is.True);
+        }
+
+        [TestCase(CardType.MINION, Trigger.ON_PLAY)]
+        [TestCase(CardType.WEAPON, Trigger.ON_PLAY)]
+        [TestCase(CardType.SPELL, Trigger.ON_CAST)]
+        [TestCase(CardType.HERO_POWER, Trigger.ON_CAST)]
+        public void Unearth_Is_Valid_On_Player_Initiated_Source_Paths(CardType type, Trigger trigger)
+        {
+            CardDefinition def = WithRule(type, Rule(trigger, new UnearthAction(3)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                string.Join("; ", report.Issues.Select(i => $"{i.Code}: {i.Message}")));
+        }
+
+        [TestCase(Trigger.ON_DEATH)]
+        [TestCase(Trigger.ON_DAMAGED)]
+        [TestCase(Trigger.ON_TURN_START)]
+        [TestCase(Trigger.ON_TURN_END)]
+        [TestCase(Trigger.ON_FRIENDLY_SUMMON)]
+        [TestCase(Trigger.ON_SPELL_CAST)]
+        [TestCase(Trigger.ON_HEAL)]
+        public void Unearth_Rejects_Observer_Paths_That_Cannot_Pause_For_Input(Trigger trigger)
+        {
+            RuleCondition condition = trigger == Trigger.ON_TURN_START
+                ? new TurnOwnerCondition(TurnOwner.ANY)
+                : AlwaysCondition.Instance;
+            CardDefinition def = WithRule(CardType.MINION,
+                Rule(trigger, new UnearthAction(3), condition));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-TRIGGER" &&
+                i.Field == "rules[0].action"), Is.True);
+        }
 
         [Test]
-        public void Dead_Trigger_Is_An_Error()
+        public void Unearth_Rejects_The_Live_Weapon_Attack_Observer_Path()
         {
-            // AURA is declared in the Trigger enum but has no raise site — and cannot get one until a
-            // derived-stat recompute pass exists (EF-017a/b). This probe has migrated twice as triggers
-            // went live under it: ON_TURN_START (EF-011), then ON_HEAL (EF-015). AURA is the last one
-            // left, so when EF-017b lands this test needs a different subject or a different shape.
-            var effect = new EffectDef(Trigger.AURA, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
-            var report = Validator().Validate(WithEffect(CardType.MINION, effect), Db(WithEffect(CardType.MINION, effect)));
+            CardDefinition def = WithRule(CardType.WEAPON,
+                Rule(Trigger.ON_ATTACK, new UnearthAction(3)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.False,
+                "the source/trigger pair itself is live");
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-TRIGGER"), Is.True,
+                "the interactive action is what makes this otherwise-live path unreachable");
+        }
+
+        [Test]
+        public void Unsupported_Aura_Shape_Is_An_Error()
+        {
+            var rule = new RuleDefinition(new RuleId("rule_1"), AuraActivation.Instance,
+                AlwaysCondition.Instance, SourceBoundLifetime.Instance, new DrawAction(1));
+            var report = Validator().Validate(WithRule(CardType.MINION, rule), Db(WithRule(CardType.MINION, rule)));
             Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"));
+            Assert.That(report.Issues.Any(i => i.Code == "C21-AURA-UNSUPPORTED"));
         }
 
         [Test]
@@ -204,10 +374,9 @@ namespace Emberfall.Core.Tests.CardValidation
             // EF-015 flipped ON_HEAL from Dead to MinionOnly. DamagePipeline.ApplyHeal raises it on the
             // character whose health was restored, and only a minion can be that character: a SPELL is
             // not a permanent, a WEAPON has no health. So the type gate here is permanent, not staging.
-            EffectDef Heal() => new EffectDef(Trigger.ON_HEAL, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            RuleDefinition Heal() => Rule(Trigger.ON_HEAL, new DrawAction(1));
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Heal()), Db(WithEffect(CardType.MINION, Heal())));
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Heal()), Db(WithRule(CardType.MINION, Heal())));
             Assert.That(onMinion.Ok, Is.True,
                 "a minion 'whenever this is healed' effect has a runtime raise site (DamagePipeline.ApplyHeal).");
             Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-DEAD"), Is.False,
@@ -215,7 +384,7 @@ namespace Emberfall.Core.Tests.CardValidation
 
             foreach (var type in new[] { CardType.SPELL, CardType.WEAPON })
             {
-                var report = Validator().Validate(WithEffect(type, Heal()), Db(WithEffect(type, Heal())));
+                var report = Validator().Validate(WithRule(type, Heal()), Db(WithRule(type, Heal())));
                 Assert.That(report.Ok, Is.False, $"ON_HEAL on a {type} is inert — nothing there can be healed.");
                 Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"), Is.True,
                     $"ON_HEAL on a {type} must be rejected as minion-only.");
@@ -225,14 +394,13 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnAttack_Is_Dead_On_A_Minion_But_Live_On_A_Weapon()
         {
-            EffectDef Attack() => new EffectDef(Trigger.ON_ATTACK, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            RuleDefinition Attack() => Rule(Trigger.ON_ATTACK, new DrawAction(1));
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Attack()), Db(WithEffect(CardType.MINION, Attack())));
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Attack()), Db(WithRule(CardType.MINION, Attack())));
             Assert.That(onMinion.Ok, Is.False);
             Assert.That(onMinion.Issues.Any(i => i.Code == "C21-TRIGGER-WEAPON-ONLY"));
 
-            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Attack()), Db(WithEffect(CardType.WEAPON, Attack())));
+            var onWeapon = Validator().Validate(WithRule(CardType.WEAPON, Attack()), Db(WithRule(CardType.WEAPON, Attack())));
             Assert.That(onWeapon.Ok, Is.True, "ON_ATTACK is raised for weapons — a weapon 'whenever this attacks' effect is legal.");
         }
 
@@ -241,7 +409,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase(TurnOwner.ANY)]
         public void OnTurnStart_Is_Live_On_A_Minion_With_Explicit_Turn_Ownership(TurnOwner owner)
         {
-            var def = WithEffect(CardType.MINION, TurnStart(owner));
+            var def = WithRule(CardType.MINION, TurnStart(owner));
 
             var report = Validator().Validate(def, Db(def));
 
@@ -252,9 +420,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnTurnStart_Requires_A_TurnOwner_Condition()
         {
-            var effect = new EffectDef(Trigger.ON_TURN_START, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_TURN_START, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -263,20 +430,20 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void OnTurnStart_Requires_A_TurnOwner_Value()
+        public void CardJson_Requires_A_TurnOwner_Value()
         {
-            var def = WithEffect(CardType.MINION, TurnStart(owner: null));
+            const string json = "{\"id\":\"missing_turn_owner\",\"type\":\"MINION\",\"rules\":[{" +
+                "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_TURN_START\"}," +
+                "\"condition\":{\"type\":\"TURN_OWNER\"},\"lifetime\":{\"type\":\"SOURCE_BOUND\"}," +
+                "\"action\":{\"type\":\"DRAW\",\"count\":1}}]}";
 
-            var report = Validator().Validate(def, Db(def));
-
-            Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-REQUIRED"));
+            Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
         }
 
         [Test]
         public void OnTurnStart_Rejects_An_Invalid_TurnOwner_Value()
         {
-            var def = WithEffect(CardType.MINION, TurnStart((TurnOwner)999));
+            var def = WithRule(CardType.MINION, TurnStart((TurnOwner)999));
 
             var report = Validator().Validate(def, Db(def));
 
@@ -284,26 +451,34 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-INVALID"));
         }
 
-        [TestCase(CardType.SPELL)]
-        [TestCase(CardType.WEAPON)]
         [TestCase(CardType.HERO_POWER)]
-        public void OnTurnStart_Is_Rejected_On_Unsupported_Source_Types(CardType type)
+        public void OnTurnStart_Is_Rejected_On_Unsupported_NonSpell_Source_Types(CardType type)
         {
-            var def = WithEffect(type, TurnStart(TurnOwner.ANY));
+            var def = WithRule(type, TurnStart(TurnOwner.ANY));
 
             var report = Validator().Validate(def, Db(def));
 
             Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-MINION-ONLY"));
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-SOURCE-UNSUPPORTED"));
+        }
+
+        [Test]
+        public void OnTurnStart_Is_Live_On_An_Equipped_Weapon()
+        {
+            var def = WithRule(CardType.WEAPON, TurnStart(TurnOwner.ANY));
+
+            var report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                "the shared source policy admits the equipped-weapon observer path");
         }
 
         [Test]
         public void TurnOwner_Condition_Is_Rejected_On_Other_Triggers()
         {
-            var effect = new EffectDef(Trigger.ON_PLAY, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
-                condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER));
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_PLAY, new DrawAction(1),
+                new TurnOwnerCondition(TurnOwner.CONTROLLER));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -316,23 +491,87 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             const string json = "{\"id\":\"turn_probe\",\"name\":\"Turn Probe\",\"type\":\"MINION\",\"cost\":1,"
                 + "\"attack\":1,\"health\":1,\"class\":\"NEUTRAL\",\"rarity\":\"COMMON\",\"keywords\":[],"
-                + "\"setId\":\"CORE\",\"collectible\":false,\"artId\":\"art/turn_probe\",\"effects\":[{"
-                + "\"trigger\":\"ON_TURN_START\",\"condition\":{\"type\":\"TURN_OWNER\",\"value\":\"OPPONENT\"},"
-                + "\"action\":\"DRAW\",\"amount\":1}]}";
+                + "\"setId\":\"CORE\",\"collectible\":false,\"artId\":\"art/turn_probe\",\"rules\":[{"
+                + "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_TURN_START\"},"
+                + "\"condition\":{\"type\":\"TURN_OWNER\",\"owner\":\"OPPONENT\"},"
+                + "\"lifetime\":{\"type\":\"SOURCE_BOUND\"},\"action\":{\"type\":\"DRAW\",\"count\":1}}]}";
 
             var def = CardJson.Deserialize(json);
 
-            Assert.That(def.Effects[0].Condition, Is.Not.Null);
-            Assert.That(def.Effects[0].Condition!.Type, Is.EqualTo(ConditionType.TURN_OWNER));
-            Assert.That(def.Effects[0].Condition!.TurnOwner, Is.EqualTo(TurnOwner.OPPONENT));
+            Assert.That(def.Rules[0].Condition, Is.TypeOf<TurnOwnerCondition>());
+            Assert.That(((TurnOwnerCondition)def.Rules[0].Condition).Owner, Is.EqualTo(TurnOwner.OPPONENT));
+        }
+
+        [Test]
+        public void CardJson_Rejects_Unknown_Properties_At_Every_Object_Schema_Level()
+        {
+            AssertRejectsUnknownProperty(
+                "{\"id\":\"unknown_root\",\"type\":\"SPELL\",\"unexpected\":true}",
+                "card");
+            AssertRejectsUnknownProperty(NormalizedRuleJson(
+                "\"unexpected\":true,", "{\"type\":\"DRAW\",\"count\":1}"), "rule");
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DRAW\",\"count\":1,\"unexpected\":true}"), "rule.action DRAW");
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\",\"unexpected\":true}}"),
+                "target");
+            AssertRejectsUnknownProperty(NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\",\"filter\":{\"damaged\":true,\"unexpected\":true}}}"),
+                "target.filter");
+        }
+
+        [Test]
+        public void CardJson_Rejects_The_Removed_Presentation_Override_Field()
+        {
+            string json = NormalizedRuleJson("\"vfxEvent\":\"onDraw\",",
+                "{\"type\":\"DRAW\",\"count\":1}");
+
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
+
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property 'vfxEvent' in rule."));
+        }
+
+        [Test]
+        public void CardJson_Accepts_All_Known_Target_And_Filter_Properties()
+        {
+            string json = NormalizedRuleJson("",
+                "{\"type\":\"DAMAGE\",\"amount\":1,\"target\":{\"selector\":\"ANY_MINION\","
+                + "\"chosenBy\":\"RANDOM\",\"count\":-1,\"filter\":{\"damaged\":true,\"tribe\":\"CONSTRUCT\"}}}");
+
+            Assert.DoesNotThrow(() => CardJson.Deserialize(json));
+        }
+
+        [Test]
+        public void CardJson_Allows_Fixture_Comments_Only_At_The_Card_Root()
+        {
+            Assert.DoesNotThrow(() => CardJson.Deserialize(
+                "{\"_comment\":\"fixture note\",\"id\":\"commented_card\",\"type\":\"SPELL\"}"));
+
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(
+                NormalizedRuleJson("\"_comment\":\"not metadata here\",",
+                    "{\"type\":\"DRAW\",\"count\":1}")));
+
+            Assert.That(ex!.Message, Is.EqualTo("Unknown card JSON property '_comment' in rule."));
+        }
+
+        private static string NormalizedRuleJson(string rulePrefix, string action)
+            => "{\"id\":\"typed_json\",\"type\":\"SPELL\",\"rules\":[{" + rulePrefix
+                + "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_CAST\"},"
+                + "\"condition\":{\"type\":\"ALWAYS\"},\"lifetime\":{\"type\":\"ONE_SHOT\"},"
+                + "\"action\":" + action + "}]}";
+
+        private static void AssertRejectsUnknownProperty(string json, string schemaLevel)
+        {
+            var ex = Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
+
+            Assert.That(ex!.Message, Is.EqualTo($"Unknown card JSON property 'unexpected' in {schemaLevel}."));
         }
 
         [Test]
         public void OnTurnEnd_Is_Live_After_EF012()
         {
-            var effect = new EffectDef(Trigger.ON_TURN_END, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_TURN_END, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -343,9 +582,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnDamaged_Is_Live_After_EF013()
         {
-            var effect = new EffectDef(Trigger.ON_DAMAGED, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_DAMAGED, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -356,9 +594,8 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void OnSpellCast_Is_Live_After_EF016()
         {
-            var effect = new EffectDef(Trigger.ON_SPELL_CAST, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
-            var def = WithEffect(CardType.MINION, effect);
+            RuleDefinition rule = Rule(Trigger.ON_SPELL_CAST, new DrawAction(1));
+            var def = WithRule(CardType.MINION, rule);
 
             var report = Validator().Validate(def, Db(def));
 
@@ -367,36 +604,94 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
+        public void Future_Spell_Observers_Accept_Only_Explicit_Ongoing_Lifetimes()
         {
-            EffectDef Death() => new EffectDef(Trigger.ON_DEATH, Action.DRAW, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, vfxOverride: null);
+            RuleLifetime[] accepted =
+            {
+                OneShotLifetime.Instance,
+                new FiniteLifetime(2),
+                PermanentLifetime.Instance,
+            };
+            foreach (RuleLifetime lifetime in accepted)
+            {
+                var rule = new RuleDefinition(new RuleId("future"),
+                    new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                    lifetime, new DrawAction(1));
+                CardDefinition def = WithRule(CardType.SPELL, rule);
 
-            var onMinion = Validator().Validate(WithEffect(CardType.MINION, Death()), Db(WithEffect(CardType.MINION, Death())));
-            Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion deathrattle.");
+                Assert.That(Validator().Validate(def, Db(def)).Ok, Is.True,
+                    $"{lifetime.GetType().Name} should be live on a future-trigger spell rule.");
+            }
 
-            var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Death()), Db(WithEffect(CardType.WEAPON, Death())));
-            Assert.That(onWeapon.Ok, Is.True,
-                "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon deathrattle is legal — "
-                + "C21-WEAPON-DEATHRATTLE is retired and must not come back.");
-            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-DEATHRATTLE"), Is.False,
-                "the retired weapon-deathrattle gate must not fire.");
+            var sourceBound = new RuleDefinition(new RuleId("future"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                SourceBoundLifetime.Instance, new DrawAction(1));
+            CardDefinition invalid = WithRule(CardType.SPELL, sourceBound);
+            Assert.That(Validator().Validate(invalid, Db(invalid)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-ACTIVATION"), Is.True,
+                "A graveyard spell cannot remain a source-bound permanent.");
         }
 
         [Test]
-        public void Every_Trigger_Enum_Member_Is_Tabled()
+        public void Ongoing_Lifetimes_Fail_Closed_Outside_Future_Spell_Rules()
         {
-            // Fail-closed only works if the table is exhaustive; a new enum member with no row is a
-            // silent Dead. This asserts an author who adds a Trigger also files it in the C21 table.
+            var finiteMinion = new RuleDefinition(new RuleId("finite_minion"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                new FiniteLifetime(2), new DrawAction(1));
+            CardDefinition minion = WithRule(CardType.MINION, finiteMinion);
+            Assert.That(Validator().Validate(minion, Db(minion)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-UNSUPPORTED"), Is.True);
+
+            var permanentCast = new RuleDefinition(new RuleId("permanent_cast"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                PermanentLifetime.Instance, new DrawAction(1));
+            CardDefinition spell = WithRule(CardType.SPELL, permanentCast);
+            Assert.That(Validator().Validate(spell, Db(spell)).Issues.Any(i =>
+                i.Code == "C23-LIFETIME-ACTIVATION"), Is.True);
+
+            var zeroUses = new RuleDefinition(new RuleId("zero_uses"),
+                new TriggeredActivation(Trigger.ON_TURN_END), AlwaysCondition.Instance,
+                new FiniteLifetime(0), new DrawAction(1));
+            CardDefinition zero = WithRule(CardType.SPELL, zeroUses);
+            Assert.That(Validator().Validate(zero, Db(zero)).Issues.Any(i =>
+                i.Code == "C23-FINITE-USES"), Is.True);
+        }
+
+        [Test]
+        public void OnDeath_Is_Live_On_Both_A_Minion_And_A_Weapon_After_EF020()
+        {
+            RuleDefinition Death() => Rule(Trigger.ON_DEATH, new DrawAction(1));
+
+            var onMinion = Validator().Validate(WithRule(CardType.MINION, Death()), Db(WithRule(CardType.MINION, Death())));
+            Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion toll.");
+
+            var onWeapon = Validator().Validate(WithRule(CardType.WEAPON, Death()), Db(WithRule(CardType.WEAPON, Death())));
+            Assert.That(onWeapon.Ok, Is.True,
+                "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon toll is legal — "
+                + "C21-WEAPON-TOLL is retired and must not come back.");
+            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-TOLL"), Is.False,
+                "the retired weapon-toll gate must not fire.");
+        }
+
+        [Test]
+        public void Every_Trigger_Enum_Member_Has_An_Explicit_Liveness_Expectation()
+        {
+            // Fail-closed only works if every enum member has an explicit live/dead expectation.
             var live = new[] { Trigger.ON_PLAY, Trigger.ON_CAST, Trigger.ON_DEATH,
-                               Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
-                               Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
-                               Trigger.ON_HEAL };
-            var dead = new[] { Trigger.AURA };
+                                Trigger.ON_FRIENDLY_SUMMON, Trigger.ON_ATTACK, Trigger.ON_DAMAGED,
+                                Trigger.ON_TURN_START, Trigger.ON_TURN_END, Trigger.ON_SPELL_CAST,
+                                Trigger.ON_HEAL, Trigger.AURA };
+            var dead = System.Array.Empty<Trigger>();
+            foreach (Trigger trigger in live)
+                Assert.That(EffectSourceCapabilities.SupportsAny(trigger), Is.True,
+                    $"{trigger} is expected to have at least one source/raise path.");
+            foreach (Trigger trigger in dead)
+                Assert.That(EffectSourceCapabilities.SupportsAny(trigger), Is.False,
+                    $"{trigger} is expected to remain fail-closed.");
             var accounted = live.Concat(dead).ToHashSet();
             var missing = System.Enum.GetValues(typeof(Trigger)).Cast<Trigger>().Where(t => !accounted.Contains(t)).ToList();
             Assert.That(missing, Is.Empty,
-                "Trigger(s) not classified by the C21 test/table — add to TriggerLivenessTable and here: "
+                "Trigger(s) lack a C21 expectation — update EffectSourceCapabilities and this test: "
                 + string.Join(", ", missing));
         }
     }

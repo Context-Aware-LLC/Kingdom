@@ -85,7 +85,7 @@ namespace Emberfall.Net.Client.Tests
             var deadSignal = new TaskCompletionSource<ConnectionState>(TaskCreationOptions.RunContinuationsAsynchronously);
             c0.OnConnectionStateChanged += s => { if (s == ConnectionState.Dead) deadSignal.TrySetResult(s); };
 
-            // A submit in flight, then the socket vanishes: the runner would spin forever on a frozen
+            // A submit in flight, then the socket vanishes: the runner would spin forever on a stale
             // mirror (RC-F10) if nothing pushed a terminal signal in. The client provides it.
             Task<CommandResult> pending = c0.SubmitAsync(new MulliganIntent(c0.Player, Array.Empty<InstanceId>()));
             peer.Transport0.ServerClose();

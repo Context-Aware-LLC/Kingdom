@@ -37,7 +37,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             // Corrupt the first expected event's Kind so the stream diverges at sequence 0.
             var bad = new List<ExpectedEvent>(fx.ExpectedEvents!);
             var first = bad[0];
-            bad[0] = new ExpectedEvent(first.Seq, VfxEvent.onDeath, first.Src, first.Tgt, first.Amt, first.Flags);
+            bad[0] = new ExpectedEvent(first.Seq, GameEventKind.CardDestroyed, first.Src, first.Tgt, first.Amt, first.Flags);
             fx.ExpectedEvents = bad;
 
             var res = ReplayHarness.Run(fx);

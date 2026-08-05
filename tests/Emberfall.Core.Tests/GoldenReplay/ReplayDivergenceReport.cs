@@ -7,7 +7,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// <summary>
     /// Makes a desync debuggable (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §6). Points at the FIRST point of divergence — a bare
     /// "hash mismatch" is useless for fixing a desync. Both checks always run (§6.3) so a single CI
-    /// failure shows the complete picture rather than fixing one and rediscovering the other next push.
+    /// failure shows the complete picture rather than fixing one and exposing the other next push.
     /// </summary>
     public sealed class ReplayDivergenceReport
     {

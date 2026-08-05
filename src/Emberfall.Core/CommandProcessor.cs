@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core
@@ -8,10 +9,8 @@ namespace Emberfall.Core
     /// there is ZERO mutation and ZERO events. Same <c>(GameState, PlayerIntent)</c> ⇒ same mutation
     /// and same ordered event stream on any machine — the property the golden-replay test proves (R1).
     ///
-    /// M1-foundation subset: <see cref="MulliganIntent"/>, <see cref="EndTurnIntent"/>,
-    /// <see cref="ConcedeIntent"/>, <see cref="AutoConfirmIntent"/> — i.e. the match-start + turn-loop
-    /// spine (coin flip and the deal live in <see cref="MatchEngine"/>). Card-play / attack / hero-power
-    /// land with the effect interpreter (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B) and are rejected as NotImplemented here.
+    /// Owns the complete authoritative player-intent allowlist, including interactive Unearth
+    /// continuation. Coin flip and the opening deal live in <see cref="MatchEngine"/>.
     /// </summary>
     public sealed class CommandProcessor : ICommandProcessor, ICommandValidator
     {
@@ -32,6 +31,15 @@ namespace Emberfall.Core
                 return false;
             }
 
+            // An interactive choice is the only legal gameplay continuation until it is resolved.
+            // AutoConfirm remains available to the authoritative timer path.
+            if (state.PendingChoice != null &&
+                intent is not UnearthChoiceIntent && intent is not AutoConfirmIntent)
+            {
+                reason = RejectReason.ChoicePending;
+                return false;
+            }
+
             switch (intent)
             {
                 case MulliganIntent m:
@@ -48,18 +56,8 @@ namespace Emberfall.Core
                     return ValidateAttack(state, a, out reason);
                 case HeroPowerIntent hp:
                     return ValidateHeroPower(state, hp, out reason);
-                // ┌─ SECURITY TRIPWIRE — VULN-001 (LATENT). READ BEFORE DELETING THIS CASE. ─┐
-                // ChosenCardId is the ONLY client-authored string in the shipping intent set
-                // that becomes a card identity. This rejection is the sole reason VULN-001 is
-                // latent; implementing Discover arms it. An unvalidated id enters authoritative
-                // state, ships to BOTH seats, and throws in the OPPONENT's BoardController —
-                // freezing their client for the rest of the match while the server stays healthy.
-                // Binding rules (TryGet not Get; validate against the OFFERED set, not just the
-                // database) — dev-docs/quality/security.md#latent-vulnerabilities.
-                // └──────────────────────────────────────────────────────────────────────────┘
-                case DiscoverChoiceIntent _:
-                    reason = RejectReason.NotImplemented;   // Discover = later
-                    return false;
+                case UnearthChoiceIntent u:
+                    return ValidateUnearthChoice(state, u, out reason);
                 default:
                     reason = RejectReason.UnknownIntent;    // off-allowlist (dev-docs/contracts/gameplay-and-session.md:18)
                     return false;
@@ -97,9 +95,22 @@ namespace Emberfall.Core
             return true;
         }
 
-        private static bool ValidateAutoConfirm(GameState state, AutoConfirmIntent a, out RejectReason? reason)
+        private bool ValidateAutoConfirm(GameState state, AutoConfirmIntent a, out RejectReason? reason)
         {
             if (!KnownPlayer(state, a.Player, out reason)) return false;
+            if (state.PendingChoice != null)
+            {
+                PendingChoice pending = state.PendingChoice;
+                if (pending.Kind != PendingChoiceKind.Unearth)
+                { reason = RejectReason.NoPendingChoice; return false; }
+                if (pending.Chooser != a.Player)
+                { reason = RejectReason.NotChoiceOwner; return false; }
+                if (pending.Options.Count == 0 || !_db.TryGet(pending.Options[0], out _))
+                { reason = RejectReason.InvalidChoice; return false; }
+                if (state.PlayerOf(a.Player).Hand.Count >= MatchEngine.HandCap)
+                { reason = RejectReason.HandFull; return false; }
+                return true;
+            }
             int seat = state.SeatOf(a.Player);
             if (state.Phase == TurnPhase.Mulligan)
             {
@@ -109,6 +120,37 @@ namespace Emberfall.Core
             if (state.Phase == TurnPhase.Main && state.ActivePlayer == a.Player) return true;
             reason = RejectReason.WrongPhase;
             return false;
+        }
+
+        private bool ValidateUnearthChoice(GameState state, UnearthChoiceIntent choice,
+            out RejectReason? reason)
+        {
+            if (!KnownPlayer(state, choice.Player, out reason)) return false;
+            PendingChoice? pending = state.PendingChoice;
+            if (pending == null || pending.Kind != PendingChoiceKind.Unearth)
+            { reason = RejectReason.NoPendingChoice; return false; }
+            if (pending.Chooser != choice.Player)
+            { reason = RejectReason.NotChoiceOwner; return false; }
+            if (pending.ChoiceSequence != choice.ChoiceSequence)
+            { reason = RejectReason.StaleChoice; return false; }
+            if (state.PlayerOf(choice.Player).Hand.Count >= MatchEngine.HandCap)
+            { reason = RejectReason.HandFull; return false; }
+
+            bool offered = false;
+            for (int i = 0; i < pending.Options.Count; i++)
+            {
+                if (string.Equals(pending.Options[i], choice.ChosenCardId,
+                        System.StringComparison.Ordinal))
+                {
+                    offered = true;
+                    break;
+                }
+            }
+            if (!offered || !_db.TryGet(choice.ChosenCardId, out _))
+            { reason = RejectReason.InvalidChoice; return false; }
+
+            reason = null;
+            return true;
         }
 
         private bool ValidatePlayCard(GameState state, PlayCardIntent p, out RejectReason? reason)
@@ -128,62 +170,10 @@ namespace Emberfall.Core
             if (def.Type == CardType.MINION && ps.Board.Count >= MatchEngine.BoardCap)
             { reason = RejectReason.BoardFull; return false; }
 
-            // Explicit-choice (ANY_*) selectors require a player-chosen target — mirrors the
-            // ValidateHeroPower gate. Without it a targeted play silently fell through to the verb
-            // defaults (enemy face for damage, own face for heal): mana spent, wrong effect, no
-            // rejection the UI could surface. The interpreter now throws in that case, so this gate
-            // is also what keeps a target-less client submit from faulting the match.
-            if (p.Targets.Count == 0 && RequiresChosenTarget(def))
+            Trigger playTrigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            if (!Targeting.ValidatePlayerChoices(state, _db, p.Player, def, playTrigger, p.Targets,
+                    ps.Hand[handIdx].Id))
             { reason = RejectReason.IllegalTarget; return false; }
-
-            // Target legality for any targets the intent supplies (M1 targeting model: EffectInterpreter
-            // doc). Each must name a live character; an enemy STEALTH minion can't be singled out by a
-            // play; and each must satisfy the card's explicit-choice selector shape (a minion-only
-            // selector can't be aimed at a hero, a friendly-only selector at an enemy).
-            foreach (var tr in p.Targets)
-            {
-                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
-                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
-                { reason = RejectReason.IllegalTarget; return false; }
-                if (!TargetsSatisfySelectors(def, ch, seat))
-                { reason = RejectReason.IllegalTarget; return false; }
-            }
-            return true;
-        }
-
-        // ── Explicit-choice (ANY_*) selector legality ────────────────────────────
-
-        private static bool IsExplicitChoice(string? selector)
-            => selector != null && selector.StartsWith("ANY_");
-
-        /// <summary>True when any play-trigger effect declares an explicit-choice (ANY_*) selector.</summary>
-        private static bool RequiresChosenTarget(Cards.CardDefinition def)
-        {
-            foreach (var eff in def.Effects)
-                if ((eff.Trigger == Trigger.ON_PLAY || eff.Trigger == Trigger.ON_CAST) && IsExplicitChoice(eff.Selector))
-                    return true;
-            return false;
-        }
-
-        /// <summary>
-        /// A chosen target must fit the shape of every play-trigger ANY_* selector on the card (the M1
-        /// targeting model shares one chosen-target list across all of a card's effects).
-        /// </summary>
-        private static bool TargetsSatisfySelectors(Cards.CardDefinition def, CharacterRef ch, int casterSeat)
-        {
-            foreach (var eff in def.Effects)
-            {
-                if (eff.Trigger != Trigger.ON_PLAY && eff.Trigger != Trigger.ON_CAST) continue;
-                if (!IsExplicitChoice(eff.Selector)) continue;
-                switch (eff.Selector)
-                {
-                    case "ANY_FRIENDLY": if (ch.Seat != casterSeat) return false; break;
-                    case "ANY_ENEMY": if (ch.Seat == casterSeat) return false; break;
-                    case "ANY_MINION": if (!ch.IsMinion) return false; break;
-                    case "ANY_FRIENDLY_MINION": if (!ch.IsMinion || ch.Seat != casterSeat) return false; break;
-                        // ANY_CHARACTER (and any future ANY_*) accepts every live character.
-                }
-            }
             return true;
         }
 
@@ -216,6 +206,7 @@ namespace Emberfall.Core
                 case PlayCardIntent p: ApplyPlayCard(state, p, buf); break;
                 case AttackIntent ai: ApplyAttack(state, ai, buf); break;
                 case HeroPowerIntent hp: ApplyHeroPower(state, hp, buf); break;
+                case UnearthChoiceIntent u: ApplyUnearthChoice(state, u, buf); break;
                 default: return CommandResult.Rejected(RejectReason.NotImplemented, state.StateVersion);
             }
 
@@ -248,7 +239,7 @@ namespace Emberfall.Core
                 ps.Deck.RemoveAt(0);
                 card.Zone = Zone.Hand;
                 ps.Hand.Add(card);
-                buf.Emit(VfxEvent.onDraw, source: card.Id);
+                buf.Emit(GameEventKind.CardDrawn, source: card.Id);
             }
 
             // Shuffle the set-aside cards back into the deck (consumes RNG deterministically). An empty
@@ -274,7 +265,7 @@ namespace Emberfall.Core
             var activeSeat = state.SeatOf(state.ActivePlayer);
             var interp = new EffectInterpreter(state, _db, buf);
 
-            buf.Emit(VfxEvent.onTurnEnd, source: state.Players[activeSeat].Hero.Id);
+            buf.Emit(GameEventKind.TurnEnded, source: state.Players[activeSeat].Hero.Id);
             state.Phase = TurnPhase.EndOfTurn;
 
             // EF-012: ON_TURN_END fires here — the active player still owns the turn and the phase is
@@ -288,7 +279,7 @@ namespace Emberfall.Core
             // left→right sweep, which is what makes this replay-stable.
             interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
 
-            // The end-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE the seat
+            // The end-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE the seat
             // flip and the incoming StartTurnSequence, whose thaw loop resets SummonedThisTurn /
             // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade. CheckWin
             // is called explicitly because Drain only win-checks while its queue is non-empty (the same
@@ -307,19 +298,41 @@ namespace Emberfall.Core
             int seat = state.SeatOf(c.Player);
             state.Outcome = seat == 0 ? MatchOutcome.Player1Win : MatchOutcome.Player0Win;
             state.Phase = TurnPhase.GameOver;
-            buf.Emit(VfxEvent.onGameOver);
+            buf.Emit(GameEventKind.MatchEnded);
             int winnerSeat = seat == 0 ? 1 : 0;
-            buf.Emit(VfxEvent.onGameWin, source: state.Players[winnerSeat].Hero.Id);
+            buf.Emit(GameEventKind.MatchWon, source: state.Players[winnerSeat].Hero.Id);
         }
 
         private void ApplyAutoConfirm(GameState state, AutoConfirmIntent a, EventBuffer buf)
         {
-            // Timer expiry is an ordinary command (dev-docs/contracts/gameplay-and-session.md:38): keep all cards in
-            // mulligan, or end the turn in Main.
-            if (state.Phase == TurnPhase.Mulligan)
+            // Timer expiry is an ordinary command (dev-docs/contracts/gameplay-and-session.md:38):
+            // choose the first offered option, keep all cards in mulligan, or end the turn in Main.
+            if (state.PendingChoice != null)
+            {
+                PendingChoice pending = state.PendingChoice;
+                ApplyUnearthChoice(state,
+                    new UnearthChoiceIntent(a.Player, pending.Options[0], pending.ChoiceSequence), buf);
+            }
+            else if (state.Phase == TurnPhase.Mulligan)
                 ApplyMulligan(state, new MulliganIntent(a.Player, System.Array.Empty<InstanceId>()), buf);
             else
                 ApplyEndTurn(state, new EndTurnIntent(a.Player), buf);
+        }
+
+        private void ApplyUnearthChoice(GameState state, UnearthChoiceIntent choice, EventBuffer buf)
+        {
+            PlayerState chooser = state.PlayerOf(choice.Player);
+            CardDefinition definition = _db.Get(choice.ChosenCardId);
+            var created = new CardInstance(state.NextInstanceId(), definition.Id, chooser.Id)
+            {
+                Zone = Zone.Hand,
+            };
+            chooser.Hand.Add(created);
+            state.PendingChoice = null;
+
+            // The newly minted instance id is the immutable event identity. Emit after the card
+            // enters hand so EventBuffer captures owner-only visibility at the point of truth.
+            buf.Emit(GameEventKind.CardCreatedInHand, source: created.Id, flags: EventFlags.IsToken);
         }
 
         private void ApplyPlayCard(GameState state, PlayCardIntent p, EventBuffer buf)
@@ -336,28 +349,27 @@ namespace Emberfall.Core
             ps.Hand.RemoveAt(handIdx);
 
             var interp = new EffectInterpreter(state, _db, buf);
-            var targets = ResolveTargets(state, p.Targets);
-
             switch (def.Type)
             {
                 case CardType.MINION:
-                    RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot);
-                    buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // Battlecry
-                    interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card);
+                    RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot, _db);
+                    buf.Emit(GameEventKind.CardPlayed, source: card.Id);
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
+                    interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
+                        triggerSource: card.Id);
                     break;
 
                 case CardType.SPELL:
                     card.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(card);
-                    buf.Emit(VfxEvent.onPlay, source: card.Id);
-                    interp.RaiseSelf(card, Trigger.ON_CAST, targets);                 // the spell's one-shot effect
+                    buf.Emit(GameEventKind.CardPlayed, source: card.Id);
+                    interp.RaiseSelf(card, Trigger.ON_CAST, p.Targets);                 // the spell's one-shot effect
                     // EF-016: ON_SPELL_CAST — the observer half of a cast, enqueued AFTER the spell's own
                     // ON_CAST so the spell resolves first and reactions see the board it left behind. Same
                     // RaiseSelf-then-RaiseObservers shape as the MINION arm above (ON_PLAY → ON_FRIENDLY_SUMMON).
                     //
                     // THE TRAP THIS PLACEMENT EXISTS TO AVOID: hero powers reach the interpreter through an
-                    // ephemeral HERO_POWER CardInstance and raise Trigger.ON_CAST too (ApplyHeroPower below).
+                    // carrierless HERO_POWER source context and raise Trigger.ON_CAST too (ApplyHeroPower below).
                     // Hooking generic ON_CAST would therefore fire spell-cast reactions on every hero power.
                     // Gating the raise to this branch — the only place a CardType.SPELL is cast — is what
                     // keeps "whenever a spell is cast" meaning spells. Any future cast path must decide
@@ -368,26 +380,36 @@ namespace Emberfall.Core
                     // observer sweep, so a controller filter here would be a new, unspecified rule.
                     // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
-                    interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null);
+                    interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null, triggerSource: card.Id);
+                    // An ongoing observer becomes live only after the spell and the cast-time
+                    // subscriber snapshot have fully resolved. In particular it cannot observe the
+                    // same cast that created it, and the resolved card remains in the graveyard.
+                    bool hasOngoingRules = false;
+                    for (int i = 0; i < def.Rules.Count; i++)
+                        if (RuleLifetimeCapabilities.TryCreateOngoingEffect(def.Type,
+                                RuleSemantics.TriggerOf(def.Rules[i]), def.Rules[i].Lifetime,
+                                out _, out _))
+                        {
+                            hasOngoingRules = true;
+                            break;
+                        }
+                    if (hasOngoingRules)
+                    {
+                        interp.Drain();
+                        if (state.Outcome == MatchOutcome.InProgress)
+                            interp.CreateOngoingEffects(def, card.Controller);
+                    }
                     break;
 
                 case CardType.WEAPON:
-                    card.Zone = Zone.Graveyard;
-                    ps.Graveyard.Add(card);
                     RulesEngine.BreakWeapon(interp, seat); // destroy old weapon (rattle enqueued) before equipping new
-                    ps.Weapon = new WeaponInstance
-                    {
-                        Id = state.NextInstanceId(),
-                        DefinitionId = def.Id,
-                        Attack = def.Attack ?? 0,
-                        Durability = def.Durability ?? 1,
-                    };
-                    buf.Emit(VfxEvent.onEquip, source: ps.Hero.Id);
-                    interp.RaiseSelf(card, Trigger.ON_PLAY, targets);                 // weapon Battlecry
+                    RulesEngine.EnterWeapon(state, card, def, seat);
+                    buf.Emit(GameEventKind.WeaponEquipped, source: ps.Hero.Id);
+                    interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // weapon Herald
                     break;
             }
 
-            interp.Drain();   // resolve battlecry/cast, settle deaths + win, cascade deathrattles
+            interp.Drain();   // resolve herald/cast, settle deaths + win, cascade tolls
         }
 
         private bool ValidateHeroPower(GameState state, HeroPowerIntent hp, out RejectReason? reason)
@@ -403,23 +425,9 @@ namespace Emberfall.Core
             if (ps.HeroPowerUsedThisTurn) { reason = RejectReason.HeroPowerAlreadyUsed; return false; }
             if (ps.Mana.Available < 2) { reason = RejectReason.NotEnoughMana; return false; }
 
-            // Explicit-choice selectors (ANY_*) require a player-chosen target. Without this gate a
-            // targeted hero power silently falls through to the verb defaults (enemy face for damage,
-            // own face for heal) — mana spent, wrong effect, no rejection the UI could surface.
             var hpDef = _db.Get(ps.Hero.HeroPowerId);
-            if (hp.Targets.Count == 0 && RequiresChosenTarget(hpDef))
+            if (!Targeting.ValidatePlayerChoices(state, _db, hp.Player, hpDef, Trigger.ON_CAST, hp.Targets))
             { reason = RejectReason.IllegalTarget; return false; }
-
-            // Target legality (spells can't single out a stealthed enemy minion; TAUNT not enforced for
-            // non-attacks; chosen targets must fit the power's explicit-choice selector shape).
-            foreach (var tr in hp.Targets)
-            {
-                if (!Characters.TryFind(state, tr.Instance, out var ch)) { reason = RejectReason.IllegalTarget; return false; }
-                if (ch.IsMinion && ch.Seat != seat && ch.Minion!.Keywords.Contains(Keyword.STEALTH))
-                { reason = RejectReason.IllegalTarget; return false; }
-                if (!TargetsSatisfySelectors(hpDef, ch, seat))
-                { reason = RejectReason.IllegalTarget; return false; }
-            }
             return true;
         }
 
@@ -432,26 +440,17 @@ namespace Emberfall.Core
             ps.Mana.Spent += 2;
             ps.HeroPowerUsedThisTurn = true;
 
-            // Ephemeral source for the interpreter: gives it Controller (seat) and DefinitionId (effects).
-            // Never placed in a zone list; just carries identity for the effect queue.
-            var src = new CardInstance(state.NextInstanceId(), ps.Hero.HeroPowerId, ps.Id)
-            {
-                Zone = Zone.Graveyard
-            };
-            // The ephemeral source never enters a zone, so emit-time zone lookup can't classify
-            // it — mark it public explicitly: the hero power's act is public (design §6.1).
-            buf.MarkPublic(src.Id);
-
-            buf.Emit(VfxEvent.onHeroPower, source: ps.Hero.Id);
+            buf.Emit(GameEventKind.HeroPowerUsed, source: ps.Hero.Id);
 
             var interp = new EffectInterpreter(state, _db, buf);
-            var targets = ResolveTargets(state, hp.Targets);
             // This ON_CAST is the SECOND raise site for the trigger — a hero power, not a spell. EF-016
             // deliberately does NOT follow it with RaiseObservers(ON_SPELL_CAST): that raise lives only in
             // ApplyPlayCard's CardType.SPELL arm, so "whenever a spell is cast" excludes hero powers.
             // If a design ruling ever makes hero powers count as spell casts, this is the line to change —
             // and HeroPowerDoesNotFireOnSpellCast in SpellCastTriggerTests is the test that must change with it.
-            interp.RaiseSelf(src, Trigger.ON_CAST, targets);
+            CardDefinition definition = _db.Get(ps.Hero.HeroPowerId);
+            interp.RaiseSelf(ps.Hero.Id, ps.Id, definition, EffectSourceKind.HeroPower,
+                currentCarrier: null, Trigger.ON_CAST, hp.Targets);
             interp.Drain();
         }
 
@@ -475,19 +474,20 @@ namespace Emberfall.Core
             if (attacker.IsHero)
             {
                 if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
-                if (ps.Hero.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
-                if (ps.HeroAttacksUsedThisTurn >= 1) { reason = RejectReason.NoAttacksLeft; return false; }
+                if (ps.Hero.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
+                int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
+                if (ps.HeroAttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
             {
                 var m = attacker.Minion!;
-                if (m.IsFrozen) { reason = RejectReason.AttackerFrozen; return false; }
+                if (m.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
                 if (m.CurrentAttack <= 0) { reason = RejectReason.IllegalTarget; return false; }
-                bool hasCharge = m.Keywords.Contains(Keyword.CHARGE);
-                bool hasRush = m.Keywords.Contains(Keyword.RUSH);
-                if (m.SummonedThisTurn && !hasCharge && !hasRush)
+                bool hasFervor = m.Keywords.Contains(Keyword.FERVOR);
+                bool hasSkirmish = m.Keywords.Contains(Keyword.SKIRMISH);
+                if (m.SummonedThisTurn && !hasFervor && !hasSkirmish)
                 { reason = RejectReason.HasSummoningSickness; return false; }
-                int maxAttacks = m.Keywords.Contains(Keyword.WINDFURY) ? 2 : 1;
+                int maxAttacks = m.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
                 if (m.AttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
 
@@ -497,25 +497,25 @@ namespace Emberfall.Core
             if (defender.Seat == seat)
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // RUSH can only target minions during summoning turn
+            // SKIRMISH can only target minions during summoning turn
             if (attacker.IsMinion && attacker.Minion!.SummonedThisTurn
-                && attacker.Minion.Keywords.Contains(Keyword.RUSH) && defender.IsHero)
+                && attacker.Minion.Keywords.Contains(Keyword.SKIRMISH) && defender.IsHero)
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // STEALTH blocks targeting (even a stealthed taunter hides its taunt)
-            if (defender.IsMinion && defender.Minion!.Keywords.Contains(Keyword.STEALTH))
+            // SHROUD blocks targeting (even a shrouded bulwarker hides its bulwark)
+            if (defender.IsMinion && defender.Minion!.Keywords.Contains(Keyword.SHROUD))
             { reason = RejectReason.IllegalTarget; return false; }
 
-            // TAUNT enforcement: must attack a non-stealthed taunter if one exists
+            // BULWARK enforcement: must attack a non-shrouded bulwarker if one exists
             var foeBoard = state.Players[foe].Board;
-            bool anyTaunt = false;
+            bool anyBulwark = false;
             for (int i = 0; i < foeBoard.Count; i++)
             {
                 var fm = foeBoard[i];
-                if (fm.Keywords.Contains(Keyword.TAUNT) && !fm.Keywords.Contains(Keyword.STEALTH))
-                { anyTaunt = true; break; }
+                if (fm.Keywords.Contains(Keyword.BULWARK) && !fm.Keywords.Contains(Keyword.SHROUD))
+                { anyBulwark = true; break; }
             }
-            if (anyTaunt && (!defender.IsMinion || !defender.Minion!.Keywords.Contains(Keyword.TAUNT)))
+            if (anyBulwark && (!defender.IsMinion || !defender.Minion!.Keywords.Contains(Keyword.BULWARK)))
             { reason = RejectReason.IllegalTarget; return false; }
 
             return true;
@@ -534,37 +534,34 @@ namespace Emberfall.Core
 
             int attackerAtk = attacker.IsMinion
                 ? attacker.Minion!.CurrentAttack
-                : ps.Weapon!.Attack;
+                : ps.Weapon!.CurrentAttack;
 
             var attackerKws = attacker.IsMinion
-                ? attacker.Minion!.Keywords
-                : new HashSet<Keyword>();
+                ? new HashSet<Keyword>(attacker.Minion!.Keywords)
+                : new HashSet<Keyword>(ps.Weapon!.Keywords);
 
             bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
             bool vanguard = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
 
-            // Stealth breaks the moment the attacker declares
-            if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.STEALTH);
+            // Shroud breaks the moment the attacker declares
+            if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.SHROUD);
 
             // Increment attack budget (before damage — canonical ordering)
             if (attacker.IsMinion) attacker.Minion!.AttacksUsedThisTurn++;
             else ps.HeroAttacksUsedThisTurn++;
 
-            buf.Emit(VfxEvent.onAttack, source: attacker.Id, target: defender.Id);
+            buf.Emit(GameEventKind.AttackDeclared, source: attacker.Id, target: defender.Id);
 
-            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal). WeaponInstance
-            // carries no CardInstance of its own, so wrap it in a throwaway one purely for effect lookup.
+            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from
+            // the equipped card itself, preserving its identity and runtime source state.
             if (attacker.IsHero && ps.Weapon != null)
-            {
-                var weaponCard = new CardInstance(ps.Weapon.Id, ps.Weapon.DefinitionId, a.Player);
-                interp.RaiseSelf(weaponCard, Trigger.ON_ATTACK, System.Array.Empty<CharacterRef>());
-            }
+                interp.RaiseSelf(ps.Weapon, Trigger.ON_ATTACK, System.Array.Empty<TargetRef>());
 
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);
 
             // OVERWHELM: carry excess overkill damage to enemy hero (minion targets only).
-            // Riders (LIFESTEAL/POISONOUS) attach to the primary hit only — G0 ruling R-2(c),
+            // Riders (LIFEDRAIN/VENOM) attach to the primary hit only — G0 ruling R-2(c),
             // Sam 2026-07-14: overflow carries damage, not keywords (matches the Aegis
             // no-riders precedent; keeps Lifedrain heal ≤ attack value).
             if (overwhelm && defender.IsMinion && defender.Minion!.CurrentHealth < 0)
@@ -586,25 +583,16 @@ namespace Emberfall.Core
             // Weapon durability on hero attack
             if (attacker.IsHero && ps.Weapon != null)
             {
-                ps.Weapon.Durability--;
-                if (ps.Weapon.Durability <= 0)
+                ps.Weapon.CurrentDurability--;
+                if (ps.Weapon.CurrentDurability <= 0)
                     RulesEngine.BreakWeapon(interp, seat);   // rattle enqueued; interp.Drain() below resolves it
             }
 
-            // Settle deaths, deathrattles, win-check.
+            // Settle deaths, tolls, win-check.
             // CheckWin is also called here because Drain only invokes it inside the effect-queue loop —
             // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
-        }
-
-        private static IReadOnlyList<CharacterRef> ResolveTargets(GameState state, IReadOnlyList<TargetRef> refs)
-        {
-            if (refs == null || refs.Count == 0) return System.Array.Empty<CharacterRef>();
-            var list = new List<CharacterRef>(refs.Count);
-            foreach (var r in refs)
-                if (Characters.TryFind(state, r.Instance, out var ch)) list.Add(ch);
-            return list;
         }
 
         // ── Turn sequence (GDD §1b / ARCHITECTURE §5) ─────────────────────────────
@@ -618,20 +606,20 @@ namespace Emberfall.Core
             state.TurnNumber++;
             state.ActionResolutionsThisTurn = 0;
 
-            // Mana: +1 max (cap 10) → apply overload locks → refill.
+            // Mana: +1 max (cap 10) → apply backdraft locks → refill.
             ps.Mana.Max = System.Math.Min(ps.Mana.Max + 1, MatchEngine.MaxMana);
-            int locked = ps.NextTurnOverloadLock;
-            ps.NextTurnOverloadLock = 0;
+            int locked = ps.NextTurnBackdraftLock;
+            ps.NextTurnBackdraftLock = 0;
             ps.Mana.Locked = locked;
             ps.Mana.Spent = 0;
             ps.Mana.Temporary = 0;
             ps.Mana.Available = System.Math.Max(0, ps.Mana.Max - locked);
 
             // Thaw + reset summoning sickness / attack budget / hero power.
-            ps.Hero.IsFrozen = false;
+            ps.Hero.IsFrosted = false;
             foreach (var m in ps.Board)
             {
-                m.IsFrozen = false;
+                m.IsFrosted = false;
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
             }
@@ -639,22 +627,22 @@ namespace Emberfall.Core
             ps.HeroAttacksUsedThisTurn = 0;
 
             var interp = new EffectInterpreter(state, _db, buf);
-            buf.Emit(VfxEvent.onTurnStart, source: ps.Hero.Id);
+            buf.Emit(GameEventKind.TurnStarted, source: ps.Hero.Id);
 
             // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
-            // effect sees the board the turn actually starts on (unfrozen, sickness cleared, mana
+            // effect sees the board the turn actually starts on (unfrosted, sickness cleared, mana
             // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
             // alive. Draining after DrawOne would let a corpse draw fatigue.
             //
             // The incoming player is explicit event context, separate from each source controller.
-            // EffectConditionDef then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
+            // TurnOwnerCondition then qualifies CONTROLLER, OPPONENT or ANY without encoding ownership
             // into trigger/selector names. `excluded: null` because no card causes a turn to start.
-            // The current source seam is board minions, active-side first and left→right; weapon and
-            // ongoing-spell lifecycles are deliberately split follow-ups.
+            // The shared source seam walks incoming board minions left-to-right, equipped weapon,
+            // then the other side in the same category order, followed by ongoing effects.
             interp.RaiseObservers(Trigger.ON_TURN_START, excluded: null,
-                context: TriggerContext.ForTurnStart(player));
+                context: TriggerEventContext.ForIncomingTurn(player));
 
-            // The start-of-turn cascade must FULLY settle — deaths, deathrattles, win-check — BEFORE
+            // The start-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE
             // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is
             // non-empty, and a start-of-turn toll that kills its own controller must end the match here
             // rather than draw a card into a finished game.

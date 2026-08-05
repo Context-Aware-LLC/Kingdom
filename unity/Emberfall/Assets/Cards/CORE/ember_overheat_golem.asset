@@ -12,9 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: ember_overheat_golem
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: "{ \"id\": \"ember_overheat_golem\", \"name\": \"Overheat Golem\", \"type\":
-    \"MINION\", \"cost\": 3, \"attack\": 5, \"health\": 4, \"class\": \"EMBERWARD\",
-    \"rarity\": \"RARE\", \"keywords\": [\"OVERLOAD\"], \"tribe\": \"CONSTRUCT\",\n   
-    \"setId\": \"CORE\", \"collectible\": true, \"artId\": \"art/ember_overheat_golem\",\n   
-    \"effects\": [ { \"trigger\": \"ON_PLAY\", \"action\": \"OVERLOAD\", \"amount\":
-    2 } ] }"
+  _json: '{"id":"ember_overheat_golem","name":"Overheat Golem","type":"MINION","cost":3,"attack":5,"health":4,"class":"EMBERWARD","rarity":"RARE","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_PLAY"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"BACKDRAFT","amount":2}}],"tribe":"CONSTRUCT","setId":"CORE","collectible":true,"artId":"art/ember_overheat_golem"}'

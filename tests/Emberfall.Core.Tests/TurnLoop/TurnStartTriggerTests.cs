@@ -22,27 +22,33 @@ namespace Emberfall.Core.Tests.TurnLoop
         private const string Toller = "ef011_toller";     // 1/3, "at the start of a turn, 1 damage to the enemy hero"
         private const string Vanilla = "ef011_vanilla";   // 1/1, no effects — the control
 
-        private static EffectConditionDef OwnerCondition(TurnOwner owner)
-            => new EffectConditionDef(ConditionType.TURN_OWNER, owner);
-
         private static FakeCardDatabase Db(TurnOwner owner = TurnOwner.ANY, int tollDamage = 1, int tollerHealth = 3)
         {
-            var toll = new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                amount: tollDamage, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ENEMY_HERO", condition: OwnerCondition(owner));
+            var toll = TestRules.Rule("turn_start_toll", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(owner),
+                TestRules.Damage(Trigger.ON_TURN_START, tollDamage));
 
             return new FakeCardDatabase()
-                .Register(Minion(Toller, health: tollerHealth, effects: new[] { toll }))
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()));
+                .Register(Minion(Toller, health: tollerHealth, rules: new[] { toll }))
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()));
         }
 
-        private static CardDefinition Minion(string id, int health, EffectDef[] effects)
+        private static CardDefinition Minion(string id, int health, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.MINION, cost: 1,
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
-                cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                keywords: Array.Empty<Keyword>(), rules: rules,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+
+        private static CardDefinition Weapon(string id, RuleDefinition[] rules)
+            => new CardDefinition(
+                id: id, name: id, type: CardType.WEAPON, cost: 1,
+                attack: 1, health: null, durability: 3,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: Array.Empty<Keyword>(), rules: rules,
+                flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         /// <summary>A match where both decks are nothing but <paramref name="cardId"/>, already past mulligan.</summary>
@@ -88,6 +94,20 @@ namespace Emberfall.Core.Tests.TurnLoop
             return card;
         }
 
+        private static CardInstance PutWeapon(GameState s, ICardDatabase db, int seat, string cardId)
+        {
+            var ps = s.Players[seat];
+            var def = db.Get(cardId);
+            var card = new CardInstance(s.NextInstanceId(), cardId, ps.Id)
+            {
+                Zone = Zone.Weapon,
+                CurrentAttack = def.Attack ?? 0,
+                CurrentDurability = def.Durability,
+            };
+            ps.Weapon = card;
+            return card;
+        }
+
         [Test]
         public void OnTurnStart_Fires_At_All()
         {
@@ -107,11 +127,10 @@ namespace Emberfall.Core.Tests.TurnLoop
         [Test]
         public void Missing_TurnOwner_Condition_Fails_Closed_At_Runtime()
         {
-            var invalid = new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                amount: 1, amount2: null, tokenId: null, grantedKeyword: null,
-                vfxOverride: null, selector: "ENEMY_HERO");
+            var invalid = TestRules.Rule("missing_turn_owner", Trigger.ON_TURN_START,
+                TestRules.Damage(Trigger.ON_TURN_START, 1));
             var db = new FakeCardDatabase()
-                .Register(Minion(Toller, health: 3, effects: new[] { invalid }));
+                .Register(Minion(Toller, health: 3, rules: new[] { invalid }));
             var (host, s) = Match(db, Toller, seed: 210UL);
             int firstSeat = s.SeatOf(s.ActivePlayer);
             int secondSeat = 1 - firstSeat;
@@ -184,11 +203,11 @@ namespace Emberfall.Core.Tests.TurnLoop
         public void Opponent_Turn_Temporary_Mana_Is_Unusable_And_Clears_At_The_Controllers_Reset()
         {
             var db = new FakeCardDatabase()
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.GAIN_MANA,
-                        amount: 2, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, condition: OwnerCondition(TurnOwner.OPPONENT)),
+                    TestRules.Rule("opponent_turn_mana", Trigger.ON_TURN_START,
+                        new TurnOwnerCondition(TurnOwner.OPPONENT),
+                        new GainManaAction(2, ManaGainKind.TEMPORARY)),
                 }));
             var (host, s) = Match(db, Toller, seed: 222UL);
             int firstSeat = s.SeatOf(s.ActivePlayer);
@@ -240,18 +259,16 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             const string leftId = "ef011_left";
             const string rightId = "ef011_right";
-            var leftEffect = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
-                condition: OwnerCondition(TurnOwner.CONTROLLER));
-            var rightEffect = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 2, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
-                condition: OwnerCondition(TurnOwner.CONTROLLER));
+            var leftRule = TestRules.Rule("left_toll", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 1));
+            var rightRule = TestRules.Rule("right_toll", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 2));
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(leftId, health: 3, effects: new[] { leftEffect }))
-                .Register(Minion(rightId, health: 3, effects: new[] { rightEffect }));
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(leftId, health: 3, rules: new[] { leftRule }))
+                .Register(Minion(rightId, health: 3, rules: new[] { rightRule }));
             var (host, s) = Match(db, Vanilla, seed: 230UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
             int incoming = 1 - outgoing;
@@ -260,7 +277,7 @@ namespace Emberfall.Core.Tests.TurnLoop
 
             var result = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
 
-            var damage = result.Events.Where(e => e.Kind == VfxEvent.onDamage).ToList();
+            var damage = result.Events.Where(e => e.Kind == GameEventKind.DamageApplied).ToList();
             Assert.That(damage, Has.Count.EqualTo(2));
             Assert.That(damage[0].Source, Is.EqualTo(left.Id),
                 "The incoming side's leftmost subscriber must enqueue first.");
@@ -270,22 +287,106 @@ namespace Emberfall.Core.Tests.TurnLoop
         }
 
         [Test]
+        public void Observer_Order_Is_Incoming_Board_Then_Weapon_Then_Other_Board_Then_Weapon()
+        {
+            const string minionId = "ef031_order_minion";
+            const string weaponId = "ef031_order_weapon";
+            RuleDefinition Toll(string id, int amount) => TestRules.Rule(id,
+                Trigger.ON_TURN_START, new TurnOwnerCondition(TurnOwner.ANY),
+                TestRules.Damage(Trigger.ON_TURN_START, amount));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(minionId, health: 3,
+                    rules: new[] { Toll("minion_toll", 1) }))
+                .Register(Weapon(weaponId, new[] { Toll("weapon_toll", 2) }));
+            var (host, s) = Match(db, Vanilla, seed: 233UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance incomingMinion = PutOnBoard(s, db, incoming, minionId);
+            CardInstance incomingWeapon = PutWeapon(s, db, incoming, weaponId);
+            CardInstance outgoingMinion = PutOnBoard(s, db, outgoing, minionId);
+            CardInstance outgoingWeapon = PutWeapon(s, db, outgoing, weaponId);
+
+            CommandResult result = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.That(result.Events.Where(e => e.Kind == GameEventKind.DamageApplied)
+                .Select(e => e.Source), Is.EqualTo(new InstanceId?[]
+                {
+                    incomingMinion.Id,
+                    incomingWeapon.Id,
+                    outgoingMinion.Id,
+                    outgoingWeapon.Id,
+                }));
+        }
+
+        [TestCase(TurnOwner.CONTROLLER, 1)]
+        [TestCase(TurnOwner.OPPONENT, 1)]
+        [TestCase(TurnOwner.ANY, 2)]
+        public void Equipped_Weapon_Uses_Explicit_Turn_Ownership(TurnOwner owner,
+            int expectedActivations)
+        {
+            const string weaponId = "ef031_turn_owner_weapon";
+            RuleDefinition toll = TestRules.Rule("weapon_toll", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(owner), TestRules.Damage(Trigger.ON_TURN_START, 1));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Weapon(weaponId, new[] { toll }));
+            var (host, s) = Match(db, Vanilla, seed: 235UL + (ulong)owner);
+            int weaponSeat = s.SeatOf(s.ActivePlayer);
+            int otherSeat = 1 - weaponSeat;
+            _ = PutWeapon(s, db, weaponSeat, weaponId);
+            int targetHealth = s.Players[otherSeat].Hero.CurrentHealth;
+
+            Accept(host, new EndTurnIntent(s.Players[weaponSeat].Id));
+            Accept(host, new EndTurnIntent(s.Players[otherSeat].Id));
+
+            Assert.That(s.Players[otherSeat].Hero.CurrentHealth,
+                Is.EqualTo(targetHealth - expectedActivations));
+        }
+
+        [Test]
+        public void Queued_Damage_Keeps_The_Source_Keyword_Snapshot_After_Silence()
+        {
+            const string sourceId = "ef031_snapshot_source";
+            RuleDefinition silence = TestRules.Rule("silence_self", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                new SilenceAction(new TargetSpec("SELF")));
+            RuleDefinition damage = TestRules.Rule("damage_enemy", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 3));
+            var db = new FakeCardDatabase()
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(sourceId, health: 3, rules: new[] { silence, damage }));
+            var (host, s) = Match(db, Vanilla, seed: 234UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance source = PutOnBoard(s, db, incoming, sourceId);
+            source.Keywords.Add(Keyword.LIFEDRAIN);
+            s.Players[incoming].Hero.CurrentHealth = 20;
+
+            Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.That(source.Keywords, Does.Not.Contain(Keyword.LIFEDRAIN),
+                "the first queued rule proves the live carrier was silenced");
+            Assert.That(s.Players[incoming].Hero.CurrentHealth, Is.EqualTo(23),
+                "the later queued damage must use the pre-silence rider/controller snapshot");
+        }
+
+        [Test]
         public void Subscriber_Snapshot_Still_Resolves_A_Source_Killed_By_An_Earlier_Subscriber()
         {
             const string sweeperId = "ef011_sweeper";
             const string followerId = "ef011_follower";
-            var sweep = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 5, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ALL_MINIONS",
-                condition: OwnerCondition(TurnOwner.CONTROLLER));
-            var follow = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
-                condition: OwnerCondition(TurnOwner.CONTROLLER));
+            var sweep = TestRules.Rule("sweep", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 5, "ALL_MINIONS"));
+            var follow = TestRules.Rule("follow", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                TestRules.Damage(Trigger.ON_TURN_START, 1));
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(sweeperId, health: 3, effects: new[] { sweep }))
-                .Register(Minion(followerId, health: 3, effects: new[] { follow }));
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(sweeperId, health: 3, rules: new[] { sweep }))
+                .Register(Minion(followerId, health: 3, rules: new[] { follow }));
             var (host, s) = Match(db, Vanilla, seed: 231UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
             int incoming = 1 - outgoing;
@@ -300,7 +401,7 @@ namespace Emberfall.Core.Tests.TurnLoop
             Assert.That(s.Players[incoming].Graveyard.Any(c => c.Id == follower.Id), Is.True);
             Assert.That(s.Players[outgoing].Hero.CurrentHealth, Is.EqualTo(outgoingHealth - 1),
                 "The follower was snapshotted before the drain, so its queued effect survives its death.");
-            Assert.That(result.Events.Any(e => e.Kind == VfxEvent.onDamage && e.Source == follower.Id), Is.True);
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.DamageApplied && e.Source == follower.Id), Is.True);
         }
 
         [Test]
@@ -308,18 +409,16 @@ namespace Emberfall.Core.Tests.TurnLoop
         {
             const string budgetId = "ef011_budget";
             var nonMatching = Enumerable.Range(0, MatchEngine.ActionResolutionCap)
-                .Select(_ => new EffectDef(Trigger.ON_TURN_START,
-                    Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                    grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
-                    condition: OwnerCondition(TurnOwner.CONTROLLER)));
-            var matching = new EffectDef(Trigger.ON_TURN_START,
-                Emberfall.Core.Contracts.Action.DEAL_DAMAGE, amount: 1, amount2: null, tokenId: null,
-                grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO",
-                condition: OwnerCondition(TurnOwner.OPPONENT));
-            var effects = nonMatching.Concat(new[] { matching }).ToArray();
+                .Select(i => TestRules.Rule($"non_matching_{i}", Trigger.ON_TURN_START,
+                    new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                    TestRules.Damage(Trigger.ON_TURN_START, 1)));
+            var matching = TestRules.Rule("matching", Trigger.ON_TURN_START,
+                new TurnOwnerCondition(TurnOwner.OPPONENT),
+                TestRules.Damage(Trigger.ON_TURN_START, 1));
+            var rules = nonMatching.Concat(new[] { matching }).ToArray();
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(budgetId, health: 3, effects: effects));
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(budgetId, health: 3, rules: rules));
             var (host, s) = Match(db, Vanilla, seed: 232UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
             int incoming = 1 - outgoing;
@@ -341,12 +440,12 @@ namespace Emberfall.Core.Tests.TurnLoop
             // it raises. Temporary crystals granted BY the trigger must therefore survive into Main — if
             // the raise were hoisted above the mana block, this reset would silently wipe them.
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.GAIN_MANA,
-                        amount: 2, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: null, condition: OwnerCondition(TurnOwner.CONTROLLER)),
+                    TestRules.Rule("controller_turn_mana", Trigger.ON_TURN_START,
+                        new TurnOwnerCondition(TurnOwner.CONTROLLER),
+                        new GainManaAction(2, ManaGainKind.TEMPORARY)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 24UL);
@@ -363,18 +462,58 @@ namespace Emberfall.Core.Tests.TurnLoop
         }
 
         [Test]
+        public void Turn_Start_Resets_Frost_And_Attack_State_Before_Observer_Drain_And_Main()
+        {
+            // This is deliberately one end-to-end turn boundary, rather than isolated flag tests. The
+            // incoming source starts frosted and exhausted, yet its turn-start toll resolves; once that
+            // drain and draw finish, the same minion can attack in Main.
+            var db = Db(TurnOwner.CONTROLLER);
+            var (host, s) = Match(db, Vanilla, seed: 241UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance toller = PutOnBoard(s, db, incoming, Toller);
+            toller.IsFrosted = true;
+            toller.SummonedThisTurn = true;
+            toller.AttacksUsedThisTurn = 1;
+            s.Players[incoming].Hero.IsFrosted = true;
+            s.Players[incoming].HeroAttacksUsedThisTurn = 1;
+            int heroBefore = s.Players[outgoing].Hero.CurrentHealth;
+
+            CommandResult start = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(start.Events.Any(e => e.Kind == GameEventKind.DamageApplied && e.Source == toller.Id),
+                    Is.True, "the source snapshot drains after its incoming turn reset");
+                Assert.That(s.Players[outgoing].Hero.CurrentHealth, Is.EqualTo(heroBefore - 1));
+                Assert.That(s.Players[incoming].Hero.IsFrosted, Is.False);
+                Assert.That(s.Players[incoming].HeroAttacksUsedThisTurn, Is.EqualTo(0));
+                Assert.That((toller.IsFrosted, toller.SummonedThisTurn, toller.AttacksUsedThisTurn),
+                    Is.EqualTo((false, false, 0)));
+                Assert.That(s.Phase, Is.EqualTo(TurnPhase.Main), "the full drain completes before Main.");
+            });
+
+            CommandResult attack = Accept(host, new AttackIntent(s.Players[incoming].Id, toller.Id,
+                new TargetRef(s.Players[outgoing].Hero.Id)));
+
+            Assert.That(attack.Events.Any(e => e.Kind == GameEventKind.AttackDeclared && e.Source == toller.Id),
+                Is.True, "cleared frost, summoning sickness, and attack budget permit the next Main action.");
+            Assert.That(toller.AttacksUsedThisTurn, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Lethal_Turn_Start_Toll_Ends_The_Match_Before_The_Draw()
         {
             // ORDERING, second half — the one the EF-010 seam comment called out: settle the cascade
             // BEFORE DrawOne, "or a corpse would draw fatigue". CheckWin is called explicitly after the
             // drain because Drain only win-checks while its queue is non-empty.
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                        amount: 99, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ENEMY_HERO", condition: OwnerCondition(TurnOwner.OPPONENT)),
+                    TestRules.Rule("lethal_toll", Trigger.ON_TURN_START,
+                        new TurnOwnerCondition(TurnOwner.OPPONENT),
+                        TestRules.Damage(Trigger.ON_TURN_START, 99)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 25UL);
@@ -398,12 +537,12 @@ namespace Emberfall.Core.Tests.TurnLoop
             // A non-lethal cascade must also fully resolve first: the corpse is in the graveyard, and the
             // turn then proceeds normally into Main with its draw taken.
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_START, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                        amount: 5, amount2: null, tokenId: null, grantedKeyword: null,
-                        vfxOverride: null, selector: "ALL_MINIONS", condition: OwnerCondition(TurnOwner.OPPONENT)),
+                    TestRules.Rule("turn_start_sweep", Trigger.ON_TURN_START,
+                        new TurnOwnerCondition(TurnOwner.OPPONENT),
+                        TestRules.Damage(Trigger.ON_TURN_START, 5, "ALL_MINIONS")),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 26UL);

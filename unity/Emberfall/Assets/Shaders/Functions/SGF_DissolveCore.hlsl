@@ -1,5 +1,5 @@
 // SGF_DissolveCore — shared dissolve clip + edge-band logic.
-// Used by SG_Dissolve (minion death) and SG_Stealth (edge-translucency shimmer).
+// Used by SG_Dissolve (minion death) and SG_Shroud (edge-translucency shimmer).
 //
 // Shader Graph: Custom Function node, File mode.
 //   Source:   Assets/Shaders/Functions/SGF_DissolveCore.hlsl

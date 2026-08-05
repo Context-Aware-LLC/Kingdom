@@ -61,7 +61,6 @@ namespace Emberfall.Net.Client.Tests
             {
                 Array.Empty<byte>(),
                 Encoding.UTF8.GetBytes("{"),
-                Encoding.UTF8.GetBytes("{\"v\":2,\"matchId\":\"m\",\"seq\":1,\"type\":\"snapshot\",\"body\":{}}"), // wrong version
                 Encoding.UTF8.GetBytes("{\"v\":1,\"matchId\":\"m\",\"seq\":1,\"type\":\"snapshot\",\"body\":{\"stateVersion\":1.5}}"), // float
                 new byte[] { 0xff, 0xfe, 0x00 }, // not UTF-8
             };
@@ -75,6 +74,83 @@ namespace Emberfall.Net.Client.Tests
             // (budget is generous here — the point is "no throw", not the death path, which is 4c).
             Assert.That(c0.ResyncCount, Is.EqualTo(hostile.Length));
             Assert.That(c0.State, Is.EqualTo(ConnectionState.Live));
+        }
+
+        [Test]
+        public async Task Unknown_Semantic_Event_Is_A_Terminal_Contract_Mismatch_Not_A_Resync()
+        {
+            using var peer = new LoopbackServerPeer();
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
+            await StartPairAsync(peer, c0, c1);
+            int baseline = c0.InboundProcessed;
+            var e = new GameEvent(GameEventKind.CardPlayed, 1, null, null, null, EventFlags.None);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(
+                    new EventsMsg(c0.StateVersion, new[] { e }), new MatchId("m-loop"), 99))
+                .Replace("\"kind\":\"CardPlayed\"", "\"kind\":\"FutureSemanticFact\"");
+
+            peer.Transport0.EnqueueInbound(Encoding.UTF8.GetBytes(json));
+            await c0.WaitInboundAsync(baseline + 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
+                Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.ContractMismatch));
+                Assert.That(c0.ResyncCount, Is.Zero);
+            });
+        }
+
+        [Test]
+        public async Task Protocol_Version_Mismatch_Is_Terminal_Not_Resyncable()
+        {
+            using var peer = new LoopbackServerPeer();
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions { DeviceToken = "test-device-0" });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
+            await StartPairAsync(peer, c0, c1);
+            int baseline = c0.InboundProcessed;
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(
+                    new HeartbeatMsg(), new MatchId("m-loop"), 100))
+                .Replace("\"v\":1", "\"v\":2");
+
+            peer.Transport0.EnqueueInbound(Encoding.UTF8.GetBytes(json));
+            await c0.WaitInboundAsync(baseline + 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
+                Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.ContractMismatch));
+                Assert.That(c0.ResyncCount, Is.Zero);
+            });
+        }
+
+        [Test]
+        public async Task MatchStart_Engine_Contract_Must_Exactly_Match_Client()
+        {
+            using var peer = new LoopbackServerPeer();
+            using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions
+            {
+                DeviceToken = "test-device-0",
+                ContractVersion = "interfaces.v4",
+            });
+            using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
+            await StartPairAsync(peer, c0, c1);
+            int baseline = c0.InboundProcessed;
+            var mismatch = new MatchStartMsg(
+                c0.Player,
+                c0.Seat,
+                "interfaces.v3",
+                new OpponentInfo(new PlayerId("opponent"), "Opponent"),
+                SnapshotMsg.Of(c0.Current));
+
+            peer.Transport0.EnqueueInbound(ProtocolCodec.Encode(mismatch, new MatchId("m-loop"), 101));
+            await c0.WaitInboundAsync(baseline + 1);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
+                Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.ContractMismatch));
+                Assert.That(c0.ResyncCount, Is.Zero);
+            });
         }
 
         [Test]

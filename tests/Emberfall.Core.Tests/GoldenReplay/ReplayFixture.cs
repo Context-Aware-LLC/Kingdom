@@ -16,7 +16,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     public sealed class ReplayFixture
     {
         /// <summary>Highest on-disk schema this loader understands (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2).</summary>
-        public const int CurrentSchemaVersion = 2;
+        public const int CurrentSchemaVersion = 3;
 
         /// <summary>
         /// The v1 implicit values — the <see cref="MatchSetup"/> C# defaults that v1 fixtures were
@@ -148,6 +148,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
                                 targets.Add(new TargetRef(ParseInstance(t.GetString()!)));
                         return new HeroPowerIntent(player, targets);
                     }
+                case "unearth_choice":
+                    return new UnearthChoiceIntent(player,
+                        el.GetProperty("chosenCardId").GetString()!,
+                        el.GetProperty("choiceSequence").GetUInt64());
                 default:
                     throw new NotSupportedException($"Intent tag '{tag}' not supported by the golden-replay harness.");
             }
@@ -161,17 +165,17 @@ namespace Emberfall.Core.Tests.GoldenReplay
         }
     }
 
-    /// <summary>One expected D7 event row (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/golden-replay.md §3.2). Compared field-by-field in sequence order.</summary>
+    /// <summary>One expected semantic event row. Compared field-by-field in sequence order.</summary>
     public readonly struct ExpectedEvent
     {
         public readonly ulong Seq;
-        public readonly VfxEvent Kind;
+        public readonly GameEventKind Kind;
         public readonly InstanceId? Src;
         public readonly InstanceId? Tgt;
         public readonly int? Amt;
         public readonly EventFlags Flags;
 
-        public ExpectedEvent(ulong seq, VfxEvent kind, InstanceId? src, InstanceId? tgt, int? amt, EventFlags flags)
+        public ExpectedEvent(ulong seq, GameEventKind kind, InstanceId? src, InstanceId? tgt, int? amt, EventFlags flags)
         {
             Seq = seq; Kind = kind; Src = src; Tgt = tgt; Amt = amt; Flags = flags;
         }
@@ -179,7 +183,10 @@ namespace Emberfall.Core.Tests.GoldenReplay
         public static ExpectedEvent Parse(JsonElement e)
         {
             ulong seq = e.GetProperty("seq").GetUInt64();
-            var kind = (VfxEvent)Enum.Parse(typeof(VfxEvent), e.GetProperty("kind").GetString()!, false);
+            string kindValue = e.GetProperty("kind").GetString()!;
+            if (!Enum.TryParse(kindValue, false, out GameEventKind kind)
+                || !Enum.IsDefined(typeof(GameEventKind), kind))
+                throw new FormatException($"Unknown event kind '{kindValue}'.");
             InstanceId? src = InstOrNull(e, "src");
             InstanceId? tgt = InstOrNull(e, "tgt");
             int? amt = e.TryGetProperty("amt", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : (int?)null;

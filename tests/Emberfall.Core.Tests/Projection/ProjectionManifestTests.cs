@@ -9,7 +9,7 @@ namespace Emberfall.Core.Tests.Projection
     /// <summary>
     /// §7.1 test 5 — the default-deny totality tripwire (dev-docs/architecture/determinism-and-projection.md:35), mirror of the
     /// A2a serializer-manifest discipline: every field reachable from <see cref="GameState"/> must
-    /// be pinned below WITH its §5.2 redaction class, and every <see cref="VfxEvent"/> member must
+    /// be pinned below WITH its §5.2 redaction class, and every <see cref="GameEventKind"/> member must
     /// be pinned as OBL-8-classified. Adding a Contracts field or event kind without updating this
     /// manifest (and the projector, and the spec row) fails CI — an unclassified field is REDACTED
     /// by omission in the clone walk, but it must never be UNCLASSIFIED silently.
@@ -38,7 +38,16 @@ namespace Emberfall.Core.Tests.Projection
                 ["NextEventSequence"] = "PUBLIC",
                 ["Mulligan0Done"] = "PUBLIC",
                 ["Mulligan1Done"] = "PUBLIC",
+                ["OngoingEffects"] = "PUBLIC list; authority-only rule id stripped",
                 ["PendingChoice"] = "per-field (OBL-1)",
+            },
+            [typeof(OngoingEffectInstance)] = new()
+            {
+                ["Id"] = "PUBLIC",
+                ["Controller"] = "PUBLIC",
+                ["SourceDefinitionId"] = "PUBLIC",
+                ["Lifetime"] = "PUBLIC",
+                ["RemainingUses"] = "PUBLIC",
             },
             [typeof(PlayerState)] = new()
             {
@@ -52,7 +61,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Mana"] = "PUBLIC",
                 ["HeroPowerUsedThisTurn"] = "PUBLIC",
                 ["HeroAttacksUsedThisTurn"] = "PUBLIC",
-                ["NextTurnOverloadLock"] = "PUBLIC",
+                ["NextTurnBackdraftLock"] = "PUBLIC",
             },
             [typeof(HeroInstance)] = new()
             {
@@ -63,7 +72,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["MaxHealth"] = "PUBLIC",
                 ["Armor"] = "PUBLIC",
                 ["HeroPowerId"] = "PUBLIC",
-                ["IsFrozen"] = "PUBLIC",
+                ["IsFrosted"] = "PUBLIC",
             },
             [typeof(CardInstance)] = new()
             {
@@ -78,18 +87,12 @@ namespace Emberfall.Core.Tests.Projection
                 ["Keywords"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["Enchantments"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["HasAegisShield"] = "PUBLIC in visible zones (false in card-backs)",
-                ["IsFrozen"] = "PUBLIC in visible zones (false in card-backs)",
+                ["IsFrosted"] = "PUBLIC in visible zones (false in card-backs)",
+                ["IsSilenced"] = "PUBLIC in visible zones (false in card-backs)",
                 ["SummonedThisTurn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",
-                ["HasUsedReborn"] = "PUBLIC in visible zones (false in card-backs)",
+                ["HasUsedRekindle"] = "PUBLIC in visible zones (false in card-backs)",
                 ["Position"] = "PUBLIC (board only; 0 elsewhere)",
-            },
-            [typeof(WeaponInstance)] = new()
-            {
-                ["Id"] = "PUBLIC",
-                ["DefinitionId"] = "PUBLIC",
-                ["Attack"] = "PUBLIC",
-                ["Durability"] = "PUBLIC",
             },
             [typeof(Enchantment)] = new()
             {
@@ -97,6 +100,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["AttackDelta"] = "PUBLIC",
                 ["HealthDelta"] = "PUBLIC",
                 ["GrantedKeyword"] = "PUBLIC",
+                ["IsAura"] = "PUBLIC",
             },
             [typeof(ManaPool)] = new()
             {
@@ -138,24 +142,26 @@ namespace Emberfall.Core.Tests.Projection
         }
 
         [Test]
-        public void Every_VfxEvent_Kind_Has_An_OBL8_Row()
+        public void Every_Semantic_Event_Kind_Has_An_OBL8_Row()
         {
             // Pinned OBL-8 vocabulary (dev-docs/architecture/determinism-and-projection.md:24). A new enum member without a
             // table row (and a projector rule) must fail here, not leak silently.
             var classified = new HashSet<string>
             {
-                "onPlay", "onSummon", "onAttack", "onDamage", "onHeal", "onDeath", "onBuff",
-                "onDebuff", "onDraw", "onSilence", "onFreeze", "onTransform", "onReturn",
-                "onManaGain", "onEquip", "onDiscover", "onTurnStart", "onTurnEnd", "onHeroPower",
-                "onFatigue", "onGameWin", "onGameOver",
+                "CardPlayed", "CardSummoned", "AttackDeclared", "DamageApplied", "HealthRestored",
+                "CardDestroyed", "StatsModified", "KeywordApplied", "CardDrawn", "CardCreatedInHand",
+                "CardSilenced", "FrostApplied", "CardTransformed", "CardBounced", "ManaGained",
+                "WeaponEquipped", "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
+                "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
+                "OngoingEffectCreated", "OngoingEffectTriggered", "OngoingEffectExpired",
             };
 
-            var actual = Enum.GetNames(typeof(VfxEvent));
+            var actual = Enum.GetNames(typeof(GameEventKind));
             Assert.That(actual, Has.Length.EqualTo(classified.Count),
-                "VfxEvent vocabulary changed — author the OBL-8 row (default-deny) before extending this pin.");
+                "GameEventKind vocabulary changed — author the OBL-8 row before extending this pin.");
             foreach (var name in actual)
                 Assert.That(classified.Contains(name), Is.True,
-                    $"UNCLASSIFIED EVENT KIND: VfxEvent.{name} has no OBL-8 row.");
+                    $"UNCLASSIFIED EVENT KIND: GameEventKind.{name} has no OBL-8 row.");
         }
     }
 }

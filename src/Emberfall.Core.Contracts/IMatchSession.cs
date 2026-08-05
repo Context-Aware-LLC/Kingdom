@@ -31,7 +31,7 @@ namespace Emberfall.Core.Contracts
         /// <summary>A fresh projected snapshot arrived (post-command / reconnect).</summary>
         event Action<GameState> OnSnapshot;
 
-        /// <summary>Ordered projected D7 batch for presentation playback. Fires AFTER OnSnapshot:
+        /// <summary>Ordered projected semantic-event batch for presentation playback. Fires AFTER OnSnapshot:
         /// <see cref="Current"/> is already the post-command state when the batch lands, so event
         /// handlers can resolve ids against it (the old in-place-mutation coincidence, made a rule).</summary>
         event GameEventStream OnEvents;

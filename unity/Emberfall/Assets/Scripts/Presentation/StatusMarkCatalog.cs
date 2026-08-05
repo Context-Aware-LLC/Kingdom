@@ -15,20 +15,18 @@ namespace Emberfall.Presentation
         // To add an icon: drop an entry here (art must exist in UI_Core first).
         private static readonly Dictionary<Keyword, string> s_keywordIcons = new()
         {
-            { Keyword.TAUNT,        "icon_kw_taunt"       },
-            { Keyword.CHARGE,       "icon_kw_charge"      },
-            { Keyword.RUSH,         "icon_kw_rush"        },
-            { Keyword.DIVINE_SHIELD,"icon_kw_divine_shield"},
-            { Keyword.BATTLECRY,    "icon_kw_battlecry"   },
-            { Keyword.DEATHRATTLE,  "icon_kw_deathrattle" },
-            { Keyword.LIFESTEAL,    "icon_kw_lifesteal"   },
-            { Keyword.WINDFURY,     "icon_kw_windfury"    },
-            { Keyword.STEALTH,      "icon_kw_stealth"     },
-            { Keyword.POISONOUS,    "icon_kw_poisonous"   },
-            { Keyword.SPELL_DAMAGE, "icon_kw_spell_damage"},
-            { Keyword.FREEZE,       "icon_kw_freeze"      },
-            { Keyword.OVERLOAD,     "icon_kw_overload"    },
-            { Keyword.REBORN,       "icon_kw_reborn"      },
+            { Keyword.BULWARK,        "icon_kw_bulwark"       },
+            { Keyword.FERVOR,       "icon_kw_fervor"      },
+            { Keyword.SKIRMISH,         "icon_kw_skirmish"        },
+            { Keyword.AEGIS,"icon_kw_divine_shield"},
+            { Keyword.LIFEDRAIN,    "icon_kw_lifedrain"   },
+            { Keyword.DOUBLESTRIKE,     "icon_kw_doublestrike"    },
+            { Keyword.SHROUD,      "icon_kw_shroud"     },
+            { Keyword.VENOM,    "icon_kw_venom"   },
+            { Keyword.ARCANE_SURGE, "icon_kw_spell_damage"},
+            { Keyword.FROST,       "icon_kw_frost"      },
+            { Keyword.BACKDRAFT,     "icon_kw_backdraft"    },
+            { Keyword.REKINDLE,       "icon_kw_rekindle"      },
         };
 
         // Keywords with no icon by design or with art pending — silently skip, no warning.

@@ -72,7 +72,7 @@ namespace Emberfall.Net.Protocol.Tests
             var messages = new NetMessage[]
             {
                 SnapshotMsg.Of(projected),
-                new MatchStartMsg(viewer, 0, "interfaces.v3",
+                new MatchStartMsg(viewer, 0, "interfaces.v4",
                     new OpponentInfo(authoritative.Players[1].Id, "Rival"), SnapshotMsg.Of(projected)),
                 new MatchEndMsg(MatchOutcome.Player0Win, MatchEndReason.Win),
             };

@@ -5,24 +5,20 @@ using Emberfall.Core.Cards;
 namespace Emberfall.Core
 {
     /// <summary>
-    /// The runtime tree-walking interpreter over <see cref="EffectDef"/> data (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3 — chosen
+    /// The runtime tree-walking interpreter over <see cref="RuleDefinition"/> data (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3 — chosen
     /// over codegen so balance is a data patch, not a rebuild). One instance is created per command; it owns
     /// the deterministic effect queue and drains it to a fixed point, running the three post-mutation checks
     /// (DeathCheck / CapCheck / WinCheck) after every step. Ordering is part of the determinism contract and
     /// is exercised by the golden-replay gate (dev-docs/quality/testing-and-ci.md:24) — no Dictionary/HashSet iteration ever
     /// drives order here; only sorted lists and ascending <see cref="InstanceId"/> tie-breaks.
     ///
-    /// <para><b>M1 targeting model.</b> The committed <see cref="EffectDef"/> carries no <c>TargetSpec</c>
-    /// (design's dev-docs/specs/card-schema.md §5.3 is not yet in the data model). So targets resolve two ways: a
-    /// player-initiated trigger (ON_PLAY / ON_CAST) uses the validated targets from the intent; a fired
-    /// trigger (ON_DEATH / observers) has no player, so it falls back to a verb-relative default
-    /// (DEAL_DAMAGE→enemy hero, HEAL→friendly hero, BUFF/GIVE_KEYWORD→self). Selector-based AoE awaits a
-    /// TargetSpec primitive via the <c>requiresEngineeringPrimitive</c> gate (dev-docs/specs/card-schema.md:40).</para>
+    /// <para><b>Targeting.</b> Every authored <see cref="TargetSpec"/> is resolved through
+    /// <see cref="Targeting"/>, which owns candidate order, filters, bindings, multiplicity and canonical
+    /// RNG use. Selector-less legacy effects retain their verb-relative defaults until the typed-rule
+    /// migration makes every target policy explicit.</para>
     /// </summary>
     internal sealed class EffectInterpreter
     {
-        private static readonly IReadOnlyDictionary<Contracts.Action, IActionHandler> Handlers = ActionHandlers.Registry;
-
         private readonly GameState _state;
         private readonly ICardDatabase _db;
         private readonly EventBuffer _buf;
@@ -39,40 +35,93 @@ namespace Emberfall.Core
         public ICardDatabase Db => _db;
         public EventBuffer Events => _buf;
 
+        /// <summary>Create one carrierless observer for each future-trigger rule on a resolved spell.</summary>
+        public int CreateOngoingEffects(CardDefinition spell, PlayerId controller)
+        {
+            int created = 0;
+            for (int i = 0; i < spell.Rules.Count; i++)
+            {
+                RuleDefinition rule = spell.Rules[i];
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
+                if (!RuleLifetimeCapabilities.TryCreateOngoingEffect(spell.Type, trigger,
+                        rule.Lifetime, out OngoingEffectLifetime lifetime,
+                        out int? remainingUses))
+                    continue;
+
+                InstanceId id = _state.NextInstanceId();
+                OngoingEffectInstance instance = OngoingEffectInstance.Create(id, controller,
+                    spell.Id, rule.Id.Value, lifetime, remainingUses);
+                _state.OngoingEffects.Add(instance);
+                _buf.Emit(GameEventKind.OngoingEffectCreated, source: instance.Id);
+                created++;
+            }
+            return created;
+        }
+
         // ── Raising triggers ─────────────────────────────────────────────────────
 
         /// <summary>
-        /// Enqueue a card's OWN effects matching <paramref name="trigger"/> (ON_PLAY battlecry, ON_CAST spell,
-        /// ON_DEATH deathrattle). <paramref name="chosenTargets"/> are the player-resolved targets (empty for
-        /// fired triggers, which fall back to verb defaults at resolution time).
+        /// Enqueue a card's OWN effects matching <paramref name="trigger"/>. Player-authored choices are
+        /// already validated; automatic and random target specs resolve later against authoritative state.
         /// </summary>
-        public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<CharacterRef> chosenTargets)
+        public void RaiseSelf(CardInstance source, Trigger trigger, IReadOnlyList<TargetRef> chosenTargets,
+            TriggerEventContext context = default)
         {
-            var def = _db.Get(source.DefinitionId);
-            var effects = def.Effects;
-            for (int i = 0; i < effects.Count; i++)
-                if (effects[i].Trigger == trigger)
-                    _queue.Enqueue(new QueuedEffect(effects[i], source, chosenTargets));
+            // Do not form new work from a silenced permanent. Already queued work deliberately reaches
+            // Drain unchanged: the subscription snapshot was taken before silence and must resolve.
+            if (source.IsSilenced) return;
+            CardDefinition definition = _db.Get(source.DefinitionId);
+            if (!EffectSourceCapabilities.TryForCardType(definition.Type,
+                    out EffectSourceKind sourceKind))
+                return;
+            RaiseSelf(source.Id, source.Controller, definition, sourceKind, source, trigger,
+                chosenTargets, context);
+        }
+
+        /// <summary>Enqueue a carrierless source such as a hero power or future ongoing effect.</summary>
+        public void RaiseSelf(InstanceId identity, PlayerId controller, CardDefinition definition,
+            EffectSourceKind sourceKind, CardInstance? currentCarrier, Trigger trigger,
+            IReadOnlyList<TargetRef> chosenTargets, TriggerEventContext context = default)
+        {
+            if (!EffectSourceCapabilities.Supports(sourceKind, trigger)) return;
+            IReadOnlyList<RuleDefinition> rules = definition.Rules;
+            var bindings = new TargetBindingContext();
+            context = context.WithTriggerSource(identity);
+            for (int i = 0; i < rules.Count; i++)
+                if (RuleSemantics.ActivatesOn(rules[i], trigger))
+                {
+                    var source = new EffectSourceContext(identity, controller, definition, rules[i],
+                        sourceKind, currentCarrier);
+                    _queue.Enqueue(new QueuedEffect(source, chosenTargets, bindings, context));
+                }
         }
 
         /// <summary>
-        /// Enqueue every board-minion trigger source's effects subscribed to <paramref name="trigger"/>
-        /// (observer triggers such as ON_FRIENDLY_SUMMON), in canonical order: active player's side first,
-        /// then board left→right by position. This is the single source-enumeration seam; weapons and
-        /// ongoing effects extend it only when their runtime lifecycle and validation land together.
+        /// Enqueue every persistent source subscribed to <paramref name="trigger"/> in the shared
+        /// deterministic board-minion, equipped-weapon, future-ongoing order.
         /// Conditions qualify effects while this snapshot is built, before queue/cap accounting.
         /// </summary>
-        public void RaiseObservers(Trigger trigger, CardInstance? excluded, TriggerContext context = default)
+        public void RaiseObservers(Trigger trigger, CardInstance? excluded,
+            TriggerEventContext context = default,
+            InstanceId? triggerSource = null)
         {
-            foreach (var src in OrderedTriggerSources())
+            PlayerId firstPlayer = context.IncomingTurnPlayer ?? _state.ActivePlayer;
+            TriggerEventContext eventContext = triggerSource.HasValue
+                ? context.WithTriggerSource(triggerSource.Value)
+                : context;
+            EffectSourceContext? previous = null;
+            var bindings = new TargetBindingContext();
+            foreach (EffectSourceContext source in OrderedTriggerSources.Snapshot(
+                         _state, _db, firstPlayer, trigger))
             {
-                if (excluded != null && ReferenceEquals(src, excluded)) continue;
-                var def = _db.Get(src.DefinitionId);
-                var effects = def.Effects;
-                for (int i = 0; i < effects.Count; i++)
-                    if (effects[i].Trigger == trigger &&
-                        ConditionEvaluator.Holds(effects[i], src, context))
-                        _queue.Enqueue(new QueuedEffect(effects[i], src, System.Array.Empty<CharacterRef>(), context));
+                if (excluded != null && source.Identity == excluded.Id) continue;
+                if (!ConditionEvaluator.Holds(source, context)) continue;
+                if (previous == null || previous.Identity != source.Identity ||
+                    previous.Kind != source.Kind)
+                    bindings = new TargetBindingContext();
+                _queue.Enqueue(new QueuedEffect(source, System.Array.Empty<TargetRef>(), bindings,
+                    eventContext));
+                previous = source;
             }
         }
 
@@ -80,7 +129,7 @@ namespace Emberfall.Core
 
         /// <summary>
         /// Settle the board: resolve any pending deaths from the primary mutation, then drain queued effects
-        /// breadth-first — each effect followed by a fresh DeathCheck + WinCheck so chained deathrattles
+        /// breadth-first — each effect followed by a fresh DeathCheck + WinCheck so chained tolls
         /// cascade deterministically. Bounded by <see cref="MatchEngine.ActionResolutionCap"/>.
         /// </summary>
         public void Drain()
@@ -89,7 +138,7 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(qe.Effect, qe.Source, qe.TriggerContext))
+                if (!ConditionEvaluator.Holds(qe.Source, qe.TriggerEvent))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -107,19 +156,41 @@ namespace Emberfall.Core
 
         private void ResolveOne(QueuedEffect qe)
         {
-            if (!Handlers.TryGetValue(qe.Effect.Action, out var handler))
-                return; // unimplemented verb (e.g. DISCOVER pending its choice flow) — graceful no-op
-
             var targets = ResolveTargets(qe);
-            handler.Execute(new EffectContext(this, qe.Effect, qe.Source, targets));
+            if (qe.Source.Kind == EffectSourceKind.OngoingEffect)
+                _buf.Emit(GameEventKind.OngoingEffectTriggered, source: qe.Source.Identity);
+            ActionHandlers.Execute(new EffectContext(this, qe.Source, targets));
+            if (qe.Source.Kind == EffectSourceKind.OngoingEffect)
+                ConsumeOngoingEffect(qe.Source);
         }
 
-        // ── Death resolution (the deathrattle cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
+        private void ConsumeOngoingEffect(EffectSourceContext source)
+        {
+            int index = -1;
+            for (int i = 0; i < _state.OngoingEffects.Count; i++)
+                if (_state.OngoingEffects[i].Id == source.Identity &&
+                    _state.OngoingEffects[i].RuleId == source.RuleReference.RuleId.Value)
+                {
+                    index = i;
+                    break;
+                }
+            if (index < 0) return;
+
+            OngoingEffectInstance instance = _state.OngoingEffects[index];
+            bool expired = RuleLifetimeCapabilities.ConsumeOngoingEffect(instance.Lifetime,
+                instance.RemainingUses, out int? remainingUses);
+            instance.RemainingUses = remainingUses;
+            if (!expired) return;
+            _buf.Emit(GameEventKind.OngoingEffectExpired, source: instance.Id);
+            _state.OngoingEffects.RemoveAt(index);
+        }
+
+        // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─
 
         /// <summary>
         /// Resolve all minions currently at ≤0 health as a single batch in deterministic death order, firing
-        /// each one's ON_DEATH (deathrattle) onto the queue and resummoning REBORN copies. Repeats until no
-        /// fresh corpses remain in this settle; queued deathrattles themselves drain back in <see cref="Drain"/>.
+        /// each one's ON_DEATH (toll) onto the queue and resummoning REKINDLE copies. Repeats until no
+        /// fresh corpses remain in this settle; queued tolls themselves drain back in <see cref="Drain"/>.
         /// </summary>
         private void DeathCheck()
         {
@@ -150,22 +221,21 @@ namespace Emberfall.Core
                     RulesEngine.Reindex(ps.Board);
                     minion.Zone = Zone.Graveyard;
                     ps.Graveyard.Add(minion);
-                    _buf.Emit(VfxEvent.onDeath, source: minion.Id);
+                    AuraEngine.Recompute(_state, _db);
+                    _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 
                     var def = _db.Get(minion.DefinitionId);
-                    var effects = def.Effects;
-                    for (int i = 0; i < effects.Count; i++)
-                        if (effects[i].Trigger == Trigger.ON_DEATH)
-                            _queue.Enqueue(new QueuedEffect(effects[i], minion, System.Array.Empty<CharacterRef>()));
+                    RaiseSelf(minion, Trigger.ON_DEATH, System.Array.Empty<TargetRef>(),
+                        TriggerEventContext.ForSource(minion.Id));
 
-                    // REBORN: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
-                    if (minion.Keywords.Contains(Keyword.REBORN) && !minion.HasUsedReborn)
+                    // REKINDLE: the first death resummons a 1-health copy at the same slot (dev-docs/specs/card-schema.md §4).
+                    if (minion.Keywords.Contains(Keyword.REKINDLE) && !minion.HasUsedRekindle)
                     {
-                        minion.HasUsedReborn = true; // mark original consumed; copy gets its own flag in Resummon
+                        minion.HasUsedRekindle = true; // mark original consumed; copy gets its own flag in Resummon
                         Resummon(seat, def, idx);
                     }
                 }
-                // loop: REBORN copies / chained kills may have produced fresh corpses to settle
+                // loop: REKINDLE copies / chained kills may have produced fresh corpses to settle
             }
         }
 
@@ -175,106 +245,18 @@ namespace Emberfall.Core
             if (ps.Board.Count >= MatchEngine.BoardCap) return;
 
             var copy = new CardInstance(_state.NextInstanceId(), def.Id, ps.Id);
-            if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex)) return;
-            copy.CurrentHealth = 1;            // Reborn returns at 1 health
-            copy.HasUsedReborn = true;         // never reborns again
-            _buf.Emit(VfxEvent.onSummon, source: copy.Id, flags: EventFlags.IsToken);
+            if (!RulesEngine.EnterBoard(_state, copy, def, seat, atIndex, _db)) return;
+            copy.CurrentHealth = 1;            // Rekindle returns at 1 health
+            copy.HasUsedRekindle = true;         // never rekindles again
+            _buf.Emit(GameEventKind.CardSummoned, source: copy.Id, flags: EventFlags.IsToken);
         }
 
         // ── Target resolution ────────────────────────────────────────────────────
 
-        private IReadOnlyList<CharacterRef> ResolveTargets(QueuedEffect qe)
+        private IReadOnlyList<TargetCandidate> ResolveTargets(QueuedEffect qe)
         {
-            if (qe.ChosenTargets.Count > 0) return qe.ChosenTargets;
-            if (qe.Effect.Selector != null) return SelectorTargets(qe.Effect, qe.Source);
-            return DefaultTargets(qe.Effect, qe.Source);
-        }
-
-        /// <summary>
-        /// Auto-resolve targets from the effect's declared selector (dev-docs/specs/card-schema.md §5.3). Activated only
-        /// when no player-chosen targets are present — covers AoE sweeps (ENEMY_MINIONS), unconditional
-        /// auto-targets (ENEMY_HERO), and SELF. Explicit-choice (ANY_*) selectors are never auto-resolved:
-        /// CommandProcessor validation rejects a player intent that omits their target, so reaching here
-        /// with one means a fired trigger authored an ANY_* selector — a data bug, and it throws.
-        /// Unimplemented selectors (ADJACENT, TRIGGER_SOURCE) and unknown strings also throw: the M2
-        /// Phase 0 grammar-freeze ruling — silent fallback was silent mistargeting.
-        /// </summary>
-        private IReadOnlyList<CharacterRef> SelectorTargets(EffectDef eff, CardInstance source)
-        {
-            int seat = _state.SeatOf(source.Controller);
-            int foe = seat == 0 ? 1 : 0;
-            switch (eff.Selector)
-            {
-                case "SELF":
-                    return source.Zone == Zone.Board
-                        ? new[] { CharacterRef.OfMinion(seat, source) }
-                        : (IReadOnlyList<CharacterRef>)System.Array.Empty<CharacterRef>();
-                case "ENEMY_MINIONS":
-                    {
-                        var board = _state.Players[foe].Board;
-                        var refs = new CharacterRef[board.Count];
-                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(foe, board[i]);
-                        return refs;
-                    }
-                case "FRIENDLY_MINIONS":
-                    {
-                        var board = _state.Players[seat].Board;
-                        var refs = new CharacterRef[board.Count];
-                        for (int i = 0; i < board.Count; i++) refs[i] = CharacterRef.OfMinion(seat, board[i]);
-                        return refs;
-                    }
-                case "ALL_MINIONS":
-                    {
-                        var list = new List<CharacterRef>();
-                        var b0 = _state.Players[seat].Board;
-                        var b1 = _state.Players[foe].Board;
-                        for (int i = 0; i < b0.Count; i++) list.Add(CharacterRef.OfMinion(seat, b0[i]));
-                        for (int i = 0; i < b1.Count; i++) list.Add(CharacterRef.OfMinion(foe, b1[i]));
-                        return list;
-                    }
-                case "ENEMY_HERO":
-                    return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
-                case "FRIENDLY_HERO":
-                    return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
-                default:
-                    throw new System.InvalidOperationException(
-                        $"Card '{source.DefinitionId}': effect {eff.Action} declares selector '{eff.Selector}' " +
-                        "which the interpreter cannot auto-resolve (explicit-choice ANY_* selectors require " +
-                        "player-chosen targets; ADJACENT/TRIGGER_SOURCE are unimplemented). Fix the card row " +
-                        "or gate it behind requiresEngineeringPrimitive — silent fallback is mistargeting.");
-            }
-        }
-
-        private IReadOnlyList<CharacterRef> DefaultTargets(EffectDef eff, CardInstance source)
-        {
-            int seat = _state.SeatOf(source.Controller);
-            int foe = seat == 0 ? 1 : 0;
-            switch (eff.Action)
-            {
-                case Contracts.Action.DEAL_DAMAGE:
-                    return new[] { CharacterRef.OfHero(foe, _state.Players[foe].Hero) };
-                case Contracts.Action.HEAL:
-                    return new[] { CharacterRef.OfHero(seat, _state.Players[seat].Hero) };
-                case Contracts.Action.BUFF:
-                case Contracts.Action.GIVE_KEYWORD:
-                    return source.Zone == Zone.Board
-                        ? new[] { CharacterRef.OfMinion(seat, source) }
-                        : System.Array.Empty<CharacterRef>();
-                default:
-                    // DESTROY / RETURN_TO_HAND / SILENCE / TRANSFORM need an explicit target; none → no-op.
-                    return System.Array.Empty<CharacterRef>();
-            }
-        }
-
-        // ── Deterministic trigger-source ordering ────────────────────────────────
-
-        /// <summary>Board-minion sources only: active player's side first, each board left→right.</summary>
-        private IEnumerable<CardInstance> OrderedTriggerSources()
-        {
-            int active = _state.SeatOf(_state.ActivePlayer);
-            int other = active == 0 ? 1 : 0;
-            foreach (var m in _state.Players[active].Board) yield return m;
-            foreach (var m in _state.Players[other].Board) yield return m;
+            return Targeting.ResolveTargets(_state, _db, qe.Source, qe.ChosenTargets,
+                qe.Bindings, qe.TriggerEvent.TriggerSource);
         }
 
         private int DeathOrder(CharacterRef a, CharacterRef b)
@@ -294,48 +276,34 @@ namespace Emberfall.Core
     /// <summary>One effect waiting in the resolution queue, bound to the source that fired it and its targets.</summary>
     internal readonly struct QueuedEffect
     {
-        public readonly EffectDef Effect;
-        public readonly CardInstance Source;
-        public readonly IReadOnlyList<CharacterRef> ChosenTargets;
-        public readonly TriggerContext TriggerContext;
+        public readonly EffectSourceContext Source;
+        public readonly IReadOnlyList<TargetRef> ChosenTargets;
+        public readonly TargetBindingContext Bindings;
+        public readonly TriggerEventContext TriggerEvent;
 
-        public QueuedEffect(EffectDef effect, CardInstance source, IReadOnlyList<CharacterRef> chosenTargets,
-            TriggerContext triggerContext = default)
+        public QueuedEffect(EffectSourceContext source, IReadOnlyList<TargetRef> chosenTargets,
+            TargetBindingContext bindings, TriggerEventContext triggerEvent = default)
         {
-            Effect = effect;
             Source = source;
-            ChosenTargets = chosenTargets ?? System.Array.Empty<CharacterRef>();
-            TriggerContext = triggerContext;
+            ChosenTargets = chosenTargets ?? System.Array.Empty<TargetRef>();
+            Bindings = bindings;
+            TriggerEvent = triggerEvent;
         }
-    }
-
-    /// <summary>Event-specific values conditions can inspect without conflating them with the source.</summary>
-    internal readonly struct TriggerContext
-    {
-        public readonly PlayerId? TurnPlayer;
-
-        private TriggerContext(PlayerId? turnPlayer) => TurnPlayer = turnPlayer;
-
-        public static TriggerContext ForTurnStart(PlayerId turnPlayer) => new TriggerContext(turnPlayer);
     }
 
     /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
     internal static class ConditionEvaluator
     {
-        public static bool Holds(EffectDef effect, CardInstance source, TriggerContext context)
+        public static bool Holds(EffectSourceContext source, TriggerEventContext context)
         {
-            var condition = effect.Condition;
-            if (condition == null)
-                return effect.Trigger != Trigger.ON_TURN_START; // invalid card data fails closed at runtime too
-
-            switch (condition.Type)
+            switch (source.Rule.Condition)
             {
-                case ConditionType.TURN_OWNER:
-                    if (!condition.TurnOwner.HasValue || !context.TurnPlayer.HasValue)
-                        return false;
-
-                    bool controllerTurn = source.Controller == context.TurnPlayer.Value;
-                    switch (condition.TurnOwner.Value)
+                case AlwaysCondition _:
+                    return RuleSemantics.TriggerOf(source.Rule) != Trigger.ON_TURN_START;
+                case TurnOwnerCondition condition:
+                    if (!context.IncomingTurnPlayer.HasValue) return false;
+                    bool controllerTurn = source.Controller == context.IncomingTurnPlayer.Value;
+                    switch (condition.Owner)
                     {
                         case TurnOwner.CONTROLLER: return controllerTurn;
                         case TurnOwner.OPPONENT: return !controllerTurn;
@@ -350,37 +318,33 @@ namespace Emberfall.Core
 
     /// <summary>
     /// Everything a single primitive needs to apply itself (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.1). The handler mutates
-    /// <see cref="State"/> through the shared pipelines, emits D7 events via <see cref="Events"/>, and may
+    /// <see cref="State"/> through the shared pipelines, emits semantic events via <see cref="Events"/>, and may
     /// enqueue follow-on triggers via the back-reference to the interpreter.
     /// </summary>
     internal readonly struct EffectContext
     {
         public readonly EffectInterpreter Interpreter;
-        public readonly EffectDef Effect;
-        public readonly CardInstance Source;
-        public readonly IReadOnlyList<CharacterRef> Targets;
+        public readonly EffectSourceContext Source;
+        public readonly IReadOnlyList<TargetCandidate> Targets;
 
-        public EffectContext(EffectInterpreter interpreter, EffectDef effect, CardInstance source,
-            IReadOnlyList<CharacterRef> targets)
+        public EffectContext(EffectInterpreter interpreter, EffectSourceContext source,
+            IReadOnlyList<TargetCandidate> targets)
         {
             Interpreter = interpreter;
-            Effect = effect;
             Source = source;
             Targets = targets;
         }
 
+        public RuleDefinition Rule => Source.Rule;
         public GameState State => Interpreter.State;
         public ICardDatabase Db => Interpreter.Db;
         public EventBuffer Events => Interpreter.Events;
 
-        /// <summary>The effect's VFX override if present, else the action's default event (dev-docs/specs/card-schema.md §5.2).</summary>
-        public VfxEvent Vfx(VfxEvent fallback) => Effect.VfxOverride ?? fallback;
     }
 
-    /// <summary>One reusable engine primitive — a verb in the closed <see cref="Contracts.Action"/> set.</summary>
+    /// <summary>One reusable engine primitive for a closed typed <see cref="RuleAction"/> node.</summary>
     internal interface IActionHandler
     {
-        Contracts.Action Verb { get; }
         void Execute(in EffectContext ctx);
     }
 }

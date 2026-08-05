@@ -11,7 +11,7 @@ namespace Emberfall.Net.Protocol
     /// hardening of design §5 finding 7 — reflection lives only in the completeness TEST, which
     /// proves this table covers every sealed PlayerIntent subtype). Field names are the golden-
     /// fixture dialect (`player`, `card`, `slot`, `targets`, `attacker`, `defender`, `toReplace`)
-    /// plus `chosenCardId` (no fixture precedent — design §5 finding 8).
+    /// plus `chosenCardId` and `choiceSequence` for authoritative pending-choice correlation.
     /// </summary>
     internal static class IntentJsonCodec
     {
@@ -20,7 +20,7 @@ namespace Emberfall.Net.Protocol
         public const string HeroPower = "hero_power";
         public const string EndTurn = "end_turn";
         public const string Mulligan = "mulligan";
-        public const string DiscoverChoice = "discover_choice";
+        public const string UnearthChoice = "unearth_choice";
         public const string Concede = "concede";
         public const string AutoConfirm = "auto_confirm";
 
@@ -28,7 +28,7 @@ namespace Emberfall.Net.Protocol
         /// [ReplayTag]-annotated subtype set).</summary>
         public static IReadOnlyList<string> KnownTags { get; } = new[]
         {
-            PlayCard, Attack, HeroPower, EndTurn, Mulligan, DiscoverChoice, Concede, AutoConfirm,
+            PlayCard, Attack, HeroPower, EndTurn, Mulligan, UnearthChoice, Concede, AutoConfirm,
         };
 
         public static bool TryTagOf(PlayerIntent intent, out string tag)
@@ -40,7 +40,7 @@ namespace Emberfall.Net.Protocol
                 case HeroPowerIntent _: tag = HeroPower; return true;
                 case EndTurnIntent _: tag = EndTurn; return true;
                 case MulliganIntent _: tag = Mulligan; return true;
-                case DiscoverChoiceIntent _: tag = DiscoverChoice; return true;
+                case UnearthChoiceIntent _: tag = UnearthChoice; return true;
                 case ConcedeIntent _: tag = Concede; return true;
                 case AutoConfirmIntent _: tag = AutoConfirm; return true;
                 default: tag = ""; return false;
@@ -75,8 +75,9 @@ namespace Emberfall.Net.Protocol
                     foreach (var id in mu.ToReplace) w.Str(WirePrimitives.InstanceToWire(id));
                     w.EndArray();
                     break;
-                case DiscoverChoiceIntent dc:
+                case UnearthChoiceIntent dc:
                     w.Name("chosenCardId"); w.Str(dc.ChosenCardId);
+                    w.Name("choiceSequence"); w.U64(dc.ChoiceSequence);
                     break;
                     // EndTurn / Concede / AutoConfirm carry only $type + player.
             }
@@ -86,7 +87,18 @@ namespace Emberfall.Net.Protocol
         private static void WriteTargets(JsonWriter w, IReadOnlyList<TargetRef> targets)
         {
             w.BeginArray();
-            foreach (var t in targets) w.Str(WirePrimitives.InstanceToWire(t.Instance));
+            foreach (var t in targets)
+            {
+                if (t.Binding.Length == 0)
+                {
+                    w.Str(WirePrimitives.InstanceToWire(t.Instance));
+                    continue;
+                }
+                w.BeginObject();
+                w.Name("instance"); w.Str(WirePrimitives.InstanceToWire(t.Instance));
+                w.Name("binding"); w.Str(t.Binding);
+                w.EndObject();
+            }
             w.EndArray();
         }
 
@@ -150,11 +162,14 @@ namespace Emberfall.Net.Protocol
                         intent = new MulliganIntent(player, toReplace);
                         return Success(out error);
                     }
-                case DiscoverChoice:
+                case UnearthChoice:
                     {
                         if (!obj.TryGet("chosenCardId", out var ccVal) || !ccVal.TryStr(out string chosen))
                         { detail = "missing chosenCardId"; return false; }
-                        intent = new DiscoverChoiceIntent(player, chosen);
+                        if (!obj.TryGet("choiceSequence", out var seqVal) ||
+                            !seqVal.TryU64(out ulong choiceSequence))
+                        { detail = "missing or bad choiceSequence"; return false; }
+                        intent = new UnearthChoiceIntent(player, chosen, choiceSequence);
                         return Success(out error);
                     }
                 default:
@@ -188,9 +203,19 @@ namespace Emberfall.Net.Protocol
             if (tVal.Kind != JKind.Array) { detail = "targets is not an array"; return false; }
             foreach (var item in tVal.Items!)
             {
-                if (!item.TryStr(out string s) || !WirePrimitives.TryInstance(s, out var id))
+                if (item.TryStr(out string s) && WirePrimitives.TryInstance(s, out var legacyId))
+                {
+                    targets.Add(new TargetRef(legacyId));
+                    continue;
+                }
+                if (item.Kind != JKind.Object ||
+                    !item.TryGet("instance", out var instanceVal) ||
+                    !instanceVal.TryStr(out string instanceText) ||
+                    !WirePrimitives.TryInstance(instanceText, out var id) ||
+                    !item.TryGet("binding", out var bindingVal) ||
+                    !bindingVal.TryStr(out string binding) || string.IsNullOrEmpty(binding))
                 { detail = "bad target entry"; return false; }
-                targets.Add(new TargetRef(id));
+                targets.Add(new TargetRef(id, binding));
             }
             return true;
         }

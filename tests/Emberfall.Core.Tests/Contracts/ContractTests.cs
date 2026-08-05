@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Tests.Contracts
@@ -28,20 +29,98 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void VfxEvent_Vocabulary_Is_The_Closed_D7_Set_Of_22()
+        public void GameEventKind_Vocabulary_Is_The_Closed_Semantic_Set()
         {
-            // hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §5.2 lists exactly 22 closed D7 events.
-            Assert.That(Enum.GetValues(typeof(VfxEvent)).Length, Is.EqualTo(22));
+            var expected = new[]
+            {
+                "CardPlayed", "CardSummoned", "AttackDeclared", "DamageApplied",
+                "HealthRestored", "CardDestroyed", "StatsModified", "KeywordApplied",
+                "CardDrawn", "CardCreatedInHand", "CardSilenced", "FrostApplied",
+                "CardTransformed", "CardBounced", "ManaGained", "WeaponEquipped",
+                "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
+                "FatigueDamage", "MatchWon", "MatchEnded", "ArmorGained", "ControlChanged",
+                "OngoingEffectCreated", "OngoingEffectTriggered", "OngoingEffectExpired",
+            };
+
+            Assert.That(Enum.GetNames(typeof(GameEventKind)), Is.EqualTo(expected));
         }
 
         [Test]
-        public void Keyword_Enum_Has_The_18_Canonical_Keywords()
+        public void PresentationCue_Vocabulary_Is_Separate_From_Semantic_Events()
+        {
+            var expected = new[]
+            {
+                "Play", "Summon", "Attack", "Damage", "Heal", "Death", "Buff",
+                "Draw", "Silence", "Frost", "Transform", "Return", "ManaGain",
+                "Equip", "Unearth", "TurnStart", "TurnEnd", "HeroPower", "Fatigue",
+                "GameWin", "GameOver", "ArmorGain", "ControlChange",
+                "OngoingEffectCreate", "OngoingEffectTrigger", "OngoingEffectExpire",
+            };
+
+            Assert.That(Enum.GetNames(typeof(PresentationCue)), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void Every_Semantic_Event_Has_An_Explicit_Default_Presentation_Cue()
+        {
+            foreach (GameEventKind kind in Enum.GetValues(typeof(GameEventKind)))
+                Assert.That(PresentationCueDefaults.For(kind), Is.TypeOf<PresentationCue>());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(PresentationCueDefaults.For(GameEventKind.StatsModified), Is.EqualTo(PresentationCue.Buff));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.KeywordApplied), Is.EqualTo(PresentationCue.Buff));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.CardDrawn), Is.EqualTo(PresentationCue.Draw));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.CardCreatedInHand), Is.EqualTo(PresentationCue.Draw));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.ArmorGained), Is.EqualTo(PresentationCue.ArmorGain));
+                Assert.That(PresentationCueDefaults.For(GameEventKind.ControlChanged), Is.EqualTo(PresentationCue.ControlChange));
+            });
+        }
+
+        [Test]
+        public void Legacy_Vfx_Event_And_Sink_Contracts_Are_Removed()
+        {
+            var assembly = typeof(GameEvent).Assembly;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(assembly.GetType("Emberfall.Core.Contracts.VfxEvent"), Is.Null);
+                Assert.That(assembly.GetType("Emberfall.Core.Contracts.IGameEventSink"), Is.Null);
+            });
+        }
+
+        [Test]
+        public void Keyword_Enum_Keeps_The_16_Stable_Wire_Slots()
         {
             // dev-docs/specs/card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
-            // REKINDLING set (M3) adds REINFORCE — 18 implemented keywords total.
-            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(18));
+            // Herald and Toll were removed before the later explicit ordinals. SILENCE, BACKDRAFT,
+            // and REINFORCE now remain as reserved action-marker slots rather than runtime keywords.
+            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(16));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
+            Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("HERALD"));
+            Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("TOLL"));
+            Assert.Multiple(() =>
+            {
+                Assert.That((int)Keyword.LIFEDRAIN, Is.EqualTo(6));
+                Assert.That((int)Keyword.DOUBLESTRIKE, Is.EqualTo(7));
+                Assert.That((int)Keyword.SHROUD, Is.EqualTo(8));
+                Assert.That((int)Keyword.VENOM, Is.EqualTo(9));
+                Assert.That((int)Keyword.ARCANE_SURGE, Is.EqualTo(10));
+                Assert.That((int)Keyword.SILENCE, Is.EqualTo(11));
+                Assert.That((int)Keyword.FROST, Is.EqualTo(12));
+                Assert.That((int)Keyword.BACKDRAFT, Is.EqualTo(13));
+                Assert.That((int)Keyword.REKINDLE, Is.EqualTo(14));
+                Assert.That((int)Keyword.OVERWHELM, Is.EqualTo(15));
+                Assert.That((int)Keyword.VANGUARD, Is.EqualTo(16));
+                Assert.That((int)Keyword.REINFORCE, Is.EqualTo(17));
+            });
+            Assert.Multiple(() =>
+            {
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.SILENCE), Is.False);
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.BACKDRAFT), Is.False);
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.REINFORCE), Is.False);
+            });
         }
 
         [Test]

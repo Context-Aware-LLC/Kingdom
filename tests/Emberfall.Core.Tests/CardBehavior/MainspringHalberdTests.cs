@@ -8,7 +8,6 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Collection;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.CardBehavior
 {
@@ -68,18 +67,15 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Durability, Is.EqualTo(3));
             Assert.That(def.Rarity, Is.EqualTo(Rarity.RARE));
             Assert.That(def.SetId, Is.EqualTo(SetId.REKINDLING));
-            Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.DEATHRATTLE }));
-            Assert.That(def.CardText, Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(def.Keywords, Is.Empty, "Toll is derived presentation, not a carrier keyword.");
+            Assert.That(CardTextGenerator.Generate(def), Is.EqualTo("[Toll] Draw a card."));
 
-            Assert.That(def.Effects.Count, Is.EqualTo(1));
-            var fx = def.Effects[0];
-            Assert.That(fx.Trigger, Is.EqualTo(Trigger.ON_DEATH),
+            Assert.That(def.Rules.Count, Is.EqualTo(1));
+            RuleDefinition rule = def.Rules[0];
+            Assert.That(RuleSemantics.TriggerOf(rule), Is.EqualTo(Trigger.ON_DEATH),
                 "ON_DEATH is the only trigger that reaches a weapon leaving play (RulesEngine.BreakWeapon, EF-020).");
-            Assert.That(fx.Action, Is.EqualTo(Verb.DRAW));
-            Assert.That(fx.Amount, Is.EqualTo(1));
-            Assert.That(fx.Selector, Is.Null.Or.Empty,
-                "DrawHandler resolves the seat off Source.Controller — a selector here would be noise, and an "
-                + "ANY_* one would throw on a trigger the player never targets.");
+            Assert.That(rule.Action, Is.TypeOf<DrawAction>());
+            Assert.That(((DrawAction)rule.Action).Count, Is.EqualTo(1));
         }
 
         [Test]
@@ -153,11 +149,11 @@ namespace Emberfall.Core.Tests.CardBehavior
             new CommandProcessor(LiveDb).Execute(s,
                 new PlayCardIntent(s.ActivePlayer, lance.Id, 0, Array.Empty<TargetRef>()));
 
-            Assert.That(s.Players[0].Weapon!.Durability, Is.EqualTo(2),
+            Assert.That(s.Players[0].Weapon!.CurrentDurability, Is.EqualTo(2),
                 "the incoming lance keeps its full durability — the outgoing rattle must not touch it.");
         }
 
-        // ── Harness (shape borrowed from Combat/WeaponDeathrattleTests) ──────────
+        // ── Harness (shape borrowed from Combat/WeaponTollTests) ──────────
 
         private static GameState MainPhase()
         {
@@ -182,12 +178,11 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         private static void Equip(GameState s, int seat, CardDefinition def, int? durabilityOverride = null)
-            => s.Players[seat].Weapon = new WeaponInstance
+            => s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), def.Id, s.Players[seat].Id)
             {
-                Id = s.NextInstanceId(),
-                DefinitionId = def.Id,
-                Attack = def.Attack ?? 0,
-                Durability = durabilityOverride ?? def.Durability ?? 1,
+                Zone = Zone.Weapon,
+                CurrentAttack = def.Attack ?? 0,
+                CurrentDurability = durabilityOverride ?? def.Durability ?? 1,
             };
 
         private static CardInstance ToHand(GameState s, int seat, CardDefinition def)

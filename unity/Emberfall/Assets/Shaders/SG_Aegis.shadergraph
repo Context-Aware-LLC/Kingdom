@@ -1,4 +1,4 @@
-﻿{
+{
     "m_SGVersion": 3,
     "m_Type": "UnityEditor.ShaderGraph.GraphData",
     "m_ObjectId": "c1c2a6093bbe465c8aac6ff5eb40c9d4",
@@ -2035,7 +2035,7 @@
     "m_Type": "UnityEditor.ShaderGraph.AddNode",
     "m_ObjectId": "9fa7f11e1b374ce0a8b9ae8786cc1a83",
     "m_Group": { "m_Id": "" },
-    "m_Name": "Add ((rim+shimmer) + tauntInteriorFill)",
+    "m_Name": "Add ((rim+shimmer) + bulwarkInteriorFill)",
     "m_DrawState": {
         "m_Expanded": true,
         "m_Position": { "serializedVersion": "2", "x": -40.0, "y": -220.0, "width": 208.0, "height": 302.0 }

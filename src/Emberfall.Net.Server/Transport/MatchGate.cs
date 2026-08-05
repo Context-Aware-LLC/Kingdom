@@ -145,6 +145,16 @@ namespace Emberfall.Net.Server.Transport
                 return;
             }
 
+            if (!string.Equals(
+                    hello.ClientContractVersion,
+                    _opts.EngineContractVersion,
+                    StringComparison.Ordinal))
+            {
+                conn.Close(1002, "contract mismatch");
+                await conn.PumpTask;
+                return;
+            }
+
             // ── VULN-003 (security/known-vulnerabilities, LATENT — trigger row "Attaching anything of
             //    value to an account"). THIS IS THE LINE THAT ARMS IT. hello.DeviceToken is a string
             //    the client chose, and this is the whole of our identity check: there is none. That is

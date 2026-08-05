@@ -370,9 +370,7 @@ namespace Emberfall.Net.Server
                 SendSnapshot(seat);
                 if (raw.Events.Count > 0)
                 {
-                    var projected = new List<GameEvent>(raw.Events.Count);
-                    for (int i = 0; i < raw.Events.Count; i++)
-                        projected.Add(GameStateProjector.ProjectEvent(raw.Events[i], seat, vis[i]));
+                    var projected = GameStateProjector.ProjectEvents(raw.Events, vis, seat);
                     Send(seat, new EventsMsg(raw.StateVersion, projected));
                 }
             }

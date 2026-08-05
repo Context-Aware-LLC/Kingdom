@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using Emberfall.Core;
@@ -144,6 +145,34 @@ namespace Emberfall.Core.Tests.Projection
             var (host, s) = NewMatch(0x11UL);
             Assert.That(host.Snapshot(s.Players[0].Id).PendingChoice, Is.Null);
             Assert.That(host.Snapshot(s.Players[1].Id).PendingChoice, Is.Null);
+        }
+
+        [Test]
+        public void Ongoing_Effects_Project_Public_Status_But_Not_The_Rule_Reference()
+        {
+            var (host, s) = NewMatch(0x0EUL);
+            var effect = OngoingEffectInstance.CreateFinite(s.NextInstanceId(), s.Players[0].Id,
+                "public_source_definition", "private_rule_reference", 3);
+            s.OngoingEffects.Add(effect);
+
+            GameState p0 = host.Snapshot(s.Players[0].Id);
+            GameState p1 = host.Snapshot(s.Players[1].Id);
+
+            foreach (GameState projected in new[] { p0, p1 })
+            {
+                OngoingEffectInstance visible = projected.OngoingEffects.Single();
+                Assert.Multiple(() =>
+                {
+                    Assert.That(visible.Id, Is.EqualTo(effect.Id));
+                    Assert.That(visible.Controller, Is.EqualTo(effect.Controller));
+                    Assert.That(visible.SourceDefinitionId, Is.EqualTo("public_source_definition"));
+                    Assert.That(visible.Lifetime, Is.EqualTo(OngoingEffectLifetime.FINITE));
+                    Assert.That(visible.RemainingUses, Is.EqualTo(3));
+                    Assert.That(visible.RuleId, Is.Empty,
+                        "The engine-only lookup key must not survive default-deny projection.");
+                    Assert.That(ContainsToken(Ser(projected), "private_rule_reference"), Is.False);
+                });
+            }
         }
 
         // ── §7.1 test 3 — purity ─────────────────────────────────────────────────

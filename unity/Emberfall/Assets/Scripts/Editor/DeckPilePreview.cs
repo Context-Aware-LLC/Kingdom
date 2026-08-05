@@ -98,7 +98,7 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// One full-board frame with the draw flight frozen at five points along its curve, all
+        /// One full-board frame with the draw flight captured at five points along its curve, all
         /// composited at once — the path from pile to fan slot, which a live match shows for a
         /// quarter of a second and no single still can show at all.
         ///

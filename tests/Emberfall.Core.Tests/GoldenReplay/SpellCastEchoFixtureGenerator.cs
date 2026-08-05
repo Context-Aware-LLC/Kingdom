@@ -96,8 +96,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Submit(new EndTurnIntent(secondId));
 
             // ── Turn 3: first player takes a HERO POWER — the trap ───────────────
-            // searing_bolt deals 1 to a chosen character and raises Trigger.ON_CAST through an ephemeral
-            // HERO_POWER CardInstance. If ON_SPELL_CAST were hooked to generic ON_CAST, BOTH echoes would
+            // searing_bolt deals 1 to a chosen character and raises Trigger.ON_CAST through a carrierless
+            // HERO_POWER source context. If ON_SPELL_CAST were hooked to generic ON_CAST, BOTH echoes would
             // fire here. The assertions below are what make that regression a hash divergence forever.
             int beforePower = state.Players[secondSeat].Hero.CurrentHealth;
             int firstBeforePower = state.Players[firstSeat].Hero.CurrentHealth;
@@ -168,7 +168,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
                 ["name"] = "spell_cast_echo",
-                ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
+                ["engineContractVersion"] = "interfaces.v4",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0005",
                 ["p0"] = "P0",

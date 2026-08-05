@@ -112,7 +112,7 @@ namespace Emberfall.Net.Protocol
         public bool VerifyIntegrity() => string.Equals(GameStateHasher.Hash(State), Hash, System.StringComparison.Ordinal);
     }
 
-    /// <summary>The ordered projected D7 batch for one applied command (netcode §3.3).</summary>
+    /// <summary>The ordered projected semantic-event batch for one applied command (netcode §3.3).</summary>
     public sealed record EventsMsg(ulong StateVersion, IReadOnlyList<GameEvent> Events) : NetMessage;
 
     /// <summary>Intent refused; carries the envelope seq of the offending <see cref="IntentMsg"/>.</summary>
@@ -164,6 +164,8 @@ namespace Emberfall.Net.Protocol
         /// <summary>Intent <c>$type</c> tag is not in the [ReplayTag] registry → server maps to
         /// <see cref="RejectReason.UnknownIntent"/>.</summary>
         UnknownIntentTag,
+        /// <summary>A semantic event kind is not in this client's closed engine contract.</summary>
+        UnknownEventKind,
         /// <summary>An enum name failed strict parse, or a required field is missing/mis-typed.</summary>
         BadField,
         /// <summary>Payload exceeds <see cref="ProtocolCodec.MaxMessageBytes"/>.</summary>

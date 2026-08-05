@@ -88,7 +88,7 @@ band_cy = h * 0.70
 ink = (28, 18, 12, 255)
 # single-weight font: same-color stroke fakes a bolder keyword
 f_kw = ImageFont.truetype(ALFA, 97)
-d.text((w * 0.5, band_cy - 88), "Taunt", font=f_kw, fill=ink, anchor="mm",
+d.text((w * 0.5, band_cy - 88), "Bulwark", font=f_kw, fill=ink, anchor="mm",
        stroke_width=2, stroke_fill=ink)
 f_body = ImageFont.truetype(ALFA, 68)
 d.text((w * 0.5, band_cy + 42), "When this survives damage,", font=f_body,

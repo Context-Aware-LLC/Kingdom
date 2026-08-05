@@ -2,6 +2,15 @@
 
 _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty until proven a deliberate rule change._
 
+## NOR-31 ongoing-effect canonical rebaseline (2026-08-05)
+
+- **Which rule changed:** `GameState` gained the canonical `OngoingEffects` tail. Even an empty list writes a deterministic zero count, so every prior final-state digest changes while its event stream remains identical.
+- **Why the new golden is correct:** all nine fixtures replayed with unchanged intents and unchanged semantic events; only the reviewed canonical encoding tail changed. The serializer field manifest, per-field mutation sweep, pinned digest, projected/authority wire bridge, and strict snapshot round-trip are green.
+- **Linked change:** NOR-31 step 4, commit `5742ea5` (`feat(state): serialize and project ongoing effects`).
+- **cardSetSnapshot changed?** no for this rebaseline; the dedicated ongoing fixture appends fixture-only cards separately.
+- **engineContractVersion changed?** no; `interfaces.v4` remains the recorded contract label.
+
+
 - **Which rule changed:** none — **this is a NEW fixture, not a re-bake.** Nothing was rebaselined;
   there is no old hash to compare against. It is the golden EF-016 owes under the standing rule
   "no new effect without a golden": `Trigger.ON_SPELL_CAST` was declared in `Enums.cs` and raised
@@ -16,14 +25,14 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   | seq | event | meaning |
   |---|---|---|
-  | 6 → 7, 8 | `onPlay` (i64), `onDamage` i64→i1 amt 2, then `onDamage` i43→i2 amt 1 | the spell's own `ON_CAST` resolves **first**; the echo reacts after it — and that echo belongs to the player who did **not** cast |
-  | 13 → 14 | `onHeroPower` (i1), `onDamage` i84→i2 amt 1, **and nothing else** | **THE TRAP.** A hero power raises the same `Trigger.ON_CAST` through an ephemeral `HERO_POWER` card (i84). Two echoes are standing on the boards. Neither fires |
-  | 18 → 19, 20, 21 | `onPlay` (i65), `onDamage` i65→i1, then i63→i1, then i43→i2 | one cast, **both** boards swept, **active side first** (i63 is the caster's echo, i43 the opponent's) |
+  | 6 → 7, 8 | `CardPlayed` (i64), `DamageApplied` i64→i1 amt 2, then `DamageApplied` i43→i2 amt 1 | the spell's own `ON_CAST` resolves **first**; the echo reacts after it — and that echo belongs to the player who did **not** cast |
+  | 13 → 14 | `HeroPowerUsed` (i1), `DamageApplied` i84→i2 amt 1, **and nothing else** | **THE TRAP.** A hero power raises the same `Trigger.ON_CAST` through an ephemeral `HERO_POWER` card (i84). Two echoes are standing on the boards. Neither fires |
+  | 18 → 19, 20, 21 | `CardPlayed` (i65), `DamageApplied` i65→i1, then i63→i1, then i43→i2 | one cast, **both** boards swept, **active side first** (i63 is the caster's echo, i43 the opponent's) |
 
   Rows 2 and 3 are the point of the fixture. Row 2 pins the gate that the whole task turns on: the
   raise lives in `ApplyPlayCard`'s `CardType.SPELL` arm and nowhere else, so "whenever a spell is
   cast" excludes hero powers. Hooking generic `ON_CAST` instead — the obvious and wrong
-  implementation — would add two `onDamage` rows at seq 14 and fail this fixture forever. Row 3
+  implementation — would add two `DamageApplied` rows at seq 14 and fail this fixture forever. Row 3
   pins the scope and the order: an "any spell" observer sweep across both boards rather than a
   controller-scoped "whenever YOU cast", in `RaiseObservers`' canonical active-player-first walk.
   Row 1 pins queue order — `RaiseSelf` before `RaiseObservers` into a FIFO queue — which totals
@@ -45,8 +54,41 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   an `ON_SPELL_CAST` subscriber and a cheap spell to trigger it; no existing row was edited. The
   append is inert for the other fixtures — decks are explicit id lists and `GameStateHasher` walks
   game state, never the card db — and the proof is that `opening_pyra_maren`,
-  `full_match_pyra_wins`, `deathrattle_cascade`, `turn_end_toll` and `on_damaged_thorns` all replay
+  `full_match_pyra_wins`, `toll_cascade`, `turn_end_toll` and `on_damaged_thorns` all replay
   green **unrebaselined** with the two cards present, on a tree rebased onto `origin/master` after
   EF-014 landed its own two fixture-only cards into the same snapshot.
 - **engineContractVersion changed?** no. `Trigger.ON_SPELL_CAST` already existed in the enum;
   EF-016 adds a raise site, not a contract member. Stays `interfaces.v3`.
+
+## NOR-31 semantic-event contract rebaseline (2026-08-05)
+
+- **Which rule changed?** No gameplay rule changed. Expected rows now identify semantic game facts;
+  presentation cues are a separate optional field and are not part of replay comparison.
+- **Why is this correct?** Across all nine fixtures, all 168 rows preserve sequence, source, target,
+  amount, and flags. Event counts and every state hash are unchanged.
+- **Link to the change:** NOR-31, Program step 10.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** yes, to `interfaces.v4`; replay schema changed to v3.
+
+## NOR-31 silence-state hash rebaseline (2026-08-05)
+
+- **Which rule changed?** `CardInstance.IsSilenced` is now canonical state, serialized and projected.
+- **Why is this correct?** This fixture never applies SILENCE; its event stream and gameplay state are unchanged. The new false boolean participates in every card's canonical walk, so only the expected digest changes.
+- **Link to the change:** NOR-31 silence-state implementation; `GameStateSerializer.WalkCard` and `CanonicalStateFixtures` mutation manifest.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** no; replay intent/event schema is unchanged.
+
+## NOR-31 effect-source identity rebaseline (2026-08-05)
+
+- **Which rule changed?** Hero powers no longer mint a throwaway `CardInstance`. Their immutable
+  `EffectSourceContext` uses the already-public hero identity, the acting player as controller, the
+  hero-power definition/rule reference, `HeroPower` source kind, and no current carrier.
+- **Why is this correct?** Sequence 14 remains the same one point of Searing Bolt damage with no
+  spell-cast observers. Its source changes from synthetic `i84` to hero `i1`, matching sequence 13's
+  `HeroPowerUsed` fact. The final state also no longer advances `NextInstanceCounter` for an object
+  that never entered canonical state. All other 21 events are byte-for-byte unchanged.
+- **Hashes:** the silence-state baseline `c07361118ec41cdec8bdd646fb668204819900e27a69e2e4c214df4b6ba816c1`
+  changes to the combined digest `99ae8e81ff1fc4c8e8648a542dbe07e4ce93a51b8b335520b2ee8485542d7050`.
+- **Link to the change:** NOR-31 Program step 3, explicit effect-source contexts.
+- **cardSetSnapshot changed?** no.
+- **engineContractVersion changed?** no; the semantic event shape is unchanged.

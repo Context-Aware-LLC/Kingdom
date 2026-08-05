@@ -9,6 +9,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_recruit"
@@ -23,8 +24,9 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [
-      "CHARGE"
+      "FERVOR"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/ember_zealot"
@@ -37,20 +39,31 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/flame_bolt",
-    "cardText": "Deal 3 damage to a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ANY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/flame_bolt"
   },
   {
     "id": "cinder_drake",
@@ -62,6 +75,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "rules": [],
     "tribe": "DRAGON",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -77,6 +91,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_initiate"
@@ -91,8 +106,9 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/tide_oracle"
@@ -105,20 +121,31 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/frost_ripple",
-    "cardText": "Deal 2 damage to all enemy minions.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ENEMY_MINIONS"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/frost_ripple"
   },
   {
     "id": "wave_caller",
@@ -130,6 +157,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/wave_caller"
@@ -144,8 +172,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -161,8 +190,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -178,8 +208,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "CHARGE"
+      "FERVOR"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "CORE",
     "collectible": true,
@@ -195,8 +226,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_stoneback"
@@ -210,20 +242,29 @@
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/core_hollow_acolyte",
-    "cardText": "Battlecry: Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/core_hollow_acolyte"
   },
   {
     "id": "core_lantern_bearer",
@@ -234,23 +275,30 @@
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/core_lantern_bearer",
-    "cardText": "Deathrattle: Summon a 1/1 Wisp.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/core_lantern_bearer"
   },
   {
     "id": "core_aegis_templar",
@@ -262,8 +310,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "DIVINE_SHIELD"
+      "AEGIS"
     ],
+    "rules": [],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_aegis_templar"
@@ -278,8 +327,9 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
+    "rules": [],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/core_veilstalker"
@@ -293,23 +343,32 @@
     "health": 4,
     "class": "NEUTRAL",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 4,
+          "target": {
+            "selector": "ANY_FRIENDLY"
+          }
+        }
+      }
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/core_grove_mender",
-    "cardText": "Battlecry: Restore 4 Health to a friendly character.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "HEAL",
-        "amount": 4,
-        "target": {
-          "selector": "ANY_FRIENDLY"
-        }
-      }
-    ]
+    "artId": "art/core_grove_mender"
   },
   {
     "id": "core_arclight_adept",
@@ -321,12 +380,12 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [
-      "SPELL_DAMAGE"
+      "ARCANE_SURGE"
     ],
+    "rules": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/core_arclight_adept",
-    "cardText": "Spell Damage +1"
+    "artId": "art/core_arclight_adept"
   },
   {
     "id": "core_bonehound",
@@ -338,8 +397,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
+    "rules": [],
     "tribe": "UNDEAD",
     "setId": "CORE",
     "collectible": true,
@@ -355,9 +415,10 @@
     "class": "NEUTRAL",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "REBORN"
+      "BULWARK",
+      "REKINDLE"
     ],
+    "rules": [],
     "tribe": "UNDEAD",
     "setId": "CORE",
     "collectible": true,
@@ -373,6 +434,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "setId": "CORE",
     "collectible": true,
     "artId": "art/ember_cinder_lance"
@@ -385,20 +447,31 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": true,
-    "artId": "art/ember_scorch",
-    "cardText": "Deal 3 damage.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ANY_CHARACTER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_CHARACTER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "art/ember_scorch"
   },
   {
     "id": "ember_overheat_golem",
@@ -409,21 +482,30 @@
     "health": 4,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [
-      "OVERLOAD"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_overheat_golem",
-    "cardText": "Overload: (2)",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "OVERLOAD",
-        "amount": 2
-      }
-    ]
+    "artId": "art/ember_overheat_golem"
   },
   {
     "id": "ember_twin_flame",
@@ -433,24 +515,35 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": true,
-    "artId": "art/ember_twin_flame",
-    "cardText": "Deal 2 damage to all enemy minions.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ENEMY_MINIONS"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "art/ember_twin_flame"
   },
   {
     "id": "ember_pyras_wrath",
-    "name": "Pyra's Wrath",
+    "name": "Pyra\u0027s Wrath",
     "type": "MINION",
     "cost": 7,
     "attack": 6,
@@ -458,24 +551,34 @@
     "class": "EMBERWARD",
     "rarity": "LEGENDARY",
     "keywords": [
-      "CHARGE",
-      "BATTLECRY"
+      "FERVOR"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
     ],
     "tribe": "ELEMENTAL",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_pyras_wrath",
-    "cardText": "Battlecry: Deal 1 damage to the enemy hero.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ENEMY_HERO"
-        }
-      }
-    ]
+    "artId": "art/ember_pyras_wrath"
   },
   {
     "id": "tide_frostbind",
@@ -485,19 +588,30 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": true,
-    "artId": "art/tide_frostbind",
-    "cardText": "Freeze an enemy character.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "FREEZE",
-        "target": {
-          "selector": "ANY_ENEMY"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "art/tide_frostbind"
   },
   {
     "id": "tide_undertow",
@@ -507,19 +621,30 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": true,
-    "artId": "art/tide_undertow",
-    "cardText": "Return a minion to its owner's hand.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ANY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "art/tide_undertow"
   },
   {
     "id": "tide_siren",
@@ -530,22 +655,31 @@
     "health": 5,
     "class": "TIDECALLER",
     "rarity": "EPIC",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      }
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_siren",
-    "cardText": "Battlecry: Freeze all enemy minions.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "FREEZE",
-        "target": {
-          "selector": "ENEMY_MINIONS"
-        }
-      }
-    ]
+    "artId": "art/tide_siren"
   },
   {
     "id": "tide_reefguard",
@@ -557,8 +691,9 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "SPIRIT",
     "setId": "CORE",
     "collectible": true,
@@ -566,23 +701,34 @@
   },
   {
     "id": "tide_deep_bargain",
-    "name": "Maren's Deep Bargain",
+    "name": "Maren\u0027s Deep Bargain",
     "type": "SPELL",
     "cost": 3,
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 2
+        }
+      }
+    ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_deep_bargain",
-    "cardText": "Draw 2 cards.",
-    "effects": [
-      {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 2
-      }
-    ]
+    "artId": "art/tide_deep_bargain"
   },
   {
     "id": "token_spark_coin",
@@ -592,20 +738,29 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/token_spark_coin",
-    "cardText": "Gain 1 Mana Crystal this turn only.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GAIN_MANA",
-        "amount": 1,
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GAIN_MANA",
+          "amount": 1,
+          "manaKind": "TEMPORARY"
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/token_spark_coin"
   },
   {
     "id": "token_wisp_1_1",
@@ -617,6 +772,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "setId": "CORE",
     "collectible": false,
     "artId": "art/token_wisp_1_1"
@@ -629,20 +785,31 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_searing_bolt",
-    "cardText": "Deal 1 damage.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ANY_CHARACTER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_CHARACTER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_searing_bolt"
   },
   {
     "id": "hero_power_tidal_ward",
@@ -652,23 +819,29 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_tidal_ward",
-    "cardText": "Summon a 0/2 Tide Wisp with Taunt.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_tide_wisp"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_tide_wisp",
+          "count": 1
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_tidal_ward"
   },
   {
     "id": "hero_power_toll_the_bell",
@@ -678,20 +851,31 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_toll_the_bell",
-    "cardText": "Restore 2 Health to your hero.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "HEAL",
-        "amount": 2,
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_toll_the_bell"
   },
   {
     "id": "hero_power_quicken",
@@ -701,20 +885,31 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_quicken",
-    "cardText": "Restore 3 Health to your hero.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "HEAL",
-        "amount": 3,
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 3,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_quicken"
   },
   {
     "id": "token_tide_wisp",
@@ -726,8 +921,9 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "setId": "CORE",
     "collectible": false,
     "artId": "art/token_tide_wisp"
@@ -742,13 +938,13 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "REBORN"
+      "REKINDLE"
     ],
+    "rules": [],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_gatewatch_whelp",
-    "cardText": "[Reborn]"
+    "artId": "art/grave_gatewatch_whelp"
   },
   {
     "id": "grave_last_rite",
@@ -758,24 +954,47 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/grave_last_rite",
-    "cardText": "Destroy a friendly minion. Draw a card.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 1
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/grave_last_rite"
   },
   {
     "id": "grave_sable_watcher",
@@ -787,49 +1006,66 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_sable_watcher",
-    "cardText": "[Taunt] [Deathrattle] Summon a 1/1 Grave Wisp.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/grave_sable_watcher"
   },
   {
     "id": "grave_sorrows_blessing",
-    "name": "Sorrow's Blessing",
+    "name": "Sorrow\u0027s Blessing",
     "type": "SPELL",
     "cost": 2,
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/grave_sorrows_blessing",
-    "cardText": "Give a friendly minion Reborn.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "REBORN"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "REKINDLE",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/grave_sorrows_blessing"
   },
   {
     "id": "grave_charnel_priest",
@@ -840,31 +1076,50 @@
     "health": 3,
     "class": "GRAVEKEEP",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 2
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_charnel_priest",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
-        }
-      },
-      {
-        "trigger": "ON_PLAY",
-        "action": "SUMMON",
-        "amount": 2,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/grave_charnel_priest"
   },
   {
     "id": "grave_ashen_archivist",
@@ -875,21 +1130,30 @@
     "health": 3,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_ashen_archivist",
-    "cardText": "[Deathrattle] Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/grave_ashen_archivist"
   },
   {
     "id": "grave_custodian",
@@ -900,24 +1164,31 @@
     "health": 4,
     "class": "GRAVEKEEP",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "ADD_TO_HAND",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_custodian",
-    "cardText": "[Battlecry] Add a Grave Wisp to your hand.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "ADD_TO_HAND",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/grave_custodian"
   },
   {
     "id": "grave_last_gate_warden",
@@ -929,24 +1200,32 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 2
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_last_gate_warden",
-    "cardText": "[Taunt] [Deathrattle] Summon two 1/1 Grave Wisps.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "SUMMON",
-        "amount": 2,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/grave_last_gate_warden"
   },
   {
     "id": "grave_harrower_of_ash",
@@ -957,36 +1236,67 @@
     "health": 5,
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION"
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 2
+        }
+      },
+      {
+        "id": "rule_3",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_harrower_of_ash",
-    "cardText": "[Battlecry] Destroy a friendly minion. Summon two 1/1 Grave Wisps. Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
-        }
-      },
-      {
-        "trigger": "ON_PLAY",
-        "action": "SUMMON",
-        "amount": 2,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      },
-      {
-        "trigger": "ON_PLAY",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/grave_harrower_of_ash"
   },
   {
     "id": "grave_bell_novice",
@@ -997,48 +1307,66 @@
     "health": 2,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_bell_novice",
-    "cardText": "[Deathrattle] Restore 2 Health to your hero.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "HEAL",
-        "target": {
-          "selector": "FRIENDLY_HERO"
-        },
-        "amount": 2
-      }
-    ]
+    "artId": "art/grave_bell_novice"
   },
   {
     "id": "grave_tollkeeper_moth",
-    "name": "Tollkeeper's Moth",
+    "name": "Tollkeeper\u0027s Moth",
     "type": "MINION",
     "cost": 2,
     "attack": 2,
     "health": 1,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_tollkeeper_moth",
-    "cardText": "[Deathrattle] Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/grave_tollkeeper_moth"
   },
   {
     "id": "grave_chained_revenant",
@@ -1050,23 +1378,34 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [
-      "REBORN"
+      "REKINDLE"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_chained_revenant",
-    "cardText": "[Battlecry] Deal 2 damage to a minion. [Reborn]",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "target": {
-          "selector": "ANY_MINION"
-        },
-        "amount": 2
-      }
-    ]
+    "artId": "art/grave_chained_revenant"
   },
   {
     "id": "grave_wailing_chorus",
@@ -1076,28 +1415,51 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/grave_wailing_chorus",
-    "cardText": "Deal 2 damage to ALL minions. Restore 2 Health to your hero.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "target": {
-          "selector": "ALL_MINIONS"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "amount": 2
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ALL_MINIONS"
+          }
+        }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "HEAL",
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "amount": 2
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/grave_wailing_chorus"
   },
   {
     "id": "grave_bell_maul",
@@ -1109,6 +1471,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/grave_bell_maul"
@@ -1123,24 +1486,32 @@
     "class": "GRAVEKEEP",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_revenant_5_5_bulwark",
+          "count": 1
+        }
+      }
     ],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_sealed_gate_keeper",
-    "cardText": "[Taunt] [Deathrattle] Summon a 5/5 Revenant with Taunt.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_revenant_5_5_taunt"
-        }
-      }
-    ]
+    "artId": "art/grave_sealed_gate_keeper"
   },
   {
     "id": "verdant_thornback_cub",
@@ -1152,8 +1523,9 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1167,24 +1539,29 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/verdant_seedling_rite",
-    "cardText": "Gain an empty Mana Crystal. It stays empty until next turn.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GAIN_MANA",
-        "amount": 1,
-        "payload": {
-          "permanent": true,
-          "empty": true
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GAIN_MANA",
+          "amount": 1,
+          "manaKind": "PERMANENT_EMPTY"
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_seedling_rite"
   },
   {
     "id": "verdant_bramblehide_guardian",
@@ -1196,34 +1573,46 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_bramblehide_guardian"
   },
   {
     "id": "verdant_menders_bloom",
-    "name": "Mender's Bloom",
+    "name": "Mender\u0027s Bloom",
     "type": "SPELL",
     "cost": 3,
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/verdant_menders_bloom",
-    "cardText": "Restore 6 Health to a friendly character.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "HEAL",
-        "amount": 6,
-        "target": {
-          "selector": "ANY_FRIENDLY"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 6,
+          "target": {
+            "selector": "ANY_FRIENDLY"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_menders_bloom"
   },
   {
     "id": "verdant_elderroot_colossus",
@@ -1237,6 +1626,7 @@
     "keywords": [
       "OVERWHELM"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1251,20 +1641,29 @@
     "health": 5,
     "class": "VERDANT",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_canopy_seer",
-    "cardText": "Battlecry: Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/verdant_canopy_seer"
   },
   {
     "id": "verdant_ironbark_elder",
@@ -1276,8 +1675,9 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_ironbark_elder"
@@ -1294,13 +1694,14 @@
     "keywords": [
       "OVERWHELM"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_worldroot_behemoth"
   },
   {
     "id": "verdant_thalens_ancient",
-    "name": "Thalen's Ancient",
+    "name": "Thalen\u0027s Ancient",
     "type": "MINION",
     "cost": 7,
     "attack": 7,
@@ -1308,9 +1709,10 @@
     "class": "VERDANT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
+      "BULWARK",
       "OVERWHELM"
     ],
+    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "art/verdant_thalens_ancient"
@@ -1325,20 +1727,31 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/verdant_grasping_thornvine",
-    "cardText": "Whenever this attacks, restore 2 Health to your hero.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_ATTACK",
-        "action": "HEAL",
-        "amount": 2,
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_ATTACK"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_grasping_thornvine"
   },
   {
     "id": "verdant_sapsurge",
@@ -1348,20 +1761,31 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 4,
+          "target": {
+            "selector": "ANY_CHARACTER"
+          }
+        }
+      }
+    ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_sapsurge",
-    "cardText": "Restore 4 Health.",
-    "effects": [
-      {
-        "trigger": "ON_CAST",
-        "action": "HEAL",
-        "target": {
-          "selector": "ANY_CHARACTER"
-        },
-        "amount": 4
-      }
-    ]
+    "artId": "art/verdant_sapsurge"
   },
   {
     "id": "verdant_rootweaver",
@@ -1372,23 +1796,32 @@
     "health": 3,
     "class": "VERDANT",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_rootweaver",
-    "cardText": "[Battlecry] Restore 2 Health to your hero.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "HEAL",
-        "target": {
-          "selector": "FRIENDLY_HERO"
-        },
-        "amount": 2
-      }
-    ]
+    "artId": "art/verdant_rootweaver"
   },
   {
     "id": "verdant_mosshide_stag",
@@ -1399,24 +1832,33 @@
     "health": 4,
     "class": "VERDANT",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      }
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_mosshide_stag",
-    "cardText": "[Battlecry] Deal 2 damage to a minion.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "target": {
-          "selector": "ANY_MINION"
-        },
-        "amount": 2
-      }
-    ]
+    "artId": "art/verdant_mosshide_stag"
   },
   {
     "id": "verdant_wild_bloom",
@@ -1426,31 +1868,54 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/verdant_wild_bloom",
-    "cardText": "Give a friendly minion +2/+2 and Taunt.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "BUFF",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "amount": 2,
-        "amount2": 2
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 2,
+          "health": 2,
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
+          }
+        }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "TAUNT"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "BULWARK",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "binding": "target"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/verdant_wild_bloom"
   },
   {
     "id": "verdant_thornfang_matron",
@@ -1461,24 +1926,31 @@
     "health": 5,
     "class": "VERDANT",
     "rarity": "EPIC",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_thorn_cub_1_2",
+          "count": 2
+        }
+      }
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_thornfang_matron",
-    "cardText": "[Battlecry] Summon two 1/2 Thorn Cubs.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "SUMMON",
-        "amount": 2,
-        "payload": {
-          "tokenId": "token_thorn_cub_1_2"
-        }
-      }
-    ]
+    "artId": "art/verdant_thornfang_matron"
   },
   {
     "id": "core_choking_vines",
@@ -1488,19 +1960,30 @@
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/core_choking_vines",
-    "cardText": "Destroy a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/core_choking_vines"
   },
   {
     "id": "core_thistleguard_sprig",
@@ -1512,8 +1995,9 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "DIVINE_SHIELD"
+      "AEGIS"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1529,14 +2013,14 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT",
-      "REBORN"
+      "BULWARK",
+      "REKINDLE"
     ],
+    "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/relic_bound_revenant",
-    "cardText": "[Taunt] [Reborn]"
+    "artId": "art/relic_bound_revenant"
   },
   {
     "id": "relic_corpse_cart",
@@ -1547,27 +2031,34 @@
     "health": 1,
     "class": "NEUTRAL",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/relic_corpse_cart",
-    "cardText": "[Battlecry] Summon a 1/1 Grave Wisp.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_wisp_1_1"
-        }
-      }
-    ]
+    "artId": "art/relic_corpse_cart"
   },
   {
-    "id": "token_revenant_5_5_taunt",
+    "id": "token_revenant_5_5_bulwark",
     "name": "Revenant",
     "type": "MINION",
     "cost": 0,
@@ -1576,12 +2067,13 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
     "collectible": false,
-    "artId": "art/token_revenant_5_5_taunt"
+    "artId": "art/token_revenant_5_5_bulwark"
   },
   {
     "id": "token_thorn_cub_1_2",
@@ -1593,6 +2085,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": false,
@@ -1606,25 +2099,48 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ember_stoke_the_coals",
-    "cardText": "Deal 2 damage to your hero. Draw 2 cards.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 2
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 2
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ember_stoke_the_coals"
   },
   {
     "id": "ember_slagshell_bulwark",
@@ -1636,13 +2152,13 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_slagshell_bulwark",
-    "cardText": "[Taunt]"
+    "artId": "art/ember_slagshell_bulwark"
   },
   {
     "id": "ember_forgeheart_colossus",
@@ -1653,21 +2169,30 @@
     "health": 6,
     "class": "EMBERWARD",
     "rarity": "EPIC",
-    "keywords": [
-      "OVERLOAD"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_forgeheart_colossus",
-    "cardText": "Overload: (2)",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "OVERLOAD",
-        "amount": 2
-      }
-    ]
+    "artId": "art/ember_forgeheart_colossus"
   },
   {
     "id": "tide_fathom_crush",
@@ -1677,20 +2202,31 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/tide_fathom_crush",
-    "cardText": "Deal 4 damage to a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 4,
-        "target": {
-          "selector": "ANY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 4,
+          "target": {
+            "selector": "ANY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_fathom_crush"
   },
   {
     "id": "tide_deepfrost_spear",
@@ -1701,22 +2237,31 @@
     "durability": 3,
     "class": "TIDECALLER",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY"
+          }
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_deepfrost_spear",
-    "cardText": "[Battlecry] Freeze an enemy character.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "FREEZE",
-        "target": {
-          "selector": "ANY_ENEMY"
-        }
-      }
-    ]
+    "artId": "art/tide_deepfrost_spear"
   },
   {
     "id": "tide_glacierborn_leviathan",
@@ -1727,24 +2272,33 @@
     "health": 6,
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      }
     ],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_glacierborn_leviathan",
-    "cardText": "[Battlecry] Deal 3 damage to all enemy minions.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ENEMY_MINIONS"
-        }
-      }
-    ]
+    "artId": "art/tide_glacierborn_leviathan"
   },
   {
     "id": "ember_ashfall_wyrm",
@@ -1758,11 +2312,11 @@
     "keywords": [
       "VANGUARD"
     ],
+    "rules": [],
     "tribe": "DRAGON",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_ashfall_wyrm",
-    "cardText": "[Vanguard]"
+    "artId": "art/ember_ashfall_wyrm"
   },
   {
     "id": "ember_kiln_warden",
@@ -1774,14 +2328,14 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT",
-      "DIVINE_SHIELD"
+      "BULWARK",
+      "AEGIS"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_kiln_warden",
-    "cardText": "[Taunt] [Divine Shield]"
+    "artId": "art/ember_kiln_warden"
   },
   {
     "id": "ember_emberdrinker",
@@ -1793,13 +2347,13 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [
-      "LIFESTEAL"
+      "LIFEDRAIN"
     ],
+    "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_emberdrinker",
-    "cardText": "[Lifesteal]"
+    "artId": "art/ember_emberdrinker"
   },
   {
     "id": "tide_drowned_titan",
@@ -1810,23 +2364,32 @@
     "health": 6,
     "class": "TIDECALLER",
     "rarity": "EPIC",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_MINION"
+          }
+        }
+      }
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_drowned_titan",
-    "cardText": "[Battlecry] Return a minion to its owner's hand.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ANY_MINION"
-        }
-      }
-    ]
+    "artId": "art/tide_drowned_titan"
   },
   {
     "id": "tide_hollowshell_warden",
@@ -1838,23 +2401,33 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT",
-      "DEATHRATTLE"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ENEMY_MINIONS"
+          }
+        }
+      }
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_hollowshell_warden",
-    "cardText": "[Taunt] [Deathrattle] Freeze all enemy minions.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "FREEZE",
-        "target": {
-          "selector": "ENEMY_MINIONS"
-        }
-      }
-    ]
+    "artId": "art/tide_hollowshell_warden"
   },
   {
     "id": "tide_hoarfrost_lash",
@@ -1864,20 +2437,31 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/tide_hoarfrost_lash",
-    "cardText": "Deal 2 damage to a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ANY_MINION"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_MINION"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/tide_hoarfrost_lash"
   },
   {
     "id": "hero_power_blueprint",
@@ -1887,17 +2471,28 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ],
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/hero_power_blueprint",
-    "cardText": "Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/hero_power_blueprint"
   },
   {
     "id": "token_gear_wisp",
@@ -1909,6 +2504,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": false,
@@ -1922,23 +2518,32 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_shadow_mark",
-    "cardText": "Give a friendly minion Stealth.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "STEALTH"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "SHROUD",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_shadow_mark"
   },
   {
     "id": "hero_power_earthwall",
@@ -1948,23 +2553,29 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_earthwall",
-    "cardText": "Summon a 0/3 Stone Shard with Bulwark.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "SUMMON",
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_stone_shard"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "target": {
-          "selector": "FRIENDLY_HERO"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_stone_shard",
+          "count": 1
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_earthwall"
   },
   {
     "id": "token_stone_shard",
@@ -1976,8 +2587,9 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": false,
@@ -1991,30 +2603,56 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "art/hero_power_chain_spark",
-    "cardText": "Deal 1 damage to a random enemy. Then 1 to another.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM",
+            "binding": "first_hit"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM",
+            "binding": "second_hit",
+            "distinctFrom": "first_hit"
+          }
         }
       }
-    ]
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/hero_power_chain_spark"
   },
   {
     "id": "clock_gear_imp",
@@ -2025,21 +2663,30 @@
     "health": 1,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_gear_imp",
-    "cardText": "[Toll] Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/clock_gear_imp"
   },
   {
     "id": "clock_bronze_frame",
@@ -2050,21 +2697,30 @@
     "health": 2,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_bronze_frame",
-    "cardText": "[Herald] Draw a card.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DRAW",
-        "amount": 1
-      }
-    ]
+    "artId": "art/clock_bronze_frame"
   },
   {
     "id": "clock_spring_coil",
@@ -2076,13 +2732,13 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_spring_coil",
-    "cardText": "[Bulwark]"
+    "artId": "art/clock_spring_coil"
   },
   {
     "id": "clock_snap_bolt",
@@ -2092,21 +2748,32 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/clock_snap_bolt",
-    "cardText": "Deal 2 damage to a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/clock_snap_bolt"
   },
   {
     "id": "clock_assembly_drone",
@@ -2117,27 +2784,31 @@
     "health": 3,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_gear_wisp",
+          "count": 1
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_assembly_drone",
-    "cardText": "[Herald] Summon a 1/1 Gear Wisp.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "SUMMON",
-        "target": {
-          "selector": "FRIENDLY_HERO"
-        },
-        "amount": 1,
-        "payload": {
-          "tokenId": "token_gear_wisp"
-        }
-      }
-    ]
+    "artId": "art/clock_assembly_drone"
   },
   {
     "id": "clock_overclocker",
@@ -2148,29 +2819,38 @@
     "health": 3,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1,
+            "filter": {
+              "tribe": "CONSTRUCT"
+            }
+          }
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_overclocker",
-    "cardText": "[Herald] Give all friendly Constructs +1/+1.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "BUFF",
-        "amount": 1,
-        "amount2": 1,
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1,
-          "filter": {
-            "tribe": "CONSTRUCT"
-          }
-        }
-      }
-    ]
+    "artId": "art/clock_overclocker"
   },
   {
     "id": "clock_clockwork_sniper",
@@ -2181,25 +2861,34 @@
     "health": 4,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_CHARACTER",
+            "chosenBy": "PLAYER"
+          }
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_clockwork_sniper",
-    "cardText": "[Herald] Deal 2 damage to any target.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ANY_CHARACTER",
-          "chosenBy": "PLAYER"
-        }
-      }
-    ]
+    "artId": "art/clock_clockwork_sniper"
   },
   {
     "id": "clock_gear_overhaul",
@@ -2209,25 +2898,36 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/clock_gear_overhaul",
-    "cardText": "Give all friendly Constructs +2/+2.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "BUFF",
-        "amount": 2,
-        "amount2": 2,
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1,
-          "filter": {
-            "tribe": "CONSTRUCT"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 2,
+          "health": 2,
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1,
+            "filter": {
+              "tribe": "CONSTRUCT"
+            }
           }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/clock_gear_overhaul"
   },
   {
     "id": "clock_temporal_rewinder",
@@ -2237,25 +2937,48 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/clock_temporal_rewinder",
-    "cardText": "Return a minion to its owner's hand. Draw a card.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 1
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/clock_temporal_rewinder"
   },
   {
     "id": "clock_modular_stalker",
@@ -2266,21 +2989,30 @@
     "health": 4,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
-    "keywords": [
-      "DEATHRATTLE"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 2
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_modular_stalker",
-    "cardText": "[Toll] Draw 2 cards.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DRAW",
-        "amount": 2
-      }
-    ]
+    "artId": "art/clock_modular_stalker"
   },
   {
     "id": "clock_chrono_construct",
@@ -2293,13 +3025,13 @@
     "rarity": "EPIC",
     "keywords": [
       "VANGUARD",
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_chrono_construct",
-    "cardText": "[Vanguard] [Bulwark]"
+    "artId": "art/clock_chrono_construct"
   },
   {
     "id": "clock_mass_recall",
@@ -2309,20 +3041,31 @@
     "class": "CLOCKWRIGHT",
     "rarity": "EPIC",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/clock_mass_recall",
-    "cardText": "Return all minions to their owners' hands.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ALL_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ALL_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/clock_mass_recall"
   },
   {
     "id": "clock_the_great_mechanism",
@@ -2334,22 +3077,32 @@
     "class": "CLOCKWRIGHT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "DIVINE_SHIELD",
-      "BATTLECRY"
+      "BULWARK",
+      "AEGIS"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 2
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/clock_the_great_mechanism",
-    "cardText": "[Bulwark] [Aegis] [Herald] Draw 2 cards.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DRAW",
-        "amount": 2
-      }
-    ]
+    "artId": "art/clock_the_great_mechanism"
   },
   {
     "id": "night_lurk_wisp",
@@ -2361,13 +3114,13 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
+    "rules": [],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_lurk_wisp",
-    "cardText": "[Shroud]"
+    "artId": "art/night_lurk_wisp"
   },
   {
     "id": "night_shadow_dart",
@@ -2377,21 +3130,32 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_shadow_dart",
-    "cardText": "Deal 2 damage to a minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_shadow_dart"
   },
   {
     "id": "night_viper_fang",
@@ -2403,13 +3167,13 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "POISONOUS"
+      "VENOM"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_viper_fang",
-    "cardText": "[Venom]"
+    "artId": "art/night_viper_fang"
   },
   {
     "id": "night_shadow_stalker",
@@ -2421,13 +3185,13 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "STEALTH"
+      "SHROUD"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_shadow_stalker",
-    "cardText": "[Shroud]"
+    "artId": "art/night_shadow_stalker"
   },
   {
     "id": "night_finish_the_job",
@@ -2437,23 +3201,34 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_finish_the_job",
-    "cardText": "Destroy a damaged minion.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER",
-          "filter": {
-            "damaged": true
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER",
+            "filter": {
+              "damaged": true
+            }
           }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_finish_the_job"
   },
   {
     "id": "night_venom_asp",
@@ -2465,13 +3240,13 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
-      "POISONOUS"
+      "VENOM"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_venom_asp",
-    "cardText": "[Venom]"
+    "artId": "art/night_venom_asp"
   },
   {
     "id": "night_shadow_blade",
@@ -2482,26 +3257,33 @@
     "durability": 3,
     "class": "NIGHTVEIL",
     "rarity": "RARE",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "SHROUD",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
+          }
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_shadow_blade",
-    "cardText": "[Herald] Give a friendly minion [Shroud].",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION",
-          "chosenBy": "PLAYER"
-        },
-        "payload": {
-          "keyword": "STEALTH"
-        }
-      }
-    ]
+    "artId": "art/night_shadow_blade"
   },
   {
     "id": "night_vanishing_act",
@@ -2511,23 +3293,32 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_vanishing_act",
-    "cardText": "Give all friendly minions [Shroud].",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "STEALTH"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "SHROUD",
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_vanishing_act"
   },
   {
     "id": "night_fade_out",
@@ -2537,25 +3328,48 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_fade_out",
-    "cardText": "Return a friendly minion to your hand. Draw a card.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DRAW",
-        "amount": 1
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_fade_out"
   },
   {
     "id": "night_death_mark",
@@ -2565,31 +3379,52 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_death_mark",
-    "cardText": "Destroy a minion. Give a random friendly minion [Venom].",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DESTROY",
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DESTROY",
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "chosenBy": "RANDOM"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "POISONOUS"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "VENOM",
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "chosenBy": "RANDOM"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_death_mark"
   },
   {
     "id": "night_shadow_walk",
@@ -2599,20 +3434,31 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/night_shadow_walk",
-    "cardText": "Return all enemy minions to their owners' hands.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "RETURN_TO_HAND",
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/night_shadow_walk"
   },
   {
     "id": "night_void_shriek",
@@ -2623,36 +3469,55 @@
     "health": 4,
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
-    "keywords": [
-      "BATTLECRY"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "SHROUD",
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
+        }
+      }
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_void_shriek",
-    "cardText": "[Herald] Deal 2 damage to all enemy minions. Give all friendly minions [Shroud].",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
-        }
-      },
-      {
-        "trigger": "ON_PLAY",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
-        },
-        "payload": {
-          "keyword": "STEALTH"
-        }
-      }
-    ]
+    "artId": "art/night_void_shriek"
   },
   {
     "id": "night_kira_blade_of_shadows",
@@ -2664,25 +3529,35 @@
     "class": "NIGHTVEIL",
     "rarity": "LEGENDARY",
     "keywords": [
-      "STEALTH",
-      "POISONOUS",
-      "DEATHRATTLE"
+      "SHROUD",
+      "VENOM"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 4,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
     ],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/night_kira_blade_of_shadows",
-    "cardText": "[Shroud] [Venom] [Toll] Deal 4 damage to the enemy hero.",
-    "effects": [
-      {
-        "trigger": "ON_DEATH",
-        "action": "DEAL_DAMAGE",
-        "amount": 4,
-        "target": {
-          "selector": "ENEMY_HERO"
-        }
-      }
-    ]
+    "artId": "art/night_kira_blade_of_shadows"
   },
   {
     "id": "ward_pebble_sentinel",
@@ -2694,13 +3569,13 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_pebble_sentinel",
-    "cardText": "[Bulwark]"
+    "artId": "art/ward_pebble_sentinel"
   },
   {
     "id": "ward_stone_throw",
@@ -2710,21 +3585,32 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ward_stone_throw",
-    "cardText": "Deal 1 damage to all enemy minions.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ward_stone_throw"
   },
   {
     "id": "ward_boulderhide",
@@ -2736,13 +3622,13 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_boulderhide",
-    "cardText": "[Bulwark]"
+    "artId": "art/ward_boulderhide"
   },
   {
     "id": "ward_earth_barrier",
@@ -2752,22 +3638,33 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ward_earth_barrier",
-    "cardText": "Give a friendly minion +0/+3.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "BUFF",
-        "amount": 0,
-        "amount2": 3,
-        "target": {
-          "selector": "ANY_FRIENDLY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 0,
+          "health": 3,
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ward_earth_barrier"
   },
   {
     "id": "ward_rock_golem",
@@ -2779,13 +3676,13 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_rock_golem",
-    "cardText": "[Bulwark]"
+    "artId": "art/ward_rock_golem"
   },
   {
     "id": "ward_stone_rain",
@@ -2795,21 +3692,32 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ward_stone_rain",
-    "cardText": "Deal 3 damage to all enemy minions.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ward_stone_rain"
   },
   {
     "id": "ward_granite_guardian",
@@ -2821,13 +3729,13 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_granite_guardian",
-    "cardText": "[Bulwark]"
+    "artId": "art/ward_granite_guardian"
   },
   {
     "id": "ward_earthen_blessing",
@@ -2837,22 +3745,33 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ward_earthen_blessing",
-    "cardText": "Give all friendly minions +0/+2.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "BUFF",
-        "amount": 0,
-        "amount2": 2,
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 0,
+          "health": 2,
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ward_earthen_blessing"
   },
   {
     "id": "ward_living_monolith",
@@ -2864,13 +3783,13 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "TAUNT"
+      "BULWARK"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_living_monolith",
-    "cardText": "[Bulwark]"
+    "artId": "art/ward_living_monolith"
   },
   {
     "id": "ward_stomp",
@@ -2880,31 +3799,54 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/ward_stomp",
-    "cardText": "Deal 2 damage to all enemy minions. Give a random friendly minion +0/+2.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "BUFF",
-        "amount": 0,
-        "amount2": 2,
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "chosenBy": "RANDOM"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 0,
+          "health": 2,
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "chosenBy": "RANDOM"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/ward_stomp"
   },
   {
     "id": "ward_siege_golem",
@@ -2916,26 +3858,36 @@
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
-      "BATTLECRY"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 0,
+          "health": 2,
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_siege_golem",
-    "cardText": "[Bulwark] [Herald] Give all friendly minions +0/+2.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "BUFF",
-        "amount": 0,
-        "amount2": 2,
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
-        }
-      }
-    ]
+    "artId": "art/ward_siege_golem"
   },
   {
     "id": "ward_stone_colossus",
@@ -2947,14 +3899,14 @@
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [
-      "TAUNT",
+      "BULWARK",
       "OVERWHELM"
     ],
+    "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_stone_colossus",
-    "cardText": "[Bulwark] [Overwhelm]"
+    "artId": "art/ward_stone_colossus"
   },
   {
     "id": "ward_duras_the_ironmount",
@@ -2966,27 +3918,35 @@
     "class": "STONEWARDEN",
     "rarity": "LEGENDARY",
     "keywords": [
-      "TAUNT",
-      "BATTLECRY"
+      "BULWARK"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "BULWARK",
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
+        }
+      }
     ],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ward_duras_the_ironmount",
-    "cardText": "[Bulwark] [Herald] Give all friendly minions [Bulwark].",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
-        },
-        "payload": {
-          "keyword": "TAUNT"
-        }
-      }
-    ]
+    "artId": "art/ward_duras_the_ironmount"
   },
   {
     "id": "storm_spark_imp",
@@ -2998,13 +3958,13 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
+    "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_spark_imp",
-    "cardText": "[Doublestrike]"
+    "artId": "art/storm_spark_imp"
   },
   {
     "id": "storm_lightning_bolt",
@@ -3013,29 +3973,50 @@
     "cost": 1,
     "class": "TEMPEST",
     "rarity": "COMMON",
-    "keywords": [
-      "OVERLOAD"
-    ],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_lightning_bolt",
-    "cardText": "Deal 3 damage to a minion. [Backdraft] (1).",
-    "effects": [
+    "keywords": [],
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ANY_MINION",
-          "chosenBy": "PLAYER"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_MINION",
+            "chosenBy": "PLAYER"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "OVERLOAD",
-        "amount": 1
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 1
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_lightning_bolt"
   },
   {
     "id": "storm_gust_sprite",
@@ -3047,13 +4028,13 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
+    "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_gust_sprite",
-    "cardText": "[Doublestrike]"
+    "artId": "art/storm_gust_sprite"
   },
   {
     "id": "storm_wind_rider",
@@ -3065,13 +4046,13 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
+    "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_wind_rider",
-    "cardText": "[Skirmish]"
+    "artId": "art/storm_wind_rider"
   },
   {
     "id": "storm_chain_lightning",
@@ -3081,39 +4062,74 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_chain_lightning",
-    "cardText": "Deal 2 damage to a random enemy. Then 1 damage. Then 1 damage.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 1,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_3",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_chain_lightning"
   },
   {
     "id": "storm_crackle",
@@ -3122,29 +4138,50 @@
     "cost": 2,
     "class": "TEMPEST",
     "rarity": "RARE",
-    "keywords": [
-      "OVERLOAD"
-    ],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_crackle",
-    "cardText": "Deal 4 damage to a random enemy. [Backdraft] (2).",
-    "effects": [
+    "keywords": [],
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 4,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 4,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM"
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "OVERLOAD",
-        "amount": 2
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_crackle"
   },
   {
     "id": "storm_tempest_striker",
@@ -3156,13 +4193,13 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "WINDFURY"
+      "DOUBLESTRIKE"
     ],
+    "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_tempest_striker",
-    "cardText": "[Doublestrike]"
+    "artId": "art/storm_tempest_striker"
   },
   {
     "id": "storm_static_shock",
@@ -3172,21 +4209,32 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_static_shock",
-    "cardText": "Deal 3 damage to a random enemy.",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ANY_ENEMY",
-          "chosenBy": "RANDOM"
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_ENEMY",
+            "chosenBy": "RANDOM"
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_static_shock"
   },
   {
     "id": "storm_thunder_hoof",
@@ -3198,13 +4246,13 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [
-      "RUSH"
+      "SKIRMISH"
     ],
+    "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_thunder_hoof",
-    "cardText": "[Skirmish]"
+    "artId": "art/storm_thunder_hoof"
   },
   {
     "id": "storm_static_discharge",
@@ -3213,29 +4261,50 @@
     "cost": 3,
     "class": "TEMPEST",
     "rarity": "RARE",
-    "keywords": [
-      "OVERLOAD"
-    ],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_static_discharge",
-    "cardText": "Deal 2 damage to all enemy minions. [Backdraft] (1).",
-    "effects": [
+    "keywords": [],
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 2,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
         }
       },
       {
-        "trigger": "ON_CAST",
-        "action": "OVERLOAD",
-        "amount": 1
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 1
+        }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_static_discharge"
   },
   {
     "id": "storm_hurricane",
@@ -3245,23 +4314,32 @@
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
-    "setId": "EMBERFALL",
-    "collectible": true,
-    "artId": "art/storm_hurricane",
-    "cardText": "Give all friendly minions [Doublestrike].",
-    "effects": [
+    "rules": [
       {
-        "trigger": "ON_CAST",
-        "action": "GIVE_KEYWORD",
-        "target": {
-          "selector": "FRIENDLY_MINIONS",
-          "count": -1
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
         },
-        "payload": {
-          "keyword": "WINDFURY"
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "DOUBLESTRIKE",
+          "target": {
+            "selector": "FRIENDLY_MINIONS",
+            "count": -1
+          }
         }
       }
-    ]
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "art/storm_hurricane"
   },
   {
     "id": "storm_lightning_storm",
@@ -3270,37 +4348,70 @@
     "cost": 5,
     "class": "TEMPEST",
     "rarity": "EPIC",
-    "keywords": [
-      "OVERLOAD"
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": -1
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      },
+      {
+        "id": "rule_3",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_lightning_storm",
-    "cardText": "Deal 3 damage to all enemy minions and the enemy hero. [Backdraft] (2).",
-    "effects": [
-      {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ENEMY_MINIONS",
-          "count": -1
-        }
-      },
-      {
-        "trigger": "ON_CAST",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ENEMY_HERO"
-        }
-      },
-      {
-        "trigger": "ON_CAST",
-        "action": "OVERLOAD",
-        "amount": 2
-      }
-    ]
+    "artId": "art/storm_lightning_storm"
   },
   {
     "id": "storm_zael_of_the_struck_sky",
@@ -3312,23 +4423,33 @@
     "class": "TEMPEST",
     "rarity": "LEGENDARY",
     "keywords": [
-      "WINDFURY",
-      "BATTLECRY"
+      "DOUBLESTRIKE"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
     ],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_zael_of_the_struck_sky",
-    "cardText": "[Doublestrike] [Herald] Deal 3 damage to the enemy hero.",
-    "effects": [
-      {
-        "trigger": "ON_PLAY",
-        "action": "DEAL_DAMAGE",
-        "amount": 3,
-        "target": {
-          "selector": "ENEMY_HERO"
-        }
-      }
-    ]
+    "artId": "art/storm_zael_of_the_struck_sky"
   }
 ]

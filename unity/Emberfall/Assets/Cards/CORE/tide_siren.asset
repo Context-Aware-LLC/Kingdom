@@ -12,9 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: tide_siren
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: "{ \"id\": \"tide_siren\",      \"name\": \"Hollow Tide Siren\",\"type\":
-    \"MINION\", \"cost\": 5, \"attack\": 4, \"health\": 5, \"class\": \"TIDECALLER\",
-    \"rarity\": \"EPIC\", \"keywords\": [\"BATTLECRY\"],\n    \"setId\": \"CORE\",
-    \"collectible\": true, \"artId\": \"art/tide_siren\",\n    \"effects\": [ { \"trigger\":
-    \"ON_PLAY\", \"action\": \"FREEZE\", \"target\": { \"selector\": \"ENEMY_MINIONS\"
-    } } ] }"
+  _json: '{"id":"tide_siren","name":"Hollow Tide Siren","type":"MINION","cost":5,"attack":4,"health":5,"class":"TIDECALLER","rarity":"EPIC","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_PLAY"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"FROST","target":{"selector":"ENEMY_MINIONS"}}}],"setId":"CORE","collectible":true,"artId":"art/tide_siren"}'

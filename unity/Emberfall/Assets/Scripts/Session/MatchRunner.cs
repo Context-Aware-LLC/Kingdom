@@ -74,7 +74,7 @@ namespace Emberfall.Session
         private SeatOwnership _owner = SeatOwnership.Both;
 
         // RC-F10 (b3 §7.1-bis): a networked Dead/Ended must stop the runner from OUTSIDE — the
-        // loop's only truth source is the mirror, which a dead socket freezes forever.
+        // loop's only truth source is the mirror, which stops changing after a dead socket.
         private bool _stopRequested;
         private bool _endedFired;
         private MatchOutcome _stopOutcome = MatchOutcome.InProgress;
@@ -204,7 +204,7 @@ namespace Emberfall.Session
                 yield return null;
             }
 
-            // RC-F10: StopMatch() broke the loop (Dead/Ended off a frozen mirror whose Outcome never
+            // RC-F10: StopMatch() broke the loop (Dead/Ended off a stale mirror whose Outcome never
             // flips). Fire OnMatchEnded once, AFTER the queue drained, so the last animation still
             // plays — death stops input, not the story of how it ended.
             if (_stopRequested && !_endedFired)
@@ -216,7 +216,7 @@ namespace Emberfall.Session
 
         /// <summary>Stop the runner from OUTSIDE (RC-F10, b3 §7.1-bis). NetworkedGameBootstrap calls
         /// this from <c>OnConnectionStateChanged</c> on Dead/Ended, because the submit loop's only
-        /// truth source is the mirror, which a dead socket freezes at Outcome=InProgress forever.
+        /// truth source is the mirror, which a dead socket strands at Outcome=InProgress forever.
         /// Stops submits immediately; lets PlaybackLoop drain before OnMatchEnded. Hot-seat never
         /// calls it. <paramref name="finalOutcome"/> is what the banner shows (e.g. a forfeit loss).</summary>
         public void StopMatch(MatchOutcome finalOutcome = MatchOutcome.InProgress)

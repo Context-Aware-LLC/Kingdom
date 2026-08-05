@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "name": "opening_pyra_maren",
-  "engineContractVersion": "interfaces.v3",
+  "engineContractVersion": "interfaces.v4",
   "cardSetSnapshot": "M1.cards.snapshot.json",
   "matchId": "GOLD-0001",
   "p0": "P0",
@@ -49,11 +49,11 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "38e1d7486d24b4f43f5dfa96c21226b262d63413854495d2e3f191c5b382130c",
+    "stateHash": "c7250ae75de1b74bf6c7b9756bc89d6dfc9adf01f10b66b7a135867576d12f33",
     "eventStream": [
       {
         "seq": 0,
-        "kind": "onTurnStart",
+        "kind": "TurnStarted",
         "src": "i1",
         "tgt": null,
         "amt": null,
@@ -61,7 +61,7 @@
       },
       {
         "seq": 1,
-        "kind": "onDraw",
+        "kind": "CardDrawn",
         "src": "i26",
         "tgt": null,
         "amt": null,

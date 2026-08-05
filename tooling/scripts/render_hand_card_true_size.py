@@ -89,8 +89,8 @@ DIGIT_EM = const(frames, "DigitEmStd")
 # The card under the lens: the set's kind of worst case for the rules band — long
 # enough that TMP's auto-fit is on the shrink floor rather than at BodyEm.
 NAME = "Graven Bellringer"
-RULES_KEYWORD = "Deathrattle:"
-RULES_BODY = " Summon two 1/1 Wisps and give them Rush until end of turn."
+RULES_KEYWORD = "Toll:"
+RULES_BODY = " Summon two 1/1 Wisps and give them Skirmish until end of turn."
 COST, ATTACK, HEALTH = "6", "4", "5"
 
 INK = (36, 26, 18, 255)

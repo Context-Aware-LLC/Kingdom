@@ -182,6 +182,7 @@ namespace Emberfall.Net.Protocol
             w.BeginObject();
             w.Name("seq"); w.U64(e.Sequence);
             w.Name("kind"); w.Str(e.Kind.ToString());
+            if (e.CueOverride.HasValue) { w.Name("cue"); w.Str(e.CueOverride.Value.ToString()); }
             if (e.Source.HasValue) { w.Name("src"); w.Str(WirePrimitives.InstanceToWire(e.Source.Value)); }
             if (e.Target.HasValue) { w.Name("tgt"); w.Str(WirePrimitives.InstanceToWire(e.Target.Value)); }
             if (e.Amount.HasValue) { w.Name("amt"); w.I32(e.Amount.Value); }
@@ -354,27 +355,42 @@ namespace Emberfall.Net.Protocol
             var events = new List<GameEvent>(evVal.Items!.Count);
             foreach (var item in evVal.Items)
             {
-                if (!TryReadEvent(item, out var e, out string detail))
-                    return DecodeResult.Fail(ProtocolError.BadField, detail, matchId, seq);
+                if (!TryReadEvent(item, out var e, out ProtocolError error, out string detail))
+                    return DecodeResult.Fail(error, detail, matchId, seq);
                 events.Add(e);
             }
             return DecodeResult.Success(new EventsMsg(stateVersion, events), matchId, seq);
         }
 
-        private static bool TryReadEvent(JVal obj, out GameEvent e, out string detail)
+        private static bool TryReadEvent(JVal obj, out GameEvent e, out ProtocolError error, out string detail)
         {
             e = default;
+            error = ProtocolError.BadField;
             detail = "";
             if (obj.Kind != JKind.Object) { detail = "event is not an object"; return false; }
             if (!obj.TryGet("seq", out var sVal) || !sVal.TryU64(out ulong evSeq))
             { detail = "missing/bad event 'seq'"; return false; }
-            if (!obj.TryGet("kind", out var kVal) || !kVal.TryStr(out string kindStr)
-                || !WirePrimitives.TryEnum(kindStr, out VfxEvent kind))
+            if (!obj.TryGet("kind", out var kVal) || !kVal.TryStr(out string kindStr))
             { detail = "missing/bad event 'kind'"; return false; }
+            if (!WirePrimitives.TryEnum(kindStr, out GameEventKind kind))
+            {
+                error = ProtocolError.UnknownEventKind;
+                detail = $"unknown event kind '{kindStr}'";
+                return false;
+            }
 
             InstanceId? src = null, tgt = null;
             int? amt = null;
             EventFlags flags = EventFlags.None;
+            PresentationCue? cue = null;
+
+            if (obj.TryGet("cue", out var cueVal))
+            {
+                if (!cueVal.TryStr(out string cueStr))
+                { detail = "bad event 'cue'"; return false; }
+                if (WirePrimitives.TryEnum(cueStr, out PresentationCue parsedCue))
+                    cue = parsedCue;
+            }
 
             if (obj.TryGet("src", out var srcVal) && !srcVal.IsNull)
             {
@@ -399,7 +415,17 @@ namespace Emberfall.Net.Protocol
                 { detail = "bad event 'flags'"; return false; }
             }
 
-            e = new GameEvent(kind, evSeq, src, tgt, amt, flags);
+            try
+            {
+                GameEventPolicy.Validate(kind, amt, flags, cue);
+            }
+            catch (System.ArgumentException ex)
+            {
+                detail = ex.Message;
+                return false;
+            }
+
+            e = new GameEvent(kind, evSeq, src, tgt, amt, flags, cue);
             return true;
         }
 

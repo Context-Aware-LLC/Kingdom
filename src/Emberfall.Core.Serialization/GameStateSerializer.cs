@@ -41,7 +41,8 @@ namespace Emberfall.Core.Serialization
             w.U64(s.NextEventSequence);
             w.Bool(s.Mulligan0Done);
             w.Bool(s.Mulligan1Done);
-            WalkPendingChoice(w, s.PendingChoice);  // A2b tail seam — always null in M2 (§7 2026-07-15)
+            WalkPendingChoice(w, s.PendingChoice);  // nullable, authoritative choice state
+            WalkOngoingEffects(w, s.OngoingEffects);
         }
 
         private static void WalkPlayer(ICanonicalWriter w, PlayerState p)
@@ -56,7 +57,7 @@ namespace Emberfall.Core.Serialization
             WalkMana(w, p.Mana);
             w.Bool(p.HeroPowerUsedThisTurn);
             w.I32(p.HeroAttacksUsedThisTurn);
-            w.I32(p.NextTurnOverloadLock);
+            w.I32(p.NextTurnBackdraftLock);
         }
 
         private static void WalkHero(ICanonicalWriter w, HeroInstance h)
@@ -68,7 +69,7 @@ namespace Emberfall.Core.Serialization
             w.I32(h.MaxHealth);
             w.I32(h.Armor);
             w.Str(h.HeroPowerId);
-            w.Bool(h.IsFrozen); // added step 4 — hero freeze state is determinism-relevant
+            w.Bool(h.IsFrosted); // added step 4 — hero frost state is determinism-relevant
         }
 
         private static void WalkZone(ICanonicalWriter w, List<CardInstance> zone)
@@ -102,24 +103,23 @@ namespace Emberfall.Core.Serialization
                 w.I32(e.AttackDelta);
                 w.I32(e.HealthDelta);
                 w.NullableEnum(e.GrantedKeyword);
+                w.Bool(e.IsAura);
             }
 
             w.Bool(c.HasAegisShield);
-            w.Bool(c.IsFrozen);
+            w.Bool(c.IsFrosted);
+            w.Bool(c.IsSilenced);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);
-            w.Bool(c.HasUsedReborn);
+            w.Bool(c.HasUsedRekindle);
             w.I32(c.Position);
         }
 
-        private static void WalkWeapon(ICanonicalWriter w, WeaponInstance? weapon)
+        private static void WalkWeapon(ICanonicalWriter w, CardInstance? weapon)
         {
             if (weapon is null) { w.Bool(false); return; }
             w.Bool(true);
-            w.I32(weapon.Id.Value);
-            w.Str(weapon.DefinitionId);
-            w.I32(weapon.Attack);
-            w.I32(weapon.Durability);
+            WalkCard(w, weapon);
         }
 
         private static void WalkPendingChoice(ICanonicalWriter w, PendingChoice? pc)
@@ -131,9 +131,24 @@ namespace Emberfall.Core.Serialization
             w.I32(pc.Source.Value);
             w.I32(pc.Options.Count);                    // count prefix, then list order (§4.1).
             // Phase-2 ringfence (OBL-3): list order MUST be the deterministic RNG roll order of
-            // the Discover pool — the walk is order-PRESERVING only, never an ordering source.
+            // the Unearth pool — the walk is order-PRESERVING only, never an ordering source.
             foreach (var id in pc.Options) w.Str(id);
             w.U64(pc.ChoiceSequence);
+        }
+
+        private static void WalkOngoingEffects(ICanonicalWriter w,
+            List<OngoingEffectInstance> ongoingEffects)
+        {
+            w.I32(ongoingEffects.Count);
+            foreach (OngoingEffectInstance effect in ongoingEffects)
+            {
+                w.I32(effect.Id.Value);
+                w.Str(effect.Controller.Value);
+                w.Str(effect.SourceDefinitionId);
+                w.Str(effect.RuleId);
+                w.Enum(effect.Lifetime);
+                w.NullableI32(effect.RemainingUses);
+            }
         }
 
         private static void WalkMana(ICanonicalWriter w, ManaPool m)

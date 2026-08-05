@@ -43,7 +43,7 @@ namespace Emberfall.Net.Server
         /// Trusted server-side rating lookup for queue tickets. Null preserves today's unrated
         /// guest behavior by using <see cref="MatchmakingQueueOptions.DefaultRating"/>; ratings
         /// never come from a client hello. Do not attach a persisted rating to the bearer-token
-        /// <see cref="AccountId"/> until VULN-003's authentication requirement is discharged.
+        /// <see cref="AccountId"/> until VULN-003's authentication requirement is satisfied.
         /// </summary>
         public Func<AccountId, int>? MatchmakingRatingForAccount { get; init; }
 

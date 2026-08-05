@@ -31,10 +31,57 @@ namespace Emberfall.Net.Server.Tests
 
             // Seq baseline reset (RC F7): a brand-new client legitimately restarts at seq 1 —
             // posted via the NEW connection, which is now the seat's identity.
-            var reborn = new ScriptedClient(h.P0);
-            h.Post(fresh, reborn.Frame(new HeartbeatMsg(), h.Id));
+            var rekindle = new ScriptedClient(h.P0);
+            h.Post(fresh, rekindle.Frame(new HeartbeatMsg(), h.Id));
             Assert.That(fresh.Last<HeartbeatMsg>(), Is.Not.Null,
                 "post-reconnect seq 1 must be accepted on the new connection");
+        }
+
+        [Test]
+        public void Reconnect_Preserves_Chooser_Offer_Order_And_Default_Denies_The_Opponent()
+        {
+            var h = new SessionHarness();
+            h.ConfirmMulligans();
+            string token0 = h.Conn0.Last<MatchStartMsg>().ReconnectToken;
+            string token1 = h.Conn1.Last<MatchStartMsg>().ReconnectToken;
+            h.Session.Host.State.PendingChoice = new PendingChoice
+            {
+                Chooser = h.P0,
+                Kind = PendingChoiceKind.Unearth,
+                Source = h.Session.Host.State.Players[0].Hero.Id,
+                ChoiceSequence = 701,
+                Options = { "hidden_offer_third", "hidden_offer_first", "hidden_offer_second" },
+            };
+
+            h.Disconnect(0);
+            var chooserConnection = new FakeConnection();
+            h.Session.Dispatch(new SessionCommand.Reconnect(
+                new ReconnectMsg(h.P0, token0, 0), chooserConnection));
+            SnapshotMsg chooser = chooserConnection.Last<SnapshotMsg>();
+
+            Assert.That(chooser.VerifyIntegrity(), Is.True);
+            Assert.That(chooser.State.PendingChoice, Is.Not.Null);
+            Assert.That(chooser.State.PendingChoice!.Options,
+                Is.EqualTo(new[] { "hidden_offer_third", "hidden_offer_first", "hidden_offer_second" }));
+            Assert.That(chooser.State.PendingChoice.ChoiceSequence, Is.EqualTo(701UL));
+            Assert.That(chooser.State.PendingChoice.Source,
+                Is.EqualTo(h.Session.Host.State.PendingChoice.Source));
+
+            h.Disconnect(1);
+            var opponentConnection = new FakeConnection();
+            h.Session.Dispatch(new SessionCommand.Reconnect(
+                new ReconnectMsg(h.P1, token1, 0), opponentConnection));
+            SnapshotMsg opponent = opponentConnection.Last<SnapshotMsg>();
+
+            Assert.That(opponent.VerifyIntegrity(), Is.True);
+            Assert.That(opponent.State.PendingChoice, Is.Not.Null);
+            Assert.That((opponent.State.PendingChoice!.Chooser, opponent.State.PendingChoice.Kind),
+                Is.EqualTo((h.P0, PendingChoiceKind.Unearth)),
+                "the opponent receives only public Unearth-in-progress metadata");
+            Assert.That(opponent.State.PendingChoice.Options, Is.Empty);
+            Assert.That((opponent.State.PendingChoice.Source.Value,
+                    opponent.State.PendingChoice.ChoiceSequence),
+                Is.EqualTo((0, 0UL)));
         }
 
         [Test]
