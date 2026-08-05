@@ -122,6 +122,65 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(state.OngoingEffects[0].IsExpired, Is.False);
         }
 
+        [TestCase(TurnOwner.CONTROLLER)]
+        [TestCase(TurnOwner.OPPONENT)]
+        [TestCase(TurnOwner.ANY)]
+        public void Turn_Ownership_Is_EndToEnd_For_Ongoing_Effects_From_Both_Seats(
+            TurnOwner owner)
+        {
+            RuleDefinition future = FutureRule("owned_turn", Trigger.ON_TURN_START,
+                PermanentLifetime.Instance, owner);
+            CardDefinition definition = Spell(OngoingSpell, future);
+            var db = new FakeCardDatabase().Register(definition).Register(Minion(Vanilla));
+            GameState state = EmptyState();
+            var p0Spell = new CardInstance(new InstanceId(3), OngoingSpell, state.Players[0].Id)
+                { Zone = Zone.Hand };
+            var p1Spell = new CardInstance(new InstanceId(4), OngoingSpell, state.Players[1].Id)
+                { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(p0Spell);
+            state.Players[1].Hand.Add(p1Spell);
+            state.NextInstanceCounter = 5;
+            var processor = new CommandProcessor(db);
+
+            _ = Play(state, processor, p0Spell);
+            InstanceId p0Ongoing = state.OngoingEffects.Single().Id;
+            CommandResult firstP1Turn = Accept(processor.Execute(state,
+                new EndTurnIntent(state.Players[0].Id)));
+            _ = Play(state, processor, p1Spell);
+            InstanceId p1Ongoing = state.OngoingEffects.Single(e => e.Id != p0Ongoing).Id;
+            CommandResult firstP0Turn = Accept(processor.Execute(state,
+                new EndTurnIntent(state.Players[1].Id)));
+            CommandResult secondP1Turn = Accept(processor.Execute(state,
+                new EndTurnIntent(state.Players[0].Id)));
+
+            InstanceId[] Triggered(CommandResult result) => result.Events
+                .Where(e => e.Kind == GameEventKind.OngoingEffectTriggered)
+                .Select(e => e.Source!.Value).ToArray();
+
+            switch (owner)
+            {
+                case TurnOwner.CONTROLLER:
+                    Assert.That(Triggered(firstP1Turn), Is.Empty);
+                    Assert.That(Triggered(firstP0Turn), Is.EqualTo(new[] { p0Ongoing }));
+                    Assert.That(Triggered(secondP1Turn), Is.EqualTo(new[] { p1Ongoing }));
+                    break;
+                case TurnOwner.OPPONENT:
+                    Assert.That(Triggered(firstP1Turn), Is.EqualTo(new[] { p0Ongoing }));
+                    Assert.That(Triggered(firstP0Turn), Is.EqualTo(new[] { p1Ongoing }));
+                    Assert.That(Triggered(secondP1Turn), Is.EqualTo(new[] { p0Ongoing }));
+                    break;
+                case TurnOwner.ANY:
+                    Assert.That(Triggered(firstP1Turn), Is.EqualTo(new[] { p0Ongoing }));
+                    Assert.That(Triggered(firstP0Turn),
+                        Is.EqualTo(new[] { p0Ongoing, p1Ongoing }),
+                        "Incoming p0 sources resolve before the other side.");
+                    Assert.That(Triggered(secondP1Turn),
+                        Is.EqualTo(new[] { p1Ongoing, p0Ongoing }),
+                        "Incoming p1 sources resolve before the other side.");
+                    break;
+            }
+        }
+
         [Test]
         public void SpellCast_Observer_Does_Not_Observe_Its_Own_Creation_Cast()
         {
@@ -171,6 +230,15 @@ namespace Emberfall.Core.Tests.Interpreter
                 new InstanceId(10), new InstanceId(11), new InstanceId(12),
                 new InstanceId(20), new InstanceId(21), new InstanceId(22),
             }));
+
+            var events = new EventBuffer(state);
+            var interpreter = new EffectInterpreter(state, db, events);
+            interpreter.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
+            interpreter.Drain();
+
+            Assert.That(events.Events.Where(e => e.Kind == GameEventKind.DamageApplied)
+                .Select(e => e.Source), Is.EqualTo(ids.Select(id => (InstanceId?)id)),
+                "Resolved event sources must preserve board → weapon → ongoing for each side.");
         }
 
         [Test]
