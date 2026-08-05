@@ -53,10 +53,10 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Packages\com.unity.addressables.android\Tests\Runtime\AssemblyInfo.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Runtime\PlayAssetDeliveryRuntimeTest.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Runtime\PlayAssetDeliveryBuildTestsBase.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Runtime\PlayAssetDeliveryTestsBase.cs" />
+    <Compile Include="Packages\com.unity.addressables.android\Tests\Runtime\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Packages\com.unity.addressables.android\Tests\Runtime\Unity.Addressables.Android.Tests.asmdef" />
@@ -316,6 +316,10 @@
     </Reference>
     <Reference Include="UnityEngine.VFXModule">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Managed\UnityEngine\UnityEngine.VFXModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VectorGraphicsModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Managed\UnityEngine\UnityEngine.VectorGraphicsModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEditor">

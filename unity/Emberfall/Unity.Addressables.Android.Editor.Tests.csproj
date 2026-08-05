@@ -55,14 +55,14 @@
   <ItemGroup>
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryAssetPackNamesTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliverySetupTests.cs" />
+    <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryNoPADGroupsBuildTests.cs" />
+    <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryAndroidBuildTestsBase.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryBuildWindowsTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryAndroidBuildTests.cs" />
-    <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryNoPADGroupsBuildTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryNoInstallTimePacksBuildTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryCustomTemplatesTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryNonInitializedBuildTests.cs" />
     <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\CustomAssetPackSettingsTests.cs" />
-    <Compile Include="Packages\com.unity.addressables.android\Tests\Editor\PlayAssetDeliveryAndroidBuildTestsBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Packages\com.unity.addressables.android\Tests\Editor\Unity.Addressables.Android.Editor.Tests.asmdef" />

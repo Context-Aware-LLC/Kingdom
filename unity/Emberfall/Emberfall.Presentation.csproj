@@ -57,56 +57,59 @@
     <Compile Include="Assets\Scripts\Presentation\CardPresenter.cs" />
     <Compile Include="Assets\Scripts\Presentation\ManaTrayView.cs" />
     <Compile Include="Assets\Scripts\Presentation\HeroSocketsView.cs" />
-    <Compile Include="Assets\Scripts\Presentation\IUiSpriteProvider.cs" />
-    <Compile Include="Assets\Scripts\Presentation\MaterialCatalog.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardFaceBaker.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardRevealTrigger.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardDatabaseLoader.cs" />
-    <Compile Include="Assets\Scripts\Presentation\ClickableBoardSlot.cs" />
     <Compile Include="Assets\Scripts\Presentation\ClickableCard.cs" />
-    <Compile Include="Assets\Scripts\Presentation\BoardAnchors.cs" />
-    <Compile Include="Assets\Scripts\Presentation\TextArcWarp.cs" />
-    <Compile Include="Assets\Scripts\Presentation\HoverRevealModel.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardDeathDissolve.cs" />
     <Compile Include="Assets\Scripts\Presentation\TurnClockView.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardRevealController.cs" />
-    <Compile Include="Assets\Scripts\Presentation\AddressableUiSpriteProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\FrameRarityCatalog.cs" />
     <Compile Include="Assets\Scripts\Presentation\NetworkedGameBootstrap.cs" />
     <Compile Include="Assets\Scripts\Presentation\KeywordCopy.cs" />
-    <Compile Include="Assets\Scripts\Presentation\AddressableArtProvider.cs" />
-    <Compile Include="Assets\Scripts\Presentation\ShaderIds.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardRevealPanel.cs" />
     <Compile Include="Assets\Scripts\Presentation\SeatAnchors.cs" />
-    <Compile Include="Assets\Scripts\Presentation\HandCardHover.cs" />
     <Compile Include="Assets\Scripts\Presentation\DeckPileView.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorUiSpriteProvider.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardLiveState.cs" />
     <Compile Include="Assets\Scripts\Presentation\ClickableHero.cs" />
-    <Compile Include="Assets\Scripts\Presentation\DesyncFaultInjector.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardRevealContent.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardDrawFlight.cs" />
-    <Compile Include="Assets\Scripts\Presentation\VfxDirector.cs" />
-    <Compile Include="Assets\Scripts\Presentation\HeroPlateView.cs" />
     <Compile Include="Assets\Scripts\Presentation\ClickableHeroPower.cs" />
     <Compile Include="Assets\Scripts\Presentation\CardMaterialBinder.cs" />
-    <Compile Include="Assets\Scripts\Presentation\RejectToastView.cs" />
-    <Compile Include="Assets\Scripts\Presentation\MainMenuController.cs" />
-    <Compile Include="Assets\Scripts\Presentation\Properties\AssemblyInfo.cs" />
-    <Compile Include="Assets\Scripts\Presentation\MatchEndBanner.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorUiTextProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardController.cs" />
     <Compile Include="Assets\Scripts\Presentation\HandFanLayout.cs" />
     <Compile Include="Assets\Scripts\Presentation\StatusMarkCatalog.cs" />
     <Compile Include="Assets\Scripts\Presentation\HotSeatInput.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardSnapshot.cs" />
+    <Compile Include="Assets\Scripts\Presentation\DeckbuilderController.cs" />
+    <Compile Include="Assets\Scripts\Presentation\EndTurnButtonView.cs" />
+    <Compile Include="Assets\Scripts\Presentation\HeroFrameGeometry.cs" />
+    <Compile Include="Assets\Scripts\Presentation\AddressableUiTextProvider.cs" />
+    <Compile Include="Assets\Scripts\Presentation\VersusOverlay.cs" />
+    <Compile Include="Assets\Scripts\Presentation\MulliganConfirmButtonView.cs" />
+    <Compile Include="Assets\Scripts\Presentation\IUiSpriteProvider.cs" />
+    <Compile Include="Assets\Scripts\Presentation\MaterialCatalog.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardRevealTrigger.cs" />
+    <Compile Include="Assets\Scripts\Presentation\ClickableBoardSlot.cs" />
+    <Compile Include="Assets\Scripts\Presentation\BoardAnchors.cs" />
+    <Compile Include="Assets\Scripts\Presentation\TextArcWarp.cs" />
+    <Compile Include="Assets\Scripts\Presentation\HoverRevealModel.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardRevealController.cs" />
+    <Compile Include="Assets\Scripts\Presentation\AddressableUiSpriteProvider.cs" />
+    <Compile Include="Assets\Scripts\Presentation\AddressableArtProvider.cs" />
+    <Compile Include="Assets\Scripts\Presentation\ShaderIds.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardRevealPanel.cs" />
+    <Compile Include="Assets\Scripts\Presentation\HandCardHover.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardLiveState.cs" />
+    <Compile Include="Assets\Scripts\Presentation\DesyncFaultInjector.cs" />
+    <Compile Include="Assets\Scripts\Presentation\CardRevealContent.cs" />
+    <Compile Include="Assets\Scripts\Presentation\VfxDirector.cs" />
+    <Compile Include="Assets\Scripts\Presentation\HeroPlateView.cs" />
+    <Compile Include="Assets\Scripts\Presentation\RejectToastView.cs" />
+    <Compile Include="Assets\Scripts\Presentation\MainMenuController.cs" />
+    <Compile Include="Assets\Scripts\Presentation\Properties\AssemblyInfo.cs" />
+    <Compile Include="Assets\Scripts\Presentation\MatchEndBanner.cs" />
     <Compile Include="Assets\Scripts\Presentation\BoardBackdrop.cs" />
     <Compile Include="Assets\Scripts\Presentation\EditorArtProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\IBoardAnchors.cs" />
-    <Compile Include="Assets\Scripts\Presentation\CardSnapshot.cs" />
-    <Compile Include="Assets\Scripts\Presentation\DeckbuilderController.cs" />
     <Compile Include="Assets\Scripts\Presentation\ICardPresenter.cs" />
-    <Compile Include="Assets\Scripts\Presentation\EndTurnButtonView.cs" />
-    <Compile Include="Assets\Scripts\Presentation\HeroFrameGeometry.cs" />
     <Compile Include="Assets\Scripts\Presentation\IArtProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\ProceduralBoardSetup.cs" />
     <Compile Include="Assets\Scripts\Presentation\GameBootstrap.cs" />
@@ -114,10 +117,7 @@
     <Compile Include="Assets\Scripts\Presentation\LoadingOverlay.cs" />
     <Compile Include="Assets\Scripts\Presentation\InputRouter.cs" />
     <Compile Include="Assets\Scripts\Presentation\TurnClockStubDriver.cs" />
-    <Compile Include="Assets\Scripts\Presentation\AddressableUiTextProvider.cs" />
     <Compile Include="Assets\Scripts\Presentation\ICardLiveState.cs" />
-    <Compile Include="Assets\Scripts\Presentation\VersusOverlay.cs" />
-    <Compile Include="Assets\Scripts\Presentation\MulliganConfirmButtonView.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Presentation\Emberfall.Presentation.asmdef" />
@@ -377,6 +377,10 @@
     </Reference>
     <Reference Include="UnityEngine.VFXModule">
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Managed\UnityEngine\UnityEngine.VFXModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.VectorGraphicsModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Managed\UnityEngine\UnityEngine.VectorGraphicsModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEditor">
@@ -647,6 +651,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\PlaybackEngines\AndroidPlayer\UnityEditor.Android.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.VisualScripting.YamlDotNet">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>Library\PackageCache\com.unity.collections@a43cabe808ca\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
       <Private>False</Private>
@@ -663,12 +671,24 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@44f7d31723bd\net472\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.VisualScripting.IonicZip">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\DotNetZip\Unity.VisualScripting.IonicZip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
       <HintPath>Library\PackageCache\com.unity.ai.assistant@6fee27370e6a\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.TextureAssets">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\EditorAssetResources\Unity.VisualScripting.TextureAssets.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">

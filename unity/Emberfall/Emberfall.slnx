@@ -14,7 +14,6 @@
   <Project Path="Emberfall.Net.Client.csproj" />
   <Project Path="Emberfall.Net.Protocol.csproj" />
   <Project Path="Unity.Addressables.Android.Tests.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Emberfall.AI.csproj" />
   <Project Path="Emberfall.Core.Serialization.csproj" />
 </Solution>

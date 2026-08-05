@@ -53,23 +53,26 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\MatchEngine.cs">
-      <Link>MatchEngine.cs</Link>
-    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\EventBuffer.cs">
       <Link>EventBuffer.cs</Link>
-    </Compile>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\CommandProcessor.cs">
-      <Link>CommandProcessor.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Characters.cs">
       <Link>Characters.cs</Link>
     </Compile>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\LocalMatchSession.cs">
-      <Link>LocalMatchSession.cs</Link>
-    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\EffectInterpreter.cs">
       <Link>EffectInterpreter.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Projection\EventVisibility.cs">
+      <Link>Projection\EventVisibility.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\MatchEngine.cs">
+      <Link>MatchEngine.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\CommandProcessor.cs">
+      <Link>CommandProcessor.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\LocalMatchSession.cs">
+      <Link>LocalMatchSession.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\ActionHandlers.cs">
       <Link>ActionHandlers.cs</Link>
@@ -92,9 +95,6 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Projection\GameStateProjector.cs">
       <Link>Projection\GameStateProjector.cs</Link>
     </Compile>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Projection\EventVisibility.cs">
-      <Link>Projection\EventVisibility.cs</Link>
-    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\PrebuiltDecks.cs">
       <Link>PrebuiltDecks.cs</Link>
     </Compile>
@@ -105,6 +105,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Unity.VisualScripting.YamlDotNet">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>Library\PackageCache\com.unity.collections@a43cabe808ca\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
       <Private>False</Private>
@@ -121,12 +125,24 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@44f7d31723bd\net472\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.VisualScripting.IonicZip">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\DotNetZip\Unity.VisualScripting.IonicZip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
       <HintPath>Library\PackageCache\com.unity.ai.assistant@6fee27370e6a\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.TextureAssets">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\EditorAssetResources\Unity.VisualScripting.TextureAssets.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">

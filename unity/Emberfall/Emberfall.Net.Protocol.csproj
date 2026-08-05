@@ -53,9 +53,6 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\SnapshotJsonCodec.cs">
-      <Link>SnapshotJsonCodec.cs</Link>
-    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\ProtocolCodec.cs">
       <Link>ProtocolCodec.cs</Link>
     </Compile>
@@ -68,14 +65,17 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\IsExternalInit.cs">
       <Link>IsExternalInit.cs</Link>
     </Compile>
-    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\WirePrimitives.cs">
-      <Link>WirePrimitives.cs</Link>
-    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\NetMessage.cs">
       <Link>NetMessage.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\JsonWriter.cs">
       <Link>JsonWriter.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\SnapshotJsonCodec.cs">
+      <Link>SnapshotJsonCodec.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Protocol\WirePrimitives.cs">
+      <Link>WirePrimitives.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -84,6 +84,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Unity.VisualScripting.YamlDotNet">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\YamlDotNet\Unity.VisualScripting.YamlDotNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>Library\PackageCache\com.unity.collections@a43cabe808ca\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
       <Private>False</Private>
@@ -100,12 +104,24 @@
       <HintPath>Library\PackageCache\com.unity.ext.nunit@44f7d31723bd\net472\unity-custom\nunit.framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.VisualScripting.IonicZip">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\Dependencies\DotNetZip\Unity.VisualScripting.IonicZip.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@4dfd81071c64\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AiEditorToolsSdk">
       <HintPath>Library\PackageCache\com.unity.ai.assistant@6fee27370e6a\Modules\Unity.AI.Toolkit.Sdk\Editor\AiEditorToolsSdk.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.VisualScripting.TextureAssets">
+      <HintPath>Library\PackageCache\com.unity.visualscripting@4edfcc09512f\Editor\VisualScripting.Core\EditorAssetResources\Unity.VisualScripting.TextureAssets.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Mono.Cecil">
