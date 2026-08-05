@@ -176,6 +176,10 @@ namespace Emberfall.Core.Cards
         public Rarity Rarity { get; }
         public IReadOnlyList<Keyword> Keywords { get; }
         public IReadOnlyList<EffectDef> Effects { get; }
+        private IReadOnlyList<RuleDefinition>? _rules;
+        /// <summary>The normalized typed rules. Legacy callers are adapted lazily during migration.</summary>
+        public IReadOnlyList<RuleDefinition> Rules
+            => _rules ?? (_rules = RuleRuntimeAdapter.FromLegacy(Id, Effects));
         public string CardText { get; }
         public string FlavorText { get; }
         public string ArtId { get; }
@@ -227,6 +231,37 @@ namespace Emberfall.Core.Cards
             Rarity = rarity;
             Keywords = keywords ?? System.Array.Empty<Keyword>();
             Effects = effects ?? System.Array.Empty<EffectDef>();
+            CardText = cardText ?? "";
+            FlavorText = flavorText ?? "";
+            ArtId = artId ?? "";
+            SetId = setId;
+            Collectible = collectible;
+            Tribe = tribe;
+            FactionId = factionId ?? "";
+            RequiresEngineeringPrimitive = requiresEngineeringPrimitive;
+        }
+
+        /// <summary>Typed-rule constructor. Effects is a temporary projection for the legacy runtime.</summary>
+        public CardDefinition(
+            string id, string name, CardType type, int cost,
+            int? attack, int? health, int? durability,
+            CardClass @class, Rarity rarity,
+            IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
+            string cardText, string flavorText, string artId, SetId setId,
+            bool collectible, Tribe? tribe, string factionId, bool requiresEngineeringPrimitive)
+        {
+            Id = id;
+            Name = name;
+            Type = type;
+            Cost = cost;
+            Attack = attack;
+            Health = health;
+            Durability = durability;
+            Class = @class;
+            Rarity = rarity;
+            Keywords = keywords ?? System.Array.Empty<Keyword>();
+            _rules = rules ?? System.Array.Empty<RuleDefinition>();
+            Effects = RuleRuntimeAdapter.ToLegacy(_rules);
             CardText = cardText ?? "";
             FlavorText = flavorText ?? "";
             ArtId = artId ?? "";
