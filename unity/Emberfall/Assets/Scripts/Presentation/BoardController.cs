@@ -350,7 +350,7 @@ namespace Emberfall.Presentation
         /// weapon, breaking it still falls out of the normal departed-card sweep rather than
         /// leaking a view.
         /// </summary>
-        private void SyncWeapon(PlayerId owner, WeaponInstance weapon)
+        private void SyncWeapon(PlayerId owner, CardInstance weapon)
         {
             if (weapon == null) return;
             _thisLive.Add(weapon.Id);

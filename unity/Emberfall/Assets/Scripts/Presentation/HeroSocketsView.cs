@@ -144,14 +144,15 @@ namespace Emberfall.Presentation
                           && state.Phase == TurnPhase.Main;
             SetPower(cost, usable, powerDef?.ArtId);
 
-            WeaponInstance w = ps.Weapon;
+            CardInstance w = ps.Weapon;
             if (w == null) { SetWeapon(false, 0, 0, null, 0, 0); return; }
 
             // Base values so a buffed or damaged weapon reads as such — carried over from
             // CardPresenter.SetWeaponStats, which used to render the equipped weapon as a card.
             CardDefinition wdef = _db?.Get(w.DefinitionId);
-            SetWeapon(true, w.Attack, w.Durability, wdef?.ArtId,
-                      wdef?.Attack ?? w.Attack, wdef?.Durability ?? w.Durability);
+            int durability = w.CurrentDurability ?? 0;
+            SetWeapon(true, w.CurrentAttack, durability, wdef?.ArtId,
+                      wdef?.Attack ?? w.CurrentAttack, wdef?.Durability ?? durability);
         }
 
         /// <summary>Public so an editor preview can drive the shipping layer directly rather than

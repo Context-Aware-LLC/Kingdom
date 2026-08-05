@@ -131,21 +131,27 @@ not.
 
 ## What a weapon can and cannot do
 
-A hero attacking with a weapon carries **no keywords at all** — `attackerKws` is a literal empty
-set for a hero, and `WeaponInstance` has no keyword field to read from. **No weapon can carry
-Lifedrain, Venom or Frost as an on-hit rider.** Do not author one.
+A weapon is the original `CardInstance` moved from hand into `Zone.Weapon`; it keeps that identity
+until `BreakWeapon` moves the same object to the graveyard. Its keywords, enchantments and current
+durability are ordinary card state and survive those public-zone transitions.
+
+Weapon attacks carry `LIFESTEAL`, `POISONOUS`, `FREEZE`, and `WINDFURY`. The first three enter the
+existing fixed damage-rider order; `WINDFURY` raises the hero's attack budget to two. Marker keywords
+whose behavior is expressed by trigger/effect data (including `BATTLECRY` and `DEATHRATTLE`) remain
+legal. `CardValidator`'s fail-closed weapon-carrier table rejects keywords with no weapon behavior;
+weapon-ness alone is not a rejection reason.
 
 A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip battlecry),
 **`ON_ATTACK` with a static selector** — that trigger fires with an empty target list, so "the
 minion this hits" is not addressable — and **`ON_DEATH`** (EF-020).
 
-**A weapon deathrattle resolves with the weapon already unequipped**, and on an equip-replacement
-with the *replacement* already in the slot. A `SELF`-selector effect on one therefore targets
-nothing: a weapon is not on the board, and its wrapper `CardInstance` is not in `Zone.Board`.
+**A weapon deathrattle resolves with the weapon already in its controller's graveyard**, and on an
+equip-replacement with the *replacement* already in the slot. A `SELF`-selector effect on one
+therefore targets nothing: a weapon is not in `Zone.Board`.
 
-Giving weapons keywords is a **hash-canonical change**, not a small patch: `WeaponInstance` is
-game state, so a new field must enter the serializer and hasher, and the golden replays re-bake
-with the R1 gate as witness.
+Changing a weapon's runtime shape is **hash-canonical** because `PlayerState.Weapon` is game state.
+Update the canonical serializer, projection, snapshot codec, shared field/mutation manifest, pinned
+digest, and affected golden fixtures under the rebaseline guard in one reviewed change.
 
 ## Player-facing input consults the vulnerability index
 
@@ -175,8 +181,7 @@ leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touc
 to update. Conversely — **if you are editing a line that carries one, discharging it is part of
 your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
 
-Placed so far: the `Trigger` enum (`Enums.cs`), the per-effect loop in `CardValidator`, and
-`WeaponInstance` (`GameState.cs`).
+Placed so far: the `Trigger` enum (`Enums.cs`) and the per-effect loop in `CardValidator`.
 
 **A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
 that is simply true. Only pin the ones that a known, named change will invalidate.
