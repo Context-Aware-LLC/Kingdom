@@ -105,22 +105,22 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Empty_Without_Permanent_Is_A_Warning_Not_An_Error()
+        public void GainMana_Rejects_An_Unknown_Typed_Kind()
         {
-            var effect = new EffectDef(Trigger.ON_CAST, Action.GAIN_MANA, amount: 1, amount2: null,
-                tokenId: null, grantedKeyword: null, selector: "FRIENDLY_HERO",
-                permanent: false, empty: true);
+            var rule = new RuleDefinition(new RuleId("gain_mana"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new GainManaAction(1, (ManaGainKind)999));
             var def = new CardDefinition(
                 id: "test_empty_mana", name: "Test", type: CardType.SPELL, cost: 1,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: System.Array.Empty<Keyword>(), effects: new[] { effect },
+                keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 cardText: "", flavorText: "", artId: "art/x", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
-            Assert.That(report.Ok, Is.True);
-            Assert.That(report.Issues.Any(i => i.Code == "C15-EMPTY-WITHOUT-PERMANENT" && i.Severity == Severity.Warning));
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C15-MANA-KIND" && i.Severity == Severity.Error));
         }
 
         [Test]
@@ -331,14 +331,14 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void OnTurnStart_Requires_A_TurnOwner_Value()
+        public void CardJson_Requires_A_TurnOwner_Value()
         {
-            var def = WithEffect(CardType.MINION, TurnStart(owner: null));
+            const string json = "{\"id\":\"missing_turn_owner\",\"type\":\"MINION\",\"rules\":[{" +
+                "\"id\":\"rule_1\",\"activation\":{\"type\":\"TRIGGERED\",\"trigger\":\"ON_TURN_START\"}," +
+                "\"condition\":{\"type\":\"TURN_OWNER\"},\"lifetime\":{\"type\":\"SOURCE_BOUND\"}," +
+                "\"action\":{\"type\":\"DRAW\",\"count\":1}}]}";
 
-            var report = Validator().Validate(def, Db(def));
-
-            Assert.That(report.Ok, Is.False);
-            Assert.That(report.Issues.Any(i => i.Code == "C22-TURN-OWNER-REQUIRED"));
+            Assert.Throws<System.FormatException>(() => CardJson.Deserialize(json));
         }
 
         [Test]

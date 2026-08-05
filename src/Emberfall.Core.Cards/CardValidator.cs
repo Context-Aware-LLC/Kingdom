@@ -25,14 +25,6 @@ namespace Emberfall.Core.Cards
             Trigger.ON_PLAY, Trigger.ON_CAST,
         };
 
-        // Verbs whose EffectDef.Amount is required (C10). Extends the tooling-doc list with the
-        // verbs actually present in the Action enum/M1 data (BACKDRAFT, FROST) that doc predates.
-        private static readonly HashSet<Action> AmountRequiredActions = new HashSet<Action>
-        {
-            Action.DEAL_DAMAGE, Action.HEAL, Action.DRAW, Action.SUMMON, Action.BUFF,
-            Action.GAIN_MANA, Action.UNEARTH, Action.ADD_TO_HAND, Action.BACKDRAFT,
-        };
-
         /// <summary>Whether a <see cref="Trigger"/> has a raise site in the engine (C21).</summary>
         private enum TriggerLiveness
         {
@@ -150,8 +142,8 @@ namespace Emberfall.Core.Cards
                 case CardType.SPELL:
                     if (def.Attack is not null || def.Health is not null || def.Durability is not null)
                         Err("C5-SPELL-STATS", "stats", "SPELL must have attack/health/durability == null.");
-                    if (def.Effects.Count == 0 && !def.RequiresEngineeringPrimitive)
-                        Err("C5-SPELL-EFFECTS", "effects", "SPELL must have >=1 effect or set requiresEngineeringPrimitive.");
+                    if (def.Rules.Count == 0 && !def.RequiresEngineeringPrimitive)
+                        Err("C5-SPELL-EFFECTS", "rules", "SPELL must have >=1 rule or set requiresEngineeringPrimitive.");
                     break;
                 case CardType.WEAPON:
                     if (def.Attack is null || def.Attack < 0)
@@ -183,30 +175,39 @@ namespace Emberfall.Core.Cards
             if (def.Durability is int dur && (dur < 1 || dur > 8))
                 Err("C8-DURABILITY-RANGE", "durability", "durability must be 1-8.");
 
-            // C9-C11, C13, C14, C17, C21 — per-effect checks
+            // C9-C14, C21-C23 — per-rule checks
             var priorTargetBindings = new HashSet<string>();
-            for (int i = 0; i < def.Effects.Count; i++)
+            var ruleIds = new HashSet<string>();
+            for (int i = 0; i < def.Rules.Count; i++)
             {
-                var fx = def.Effects[i];
-                string prefix = $"effects[{i}]";
+                RuleDefinition rule = def.Rules[i];
+                string prefix = $"rules[{i}]";
+                string ruleId = rule.Id.Value ?? "";
+                string actionName = ActionName(rule.Action);
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
 
-                // C9: Action is a known verb — guaranteed by the enum type system (CardJson throws on
-                // an unrecognized string), kept as a defensive no-op check for POCOs built by hand.
+                // C9 — stable, card-scoped identity. The same syntax as a card id keeps rule ids
+                // portable across JSON, logs and deterministic snapshots.
+                if (!IdPattern.IsMatch(ruleId))
+                    Err("C9-RULE-ID-FORMAT", $"{prefix}.id", "rule id must match ^[a-z0-9_]+$.");
+                if (!ruleIds.Add(ruleId))
+                    Err("C9-RULE-ID-DUPLICATE", $"{prefix}.id",
+                        $"rule id '{ruleId}' appears more than once on this card.");
 
                 // C21 — trigger liveness (see TriggerLivenessTable). A card on a trigger with no raise
                 // site parses, validates, loads and does nothing, forever, with no error at runtime;
                 // this is the only place that catches it.
-                if (!TriggerLivenessTable.TryGetValue(fx.Trigger, out var liveness))
+                if (!TriggerLivenessTable.TryGetValue(trigger, out var liveness))
                     liveness = TriggerLiveness.Dead; // fail closed: a new enum member is dead until tabled live
                 switch (liveness)
                 {
                     case TriggerLiveness.Dead:
-                        Err("C21-TRIGGER-DEAD", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
+                        Err("C21-TRIGGER-DEAD", $"{prefix}.activation",
+                            $"trigger '{trigger}' has no raise site in the engine — a card using it does nothing, silently. Author only a live trigger (see EF-011..EF-017b).");
                         break;
                     case TriggerLiveness.WeaponOnly when def.Type != CardType.WEAPON:
-                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
+                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.activation",
+                            $"trigger '{trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
                         break;
                     case TriggerLiveness.MinionOnly when def.Type != CardType.MINION:
                         // The tail differs per trigger and is load-bearing: ON_TURN_START is minion-only
@@ -214,9 +215,9 @@ namespace Emberfall.Core.Cards
                         // ON_HEAL is minion-only permanently (nothing else has health to restore), and
                         // telling an author to wait for a lifecycle that will never come is worse than
                         // saying nothing.
-                        Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.trigger",
-                            $"trigger '{fx.Trigger}' is raised on board minions only — it is dead on a {def.Type}"
-                            + (fx.Trigger == Trigger.ON_TURN_START
+                        Err("C21-TRIGGER-MINION-ONLY", $"{prefix}.activation",
+                            $"trigger '{trigger}' is raised on board minions only — it is dead on a {def.Type}"
+                            + (trigger == Trigger.ON_TURN_START
                                 ? " until that source lifecycle is implemented."
                                 : "."));
                         break;
@@ -228,116 +229,112 @@ namespace Emberfall.Core.Cards
                 // C22 — the first reusable condition seam. Turn ownership is mandatory and explicit
                 // for ON_TURN_START; on every other trigger it lacks a turn-event context and would be
                 // an inert authoring error, so fail closed rather than silently skipping forever.
-                if (fx.Condition != null
-                    && !System.Enum.IsDefined(typeof(ConditionType), fx.Condition.Type))
+                if (trigger == Trigger.ON_TURN_START)
                 {
-                    Err("C22-CONDITION-UNKNOWN", $"{prefix}.condition.type",
-                        $"condition type '{fx.Condition.Type}' is not implemented.");
-                }
-                else if (fx.Trigger == Trigger.ON_TURN_START)
-                {
-                    if (fx.Condition == null
-                        || fx.Condition.Type != ConditionType.TURN_OWNER
-                        || !fx.Condition.TurnOwner.HasValue)
+                    if (!(rule.Condition is TurnOwnerCondition turnOwner))
                     {
                         Err("C22-TURN-OWNER-REQUIRED", $"{prefix}.condition",
-                            "ON_TURN_START requires condition.type TURN_OWNER with value CONTROLLER, OPPONENT, or ANY.");
+                            "ON_TURN_START requires a TURN_OWNER condition with owner CONTROLLER, OPPONENT, or ANY.");
                     }
-                    else if (!System.Enum.IsDefined(typeof(TurnOwner), fx.Condition.TurnOwner.Value))
+                    else if (!System.Enum.IsDefined(typeof(TurnOwner), turnOwner.Owner))
                     {
-                        Err("C22-TURN-OWNER-INVALID", $"{prefix}.condition.value",
-                            $"turn owner '{fx.Condition.TurnOwner.Value}' is not CONTROLLER, OPPONENT, or ANY.");
+                        Err("C22-TURN-OWNER-INVALID", $"{prefix}.condition.owner",
+                            $"turn owner '{turnOwner.Owner}' is not CONTROLLER, OPPONENT, or ANY.");
                     }
                 }
-                else if (fx.Condition != null && fx.Condition.Type == ConditionType.TURN_OWNER)
+                else if (rule.Condition is TurnOwnerCondition)
                 {
                     Err("C22-TURN-OWNER-TRIGGER", $"{prefix}.condition",
                         "TURN_OWNER is valid only on ON_TURN_START because other triggers carry no incoming-turn context.");
                 }
 
-                // C10
-                if (AmountRequiredActions.Contains(fx.Action) && fx.Amount is null)
-                    Err("C10-AMOUNT-REQUIRED", $"{prefix}.amount", $"{fx.Action} requires 'amount'.");
-
-                // C11
-                switch (fx.Action)
+                // C23 — only one-shot player actions and source-bound observed triggers have a
+                // runtime today. The other lifetime nodes are reserved, typed, and rejected until
+                // their ongoing-state slice lands.
+                if (rule.Lifetime is FiniteLifetime || rule.Lifetime is PermanentLifetime)
                 {
-                    case Action.SUMMON:
-                    case Action.ADD_TO_HAND:
-                    case Action.TRANSFORM:
-                    case Action.EQUIP:
-                        if (string.IsNullOrEmpty(fx.TokenId))
-                            Err("C11-PAYLOAD-REQUIRED", $"{prefix}.payload.tokenId", $"{fx.Action} requires payload.tokenId.");
-                        break;
-                    case Action.GIVE_KEYWORD:
-                        if (fx.GrantedKeyword is null)
-                            Err("C11-PAYLOAD-REQUIRED", $"{prefix}.payload.keyword", "GIVE_KEYWORD requires payload.keyword.");
-                        break;
+                    Err("C23-LIFETIME-UNSUPPORTED", $"{prefix}.lifetime",
+                        $"lifetime '{rule.Lifetime.GetType().Name}' requires the ongoing-effect runtime slice.");
                 }
-
-                // C12 / C13
-                if (!string.IsNullOrEmpty(fx.TokenId))
+                else
                 {
-                    if (db is null || !db.TryGet(fx.TokenId!, out var token))
-                        Err("C12-TOKEN-UNRESOLVED", $"{prefix}.payload.tokenId", $"'{fx.TokenId}' does not resolve in the card database.");
-                    else if (fx.Action == Action.SUMMON && token.Collectible)
-                        Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.payload.tokenId", $"SUMMON token '{fx.TokenId}' is collectible:true — tokens are usually collectible:false.");
+                    bool needsOneShot = trigger == Trigger.ON_PLAY || trigger == Trigger.ON_CAST;
+                    if ((needsOneShot && !(rule.Lifetime is OneShotLifetime)) ||
+                        (!needsOneShot && !(rule.Lifetime is SourceBoundLifetime)))
+                        Err("C23-LIFETIME-ACTIVATION", $"{prefix}.lifetime",
+                            $"trigger '{trigger}' requires a {(needsOneShot ? "ONE_SHOT" : "SOURCE_BOUND")} lifetime.");
+                }
+                if (rule.Lifetime is FiniteLifetime finite && finite.Uses <= 0)
+                    Err("C23-FINITE-USES", $"{prefix}.lifetime.uses",
+                        "FINITE lifetime uses must be greater than zero.");
+
+                // C11-C13 — payload presence is structural in the typed action classes. String ids
+                // can still be empty in hand-built definitions, and referenced cards must resolve.
+                string? referencedCardId = ReferencedCardId(rule.Action);
+                if (referencedCardId != null)
+                {
+                    if (string.IsNullOrEmpty(referencedCardId))
+                        Err("C11-PAYLOAD-REQUIRED", $"{prefix}.action.cardId",
+                            $"{actionName} requires action.cardId.");
+                    else if (db is null || !db.TryGet(referencedCardId, out var token))
+                        Err("C12-TOKEN-UNRESOLVED", $"{prefix}.action.cardId",
+                            $"'{referencedCardId}' does not resolve in the card database.");
+                    else if (rule.Action is SummonAction && token.Collectible)
+                        Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.action.cardId",
+                            $"SUMMON token '{referencedCardId}' is collectible:true — tokens are usually collectible:false.");
                 }
 
                 // C14
-                if (!string.IsNullOrEmpty(fx.Selector) && !TargetSpec.IsKnownSelector(fx.Selector!))
-                    Err("C14-SELECTOR-INVALID", $"{prefix}.target.selector", $"'{fx.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
-                else if (fx.Target != null &&
-                         !ActionTargetCapabilities.HasCompatibleTarget(
-                             fx.Action, fx.Target.Selector, def.Type, fx.Trigger))
-                    Err("C14F-ACTION-TARGET-INCOMPATIBLE", $"{prefix}.target.selector",
-                        $"{fx.Action} cannot affect any target kind produced by '{fx.Target.Selector}'.");
+                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
+                if (target != null && !TargetSpec.IsKnownSelector(target.Selector))
+                    Err("C14-SELECTOR-INVALID", $"{prefix}.action.target.selector", $"'{target.Selector}' is not a known Selector (dev-docs/specs/card-schema.md §5.3).");
+                else if (target != null &&
+                         !RuleActionCapabilities.HasCompatibleTarget(
+                             rule.Action, target.Selector, def.Type, trigger))
+                    Err("C14F-ACTION-TARGET-INCOMPATIBLE", $"{prefix}.action.target.selector",
+                        $"{actionName} cannot affect any target kind produced by '{target.Selector}'.");
                 // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
                 // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
                 // through this very rule, because C14 checked the selector without the trigger.
-                else if (fx.Target != null &&
-                         (fx.Target.ChosenBy == TargetChosenBy.PLAYER ||
-                          (!fx.Target.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(fx.Target.Selector)))
-                         && !PlayerTargetedTriggers.Contains(fx.Trigger)
+                else if (target != null &&
+                         (target.ChosenBy == TargetChosenBy.PLAYER ||
+                          (!target.ChosenBy.HasValue && TargetSpec.DefaultsToPlayerChoice(target.Selector)))
+                         && !PlayerTargetedTriggers.Contains(trigger)
                          && !def.RequiresEngineeringPrimitive)
-                    Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.target.selector",
-                        $"'{fx.Selector}' is an explicit-choice selector, but {fx.Trigger} fires with no player choosing — " +
+                    Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.action.target.selector",
+                        $"'{target.Selector}' is an explicit-choice selector, but {trigger} fires with no player choosing — " +
                         "the interpreter throws on it at runtime. Use an auto-resolvable selector " +
                         "(SELF / FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
                         "or set requiresEngineeringPrimitive to hold the row out of every pool until the primitive lands.");
 
-                if (fx.Target?.Count is int targetCount && targetCount < -1)
-                    Err("C14C-TARGET-COUNT", $"{prefix}.target.count",
+                if (target?.Count is int targetCount && targetCount < -1)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.action.target.count",
                         "target.count must be positive or -1 for every candidate.");
-                if (fx.Target?.Count == 0)
-                    Err("C14C-TARGET-COUNT", $"{prefix}.target.count",
+                if (target?.Count == 0)
+                    Err("C14C-TARGET-COUNT", $"{prefix}.action.target.count",
                         "target.count cannot be zero.");
-                if (fx.Target != null)
+                if (target != null)
                 {
-                    if (fx.Target.Binding.Length > 0 && !TargetBindingPattern.IsMatch(fx.Target.Binding))
-                        Err("C14D-TARGET-BINDING", $"{prefix}.target.binding",
+                    if (target.Binding.Length > 0 && !TargetBindingPattern.IsMatch(target.Binding))
+                        Err("C14D-TARGET-BINDING", $"{prefix}.action.target.binding",
                             "target.binding must match ^[a-z][a-z0-9_]{0,31}$.");
-                    if (fx.Target.DistinctFrom.Length > 0)
+                    if (target.DistinctFrom.Length > 0)
                     {
-                        if (!TargetBindingPattern.IsMatch(fx.Target.DistinctFrom))
-                            Err("C14D-TARGET-BINDING", $"{prefix}.target.distinctFrom",
+                        if (!TargetBindingPattern.IsMatch(target.DistinctFrom))
+                            Err("C14D-TARGET-BINDING", $"{prefix}.action.target.distinctFrom",
                                 "target.distinctFrom must match ^[a-z][a-z0-9_]{0,31}$.");
-                        else if (!priorTargetBindings.Contains(fx.Target.DistinctFrom))
-                            Err("C14E-TARGET-BINDING-ORDER", $"{prefix}.target.distinctFrom",
-                                $"target.distinctFrom '{fx.Target.DistinctFrom}' must name a binding from an earlier effect.");
+                        else if (!priorTargetBindings.Contains(target.DistinctFrom))
+                            Err("C14E-TARGET-BINDING-ORDER", $"{prefix}.action.target.distinctFrom",
+                                $"target.distinctFrom '{target.DistinctFrom}' must name a binding from an earlier rule.");
                     }
-                    if (fx.Target.Binding.Length > 0) priorTargetBindings.Add(fx.Target.Binding);
+                    if (target.Binding.Length > 0) priorTargetBindings.Add(target.Binding);
                 }
 
-                // C15 — GAIN_MANA payload sanity: `empty` modifies a permanent gain only.
-                if (fx.Empty && !fx.Permanent)
-                    Warn("C15-EMPTY-WITHOUT-PERMANENT", $"{prefix}.payload.empty",
-                        "payload.empty has no meaning without payload.permanent — temporary crystals are always filled.");
-                if (fx.Permanent && fx.Action != Action.GAIN_MANA)
-                    Warn("C15-PERMANENT-NON-MANA", $"{prefix}.payload.permanent",
-                        $"payload.permanent is only read by GAIN_MANA; it is inert on {fx.Action}.");
-
+                if (rule.Action is GainManaAction mana &&
+                    !System.Enum.IsDefined(typeof(ManaGainKind), mana.Kind))
+                    Err("C15-MANA-KIND", $"{prefix}.action.kind",
+                        $"mana kind '{mana.Kind}' is not implemented.");
             }
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the
@@ -353,6 +350,47 @@ namespace Emberfall.Core.Cards
                 if (issue.Severity == Severity.Error) { ok = false; break; }
 
             return new ValidationReport(ok, issues, requiresPrimitive);
+        }
+
+        private static string? ReferencedCardId(RuleAction action)
+        {
+            switch (action)
+            {
+                case SummonAction a: return a.CardId;
+                case AddToHandAction a: return a.CardId;
+                case EquipAction a: return a.CardId;
+                case TransformAction a: return a.CardId;
+                default: return null;
+            }
+        }
+
+        private static string ActionName(RuleAction action)
+        {
+            switch (action)
+            {
+                case DamageAction _: return "DAMAGE";
+                case HealAction _: return "HEAL";
+                case ModifyStatsAction _: return "MODIFY_STATS";
+                case ReinforceAction _: return "REINFORCE";
+                case GrantKeywordAction _: return "GRANT_KEYWORD";
+                case DestroyAction _: return "DESTROY";
+                case ReturnToHandAction _: return "RETURN_TO_HAND";
+                case SilenceAction _: return "SILENCE";
+                case TransformAction _: return "TRANSFORM";
+                case FrostAction _: return "FROST";
+                case TakeControlAction _: return "TAKE_CONTROL";
+                case DrawAction _: return "DRAW";
+                case SummonAction _: return "SUMMON";
+                case AddToHandAction _: return "ADD_TO_HAND";
+                case EquipAction _: return "EQUIP";
+                case GainManaAction _: return "GAIN_MANA";
+                case GainArmorAction _: return "GAIN_ARMOR";
+                case BackdraftAction _: return "BACKDRAFT";
+                case UnearthAction _: return "UNEARTH";
+                default:
+                    throw new System.InvalidOperationException(
+                        $"Rule action '{action.GetType().Name}' is absent from validator semantics.");
+            }
         }
 
         /// <summary>
