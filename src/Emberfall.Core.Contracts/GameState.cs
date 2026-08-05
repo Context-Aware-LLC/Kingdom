@@ -39,11 +39,9 @@ namespace Emberfall.Core.Contracts
         public List<OngoingEffectInstance> OngoingEffects = new List<OngoingEffectInstance>();
 
         /// <summary>
-        /// The pending-choice seam (A2b, decision 3). ALWAYS null in M2 — the shape exists so
-        /// Phase 2 adds interpreter machinery only, never a Contracts change. Carries serializable
-        /// STATE only, never the continuation/delegate. Redaction contract for the future
-        /// GameStateProjector is documented per-field on <see cref="PendingChoice"/> (§7 review
-        /// 2026-07-15, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a2b-scoped-review-2026-07-15.md — OBL-1).
+        /// Authoritative state for a pending player choice (currently Unearth). Carries serializable
+        /// state only, never a continuation or delegate. <see cref="GameStateProjector"/> redacts
+        /// choices per field for the chooser and opponent.
         /// </summary>
         public PendingChoice? PendingChoice;
 

@@ -88,14 +88,15 @@ heal inside `ApplyDamage` — the path the trigger was expected to fire on — f
 always heals the source's own *hero*. Dead on `SPELL`/`WEAPON` permanently, not pending a lifecycle:
 neither has health to restore.
 
-**`ON_TURN_START` is live for board minions and equipped weapons with an explicit turn-owner
-condition** (EF-011 / NOR-31).
+**`ON_TURN_START` is live for board minions, equipped weapons, and resolved ongoing spell effects
+with an explicit turn-owner condition** (EF-011 / NOR-31).
 Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
 missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
 **after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrosted
 board with mana already refilled, and a lethal start-of-turn cascade ends the match instead of
-drawing into a finished game. Persistent spell effects are not turn-start sources yet because their
-canonical state does not exist; `CardValidator` rejects ordinary spell rows on this trigger.
+drawing into a finished game. A resolved spell creates a carrierless ongoing observer for an
+explicit `ONE_SHOT`, `FINITE`, or `PERMANENT` future rule; ordinary hand, deck, and graveyard cards
+never observe.
 
 **`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
 permanent on both boards, not "at the end of *your* turn". A card that should only fire on its

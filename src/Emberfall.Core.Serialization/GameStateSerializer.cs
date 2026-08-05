@@ -41,7 +41,7 @@ namespace Emberfall.Core.Serialization
             w.U64(s.NextEventSequence);
             w.Bool(s.Mulligan0Done);
             w.Bool(s.Mulligan1Done);
-            WalkPendingChoice(w, s.PendingChoice);  // A2b tail seam — always null in M2 (§7 2026-07-15)
+            WalkPendingChoice(w, s.PendingChoice);  // nullable, authoritative choice state
             WalkOngoingEffects(w, s.OngoingEffects);
         }
 
