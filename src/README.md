@@ -11,7 +11,7 @@ firewall + RNG + canonical serialization + the R1 golden-replay gate + CI.
 | Project | Target | UnityEngine? | Holds |
 |---|---|:--:|---|
 | `Emberfall.Core.Contracts` | netstandard2.1 | **No** | Enums, DTOs, `PlayerIntent` (+ `[ReplayTag]`), `GameEvent`, `CommandResult`, the `GameState` POCO graph, **`DeterministicRandom` (splitmix64)**, core interfaces. |
-| `Emberfall.Core.Cards` | netstandard2.1 | **No** | `CardDefinition`, `EffectDef`, the single shared `CardJson` parser, `ICardDatabase`/`ICardValidator`. |
+| `Emberfall.Core.Cards` | netstandard2.1 | **No** | `CardDefinition`, typed `RuleDefinition` nodes, the single shared `CardJson` parser, `ICardDatabase`/`ICardValidator`. |
 | `Emberfall.Core` | netstandard2.1 | **No** | `MatchEngine.BeginMatch` (core-driven opening), `CommandProcessor` (Validate→Apply→Emit turn loop), `LocalMatchHost`. |
 
 Each project ships both a `.csproj` (for license-free `dotnet` CI) and a Unity `.asmdef` with
