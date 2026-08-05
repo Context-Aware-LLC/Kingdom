@@ -258,6 +258,70 @@ namespace Emberfall.Core.Tests.CardValidation
         private static RuleDefinition TurnStart(TurnOwner owner)
             => Rule(Trigger.ON_TURN_START, new DrawAction(1), new TurnOwnerCondition(owner));
 
+        [TestCase(-1)]
+        [TestCase(0)]
+        public void Unearth_Requires_A_Positive_Offer_Count(int count)
+        {
+            CardDefinition def = WithRule(CardType.SPELL,
+                Rule(Trigger.ON_CAST, new UnearthAction(count)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-COUNT" &&
+                i.Field == "rules[0].action.count"), Is.True);
+        }
+
+        [TestCase(CardType.MINION, Trigger.ON_PLAY)]
+        [TestCase(CardType.WEAPON, Trigger.ON_PLAY)]
+        [TestCase(CardType.SPELL, Trigger.ON_CAST)]
+        [TestCase(CardType.HERO_POWER, Trigger.ON_CAST)]
+        public void Unearth_Is_Valid_On_Player_Initiated_Source_Paths(CardType type, Trigger trigger)
+        {
+            CardDefinition def = WithRule(type, Rule(trigger, new UnearthAction(3)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.True,
+                string.Join("; ", report.Issues.Select(i => $"{i.Code}: {i.Message}")));
+        }
+
+        [TestCase(Trigger.ON_DEATH)]
+        [TestCase(Trigger.ON_DAMAGED)]
+        [TestCase(Trigger.ON_TURN_START)]
+        [TestCase(Trigger.ON_TURN_END)]
+        [TestCase(Trigger.ON_FRIENDLY_SUMMON)]
+        [TestCase(Trigger.ON_SPELL_CAST)]
+        [TestCase(Trigger.ON_HEAL)]
+        public void Unearth_Rejects_Observer_Paths_That_Cannot_Pause_For_Input(Trigger trigger)
+        {
+            RuleCondition condition = trigger == Trigger.ON_TURN_START
+                ? new TurnOwnerCondition(TurnOwner.ANY)
+                : AlwaysCondition.Instance;
+            CardDefinition def = WithRule(CardType.MINION,
+                Rule(trigger, new UnearthAction(3), condition));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-TRIGGER" &&
+                i.Field == "rules[0].action"), Is.True);
+        }
+
+        [Test]
+        public void Unearth_Rejects_The_Live_Weapon_Attack_Observer_Path()
+        {
+            CardDefinition def = WithRule(CardType.WEAPON,
+                Rule(Trigger.ON_ATTACK, new UnearthAction(3)));
+
+            ValidationReport report = Validator().Validate(def, Db(def));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.False,
+                "the source/trigger pair itself is live");
+            Assert.That(report.Issues.Any(i => i.Code == "C24-UNEARTH-TRIGGER"), Is.True,
+                "the interactive action is what makes this otherwise-live path unreachable");
+        }
+
         [Test]
         public void Unsupported_Aura_Shape_Is_An_Error()
         {

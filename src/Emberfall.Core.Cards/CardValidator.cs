@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// The shared, headless card-legality validator (C1-C21, dev-docs/pipelines/card-authoring-and-import.md:20).
+    /// The shared, headless card-legality validator (C1-C24, dev-docs/pipelines/card-authoring-and-import.md:20).
     /// Runs identically at server/client load and inside the editor (dev-docs/pipelines/card-authoring-and-import.md:20) — this
     /// assembly has zero UnityEngine references, so this type is safe to run on the dedicated server.
     /// Content/art/budget lint (the E-series) is a separate, editor-only IContentLinter — never here.
@@ -301,6 +301,19 @@ namespace Emberfall.Core.Cards
                     !System.Enum.IsDefined(typeof(ManaGainKind), mana.Kind))
                     Err("C15-MANA-KIND", $"{prefix}.action.kind",
                         $"mana kind '{mana.Kind}' is not implemented.");
+
+                // C24 — interactive choices need a positive offer and a command path that is
+                // already waiting for player input. Observer cascades cannot suspend and resume
+                // the interpreter, so authoring Unearth there would continue past an open choice.
+                if (rule.Action is UnearthAction unearth)
+                {
+                    if (unearth.Count <= 0)
+                        Err("C24-UNEARTH-COUNT", $"{prefix}.action.count",
+                            "UNEARTH count must be greater than zero.");
+                    if (!PlayerTargetedTriggers.Contains(trigger))
+                        Err("C24-UNEARTH-TRIGGER", $"{prefix}.action",
+                            $"UNEARTH requires an ON_PLAY or ON_CAST player-command path; '{trigger}' cannot pause for input.");
+                }
             }
 
             // C18/C19: Keywords/Class/Rarity/SetId/Tribe/Type are already closed C# enums — the
