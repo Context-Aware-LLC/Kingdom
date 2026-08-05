@@ -10,7 +10,7 @@ server snapshots wholesale and never speculates. Mobile-first, architected for D
 
 ## What this file is
 
-Constraints you **cannot discover by looking**. Everything below documents an *absence* or a
+Constraints you **cannot unearth by looking**. Everything below documents an *absence* or a
 *consequence* — a trigger that parses but never fires, a rename that relocates every save —
 because those are invisible on inspection and expensive to learn by hitting them.
 
@@ -83,7 +83,7 @@ means "whenever *this* minion is healed", never "whenever anything is healed"; a
 somebody else being healed cannot be expressed today. Two silences are deliberate and both are load-
 bearing: an **overheal raises nothing** (a target already at max restores nothing, so nothing was
 healed — the same "the no-op is not the event" precedent as an Aegis-absorbed hit), and a **hero heal
-raises nothing**, because heroes carry no card effects. That second one is why the reentrant LIFESTEAL
+raises nothing**, because heroes carry no card effects. That second one is why the reentrant LIFEDRAIN
 heal inside `ApplyDamage` — the path the trigger was expected to fire on — fires it on nobody: lifedrain
 always heals the source's own *hero*. Dead on `SPELL`/`WEAPON` permanently, not pending a lifecycle:
 neither has health to restore.
@@ -91,7 +91,7 @@ neither has health to restore.
 **`ON_TURN_START` is live for board minions with an explicit turn-owner condition** (EF-011).
 Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
 missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
-**after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrozen
+**after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrosted
 board with mana already refilled, and a lethal start-of-turn cascade ends the match instead of
 drawing into a finished game. Weapons and persistent spell effects are not turn-start sources yet;
 `CardValidator` rejects those source types until their explicit lifecycle follow-ups land.
@@ -135,17 +135,17 @@ A weapon is the original `CardInstance` moved from hand into `Zone.Weapon`; it k
 until `BreakWeapon` moves the same object to the graveyard. Its keywords, enchantments and current
 durability are ordinary card state and survive those public-zone transitions.
 
-Weapon attacks carry `LIFESTEAL`, `POISONOUS`, `FREEZE`, and `WINDFURY`. The first three enter the
-existing fixed damage-rider order; `WINDFURY` raises the hero's attack budget to two. Marker keywords
-whose behavior is expressed by trigger/effect data (including `BATTLECRY` and `DEATHRATTLE`) remain
+Weapon attacks carry `LIFEDRAIN`, `VENOM`, `FROST`, and `DOUBLESTRIKE`. The first three enter the
+existing fixed damage-rider order; `DOUBLESTRIKE` raises the hero's attack budget to two. Marker keywords
+whose behavior is expressed by trigger/effect data (including `HERALD` and `TOLL`) remain
 legal. `CardValidator`'s fail-closed weapon-carrier table rejects keywords with no weapon behavior;
 weapon-ness alone is not a rejection reason.
 
-A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip battlecry),
+A weapon's entire expressive surface today is **stats**, **`ON_PLAY`** (equip herald),
 **`ON_ATTACK` with a static selector** — that trigger fires with an empty target list, so "the
 minion this hits" is not addressable — and **`ON_DEATH`** (EF-020).
 
-**A weapon deathrattle resolves with the weapon already in its controller's graveyard**, and on an
+**A weapon toll resolves with the weapon already in its controller's graveyard**, and on an
 equip-replacement with the *replacement* already in the slot. A `SELF`-selector effect on one
 therefore targets nothing: a weapon is not in `Zone.Board`.
 

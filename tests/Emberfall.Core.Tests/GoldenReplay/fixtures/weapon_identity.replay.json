@@ -254,7 +254,7 @@
       },
       {
         "seq": 15,
-        "kind": "onFreeze",
+        "kind": "onFrost",
         "src": "i1",
         "tgt": "i41",
         "amt": null,
@@ -430,7 +430,7 @@
       },
       {
         "seq": 37,
-        "kind": "onFreeze",
+        "kind": "onFrost",
         "src": "i1",
         "tgt": "i2",
         "amt": null,

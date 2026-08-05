@@ -114,8 +114,8 @@ namespace Emberfall.Net.Server.Tests
         [Test]
         public void Enum_Spellings_Are_Canonical_Lowercase_Not_CSharp_Member_Names()
         {
-            // §5 freezes field names and type strings as additive-only. If these came from
-            // ToString(), renaming a C# member would silently re-spell a frozen column.
+            // §5 frosts field names and type strings as additive-only. If these came from
+            // ToString(), renaming a C# member would silently re-spell a frosted column.
             new JsonlTelemetrySink(_dir, "local").MatchComplete(
                 Complete("m1", reason: MatchEndReason.Timeout, outcome: MatchOutcome.Draw,
                          source: TelemetrySource.AiSoak, p0Result: SeatResult.Draw, p1Result: SeatResult.Draw));

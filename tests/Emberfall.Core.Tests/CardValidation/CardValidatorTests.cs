@@ -41,7 +41,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void All_M1_Cards_Pass_Core_Validation()
         {
             // ANY_MINION / ANY_FRIENDLY_MINION were canonized into the Selector vocabulary by the
-            // M2 Phase 0 grammar freeze (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
+            // M2 Phase 0 grammar frost (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
             // one known-bad row — now validates clean along with everything else.
             var (cards, db) = LoadM1Set();
             var validator = new CardValidator();
@@ -493,14 +493,14 @@ namespace Emberfall.Core.Tests.CardValidation
                 tokenId: null, grantedKeyword: null, vfxOverride: null);
 
             var onMinion = Validator().Validate(WithEffect(CardType.MINION, Death()), Db(WithEffect(CardType.MINION, Death())));
-            Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion deathrattle.");
+            Assert.That(onMinion.Ok, Is.True, "ON_DEATH is a live minion toll.");
 
             var onWeapon = Validator().Validate(WithEffect(CardType.WEAPON, Death()), Db(WithEffect(CardType.WEAPON, Death())));
             Assert.That(onWeapon.Ok, Is.True,
-                "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon deathrattle is legal — "
-                + "C21-WEAPON-DEATHRATTLE is retired and must not come back.");
-            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-DEATHRATTLE"), Is.False,
-                "the retired weapon-deathrattle gate must not fire.");
+                "EF-020 gave RulesEngine.BreakWeapon a raise site, so a weapon toll is legal — "
+                + "C21-WEAPON-TOLL is retired and must not come back.");
+            Assert.That(onWeapon.Issues.Any(i => i.Code == "C21-WEAPON-TOLL"), Is.False,
+                "the retired weapon-toll gate must not fire.");
         }
 
         [Test]

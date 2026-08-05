@@ -17,13 +17,13 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   The played blade is hand id `i29`; the final weapon-death event is also sourced by `i29`, and the
   same object is in graveyard after the third swing. No replacement weapon id is minted.
 
-  The blade carries current canonical `LIFESTEAL`, `POISONOUS`, `FREEZE`, and `WINDFURY` names.
+  The blade carries current canonical `LIFEDRAIN`, `VENOM`, `FROST`, and `DOUBLESTRIKE` names.
   The event stream pins the existing rider order and controls:
 
-  - the first two-damage hit heals the wielder, freezes the target, then Venom settles a six-health
+  - the first two-damage hit heals the wielder, frosts the target, then Venom settles a six-health
     minion's death;
-  - an Aegis-absorbed hit emits amount 0 with `AegisAbsorbed` and no heal/freeze/death rider; and
-  - the face hit heals, freezes the enemy hero, then breaks the three-durability blade.
+  - an Aegis-absorbed hit emits amount 0 with `AegisAbsorbed` and no heal/frost/death rider; and
+  - the face hit heals, frosts the enemy hero, then breaks the three-durability blade.
 
   The baked hash is `669f9dd244c3b57a234b48b8e2dd73138ae105890028580e39bfebf1ffebae3d`.
   The match remains `InProgress`, so no terminal outcome truncates the stream.

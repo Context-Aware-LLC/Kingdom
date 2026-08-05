@@ -11,12 +11,12 @@ using NUnit.Framework;
 namespace Emberfall.Core.Tests.GoldenReplay
 {
     /// <summary>
-    /// One-shot fixture generator for <c>deathrattle_cascade</c> (dev-docs/quality/testing-and-ci.md:31 / Step 5 of
+    /// One-shot fixture generator for <c>toll_cascade</c> (dev-docs/quality/testing-and-ci.md:31 / Step 5 of
     /// M1 Phase B). Marked [Explicit] — never runs in CI. Run it once locally to produce and rebaseline
     /// the fixture, then commit the resulting <c>*.replay.json</c> and <c>*.rebaseline.md</c> pair.
     ///
     /// Scenario: both players build identical Lantern-Bearer boards, then trade on turn 3.
-    /// Both 2/2 DEATHRATTLE minions die simultaneously; the cascade loop fires both ON_DEATH
+    /// Both 2/2 TOLL minions die simultaneously; the cascade loop fires both ON_DEATH
     /// effects in active-player-first board order, summoning a Wisp for each side.
     /// </summary>
     [TestFixture]
@@ -27,8 +27,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
         private static readonly string[] LanternDeck =
             Enumerable.Repeat("core_lantern_bearer", 10).ToArray();
 
-        [Test, Category("Generator"), Explicit("Writes deathrattle_cascade.replay.json — run locally to bake")]
-        public void Write_DeathrattleCascade_Fixture()
+        [Test, Category("Generator"), Explicit("Writes toll_cascade.replay.json — run locally to bake")]
+        public void Write_TollCascade_Fixture()
         {
             var snapshotPath = Path.Combine(RepoPaths.CardSetsDir, "M1.cards.snapshot.json");
             var db = JsonCardDatabase.FromSnapshotFile(snapshotPath);
@@ -91,20 +91,20 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 "Second player's LB should be in graveyard.");
             Assert.That(state.Players[firstSeat].Board
                 .Any(c => c.DefinitionId == "token_wisp_1_1"), Is.True,
-                "First player should have a Wisp from deathrattle.");
+                "First player should have a Wisp from toll.");
             Assert.That(state.Players[secondSeat].Board
                 .Any(c => c.DefinitionId == "token_wisp_1_1"), Is.True,
-                "Second player should have a Wisp from deathrattle.");
+                "Second player should have a Wisp from toll.");
 
             // ── Write fixture JSON and rebaseline ────────────────────────────────
-            var fixturePath = Path.Combine(RepoPaths.FixturesDir, "deathrattle_cascade.replay.json");
+            var fixturePath = Path.Combine(RepoPaths.FixturesDir, "toll_cascade.replay.json");
             WriteFixtureJson(fixturePath, setup, recorded);
 
             var fx = ReplayFixture.Load(fixturePath);
             ReplayHarness.Rebaseline(fx);
 
             TestContext.Out.WriteLine($"✓ Wrote and rebaselined: {fixturePath}");
-            TestContext.Out.WriteLine("Fill in deathrattle_cascade.rebaseline.md, then commit both files.");
+            TestContext.Out.WriteLine("Fill in toll_cascade.rebaseline.md, then commit both files.");
         }
 
         // ── Serialization helpers ────────────────────────────────────────────────
@@ -123,7 +123,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             var root = new JsonObject
             {
                 ["schemaVersion"] = ReplayFixture.CurrentSchemaVersion,
-                ["name"] = "deathrattle_cascade",
+                ["name"] = "toll_cascade",
                 ["engineContractVersion"] = "interfaces.v3",   // Contracts schema counter (A2b §7 ruling item 6)
                 ["cardSetSnapshot"] = "M1.cards.snapshot.json",
                 ["matchId"] = "GOLD-0003",

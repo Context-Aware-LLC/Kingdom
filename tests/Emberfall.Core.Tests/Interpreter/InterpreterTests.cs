@@ -12,7 +12,7 @@ namespace Emberfall.Core.Tests.Interpreter
 {
     /// <summary>
     /// L1 — the effect interpreter (M1 Phase B step 1) driven through the real public
-    /// <c>CommandProcessor.Execute</c> door: PlayCard → battlecry/cast → DeathCheck → deathrattle cascade.
+    /// <c>CommandProcessor.Execute</c> door: PlayCard → herald/cast → DeathCheck → toll cascade.
     /// Constructs a Main-phase <see cref="GameState"/> directly so a known card sits in hand, then asserts
     /// on the public state + the ordered D7 event stream.
     /// </summary>
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 Position = ps.Board.Count,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            if (ci.Keywords.Contains(Keyword.DIVINE_SHIELD)) ci.HasAegisShield = true;
+            if (ci.Keywords.Contains(Keyword.AEGIS)) ci.HasAegisShield = true;
             ps.Board.Add(ci);
             return ci;
         }
@@ -123,7 +123,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Battlecry_DealDamage_To_Chosen_Target_Kills_Minion()
+        public void Herald_DealDamage_To_Chosen_Target_Kills_Minion()
         {
             var db = new FakeCardDatabase().Register(Minion("bolt", 1, 1, 1,
                 effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }));
@@ -140,12 +140,12 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Deathrattle_Summons_Token_When_Minion_Dies()
+        public void Toll_Summons_Token_When_Minion_Dies()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }))
                 .Register(Minion("rattler", 1, 1, 1,
-                    keywords: new[] { Keyword.DEATHRATTLE },
+                    keywords: new[] { Keyword.TOLL },
                     effects: new[] { Eff(Trigger.ON_DEATH, Verb.SUMMON, amount: 1, tokenId: "token_imp") }));
             var s = MainPhase(db);
             var victim = Board(s, 1, db.Get("rattler"));
@@ -154,20 +154,20 @@ namespace Emberfall.Core.Tests.Interpreter
             Processor(db).Execute(s, new PlayCardIntent(
                 s.Players[0].Id, card.Id, 0, new[] { new TargetRef(victim.Id) }));
 
-            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "Deathrattle summoned a token.");
+            Assert.That(s.Players[1].Board, Has.Count.EqualTo(1), "Toll summoned a token.");
             Assert.That(s.Players[1].Board[0].DefinitionId, Is.EqualTo("token_imp"));
             Assert.That(s.Players[1].Graveyard, Has.Count.EqualTo(1));
         }
 
         [Test]
-        public void Deathrattle_Cascade_Effect_Then_Death_Then_Effect()
+        public void Toll_Cascade_Effect_Then_Death_Then_Effect()
         {
-            // bolt(P0) kills enemy 'pinger'; its deathrattle DEAL_DAMAGE defaults to the dying minion's enemy
-            // hero = P0. Tests effect → death → deathrattle-effect chaining through one Drain.
+            // bolt(P0) kills enemy 'pinger'; its toll DEAL_DAMAGE defaults to the dying minion's enemy
+            // hero = P0. Tests effect → death → toll-effect chaining through one Drain.
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }))
                 .Register(Minion("pinger", 1, 1, 1,
-                    keywords: new[] { Keyword.DEATHRATTLE },
+                    keywords: new[] { Keyword.TOLL },
                     effects: new[] { Eff(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: 2) }));
             var s = MainPhase(db);
             var victim = Board(s, 1, db.Get("pinger"));
@@ -177,16 +177,16 @@ namespace Emberfall.Core.Tests.Interpreter
                 s.Players[0].Id, card.Id, 0, new[] { new TargetRef(victim.Id) }));
 
             Assert.That(s.Players[1].Board, Is.Empty);
-            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(28), "Deathrattle pinged the caster's hero for 2.");
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(28), "Toll pinged the caster's hero for 2.");
         }
 
         [Test]
-        public void Two_Simultaneous_Deaths_Both_Fire_Deathrattles_In_Board_Order()
+        public void Two_Simultaneous_Deaths_Both_Fire_Tolls_In_Board_Order()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("vanilla", 0, 1, 1))
                 .Register(Minion("rattler", 1, 1, 1,
-                    keywords: new[] { Keyword.DEATHRATTLE },
+                    keywords: new[] { Keyword.TOLL },
                     effects: new[] { Eff(Trigger.ON_DEATH, Verb.SUMMON, amount: 1, tokenId: "token_imp") }));
             var s = MainPhase(db);
             // Two enemy rattlers already at lethal — the next command must settle BOTH as one batch.
@@ -217,7 +217,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }));
             var s = MainPhase(db);
-            var shielded = Board(s, 1, Minion("guard", 1, 2, 2, keywords: new[] { Keyword.DIVINE_SHIELD }));
+            var shielded = Board(s, 1, Minion("guard", 1, 2, 2, keywords: new[] { Keyword.AEGIS }));
             var card = Hand(s, 0, "bolt");
 
             var r = Processor(db).Execute(s, new PlayCardIntent(
@@ -233,7 +233,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Buff_Battlecry_Raises_Target_Stats()
+        public void Buff_Herald_Raises_Target_Stats()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("buffer", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.BUFF, amount: 2, amount2: 3) }));
@@ -255,7 +255,7 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("blesser", 1, 1, 1,
-                    effects: new[] { Eff(Trigger.ON_PLAY, Verb.GIVE_KEYWORD, keyword: Keyword.DIVINE_SHIELD) }));
+                    effects: new[] { Eff(Trigger.ON_PLAY, Verb.GIVE_KEYWORD, keyword: Keyword.AEGIS) }));
             var s = MainPhase(db);
             var ally = Board(s, 0, Minion("ally", 1, 1, 1));
             var card = Hand(s, 0, "blesser");
@@ -263,7 +263,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Processor(db).Execute(s, new PlayCardIntent(
                 s.Players[0].Id, card.Id, 1, new[] { new TargetRef(ally.Id) }));
 
-            Assert.That(ally.Keywords, Does.Contain(Keyword.DIVINE_SHIELD));
+            Assert.That(ally.Keywords, Does.Contain(Keyword.AEGIS));
             Assert.That(ally.HasAegisShield, Is.True);
         }
 
@@ -282,7 +282,7 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Lethal_Battlecry_Ends_The_Match()
+        public void Lethal_Herald_Ends_The_Match()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("nuke", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 30) }));
@@ -298,12 +298,12 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void IllegalTarget_On_Enemy_Stealth_Is_Rejected()
+        public void IllegalTarget_On_Enemy_Shroud_Is_Rejected()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion("bolt", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }));
             var s = MainPhase(db);
-            var hidden = Board(s, 1, Minion("sneak", 1, 1, 1, keywords: new[] { Keyword.STEALTH }));
+            var hidden = Board(s, 1, Minion("sneak", 1, 1, 1, keywords: new[] { Keyword.SHROUD }));
             var card = Hand(s, 0, "bolt");
 
             var r = Processor(db).Execute(s, new PlayCardIntent(
@@ -336,7 +336,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 var db = new FakeCardDatabase()
                     .Register(Minion("bolt", 1, 1, 1, effects: new[] { Eff(Trigger.ON_PLAY, Verb.DEAL_DAMAGE, amount: 3) }))
                     .Register(Minion("rattler", 1, 1, 1,
-                        keywords: new[] { Keyword.DEATHRATTLE },
+                        keywords: new[] { Keyword.TOLL },
                         effects: new[] { Eff(Trigger.ON_DEATH, Verb.SUMMON, amount: 1, tokenId: "token_imp") }));
                 var s = MainPhase(db);
                 var victim = Board(s, 1, db.Get("rattler"));

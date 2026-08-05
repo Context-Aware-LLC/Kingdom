@@ -60,7 +60,7 @@ namespace Emberfall.Core.Tests.HeroPower
                 Position = ps.Board.Count,
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
-            if (ci.Keywords.Contains(Keyword.DIVINE_SHIELD)) ci.HasAegisShield = true;
+            if (ci.Keywords.Contains(Keyword.AEGIS)) ci.HasAegisShield = true;
             ps.Board.Add(ci);
             return ci;
         }
@@ -81,7 +81,7 @@ namespace Emberfall.Core.Tests.HeroPower
         private static CardDefinition WispDef()
             => new CardDefinition("token_wisp", "Wisp", CardType.MINION, 0, 0, 2, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                new[] { Keyword.TAUNT }, System.Array.Empty<EffectDef>(),
+                new[] { Keyword.BULWARK }, System.Array.Empty<EffectDef>(),
                 "", "", "art/token_wisp", SetId.CORE, false, null, "", false);
 
         private static EffectDef Eff(Trigger trigger, Verb action, int? amount = null, string? tokenId = null)
@@ -151,13 +151,13 @@ namespace Emberfall.Core.Tests.HeroPower
         }
 
         [Test]
-        public void Reject_StealthTarget()
+        public void Reject_ShroudTarget()
         {
             var db = new FakeCardDatabase();
-            var stealthDef = Minion("stealthy", 2, 3, new[] { Keyword.STEALTH });
-            db.Register(stealthDef);
+            var shroudDef = Minion("shroudy", 2, 3, new[] { Keyword.SHROUD });
+            db.Register(shroudDef);
             var s = MainPhase(db);
-            var enemy = Board(s, 1, stealthDef);
+            var enemy = Board(s, 1, shroudDef);
             var proc = new CommandProcessor(db);
 
             var r = proc.Execute(s, new HeroPowerIntent(s.ActivePlayer,
@@ -292,7 +292,7 @@ namespace Emberfall.Core.Tests.HeroPower
         // ── Tidal Ward tests ──────────────────────────────────────────────────────
 
         [Test]
-        public void TidalWard_Summons_Wisp_WithTaunt()
+        public void TidalWard_Summons_Wisp_WithBulwark()
         {
             var wispDef = WispDef();
             var db = new FakeCardDatabase();
@@ -311,7 +311,7 @@ namespace Emberfall.Core.Tests.HeroPower
             var wisp = s.Players[1].Board[0];
             Assert.That(wisp.CurrentAttack, Is.EqualTo(0));
             Assert.That(wisp.CurrentHealth, Is.EqualTo(2));
-            Assert.That(wisp.Keywords.Contains(Keyword.TAUNT), Is.True);
+            Assert.That(wisp.Keywords.Contains(Keyword.BULWARK), Is.True);
         }
 
         [Test]

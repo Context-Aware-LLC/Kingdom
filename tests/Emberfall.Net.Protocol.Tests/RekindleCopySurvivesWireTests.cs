@@ -10,9 +10,9 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// Bisect for the live "Throneless King REBORN copy vanishes on the client" bug
-    /// (project memory <c>live-test-and-reborn-2026-07-20</c>). The engine is proven to PRODUCE the
-    /// 1-HP copy on a combat death (<c>CombatTests.REBORN_Triggers_On_Combat_Death</c>). This walks
+    /// Bisect for the live "Throneless King REKINDLE copy vanishes on the client" bug
+    /// (project memory <c>live-test-and-rekindle-2026-07-20</c>). The engine is proven to PRODUCE the
+    /// 1-HP copy on a combat death (<c>CombatTests.REKINDLE_Triggers_On_Combat_Death</c>). This walks
     /// that copy through the two server-side wire layers the client depends on — per-viewer
     /// <see cref="GameStateProjector"/> redaction, then the <see cref="SnapshotJsonCodec"/> JSON
     /// round-trip via <see cref="ProtocolCodec"/> — and asserts it arrives intact for BOTH the owner
@@ -21,12 +21,12 @@ namespace Emberfall.Net.Protocol.Tests
     /// </summary>
     [TestFixture]
     [Category("Contract")]
-    public sealed class RebornCopySurvivesWireTests
+    public sealed class RekindleCopySurvivesWireTests
     {
         private static CardDefinition King()
             => new CardDefinition("core_throneless_king", "Throneless King", CardType.MINION, 6, 6, 6, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                new[] { Keyword.TAUNT, Keyword.REBORN }, Array.Empty<EffectDef>(),
+                new[] { Keyword.BULWARK, Keyword.REKINDLE }, Array.Empty<EffectDef>(),
                 "", "", "art/core_throneless_king", SetId.CORE, true, null, "", false);
 
         private static CardDefinition Bruiser()
@@ -52,7 +52,7 @@ namespace Emberfall.Net.Protocol.Tests
         }
 
         [Test]
-        public void Reborn_Copy_From_A_Combat_Death_Survives_Projection_And_The_Codec()
+        public void Rekindle_Copy_From_A_Combat_Death_Survives_Projection_And_The_Codec()
         {
             var db = new FakeCardDatabase().Register(King()).Register(Bruiser());
             var p0 = new PlayerId("P0");
@@ -73,7 +73,7 @@ namespace Emberfall.Net.Protocol.Tests
             s.Players[1].Mana.Max = s.Players[1].Mana.Available = 10;
 
             var attacker = PutOnBoard(s, 0, Bruiser());   // 6/8 — survives retaliation
-            var king = PutOnBoard(s, 1, King());          // 6/6 TAUNT+REBORN — dies, reborns
+            var king = PutOnBoard(s, 1, King());          // 6/6 BULWARK+REKINDLE — dies, rekindles
 
             var r = new CommandProcessor(db).Execute(s,
                 new AttackIntent(p0, attacker.Id, new TargetRef(king.Id)));
@@ -98,13 +98,13 @@ namespace Emberfall.Net.Protocol.Tests
 
                 var board = wireState.Players[1].Board;
                 Assert.That(board, Has.Count.EqualTo(1),
-                    $"REBORN copy missing from seat-1 board as seen by {viewer} — dropped in projection or codec");
+                    $"REKINDLE copy missing from seat-1 board as seen by {viewer} — dropped in projection or codec");
                 var copy = board[0];
                 Assert.That(copy.Id.Value, Is.EqualTo(authCopy.Id.Value), $"[{viewer}] copy kept its instance id over the wire");
                 Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), $"[{viewer}] copy is still a King");
                 Assert.That(copy.CurrentHealth, Is.EqualTo(1), $"[{viewer}] copy is at 1 HP");
-                Assert.That(copy.Keywords, Does.Contain(Keyword.TAUNT), $"[{viewer}] copy kept TAUNT");
-                Assert.That(copy.HasUsedReborn, Is.True, $"[{viewer}] copy is marked reborn-consumed");
+                Assert.That(copy.Keywords, Does.Contain(Keyword.BULWARK), $"[{viewer}] copy kept BULWARK");
+                Assert.That(copy.HasUsedRekindle, Is.True, $"[{viewer}] copy is marked rekindle-consumed");
             }
         }
     }

@@ -68,9 +68,9 @@ namespace Emberfall.Core.Tests.Combat
             };
             foreach (var k in def.Keywords) ci.Keywords.Add(k);
             // Mirror the real summon path (RulesEngine.cs:67), which derives the shield from the
-            // keyword rather than leaving it false — otherwise a DIVINE_SHIELD def boards unshielded
+            // keyword rather than leaving it false — otherwise a AEGIS def boards unshielded
             // and an Aegis test would silently pass for the wrong reason.
-            ci.HasAegisShield = ci.Keywords.Contains(Keyword.DIVINE_SHIELD);
+            ci.HasAegisShield = ci.Keywords.Contains(Keyword.AEGIS);
             ps.Board.Add(ci);
             return ci;
         }
@@ -121,7 +121,7 @@ namespace Emberfall.Core.Tests.Combat
         public void Aegis_Absorbed_Hit_Raises_No_ON_DAMAGED()
         {
             // EF-014 site 2 — the Aegis early return (DamagePipeline.cs:60-65). The SAME minion as the test
-            // above, plus DIVINE_SHIELD: the shield eats the hit, so the minion was never "damaged" and its
+            // above, plus AEGIS: the shield eats the hit, so the minion was never "damaged" and its
             // ON_DAMAGED must not fire (G0 ruling R-2(c), "no on-hit riders" on an absorbed hit).
             //
             // This is the only place that decision is enforced rather than merely commented. Deleting the
@@ -130,7 +130,7 @@ namespace Emberfall.Core.Tests.Combat
                 .Register(Spell("poke", Eff(Trigger.ON_CAST, Verb.DEAL_DAMAGE, amount: 1)))
                 .Register(Minion("wardstinger", 1, 10,
                     effects: new[] { Eff(Trigger.ON_DAMAGED, Verb.DEAL_DAMAGE, amount: 3, selector: "ENEMY_HERO") },
-                    keywords: new[] { Keyword.DIVINE_SHIELD }));
+                    keywords: new[] { Keyword.AEGIS }));
             var s = MainPhase();
             var warded = Board(s, 1, db.Get("wardstinger"));   // enemy minion; its enemy hero = P0
             var poke = Hand(s, 0, "poke");

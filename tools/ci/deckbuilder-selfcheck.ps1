@@ -24,7 +24,7 @@ param(
     # Collection root to build into. Defaults to a fresh temp dir that is removed on success.
     [string] $Root,
 
-    # Card data directory. Defaults to the tool's own repo-root discovery.
+    # Card data directory. Defaults to the tool's own repo-root unearthing.
     [string] $Cards
 )
 
@@ -88,7 +88,7 @@ if ($verifyCode -ne 0) {
     exit $verifyCode
 }
 
-Write-Host "== EF-046 DONE-WHEN DISCHARGED ==" -ForegroundColor Green
+Write-Host "== EF-046 DONE-WHEN DISFERVORD ==" -ForegroundColor Green
 Write-Host "two processes, one collection root, deck reloaded from disk and queue-eligible."
 
 if ($ephemeral) { Remove-Item -Recurse -Force $Root }

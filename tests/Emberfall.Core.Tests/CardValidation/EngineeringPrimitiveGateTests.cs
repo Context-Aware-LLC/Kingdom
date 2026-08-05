@@ -12,7 +12,7 @@ namespace Emberfall.Core.Tests.CardValidation
     /// EF-032a — C14b keeps the pool free of fired effects that still require a player choice.
     ///
     /// <para>The defect these tests exist for: a card declared an <c>ON_DEATH</c> effect on an
-    /// explicit-choice (<c>ANY_*</c>) selector. A Deathrattle fires with no player choosing — and
+    /// explicit-choice (<c>ANY_*</c>) selector. A Toll fires with no player choosing — and
     /// 6 of 64 balance-matrix cells crashed, every matchup whose generated pool drew the row.</para>
     ///
     /// <para>Two guards had failed. C14 checked the selector without the trigger, so the row

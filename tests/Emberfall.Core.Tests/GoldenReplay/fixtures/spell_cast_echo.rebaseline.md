@@ -45,7 +45,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   an `ON_SPELL_CAST` subscriber and a cheap spell to trigger it; no existing row was edited. The
   append is inert for the other fixtures — decks are explicit id lists and `GameStateHasher` walks
   game state, never the card db — and the proof is that `opening_pyra_maren`,
-  `full_match_pyra_wins`, `deathrattle_cascade`, `turn_end_toll` and `on_damaged_thorns` all replay
+  `full_match_pyra_wins`, `toll_cascade`, `turn_end_toll` and `on_damaged_thorns` all replay
   green **unrebaselined** with the two cards present, on a tree rebased onto `origin/master` after
   EF-014 landed its own two fixture-only cards into the same snapshot.
 - **engineContractVersion changed?** no. `Trigger.ON_SPELL_CAST` already existed in the enum;

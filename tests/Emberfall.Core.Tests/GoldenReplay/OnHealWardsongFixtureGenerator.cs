@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     ///
     /// <para>The heal is 2 against 1 missing health, so it also pins the clamp: each <c>onHeal</c> carries the
     /// <i>effective</i> 1, not the requested 2. Nothing dies anywhere in the log — 3-health minions against a
-    /// 1-damage volley — keeping this fixture about the heal trigger and not a second deathrattle test.</para>
+    /// 1-damage volley — keeping this fixture about the heal trigger and not a second toll test.</para>
     /// </summary>
     [TestFixture]
     public sealed class OnHealWardsongFixtureGenerator

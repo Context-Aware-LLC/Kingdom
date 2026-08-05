@@ -17,7 +17,7 @@ namespace Emberfall.Core.Tests.Combat
         private const string Drainer = "weapon_identity_drainer";
         private const string Venomed = "weapon_identity_venomed";
         private const string Froster = "weapon_identity_froster";
-        private const string Windfury = "weapon_identity_windfury";
+        private const string Doublestrike = "weapon_identity_doublestrike";
         private const string RiderStack = "weapon_identity_rider_stack";
         private const string Swapper = "weapon_identity_swapper";
         private const string Toll = "weapon_identity_toll";
@@ -42,20 +42,20 @@ namespace Emberfall.Core.Tests.Combat
 
         private static FakeCardDatabase Db() => new FakeCardDatabase()
             .Register(Weapon(Plain, 2, 3))
-            .Register(Weapon(Drainer, 3, 3, new[] { Keyword.LIFESTEAL }))
-            .Register(Weapon(Venomed, 1, 3, new[] { Keyword.POISONOUS }))
-            .Register(Weapon(Froster, 2, 3, new[] { Keyword.FREEZE, Keyword.WINDFURY }))
-            .Register(Weapon(Windfury, 1, 3, new[] { Keyword.WINDFURY }))
+            .Register(Weapon(Drainer, 3, 3, new[] { Keyword.LIFEDRAIN }))
+            .Register(Weapon(Venomed, 1, 3, new[] { Keyword.VENOM }))
+            .Register(Weapon(Froster, 2, 3, new[] { Keyword.FROST, Keyword.DOUBLESTRIKE }))
+            .Register(Weapon(Doublestrike, 1, 3, new[] { Keyword.DOUBLESTRIKE }))
             .Register(Weapon(RiderStack, 3, 4, new[]
             {
-                Keyword.LIFESTEAL, Keyword.POISONOUS, Keyword.FREEZE, Keyword.WINDFURY,
+                Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
             }))
-            .Register(Weapon(Swapper, 2, 3, new[] { Keyword.WINDFURY },
+            .Register(Weapon(Swapper, 2, 3, new[] { Keyword.DOUBLESTRIKE },
                 new EffectDef(Trigger.ON_ATTACK, Verb.EQUIP, null, null, Froster, null, null)))
-            .Register(Weapon(Toll, 2, 1, new[] { Keyword.DEATHRATTLE },
+            .Register(Weapon(Toll, 2, 1, new[] { Keyword.TOLL },
                 new EffectDef(Trigger.ON_DEATH, Verb.DRAW, 1, null, null, null, null)))
             .Register(Minion(Dummy, 0, 12))
-            .Register(Minion(Shielded, 0, 12, Keyword.DIVINE_SHIELD));
+            .Register(Minion(Shielded, 0, 12, Keyword.AEGIS));
 
         private static GameState MainPhase()
         {
@@ -102,7 +102,7 @@ namespace Emberfall.Core.Tests.Combat
                 Position = player.Board.Count,
             };
             foreach (var keyword in def.Keywords) card.Keywords.Add(keyword);
-            card.HasAegisShield = card.Keywords.Contains(Keyword.DIVINE_SHIELD);
+            card.HasAegisShield = card.Keywords.Contains(Keyword.AEGIS);
             player.Board.Add(card);
             return card;
         }
@@ -130,10 +130,10 @@ namespace Emberfall.Core.Tests.Combat
             {
                 Source = new InstanceId(91),
                 AttackDelta = 2,
-                GrantedKeyword = Keyword.FREEZE,
+                GrantedKeyword = Keyword.FROST,
             };
             card.Enchantments.Add(enchantment);
-            card.Keywords.Add(Keyword.FREEZE);
+            card.Keywords.Add(Keyword.FROST);
             card.CurrentDurability = 2;
             int nextIdBeforePlay = state.NextInstanceCounter;
 
@@ -147,8 +147,8 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(card.Zone, Is.EqualTo(Zone.Weapon));
             Assert.That(card.CurrentAttack, Is.EqualTo(5), "printed attack plus the retained enchantment");
             Assert.That(card.CurrentDurability, Is.EqualTo(2), "existing runtime durability is retained");
-            Assert.That(card.Keywords, Does.Contain(Keyword.LIFESTEAL), "printed keywords initialize on equip");
-            Assert.That(card.Keywords, Does.Contain(Keyword.FREEZE), "granted keywords survive the transition");
+            Assert.That(card.Keywords, Does.Contain(Keyword.LIFEDRAIN), "printed keywords initialize on equip");
+            Assert.That(card.Keywords, Does.Contain(Keyword.FROST), "granted keywords survive the transition");
             Assert.That(card.Enchantments.Single(), Is.SameAs(enchantment));
             Assert.That(state.Players[0].Graveyard, Does.Not.Contain(card));
         }
@@ -172,14 +172,14 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[0].Graveyard, Does.Contain(weapon));
             Assert.That(state.Players[0].Graveyard.Single(c => c.Id == weapon.Id), Is.SameAs(weapon));
             Assert.That(weapon.Zone, Is.EqualTo(Zone.Graveyard));
-            Assert.That(weapon.Keywords, Does.Contain(Keyword.DEATHRATTLE),
+            Assert.That(weapon.Keywords, Does.Contain(Keyword.TOLL),
                 "the Toll presentation marker stays on the same card instance");
             Assert.That(state.Players[0].Hand, Does.Contain(drawn),
                 "the marker is backed by the ON_DEATH rule, which still fires from that instance");
         }
 
         [Test]
-        public void Lifesteal_Weapon_Heals_The_Wielding_Hero()
+        public void Lifedrain_Weapon_Heals_The_Wielding_Hero()
         {
             var db = Db();
             var state = MainPhase();
@@ -194,7 +194,7 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Aegis_Absorbs_A_Weapon_Hit_Before_Any_Lifesteal_Rider()
+        public void Aegis_Absorbs_A_Weapon_Hit_Before_Any_Lifedrain_Rider()
         {
             var db = Db();
             var state = MainPhase();
@@ -208,15 +208,15 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(target.HasAegisShield, Is.False);
             Assert.That(target.CurrentHealth, Is.EqualTo(12));
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(20),
-                "Aegis returns before the Lifesteal/Venom/Freeze rider block");
+                "Aegis returns before the Lifedrain/Venom/Frost rider block");
         }
 
         [Test]
-        public void Unified_Weapon_Pins_The_Full_Aegis_Soak_Lifesteal_Venom_Frost_Rider_Sequence()
+        public void Unified_Weapon_Pins_The_Full_Aegis_Soak_Lifedrain_Venom_Frost_Rider_Sequence()
         {
             // One equipped CardInstance carries every live attack rider. The three swings deliberately
             // exercise the pipeline in its fixed order: Aegis returns before riders; armor soaks before
-            // Lifesteal; then a minion hit receives Venom before Frost and the subsequent DeathCheck.
+            // Lifedrain; then a minion hit receives Venom before Frost and the subsequent DeathCheck.
             var db = Db();
             var state = MainPhase();
             state.Players[0].Hero.CurrentHealth = 20;
@@ -231,7 +231,7 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(warded.CurrentHealth, Is.EqualTo(12));
             Assert.That(warded.HasAegisShield, Is.False);
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(20),
-                "Aegis is the first gate: no Lifesteal, Venom, or Frost rider may run.");
+                "Aegis is the first gate: no Lifedrain, Venom, or Frost rider may run.");
             Assert.That(absorbed.Events.Select(e => e.Kind),
                 Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage }));
             Assert.That(absorbed.Events[1].Flags & EventFlags.AegisAbsorbed, Is.Not.EqualTo(EventFlags.None));
@@ -244,11 +244,11 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[1].Hero.CurrentHealth, Is.EqualTo(29),
                 "two armor soaks before the remaining point reaches health.");
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(23),
-                "Lifesteal follows the damage/soak mutation and restores the full dealt amount.");
-            Assert.That(state.Players[1].Hero.IsFrozen, Is.True,
-                "Frost is the final rider, after Lifesteal.");
+                "Lifedrain follows the damage/soak mutation and restores the full dealt amount.");
+            Assert.That(state.Players[1].Hero.IsFrosted, Is.True,
+                "Frost is the final rider, after Lifedrain.");
             Assert.That(soaked.Events.Select(e => e.Kind),
-                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFreeze }));
+                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFrost }));
 
             // WIND FURY has spent the two attacks for this turn. Use the actual turn boundary rather than
             // mutating the attack budget, so the third swing remains a normal unified-weapon command path.
@@ -265,16 +265,16 @@ namespace Emberfall.Core.Tests.Combat
 
             Assert.That(venomAndFrost.Accepted, Is.True);
             Assert.That(poisoned.CurrentHealth, Is.EqualTo(0), "Venom makes the otherwise surviving 3-damage hit lethal.");
-            Assert.That(poisoned.IsFrozen, Is.True, "Frost still runs after Venom marks the minion dead.");
+            Assert.That(poisoned.IsFrosted, Is.True, "Frost still runs after Venom marks the minion dead.");
             Assert.That(state.Players[1].Board, Does.Not.Contain(poisoned), "the following DeathCheck settles Venom.");
             Assert.That(venomAndFrost.Events.Select(e => e.Kind), Is.EqualTo(new[]
             {
-                VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFreeze, VfxEvent.onDeath,
+                VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFrost, VfxEvent.onDeath,
             }));
         }
 
         [Test]
-        public void Poisonous_Weapon_Kills_A_Minion_That_Survives_Its_Damage()
+        public void Venom_Weapon_Kills_A_Minion_That_Survives_Its_Damage()
         {
             var db = Db();
             var state = MainPhase();
@@ -288,7 +288,7 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Freeze_Weapon_Freezes_What_It_Damages()
+        public void Frost_Weapon_Frosts_What_It_Damages()
         {
             var db = Db();
             var state = MainPhase();
@@ -298,21 +298,21 @@ namespace Emberfall.Core.Tests.Combat
             var result = SwingAt(state, db, target.Id);
 
             Assert.That(result.Accepted, Is.True);
-            Assert.That(target.IsFrozen, Is.True);
+            Assert.That(target.IsFrosted, Is.True);
         }
 
         [Test]
-        public void Windfury_Weapon_Allows_Two_Hero_Attacks_But_Not_Three()
+        public void Doublestrike_Weapon_Allows_Two_Hero_Attacks_But_Not_Three()
         {
             var db = Db();
             var state = MainPhase();
-            PlayWeapon(state, db, Windfury);
+            PlayWeapon(state, db, Doublestrike);
             var processor = new CommandProcessor(db);
             var attack = new AttackIntent(state.ActivePlayer, state.Players[0].Hero.Id,
                 new TargetRef(state.Players[1].Hero.Id));
 
             Assert.That(processor.Execute(state, attack).Accepted, Is.True, "first attack");
-            Assert.That(processor.Execute(state, attack).Accepted, Is.True, "Windfury attack");
+            Assert.That(processor.Execute(state, attack).Accepted, Is.True, "Doublestrike attack");
             Assert.That(processor.Execute(state, attack).Reason, Is.EqualTo(RejectReason.NoAttacksLeft));
             Assert.That(state.Players[0].Weapon!.CurrentDurability, Is.EqualTo(1));
         }
@@ -322,32 +322,32 @@ namespace Emberfall.Core.Tests.Combat
         {
             var db = Db();
             var state = MainPhase();
-            PlayWeapon(state, db, Swapper); // Windfury, no Freeze; ON_ATTACK equips Froster
+            PlayWeapon(state, db, Swapper); // Doublestrike, no Frost; ON_ATTACK equips Froster
             var firstTarget = OnBoard(state, 1, db.Get(Dummy));
 
             var first = SwingAt(state, db, firstTarget.Id);
 
             Assert.That(first.Accepted, Is.True);
-            Assert.That(firstTarget.IsFrozen, Is.False,
+            Assert.That(firstTarget.IsFrosted, Is.False,
                 "the first hit uses the declaring weapon's rider snapshot, not its queued replacement");
             Assert.That(state.Players[0].Weapon!.DefinitionId, Is.EqualTo(Froster));
 
             var secondTarget = OnBoard(state, 1, db.Get(Dummy));
             var second = SwingAt(state, db, secondTarget.Id);
 
-            Assert.That(second.Accepted, Is.True, "the replacement also carries Windfury");
-            Assert.That(secondTarget.IsFrozen, Is.True,
+            Assert.That(second.Accepted, Is.True, "the replacement also carries Doublestrike");
+            Assert.That(secondTarget.IsFrosted, Is.True,
                 "the next hit uses the replacement weapon's own rider set");
         }
 
-        [TestCase(Keyword.LIFESTEAL)]
-        [TestCase(Keyword.POISONOUS)]
-        [TestCase(Keyword.FREEZE)]
-        [TestCase(Keyword.WINDFURY)]
-        [TestCase(Keyword.BATTLECRY)]
-        [TestCase(Keyword.DEATHRATTLE)]
+        [TestCase(Keyword.LIFEDRAIN)]
+        [TestCase(Keyword.VENOM)]
+        [TestCase(Keyword.FROST)]
+        [TestCase(Keyword.DOUBLESTRIKE)]
+        [TestCase(Keyword.HERALD)]
+        [TestCase(Keyword.TOLL)]
         [TestCase(Keyword.SILENCE)]
-        [TestCase(Keyword.OVERLOAD)]
+        [TestCase(Keyword.BACKDRAFT)]
         [TestCase(Keyword.REINFORCE)]
         public void Live_Riders_And_Trigger_Markers_Are_Legal_On_Weapons(Keyword keyword)
         {
@@ -357,13 +357,13 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(report.Issues.Any(i => i.Code == "C6-WEAPON-KEYWORD-DEAD"), Is.False);
         }
 
-        [TestCase(Keyword.TAUNT)]
-        [TestCase(Keyword.CHARGE)]
-        [TestCase(Keyword.RUSH)]
-        [TestCase(Keyword.DIVINE_SHIELD)]
-        [TestCase(Keyword.STEALTH)]
-        [TestCase(Keyword.SPELL_DAMAGE)]
-        [TestCase(Keyword.REBORN)]
+        [TestCase(Keyword.BULWARK)]
+        [TestCase(Keyword.FERVOR)]
+        [TestCase(Keyword.SKIRMISH)]
+        [TestCase(Keyword.AEGIS)]
+        [TestCase(Keyword.SHROUD)]
+        [TestCase(Keyword.ARCANE_SURGE)]
+        [TestCase(Keyword.REKINDLE)]
         [TestCase(Keyword.OVERWHELM)]
         [TestCase(Keyword.VANGUARD)]
         public void Unsupported_Weapon_Keywords_Fail_Closed(Keyword keyword)
@@ -380,14 +380,14 @@ namespace Emberfall.Core.Tests.Combat
         {
             var supported = new[]
             {
-                Keyword.LIFESTEAL, Keyword.POISONOUS, Keyword.FREEZE, Keyword.WINDFURY,
-                Keyword.BATTLECRY, Keyword.DEATHRATTLE, Keyword.SILENCE, Keyword.OVERLOAD,
+                Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
+                Keyword.HERALD, Keyword.TOLL, Keyword.SILENCE, Keyword.BACKDRAFT,
                 Keyword.REINFORCE,
             };
             var unsupported = new[]
             {
-                Keyword.TAUNT, Keyword.CHARGE, Keyword.RUSH, Keyword.DIVINE_SHIELD,
-                Keyword.STEALTH, Keyword.SPELL_DAMAGE, Keyword.REBORN, Keyword.OVERWHELM,
+                Keyword.BULWARK, Keyword.FERVOR, Keyword.SKIRMISH, Keyword.AEGIS,
+                Keyword.SHROUD, Keyword.ARCANE_SURGE, Keyword.REKINDLE, Keyword.OVERWHELM,
                 Keyword.VANGUARD,
             };
 

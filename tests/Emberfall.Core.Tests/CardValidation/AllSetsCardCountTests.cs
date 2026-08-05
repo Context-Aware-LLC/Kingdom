@@ -10,7 +10,7 @@ namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
     /// Loader test: asserts the client card database (M1+M2+M3) equals CardCi's count.
-    /// Discharges EF-040 DONE-WHEN: client database count equals 260.
+    /// Disfervors EF-040 DONE-WHEN: client database count equals 260.
     /// Update counts here when cards are added to any set.
     /// </summary>
     [TestFixture]

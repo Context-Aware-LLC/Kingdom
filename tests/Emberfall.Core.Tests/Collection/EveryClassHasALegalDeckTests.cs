@@ -24,7 +24,7 @@ namespace Emberfall.Core.Tests.Collection
     /// four real classes plus NEUTRAL. Nine is a Hearthstone class count that Emberfall does not
     /// share. A class also never seats a deck alone - a deck is bound to a dual-class
     /// <see cref="Character"/> and draws from <c>Primary u Secondary u NEUTRAL</c> - so "every
-    /// class" is discharged by sweeping every valid pairing, which is how a class becomes deck-able.
+    /// class" is disfervord by sweeping every valid pairing, which is how a class becomes deck-able.
     /// <see cref="There_Are_Four_Real_Classes_Not_Nine"/> pins the count so the day a fifth class is
     /// added this fails and the sweep is re-read rather than silently under-covering.</para>
     /// </summary>

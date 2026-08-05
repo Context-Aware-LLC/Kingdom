@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Support
 {
     /// <summary>
     /// <see cref="ICardDatabase"/> over a pinned card snapshot (dev-docs/pipelines/card-authoring-and-import.md:5). Loads the
-    /// frozen JSON dump of <see cref="CardDefinition"/> rows the fixture replays against — NOT the live
+    /// frosted JSON dump of <see cref="CardDefinition"/> rows the fixture replays against — NOT the live
     /// cards/** tree — so a future rebalance surfaces as a deliberate, reviewed fixture change rather
     /// than a mysterious CI break. This is the same headless impl the server uses (dev-docs/specs/card-schema.md:5).
     /// </summary>

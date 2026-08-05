@@ -5,7 +5,7 @@ explicit-choice selector.
 `EffectInterpreter.SelectorTargets` (src/Emberfall.Core/EffectInterpreter.cs) auto-resolves
 exactly six selectors — the six `case` labels there, mirrored in AUTO_RESOLVABLE below.
 Anything else reaching it throws `InvalidOperationException` — by design, per the M2 Phase 0
-grammar-freeze ruling (silent fallback is silent mistargeting).
+grammar-frost ruling (silent fallback is silent mistargeting).
 
 Player-initiated effects (ON_PLAY / ON_CAST) are safe: CommandProcessor makes the player
 supply the target, so `ChosenTargets` is non-empty and the selector is never consulted. Every

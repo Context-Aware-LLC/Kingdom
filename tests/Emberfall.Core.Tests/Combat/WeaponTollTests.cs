@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.Combat
 {
     /// <summary>
     /// L1 — EF-020. <c>RulesEngine.BreakWeapon</c> emitted an <c>onDeath</c> VFX event and raised no trigger
-    /// at all, so a Deathrattle on a WEAPON was structurally impossible: it parsed, validated, loaded and
+    /// at all, so a Toll on a WEAPON was structurally impossible: it parsed, validated, loaded and
     /// then did nothing forever, silently. (<c>CardValidator</c> rule C21 rejected the card outright to stop
     /// anyone authoring one — that gate is retired by the same change these tests cover.)
     ///
@@ -27,11 +27,11 @@ namespace Emberfall.Core.Tests.Combat
     /// </summary>
     [TestFixture]
     [Category("Unit")]
-    public sealed class WeaponDeathrattleTests
+    public sealed class WeaponTollTests
     {
-        private const string Rattler = "ef020_rattler";   // 2/1 weapon, Deathrattle: 3 damage to the enemy hero
+        private const string Rattler = "ef020_rattler";   // 2/1 weapon, Toll: 3 damage to the enemy hero
         private const string Plain = "ef020_plain";       // 3/2 weapon, no effects — the replacement
-        private const string Chainer = "ef020_chainer";   // 2/1 weapon, Deathrattle: equip ef020_plain
+        private const string Chainer = "ef020_chainer";   // 2/1 weapon, Toll: equip ef020_plain
         private const string Successor = "ef020_success"; // 4/2 weapon, no effects — what Chainer equips
 
         private static CardDefinition Weapon(string id, int atk, int durability, params EffectDef[] effects)
@@ -52,7 +52,7 @@ namespace Emberfall.Core.Tests.Combat
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
-        /// <summary>Deathrattle: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
+        /// <summary>Toll: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
         private static EffectDef Rattle(int dmg)
             => new EffectDef(Trigger.ON_DEATH, Verb.DEAL_DAMAGE, amount: dmg, amount2: null,
                 tokenId: null, grantedKeyword: null, vfxOverride: null, selector: "ENEMY_HERO");
@@ -147,7 +147,7 @@ namespace Emberfall.Core.Tests.Combat
         // ── Door 1: durability exhaustion ────────────────────────────────────────
 
         [Test]
-        public void Weapon_Deathrattle_Fires_On_Durability_Exhaustion()
+        public void Weapon_Toll_Fires_On_Durability_Exhaustion()
         {
             var db = Db();
             var s = MainPhase();
@@ -161,14 +161,14 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(s.Players[0].Weapon, Is.Null, "durability hit zero — the weapon broke");
             Assert.That(dummy.CurrentHealth, Is.EqualTo(8), "the swing itself landed for 2");
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(27),
-                "the weapon's Deathrattle dealt 3 to the enemy hero — before EF-020 BreakWeapon raised nothing "
+                "the weapon's Toll dealt 3 to the enemy hero — before EF-020 BreakWeapon raised nothing "
                 + "and this stayed at 30.");
         }
 
         // ── Door 2: equip-replacement ────────────────────────────────────────────
 
         [Test]
-        public void Weapon_Deathrattle_Fires_On_Equip_Replacement()
+        public void Weapon_Toll_Fires_On_Equip_Replacement()
         {
             var db = Db();
             var s = MainPhase();
@@ -180,7 +180,7 @@ namespace Emberfall.Core.Tests.Combat
 
             Assert.That(r.Accepted, Is.True);
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(27),
-                "replacing a weapon destroys it, so its Deathrattle must fire — the second of the two doors "
+                "replacing a weapon destroys it, so its Toll must fire — the second of the two doors "
                 + "a weapon leaves play by.");
             Assert.That(s.Players[0].Weapon, Is.Not.Null);
             Assert.That(s.Players[0].Weapon!.DefinitionId, Is.EqualTo(Plain), "the new weapon is equipped");
@@ -193,7 +193,7 @@ namespace Emberfall.Core.Tests.Combat
         [Test]
         public void Replacement_Is_Already_Equipped_When_The_Outgoing_Rattle_Resolves()
         {
-            // Chainer's Deathrattle EQUIPs a successor. Because the rattle ENQUEUES rather than resolving
+            // Chainer's Toll EQUIPs a successor. Because the rattle ENQUEUES rather than resolving
             // inline, the sequence is: Chainer breaks → rattle queued → Plain equipped → drain → rattle
             // EQUIPs Successor, which breaks *Plain*. If the rattle resolved inline instead, it would break
             // Chainer's own already-empty slot and Plain would survive as the final weapon. This test is the
@@ -213,7 +213,7 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Weapon_Deathrattle_Does_Not_Break_Its_Own_Empty_Slot_Twice()
+        public void Weapon_Toll_Does_Not_Break_Its_Own_Empty_Slot_Twice()
         {
             // Guard against the obvious regression in a naive fix: raising BEFORE clearing ps.Weapon would
             // let an EQUIP rattle re-enter BreakWeapon on the corpse and fire the SAME rattle again, and a
@@ -233,7 +233,7 @@ namespace Emberfall.Core.Tests.Combat
         }
 
         [Test]
-        public void Weapon_Without_A_Deathrattle_Breaks_Silently_As_Before()
+        public void Weapon_Without_A_Toll_Breaks_Silently_As_Before()
         {
             // The control: EF-020 must not invent a trigger for a weapon that has no ON_DEATH effect.
             var db = Db();

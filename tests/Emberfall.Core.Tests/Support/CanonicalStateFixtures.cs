@@ -33,16 +33,16 @@ namespace Emberfall.Core.Tests.Support
             [typeof(PlayerState)] = new[]
             {
                 "Board", "Deck", "Graveyard", "Hand", "Hero", "HeroAttacksUsedThisTurn",
-                "HeroPowerUsedThisTurn", "Id", "Mana", "NextTurnOverloadLock", "Weapon"
+                "HeroPowerUsedThisTurn", "Id", "Mana", "NextTurnBackdraftLock", "Weapon"
             },
             [typeof(HeroInstance)] = new[]
             {
-                "Armor", "Class", "Controller", "CurrentHealth", "HeroPowerId", "Id", "IsFrozen", "MaxHealth"
+                "Armor", "Class", "Controller", "CurrentHealth", "HeroPowerId", "Id", "IsFrosted", "MaxHealth"
             },
             [typeof(CardInstance)] = new[]
             {
                 "AttacksUsedThisTurn", "Controller", "CurrentAttack", "CurrentDurability", "CurrentHealth",
-                "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedReborn", "Id", "IsFrozen",
+                "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id", "IsFrosted",
                 "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
             },
             [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "Source" },
@@ -73,7 +73,7 @@ namespace Emberfall.Core.Tests.Support
             // PendingChoice (seeded non-null — M2 production never populates it, so the seed is
             // the ONLY coverage of the non-null walk branch until Phase 2; §7 ruling item 7)
             ["PendingChoice.Chooser"] = s => s.PendingChoice!.Chooser = s.Players[1].Id,
-            ["PendingChoice.Kind"] = s => s.PendingChoice!.Kind = (PendingChoiceKind)1,   // no second member yet (Q1: Discover-only); the cast perturbs the canonical int
+            ["PendingChoice.Kind"] = s => s.PendingChoice!.Kind = (PendingChoiceKind)1,   // no second member yet (Q1: Unearth-only); the cast perturbs the canonical int
             ["PendingChoice.Source"] = s => s.PendingChoice!.Source = new InstanceId(70),
             ["PendingChoice.Options"] = s => s.PendingChoice!.Options.Add("disc_seed_extra"),
             ["PendingChoice.ChoiceSequence"] = s => s.PendingChoice!.ChoiceSequence++,
@@ -94,7 +94,7 @@ namespace Emberfall.Core.Tests.Support
             ["PlayerState.Mana"] = s => s.Players[0].Mana = new ManaPool { Max = 9, Available = 9 },
             ["PlayerState.HeroPowerUsedThisTurn"] = s => s.Players[0].HeroPowerUsedThisTurn = !s.Players[0].HeroPowerUsedThisTurn,
             ["PlayerState.HeroAttacksUsedThisTurn"] = s => s.Players[0].HeroAttacksUsedThisTurn++,
-            ["PlayerState.NextTurnOverloadLock"] = s => s.Players[0].NextTurnOverloadLock++,
+            ["PlayerState.NextTurnBackdraftLock"] = s => s.Players[0].NextTurnBackdraftLock++,
 
             // HeroInstance (seat 0's hero)
             ["HeroInstance.Id"] = s => s.Players[0].Hero.Id = new InstanceId(77),
@@ -104,7 +104,7 @@ namespace Emberfall.Core.Tests.Support
             ["HeroInstance.MaxHealth"] = s => s.Players[0].Hero.MaxHealth++,
             ["HeroInstance.Armor"] = s => s.Players[0].Hero.Armor += 3,
             ["HeroInstance.HeroPowerId"] = s => s.Players[0].Hero.HeroPowerId = "hp_other",
-            ["HeroInstance.IsFrozen"] = s => s.Players[0].Hero.IsFrozen = !s.Players[0].Hero.IsFrozen,
+            ["HeroInstance.IsFrosted"] = s => s.Players[0].Hero.IsFrosted = !s.Players[0].Hero.IsFrosted,
 
             // CardInstance (the seeded hand card — has durability, keywords, enchantment)
             ["CardInstance.Id"] = s => HandCard(s).Id = new InstanceId(88),
@@ -115,21 +115,21 @@ namespace Emberfall.Core.Tests.Support
             ["CardInstance.CurrentHealth"] = s => HandCard(s).CurrentHealth++,
             ["CardInstance.MaxHealth"] = s => HandCard(s).MaxHealth++,
             ["CardInstance.CurrentDurability"] = s => HandCard(s).CurrentDurability = null,
-            ["CardInstance.Keywords"] = s => HandCard(s).Keywords.Add(Keyword.WINDFURY),
+            ["CardInstance.Keywords"] = s => HandCard(s).Keywords.Add(Keyword.DOUBLESTRIKE),
             ["CardInstance.Enchantments"] = s => HandCard(s).Enchantments.Add(
                 new Enchantment { Source = new InstanceId(60), AttackDelta = 2, HealthDelta = 2 }),
             ["CardInstance.HasAegisShield"] = s => HandCard(s).HasAegisShield = !HandCard(s).HasAegisShield,
-            ["CardInstance.IsFrozen"] = s => HandCard(s).IsFrozen = !HandCard(s).IsFrozen,
+            ["CardInstance.IsFrosted"] = s => HandCard(s).IsFrosted = !HandCard(s).IsFrosted,
             ["CardInstance.SummonedThisTurn"] = s => HandCard(s).SummonedThisTurn = !HandCard(s).SummonedThisTurn,
             ["CardInstance.AttacksUsedThisTurn"] = s => HandCard(s).AttacksUsedThisTurn++,
-            ["CardInstance.HasUsedReborn"] = s => HandCard(s).HasUsedReborn = !HandCard(s).HasUsedReborn,
+            ["CardInstance.HasUsedRekindle"] = s => HandCard(s).HasUsedRekindle = !HandCard(s).HasUsedRekindle,
             ["CardInstance.Position"] = s => HandCard(s).Position++,
 
             // Enchantment (the seeded hand card's enchantment)
             ["Enchantment.Source"] = s => HandCard(s).Enchantments[0].Source = new InstanceId(66),
             ["Enchantment.AttackDelta"] = s => HandCard(s).Enchantments[0].AttackDelta++,
             ["Enchantment.HealthDelta"] = s => HandCard(s).Enchantments[0].HealthDelta++,
-            ["Enchantment.GrantedKeyword"] = s => HandCard(s).Enchantments[0].GrantedKeyword = Keyword.RUSH,
+            ["Enchantment.GrantedKeyword"] = s => HandCard(s).Enchantments[0].GrantedKeyword = Keyword.SKIRMISH,
 
             // ManaPool (seat 0)
             ["ManaPool.Max"] = s => s.Players[0].Mana.Max++,
@@ -168,7 +168,7 @@ namespace Emberfall.Core.Tests.Support
             var p1 = new PlayerState(p1Id, new HeroInstance(new InstanceId(1), p1Id, CardClass.TIDECALLER, 30)
             {
                 HeroPowerId = "hp_tide",
-                IsFrozen = true,
+                IsFrosted = true,
             });
 
             // Seat 0: every zone populated, weapon equipped, a card with durability + keywords +
@@ -176,14 +176,14 @@ namespace Emberfall.Core.Tests.Support
             p0.Deck.Add(MakeCard(2, p0Id, Zone.Deck));
             var handCard = MakeCard(3, p0Id, Zone.Hand);
             handCard.CurrentDurability = 2;
-            handCard.Keywords.Add(Keyword.TAUNT);
-            handCard.Keywords.Add(Keyword.STEALTH);
+            handCard.Keywords.Add(Keyword.BULWARK);
+            handCard.Keywords.Add(Keyword.SHROUD);
             handCard.Enchantments.Add(new Enchantment
             {
                 Source = new InstanceId(4),
                 AttackDelta = 1,
                 HealthDelta = 1,
-                GrantedKeyword = Keyword.CHARGE,
+                GrantedKeyword = Keyword.FERVOR,
             });
             p0.Hand.Add(handCard);
             var boardCard = MakeCard(5, p0Id, Zone.Board);
@@ -195,10 +195,10 @@ namespace Emberfall.Core.Tests.Support
             p0.Weapon.DefinitionId = "weapon_seed";
             p0.Weapon.CurrentAttack = 3;
             p0.Weapon.CurrentDurability = 2;
-            p0.Weapon.Keywords.Add(Keyword.LIFESTEAL);
+            p0.Weapon.Keywords.Add(Keyword.LIFEDRAIN);
             p0.Mana = new ManaPool { Max = 5, Available = 3, Spent = 2, Locked = 1, Temporary = 1 };
             p0.HeroAttacksUsedThisTurn = 1;
-            p0.NextTurnOverloadLock = 2;
+            p0.NextTurnBackdraftLock = 2;
 
             // Seat 1: sparse on purpose (empty zones + null weapon are also canonical branches).
             p1.Deck.Add(MakeCard(8, p1Id, Zone.Deck));
@@ -226,7 +226,7 @@ namespace Emberfall.Core.Tests.Support
             s.PendingChoice = new PendingChoice
             {
                 Chooser = p0Id,
-                Kind = PendingChoiceKind.Discover,
+                Kind = PendingChoiceKind.Unearth,
                 Source = new InstanceId(5),
                 Options = { "disc_seed_a", "disc_seed_b" },
                 ChoiceSequence = 11,

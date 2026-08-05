@@ -234,17 +234,17 @@ namespace Emberfall.Core.Tests.Projection
         {
             // No emitter exists for either kind — synthesize the events the way a future emitter
             // would and assert the projector sentinels Amount regardless of viewer (D-OQ3 posture;
-            // onDiscover chooser-side unredaction is Phase-2 wiring).
+            // onUnearth chooser-side unredaction is Phase-2 wiring).
             var debuff = new GameEvent(VfxEvent.onDebuff, 7, new InstanceId(4), new InstanceId(5), 3, EventFlags.None);
-            var discover = new GameEvent(VfxEvent.onDiscover, 8, new InstanceId(4), null, 3, EventFlags.None);
+            var unearth = new GameEvent(VfxEvent.onUnearth, 8, new InstanceId(4), null, 3, EventFlags.None);
             var vis = new EventVisibility(IdVisibility.Public, IdVisibility.Public);
 
             foreach (int seat in new[] { 0, 1 })
             {
                 Assert.That(GameStateProjector.ProjectEvent(debuff, seat, vis).Amount, Is.Null,
                     "onDebuff Amount is sentineled until a real emitter classifies it (D-OQ3).");
-                Assert.That(GameStateProjector.ProjectEvent(discover, seat, vis).Amount, Is.Null,
-                    "onDiscover Amount is the pool-size magnitude channel (OBL-8).");
+                Assert.That(GameStateProjector.ProjectEvent(unearth, seat, vis).Amount, Is.Null,
+                    "onUnearth Amount is the pool-size magnitude channel (OBL-8).");
             }
         }
 

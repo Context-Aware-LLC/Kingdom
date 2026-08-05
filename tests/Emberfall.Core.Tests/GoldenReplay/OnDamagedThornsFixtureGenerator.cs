@@ -20,7 +20,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// </code>
     ///
     /// <para>Scenario: the first player lands <c>test_thornback</c> (1/5, "deal 1 to the enemy hero when
-    /// this is damaged") and then <c>test_aegis_thornback</c> — the same card plus DIVINE_SHIELD. The
+    /// this is damaged") and then <c>test_aegis_thornback</c> — the same card plus AEGIS. The
     /// second player then casts <c>frost_ripple</c>, a 1-damage sweep over <c>ENEMY_MINIONS</c>, catching
     /// both in a single volley.</para>
     ///
@@ -38,8 +38,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
     /// </list></para>
     ///
     /// <para>Both minions are 5-health against a 1-damage volley so nothing dies: this fixture pins the
-    /// damage trigger, and keeping death out of the log keeps it from doubling as a deathrattle test
-    /// (<c>deathrattle_cascade</c> already owns that).</para>
+    /// damage trigger, and keeping death out of the log keeps it from doubling as a toll test
+    /// (<c>toll_cascade</c> already owns that).</para>
     /// </summary>
     [TestFixture]
     public sealed class OnDamagedThornsFixtureGenerator

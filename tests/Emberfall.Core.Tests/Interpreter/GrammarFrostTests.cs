@@ -11,7 +11,7 @@ using Verb = Emberfall.Core.Contracts.Action;
 namespace Emberfall.Core.Tests.Interpreter
 {
     /// <summary>
-    /// L1 — the M2 Phase 0 grammar-freeze rulings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier a):
+    /// L1 — the M2 Phase 0 grammar-frost rulings (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier a):
     /// (1) GAIN_MANA permanent/empty payload semantics (the Quicken / Seedling Rite ramp primitive),
     /// (2) explicit-choice (ANY_*) selectors require a player-chosen target at the PlayCard door too,
     /// (3) chosen targets must fit the selector's shape (ANY_MINION can't aim at a hero),
@@ -19,7 +19,7 @@ namespace Emberfall.Core.Tests.Interpreter
     /// </summary>
     [TestFixture]
     [Category("Unit")]
-    public sealed class GrammarFreezeTests
+    public sealed class GrammarFrostTests
     {
         // ── scenario scaffolding (mirrors InterpreterTests) ──────────────────────
 
@@ -240,7 +240,7 @@ namespace Emberfall.Core.Tests.Interpreter
         public void Self_Selector_On_A_Fired_Trigger_Buffs_The_Source()
         {
             // ON_FRIENDLY_SUMMON observer with SELF selector: the observer buffs itself, never
-            // the verb-default. (Before the grammar freeze SELF silently fell into DefaultTargets.)
+            // the verb-default. (Before the grammar frost SELF silently fell into DefaultTargets.)
             var cheer = Minion("cheer", cost: 1, atk: 1, hp: 1, new[]
             {
                 new EffectDef(Trigger.ON_FRIENDLY_SUMMON, Verb.BUFF, amount: 1, amount2: 0,
@@ -272,7 +272,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var db = new FakeCardDatabase().Register(trap).Register(vanilla);
             var s = MainPhase();
             var doomed = Board(s, 1, trap);
-            doomed.CurrentHealth = 0; // next Drain's DeathCheck fires the deathrattle
+            doomed.CurrentHealth = 0; // next Drain's DeathCheck fires the toll
             var card = Hand(s, 0, "vanilla");
 
             var result = new CommandProcessor(db).Execute(s, Play(s, card));

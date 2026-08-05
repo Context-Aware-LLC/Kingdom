@@ -68,7 +68,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Durability, Is.EqualTo(3));
             Assert.That(def.Rarity, Is.EqualTo(Rarity.RARE));
             Assert.That(def.SetId, Is.EqualTo(SetId.REKINDLING));
-            Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.DEATHRATTLE }));
+            Assert.That(def.Keywords, Is.EquivalentTo(new[] { Keyword.TOLL }));
             Assert.That(def.CardText, Is.EqualTo("[Toll] Draw a card."));
 
             Assert.That(def.Effects.Count, Is.EqualTo(1));
@@ -157,7 +157,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 "the incoming lance keeps its full durability — the outgoing rattle must not touch it.");
         }
 
-        // ── Harness (shape borrowed from Combat/WeaponDeathrattleTests) ──────────
+        // ── Harness (shape borrowed from Combat/WeaponTollTests) ──────────
 
         private static GameState MainPhase()
         {

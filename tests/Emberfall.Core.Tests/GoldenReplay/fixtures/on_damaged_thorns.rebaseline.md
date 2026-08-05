@@ -17,7 +17,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 - **Why the new golden is correct:** baked by `OnDamagedThornsFixtureGenerator` (seed
   `1618033988749894`), whose in-scenario assertions all passed during generation. The leader boards
   `test_thornback` (1/5, `ON_DAMAGED → DEAL_DAMAGE 1`, `selector: ENEMY_HERO`) and then
-  `test_aegis_thornback` — the identical card plus `DIVINE_SHIELD`. The follower casts `frost_ripple`,
+  `test_aegis_thornback` — the identical card plus `AEGIS`. The follower casts `frost_ripple`,
   a 1-damage sweep over `ENEMY_MINIONS`, catching both in a **single volley**. The baked event stream
   is exactly what the raise site's contract predicts:
 
@@ -39,8 +39,8 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
      stream — the ordering decision recorded at length in `DamagePipeline.cs`.
 
   Both minions are 5 health against a 1-damage volley, so nothing dies: this fixture pins the damage
-  trigger, and keeping death out of the log keeps it from doubling as a deathrattle test
-  (`deathrattle_cascade` already owns that). Baked hash:
+  trigger, and keeping death out of the log keeps it from doubling as a toll test
+  (`toll_cascade` already owns that). Baked hash:
   `a8360284a1b54039312e4da52f95dfc34b6346dc3b053f63e89f2d54e1fffd82` (17 events, 8 intents). The
   match is deliberately still `InProgress` at the end of the log — a decided outcome would truncate
   the replay.
@@ -57,7 +57,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   the shipping `cards/**` tree) and exist solely to give this replay an `ON_DAMAGED` subscriber and its
   shielded control; no existing row was edited. The append is inert for the other four fixtures —
   decks are explicit id lists and `GameStateHasher` walks game state, never the card db — and the
-  proof is that `opening_pyra_maren`, `full_match_pyra_wins`, `deathrattle_cascade` and
+  proof is that `opening_pyra_maren`, `full_match_pyra_wins`, `toll_cascade` and
   `turn_end_toll` all replay green **unrebaselined** with both cards present. This is the same
   append-never-insert contract `test_turn_end_toller` established for EF-012.
 

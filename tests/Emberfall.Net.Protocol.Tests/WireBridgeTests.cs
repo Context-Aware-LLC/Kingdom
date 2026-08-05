@@ -11,7 +11,7 @@ using Emberfall.Net.Protocol;
 namespace Emberfall.Net.Protocol.Tests
 {
     /// <summary>
-    /// The A2 deferred bridge obligation, discharged (dev-docs/architecture/determinism-and-projection.md:13;
+    /// The A2 deferred bridge obligation, disfervord (dev-docs/architecture/determinism-and-projection.md:13;
     /// dev-docs/contracts/wire-protocol.md:41): for every reachable state s,
     /// <c>CanonicalHash(Decode(Encode(s))) == CanonicalHash(s)</c>. Corpus = every post-command
     /// state of every golden-replay fixture — authoritative AND per-viewer projected (projected

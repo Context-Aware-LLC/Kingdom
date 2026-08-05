@@ -1,4 +1,4 @@
-# Rebaseline: deathrattle_cascade
+# Rebaseline: toll_cascade
 
 _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty until proven a deliberate rule change._
 

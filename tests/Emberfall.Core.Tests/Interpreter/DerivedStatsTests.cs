@@ -196,11 +196,11 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var def = Def(2, 3);
             var c = Minion(def);
-            Grant(c, SourceA, Keyword.TAUNT);
+            Grant(c, SourceA, Keyword.BULWARK);
 
             DerivedStats.RemoveBySource(c, def, SourceA);
 
-            Assert.That(c.Keywords, Does.Not.Contain(Keyword.TAUNT));
+            Assert.That(c.Keywords, Does.Not.Contain(Keyword.BULWARK));
         }
 
         [Test]
@@ -208,26 +208,26 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var def = Def(2, 3);
             var c = Minion(def);
-            Grant(c, SourceA, Keyword.TAUNT);
-            Grant(c, SourceB, Keyword.TAUNT);
+            Grant(c, SourceA, Keyword.BULWARK);
+            Grant(c, SourceB, Keyword.BULWARK);
 
             DerivedStats.RemoveBySource(c, def, SourceA);
 
-            Assert.That(c.Keywords, Does.Contain(Keyword.TAUNT), "SourceB is still holding it up");
+            Assert.That(c.Keywords, Does.Contain(Keyword.BULWARK), "SourceB is still holding it up");
         }
 
         [Test]
         public void RemoveBySource_Never_Strips_A_Printed_Keyword()
         {
-            // The source granted TAUNT redundantly; the card was printed with it. Taking the grant away
+            // The source granted BULWARK redundantly; the card was printed with it. Taking the grant away
             // must not take away what was never the source's to give.
-            var def = Def(2, 3, Keyword.TAUNT);
+            var def = Def(2, 3, Keyword.BULWARK);
             var c = Minion(def);
-            Grant(c, SourceA, Keyword.TAUNT);
+            Grant(c, SourceA, Keyword.BULWARK);
 
             DerivedStats.RemoveBySource(c, def, SourceA);
 
-            Assert.That(c.Keywords, Does.Contain(Keyword.TAUNT));
+            Assert.That(c.Keywords, Does.Contain(Keyword.BULWARK));
         }
 
         [Test]
@@ -235,7 +235,7 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             // HasAegisShield is SPENT state, not derived. Re-seeding it on every buff would hand the
             // minion a fresh shield each time it was pumped.
-            var def = Def(2, 3, Keyword.DIVINE_SHIELD);
+            var def = Def(2, 3, Keyword.AEGIS);
             var c = Minion(def);
             Assert.That(c.HasAegisShield, Is.True);
 
@@ -247,17 +247,17 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void Recompute_Does_Not_Restore_Stealth_Broken_By_Attacking()
+        public void Recompute_Does_Not_Restore_Shroud_Broken_By_Attacking()
         {
-            // Same shape as the Aegis case: combat strips STEALTH, and a later buff must not put it back.
-            var def = Def(2, 3, Keyword.STEALTH);
+            // Same shape as the Aegis case: combat strips SHROUD, and a later buff must not put it back.
+            var def = Def(2, 3, Keyword.SHROUD);
             var c = Minion(def);
-            c.Keywords.Remove(Keyword.STEALTH);             // attacked
+            c.Keywords.Remove(Keyword.SHROUD);             // attacked
 
             Enchant(c, SourceA, 1, 1);
             DerivedStats.Recompute(c, def);
 
-            Assert.That(c.Keywords, Does.Not.Contain(Keyword.STEALTH));
+            Assert.That(c.Keywords, Does.Not.Contain(Keyword.SHROUD));
         }
 
         // ── full reset ───────────────────────────────────────────────────────────────
@@ -268,14 +268,14 @@ namespace Emberfall.Core.Tests.Interpreter
             var def = Def(1, 1);
             var c = Minion(def);
             Enchant(c, SourceA, 4, 4);
-            Grant(c, SourceB, Keyword.TAUNT);
+            Grant(c, SourceB, Keyword.BULWARK);
             DerivedStats.Recompute(c, def);
             c.CurrentHealth = 2;                            // 5 health, took 3
 
             DerivedStats.ResetToPrinted(c, def, preserveDamage: true);
 
             Assert.That(c.Enchantments, Is.Empty);
-            Assert.That(c.Keywords, Does.Not.Contain(Keyword.TAUNT));
+            Assert.That(c.Keywords, Does.Not.Contain(Keyword.BULWARK));
             Assert.That(c.CurrentAttack, Is.EqualTo(1));
             Assert.That(c.MaxHealth, Is.EqualTo(1));
             Assert.That(c.CurrentHealth, Is.EqualTo(-2), "printed body is already dead — DeathCheck's call");
@@ -287,12 +287,12 @@ namespace Emberfall.Core.Tests.Interpreter
             var def = Def(2, 5);
             var c = Minion(def);
             c.CurrentHealth = 1;
-            c.IsFrozen = true;
+            c.IsFrosted = true;
 
             DerivedStats.ResetToPrinted(c, def, preserveDamage: false);
 
             Assert.That(c.CurrentHealth, Is.EqualTo(5), "the card arrives whole; no wound crosses the zone change");
-            Assert.That(c.IsFrozen, Is.False);
+            Assert.That(c.IsFrosted, Is.False);
         }
 
         [Test]
@@ -300,7 +300,7 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             // Unlike Recompute, a reset DOES re-seed the shield — a silence or a bounce genuinely does
             // return the card to its printed form.
-            var def = Def(2, 3, Keyword.DIVINE_SHIELD);
+            var def = Def(2, 3, Keyword.AEGIS);
             var c = Minion(def);
             c.HasAegisShield = false;
 
@@ -314,13 +314,13 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var def = Def(2, 3);
             var c = Minion(def);
-            Grant(c, SourceA, Keyword.DIVINE_SHIELD);
+            Grant(c, SourceA, Keyword.AEGIS);
             c.HasAegisShield = true;
 
             DerivedStats.ResetToPrinted(c, def, preserveDamage: true);
 
             Assert.That(c.HasAegisShield, Is.False);
-            Assert.That(c.Keywords, Does.Not.Contain(Keyword.DIVINE_SHIELD));
+            Assert.That(c.Keywords, Does.Not.Contain(Keyword.AEGIS));
         }
 
         // ── the invariant the layer exists to make true ──────────────────────────────

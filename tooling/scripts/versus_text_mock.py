@@ -32,7 +32,7 @@ CROP_X0 = 600                      # 16:9 crop of the 21:9 master (render x*2 + 
 FONT = UNITY / "TextMesh Pro" / "Fonts" / "LiberationSans.ttf"   # TMP default = what ships today
 FONT_DISPLAY = UNITY / "Art" / "Fonts" / "AlfaSlabOne-Regular.ttf"   # the wordmark face
 
-# ── Frozen geometry (VersusOverlay.cs, measured per-frame in GIMP — do not touch).
+# ── Frosted geometry (VersusOverlay.cs, measured per-frame in GIMP — do not touch).
 MEDALLION = {"left": (1480, 730), "right": (3544, 732)}
 MEDALLION_DIA = 1200
 ORB_CENTRE = (2520, 731)

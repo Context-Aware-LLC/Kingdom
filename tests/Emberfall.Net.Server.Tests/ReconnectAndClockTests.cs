@@ -31,8 +31,8 @@ namespace Emberfall.Net.Server.Tests
 
             // Seq baseline reset (RC F7): a brand-new client legitimately restarts at seq 1 —
             // posted via the NEW connection, which is now the seat's identity.
-            var reborn = new ScriptedClient(h.P0);
-            h.Post(fresh, reborn.Frame(new HeartbeatMsg(), h.Id));
+            var rekindle = new ScriptedClient(h.P0);
+            h.Post(fresh, rekindle.Frame(new HeartbeatMsg(), h.Id));
             Assert.That(fresh.Last<HeartbeatMsg>(), Is.Not.Null,
                 "post-reconnect seq 1 must be accepted on the new connection");
         }

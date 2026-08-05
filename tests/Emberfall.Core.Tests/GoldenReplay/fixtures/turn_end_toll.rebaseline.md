@@ -38,7 +38,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   shipping `cards/**` tree) and exists solely to give this replay an `ON_TURN_END` subscriber; no
   existing row was edited. The append is inert for the other three fixtures — decks are explicit id
   lists and `GameStateHasher` walks game state, never the card db — and the proof is that
-  `opening_pyra_maren`, `full_match_pyra_wins` and `deathrattle_cascade` all replay green
+  `opening_pyra_maren`, `full_match_pyra_wins` and `toll_cascade` all replay green
   **unrebaselined** with the card present.
 - **engineContractVersion changed?** no. `Trigger.ON_TURN_END` already existed in the enum; EF-012
   adds a raise site, not a contract member. Stays `interfaces.v3`.

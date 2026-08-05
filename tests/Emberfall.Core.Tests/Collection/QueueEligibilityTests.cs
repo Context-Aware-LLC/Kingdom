@@ -69,7 +69,7 @@ namespace Emberfall.Core.Tests.Collection
                     $"Deck '{deck.Id}' — the gate and the predicate must not be able to disagree.");
         }
 
-        // ---- the roster overload (match-join's shape) -----------------------------------
+        // ---- the roster backdraft (match-join's shape) -----------------------------------
 
         [Test]
         public void Resolving_Through_A_Roster_Gives_The_Same_Answer()

@@ -52,7 +52,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Mana"] = "PUBLIC",
                 ["HeroPowerUsedThisTurn"] = "PUBLIC",
                 ["HeroAttacksUsedThisTurn"] = "PUBLIC",
-                ["NextTurnOverloadLock"] = "PUBLIC",
+                ["NextTurnBackdraftLock"] = "PUBLIC",
             },
             [typeof(HeroInstance)] = new()
             {
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["MaxHealth"] = "PUBLIC",
                 ["Armor"] = "PUBLIC",
                 ["HeroPowerId"] = "PUBLIC",
-                ["IsFrozen"] = "PUBLIC",
+                ["IsFrosted"] = "PUBLIC",
             },
             [typeof(CardInstance)] = new()
             {
@@ -78,10 +78,10 @@ namespace Emberfall.Core.Tests.Projection
                 ["Keywords"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["Enchantments"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["HasAegisShield"] = "PUBLIC in visible zones (false in card-backs)",
-                ["IsFrozen"] = "PUBLIC in visible zones (false in card-backs)",
+                ["IsFrosted"] = "PUBLIC in visible zones (false in card-backs)",
                 ["SummonedThisTurn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",
-                ["HasUsedReborn"] = "PUBLIC in visible zones (false in card-backs)",
+                ["HasUsedRekindle"] = "PUBLIC in visible zones (false in card-backs)",
                 ["Position"] = "PUBLIC (board only; 0 elsewhere)",
             },
             [typeof(Enchantment)] = new()
@@ -138,8 +138,8 @@ namespace Emberfall.Core.Tests.Projection
             var classified = new HashSet<string>
             {
                 "onPlay", "onSummon", "onAttack", "onDamage", "onHeal", "onDeath", "onBuff",
-                "onDebuff", "onDraw", "onSilence", "onFreeze", "onTransform", "onReturn",
-                "onManaGain", "onEquip", "onDiscover", "onTurnStart", "onTurnEnd", "onHeroPower",
+                "onDebuff", "onDraw", "onSilence", "onFrost", "onTransform", "onReturn",
+                "onManaGain", "onEquip", "onUnearth", "onTurnStart", "onTurnEnd", "onHeroPower",
                 "onFatigue", "onGameWin", "onGameOver",
             };
 

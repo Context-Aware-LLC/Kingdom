@@ -243,7 +243,7 @@ READABLE AT 220 PIXELS. One clear subject, strong silhouette, high value
 contrast between subject and background. If it needs squinting at full size it
 is dead on the board.
 
-Painterly digital illustration: confident brushwork, saturated accent lighting,
+Painterly digital illustration: confident bskirmishwork, saturated accent lighting,
 readable shapes. NOT photoreal, NOT a 3D render, NOT anime or cel-shaded.
 
 SUBJECT AND BACKGROUND MUST OPPOSE EACH OTHER. The class palette governs the
@@ -252,7 +252,7 @@ into a setting painted in that same palette becomes one flat mass, and at board
 size that mass reads as nothing: a molten creature standing in a volcano is a
 single orange blob. Put the subject somewhere its own palette does not belong,
 and oppose it in hue, in value, or in temperature — the molten thing wrecking a
-cold night village, the black slab against a pale dawn, the frozen thing under
+cold night village, the black slab against a pale dawn, the frosted thing under
 falling embers. Name the subject palette and the background separately and make
 them fight.
 """

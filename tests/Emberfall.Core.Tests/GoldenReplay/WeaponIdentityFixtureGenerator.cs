@@ -75,7 +75,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Assert.That(state.Players[leadSeat].Weapon!.Zone, Is.EqualTo(Zone.Weapon));
             Assert.That(state.Players[leadSeat].Weapon!.Keywords, Is.EquivalentTo(new[]
             {
-                Keyword.LIFESTEAL, Keyword.WINDFURY, Keyword.POISONOUS, Keyword.FREEZE,
+                Keyword.LIFEDRAIN, Keyword.DOUBLESTRIKE, Keyword.VENOM, Keyword.FROST,
             }));
             Submit(new EndTurnIntent(leadId));
 
@@ -89,9 +89,9 @@ namespace Emberfall.Core.Tests.GoldenReplay
             var brute = state.Players[followSeat].Board.First(c => c.DefinitionId == Brute);
             Submit(new AttackIntent(leadId, leadHero.Id, new TargetRef(brute.Id)));
             Assert.That(state.Players[followSeat].Board.Contains(brute), Is.False,
-                "Poisonous made the two-damage hit lethal");
+                "Venom made the two-damage hit lethal");
             Assert.That(leadHero.CurrentHealth, Is.EqualTo(fullHealth),
-                "Lifesteal restored the missing health");
+                "Lifedrain restored the missing health");
             Submit(new EndTurnIntent(leadId));
 
             Submit(new PlayCardIntent(followId, Hand(followSeat, Aegis).Id, 0,
@@ -104,14 +104,14 @@ namespace Emberfall.Core.Tests.GoldenReplay
             Submit(new AttackIntent(leadId, leadHero.Id, new TargetRef(aegis.Id)));
             Assert.That(aegis.HasAegisShield, Is.False);
             Assert.That(aegis.CurrentHealth, Is.EqualTo(6));
-            Assert.That(aegis.IsFrozen, Is.False);
+            Assert.That(aegis.IsFrosted, Is.False);
             Assert.That(leadHero.CurrentHealth, Is.EqualTo(fullHealth - 2));
             Submit(new EndTurnIntent(leadId));
 
             Submit(new EndTurnIntent(followId));
 
             Submit(new AttackIntent(leadId, leadHero.Id, new TargetRef(followHero.Id)));
-            Assert.That(followHero.IsFrozen, Is.True);
+            Assert.That(followHero.IsFrosted, Is.True);
             Assert.That(leadHero.CurrentHealth, Is.EqualTo(fullHealth));
             Assert.That(state.Players[leadSeat].Weapon, Is.Null);
             Assert.That(state.Players[leadSeat].Graveyard.Single(c => c.Id == bladeId),

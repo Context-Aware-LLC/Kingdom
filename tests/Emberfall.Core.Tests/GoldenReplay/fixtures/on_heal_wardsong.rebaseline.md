@@ -13,7 +13,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   **SELF** trigger on the healed minion (`RaiseSelf`), not an observer sweep (`RaiseObservers`, the
   shape `ON_SPELL_CAST` and `ON_TURN_END` use). It mirrors `ON_DAMAGED` at the sibling site exactly,
   so it reads "whenever THIS minion is healed". Rationale is recorded at length on `ApplyHeal` in
-  `DamagePipeline.cs`; the short form is that an observer sweep on the LIFESTEAL path would enqueue
+  `DamagePipeline.cs`; the short form is that an observer sweep on the LIFEDRAIN path would enqueue
   one effect per permanent on both boards per swing, and widening later is additive where narrowing
   later would not be.
 
@@ -50,8 +50,8 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
 
   The clamp is pinned as a side effect worth naming: the salve requests 2 against 1 missing health, and
   each `onHeal` carries the **effective** 1. Nothing dies anywhere in the log — 3-health minions against
-  a 1-damage volley — so this fixture stays about the heal trigger rather than doubling as a deathrattle
-  test (`deathrattle_cascade` owns that). Baked hash:
+  a 1-damage volley — so this fixture stays about the heal trigger rather than doubling as a toll
+  test (`toll_cascade` owns that). Baked hash:
   `24e4e68b544d280a5a4a71d058d631f2fe1ad8ce7ae5a640c72724ecf17f3a97` (25 events, 11 intents). The match
   is deliberately still `InProgress` at the end of the log — a decided outcome would truncate the replay.
 
@@ -61,7 +61,7 @@ _Required by dev-docs/quality/testing-and-ci.md:31 — a hash flip is guilty unt
   `Trigger` enum markers (`Enums.cs`), discharging the retirement trigger both carried. Headless siblings
   in `tests/Emberfall.Core.Tests/Combat/HealPipelineQueueTests.cs` — including
   `ON_HEAL_Is_A_Self_Trigger_Not_An_Observer_Sweep`, the only enforcement of the shape decision above,
-  and `Lifesteal_Heal_Inside_ApplyDamage_Raises_No_ON_HEAL`, which pins the reentrant path the brief
+  and `Lifedrain_Heal_Inside_ApplyDamage_Raises_No_ON_HEAL`, which pins the reentrant path the brief
   flags as raising nothing today (its target is always a hero, and heroes carry no card effects).
 
   **Note on the brief's line number:** it cites `DamagePipeline.cs:111`. That drifted when EF-013 and
