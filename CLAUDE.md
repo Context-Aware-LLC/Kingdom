@@ -138,10 +138,11 @@ until `BreakWeapon` moves the same object to the graveyard. Its keywords, enchan
 durability are ordinary card state and survive those public-zone transitions.
 
 Weapon attacks carry `LIFEDRAIN`, `VENOM`, `FROST`, and `DOUBLESTRIKE`. The first three enter the
-existing fixed damage-rider order; `DOUBLESTRIKE` raises the hero's attack budget to two. Marker keywords
-whose behavior is expressed by trigger/effect data (including `HERALD` and `TOLL`) remain
-legal. `CardValidator`'s fail-closed weapon-carrier table rejects keywords with no weapon behavior;
-weapon-ness alone is not a rejection reason.
+existing fixed damage-rider order; `DOUBLESTRIKE` raises the hero's attack budget to two.
+`SILENCE`, `BACKDRAFT`, and `REINFORCE` remain enum slots only for wire/hash ordinal stability:
+their behavior and generated markers come from typed actions, so they are illegal as carrier or
+granted keywords. `CardValidator`'s fail-closed weapon-carrier table rejects every other keyword
+with no weapon behavior; weapon-ness alone is not a rejection reason.
 
 A weapon's expressive surface includes **stats**, **`ON_PLAY`** (equip herald), **`ON_ATTACK` with
 a static selector** — that trigger fires with an empty target list, so "the minion this hits" is not

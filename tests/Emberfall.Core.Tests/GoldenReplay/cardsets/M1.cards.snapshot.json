@@ -475,9 +475,7 @@
     "health": 4,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [
-      "BACKDRAFT"
-    ],
+    "keywords": [],
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": true,
