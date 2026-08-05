@@ -37,6 +37,16 @@ namespace Emberfall.Core.Tests.CardValidation
             return CardJson.DeserializeArray(File.ReadAllText(path));
         }
 
+        private static string ReferencedCardId(RuleAction action)
+            => action switch
+            {
+                SummonAction summon => summon.CardId,
+                AddToHandAction addToHand => addToHand.CardId,
+                EquipAction equip => equip.CardId,
+                TransformAction transform => transform.CardId,
+                _ => "",
+            };
+
         [Test]
         public void Client_Database_Loads_All_Three_Sets()
         {
@@ -85,7 +95,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 card.Tribe?.ToString() ?? "",
                 card.FactionId,
                 card.Collectible.ToString(),
-                string.Join("\u001e", card.Effects.Select(effect => effect.TokenId ?? "")),
+                string.Join("\u001e", card.Rules.Select(rule => ReferencedCardId(rule.Action))),
             })));
             string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(projection)));
 
@@ -94,7 +104,8 @@ namespace Emberfall.Core.Tests.CardValidation
 
             var survivalToken = all.Single(card => card.Id == "token_revenant_5_5_bulwark");
             Assert.That(survivalToken.ArtId, Is.EqualTo("art/token_revenant_5_5_bulwark"));
-            Assert.That(all.Single(card => card.Id == "grave_sealed_gate_keeper").Effects.Single().TokenId,
+            var gateKeeperRule = all.Single(card => card.Id == "grave_sealed_gate_keeper").Rules.Single();
+            Assert.That(ReferencedCardId(gateKeeperRule.Action),
                 Is.EqualTo(survivalToken.Id),
                 "The sole reviewed token reference must follow the canonical whole-token identity.");
         }

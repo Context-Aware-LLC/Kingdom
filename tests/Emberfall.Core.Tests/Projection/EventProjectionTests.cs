@@ -6,7 +6,6 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Projection;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Projection
 {
@@ -61,13 +60,14 @@ namespace Emberfall.Core.Tests.Projection
             "hp_bolt", "hp_bolt", CardType.HERO_POWER, 2, null, null, null,
             CardClass.EMBERWARD, Rarity.COMMON,
             Array.Empty<Keyword>(),
-            new[] { new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, selector: "ENEMY_HERO") },
+            new[] { TestRules.Rule("bolt", Trigger.ON_CAST,
+                TestRules.Damage(Trigger.ON_CAST, 1, "ENEMY_HERO")) },
             "", "", "art/hp_bolt", SetId.CORE, false, null, "", false);
 
         private static readonly CardDefinition Hatchet = new CardDefinition(
             "hatchet", "hatchet", CardType.WEAPON, 1, 2, null, 2,
             CardClass.NEUTRAL, Rarity.COMMON,
-            Array.Empty<Keyword>(), Array.Empty<EffectDef>(),
+            Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
             "", "", "art/hatchet", SetId.CORE, true, null, "", false);
 
         private static (IReadOnlyList<GameEvent> events, IReadOnlyList<EventVisibility> vis)
@@ -290,7 +290,8 @@ namespace Emberfall.Core.Tests.Projection
                 "bounce", "bounce", CardType.SPELL, 2, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 Array.Empty<Keyword>(),
-                new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND, null, null, null, null, selector: "ANY_MINION") },
+                new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
+                    new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
                 "", "", "art/bounce", SetId.CORE, true, null, "", false);
             var db = new FakeCardDatabase().Register(bounce);
             var proc = new CommandProcessor(db);

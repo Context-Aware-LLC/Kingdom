@@ -26,21 +26,20 @@ namespace Emberfall.Core.Tests.TurnLoop
         /// <param name="tollDamage">damage the toller deals to the enemy hero on every turn end.</param>
         private static FakeCardDatabase Db(int tollDamage = 1, int tollerHealth = 3)
         {
-            var toll = new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                amount: tollDamage, amount2: null, tokenId: null, grantedKeyword: null,
-                selector: "ENEMY_HERO");
+            var toll = TestRules.Rule("turn_end_toll", Trigger.ON_TURN_END,
+                TestRules.Damage(Trigger.ON_TURN_END, tollDamage));
 
             return new FakeCardDatabase()
-                .Register(Minion(Toller, health: tollerHealth, effects: new[] { toll }))
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()));
+                .Register(Minion(Toller, health: tollerHealth, rules: new[] { toll }))
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()));
         }
 
-        private static CardDefinition Minion(string id, int health, EffectDef[] effects)
+        private static CardDefinition Minion(string id, int health, RuleDefinition[] rules)
             => new CardDefinition(
                 id: id, name: id, type: CardType.MINION, cost: 1,
                 attack: 1, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: Array.Empty<Keyword>(), effects: effects,
+                keywords: Array.Empty<Keyword>(), rules: rules,
                 cardText: "", flavorText: "", artId: "art/" + id, setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
@@ -136,12 +135,11 @@ namespace Emberfall.Core.Tests.TurnLoop
             // StartTurnSequence, whose thaw loop resets SummonedThisTurn / AttacksUsedThisTurn. A corpse
             // that survives the flip would be thawed and playable on a board it should have left.
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                        amount: 5, amount2: null, tokenId: null, grantedKeyword: null,
-                        selector: "ALL_MINIONS"),
+                    TestRules.Rule("turn_end_sweep", Trigger.ON_TURN_END,
+                        TestRules.Damage(Trigger.ON_TURN_END, 5, "ALL_MINIONS")),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 14UL);
@@ -164,12 +162,11 @@ namespace Emberfall.Core.Tests.TurnLoop
             // CheckWin is called explicitly after the drain because Drain only win-checks while its queue
             // is non-empty. A lethal toll must therefore still end the match rather than flip the seat.
             var db = new FakeCardDatabase()
-                .Register(Minion(Vanilla, health: 1, effects: Array.Empty<EffectDef>()))
-                .Register(Minion(Toller, health: 3, effects: new[]
+                .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
+                .Register(Minion(Toller, health: 3, rules: new[]
                 {
-                    new EffectDef(Trigger.ON_TURN_END, Emberfall.Core.Contracts.Action.DEAL_DAMAGE,
-                        amount: 99, amount2: null, tokenId: null, grantedKeyword: null,
-                        selector: "ENEMY_HERO"),
+                    TestRules.Rule("lethal_toll", Trigger.ON_TURN_END,
+                        TestRules.Damage(Trigger.ON_TURN_END, 99)),
                 }));
 
             var (host, s) = Match(db, Toller, seed: 15UL);

@@ -5,7 +5,6 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Tests.Support;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Determinism
 {
@@ -46,15 +45,14 @@ namespace Emberfall.Core.Tests.Determinism
             "bounce", "bounce", CardType.SPELL, 2, null, null, null,
             CardClass.NEUTRAL, Rarity.COMMON,
             Array.Empty<Keyword>(),
-            new[] { new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                amount: null, amount2: null, tokenId: null, grantedKeyword: null,
-                selector: "ANY_MINION") },
+            new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
             "", "", "art/bounce", SetId.CORE, true, null, "", false);
 
         private static readonly CardDefinition Vanilla = new CardDefinition(
             "vanilla", "vanilla", CardType.MINION, 1, 2, 2, null,
             CardClass.NEUTRAL, Rarity.COMMON,
-            Array.Empty<Keyword>(), Array.Empty<EffectDef>(),
+            Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
             "", "", "art/vanilla", SetId.CORE, true, null, "", false);
 
         private static GameState MainPhase(FakeCardDatabase db)
