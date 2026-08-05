@@ -17,7 +17,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 filter: new TargetFilterDef(damaged: true, tribe: Tribe.CONSTRUCT),
                 binding: "reinforced", distinctFrom: "first");
             var effect = new EffectDef(Trigger.ON_TURN_START, Verb.BUFF, amount: 2, amount2: 3,
-                tokenId: null, grantedKeyword: null, vfxOverride: VfxEvent.onBuff,
+                tokenId: null, grantedKeyword: null, vfxOverride: null,
                 condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER),
                 target: target);
 
@@ -30,7 +30,6 @@ namespace Emberfall.Core.Tests.CardValidation
             var action = (ModifyStatsAction)rule.Action;
             Assert.That((action.AttackDelta, action.HealthDelta, action.Target),
                 Is.EqualTo((2, 3, target)));
-            Assert.That(((OverrideRuleVfx)rule.Vfx).Event, Is.EqualTo(VfxEvent.onBuff));
 
             EffectDef roundTrip = RuleRuntimeAdapter.ToLegacy(rule);
 
@@ -38,7 +37,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 Is.EqualTo((effect.Trigger, effect.Action, effect.Amount, effect.Amount2)));
             Assert.That(roundTrip.Condition!.TurnOwner, Is.EqualTo(TurnOwner.CONTROLLER));
             Assert.That(roundTrip.Target, Is.SameAs(target));
-            Assert.That(roundTrip.VfxOverride, Is.EqualTo(VfxEvent.onBuff));
+            Assert.That(roundTrip.VfxOverride, Is.Null);
         }
 
         [Test]
@@ -49,10 +48,10 @@ namespace Emberfall.Core.Tests.CardValidation
                 new RuleDefinition(new RuleId("cast_damage"),
                     new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
                     OneShotLifetime.Instance,
-                    new DamageAction(3, new TargetSpec("ANY_CHARACTER")), DefaultRuleVfx.Instance),
+                    new DamageAction(3, new TargetSpec("ANY_CHARACTER"))),
                 new RuleDefinition(new RuleId("draw_followup"),
                     new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
-                    OneShotLifetime.Instance, new DrawAction(1), DefaultRuleVfx.Instance),
+                    OneShotLifetime.Instance, new DrawAction(1)),
             };
 
             CardDefinition card = Card(rules);
@@ -92,12 +91,25 @@ namespace Emberfall.Core.Tests.CardValidation
             var rule = new RuleDefinition(new RuleId("seize_weapon"),
                 new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
                 OneShotLifetime.Instance,
-                new TakeControlAction(new TargetSpec("ENEMY_WEAPON")), DefaultRuleVfx.Instance);
+                new TakeControlAction(new TargetSpec("ENEMY_WEAPON")));
 
             var ex = Assert.Throws<System.InvalidOperationException>(
                 () => RuleRuntimeAdapter.ToLegacy(rule));
 
             Assert.That(ex!.Message, Does.Contain(nameof(TakeControlAction)));
+        }
+
+        [Test]
+        public void Normalized_Rule_Surface_Has_No_Presentation_Or_Vfx_Node()
+        {
+            Assert.That(typeof(RuleDefinition).GetProperty("Vfx"), Is.Null);
+            Assert.That(typeof(RuleDefinition).Assembly.GetType("Emberfall.Core.Cards.RuleVfx"), Is.Null);
+
+            var legacy = new EffectDef(Trigger.ON_CAST, Verb.DRAW, 1, null, null, null,
+                VfxEvent.onDraw);
+            var ex = Assert.Throws<System.InvalidOperationException>(() =>
+                RuleRuntimeAdapter.FromLegacy(new RuleId("legacy_vfx"), legacy));
+            Assert.That(ex!.Message, Does.Contain("VFX overrides"));
         }
 
         private static CardDefinition Card(RuleDefinition[] rules)

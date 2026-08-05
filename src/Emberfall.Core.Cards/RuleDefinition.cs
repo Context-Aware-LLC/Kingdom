@@ -36,17 +36,15 @@ namespace Emberfall.Core.Cards
         public RuleCondition Condition { get; }
         public RuleLifetime Lifetime { get; }
         public RuleAction Action { get; }
-        public RuleVfx Vfx { get; }
 
         public RuleDefinition(RuleId id, RuleActivation activation, RuleCondition condition,
-            RuleLifetime lifetime, RuleAction action, RuleVfx vfx)
+            RuleLifetime lifetime, RuleAction action)
         {
             Id = id;
             Activation = activation ?? throw new ArgumentNullException(nameof(activation));
             Condition = condition ?? throw new ArgumentNullException(nameof(condition));
             Lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
             Action = action ?? throw new ArgumentNullException(nameof(action));
-            Vfx = vfx ?? throw new ArgumentNullException(nameof(vfx));
         }
     }
 
@@ -102,20 +100,6 @@ namespace Emberfall.Core.Cards
     {
         public static readonly PermanentLifetime Instance = new PermanentLifetime();
         private PermanentLifetime() { }
-    }
-
-    public abstract class RuleVfx { private protected RuleVfx() { } }
-
-    public sealed class DefaultRuleVfx : RuleVfx
-    {
-        public static readonly DefaultRuleVfx Instance = new DefaultRuleVfx();
-        private DefaultRuleVfx() { }
-    }
-
-    public sealed class OverrideRuleVfx : RuleVfx
-    {
-        public VfxEvent Event { get; }
-        public OverrideRuleVfx(VfxEvent @event) => Event = @event;
     }
 
     public abstract class RuleAction { private protected RuleAction() { } }
@@ -249,6 +233,12 @@ namespace Emberfall.Core.Cards
         public BackdraftAction(int amount) => Amount = amount;
     }
 
+    public sealed class GainArmorAction : RuleAction
+    {
+        public int Amount { get; }
+        public GainArmorAction(int amount) => Amount = amount;
+    }
+
     public sealed class UnearthAction : RuleAction
     {
         public int Count { get; }
@@ -284,10 +274,10 @@ namespace Emberfall.Core.Cards
             RuleLifetime lifetime = effect.Trigger == Trigger.ON_PLAY || effect.Trigger == Trigger.ON_CAST
                 ? (RuleLifetime)OneShotLifetime.Instance
                 : SourceBoundLifetime.Instance;
-            RuleVfx vfx = effect.VfxOverride.HasValue
-                ? (RuleVfx)new OverrideRuleVfx(effect.VfxOverride.Value)
-                : DefaultRuleVfx.Instance;
-            return new RuleDefinition(id, activation, condition, lifetime, FromLegacyAction(effect), vfx);
+            if (effect.VfxOverride.HasValue)
+                throw new InvalidOperationException(
+                    "Legacy rule-level VFX overrides are not part of the normalized rule model.");
+            return new RuleDefinition(id, activation, condition, lifetime, FromLegacyAction(effect));
         }
 
         public static IReadOnlyList<EffectDef> ToLegacy(IReadOnlyList<RuleDefinition> rules)
@@ -313,12 +303,7 @@ namespace Emberfall.Core.Cards
             if (!(rule.Lifetime is SourceBoundLifetime) && !(rule.Lifetime is OneShotLifetime))
                 throw new InvalidOperationException(
                     $"Lifetime '{rule.Lifetime.GetType().Name}' requires the ongoing-effect runtime slice.");
-            VfxEvent? vfx = rule.Vfx is DefaultRuleVfx
-                ? (VfxEvent?)null
-                : rule.Vfx is OverrideRuleVfx overridden
-                    ? overridden.Event
-                    : throw new InvalidOperationException($"Unknown VFX node '{rule.Vfx.GetType().Name}'.");
-            return ToLegacyEffect(trigger, condition, rule.Action, vfx);
+            return ToLegacyEffect(trigger, condition, rule.Action);
         }
 
         private static RuleAction FromLegacyAction(EffectDef effect)
@@ -358,39 +343,38 @@ namespace Emberfall.Core.Cards
                 $"{effect.Action} requires an explicit target before typed adaptation.");
 
         private static EffectDef ToLegacyEffect(Trigger trigger, EffectConditionDef? condition,
-            RuleAction action, VfxEvent? vfx)
+            RuleAction action)
         {
             switch (action)
             {
-                case DamageAction a: return Effect(trigger, Verb.DEAL_DAMAGE, a.Amount, null, null, null, a.Target, condition, vfx);
-                case HealAction a: return Effect(trigger, Verb.HEAL, a.Amount, null, null, null, a.Target, condition, vfx);
-                case DrawAction a: return Effect(trigger, Verb.DRAW, a.Count, null, null, null, null, condition, vfx);
-                case SummonAction a: return Effect(trigger, Verb.SUMMON, a.Count, null, a.CardId, null, null, condition, vfx);
-                case ModifyStatsAction a: return Effect(trigger, Verb.BUFF, a.AttackDelta, a.HealthDelta, null, null, a.Target, condition, vfx);
-                case ReinforceAction a: return Effect(trigger, Verb.BUFF, 1, 1, null, null, a.Target, condition, vfx);
-                case GrantKeywordAction a: return Effect(trigger, Verb.GIVE_KEYWORD, null, null, null, a.Keyword, a.Target, condition, vfx);
-                case DestroyAction a: return Effect(trigger, Verb.DESTROY, null, null, null, null, a.Target, condition, vfx);
-                case ReturnToHandAction a: return Effect(trigger, Verb.RETURN_TO_HAND, null, null, null, null, a.Target, condition, vfx);
-                case SilenceAction a: return Effect(trigger, Verb.SILENCE, null, null, null, null, a.Target, condition, vfx);
-                case UnearthAction a: return Effect(trigger, Verb.UNEARTH, a.Count, null, null, null, null, condition, vfx);
-                case TransformAction a: return Effect(trigger, Verb.TRANSFORM, null, null, a.CardId, null, a.Target, condition, vfx);
-                case EquipAction a: return Effect(trigger, Verb.EQUIP, null, null, a.CardId, null, null, condition, vfx);
+                case DamageAction a: return Effect(trigger, Verb.DEAL_DAMAGE, a.Amount, null, null, null, a.Target, condition);
+                case HealAction a: return Effect(trigger, Verb.HEAL, a.Amount, null, null, null, a.Target, condition);
+                case DrawAction a: return Effect(trigger, Verb.DRAW, a.Count, null, null, null, null, condition);
+                case SummonAction a: return Effect(trigger, Verb.SUMMON, a.Count, null, a.CardId, null, null, condition);
+                case ModifyStatsAction a: return Effect(trigger, Verb.BUFF, a.AttackDelta, a.HealthDelta, null, null, a.Target, condition);
+                case ReinforceAction a: return Effect(trigger, Verb.BUFF, 1, 1, null, null, a.Target, condition);
+                case GrantKeywordAction a: return Effect(trigger, Verb.GIVE_KEYWORD, null, null, null, a.Keyword, a.Target, condition);
+                case DestroyAction a: return Effect(trigger, Verb.DESTROY, null, null, null, null, a.Target, condition);
+                case ReturnToHandAction a: return Effect(trigger, Verb.RETURN_TO_HAND, null, null, null, null, a.Target, condition);
+                case SilenceAction a: return Effect(trigger, Verb.SILENCE, null, null, null, null, a.Target, condition);
+                case UnearthAction a: return Effect(trigger, Verb.UNEARTH, a.Count, null, null, null, null, condition);
+                case TransformAction a: return Effect(trigger, Verb.TRANSFORM, null, null, a.CardId, null, a.Target, condition);
+                case EquipAction a: return Effect(trigger, Verb.EQUIP, null, null, a.CardId, null, null, condition);
                 case GainManaAction a:
-                    return new EffectDef(trigger, Verb.GAIN_MANA, a.Amount, null, null, null, vfx,
+                    return new EffectDef(trigger, Verb.GAIN_MANA, a.Amount, null, null, null, null,
                         permanent: a.Kind != ManaGainKind.Temporary,
                         empty: a.Kind == ManaGainKind.PermanentEmpty, condition: condition);
-                case AddToHandAction a: return Effect(trigger, Verb.ADD_TO_HAND, a.Count, null, a.CardId, null, null, condition, vfx);
-                case FrostAction a: return Effect(trigger, Verb.FROST, null, null, null, null, a.Target, condition, vfx);
-                case BackdraftAction a: return Effect(trigger, Verb.BACKDRAFT, a.Amount, null, null, null, null, condition, vfx);
+                case AddToHandAction a: return Effect(trigger, Verb.ADD_TO_HAND, a.Count, null, a.CardId, null, null, condition);
+                case FrostAction a: return Effect(trigger, Verb.FROST, null, null, null, null, a.Target, condition);
+                case BackdraftAction a: return Effect(trigger, Verb.BACKDRAFT, a.Amount, null, null, null, null, condition);
                 default:
                     throw new InvalidOperationException($"Rule action '{action.GetType().Name}' has no legacy runtime adapter.");
             }
         }
 
         private static EffectDef Effect(Trigger trigger, Verb action, int? amount, int? amount2,
-            string? cardId, Keyword? keyword, TargetSpec? target, EffectConditionDef? condition,
-            VfxEvent? vfx)
-            => new EffectDef(trigger, action, amount, amount2, cardId, keyword, vfx,
+            string? cardId, Keyword? keyword, TargetSpec? target, EffectConditionDef? condition)
+            => new EffectDef(trigger, action, amount, amount2, cardId, keyword, null,
                 condition: condition, target: target);
     }
 }

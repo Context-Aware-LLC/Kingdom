@@ -17,7 +17,7 @@ namespace Emberfall.Core.Cards
         {
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId", "cardText",
-            "flavorText", "factionId", "keywords", "effects", "_comment"
+            "flavorText", "factionId", "keywords", "effects", "rules", "_comment"
         };
 
         private static readonly HashSet<string> EffectProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -43,6 +43,11 @@ namespace Emberfall.Core.Cards
         private static readonly HashSet<string> ConditionProperties = new HashSet<string>(StringComparer.Ordinal)
         {
             "type", "value"
+        };
+
+        private static readonly HashSet<string> RuleProperties = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "id", "activation", "condition", "lifetime", "action"
         };
 
         public static CardDefinition Deserialize(string json)
@@ -88,13 +93,200 @@ namespace Emberfall.Core.Cards
                 foreach (var k in kw.EnumerateArray())
                     keywords.Add((Keyword)Enum.Parse(typeof(Keyword), k.GetString()!, ignoreCase: false));
 
-            var effects = new List<EffectDef>();
-            if (el.TryGetProperty("effects", out var fx) && fx.ValueKind == JsonValueKind.Array)
-                foreach (var e in fx.EnumerateArray())
-                    effects.Add(EffectFromElement(e));
+            bool hasEffects = el.TryGetProperty("effects", out var fx);
+            bool hasRules = el.TryGetProperty("rules", out var ruleElements);
+            if (hasEffects && hasRules)
+                throw new FormatException("Card JSON cannot declare both 'effects' and 'rules'.");
 
+            if (hasRules)
+            {
+                if (ruleElements.ValueKind != JsonValueKind.Array)
+                    throw new FormatException("Card JSON rules must be an array.");
+                var rules = new List<RuleDefinition>();
+                foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
+                return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
+                    keywords, rules, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
+            }
+
+            var effects = new List<EffectDef>();
+            if (hasEffects)
+            {
+                if (fx.ValueKind != JsonValueKind.Array)
+                    throw new FormatException("Card JSON effects must be an array.");
+                foreach (var e in fx.EnumerateArray()) effects.Add(EffectFromElement(e));
+            }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
                 keywords, effects, cardText, flavor, artId, setId, collectible, tribe, faction, reqPrim);
+        }
+
+        private static RuleDefinition RuleFromElement(JsonElement element)
+        {
+            RejectUnknownProperties(element, "rule", RuleProperties);
+            var id = new RuleId(RequiredString(element, "id", "rule.id"));
+            RuleActivation activation = ActivationFromElement(
+                RequiredObject(element, "activation", "rule.activation"));
+            RuleCondition condition = ConditionFromElement(
+                RequiredObject(element, "condition", "rule.condition"));
+            RuleLifetime lifetime = LifetimeFromElement(
+                RequiredObject(element, "lifetime", "rule.lifetime"));
+            RuleAction action = ActionFromElement(
+                RequiredObject(element, "action", "rule.action"));
+            return new RuleDefinition(id, activation, condition, lifetime, action);
+        }
+
+        private static RuleActivation ActivationFromElement(JsonElement element)
+        {
+            string type = RequiredString(element, "type", "rule.activation.type");
+            switch (type)
+            {
+                case "TRIGGERED":
+                    RejectUnknownProperties(element, "rule.activation", Set("type", "trigger"));
+                    return new TriggeredActivation(ReqEnum<Trigger>(element, "trigger"));
+                case "AURA":
+                    RejectUnknownProperties(element, "rule.activation", Set("type"));
+                    return AuraActivation.Instance;
+                default:
+                    throw new FormatException($"Unknown rule activation type '{type}'.");
+            }
+        }
+
+        private static RuleCondition ConditionFromElement(JsonElement element)
+        {
+            string type = RequiredString(element, "type", "rule.condition.type");
+            switch (type)
+            {
+                case "ALWAYS":
+                    RejectUnknownProperties(element, "rule.condition", Set("type"));
+                    return AlwaysCondition.Instance;
+                case "TURN_OWNER":
+                    RejectUnknownProperties(element, "rule.condition", Set("type", "owner"));
+                    return new TurnOwnerCondition(ReqEnum<TurnOwner>(element, "owner"));
+                default:
+                    throw new FormatException($"Unknown rule condition type '{type}'.");
+            }
+        }
+
+        private static RuleLifetime LifetimeFromElement(JsonElement element)
+        {
+            string type = RequiredString(element, "type", "rule.lifetime.type");
+            switch (type)
+            {
+                case "SOURCE_BOUND":
+                    RejectUnknownProperties(element, "rule.lifetime", Set("type"));
+                    return SourceBoundLifetime.Instance;
+                case "ONE_SHOT":
+                    RejectUnknownProperties(element, "rule.lifetime", Set("type"));
+                    return OneShotLifetime.Instance;
+                case "FINITE":
+                    RejectUnknownProperties(element, "rule.lifetime", Set("type", "uses"));
+                    return new FiniteLifetime(RequiredInt(element, "uses", "rule.lifetime.uses"));
+                case "PERMANENT":
+                    RejectUnknownProperties(element, "rule.lifetime", Set("type"));
+                    return PermanentLifetime.Instance;
+                default:
+                    throw new FormatException($"Unknown rule lifetime type '{type}'.");
+            }
+        }
+
+        private static RuleAction ActionFromElement(JsonElement element)
+        {
+            string type = RequiredString(element, "type", "rule.action.type");
+            switch (type)
+            {
+                case "DAMAGE":
+                    Fields(element, type, "amount", "target");
+                    return new DamageAction(Amount(element), TargetFromElement(element));
+                case "HEAL":
+                    Fields(element, type, "amount", "target");
+                    return new HealAction(Amount(element), TargetFromElement(element));
+                case "MODIFY_STATS":
+                    Fields(element, type, "attack", "health", "target");
+                    return new ModifyStatsAction(
+                        RequiredInt(element, "attack", "rule.action.attack"),
+                        RequiredInt(element, "health", "rule.action.health"), TargetFromElement(element));
+                case "REINFORCE":
+                    Fields(element, type, "target");
+                    return new ReinforceAction(TargetFromElement(element));
+                case "GRANT_KEYWORD":
+                    Fields(element, type, "keyword", "target");
+                    return new GrantKeywordAction(ReqEnum<Keyword>(element, "keyword"), TargetFromElement(element));
+                case "DESTROY":
+                    Fields(element, type, "target");
+                    return new DestroyAction(TargetFromElement(element));
+                case "RETURN_TO_HAND":
+                    Fields(element, type, "target");
+                    return new ReturnToHandAction(TargetFromElement(element));
+                case "SILENCE":
+                    Fields(element, type, "target");
+                    return new SilenceAction(TargetFromElement(element));
+                case "TRANSFORM":
+                    Fields(element, type, "cardId", "target");
+                    return new TransformAction(RequiredString(element, "cardId", "rule.action.cardId"),
+                        TargetFromElement(element));
+                case "FROST":
+                    Fields(element, type, "target");
+                    return new FrostAction(TargetFromElement(element));
+                case "TAKE_CONTROL":
+                    Fields(element, type, "target");
+                    return new TakeControlAction(TargetFromElement(element));
+                case "DRAW":
+                    Fields(element, type, "count");
+                    return new DrawAction(Count(element));
+                case "SUMMON":
+                    Fields(element, type, "cardId", "count");
+                    return new SummonAction(RequiredString(element, "cardId", "rule.action.cardId"), Count(element));
+                case "ADD_TO_HAND":
+                    Fields(element, type, "cardId", "count");
+                    return new AddToHandAction(RequiredString(element, "cardId", "rule.action.cardId"), Count(element));
+                case "EQUIP":
+                    Fields(element, type, "cardId");
+                    return new EquipAction(RequiredString(element, "cardId", "rule.action.cardId"));
+                case "GAIN_MANA":
+                    Fields(element, type, "amount", "manaKind");
+                    return new GainManaAction(Amount(element), ReqEnum<ManaGainKind>(element, "manaKind"));
+                case "BACKDRAFT":
+                    Fields(element, type, "amount");
+                    return new BackdraftAction(Amount(element));
+                case "GAIN_ARMOR":
+                    Fields(element, type, "amount");
+                    return new GainArmorAction(Amount(element));
+                case "UNEARTH":
+                    Fields(element, type, "count");
+                    return new UnearthAction(Count(element));
+                default:
+                    throw new FormatException($"Unknown rule action type '{type}'.");
+            }
+        }
+
+        private static int Amount(JsonElement element)
+            => RequiredInt(element, "amount", "rule.action.amount");
+
+        private static int Count(JsonElement element)
+            => RequiredInt(element, "count", "rule.action.count");
+
+        private static void Fields(JsonElement element, string type, params string[] fields)
+        {
+            var allowed = new HashSet<string>(StringComparer.Ordinal) { "type" };
+            foreach (string field in fields) allowed.Add(field);
+            RejectUnknownProperties(element, $"rule.action {type}", allowed);
+        }
+
+        private static HashSet<string> Set(params string[] fields)
+            => new HashSet<string>(fields, StringComparer.Ordinal);
+
+        private static JsonElement RequiredObject(JsonElement element, string name, string path)
+        {
+            if (!element.TryGetProperty(name, out JsonElement value) || value.ValueKind != JsonValueKind.Object)
+                throw new FormatException($"Card JSON {path} must be an object.");
+            return value;
+        }
+
+        private static int RequiredInt(JsonElement element, string name, string path)
+        {
+            if (!element.TryGetProperty(name, out JsonElement value) || value.ValueKind != JsonValueKind.Number ||
+                !value.TryGetInt32(out int result))
+                throw new FormatException($"Card JSON {path} must be an integer.");
+            return result;
         }
 
         private static EffectDef EffectFromElement(JsonElement e)
@@ -122,43 +314,7 @@ namespace Emberfall.Core.Cards
 
             TargetSpec? target = null;
             if (e.TryGetProperty("target", out var tgt))
-            {
-                if (tgt.ValueKind != JsonValueKind.Object)
-                    throw new FormatException("Card JSON target must be an object.");
-                RejectUnknownProperties(tgt, "target", TargetProperties);
-                string selector = RequiredString(tgt, "selector", "target.selector");
-                TargetFilterDef? filter = null;
-                if (tgt.TryGetProperty("filter", out var f))
-                {
-                    if (f.ValueKind != JsonValueKind.Object)
-                        throw new FormatException("Card JSON target.filter must be an object.");
-                    RejectUnknownProperties(f, "target.filter", FilterProperties);
-                    bool? damaged = null;
-                    if (f.TryGetProperty("damaged", out var damagedValue))
-                    {
-                        if (damagedValue.ValueKind != JsonValueKind.True &&
-                            damagedValue.ValueKind != JsonValueKind.False)
-                            throw new FormatException("Card JSON target.filter.damaged must be a boolean.");
-                        damaged = damagedValue.GetBoolean();
-                    }
-                    Tribe? tribe = null;
-                    if (f.TryGetProperty("tribe", out var tribeValue))
-                    {
-                        if (tribeValue.ValueKind != JsonValueKind.String)
-                            throw new FormatException("Card JSON target.filter.tribe must be a string.");
-                        tribe = (Tribe)System.Enum.Parse(typeof(Tribe), tribeValue.GetString()!, ignoreCase: false);
-                    }
-                    filter = new TargetFilterDef(damaged, tribe);
-                }
-
-                target = new TargetSpec(
-                    selector,
-                    TryEnum<TargetChosenBy>(tgt, "chosenBy"),
-                    Int(tgt, "count"),
-                    filter,
-                    Str(tgt, "binding"),
-                    Str(tgt, "distinctFrom"));
-            }
+                target = TargetFromElement(tgt);
 
             EffectConditionDef? condition = null;
             if (e.TryGetProperty("condition", out var gate) && gate.ValueKind == JsonValueKind.Object)
@@ -173,6 +329,41 @@ namespace Emberfall.Core.Cards
 
             return new EffectDef(trigger, action, amount, amount2, tokenId, grantedKeyword, vfx,
                 permanent: permanent, empty: empty, condition: condition, target: target);
+        }
+
+        private static TargetSpec TargetFromElement(JsonElement owner)
+        {
+            JsonElement target = owner;
+            if (owner.ValueKind == JsonValueKind.Object && owner.TryGetProperty("target", out JsonElement nested))
+                target = nested;
+            if (target.ValueKind != JsonValueKind.Object)
+                throw new FormatException("Card JSON target must be an object.");
+            RejectUnknownProperties(target, "target", TargetProperties);
+            string selector = RequiredString(target, "selector", "target.selector");
+            TargetFilterDef? filter = null;
+            if (target.TryGetProperty("filter", out var f))
+            {
+                if (f.ValueKind != JsonValueKind.Object)
+                    throw new FormatException("Card JSON target.filter must be an object.");
+                RejectUnknownProperties(f, "target.filter", FilterProperties);
+                bool? damaged = null;
+                if (f.TryGetProperty("damaged", out var damagedValue))
+                {
+                    if (damagedValue.ValueKind != JsonValueKind.True && damagedValue.ValueKind != JsonValueKind.False)
+                        throw new FormatException("Card JSON target.filter.damaged must be a boolean.");
+                    damaged = damagedValue.GetBoolean();
+                }
+                Tribe? tribe = null;
+                if (f.TryGetProperty("tribe", out var tribeValue))
+                {
+                    if (tribeValue.ValueKind != JsonValueKind.String)
+                        throw new FormatException("Card JSON target.filter.tribe must be a string.");
+                    tribe = (Tribe)Enum.Parse(typeof(Tribe), tribeValue.GetString()!, ignoreCase: false);
+                }
+                filter = new TargetFilterDef(damaged, tribe);
+            }
+            return new TargetSpec(selector, TryEnum<TargetChosenBy>(target, "chosenBy"),
+                Int(target, "count"), filter, Str(target, "binding"), Str(target, "distinctFrom"));
         }
 
         private static void RejectUnknownProperties(JsonElement el, string schemaLevel, HashSet<string> allowed)

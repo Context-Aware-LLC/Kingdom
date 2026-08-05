@@ -175,7 +175,10 @@ namespace Emberfall.Core.Cards
         public CardClass Class { get; }
         public Rarity Rarity { get; }
         public IReadOnlyList<Keyword> Keywords { get; }
-        public IReadOnlyList<EffectDef> Effects { get; }
+        private IReadOnlyList<EffectDef>? _effects;
+        /// <summary>Temporary legacy runtime projection. New code consumes <see cref="Rules"/>.</summary>
+        public IReadOnlyList<EffectDef> Effects
+            => _effects ?? (_effects = RuleRuntimeAdapter.ToLegacy(Rules));
         private IReadOnlyList<RuleDefinition>? _rules;
         /// <summary>The normalized typed rules. Legacy callers are adapted lazily during migration.</summary>
         public IReadOnlyList<RuleDefinition> Rules
@@ -230,7 +233,7 @@ namespace Emberfall.Core.Cards
             Class = @class;
             Rarity = rarity;
             Keywords = keywords ?? System.Array.Empty<Keyword>();
-            Effects = effects ?? System.Array.Empty<EffectDef>();
+            _effects = effects ?? System.Array.Empty<EffectDef>();
             CardText = cardText ?? "";
             FlavorText = flavorText ?? "";
             ArtId = artId ?? "";
@@ -261,7 +264,6 @@ namespace Emberfall.Core.Cards
             Rarity = rarity;
             Keywords = keywords ?? System.Array.Empty<Keyword>();
             _rules = rules ?? System.Array.Empty<RuleDefinition>();
-            Effects = RuleRuntimeAdapter.ToLegacy(_rules);
             CardText = cardText ?? "";
             FlavorText = flavorText ?? "";
             ArtId = artId ?? "";
