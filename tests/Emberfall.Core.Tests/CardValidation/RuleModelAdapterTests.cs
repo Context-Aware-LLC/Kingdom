@@ -17,7 +17,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 filter: new TargetFilterDef(damaged: true, tribe: Tribe.CONSTRUCT),
                 binding: "reinforced", distinctFrom: "first");
             var effect = new EffectDef(Trigger.ON_TURN_START, Verb.BUFF, amount: 2, amount2: 3,
-                tokenId: null, grantedKeyword: null, vfxOverride: null,
+                tokenId: null, grantedKeyword: null,
                 condition: new EffectConditionDef(ConditionType.TURN_OWNER, TurnOwner.CONTROLLER),
                 target: target);
 
@@ -30,14 +30,12 @@ namespace Emberfall.Core.Tests.CardValidation
             var action = (ModifyStatsAction)rule.Action;
             Assert.That((action.AttackDelta, action.HealthDelta, action.Target),
                 Is.EqualTo((2, 3, target)));
-
             EffectDef roundTrip = RuleRuntimeAdapter.ToLegacy(rule);
 
             Assert.That((roundTrip.Trigger, roundTrip.Action, roundTrip.Amount, roundTrip.Amount2),
                 Is.EqualTo((effect.Trigger, effect.Action, effect.Amount, effect.Amount2)));
             Assert.That(roundTrip.Condition!.TurnOwner, Is.EqualTo(TurnOwner.CONTROLLER));
             Assert.That(roundTrip.Target, Is.SameAs(target));
-            Assert.That(roundTrip.VfxOverride, Is.Null);
         }
 
         [Test]
@@ -102,14 +100,11 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Normalized_Rule_Surface_Has_No_Presentation_Or_Vfx_Node()
         {
-            Assert.That(typeof(RuleDefinition).GetProperty("Vfx"), Is.Null);
-            Assert.That(typeof(RuleDefinition).Assembly.GetType("Emberfall.Core.Cards.RuleVfx"), Is.Null);
-
-            var legacy = new EffectDef(Trigger.ON_CAST, Verb.DRAW, 1, null, null, null,
-                VfxEvent.onDraw);
-            var ex = Assert.Throws<System.InvalidOperationException>(() =>
-                RuleRuntimeAdapter.FromLegacy(new RuleId("legacy_vfx"), legacy));
-            Assert.That(ex!.Message, Does.Contain("VFX overrides"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(typeof(RuleDefinition).GetProperty("Vfx"), Is.Null);
+                Assert.That(typeof(RuleDefinition).Assembly.GetType("Emberfall.Core.Cards.RuleVfx"), Is.Null);
+            });
         }
 
         private static CardDefinition Card(RuleDefinition[] rules)

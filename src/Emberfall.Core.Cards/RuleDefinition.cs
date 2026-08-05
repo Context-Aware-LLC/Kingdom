@@ -274,9 +274,6 @@ namespace Emberfall.Core.Cards
             RuleLifetime lifetime = effect.Trigger == Trigger.ON_PLAY || effect.Trigger == Trigger.ON_CAST
                 ? (RuleLifetime)OneShotLifetime.Instance
                 : SourceBoundLifetime.Instance;
-            if (effect.VfxOverride.HasValue)
-                throw new InvalidOperationException(
-                    "Legacy rule-level VFX overrides are not part of the normalized rule model.");
             return new RuleDefinition(id, activation, condition, lifetime, FromLegacyAction(effect));
         }
 
@@ -361,7 +358,7 @@ namespace Emberfall.Core.Cards
                 case TransformAction a: return Effect(trigger, Verb.TRANSFORM, null, null, a.CardId, null, a.Target, condition);
                 case EquipAction a: return Effect(trigger, Verb.EQUIP, null, null, a.CardId, null, null, condition);
                 case GainManaAction a:
-                    return new EffectDef(trigger, Verb.GAIN_MANA, a.Amount, null, null, null, null,
+                    return new EffectDef(trigger, Verb.GAIN_MANA, a.Amount, null, null, null,
                         permanent: a.Kind != ManaGainKind.TEMPORARY,
                         empty: a.Kind == ManaGainKind.PERMANENT_EMPTY, condition: condition);
                 case AddToHandAction a: return Effect(trigger, Verb.ADD_TO_HAND, a.Count, null, a.CardId, null, null, condition);
@@ -374,7 +371,7 @@ namespace Emberfall.Core.Cards
 
         private static EffectDef Effect(Trigger trigger, Verb action, int? amount, int? amount2,
             string? cardId, Keyword? keyword, TargetSpec? target, EffectConditionDef? condition)
-            => new EffectDef(trigger, action, amount, amount2, cardId, keyword, null,
+            => new EffectDef(trigger, action, amount, amount2, cardId, keyword,
                 condition: condition, target: target);
     }
 }
