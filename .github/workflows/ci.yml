@@ -3,7 +3,7 @@ name: Emberfall CI — determinism gates
 # The 9-stage CI pipeline (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §2). At M1 there is NO paid Unity seat
 # (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
 #
-#   Stage 1  Lint + rebaseline-guard      BLOCKING   (dotnet format + golden rebaseline path-pair)
+#   Stage 1  Lint + vocabulary + rebaseline-guard      BLOCKING   (format + vocabulary + golden path-pair)
 #   Stage 2  Core unit tests              BLOCKING   (L1)
 #   Stage 3  Contract / interface tests   BLOCKING   (L2)
 #   Stage 3b Collection + CardValidation  BLOCKING   (ran in NO stage before 2026-08-01)
@@ -66,7 +66,7 @@ jobs:
       - name: Build (Release)
         run: dotnet build Emberfall.slnx -c Release --no-restore
 
-      # ── Stage 1 — Lint + rebaseline-guard (BLOCKING) ────────────────────────────
+      # ── Stage 1 — Lint + vocabulary + rebaseline-guard (BLOCKING) ───────────────
       - name: "Stage 1 · Lint (dotnet format)"
         run: dotnet format Emberfall.slnx --verify-no-changes --no-restore
 
@@ -75,6 +75,10 @@ jobs:
           chmod +x tools/ci/rebaseline-guard.sh
           base="origin/${{ github.base_ref || 'master' }}"
           tools/ci/rebaseline-guard.sh "$base"
+
+      - name: "Stage 1 · Canonical vocabulary"
+        shell: pwsh
+        run: ./tools/ci/vocabulary-gate.ps1
 
       # ── Stage 2 — Core unit tests (BLOCKING, L1) ────────────────────────────────
       - name: "Stage 2 · Core unit tests"

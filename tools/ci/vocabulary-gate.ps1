@@ -8,8 +8,7 @@
 #   pwsh tools/ci/vocabulary-gate.ps1 -MigrationNote docs\migration-note.md
 #   pwsh tools/ci/vocabulary-gate.ps1 -SelfTest
 #
-# The current repository intentionally has findings while the migration is in progress. This
-# script is deliberately not wired into the workflow until that work lands.
+# This is a blocking CI gate for active source, test, Unity, and tooling assets.
 
 [CmdletBinding()]
 param(
@@ -171,6 +170,13 @@ function Get-RootRelativePath {
     return $FullPath.Substring($prefix.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) -replace '\\', '/'
 }
 
+function Convert-PathToSearchText {
+    param([string] $RelativePath)
+    $withAcronymBoundaries = $RelativePath -creplace '([A-Z]+)([A-Z][a-z])', '$1 $2'
+    $withCamelCaseBoundaries = $withAcronymBoundaries -creplace '([a-z0-9])([A-Z])', '$1 $2'
+    return $withCamelCaseBoundaries -replace '[/\\._-]+', ' '
+}
+
 function Invoke-VocabularyScan {
     param(
         [string] $ScanRoot,
@@ -199,12 +205,19 @@ function Invoke-VocabularyScan {
     $licensePhrase = [regex]::new('\bfree\s+of\s+' + [regex]::Escape($patterns.Words.b.ToLowerInvariant()) + '\b',
         [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     $allowedLicenseHitsSeen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
-    $counts = @{ Broad = 0; Upper = 0; Compound = 0; Allowed = 0; Unexplained = 0; Files = 0 }
+    $counts = @{ Broad = 0; Upper = 0; Compound = 0; Path = 0; Allowed = 0; Unexplained = 0; Files = 0 }
     $findings = [System.Collections.Generic.List[object]]::new()
 
     foreach ($file in Get-ActiveFiles $normalRoot) {
-        if (-not (Test-TextFile $file)) { continue }
         $relative = Get-RootRelativePath $normalRoot $file.FullName
+        $pathText = Convert-PathToSearchText $relative
+        foreach ($match in $patterns.Broad.Matches($pathText)) {
+            $counts.Path++
+            $counts.Unexplained++
+            $findings.Add([pscustomobject]@{ Path = $relative; Line = $null; Token = $match.Value; Pattern = 'path' })
+        }
+
+        if (-not (Test-TextFile $file)) { continue }
         $counts.Files++
         $lines = [IO.File]::ReadAllLines($file.FullName)
         for ($index = 0; $index -lt $lines.Length; $index++) {
@@ -234,7 +247,12 @@ function Invoke-VocabularyScan {
 
     if (-not $Quiet -and -not $SummaryOnly) {
         foreach ($finding in $findings | Sort-Object Path, Line, Pattern, Token) {
-            Write-Host ('VOCABULARY GATE FAIL [{0}] {1}:{2} token={3}' -f $finding.Pattern, $finding.Path, $finding.Line, $finding.Token)
+            if ($finding.Pattern -eq 'path') {
+                Write-Host ('VOCABULARY GATE FAIL [path] {0} token={1}' -f $finding.Path, $finding.Token)
+            }
+            else {
+                Write-Host ('VOCABULARY GATE FAIL [{0}] {1}:{2} token={3}' -f $finding.Pattern, $finding.Path, $finding.Line, $finding.Token)
+            }
         }
     }
     if (-not $Quiet) {
@@ -242,6 +260,7 @@ function Invoke-VocabularyScan {
         Write-Host ('BROAD_HITS={0}' -f $counts.Broad)
         Write-Host ('CANONICAL_UPPERCASE_HITS={0}' -f $counts.Upper)
         Write-Host ('COMPOUND_SYMBOL_HITS={0}' -f $counts.Compound)
+        Write-Host ('PATH_NAME_HITS={0}' -f $counts.Path)
         Write-Host ('ALLOWED_HITS={0}' -f $counts.Allowed)
         Write-Host ('UNEXPLAINED_HITS={0}' -f $counts.Unexplained)
     }
@@ -272,6 +291,14 @@ function Invoke-SelfTest {
         }
         Remove-Item -LiteralPath $note -Force
 
+        $pathFailure = Join-Path $testRoot ('src/' + $patterns.Words.g + 'Fixture.cs')
+        [IO.File]::WriteAllText($pathFailure, 'public sealed class Fixture {}')
+        $pathRed = Invoke-VocabularyScan -ScanRoot $testRoot -AllowedNotes @() -Quiet
+        if ($pathRed.Unexplained -ne 1 -or $pathRed.Path -ne 1) {
+            throw "self-test path case failed: unexplained=$($pathRed.Unexplained), path=$($pathRed.Path)"
+        }
+        Remove-Item -LiteralPath $pathFailure -Force
+
         [IO.File]::WriteAllText((Join-Path $testRoot 'src/bad.cs'), $patterns.Words.j + [Environment]::NewLine + 'Keyword.' + $patterns.Words.a)
         $red = Invoke-VocabularyScan -ScanRoot $testRoot -AllowedNotes @() -Quiet
         if ($red.Unexplained -lt 4) {
@@ -279,6 +306,8 @@ function Invoke-SelfTest {
         }
 
         Write-Host 'SELF_TEST_CLEAN=PASS'
+        Write-Host 'SELF_TEST_PATH_FAILURE_DETECTED=PASS'
+        Write-Host ('SELF_TEST_PATH_FAILURE_HITS={0}' -f $pathRed.Path)
         Write-Host 'SELF_TEST_FAILURE_DETECTED=PASS'
         Write-Host ('SELF_TEST_FAILURE_HITS={0}' -f $red.Unexplained)
     }
