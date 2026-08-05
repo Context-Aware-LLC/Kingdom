@@ -38,7 +38,7 @@ WHAT IS A SEED (human-authored, tracked, never auto-overwritten):
   art-authoring metadata does not belong mixed into it).
 
 A card with no seed entry still gets a full prompt: every field is filled with a generic,
-clearly-marked placeholder built from name/tribe/keywords/cardText. That placeholder is
+clearly-marked placeholder built from name/tribe/keywords. That placeholder is
 "plausible but general" by design, per Sam's own description of the tool -- a draft to react
 to and rewrite, never a finished brief to submit as-is.
 
@@ -198,8 +198,6 @@ def placeholder_subject(card):
         bits.append(f"{article} {card['tribe'].lower()}")
     if card.get("keywords"):
         bits.append(f"keywords {', '.join(card['keywords'])}")
-    if card.get("cardText"):
-        bits.append(f"effect: {card['cardText']}")
     return (
         "[DRAFT — placeholder only, replace with a real subject before generating] "
         + "; ".join(bits) + "."

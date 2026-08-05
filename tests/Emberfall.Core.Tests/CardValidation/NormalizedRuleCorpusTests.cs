@@ -24,6 +24,8 @@ namespace Emberfall.Core.Tests.CardValidation
                     string cardId = card.GetProperty("id").GetString()!;
                     Assert.That(card.TryGetProperty("effects", out _), Is.False,
                         $"{cardId} still declares the removed effects[] schema.");
+                    Assert.That(card.TryGetProperty("cardText", out _), Is.False,
+                        $"{cardId} still declares the removed cardText schema.");
                     Assert.That(card.TryGetProperty("rules", out JsonElement rules), Is.True,
                         $"{cardId} must explicitly declare rules[], including an empty array.");
                     Assert.That(rules.ValueKind, Is.EqualTo(JsonValueKind.Array));
