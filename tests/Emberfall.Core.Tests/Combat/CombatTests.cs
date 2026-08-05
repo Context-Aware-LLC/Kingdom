@@ -338,7 +338,7 @@ namespace Emberfall.Core.Tests.Combat
         public void OVERWHELM_Carries_Excess_Damage_To_Enemy_Hero()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("cskirmisher", 7, 6, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("crusher", 7, 6, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // 3 health; 7−3 = 4 overflow to hero
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -404,7 +404,7 @@ namespace Emberfall.Core.Tests.Combat
         public void OVERWHELM_Exact_Lethal_Carries_Nothing()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("cskirmisher", 3, 6, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("crusher", 3, 6, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // health lands exactly on 0
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -417,7 +417,7 @@ namespace Emberfall.Core.Tests.Combat
         public void OVERWHELM_Blocked_By_Aegis_No_Overflow()
         {
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("cskirmisher", 7, 6, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("crusher", 7, 6, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("shielded", 1, 3, Keyword.AEGIS));
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -461,7 +461,7 @@ namespace Emberfall.Core.Tests.Combat
             // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
             var s = MainPhase();
             s.Players[0].Hero.CurrentHealth = 10;
-            var atk = Board(s, 0, Minion("drain-cskirmisher", 7, 6, Keyword.LIFEDRAIN, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("drain-crusher", 7, 6, Keyword.LIFEDRAIN, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
@@ -518,7 +518,7 @@ namespace Emberfall.Core.Tests.Combat
         {
             // G0 ruling R-2(c), Sam 2026-07-14: overflow carries damage, not riders.
             var s = MainPhase();
-            var atk = Board(s, 0, Minion("rime-cskirmisher", 7, 6, Keyword.FROST, Keyword.OVERWHELM));
+            var atk = Board(s, 0, Minion("rime-crusher", 7, 6, Keyword.FROST, Keyword.OVERWHELM));
             var def = Board(s, 1, Minion("fodder", 1, 3)); // 7−3 = 4 overflow to enemy hero
 
             Proc().Execute(s, Attack(s, atk.Id, def.Id));

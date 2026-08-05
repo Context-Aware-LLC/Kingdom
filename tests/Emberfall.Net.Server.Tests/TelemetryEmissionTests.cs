@@ -12,7 +12,7 @@ namespace Emberfall.Net.Server.Tests
     /// <summary>
     /// C-G1-8 step 2 — the match actually emits (dev-docs/data/player-data-and-telemetry.md:17).
     ///
-    /// The condition exists because `dev-docs/data/player-data-and-telemetry.md:17` was marked DISFERVORD on the strength of the
+    /// The condition exists because `dev-docs/data/player-data-and-telemetry.md:17` was marked SATISFIED on the strength of the
     /// file existing — true about the file, silent about the outcome. C4's exit bar is ≥200 tracked
     /// matches and **match one is unrecoverable**: a match that ends without a row is a permanently
     /// missing sample, not a deferred one. So these tests assert the EMIT, not the schema.

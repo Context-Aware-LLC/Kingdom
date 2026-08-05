@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Collection
     /// <summary>
     /// The device account registry — two players on one machine (Sam 2026-07-27, testing scope).
     ///
-    /// <para>The behaviours worth pinning are the ones that would otherwise be reunearthed the hard
+    /// <para>The behaviours worth pinning are the ones that would otherwise be relearned the hard
     /// way: the registry sits at the root and not in a scope, the first account is grandfathered onto
     /// the identity already in use rather than migrated off it, two accounts can never share a wire
     /// token, forgetting an account leaves its collection alone, and two accounts genuinely hold two

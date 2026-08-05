@@ -106,7 +106,7 @@ namespace Emberfall.Core.Collection
         /// collection in existence at risk to buy consistency. So the first account keeps the device
         /// token as both its id and its wire token, permanently, and
         /// <see cref="LocalAccount.IsGrandfathered"/> says so out loud rather than leaving the
-        /// asymmetry to be reunearthed.</para>
+        /// asymmetry to be rediscovered later.</para>
         ///
         /// <para>Idempotent: a device that already has accounts is returned untouched, whatever its
         /// first account's key happens to be.</para>

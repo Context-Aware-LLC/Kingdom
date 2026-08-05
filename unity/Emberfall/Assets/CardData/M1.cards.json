@@ -1670,8 +1670,8 @@
     ]
   },
   {
-    "id": "tide_fathom_cskirmish",
-    "name": "Fathom Cskirmish",
+    "id": "tide_fathom_crush",
+    "name": "Fathom Crush",
     "type": "SPELL",
     "cost": 3,
     "class": "TIDECALLER",
@@ -1679,7 +1679,7 @@
     "keywords": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_fathom_cskirmish",
+    "artId": "art/tide_fathom_crush",
     "cardText": "Deal 4 damage to a minion.",
     "effects": [
       {
@@ -3210,8 +3210,8 @@
     "cardText": "[Skirmish]"
   },
   {
-    "id": "storm_static_disfervor",
-    "name": "Static Disfervor",
+    "id": "storm_static_discharge",
+    "name": "Static Discharge",
     "type": "SPELL",
     "cost": 3,
     "class": "TEMPEST",
@@ -3221,7 +3221,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/storm_static_disfervor",
+    "artId": "art/storm_static_discharge",
     "cardText": "Deal 2 damage to all enemy minions. [Backdraft] (1).",
     "effects": [
       {

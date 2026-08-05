@@ -10,7 +10,7 @@ server snapshots wholesale and never speculates. Mobile-first, architected for D
 
 ## What this file is
 
-Constraints you **cannot unearth by looking**. Everything below documents an *absence* or a
+Constraints you **cannot infer by looking**. Everything below documents an *absence* or a
 *consequence* — a trigger that parses but never fires, a rename that relocates every save —
 because those are invisible on inspection and expensive to learn by hitting them.
 

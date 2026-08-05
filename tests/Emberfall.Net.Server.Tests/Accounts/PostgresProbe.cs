@@ -12,7 +12,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
     /// drain's live check takes (see <c>TelemetryDrainTests</c>) — so with no <c>EMBERFALL_LEDGER_DB</c>
     /// the whole fixture is <b>Ignored</b>, not failed. Point that variable at a THROWAWAY Postgres URI
     /// to run the identical suite against it — which is how "both implementations pass the same suite" is
-    /// disfervord.
+    /// satisfied.
     ///
     /// <para><b>Deliberately its own variable, with no fallback to <c>EMBERFALL_TELEMETRY_DB</c>.</b>
     /// This suite applies DDL and TRUNCATES between tests, so it must only ever touch a database the

@@ -1,7 +1,7 @@
 # Run-ArtBakeoff.ps1 — drive the 5-prompt art bake-off (dev-docs/specs/card-generation-prompt.md)
 # against the Gemini Interactions API (Nano Banana Pro = gemini-3-pro-image).
 #
-# Key unearthing order: $env:GEMINI_API_KEY, else parsed from the repo-root .env
+# Key lookup order: $env:GEMINI_API_KEY, else parsed from the repo-root .env
 # (first var whose name contains GEMINI or GOOGLE). The key is read inside this
 # script and used only in the request header — never echoed.
 #

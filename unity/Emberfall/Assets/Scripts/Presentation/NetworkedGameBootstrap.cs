@@ -33,7 +33,7 @@ namespace Emberfall.Presentation
     ///     synchronous LocalMatchSession, and it can only be proven in-editor at runtime.
     ///
     /// RC-F10: OnConnectionStateChanged → <c>MatchRunner.StopMatch</c> on Dead/Ended — the runner's
-    /// only truth source is the mirror, which a dead socket frosts forever, so death must be pushed
+    /// only truth source is the mirror, which stops changing after a dead socket, so death must be pushed
     /// in from outside.
     /// </summary>
     public sealed class NetworkedGameBootstrap : MonoBehaviour

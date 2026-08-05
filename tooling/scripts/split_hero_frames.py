@@ -15,7 +15,7 @@ THREE THINGS THIS GETS RIGHT, EACH LEARNED THE HARD WAY.
    column near centre is ONE PIXEL wide at x=1009 on IronEmber and a 22 px gap at
    x=995..1016 on CarvedStone. Neither contains x=1024. A midline cut lands on the
    weapon's inboard boss. The model does not put the rings where the prompt asks,
-   so the seam is unearthed as a connected component, never assumed.
+   so the seam is found as a connected component, never assumed.
 
 2. THE BLACK THRESHOLD MUST BE TIGHT. The painted regions measure (0,0,0) outside
    and (1,1,0) in the sockets. At a threshold of 24 the flood ate IronEmber: dark

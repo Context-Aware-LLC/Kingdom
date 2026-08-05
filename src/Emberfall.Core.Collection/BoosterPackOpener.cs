@@ -354,7 +354,7 @@ namespace Emberfall.Core.Collection
         /// A rolled rarity the pool cannot honour falls back to the nearest rarity it can — down first,
         /// then up. Degenerate by construction (a pairing with no Legendaries), but the alternative is
         /// an index-out-of-range in the pick phase on a content gap, which is the worst possible place
-        /// to unearth one.
+        /// to find one.
         /// </summary>
         private static Rarity Substitute(Rarity rolled, Dictionary<Rarity, List<CardDefinition>> byRarity)
         {
