@@ -78,7 +78,7 @@ namespace Emberfall.Core.Tests.Interpreter
             RuleDefinition rule = Rule("cast", Trigger.ON_CAST);
             var definition = new CardDefinition("lifedrain_spell", "lifedrain_spell",
                 CardType.SPELL, 1, null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
-                new[] { Keyword.LIFEDRAIN }, new[] { rule }, "", "", "art/lifedrain_spell",
+                new[] { Keyword.LIFEDRAIN }, new[] { rule }, "", "art/lifedrain_spell",
                 SetId.CORE, true, null, "", false);
             var carrier = new CardInstance(new InstanceId(18), definition.Id, P0)
             {

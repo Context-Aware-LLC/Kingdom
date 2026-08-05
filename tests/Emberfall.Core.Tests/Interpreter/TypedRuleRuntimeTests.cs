@@ -76,7 +76,7 @@ namespace Emberfall.Core.Tests.Interpreter
             CardDefinition spell = Card("seize", CardType.SPELL, new[] { take });
             CardDefinition minionDef = new CardDefinition("guard", "guard", CardType.MINION, 1,
                 2, 3, null, CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<RuleDefinition>(), "", "", "art/guard", SetId.CORE,
+                System.Array.Empty<RuleDefinition>(), "", "art/guard", SetId.CORE,
                 true, null, "", false);
             var db = new FakeCardDatabase().Register(spell).Register(minionDef);
             GameState state = State();

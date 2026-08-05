@@ -87,13 +87,18 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void Keyword_Enum_Has_The_18_Canonical_Keywords()
+        public void Keyword_Enum_Has_The_16_Carrier_Behaviour_Keywords()
         {
             // dev-docs/specs/card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
-            // REKINDLING set (M3) adds REINFORCE — 18 implemented keywords total.
-            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(18));
+            // REKINDLING set (M3) adds REINFORCE. Herald and Toll are derived trigger labels,
+            // leaving 16 actual carrier behaviours.
+            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(16));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
+            Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("HERALD"));
+            Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("TOLL"));
+            Assert.That((int)Keyword.LIFEDRAIN, Is.EqualTo(6),
+                "Removing derived labels must not renumber later keyword ordinals.");
         }
 
         [Test]
