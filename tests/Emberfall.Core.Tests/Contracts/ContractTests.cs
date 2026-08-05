@@ -97,8 +97,21 @@ namespace Emberfall.Core.Tests.Contracts
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("HERALD"));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("TOLL"));
-            Assert.That((int)Keyword.LIFEDRAIN, Is.EqualTo(6),
-                "Removing derived labels must not renumber later keyword ordinals.");
+            Assert.Multiple(() =>
+            {
+                Assert.That((int)Keyword.LIFEDRAIN, Is.EqualTo(6));
+                Assert.That((int)Keyword.DOUBLESTRIKE, Is.EqualTo(7));
+                Assert.That((int)Keyword.SHROUD, Is.EqualTo(8));
+                Assert.That((int)Keyword.VENOM, Is.EqualTo(9));
+                Assert.That((int)Keyword.ARCANE_SURGE, Is.EqualTo(10));
+                Assert.That((int)Keyword.SILENCE, Is.EqualTo(11));
+                Assert.That((int)Keyword.FROST, Is.EqualTo(12));
+                Assert.That((int)Keyword.BACKDRAFT, Is.EqualTo(13));
+                Assert.That((int)Keyword.REKINDLE, Is.EqualTo(14));
+                Assert.That((int)Keyword.OVERWHELM, Is.EqualTo(15));
+                Assert.That((int)Keyword.VANGUARD, Is.EqualTo(16));
+                Assert.That((int)Keyword.REINFORCE, Is.EqualTo(17));
+            });
         }
 
         [Test]

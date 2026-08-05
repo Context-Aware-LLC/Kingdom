@@ -64,7 +64,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     actions[i]));
             var card = new CardDefinition("all_nodes", "All Nodes", CardType.SPELL, 1,
                 null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules, "", "", "art/all_nodes", SetId.CORE,
+                System.Array.Empty<Keyword>(), rules, "", "art/all_nodes", SetId.CORE,
                 false, null, "", false);
 
             string serialized = CardJsonRowIO.Serialize(EditableCard.FromDefinition(card).ToDefinition());
