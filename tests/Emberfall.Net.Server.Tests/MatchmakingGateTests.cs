@@ -123,10 +123,57 @@ namespace Emberfall.Net.Server.Tests
             }
         }
 
-        private static Task SendHelloAsync(ClientWebSocket ws, string deviceToken)
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task Gate_Rejects_A_Mismatched_Client_Contract_Before_Queueing()
+        {
+            string replays = Path.Combine(
+                Path.GetTempPath(), "emberfall-contract-gate-" + Guid.NewGuid().ToString("N"));
+            var queue = new ControlledQueue();
+            var built = ServerApp.BuildWithGate(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = SessionHarness.CardDataDir(),
+                ReplaysDir = replays,
+                MatchmakingQueue = queue,
+                Options = new ServerOptions { EngineContractVersion = "interfaces.v4" },
+            });
+
+            await built.App.StartAsync();
+            try
+            {
+                var baseUri = new Uri(built.App.Urls.First());
+                var wsUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws");
+                using var socket = new ClientWebSocket();
+                await socket.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(socket, TokenA, "interfaces.v3");
+
+                var buffer = new byte[256];
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                WebSocketReceiveResult result = await socket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer), cts.Token);
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(result.MessageType, Is.EqualTo(WebSocketMessageType.Close));
+                    Assert.That(queue.Count, Is.Zero, "An incompatible client must never enter matchmaking.");
+                    Assert.That(built.Gate.LiveSessions, Is.Zero);
+                });
+            }
+            finally
+            {
+                await built.App.StopAsync();
+                await DeleteDirectoryAsync(replays);
+            }
+        }
+
+        private static Task SendHelloAsync(
+            ClientWebSocket ws,
+            string deviceToken,
+            string contractVersion = "interfaces.v4")
         {
             byte[] frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, "interfaces.v3", "test", "matchmaking-gate-tests"),
+                new HelloMsg(deviceToken, contractVersion, "test", "matchmaking-gate-tests"),
                 ProtocolCodec.PreMatch,
                 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);

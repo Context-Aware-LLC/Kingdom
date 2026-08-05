@@ -27,5 +27,6 @@ namespace Emberfall.Net.Client
         Cancelled,
         Forfeited,
         Desync,
+        ContractMismatch,
     }
 }

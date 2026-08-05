@@ -246,7 +246,7 @@ namespace Emberfall.Net.Server.Tests
         private static Task SendHelloAsync(ClientWebSocket ws, string deviceToken, string displayName)
         {
             var frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, "interfaces.v3", "test", "displayname-tests", displayName),
+                new HelloMsg(deviceToken, "interfaces.v4", "test", "displayname-tests", displayName),
                 ProtocolCodec.PreMatch, 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);
         }
@@ -260,7 +260,7 @@ namespace Emberfall.Net.Server.Tests
             string json =
                 "{\"v\":1,\"type\":\"hello\",\"matchId\":\"" + ProtocolCodec.PreMatch.Value + "\",\"seq\":0," +
                 "\"body\":{\"deviceToken\":\"" + deviceToken + "\"," +
-                "\"clientContractVersion\":\"interfaces.v3\",\"platform\":\"test\",\"buildId\":\"legacy\"}}";
+                "\"clientContractVersion\":\"interfaces.v4\",\"platform\":\"test\",\"buildId\":\"legacy\"}}";
             var bytes = System.Text.Encoding.UTF8.GetBytes(json);
             return ws.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
         }

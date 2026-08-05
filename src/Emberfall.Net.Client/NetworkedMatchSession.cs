@@ -247,15 +247,18 @@ namespace Emberfall.Net.Client
 
         // ── Inbound ───────────────────────────────────────────────────────────────
 
-        /// <summary>Decode + dispatch one frame. NEVER throws on wire input — a decode failure is a
-        /// <c>resync(DecodeError)</c> (§4.5), not an exception.</summary>
+        /// <summary>Decode + dispatch one frame. Recoverable corruption requests resync; an unknown
+        /// semantic event or envelope version is a terminal contract mismatch.</summary>
         internal void HandleFrame(byte[] frame)
         {
             _lastRecvMs = _opts.Clock.NowMs;
             var res = ProtocolCodec.Decode(frame);
             if (!res.Ok)
             {
-                RequestResync(ResyncReason.DecodeError, StateVersion);
+                if (res.Error == ProtocolError.UnknownEventKind || res.Error == ProtocolError.VersionMismatch)
+                    FailContractMismatch(res.Detail ?? res.Error.ToString());
+                else
+                    RequestResync(ResyncReason.DecodeError, StateVersion);
                 BumpInbound();
                 return;
             }
@@ -276,6 +279,13 @@ namespace Emberfall.Net.Client
 
         private void OnMatchStart(MatchStartMsg ms)
         {
+            if (!string.Equals(ms.EngineContractVersion, _opts.ContractVersion, StringComparison.Ordinal))
+            {
+                FailContractMismatch(
+                    $"Server engine contract '{ms.EngineContractVersion}' does not match client '{_opts.ContractVersion}'.");
+                return;
+            }
+
             lock (_lock)
             {
                 _matchId = new MatchId(ms.Snapshot.State.Id.Value);
@@ -445,6 +455,21 @@ namespace Emberfall.Net.Client
             _opts.OnDesyncCapture(new DesyncCapture(
                 _matchId.Value ?? string.Empty, _seat, s.StateVersion, envelopeSeq,
                 s.Hash, Emberfall.Core.Serialization.GameStateHasher.Hash(s.State), rawFrame));
+        }
+
+        private void FailContractMismatch(string detail)
+        {
+            lock (_lock)
+            {
+                if (_state is ConnectionState.Ended or ConnectionState.Dead) return;
+                _deadReason = DeadReason.ContractMismatch;
+                SetStateUnlocked(ConnectionState.Dead);
+                _resyncPending = false;
+                _pendingEvents.Clear();
+                _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
+                ClearPendingUnlocked();
+                _matchStarted?.TrySetException(new InvalidOperationException(detail));
+            }
         }
 
         // ── Outbound + state ────────────────────────────────────────────────────────

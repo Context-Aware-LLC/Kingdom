@@ -25,7 +25,7 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var sent = new HelloMsg(
                 DeviceToken: "8f14e45fce8f4b6ea1c2d3e4f5a6b7c8",
-                ClientContractVersion: "interfaces.v3",
+                ClientContractVersion: "interfaces.v4",
                 Platform: "windows",
                 BuildId: "m2-alpha-7",
                 DisplayName: "Sam Ember");
@@ -44,7 +44,7 @@ namespace Emberfall.Net.Protocol.Tests
             // whole condition exists to close, and it has to fail at the codec, not downstream.
             var bytes = System.Text.Encoding.UTF8.GetBytes(
                 "{\"v\":1,\"matchId\":\"m\",\"seq\":0,\"type\":\"hello\",\"body\":{" +
-                "\"clientContractVersion\":\"interfaces.v3\",\"platform\":\"windows\",\"buildId\":\"b\"}}");
+                "\"clientContractVersion\":\"interfaces.v4\",\"platform\":\"windows\",\"buildId\":\"b\"}}");
 
             var res = ProtocolCodec.Decode(bytes);
 
@@ -58,7 +58,7 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var bytes = System.Text.Encoding.UTF8.GetBytes(
                 "{\"v\":1,\"matchId\":\"m\",\"seq\":0,\"type\":\"hello\",\"body\":{" +
-                "\"deviceToken\":\"\",\"clientContractVersion\":\"interfaces.v3\"," +
+                "\"deviceToken\":\"\",\"clientContractVersion\":\"interfaces.v4\"," +
                 "\"platform\":\"windows\",\"buildId\":\"b\"}}");
 
             var res = ProtocolCodec.Decode(bytes);
