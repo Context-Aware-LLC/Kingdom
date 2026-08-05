@@ -1,0 +1,70 @@
+using System;
+using System.Collections.Generic;
+using Emberfall.Core.Cards;
+using Emberfall.Core.Contracts;
+
+namespace Emberfall.Presentation
+{
+    /// <summary>Player-visible, rule-id-free status row for one projected ongoing effect.</summary>
+    public readonly struct OngoingEffectStatus
+    {
+        public InstanceId Id { get; }
+        public string SourceName { get; }
+        public string Owner { get; }
+        public string Remaining { get; }
+
+        public OngoingEffectStatus(InstanceId id, string sourceName, string owner,
+            string remaining)
+        {
+            Id = id;
+            SourceName = sourceName;
+            Owner = owner;
+            Remaining = remaining;
+        }
+    }
+
+    /// <summary>
+    /// Pure adapter from the projected Contracts surface to UI-ready status text. It resolves only
+    /// the public originating definition id; the authority-only rule reference is neither needed
+    /// nor reachable here.
+    /// </summary>
+    public static class OngoingEffectStatusModel
+    {
+        public static IReadOnlyList<OngoingEffectStatus> Build(GameState state,
+            ICardDatabase database, PlayerId viewer)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (database == null) throw new ArgumentNullException(nameof(database));
+            state.SeatOf(viewer); // reject unknown viewers rather than inventing an ownership label
+
+            var rows = new List<OngoingEffectStatus>(state.OngoingEffects.Count);
+            foreach (OngoingEffectInstance effect in state.OngoingEffects)
+            {
+                string sourceName = database.TryGet(effect.SourceDefinitionId,
+                    out CardDefinition definition)
+                    ? definition.Name
+                    : effect.SourceDefinitionId;
+                string owner = effect.Controller == viewer ? "You" : "Opponent";
+                rows.Add(new OngoingEffectStatus(effect.Id, sourceName, owner,
+                    RemainingText(effect)));
+            }
+            return rows;
+        }
+
+        private static string RemainingText(OngoingEffectInstance effect)
+        {
+            switch (effect.Lifetime)
+            {
+                case OngoingEffectLifetime.PERMANENT:
+                    return "Permanent";
+                case OngoingEffectLifetime.ONE_SHOT:
+                    return "1 trigger remaining";
+                case OngoingEffectLifetime.FINITE:
+                    int uses = effect.RemainingUses.GetValueOrDefault();
+                    return uses == 1 ? "1 trigger remaining" : $"{uses} triggers remaining";
+                default:
+                    return "Unknown lifetime";
+            }
+        }
+    }
+}

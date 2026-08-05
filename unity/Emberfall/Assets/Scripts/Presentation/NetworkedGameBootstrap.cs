@@ -267,6 +267,9 @@ namespace Emberfall.Presentation
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
             }
 
+            var ongoingEffects = OngoingEffectsView.Create(localId, db);
+            matchRunner.OnStateUpdated += ongoingEffects.OnStateUpdated;
+
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
             {
