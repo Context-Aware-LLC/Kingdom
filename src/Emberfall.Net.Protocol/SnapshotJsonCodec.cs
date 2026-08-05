@@ -45,6 +45,11 @@ namespace Emberfall.Net.Protocol
             w.Name("pendingChoice");
             if (s.PendingChoice is null) w.Null();
             else WritePendingChoice(w, s.PendingChoice);
+            w.Name("ongoingEffects");
+            w.BeginArray();
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+                WriteOngoingEffect(w, effect);
+            w.EndArray();
             w.EndObject();
         }
 
@@ -160,6 +165,22 @@ namespace Emberfall.Net.Protocol
             w.EndObject();
         }
 
+        private static void WriteOngoingEffect(JsonWriter w, OngoingEffectInstance effect)
+        {
+            w.BeginObject();
+            w.Name("id"); w.Str(WirePrimitives.InstanceToWire(effect.Id));
+            w.Name("controller"); w.Str(effect.Controller.Value);
+            w.Name("sourceDefinitionId"); w.Str(effect.SourceDefinitionId);
+            // Authority snapshots need this key to resume deterministic execution. Projected
+            // snapshots carry the empty sentinel because GameStateProjector never copies it.
+            w.Name("ruleId"); w.Str(effect.RuleId);
+            w.Name("lifetime"); w.Str(effect.Lifetime.ToString());
+            w.Name("remainingUses");
+            if (effect.RemainingUses.HasValue) w.I32(effect.RemainingUses.Value);
+            else w.Null();
+            w.EndObject();
+        }
+
         // ── Read (rebuilds via Contracts-only public surface) ───────────────────
 
         public static bool TryRead(JVal obj, out GameState state, out string detail)
@@ -193,6 +214,16 @@ namespace Emberfall.Net.Protocol
             if (!obj.TryGet("pendingChoice", out var pcVal)) { detail = "missing pendingChoice"; return false; }
             if (!pcVal.IsNull && !TryReadPendingChoice(pcVal, out pendingChoice, ref detail)) return false;
 
+            if (!obj.TryGet("ongoingEffects", out var ongoingVal) || ongoingVal.Kind != JKind.Array)
+            { detail = "missing/bad ongoingEffects"; return false; }
+            var ongoingEffects = new List<OngoingEffectInstance>();
+            foreach (JVal item in ongoingVal.Items!)
+            {
+                if (!TryReadOngoingEffect(item, out OngoingEffectInstance effect, ref detail))
+                    return false;
+                ongoingEffects.Add(effect);
+            }
+
             var rng = new DeterministicRandom(0UL);
             rng.SetRawState(rngRaw);
 
@@ -212,6 +243,7 @@ namespace Emberfall.Net.Protocol
                 Mulligan1Done = mull1,
                 PendingChoice = pendingChoice,
             };
+            state.OngoingEffects.AddRange(ongoingEffects);
             return true;
         }
 
@@ -395,6 +427,42 @@ namespace Emberfall.Net.Protocol
                 result.Options.Add(o);
             }
             pc = result;
+            return true;
+        }
+
+        private static bool TryReadOngoingEffect(JVal obj, out OngoingEffectInstance effect,
+            ref string detail)
+        {
+            effect = null!;
+            if (obj.Kind != JKind.Object)
+            { detail = "ongoing effect is not an object"; return false; }
+            if (!TryInstanceField(obj, "id", out InstanceId id, ref detail)) return false;
+            if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
+            if (!TryStrField(obj, "sourceDefinitionId", out string definitionId, ref detail)) return false;
+            if (!TryStrField(obj, "ruleId", out string ruleId, ref detail)) return false;
+            if (!TryEnumField(obj, "lifetime", out OngoingEffectLifetime lifetime, ref detail)) return false;
+            if (!obj.TryGet("remainingUses", out JVal remainingVal))
+            { detail = "missing/bad 'remainingUses'"; return false; }
+            int? remainingUses = null;
+            if (!remainingVal.IsNull)
+            {
+                if (!remainingVal.TryI32(out int uses))
+                { detail = "bad remainingUses"; return false; }
+                remainingUses = uses;
+            }
+
+            if (string.IsNullOrWhiteSpace(definitionId))
+            { detail = "empty sourceDefinitionId"; return false; }
+            if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
+            { detail = "permanent ongoing effect cannot carry remainingUses"; return false; }
+            if (lifetime != OngoingEffectLifetime.PERMANENT &&
+                (!remainingUses.HasValue || remainingUses.Value <= 0))
+            { detail = "bounded ongoing effect requires positive remainingUses"; return false; }
+            if (lifetime == OngoingEffectLifetime.ONE_SHOT && remainingUses != 1)
+            { detail = "one-shot ongoing effect must have one remaining use"; return false; }
+
+            effect = new OngoingEffectInstance(id, new PlayerId(controller), definitionId,
+                lifetime, remainingUses) { RuleId = ruleId };
             return true;
         }
 

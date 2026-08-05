@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Emberfall.Core.Contracts;
+using Emberfall.Core.Projection;
 using Emberfall.Core.Tests.Support;
 using Emberfall.Net.Protocol;
 
@@ -83,6 +84,56 @@ namespace Emberfall.Net.Protocol.Tests
             var m = RoundTrip<SnapshotMsg>(SnapshotMsg.Of(s));
             Assert.That(m.StateVersion, Is.EqualTo(s.StateVersion));
             Assert.That(m.VerifyIntegrity(), Is.True);
+        }
+
+        [Test]
+        public void Projected_Ongoing_Effect_RoundTrips_Without_Leaking_Its_Rule_Id()
+        {
+            GameState authority = CanonicalStateFixtures.BuildSeedState();
+            GameState projected = GameStateProjector.Project(authority, authority.Players[0].Id);
+
+            byte[] bytes = ProtocolCodec.Encode(SnapshotMsg.Of(projected), projected.Id, Seq);
+            string json = Encoding.UTF8.GetString(bytes);
+            DecodeResult decoded = ProtocolCodec.Decode(bytes);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(json, Does.Not.Contain("turn_end_echo"));
+                Assert.That(json, Does.Contain("\"ruleId\":\"\""),
+                    "The projected authority key is an empty sentinel, never hidden truth.");
+                Assert.That(decoded.Ok, Is.True, $"{decoded.Error} {decoded.Detail}");
+            });
+            var snapshot = (SnapshotMsg)decoded.Message!;
+            Assert.That(snapshot.State.OngoingEffects, Has.Count.EqualTo(1));
+            Assert.That(snapshot.State.OngoingEffects[0].SourceDefinitionId,
+                Is.EqualTo("ongoing_seed"));
+            Assert.That(snapshot.State.OngoingEffects[0].RemainingUses, Is.EqualTo(2));
+            Assert.That(snapshot.VerifyIntegrity(), Is.True);
+        }
+
+        [Test]
+        public void Snapshot_Strictly_Rejects_Invalid_Or_Missing_Ongoing_Lifetime_State()
+        {
+            GameState state = CanonicalStateFixtures.BuildSeedState();
+            string json = Encoding.UTF8.GetString(
+                ProtocolCodec.Encode(SnapshotMsg.Of(state), state.Id, Seq));
+
+            DecodeResult permanentWithUses = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"lifetime\":\"FINITE\"", "\"lifetime\":\"PERMANENT\"")));
+            DecodeResult oneShotWithTwoUses = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"lifetime\":\"FINITE\"", "\"lifetime\":\"ONE_SHOT\"")));
+            DecodeResult missingList = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(
+                json.Replace("\"ongoingEffects\"", "\"unknownOngoingEffects\"")));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(permanentWithUses.Ok, Is.False);
+                Assert.That(permanentWithUses.Error, Is.EqualTo(ProtocolError.BadField));
+                Assert.That(oneShotWithTwoUses.Ok, Is.False);
+                Assert.That(oneShotWithTwoUses.Error, Is.EqualTo(ProtocolError.BadField));
+                Assert.That(missingList.Ok, Is.False);
+                Assert.That(missingList.Error, Is.EqualTo(ProtocolError.BadField));
+            });
         }
 
         [Test]

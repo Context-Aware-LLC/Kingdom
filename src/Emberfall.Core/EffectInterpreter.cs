@@ -189,8 +189,8 @@ namespace Emberfall.Core
             if (instance.Lifetime == OngoingEffectLifetime.PERMANENT) return;
             instance.RemainingUses = instance.RemainingUses.GetValueOrDefault() - 1;
             if (!instance.IsExpired) return;
-            _state.OngoingEffects.RemoveAt(index);
             _buf.Emit(GameEventKind.OngoingEffectExpired, source: instance.Id);
+            _state.OngoingEffects.RemoveAt(index);
         }
 
         // ── Death resolution (the toll cascade engine, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §3.3) ─

@@ -42,6 +42,7 @@ namespace Emberfall.Core.Serialization
             w.Bool(s.Mulligan0Done);
             w.Bool(s.Mulligan1Done);
             WalkPendingChoice(w, s.PendingChoice);  // A2b tail seam — always null in M2 (§7 2026-07-15)
+            WalkOngoingEffects(w, s.OngoingEffects);
         }
 
         private static void WalkPlayer(ICanonicalWriter w, PlayerState p)
@@ -133,6 +134,21 @@ namespace Emberfall.Core.Serialization
             // the Unearth pool — the walk is order-PRESERVING only, never an ordering source.
             foreach (var id in pc.Options) w.Str(id);
             w.U64(pc.ChoiceSequence);
+        }
+
+        private static void WalkOngoingEffects(ICanonicalWriter w,
+            List<OngoingEffectInstance> ongoingEffects)
+        {
+            w.I32(ongoingEffects.Count);
+            foreach (OngoingEffectInstance effect in ongoingEffects)
+            {
+                w.I32(effect.Id.Value);
+                w.Str(effect.Controller.Value);
+                w.Str(effect.SourceDefinitionId);
+                w.Str(effect.RuleId);
+                w.Enum(effect.Lifetime);
+                w.NullableI32(effect.RemainingUses);
+            }
         }
 
         private static void WalkMana(ICanonicalWriter w, ManaPool m)

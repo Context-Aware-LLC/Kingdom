@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
+using Emberfall.Core.Projection;
 using Emberfall.Core.Tests.Support;
 using NUnit.Framework;
 
@@ -54,6 +55,16 @@ namespace Emberfall.Core.Tests.Interpreter
                 .Single().Source, Is.EqualTo(ongoing.Id));
             Assert.That(turn.Events.Where(e => e.Kind == GameEventKind.OngoingEffectExpired)
                 .Single().Source, Is.EqualTo(ongoing.Id));
+            foreach (int viewerSeat in new[] { 0, 1 })
+            {
+                var projected = GameStateProjector.ProjectEvents(turn.Events,
+                    processor.LastEventVisibility, viewerSeat);
+                Assert.That(projected.Where(e => e.Kind == GameEventKind.OngoingEffectTriggered)
+                    .Single().Source, Is.EqualTo(ongoing.Id));
+                Assert.That(projected.Where(e => e.Kind == GameEventKind.OngoingEffectExpired)
+                    .Single().Source, Is.EqualTo(ongoing.Id),
+                    "Expiry identity is public even though the instance is removed after the event.");
+            }
         }
 
         [Test]

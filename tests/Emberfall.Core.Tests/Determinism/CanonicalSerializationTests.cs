@@ -38,7 +38,7 @@ namespace Emberfall.Core.Tests.Determinism
             foreach (var (type, expected) in CanonicalStateFixtures.Manifest.Select(kv => (kv.Key, kv.Value)))
             {
                 var actual = type
-                    .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                     .Select(f => f.Name)
                     .OrderBy(n => n, StringComparer.Ordinal)
                     .ToArray();
@@ -98,7 +98,9 @@ namespace Emberfall.Core.Tests.Determinism
         // hash-canonical because it controls future permanent ability resolution.
         // EF-017b: Enchantment.IsAura is explicit continuous-effect provenance and therefore
         // hash-canonical. The seed includes an enchantment so this pin witnesses its walk.
-        private const string PinnedSeedDigest = "2699d236847380c882dace8a68a3f4ffc28425cfcbc82829f9a99f24d5467e2f";
+        // NOR-31: the tail now includes active carrierless spell observers and their internal
+        // authored rule reference. The seed exercises a finite observer with remaining uses.
+        private const string PinnedSeedDigest = "c6ece0aa9434231a6c4f7d582ed91e45d08db7df450077fa59e07c233e8aaaf6";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()

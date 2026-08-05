@@ -48,6 +48,15 @@ namespace Emberfall.Core.Projection
                 PendingChoice = ProjectPendingChoice(s.PendingChoice, viewer, viewerSeat, ref maxVisibleId),
             };
 
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+            {
+                // Definition/controller/lifetime are public presentation facts. The internal authored
+                // rule id is deliberately not copied into the projected graph (default deny).
+                proj.OngoingEffects.Add(new OngoingEffectInstance(
+                    Track(effect.Id, ref maxVisibleId), effect.Controller,
+                    effect.SourceDefinitionId, effect.Lifetime, effect.RemainingUses));
+            }
+
             // NextInstanceCounter: REDACTED — normalized to a pure function of what THIS viewer
             // sees (max visible id + 1), killing the hidden-mint gap channel (§5.2/§5.2.1).
             proj.NextInstanceCounter = maxVisibleId + 1;
@@ -249,6 +258,8 @@ namespace Emberfall.Core.Projection
                 foreach (var c in ps.Hand) if (c.Id.Equals(id)) return seat == 0 ? IdVisibility.Owner0 : IdVisibility.Owner1;
                 foreach (var c in ps.Deck) if (c.Id.Equals(id)) return IdVisibility.Hidden;
             }
+            foreach (OngoingEffectInstance effect in s.OngoingEffects)
+                if (effect.Id.Equals(id)) return IdVisibility.Public;
             return IdVisibility.Hidden;
         }
     }

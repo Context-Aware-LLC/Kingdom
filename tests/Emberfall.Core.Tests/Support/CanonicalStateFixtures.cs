@@ -24,7 +24,11 @@ namespace Emberfall.Core.Tests.Support
             {
                 "ActionResolutionsThisTurn", "ActivePlayer", "FatigueCounter0", "FatigueCounter1",
                 "Id", "Mulligan0Done", "Mulligan1Done", "NextEventSequence", "NextInstanceCounter",
-                "Outcome", "PendingChoice", "Phase", "Players", "Rng", "StateVersion", "TurnNumber"
+                "OngoingEffects", "Outcome", "PendingChoice", "Phase", "Players", "Rng", "StateVersion", "TurnNumber"
+            },
+            [typeof(OngoingEffectInstance)] = new[]
+            {
+                "Controller", "Id", "Lifetime", "RemainingUses", "RuleId", "SourceDefinitionId"
             },
             [typeof(PendingChoice)] = new[]
             {
@@ -68,7 +72,20 @@ namespace Emberfall.Core.Tests.Support
             ["GameState.NextEventSequence"] = s => s.NextEventSequence++,
             ["GameState.Mulligan0Done"] = s => s.Mulligan0Done = !s.Mulligan0Done,
             ["GameState.Mulligan1Done"] = s => s.Mulligan1Done = !s.Mulligan1Done,
+            ["GameState.OngoingEffects"] = s => s.OngoingEffects.Clear(),
             ["GameState.PendingChoice"] = s => s.PendingChoice = null,   // present → absent flips the flag byte
+
+            // OngoingEffectInstance (the seeded finite observer)
+            ["OngoingEffectInstance.Id"] = s => Ongoing(s).Id = new InstanceId(81),
+            ["OngoingEffectInstance.Controller"] = s => Ongoing(s).Controller = s.Players[1].Id,
+            ["OngoingEffectInstance.SourceDefinitionId"] = s => Ongoing(s).SourceDefinitionId = "ongoing_other",
+            ["OngoingEffectInstance.RuleId"] = s => Ongoing(s).RuleId = "other_rule",
+            ["OngoingEffectInstance.Lifetime"] = s =>
+            {
+                Ongoing(s).Lifetime = OngoingEffectLifetime.ONE_SHOT;
+                Ongoing(s).RemainingUses = 1;
+            },
+            ["OngoingEffectInstance.RemainingUses"] = s => Ongoing(s).RemainingUses = 3,
 
             // PendingChoice (seeded non-null — M2 production never populates it, so the seed is
             // the ONLY coverage of the non-null walk branch until Phase 2; §7 ruling item 7)
@@ -215,7 +232,7 @@ namespace Emberfall.Core.Tests.Support
                 FatigueCounter0 = 1,
                 FatigueCounter1 = 0,
                 ActionResolutionsThisTurn = 4,
-                NextInstanceCounter = 9,
+                NextInstanceCounter = 10,
                 NextEventSequence = 42,
                 Mulligan0Done = true,
                 Mulligan1Done = true,
@@ -233,7 +250,11 @@ namespace Emberfall.Core.Tests.Support
                 Options = { "disc_seed_a", "disc_seed_b" },
                 ChoiceSequence = 11,
             };
+            s.OngoingEffects.Add(OngoingEffectInstance.CreateFinite(new InstanceId(9), p0Id,
+                "ongoing_seed", "turn_end_echo", 2));
             return s;
         }
+
+        private static OngoingEffectInstance Ongoing(GameState s) => s.OngoingEffects[0];
     }
 }
