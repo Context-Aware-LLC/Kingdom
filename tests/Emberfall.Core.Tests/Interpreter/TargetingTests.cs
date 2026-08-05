@@ -4,7 +4,6 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
 using NUnit.Framework;
-using Verb = Emberfall.Core.Contracts.Action;
 
 namespace Emberfall.Core.Tests.Interpreter
 {
@@ -35,18 +34,18 @@ namespace Emberfall.Core.Tests.Interpreter
         private static CardDefinition Minion(string id, Tribe? tribe = null)
             => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<EffectDef>(), "", "", "art/" + id, SetId.CORE, true,
+                System.Array.Empty<RuleDefinition>(), "", "", "art/" + id, SetId.CORE, true,
                 tribe, "", false);
 
-        private static CardDefinition Spell(string id, params EffectDef[] effects)
+        private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), effects,
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules,
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardDefinition Weapon(string id, int attack = 2, int durability = 2,
             params Keyword[] keywords)
             => new CardDefinition(id, id, CardType.WEAPON, 1, attack, null, durability,
-                CardClass.NEUTRAL, Rarity.COMMON, keywords, System.Array.Empty<EffectDef>(),
+                CardClass.NEUTRAL, Rarity.COMMON, keywords, System.Array.Empty<RuleDefinition>(),
                 "", "", "art/" + id, SetId.CORE, true, null, "", false);
 
         private static CardInstance Board(GameState state, int seat, CardDefinition def)
@@ -159,11 +158,11 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Named_Bindings_Allow_Two_Independent_Player_Targets()
         {
-            var first = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, binding: "first"));
-            var second = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 2, null, null, null, null,
-                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER,
-                    binding: "second", distinctFrom: "first"));
+            RuleDefinition first = TestRules.Rule("first", Trigger.ON_CAST,
+                new DamageAction(1, new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, binding: "first")));
+            RuleDefinition second = TestRules.Rule("second", Trigger.ON_CAST,
+                new DamageAction(2, new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER,
+                    binding: "second", distinctFrom: "first")));
             var spell = Spell("split_bolt", first, second);
             var body = Minion("body");
             var db = new FakeCardDatabase().Register(spell).Register(body);
@@ -184,12 +183,12 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Player_Choice_Plan_Exposes_Binding_Order_Counts_And_Distinctness()
         {
-            var first = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, count: 2,
-                    binding: "first"));
-            var second = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                target: new TargetSpec("ANY_ENEMY", TargetChosenBy.PLAYER,
-                    binding: "second", distinctFrom: "first"));
+            RuleDefinition first = TestRules.Rule("first", Trigger.ON_CAST,
+                new DamageAction(1, new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, count: 2,
+                    binding: "first")));
+            RuleDefinition second = TestRules.Rule("second", Trigger.ON_CAST,
+                new DamageAction(1, new TargetSpec("ANY_ENEMY", TargetChosenBy.PLAYER,
+                    binding: "second", distinctFrom: "first")));
             var spell = Spell("choice_plan", first, second);
             var body = Minion("body");
             var db = new FakeCardDatabase().Register(spell).Register(body);
@@ -211,11 +210,11 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Binding_Distinctness_Rejects_The_Same_Target_Without_Mutation()
         {
-            var first = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, binding: "first"));
-            var second = new EffectDef(Trigger.ON_CAST, Verb.DEAL_DAMAGE, 1, null, null, null, null,
-                target: new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER,
-                    binding: "second", distinctFrom: "first"));
+            RuleDefinition first = TestRules.Rule("first", Trigger.ON_CAST,
+                new DamageAction(1, new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER, binding: "first")));
+            RuleDefinition second = TestRules.Rule("second", Trigger.ON_CAST,
+                new DamageAction(1, new TargetSpec("ANY_MINION", TargetChosenBy.PLAYER,
+                    binding: "second", distinctFrom: "first")));
             var spell = Spell("split_bolt", first, second);
             var body = Minion("body");
             var db = new FakeCardDatabase().Register(spell).Register(body);
@@ -237,9 +236,9 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Action_Capability_Filters_Presentation_And_Rejects_A_NoOp_Player_Target()
         {
-            var buff = Spell("buff", new EffectDef(Trigger.ON_CAST, Verb.BUFF,
-                1, 1, null, null, null,
-                target: new TargetSpec("ANY_FRIENDLY", TargetChosenBy.PLAYER)));
+            var buff = Spell("buff", TestRules.Rule("buff", Trigger.ON_CAST,
+                new ModifyStatsAction(1, 1,
+                    new TargetSpec("ANY_FRIENDLY", TargetChosenBy.PLAYER))));
             var body = Minion("body");
             var db = new FakeCardDatabase().Register(buff).Register(body);
             var state = State();
@@ -265,14 +264,12 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var body = Minion("body");
             var blade = Weapon("blade");
-            var recover = Spell("recover", new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                null, null, null, null, null,
-                target: new TargetSpec("FRIENDLY_GRAVEYARD", TargetChosenBy.PLAYER)));
-            var tutor = Spell("tutor", new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                null, null, null, null, null,
-                target: new TargetSpec("FRIENDLY_DECK", TargetChosenBy.RANDOM)));
-            var disarm = Spell("disarm", new EffectDef(Trigger.ON_CAST, Verb.RETURN_TO_HAND,
-                null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
+            var recover = Spell("recover", TestRules.Rule("recover", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("FRIENDLY_GRAVEYARD", TargetChosenBy.PLAYER))));
+            var tutor = Spell("tutor", TestRules.Rule("tutor", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("FRIENDLY_DECK", TargetChosenBy.RANDOM))));
+            var disarm = Spell("disarm", TestRules.Rule("disarm", Trigger.ON_CAST,
+                new ReturnToHandAction(new TargetSpec("FRIENDLY_WEAPON"))));
             var db = new FakeCardDatabase().Register(body).Register(blade)
                 .Register(recover).Register(tutor).Register(disarm);
 
@@ -319,12 +316,12 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             CardDefinition blade = Weapon("blade", keywords: Keyword.LIFEDRAIN);
             CardDefinition replacement = Weapon("replacement", attack: 4, durability: 3);
-            var silence = Spell("silence_weapon", new EffectDef(Trigger.ON_CAST, Verb.SILENCE,
-                null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
-            var destroy = Spell("destroy_weapon", new EffectDef(Trigger.ON_CAST, Verb.DESTROY,
-                null, null, null, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
-            var transform = Spell("transform_weapon", new EffectDef(Trigger.ON_CAST, Verb.TRANSFORM,
-                null, null, replacement.Id, null, null, target: new TargetSpec("FRIENDLY_WEAPON")));
+            var silence = Spell("silence_weapon", TestRules.Rule("silence", Trigger.ON_CAST,
+                new SilenceAction(new TargetSpec("FRIENDLY_WEAPON"))));
+            var destroy = Spell("destroy_weapon", TestRules.Rule("destroy", Trigger.ON_CAST,
+                new DestroyAction(new TargetSpec("FRIENDLY_WEAPON"))));
+            var transform = Spell("transform_weapon", TestRules.Rule("transform", Trigger.ON_CAST,
+                new TransformAction(replacement.Id, new TargetSpec("FRIENDLY_WEAPON"))));
             var db = new FakeCardDatabase().Register(blade).Register(replacement)
                 .Register(silence).Register(destroy).Register(transform);
 
