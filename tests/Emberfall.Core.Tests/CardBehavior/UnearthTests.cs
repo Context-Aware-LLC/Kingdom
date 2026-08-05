@@ -313,7 +313,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 type == CardType.MINION ? 1 : (int?)null,
                 type == CardType.WEAPON ? 1 : (int?)null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(),
-                rules ?? Array.Empty<RuleDefinition>(), "", "", "art/" + id, SetId.CORE,
+                rules ?? Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
                 collectible, null, "", held);
 
         private sealed class PoolDatabase : ICardDatabase
