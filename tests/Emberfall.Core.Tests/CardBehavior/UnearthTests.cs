@@ -57,11 +57,11 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
-        public void Invalid_Count_Or_Empty_Pool_Fails_Closed_Without_Rng_Or_Offer()
+        public void Invalid_Count_Fails_Closed_Without_Rng_Or_Offer()
         {
-            foreach (int count in new[] { -1, 0, 3 })
+            foreach (int count in new[] { -1, 0 })
             {
-                var db = new PoolDatabase(Array.Empty<CardDefinition>());
+                var db = new PoolDatabase(new[] { Card("eligible") });
                 var (state, processor, source) = Ready(db, count, seed: 91UL);
                 ulong rngBefore = state.Rng.RawState;
 
@@ -73,6 +73,77 @@ namespace Emberfall.Core.Tests.CardBehavior
                 Assert.That(state.Rng.RawState, Is.EqualTo(rngBefore));
                 Assert.That(result.Events.Any(e => e.Kind == GameEventKind.UnearthOffered), Is.False);
             }
+        }
+
+        [Test]
+        public void Empty_Eligible_Pool_Fails_Closed_Without_Rng_Or_Offer()
+        {
+            var db = new PoolDatabase(new[]
+            {
+                Card("not_collectible", collectible: false),
+                Card("held", held: true),
+            });
+            var (state, processor, source) = Ready(db, count: 3, seed: 92UL);
+            ulong rngBefore = state.Rng.RawState;
+
+            CommandResult result = processor.Execute(state,
+                new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>()));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(state.PendingChoice, Is.Null);
+            Assert.That(state.Rng.RawState, Is.EqualTo(rngBefore));
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.UnearthOffered), Is.False);
+        }
+
+        [Test]
+        public void Choice_Sequence_Is_Monotonic_Across_Offers()
+        {
+            var db = new PoolDatabase(new[] { Card("a"), Card("b"), Card("c") });
+            var (state, processor, firstSource) = Ready(db, count: 2, seed: 2UL);
+            CommandResult firstOffer = processor.Execute(state,
+                new PlayCardIntent(P0, firstSource.Id, 0, Array.Empty<TargetRef>()));
+            ulong firstSequence = state.PendingChoice!.ChoiceSequence;
+            Assert.That(processor.Execute(state, new UnearthChoiceIntent(P0,
+                state.PendingChoice.Options[0], firstSequence)).Accepted, Is.True);
+
+            var secondSource = new CardInstance(state.NextInstanceId(), "unearth_source", P0)
+                { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(secondSource);
+            CommandResult secondOffer = processor.Execute(state,
+                new PlayCardIntent(P0, secondSource.Id, 0, Array.Empty<TargetRef>()));
+
+            Assert.That(secondOffer.Accepted, Is.True);
+            Assert.That(state.PendingChoice!.ChoiceSequence, Is.GreaterThan(firstSequence));
+            Assert.That(state.PendingChoice.ChoiceSequence,
+                Is.EqualTo(secondOffer.Events.Single(e => e.Kind == GameEventKind.UnearthOffered).Sequence));
+            Assert.That(firstOffer.Events.Single(e => e.Kind == GameEventKind.UnearthOffered).Sequence,
+                Is.EqualTo(firstSequence));
+        }
+
+        [Test]
+        public void Pending_Choice_Order_And_Sequence_Are_Hash_Canonical()
+        {
+            GameState state = MainState(93UL);
+            state.PendingChoice = new PendingChoice
+            {
+                Chooser = P0,
+                Kind = PendingChoiceKind.Unearth,
+                Source = state.Players[0].Hero.Id,
+                ChoiceSequence = 51,
+                Options = { "choice_first", "choice_second", "choice_third" },
+            };
+            string baseline = GameStateHasher.Hash(state);
+
+            (state.PendingChoice.Options[0], state.PendingChoice.Options[1]) =
+                (state.PendingChoice.Options[1], state.PendingChoice.Options[0]);
+            Assert.That(GameStateHasher.Hash(state), Is.Not.EqualTo(baseline),
+                "option order changes which choice AutoConfirm will make");
+
+            (state.PendingChoice.Options[0], state.PendingChoice.Options[1]) =
+                (state.PendingChoice.Options[1], state.PendingChoice.Options[0]);
+            state.PendingChoice.ChoiceSequence++;
+            Assert.That(GameStateHasher.Hash(state), Is.Not.EqualTo(baseline),
+                "the stale-intent correlation id is canonical state");
         }
 
         [TestCaseSource(nameof(RejectedChoices))]

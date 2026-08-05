@@ -3,6 +3,7 @@ using System.Text;
 using NUnit.Framework;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
+using Emberfall.Core.Serialization;
 using Emberfall.Core.Tests.Support;
 using Emberfall.Net.Protocol;
 
@@ -84,6 +85,14 @@ namespace Emberfall.Net.Protocol.Tests
             var m = RoundTrip<SnapshotMsg>(SnapshotMsg.Of(s));
             Assert.That(m.StateVersion, Is.EqualTo(s.StateVersion));
             Assert.That(m.VerifyIntegrity(), Is.True);
+            Assert.That(m.State.PendingChoice, Is.Not.Null);
+            Assert.That(m.State.PendingChoice!.Options, Is.EqualTo(s.PendingChoice!.Options),
+                "the RNG offer order must survive snapshot transport exactly");
+            Assert.That((m.State.PendingChoice.Chooser, m.State.PendingChoice.Kind,
+                    m.State.PendingChoice.Source, m.State.PendingChoice.ChoiceSequence),
+                Is.EqualTo((s.PendingChoice.Chooser, s.PendingChoice.Kind,
+                    s.PendingChoice.Source, s.PendingChoice.ChoiceSequence)));
+            Assert.That(GameStateHasher.Hash(m.State), Is.EqualTo(GameStateHasher.Hash(s)));
         }
 
         [Test]
