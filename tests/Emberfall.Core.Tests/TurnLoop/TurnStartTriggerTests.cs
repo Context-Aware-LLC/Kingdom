@@ -462,6 +462,46 @@ namespace Emberfall.Core.Tests.TurnLoop
         }
 
         [Test]
+        public void Turn_Start_Resets_Frost_And_Attack_State_Before_Observer_Drain_And_Main()
+        {
+            // This is deliberately one end-to-end turn boundary, rather than isolated flag tests. The
+            // incoming source starts frosted and exhausted, yet its turn-start toll resolves; once that
+            // drain and draw finish, the same minion can attack in Main.
+            var db = Db(TurnOwner.CONTROLLER);
+            var (host, s) = Match(db, Vanilla, seed: 241UL);
+            int outgoing = s.SeatOf(s.ActivePlayer);
+            int incoming = 1 - outgoing;
+            CardInstance toller = PutOnBoard(s, db, incoming, Toller);
+            toller.IsFrosted = true;
+            toller.SummonedThisTurn = true;
+            toller.AttacksUsedThisTurn = 1;
+            s.Players[incoming].Hero.IsFrosted = true;
+            s.Players[incoming].HeroAttacksUsedThisTurn = 1;
+            int heroBefore = s.Players[outgoing].Hero.CurrentHealth;
+
+            CommandResult start = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(start.Events.Any(e => e.Kind == GameEventKind.DamageApplied && e.Source == toller.Id),
+                    Is.True, "the source snapshot drains after its incoming turn reset");
+                Assert.That(s.Players[outgoing].Hero.CurrentHealth, Is.EqualTo(heroBefore - 1));
+                Assert.That(s.Players[incoming].Hero.IsFrosted, Is.False);
+                Assert.That(s.Players[incoming].HeroAttacksUsedThisTurn, Is.EqualTo(0));
+                Assert.That((toller.IsFrosted, toller.SummonedThisTurn, toller.AttacksUsedThisTurn),
+                    Is.EqualTo((false, false, 0)));
+                Assert.That(s.Phase, Is.EqualTo(TurnPhase.Main), "the full drain completes before Main.");
+            });
+
+            CommandResult attack = Accept(host, new AttackIntent(s.Players[incoming].Id, toller.Id,
+                new TargetRef(s.Players[outgoing].Hero.Id)));
+
+            Assert.That(attack.Events.Any(e => e.Kind == GameEventKind.AttackDeclared && e.Source == toller.Id),
+                Is.True, "cleared frost, summoning sickness, and attack budget permit the next Main action.");
+            Assert.That(toller.AttacksUsedThisTurn, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Lethal_Turn_Start_Toll_Ends_The_Match_Before_The_Draw()
         {
             // ORDERING, second half — the one the EF-010 seam comment called out: settle the cascade
