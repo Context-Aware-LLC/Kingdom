@@ -38,28 +38,19 @@ namespace Emberfall.Core
         /// <summary>Create one carrierless observer for each future-trigger rule on a resolved spell.</summary>
         public int CreateOngoingEffects(CardDefinition spell, PlayerId controller)
         {
-            if (spell.Type != CardType.SPELL) return 0;
             int created = 0;
             for (int i = 0; i < spell.Rules.Count; i++)
             {
                 RuleDefinition rule = spell.Rules[i];
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
-                if (!EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect, trigger))
+                if (!RuleLifetimeCapabilities.TryCreateOngoingEffect(spell.Type, trigger,
+                        rule.Lifetime, out OngoingEffectLifetime lifetime,
+                        out int? remainingUses))
                     continue;
 
                 InstanceId id = _state.NextInstanceId();
-                OngoingEffectInstance? instance = rule.Lifetime switch
-                {
-                    OneShotLifetime => OngoingEffectInstance.CreateOneShot(id, controller,
-                        spell.Id, rule.Id.Value),
-                    FiniteLifetime finite when finite.Uses > 0 =>
-                        OngoingEffectInstance.CreateFinite(id, controller, spell.Id,
-                            rule.Id.Value, finite.Uses),
-                    PermanentLifetime => OngoingEffectInstance.CreatePermanent(id, controller,
-                        spell.Id, rule.Id.Value),
-                    _ => null,
-                };
-                if (instance == null) continue; // invalid authored combination fails closed
+                OngoingEffectInstance instance = OngoingEffectInstance.Create(id, controller,
+                    spell.Id, rule.Id.Value, lifetime, remainingUses);
                 _state.OngoingEffects.Add(instance);
                 _buf.Emit(GameEventKind.OngoingEffectCreated, source: instance.Id);
                 created++;
@@ -186,9 +177,10 @@ namespace Emberfall.Core
             if (index < 0) return;
 
             OngoingEffectInstance instance = _state.OngoingEffects[index];
-            if (instance.Lifetime == OngoingEffectLifetime.PERMANENT) return;
-            instance.RemainingUses = instance.RemainingUses.GetValueOrDefault() - 1;
-            if (!instance.IsExpired) return;
+            bool expired = RuleLifetimeCapabilities.ConsumeOngoingEffect(instance.Lifetime,
+                instance.RemainingUses, out int? remainingUses);
+            instance.RemainingUses = remainingUses;
+            if (!expired) return;
             _buf.Emit(GameEventKind.OngoingEffectExpired, source: instance.Id);
             _state.OngoingEffects.RemoveAt(index);
         }

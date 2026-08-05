@@ -79,6 +79,55 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(report.Issues.Any(i => i.Code == "C23-LIFETIME-UNSUPPORTED"), Is.True);
         }
 
+        [TestCaseSource(nameof(OngoingLifetimeCases))]
+        public void Ongoing_Lifetime_Policy_Is_The_Shared_Authoring_To_Runtime_Mapping(
+            RuleLifetime authored, OngoingEffectLifetime expectedLifetime, int? expectedUses)
+        {
+            bool created = RuleLifetimeCapabilities.TryCreateOngoingEffect(
+                CardType.SPELL, Trigger.ON_TURN_END, authored, out OngoingEffectLifetime lifetime,
+                out int? remainingUses);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(created, Is.True);
+                Assert.That(lifetime, Is.EqualTo(expectedLifetime));
+                Assert.That(remainingUses, Is.EqualTo(expectedUses));
+            });
+        }
+
+        [Test]
+        public void Ongoing_Lifetime_Policy_Fails_Closed_For_Invalid_Source_Trigger_And_Uses()
+        {
+            Assert.That(RuleLifetimeCapabilities.TryCreateOngoingEffect(
+                CardType.MINION, Trigger.ON_TURN_END, PermanentLifetime.Instance,
+                out _, out _), Is.False);
+            Assert.That(RuleLifetimeCapabilities.TryCreateOngoingEffect(
+                CardType.SPELL, Trigger.ON_CAST, PermanentLifetime.Instance,
+                out _, out _), Is.False);
+            Assert.That(RuleLifetimeCapabilities.TryCreateOngoingEffect(
+                CardType.SPELL, Trigger.ON_TURN_END, new FiniteLifetime(0),
+                out _, out _), Is.False);
+        }
+
+        [TestCase(OngoingEffectLifetime.ONE_SHOT, 1, 0, true)]
+        [TestCase(OngoingEffectLifetime.FINITE, 2, 1, false)]
+        [TestCase(OngoingEffectLifetime.FINITE, 1, 0, true)]
+        [TestCase(OngoingEffectLifetime.PERMANENT, null, null, false)]
+        [TestCase((OngoingEffectLifetime)999, 1, null, true)]
+        public void Ongoing_Lifetime_Consumption_Is_Closed_And_Deterministic(
+            OngoingEffectLifetime lifetime, int? remainingUses, int? expectedRemaining,
+            bool expectedExpired)
+        {
+            bool expired = RuleLifetimeCapabilities.ConsumeOngoingEffect(lifetime, remainingUses,
+                out int? nextRemainingUses);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(nextRemainingUses, Is.EqualTo(expectedRemaining));
+                Assert.That(expired, Is.EqualTo(expectedExpired));
+            });
+        }
+
         [TestCase("ANY_MINION", false)]
         [TestCase("ENEMY_WEAPON", false)]
         [TestCase("ENEMY_HERO", true)]
@@ -96,6 +145,13 @@ namespace Emberfall.Core.Tests.CardValidation
 
         private static ValidationReport Validate(CardDefinition card)
             => new CardValidator().Validate(card, new JsonCardDatabaseTestDouble(new[] { card }));
+
+        private static object[] OngoingLifetimeCases =
+        {
+            new object[] { OneShotLifetime.Instance, OngoingEffectLifetime.ONE_SHOT, 1 },
+            new object[] { new FiniteLifetime(3), OngoingEffectLifetime.FINITE, 3 },
+            new object[] { PermanentLifetime.Instance, OngoingEffectLifetime.PERMANENT, null! },
+        };
 
         private static RuleDefinition Rule(string id, Trigger trigger, RuleLifetime lifetime,
             RuleAction action)

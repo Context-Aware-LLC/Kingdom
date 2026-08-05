@@ -386,8 +386,9 @@ namespace Emberfall.Core
                     // same cast that created it, and the resolved card remains in the graveyard.
                     bool hasOngoingRules = false;
                     for (int i = 0; i < def.Rules.Count; i++)
-                        if (EffectSourceCapabilities.Supports(EffectSourceKind.OngoingEffect,
-                                RuleSemantics.TriggerOf(def.Rules[i])))
+                        if (RuleLifetimeCapabilities.TryCreateOngoingEffect(def.Type,
+                                RuleSemantics.TriggerOf(def.Rules[i]), def.Rules[i].Lifetime,
+                                out _, out _))
                         {
                             hasOngoingRules = true;
                             break;
