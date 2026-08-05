@@ -9,7 +9,7 @@ namespace Emberfall.Core.Tests.Projection
     /// <summary>
     /// §7.1 test 5 — the default-deny totality tripwire (dev-docs/architecture/determinism-and-projection.md:35), mirror of the
     /// A2a serializer-manifest discipline: every field reachable from <see cref="GameState"/> must
-    /// be pinned below WITH its §5.2 redaction class, and every <see cref="VfxEvent"/> member must
+    /// be pinned below WITH its §5.2 redaction class, and every <see cref="GameEventKind"/> member must
     /// be pinned as OBL-8-classified. Adding a Contracts field or event kind without updating this
     /// manifest (and the projector, and the spec row) fails CI — an unclassified field is REDACTED
     /// by omission in the clone walk, but it must never be UNCLASSIFIED silently.
@@ -131,24 +131,25 @@ namespace Emberfall.Core.Tests.Projection
         }
 
         [Test]
-        public void Every_VfxEvent_Kind_Has_An_OBL8_Row()
+        public void Every_Semantic_Event_Kind_Has_An_OBL8_Row()
         {
             // Pinned OBL-8 vocabulary (dev-docs/architecture/determinism-and-projection.md:24). A new enum member without a
             // table row (and a projector rule) must fail here, not leak silently.
             var classified = new HashSet<string>
             {
-                "onPlay", "onSummon", "onAttack", "onDamage", "onHeal", "onDeath", "onBuff",
-                "onDebuff", "onDraw", "onSilence", "onFrost", "onTransform", "onReturn",
-                "onManaGain", "onEquip", "onUnearth", "onTurnStart", "onTurnEnd", "onHeroPower",
-                "onFatigue", "onGameWin", "onGameOver",
+                "CardPlayed", "CardSummoned", "AttackDeclared", "DamageApplied", "HealthRestored",
+                "CardDestroyed", "StatsModified", "KeywordApplied", "CardDrawn", "CardCreatedInHand",
+                "CardSilenced", "FrostApplied", "CardTransformed", "CardBounced", "ManaGained",
+                "WeaponEquipped", "UnearthOffered", "TurnStarted", "TurnEnded", "HeroPowerUsed",
+                "FatigueDamage", "MatchWon", "MatchEnded",
             };
 
-            var actual = Enum.GetNames(typeof(VfxEvent));
+            var actual = Enum.GetNames(typeof(GameEventKind));
             Assert.That(actual, Has.Length.EqualTo(classified.Count),
-                "VfxEvent vocabulary changed — author the OBL-8 row (default-deny) before extending this pin.");
+                "GameEventKind vocabulary changed — author the OBL-8 row before extending this pin.");
             foreach (var name in actual)
                 Assert.That(classified.Contains(name), Is.True,
-                    $"UNCLASSIFIED EVENT KIND: VfxEvent.{name} has no OBL-8 row.");
+                    $"UNCLASSIFIED EVENT KIND: GameEventKind.{name} has no OBL-8 row.");
         }
     }
 }

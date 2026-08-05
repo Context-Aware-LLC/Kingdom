@@ -7,8 +7,8 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Subscribes to the engine's D7 event stream and plays one-shot particle effects per
-    /// the hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §2 table. Each VfxEvent maps to a prefab assigned in the Inspector;
+    /// Subscribes to the engine's semantic event stream and plays one-shot particle effects per
+    /// presentation cue. Each cue maps to a prefab assigned in the Inspector;
     /// null entries are silently skipped (VFX asset not yet authored). Uses Instantiate + timed
     /// Destroy for M1; replace with ObjectPool<T> in M2 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §3).
     ///
@@ -20,8 +20,8 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class VfxDirector : MonoBehaviour
     {
-        [Header("D7 Event → Prefab table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §2)")]
-        [SerializeField] private VfxEventEntry[] table = Array.Empty<VfxEventEntry>();
+        [Header("Presentation Cue → Prefab table")]
+        [SerializeField] private VfxCueEntry[] table = Array.Empty<VfxCueEntry>();
 
         [Header("Board anchors for world-position resolution")]
         [SerializeField] private BoardAnchors boardAnchors;
@@ -37,7 +37,7 @@ namespace Emberfall.Presentation
         [Tooltip("Reveal card size as a multiple of the in-hand/board card size.")]
         [SerializeField, Range(0.5f, 2f)] private float spellRevealScale = 1.2f;
 
-        private readonly Dictionary<VfxEvent, ParticleSystem> _lookup = new();
+        private readonly Dictionary<PresentationCue, ParticleSystem> _lookup = new();
         private GameState _state;
         private IArtProvider _artProvider;
         private BoardController _board;
@@ -51,7 +51,7 @@ namespace Emberfall.Presentation
         {
             foreach (var entry in table)
                 if (entry.Prefab != null)
-                    _lookup[entry.Kind] = entry.Prefab;
+                    _lookup[entry.Cue] = entry.Prefab;
         }
 
         /// <summary>Wire what's needed to draw a spell reveal as a REAL card, not a bare texture:
@@ -114,7 +114,8 @@ namespace Emberfall.Presentation
 
         private void PlayEvent(GameEvent e)
         {
-            if (!_lookup.TryGetValue(e.Kind, out var prefab) || prefab == null) return;
+            PresentationCue cue = e.CueOverride ?? PresentationCueDefaults.For(e.Kind);
+            if (!_lookup.TryGetValue(cue, out var prefab) || prefab == null) return;
 
             // Target preferred over source — effect lands where the thing is hit.
             Vector3? pos = ResolvePosition(e.Target) ?? ResolvePosition(e.Source);
@@ -156,9 +157,9 @@ namespace Emberfall.Presentation
 
     /// <summary>One row in the VfxDirector Inspector table.</summary>
     [Serializable]
-    public struct VfxEventEntry
+    public struct VfxCueEntry
     {
-        public VfxEvent Kind;
+        public PresentationCue Cue;
         public ParticleSystem Prefab;
     }
 }

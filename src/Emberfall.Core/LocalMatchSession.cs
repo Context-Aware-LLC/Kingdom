@@ -86,10 +86,7 @@ namespace Emberfall.Core
                 var projected = new IReadOnlyList<GameEvent>[_sessions.Length];
                 for (int seat = 0; seat < _sessions.Length; seat++)
                 {
-                    var list = new List<GameEvent>(raw.Events.Count);
-                    for (int i = 0; i < raw.Events.Count; i++)
-                        list.Add(GameStateProjector.ProjectEvent(raw.Events[i], seat, vis[i]));
-                    projected[seat] = list;
+                    projected[seat] = GameStateProjector.ProjectEvents(raw.Events, vis, seat);
                 }
 
                 foreach (var s in _sessions)

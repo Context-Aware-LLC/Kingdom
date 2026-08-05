@@ -78,7 +78,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(cast.Accepted, Is.True);
             Assert.That(state.Players[1].Hero.CurrentHealth, Is.EqualTo(30),
                 "hidden cards cannot observe either the cast or the summoned token.");
-            Assert.That(cast.Events.Any(e => e.Kind == VfxEvent.onDamage &&
+            Assert.That(cast.Events.Any(e => e.Kind == GameEventKind.DamageApplied &&
                 (e.Source == handObserver.Id || e.Source == deckObserver.Id || e.Source == graveObserver.Id)), Is.False);
 
             // The opponent has a draw card, so the turn-start assertion cannot pass merely because fatigue
@@ -91,7 +91,7 @@ namespace Emberfall.Core.Tests.Interpreter
 
             Assert.That(turnStart.Accepted, Is.True);
             Assert.That(state.Players[1].Hero.CurrentHealth, Is.EqualTo(30));
-            Assert.That(turnStart.Events.Any(e => e.Kind == VfxEvent.onDamage &&
+            Assert.That(turnStart.Events.Any(e => e.Kind == GameEventKind.DamageApplied &&
                 (e.Source == handObserver.Id || e.Source == deckObserver.Id || e.Source == graveObserver.Id)), Is.False);
         }
     }

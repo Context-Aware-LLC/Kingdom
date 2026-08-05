@@ -233,7 +233,7 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(20),
                 "Aegis is the first gate: no Lifedrain, Venom, or Frost rider may run.");
             Assert.That(absorbed.Events.Select(e => e.Kind),
-                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage }));
+                Is.EqualTo(new[] { GameEventKind.AttackDeclared, GameEventKind.DamageApplied }));
             Assert.That(absorbed.Events[1].Flags & EventFlags.AegisAbsorbed, Is.Not.EqualTo(EventFlags.None));
 
             state.Players[1].Hero.Armor = 2;
@@ -248,7 +248,7 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[1].Hero.IsFrosted, Is.True,
                 "Frost is the final rider, after Lifedrain.");
             Assert.That(soaked.Events.Select(e => e.Kind),
-                Is.EqualTo(new[] { VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFrost }));
+                Is.EqualTo(new[] { GameEventKind.AttackDeclared, GameEventKind.DamageApplied, GameEventKind.HealthRestored, GameEventKind.FrostApplied }));
 
             // WIND FURY has spent the two attacks for this turn. Use the actual turn boundary rather than
             // mutating the attack budget, so the third swing remains a normal unified-weapon command path.
@@ -269,7 +269,7 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(state.Players[1].Board, Does.Not.Contain(poisoned), "the following DeathCheck settles Venom.");
             Assert.That(venomAndFrost.Events.Select(e => e.Kind), Is.EqualTo(new[]
             {
-                VfxEvent.onAttack, VfxEvent.onDamage, VfxEvent.onHeal, VfxEvent.onFrost, VfxEvent.onDeath,
+                GameEventKind.AttackDeclared, GameEventKind.DamageApplied, GameEventKind.HealthRestored, GameEventKind.FrostApplied, GameEventKind.CardDestroyed,
             }));
         }
 

@@ -228,7 +228,7 @@ namespace Emberfall.Core.Tests.Combat
 
             Assert.That(r.Accepted, Is.True);
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(27), "3 damage exactly once, not 6");
-            Assert.That(r.Events.Count(e => e.Kind == VfxEvent.onDeath), Is.EqualTo(1),
+            Assert.That(r.Events.Count(e => e.Kind == GameEventKind.CardDestroyed), Is.EqualTo(1),
                 "exactly one weapon-death event for one break");
         }
 

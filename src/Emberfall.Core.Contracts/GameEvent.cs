@@ -3,14 +3,14 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
-    /// One outward D7 event (dev-docs/contracts/gameplay-and-session.md:46). Purely observational — it never
+    /// One outward semantic event (dev-docs/contracts/gameplay-and-session.md:46). Purely observational — it never
     /// feeds back into the core, so different animation speeds across clients cannot desync state.
     /// The full ordered stream is part of what the golden-replay test asserts (dev-docs/quality/testing-and-ci.md:24).
     /// </summary>
     public readonly struct GameEvent
     {
-        /// <summary>What to animate (closed D7 vocabulary).</summary>
-        public readonly VfxEvent Kind;
+        /// <summary>What happened in game rules (closed semantic vocabulary).</summary>
+        public readonly GameEventKind Kind;
         /// <summary>Global, monotonic order within the match.</summary>
         public readonly ulong Sequence;
         /// <summary>Who caused it (nullable).</summary>
@@ -21,8 +21,11 @@ namespace Emberfall.Core.Contracts
         public readonly int? Amount;
         /// <summary>Per-event flags (AegisAbsorbed/Lethal/Overdraw, ...).</summary>
         public readonly EventFlags Flags;
+        /// <summary>Optional presentation override; null selects <see cref="PresentationCueDefaults"/>.</summary>
+        public readonly PresentationCue? CueOverride;
 
-        public GameEvent(VfxEvent kind, ulong sequence, InstanceId? source, InstanceId? target, int? amount, EventFlags flags)
+        public GameEvent(GameEventKind kind, ulong sequence, InstanceId? source, InstanceId? target,
+                         int? amount, EventFlags flags, PresentationCue? cueOverride = null)
         {
             Kind = kind;
             Sequence = sequence;
@@ -30,6 +33,7 @@ namespace Emberfall.Core.Contracts
             Target = target;
             Amount = amount;
             Flags = flags;
+            CueOverride = cueOverride;
         }
 
         public override string ToString()
@@ -37,14 +41,9 @@ namespace Emberfall.Core.Contracts
             string src = Source.HasValue ? Source.Value.ToString() : "null";
             string tgt = Target.HasValue ? Target.Value.ToString() : "null";
             string amt = Amount.HasValue ? Amount.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null";
-            return $"{{ seq={Sequence} kind={Kind} src={src} tgt={tgt} amt={amt} flags={Flags} }}";
+            string cue = CueOverride.HasValue ? CueOverride.Value.ToString() : "default";
+            return $"{{ seq={Sequence} kind={Kind} cue={cue} src={src} tgt={tgt} amt={amt} flags={Flags} }}";
         }
-    }
-
-    /// <summary>The core writes events here during Apply.</summary>
-    public interface IGameEventSink
-    {
-        void Emit(in GameEvent e);
     }
 
     /// <summary>Presentation reads ordered batches off this delegate.</summary>

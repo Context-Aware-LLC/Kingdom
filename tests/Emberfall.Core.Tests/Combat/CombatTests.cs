@@ -307,7 +307,7 @@ namespace Emberfall.Core.Tests.Combat
             var result = Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, def.Id));
 
             Assert.That(s.Players[0].Weapon, Is.Null, "weapon broken");
-            Assert.That(result.Events.Any(e => e.Kind == VfxEvent.onDeath), Is.True, "weapon-break death event");
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.CardDestroyed), Is.True, "weapon-break death event");
         }
 
         [Test]

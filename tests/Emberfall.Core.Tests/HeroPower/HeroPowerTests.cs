@@ -265,9 +265,9 @@ namespace Emberfall.Core.Tests.HeroPower
             var r = proc.Execute(s, new HeroPowerIntent(s.ActivePlayer,
                 new[] { new TargetRef(s.Players[1].Hero.Id) }));
 
-            Assert.That(r.Events[0].Kind, Is.EqualTo(VfxEvent.onHeroPower));
+            Assert.That(r.Events[0].Kind, Is.EqualTo(GameEventKind.HeroPowerUsed));
             Assert.That(r.Events[0].Source, Is.EqualTo(s.Players[0].Hero.Id));
-            Assert.That(r.Events[1].Kind, Is.EqualTo(VfxEvent.onDamage));
+            Assert.That(r.Events[1].Kind, Is.EqualTo(GameEventKind.DamageApplied));
         }
 
         [Test]
@@ -286,7 +286,7 @@ namespace Emberfall.Core.Tests.HeroPower
                 new[] { new TargetRef(m.Id) }));
 
             Assert.That(s.Players[1].Board, Is.Empty);
-            Assert.That(r.Events.Any(e => e.Kind == VfxEvent.onDeath), Is.True);
+            Assert.That(r.Events.Any(e => e.Kind == GameEventKind.CardDestroyed), Is.True);
         }
 
         // ── Tidal Ward tests ──────────────────────────────────────────────────────
@@ -328,8 +328,8 @@ namespace Emberfall.Core.Tests.HeroPower
 
             var r = proc.Execute(s, UseHeroPower(s));
 
-            Assert.That(r.Events[0].Kind, Is.EqualTo(VfxEvent.onHeroPower));
-            Assert.That(r.Events[1].Kind, Is.EqualTo(VfxEvent.onSummon));
+            Assert.That(r.Events[0].Kind, Is.EqualTo(GameEventKind.HeroPowerUsed));
+            Assert.That(r.Events[1].Kind, Is.EqualTo(GameEventKind.CardSummoned));
         }
 
         // ── turn-reset test ───────────────────────────────────────────────────────

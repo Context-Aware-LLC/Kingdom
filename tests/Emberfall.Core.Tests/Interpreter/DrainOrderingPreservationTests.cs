@@ -88,17 +88,17 @@ namespace Emberfall.Core.Tests.Interpreter
                 new PlayCardIntent(state.Players[0].Id, advance.Id, 0, Array.Empty<TargetRef>()));
 
             Assert.That(result.Accepted, Is.True);
-            Assert.That(result.Events.Select(e => (e.Kind, e.Source)), Is.EqualTo(new (VfxEvent, InstanceId?)[]
+            Assert.That(result.Events.Select(e => (e.Kind, e.Source)), Is.EqualTo(new (GameEventKind, InstanceId?)[]
             {
-                (VfxEvent.onPlay, advance.Id),
-                (VfxEvent.onDeath, a.Id),
-                (VfxEvent.onDeath, b.Id),
-                (VfxEvent.onDamage, a.Id),
-                (VfxEvent.onDeath, cascade.Id),
-                (VfxEvent.onDamage, b.Id),
-                (VfxEvent.onDamage, cascade.Id),
-                (VfxEvent.onGameOver, null),
-                (VfxEvent.onGameWin, state.Players[1].Hero.Id),
+                (GameEventKind.CardPlayed, advance.Id),
+                (GameEventKind.CardDestroyed, a.Id),
+                (GameEventKind.CardDestroyed, b.Id),
+                (GameEventKind.DamageApplied, a.Id),
+                (GameEventKind.CardDestroyed, cascade.Id),
+                (GameEventKind.DamageApplied, b.Id),
+                (GameEventKind.DamageApplied, cascade.Id),
+                (GameEventKind.MatchEnded, null),
+                (GameEventKind.MatchWon, state.Players[1].Hero.Id),
             }));
             Assert.That(state.Outcome, Is.EqualTo(MatchOutcome.Player1Win));
             Assert.That(state.ActionResolutionsThisTurn, Is.EqualTo(3),

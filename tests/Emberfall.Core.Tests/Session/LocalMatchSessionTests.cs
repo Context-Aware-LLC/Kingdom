@@ -189,7 +189,7 @@ namespace Emberfall.Core.Tests.Session
             Assert.That(drawerBatch.Count, Is.EqualTo(opponentBatch.Count), "Events are never dropped (§5.3).");
 
             var drawIdx = Enumerable.Range(0, drawerBatch!.Count)
-                .Where(i => drawerBatch[i].Kind == VfxEvent.onDraw).ToArray();
+                .Where(i => drawerBatch[i].Kind == GameEventKind.CardDrawn).ToArray();
             Assert.That(drawIdx, Is.Not.Empty, "Turn start must draw.");
             foreach (int i in drawIdx)
             {

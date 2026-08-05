@@ -173,8 +173,8 @@ namespace Emberfall.Presentation
 
                 switch (e.Kind)
                 {
-                    case VfxEvent.onDamage:
-                    case VfxEvent.onHeal:
+                    case GameEventKind.DamageApplied:
+                    case GameEventKind.HealthRestored:
                         Restart(ref _flashRoutine, FlashDecayRoutine());
                         break;
                 }

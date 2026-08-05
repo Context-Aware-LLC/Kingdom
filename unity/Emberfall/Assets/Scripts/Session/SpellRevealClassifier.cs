@@ -26,8 +26,8 @@ namespace Emberfall.Session
     }
 
     /// <summary>
-    /// Presentation-only add-on (not part of the D7 vocabulary): a played card the opponent casts
-    /// has no visible tell today — VfxEvent.onPlay fires identically for a minion (which announces
+    /// Presentation-only add-on: a played card the opponent casts has no visible tell today —
+    /// CardPlayed fires identically for a minion (which announces
     /// itself by appearing on the board) and a spell (which just resolves). This distinguishes the
     /// two by resolving the played card's CardDefinition and checking Type == SPELL, so
     /// MatchRunner can hold the whole entry for a reveal beat without needing to know card types
@@ -49,7 +49,7 @@ namespace Emberfall.Session
             for (int i = 0; i < events.Count; i++)
             {
                 GameEvent e = events[i];
-                if (e.Kind != VfxEvent.onPlay || !e.Source.HasValue) continue;
+                if (e.Kind != GameEventKind.CardPlayed || !e.Source.HasValue) continue;
 
                 CardInstance played = FindInstance(snapshot, e.Source.Value);
                 if (played == null) continue;

@@ -134,7 +134,7 @@ namespace Emberfall.Core.Tests.TurnLoop
             {
                 var r = host.Submit(new EndTurnIntent(s.ActivePlayer));
                 foreach (var e in r.Events)
-                    if (e.Kind == VfxEvent.onFatigue) sawFatigue = true;
+                    if (e.Kind == GameEventKind.FatigueDamage) sawFatigue = true;
             }
 
             Assert.That(sawFatigue, Is.True, "Drawing from an empty deck must emit onFatigue.");

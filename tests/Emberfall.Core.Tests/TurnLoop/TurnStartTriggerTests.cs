@@ -260,7 +260,7 @@ namespace Emberfall.Core.Tests.TurnLoop
 
             var result = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
 
-            var damage = result.Events.Where(e => e.Kind == VfxEvent.onDamage).ToList();
+            var damage = result.Events.Where(e => e.Kind == GameEventKind.DamageApplied).ToList();
             Assert.That(damage, Has.Count.EqualTo(2));
             Assert.That(damage[0].Source, Is.EqualTo(left.Id),
                 "The incoming side's leftmost subscriber must enqueue first.");
@@ -300,7 +300,7 @@ namespace Emberfall.Core.Tests.TurnLoop
             Assert.That(s.Players[incoming].Graveyard.Any(c => c.Id == follower.Id), Is.True);
             Assert.That(s.Players[outgoing].Hero.CurrentHealth, Is.EqualTo(outgoingHealth - 1),
                 "The follower was snapshotted before the drain, so its queued effect survives its death.");
-            Assert.That(result.Events.Any(e => e.Kind == VfxEvent.onDamage && e.Source == follower.Id), Is.True);
+            Assert.That(result.Events.Any(e => e.Kind == GameEventKind.DamageApplied && e.Source == follower.Id), Is.True);
         }
 
         [Test]

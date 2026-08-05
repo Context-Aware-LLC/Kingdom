@@ -207,7 +207,7 @@ namespace Emberfall.Core.Tests.Interpreter
             // onDeath events present and in ascending sequence (deterministic order).
             ulong lastDeathSeq = 0; int deaths = 0;
             foreach (var e in r.Events)
-                if (e.Kind == VfxEvent.onDeath) { Assert.That(e.Sequence, Is.GreaterThan(lastDeathSeq)); lastDeathSeq = e.Sequence; deaths++; }
+                if (e.Kind == GameEventKind.CardDestroyed) { Assert.That(e.Sequence, Is.GreaterThan(lastDeathSeq)); lastDeathSeq = e.Sequence; deaths++; }
             Assert.That(deaths, Is.EqualTo(2));
         }
 
@@ -228,7 +228,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(s.Players[1].Board[0].CurrentHealth, Is.EqualTo(2), "No health lost.");
             bool absorbed = false;
             foreach (var e in r.Events)
-                if (e.Kind == VfxEvent.onDamage && (e.Flags & EventFlags.AegisAbsorbed) != 0) absorbed = true;
+                if (e.Kind == GameEventKind.DamageApplied && (e.Flags & EventFlags.AegisAbsorbed) != 0) absorbed = true;
             Assert.That(absorbed, Is.True);
         }
 

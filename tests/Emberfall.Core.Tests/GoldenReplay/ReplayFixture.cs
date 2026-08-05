@@ -165,13 +165,13 @@ namespace Emberfall.Core.Tests.GoldenReplay
     public readonly struct ExpectedEvent
     {
         public readonly ulong Seq;
-        public readonly VfxEvent Kind;
+        public readonly GameEventKind Kind;
         public readonly InstanceId? Src;
         public readonly InstanceId? Tgt;
         public readonly int? Amt;
         public readonly EventFlags Flags;
 
-        public ExpectedEvent(ulong seq, VfxEvent kind, InstanceId? src, InstanceId? tgt, int? amt, EventFlags flags)
+        public ExpectedEvent(ulong seq, GameEventKind kind, InstanceId? src, InstanceId? tgt, int? amt, EventFlags flags)
         {
             Seq = seq; Kind = kind; Src = src; Tgt = tgt; Amt = amt; Flags = flags;
         }
@@ -179,7 +179,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         public static ExpectedEvent Parse(JsonElement e)
         {
             ulong seq = e.GetProperty("seq").GetUInt64();
-            var kind = (VfxEvent)Enum.Parse(typeof(VfxEvent), e.GetProperty("kind").GetString()!, false);
+            var kind = ParseKind(e.GetProperty("kind").GetString()!);
             InstanceId? src = InstOrNull(e, "src");
             InstanceId? tgt = InstOrNull(e, "tgt");
             int? amt = e.TryGetProperty("amt", out var a) && a.ValueKind == JsonValueKind.Number ? a.GetInt32() : (int?)null;
@@ -190,6 +190,39 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
         public static ExpectedEvent From(GameEvent e)
             => new ExpectedEvent(e.Sequence, e.Kind, e.Source, e.Target, e.Amount, e.Flags);
+
+        private static GameEventKind ParseKind(string value)
+        {
+            if (Enum.TryParse(value, false, out GameEventKind semantic)
+                && Enum.IsDefined(typeof(GameEventKind), semantic))
+                return semantic;
+
+            return value switch
+            {
+                "onPlay" => GameEventKind.CardPlayed,
+                "onSummon" => GameEventKind.CardSummoned,
+                "onAttack" => GameEventKind.AttackDeclared,
+                "onDamage" => GameEventKind.DamageApplied,
+                "onHeal" => GameEventKind.HealthRestored,
+                "onDeath" => GameEventKind.CardDestroyed,
+                "onBuff" => GameEventKind.StatsModified,
+                "onDraw" => GameEventKind.CardDrawn,
+                "onSilence" => GameEventKind.CardSilenced,
+                "onFreeze" => GameEventKind.FrostApplied,
+                "onTransform" => GameEventKind.CardTransformed,
+                "onReturn" => GameEventKind.CardBounced,
+                "onManaGain" => GameEventKind.ManaGained,
+                "onEquip" => GameEventKind.WeaponEquipped,
+                "onDiscover" => GameEventKind.UnearthOffered,
+                "onTurnStart" => GameEventKind.TurnStarted,
+                "onTurnEnd" => GameEventKind.TurnEnded,
+                "onHeroPower" => GameEventKind.HeroPowerUsed,
+                "onFatigue" => GameEventKind.FatigueDamage,
+                "onGameWin" => GameEventKind.MatchWon,
+                "onGameOver" => GameEventKind.MatchEnded,
+                _ => throw new FormatException($"Unknown event kind '{value}'."),
+            };
+        }
 
         private static InstanceId? InstOrNull(JsonElement e, string name)
             => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String

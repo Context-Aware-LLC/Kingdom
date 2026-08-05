@@ -15,7 +15,7 @@ namespace Emberfall.Core
     /// or the ephemeral hero-power source (never zoned), so the verdict is taken while it is
     /// still true. The sidecar is server-side only — never serialized, never hashed.
     /// </summary>
-    internal sealed class EventBuffer : IGameEventSink
+    internal sealed class EventBuffer
     {
         private readonly GameState _state;
         private readonly List<GameEvent> _events = new List<GameEvent>();
@@ -36,18 +36,6 @@ namespace Emberfall.Core
         /// </summary>
         public void MarkPublic(InstanceId id) => (_publicMarks ??= new HashSet<int>()).Add(id.Value);
 
-        public void Emit(in GameEvent e)
-        {
-            _events.Add(e);
-            _visibility.Add(new EventVisibility(Classify(e.Source), Classify(e.Target)));
-        }
-
-        public void Emit(VfxEvent kind, InstanceId? source = null, InstanceId? target = null,
-                         int? amount = null, EventFlags flags = EventFlags.None)
-        {
-            Emit(new GameEvent(kind, _state.NextEventSequence++, source, target, amount, flags));
-        }
-
         /// <summary>
         /// Semantic event seam. Validation happens before sequence allocation so malformed events
         /// cannot leave a gap in the deterministic stream.
@@ -58,37 +46,11 @@ namespace Emberfall.Core
         {
             GameEventPolicy.Validate(kind, amount, flags, cueOverride);
 
-            PresentationCue cue = cueOverride ?? PresentationCueDefaults.For(kind);
-            Emit(new GameEvent(ToLegacyKind(cue), _state.NextEventSequence++, source, target, amount, flags));
-        }
-
-        private static VfxEvent ToLegacyKind(PresentationCue cue)
-        {
-            return cue switch
-            {
-                PresentationCue.Play => VfxEvent.onPlay,
-                PresentationCue.Summon => VfxEvent.onSummon,
-                PresentationCue.Attack => VfxEvent.onAttack,
-                PresentationCue.Damage => VfxEvent.onDamage,
-                PresentationCue.Heal => VfxEvent.onHeal,
-                PresentationCue.Death => VfxEvent.onDeath,
-                PresentationCue.Buff => VfxEvent.onBuff,
-                PresentationCue.Draw => VfxEvent.onDraw,
-                PresentationCue.Silence => VfxEvent.onSilence,
-                PresentationCue.Frost => VfxEvent.onFreeze,
-                PresentationCue.Transform => VfxEvent.onTransform,
-                PresentationCue.Return => VfxEvent.onReturn,
-                PresentationCue.ManaGain => VfxEvent.onManaGain,
-                PresentationCue.Equip => VfxEvent.onEquip,
-                PresentationCue.Unearth => VfxEvent.onDiscover,
-                PresentationCue.TurnStart => VfxEvent.onTurnStart,
-                PresentationCue.TurnEnd => VfxEvent.onTurnEnd,
-                PresentationCue.HeroPower => VfxEvent.onHeroPower,
-                PresentationCue.Fatigue => VfxEvent.onFatigue,
-                PresentationCue.GameWin => VfxEvent.onGameWin,
-                PresentationCue.GameOver => VfxEvent.onGameOver,
-                _ => throw new System.ArgumentOutOfRangeException(nameof(cue), cue, "Unknown presentation cue."),
-            };
+            var e = new GameEvent(kind, _state.NextEventSequence, source, target, amount, flags, cueOverride);
+            var visibility = new EventVisibility(Classify(source), Classify(target));
+            _state.NextEventSequence++;
+            _events.Add(e);
+            _visibility.Add(visibility);
         }
 
         private IdVisibility Classify(InstanceId? idOpt)

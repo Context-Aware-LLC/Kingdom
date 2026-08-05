@@ -7,7 +7,7 @@ namespace Emberfall.Core.Projection
     /// The hidden-information line (M2 WS A3; <c>decisions/ADR-0006</c>,
     /// <c>dev-docs/architecture/determinism-and-projection.md:20</c>).
     /// One redaction module, two entry points: <see cref="Project"/> for snapshots,
-    /// <see cref="ProjectEvent"/> for the D7 stream. Pure — the authoritative graph is never
+    /// <see cref="ProjectEvents"/> for the semantic event stream. Pure — the authoritative graph is never
     /// touched; every projected object is freshly allocated, and redacted values are constructed
     /// as sentinels directly so hidden truth never exists in the projected graph, even transiently.
     ///
@@ -173,29 +173,45 @@ namespace Emberfall.Core.Projection
         // ── Event entry point ────────────────────────────────────────────────────
 
         /// <summary>
-        /// Per-viewer copy of one D7 event. Never dropped, only value-redacted — both viewers see
-        /// the same event count and <see cref="GameEvent.Sequence"/> values (§5.3). <paramref name="vis"/>
-        /// is the emit-time sidecar captured by <c>EventBuffer</c>.
+        /// Atomically project a complete per-viewer batch. Events are never dropped, only
+        /// value-redacted, so both viewers retain identical counts, order and sequence values.
+        /// Unknown semantic kinds reject the whole batch before any projected value is returned.
         /// </summary>
-        public static GameEvent ProjectEvent(in GameEvent e, int viewerSeat, in EventVisibility vis)
+        public static IReadOnlyList<GameEvent> ProjectEvents(
+            IReadOnlyList<GameEvent> events,
+            IReadOnlyList<EventVisibility> visibility,
+            int viewerSeat)
         {
-            // OBL-8 unlisted-kind backstop: a Kind outside the classified vocabulary is fully
-            // sentineled for every viewer. (All 22 current members are classified; this catches
-            // enum members added without an OBL-8 row, alongside the CI row-coverage test.)
-            if (!KindIsClassified(e.Kind))
-                return new GameEvent(e.Kind, e.Sequence, Sentinel, Sentinel, null, EventFlags.None);
+            if (events is null) throw new System.ArgumentNullException(nameof(events));
+            if (visibility is null) throw new System.ArgumentNullException(nameof(visibility));
+            if (events.Count != visibility.Count)
+                throw new System.ArgumentException("Event and visibility batches must be index-parallel.", nameof(visibility));
+            if (viewerSeat != 0 && viewerSeat != 1)
+                throw new System.ArgumentOutOfRangeException(nameof(viewerSeat), viewerSeat, "Viewer seat must be 0 or 1.");
+
+            for (int i = 0; i < events.Count; i++)
+                if (!GameEventPolicy.IsKnown(events[i].Kind))
+                    throw new System.ArgumentException($"Unknown semantic game-event kind '{events[i].Kind}'.", nameof(events));
+
+            var projected = new List<GameEvent>(events.Count);
+            for (int i = 0; i < events.Count; i++)
+                projected.Add(ProjectEvent(events[i], viewerSeat, visibility[i]));
+            return projected;
+        }
+
+        private static GameEvent ProjectEvent(in GameEvent e, int viewerSeat, in EventVisibility vis)
+        {
 
             InstanceId? src = Redact(e.Source, vis.Source, viewerSeat);
             InstanceId? tgt = Redact(e.Target, vis.Target, viewerSeat);
 
-            // OBL-8 Amount column: P for every classified kind except the two sentinel rows —
-            // onDebuff (no emitter exists; pre-classified conservatively, D-OQ3) and onUnearth
-            // (the pool-size magnitude channel; Phase 2 wires the chooser's unredacted copy via
-            // PendingChoice context when Unearth actually lands — until then default-deny).
-            int? amount = (e.Kind == VfxEvent.onDebuff || e.Kind == VfxEvent.onUnearth) ? null : e.Amount;
+            int? amount = GameEventPolicy.AllowsAmount(e.Kind) ? e.Amount : null;
+            EventFlags flags = e.Flags & GameEventPolicy.AllowedFlags(e.Kind);
+            PresentationCue? cue = e.CueOverride.HasValue && GameEventPolicy.IsKnown(e.CueOverride.Value)
+                ? e.CueOverride
+                : null;
 
-            // OBL-8 Flags column: P for every classified kind (incl. Overdraw/IsToken on onDraw).
-            return new GameEvent(e.Kind, e.Sequence, src, tgt, amount, e.Flags);
+            return new GameEvent(e.Kind, e.Sequence, src, tgt, amount, flags, cue);
         }
 
         private static InstanceId? Redact(InstanceId? id, IdVisibility vis, int viewerSeat)
@@ -211,9 +227,6 @@ namespace Emberfall.Core.Projection
             IdVisibility.Owner1 => viewerSeat == 1,
             _ => false,
         };
-
-        private static bool KindIsClassified(VfxEvent kind)
-            => kind >= VfxEvent.onPlay && kind <= VfxEvent.onGameOver;
 
         // ── Shared zone classification (snapshot Enchantment.Source + EventBuffer capture) ──
 

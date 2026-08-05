@@ -164,6 +164,8 @@ namespace Emberfall.Net.Protocol
         /// <summary>Intent <c>$type</c> tag is not in the [ReplayTag] registry → server maps to
         /// <see cref="RejectReason.UnknownIntent"/>.</summary>
         UnknownIntentTag,
+        /// <summary>A semantic event kind is not in this client's closed engine contract.</summary>
+        UnknownEventKind,
         /// <summary>An enum name failed strict parse, or a required field is missing/mis-typed.</summary>
         BadField,
         /// <summary>Payload exceeds <see cref="ProtocolCodec.MaxMessageBytes"/>.</summary>

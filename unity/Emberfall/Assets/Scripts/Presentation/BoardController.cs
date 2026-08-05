@@ -129,7 +129,7 @@ namespace Emberfall.Presentation
         {
             foreach (GameEvent e in batch)
             {
-                if (e.Kind != VfxEvent.onDeath) continue;
+                if (e.Kind != GameEventKind.CardDestroyed) continue;
                 if (e.Source.HasValue) _diedThisTick.Add(e.Source.Value);
                 if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
             }

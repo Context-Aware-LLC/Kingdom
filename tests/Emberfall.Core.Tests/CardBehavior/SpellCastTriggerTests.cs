@@ -224,7 +224,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             var (echo, _) = Play(host, s, Echo);
             var (bolt, cast) = Play(host, s, Bolt);
 
-            var damage = cast.Events.Where(e => e.Kind == VfxEvent.onDamage).ToList();
+            var damage = cast.Events.Where(e => e.Kind == GameEventKind.DamageApplied).ToList();
             Assert.That(damage, Has.Count.EqualTo(2), "One hit from the spell, one from the echo.");
             Assert.That(damage[0].Source, Is.EqualTo(bolt.Id),
                 "The spell's own ON_CAST must resolve first — it was enqueued first.");

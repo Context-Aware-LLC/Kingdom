@@ -90,9 +90,9 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var events = new List<GameEvent>
             {
-                new GameEvent(VfxEvent.onDamage, 7, new InstanceId(3), new InstanceId(4), 5, EventFlags.Lethal),
-                new GameEvent(VfxEvent.onDraw, 8, null, new InstanceId(6), null, EventFlags.Overdraw | EventFlags.IsToken),
-                new GameEvent(VfxEvent.onTurnEnd, 9, null, null, null, EventFlags.None),
+                new GameEvent(GameEventKind.DamageApplied, 7, new InstanceId(3), new InstanceId(4), 5, EventFlags.Lethal, PresentationCue.Frost),
+                new GameEvent(GameEventKind.CardCreatedInHand, 8, null, new InstanceId(6), null, EventFlags.IsToken),
+                new GameEvent(GameEventKind.TurnEnded, 9, null, null, null, EventFlags.None),
             };
             var m = RoundTrip<EventsMsg>(new EventsMsg(21, events));
             Assert.That(m.StateVersion, Is.EqualTo(21UL));
@@ -105,7 +105,59 @@ namespace Emberfall.Net.Protocol.Tests
                 Assert.That(m.Events[i].Target, Is.EqualTo(events[i].Target));
                 Assert.That(m.Events[i].Amount, Is.EqualTo(events[i].Amount));
                 Assert.That(m.Events[i].Flags, Is.EqualTo(events[i].Flags));
+                Assert.That(m.Events[i].CueOverride, Is.EqualTo(events[i].CueOverride));
             }
+        }
+
+        [Test]
+        public void Unknown_Event_Kind_Rejects_The_Whole_Events_Batch()
+        {
+            var events = new[]
+            {
+                new GameEvent(GameEventKind.CardPlayed, 1, null, null, null, EventFlags.None),
+                new GameEvent(GameEventKind.TurnEnded, 2, null, null, null, EventFlags.None),
+            };
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, events), M, Seq))
+                .Replace("\"kind\":\"TurnEnded\"", "\"kind\":\"FutureSemanticFact\"");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Ok, Is.False);
+                Assert.That(result.Message, Is.Null, "No prefix of the batch may escape.");
+                Assert.That(result.Error, Is.EqualTo(ProtocolError.UnknownEventKind));
+            });
+        }
+
+        [Test]
+        public void Unknown_Presentation_Cue_Falls_Back_Without_Rejecting_The_Event()
+        {
+            var e = new GameEvent(
+                GameEventKind.DamageApplied, 1, null, null, 2, EventFlags.None, PresentationCue.Frost);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, new[] { e }), M, Seq))
+                .Replace("\"cue\":\"Frost\"", "\"cue\":\"FutureSpark\"");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.That(result.Ok, Is.True, $"{result.Error} {result.Detail}");
+            var decoded = (EventsMsg)result.Message!;
+            Assert.That(decoded.Events[0].CueOverride, Is.Null);
+            Assert.That(PresentationCueDefaults.For(decoded.Events[0].Kind), Is.EqualTo(PresentationCue.Damage));
+        }
+
+        [Test]
+        public void NonString_Presentation_Cue_Is_A_Bad_Field()
+        {
+            var e = new GameEvent(
+                GameEventKind.DamageApplied, 1, null, null, 2, EventFlags.None, PresentationCue.Frost);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(7, new[] { e }), M, Seq))
+                .Replace("\"cue\":\"Frost\"", "\"cue\":7");
+
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+
+            Assert.That(result.Ok, Is.False);
+            Assert.That(result.Error, Is.EqualTo(ProtocolError.BadField));
         }
 
         [Test]
