@@ -46,7 +46,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0e179d8967dcca3459591c8c7cbc171f
-    m_Address: card_art/art_last_rites
+    m_Address: card_art/art_grave_last_rites
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -57,11 +57,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 147657089d46f5446b198a97001082b6
     m_Address: card_art/art_clock_mass_recall
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 16810a714817aa045b42ea338bcabd91
-    m_Address: card_art/art_mosshide_stag
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -82,16 +77,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cac0667002d74b43a71187b344fab0e
     m_Address: card_art/art_verdant_wild_bloom
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1f957af2aa216d5478074a7e0a3237fb
-    m_Address: card_art/art_bell_novice
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2250b8122e1934145aafc9d53ea3c8e3
-    m_Address: card_art/art_thornfang_matron
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -180,11 +165,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 40a4a30d7b598ae4fbce4a92597e8cb6
-    m_Address: card_art/art_wild_bloom
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40fbd71823b95cb4e93ef14f3c2cf88a
     m_Address: card_art/art_verdant_grasping_thornvine
     m_ReadOnly: 0
@@ -197,11 +177,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 42a9af08e64a4814fbb5aa2c52ead22c
     m_Address: card_art/art_tide_icecrown_herald
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 432f2c93ac1175140901b8b69582ed40
-    m_Address: card_art/art_seedling_rite
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -330,11 +305,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 77e7519795ff27543a60a4b51a39efe7
-    m_Address: card_art/art_sealed_gate_keeper
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79975a4a19639304d9d9294b9d65b1f3
     m_Address: card_art/art_grave_bell_novice
     m_ReadOnly: 0
@@ -372,11 +342,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89e9d918c9560214e88a086de23e00c7
     m_Address: card_art/art_storm_thunder_hoof
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8a2737773bb58ec45ad10031c7de0f74
-    m_Address: card_art/art_wailing_chorus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -530,11 +495,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d769ac4efbb4fc342aa5c7ebee9d0411
-    m_Address: card_art/art_chained_revenant
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d942cdf6fa7b1064c834b9d4d3d4c813
     m_Address: card_art/art_grave_deathweaver
     m_ReadOnly: 0
@@ -547,11 +507,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db143749e9970a0428093b1717ff7c94
     m_Address: card_art/art_tide_drowned_titan
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dbbdc668077f0c145aee67b4a96671b7
-    m_Address: card_art/art_rootweaver
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -595,11 +550,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ef8a745fab3f3c44a945cfc23657e455
-    m_Address: card_art/art_sapsurge
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f09055eb55e944a4893e2bcd374073ce
     m_Address: card_art/art_night_void_shriek
     m_ReadOnly: 0
@@ -612,11 +562,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f507a8cf0763d8540838bf18a941ffc0
     m_Address: card_art/art_verdant_windroot_sprinter
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f632c9c9dff37ed4d817e54c2e74bafa
-    m_Address: card_art/art_tollkeeper_moth
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
