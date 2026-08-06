@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: CardArt_REKINDLING
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: CardArt_REKINDLING
+  m_GUID: 6cf09b507d2ec234ba1d9448da3e4797
+  m_SerializeEntries:
+  - m_GUID: 53e788054c0d999428301b18a1c1fba3
+    m_Address: card_art/art_rekind_tide_harbinger
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7ab2ef7333c65b14fa56c00e8d1b2503, type: 2}
+    - {fileID: 11400000, guid: b013fa0afb8067a4eb2f3024f5a9d20a, type: 2}

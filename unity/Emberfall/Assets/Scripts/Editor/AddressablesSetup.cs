@@ -10,16 +10,17 @@ namespace Emberfall.Editor
     /// <summary>
     /// One-shot (idempotent) Addressables bootstrap per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8:
     ///   UI_Core           — Assets/Art/UI/** at address "ui/&lt;fileName&gt;" (always loaded)
-    ///   CardArt_CORE      — Assets/Art/Cards/CORE/** + Assets/Art/Hero/** at "card_art/&lt;fileName&gt;"
-    ///   CardArt_EMBERFALL — Assets/Art/Cards/EMBERFALL/** at "card_art/&lt;fileName&gt;"
+    ///   CardArt_&lt;setId&gt;   — one group per subfolder of Assets/Art/Cards/, at "card_art/&lt;fileName&gt;".
+    ///                       CORE additionally carries Assets/Art/Hero/**.
     ///   CardData          — card set JSON at "cards/&lt;setId&gt;.cards"
-    /// Each new card set = one new CardArt_&lt;setId&gt; group + JSON rows; re-running the menu
-    /// item after an art drop re-syncs entries without duplicating them.
+    /// A new card set needs NO edit here — drop Assets/Art/Cards/&lt;setId&gt;/ and re-run. Re-running
+    /// the menu item after an art drop re-syncs entries without duplicating them.
     /// Also migrates Assets/Resources/cards/*.cards.json out of Resources/ (M2 D1).
     /// </summary>
     public static class AddressablesSetup
     {
         private const string CardDataFolder = "Assets/CardData";
+        private const string CardArtRoot = "Assets/Art/Cards";
 
         [MenuItem("Emberfall/Addressables/Setup Groups + Migrate Card Data")]
         public static void Run()
@@ -31,10 +32,21 @@ namespace Emberfall.Editor
             var uiCore = GetGroup(settings, "UI_Core");
             AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
             AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
-            var core = GetGroup(settings, "CardArt_CORE");
-            AddFolderSprites(settings, core, "Assets/Art/Cards/CORE", "card_art");
-            AddFolderSprites(settings, core, "Assets/Art/Hero", "card_art");
-            AddFolderSprites(settings, GetGroup(settings, "CardArt_EMBERFALL"), "Assets/Art/Cards/EMBERFALL", "card_art");
+            // One CardArt_<setId> group per SET FOLDER FOUND ON DISK, not a hardcoded list.
+            // REKINDLING shipped card rows and art with no group because the previous three lines
+            // named CORE and EMBERFALL literally: EditorArtProvider resolves by AssetDatabase and
+            // finds art whether or not it is addressable, so an unregistered set looks correct in
+            // the Editor and renders BLANK in a player build, silently. Enumerating the folder
+            // means a new set cannot be forgotten — it only has to exist.
+            foreach (string setFolder in Directory.GetDirectories(CardArtRoot))
+            {
+                string setId = Path.GetFileName(setFolder);
+                var group = GetGroup(settings, "CardArt_" + setId);
+                AddFolderSprites(settings, group, $"{CardArtRoot}/{setId}", "card_art");
+
+                // Hero portraits ride along with CORE — they are set-agnostic and always loaded.
+                if (setId == "CORE") AddFolderSprites(settings, group, "Assets/Art/Hero", "card_art");
+            }
 
             var dataGroup = GetGroup(settings, "CardData");
             foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { CardDataFolder }))

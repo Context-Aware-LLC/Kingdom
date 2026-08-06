@@ -50,6 +50,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f27947770a9f7243af35d1323af8ce2
+    m_Address: ui/ui_button_stone_slate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3268a7e202c268741874aa7e3f21d022
     m_Address: ui/frame_legendary
     m_ReadOnly: 0
@@ -80,8 +85,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4995c8a52bd79f04796b75112514cdb5
+    m_Address: ui/frame_common_spell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de6ac9c8bfa16941bdc2f87450939e1
     m_Address: ui/gem_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 561a8ec0ef4f7a44aaf0289123297dcb
+    m_Address: ui/ui_panel_stone_slate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -97,6 +112,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 647e928725c3e404289ba884022890bd
     m_Address: ui/gem_rare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 650e44c3a091a144abd155aec7c1d090
+    m_Address: ui/ui_button_stone_ember
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -201,12 +221,17 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1dc52688f0c16142a6e765c906d3023
-    m_Address: ui/icon_kw_herald
+    m_Address: ui/icon_kw_battlecry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d252c8982ccae1f43bf65ea2d9c3de73
     m_Address: materials/M_CardBody
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d4a3c736ffdf81d4dab9e57a5b4ad9c5
+    m_Address: ui/frame_legendary_spell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -217,6 +242,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db20ebe440881c44492ea9f13b581be5
     m_Address: ui/HeroFrames_CarvedStone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2dc61885707bed449e16b7d67d2ce19
+    m_Address: ui/ui_panel_stone_shale
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
