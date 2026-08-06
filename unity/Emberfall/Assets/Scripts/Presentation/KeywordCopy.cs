@@ -13,13 +13,9 @@ namespace Emberfall.Presentation
     /// humaniser is exactly the duplicate-surface failure the keyword-display backlog exists to
     /// close, and the tooltip is the second consumer that would have created it.</para>
     ///
-    /// <para><b>This file deliberately does NOT decide keyword NAMES.</b> The names are still the
-    /// enum ids run through a mechanical humaniser, and several cards spell the same mechanic
-    /// differently in their authored text ("Skirmish" for Rush, "Lifedrain" for Lifesteal,
-    /// "Venom" for Poisonous, "Frost" for Freeze). That double-naming is a known open bug owned by
-    /// the keyword display-layer work, not by this file. What is safe to own here is the
-    /// GLOSSARY BODY, which describes the mechanic and stays true whatever the mechanic ends up
-    /// being called.</para>
+    /// <para><b>This file deliberately does NOT decide keyword NAMES.</b> Enum ids are canonical;
+    /// <see cref="DisplayName"/> only formats them for player-facing copy. The GLOSSARY BODY owns
+    /// the short description of each carrier mechanic.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER.</b> When the keyword display layer lands and keywords gain
     /// authored display names, replace <see cref="DisplayName"/>'s humaniser with that lookup HERE
@@ -27,7 +23,7 @@ namespace Emberfall.Presentation
     /// </summary>
     internal static class KeywordCopy
     {
-        /// <summary>Interim display map (keyword-display backlog): enum ids stay TAUNT-style by
+        /// <summary>Interim display map (keyword-display backlog): enum ids stay uppercase by
         /// design; humanise for player-facing surfaces until the full display layer lands.</summary>
         internal static string DisplayName(Keyword kw)
         {
@@ -56,71 +52,65 @@ namespace Emberfall.Presentation
         /// </summary>
         internal static string Glossary(Keyword kw) => kw switch
         {
-            // CommandProcessor.ValidateAttack: a non-stealthed taunt on the defending board
-            // restricts every attack to taunts. Front-row position carries this visually.
-            Keyword.TAUNT =>
+            // CommandProcessor.ValidateAttack: a non-shrouded Bulwark on the defending board
+            // restricts every attack to Bulwarks. Front-row position carries this visually.
+            Keyword.BULWARK =>
                 "Enemy attacks have to go through this minion first.",
 
-            // CommandProcessor.ValidateAttack: CHARGE waives summoning sickness outright.
-            Keyword.CHARGE =>
+            // CommandProcessor.ValidateAttack: FERVOR waives summoning sickness outright.
+            Keyword.FERVOR =>
                 "Can attack the turn it is played, hero included.",
 
-            // Same site, plus the explicit "RUSH can only target minions during summoning turn".
-            Keyword.RUSH =>
+            // Same site, plus the explicit minion-only restriction during the summoning turn.
+            Keyword.SKIRMISH =>
                 "Can attack the turn it is played, but not the enemy hero.",
 
             // DamagePipeline: Aegis absorbs the WHOLE hit and then clears — no health lost and, by
             // G0 ruling R-2(c), no on-hit riders land either.
-            Keyword.DIVINE_SHIELD =>
+            Keyword.AEGIS =>
                 "Absorbs the next hit completely, then breaks.",
-
-            Keyword.HERALD =>
-                "Does something when you play it from your hand.",
-
-            Keyword.DEATHRATTLE =>
-                "Does something when it dies.",
 
             // DamagePipeline: the SOURCE'S CONTROLLER's hero heals for the damage dealt — the hero,
             // never the minion itself.
-            Keyword.LIFESTEAL =>
+            Keyword.LIFEDRAIN =>
                 "Damage this deals also heals your hero by the same amount.",
 
             // CommandProcessor.ValidateAttack: maxAttacks becomes 2.
-            Keyword.WINDFURY =>
+            Keyword.DOUBLESTRIKE =>
                 "Can attack twice each turn.",
 
-            // ValidateAttack + ValidatePlayCard: stealth hides a minion from attacks and from
+            // ValidateAttack + ValidatePlayCard: Shroud hides a minion from attacks and from
             // targeting, and CommandProcessor strips it the moment the minion declares an attack.
-            Keyword.STEALTH =>
+            Keyword.SHROUD =>
                 "Can't be attacked or targeted until it attacks.",
 
             // DamagePipeline: any damage to a MINION sets health to 0. Heroes are unaffected.
-            Keyword.POISONOUS =>
+            Keyword.VENOM =>
                 "Any minion this damages is destroyed.",
 
-            // ActionHandlers: one bonus point of spell damage per copy on your board.
-            Keyword.SPELL_DAMAGE =>
+            // ActionHandlers: one bonus point of damage from spells per copy on your board.
+            Keyword.ARCANE_SURGE =>
                 "Your spells deal 1 more damage. Copies add up.",
 
             Keyword.SILENCE =>
                 "Strips a minion's text, keywords and buffs.",
 
-            // DamagePipeline's Frost rider freezes WHATEVER IT DAMAGES, heroes included — unlike
-            // Poisonous above, which is minions only.
-            Keyword.FREEZE =>
+            // DamagePipeline's Frost rider affects WHATEVER IT DAMAGES, heroes included — unlike
+            // Venom above, which is minions only.
+            Keyword.FROST =>
                 "Whatever this damages misses its next attack — heroes too.",
 
-            // OverloadHandler: adds to NextTurnOverloadLock, spent at the start of your next turn.
-            Keyword.OVERLOAD =>
+            // BackdraftHandler: adds to NextTurnBackdraftLock, spent at the start of your next turn.
+            Keyword.BACKDRAFT =>
                 "Locks that much of your mana on your next turn.",
 
             // EffectInterpreter.Resummon: the copy comes back at exactly 1 health, in the same
-            // board slot, and can never reborn again.
-            Keyword.REBORN =>
+            // board slot, and can never rekindle again.
+            Keyword.REKINDLE =>
                 "The first time it dies it returns in place with 1 Health.",
 
-            // CommandProcessor: overkill on a MINION carries to the enemy hero. The overflow hit
-            // travels with a null keyword set, so Lifesteal/Poisonous/Freeze do NOT ride along.
+            // CommandProcessor: excess damage to a MINION carries to the enemy hero. The overflow
+            // hit travels with a null keyword set, so Lifedrain/Venom/Frost do NOT ride along.
             Keyword.OVERWHELM =>
                 "Excess damage from its attack spills onto the enemy hero.",
 
