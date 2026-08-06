@@ -3,7 +3,6 @@
  * colors/sizes that a token already names). dev-docs/ui/client-surfaces.md:22.
  * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
  */
-
 .deckbuilder {
     flex-grow: 1;
     background-color: var(--surface-1);
@@ -58,7 +57,6 @@
 }
 .db-panel {
     background-color: var(--surface-2);
-    background-image: ;
     border-radius: var(--space-2);
     padding: var(--space-4);
 }
