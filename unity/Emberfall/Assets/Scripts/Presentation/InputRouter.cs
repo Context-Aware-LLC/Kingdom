@@ -578,6 +578,42 @@ namespace Emberfall.Presentation
             MulliganSelectionChanged?.Invoke(0);
         }
 
+        /// <summary>
+        /// EF-049. "That press turned out to be a read, not a select." A touch long-press on a card
+        /// reveals it, but <see cref="ClickableCard"/> dispatched the same press to
+        /// <see cref="OnCardClicked"/> the moment it landed — so without this the player finishes
+        /// reading a card and finds it armed, one stray tap away from being played.
+        ///
+        /// <para>Guarded by id so it can only ever undo the selection the reading press itself
+        /// made: a reveal over some OTHER card must not clear a selection the player made
+        /// deliberately beforehand.</para>
+        ///
+        /// <para><b>The mulligan arm is not an afterthought.</b> Mulligan is the moment a player
+        /// most needs to read a card, and there a press toggles the TOSS MARK rather than
+        /// selecting. Toggling once more restores the pre-press state exactly, whichever way it
+        /// went — which is the only reason this takes the card and not just its id.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER.</b> This exists only because the click dispatches on PRESS.
+        /// When EF-048's pointer abstraction moves it to release, the long-press should suppress
+        /// the dispatch instead of undoing it — delete this method and
+        /// <c>CardRevealController.CancelPressSelection</c> in that same change.</para>
+        /// </summary>
+        public void CancelSelection(ClickableCard card)
+        {
+            if (card == null || _currentState == null) return;
+
+            if (IsMulliganActive())
+            {
+                // Mirrors OnCardClicked's mulligan arm exactly; anything it ignored, this must too.
+                if (card.OwnerId == _p0Id && card.Zone == Zone.Hand) ToggleMulliganCard(card);
+                return;
+            }
+
+            if (_state == State.Idle) return;
+            if (!_selectedId.Equals(card.CardId)) return;
+            ClearSelection();
+        }
+
         // In-match concede (C-G1-3), invoked by the settings overlay's confirm. Deliberately
         // UNGUARDED by turn/phase: concede is legal at any time (CommandProcessor: KnownPlayer +
         // not GameOver), unlike end-turn — so a player can forfeit on the opponent's turn. Routed

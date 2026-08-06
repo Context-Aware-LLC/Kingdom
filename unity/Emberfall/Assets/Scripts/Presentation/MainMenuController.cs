@@ -64,6 +64,12 @@ namespace Emberfall.Presentation
         private DropdownField _characterSecondary;
         private Button _characterCancel;
 
+        // Set right before OpenCharacterModal by OnDeckBuilder only — the first-run continuation
+        // (ConfirmName) leaves it false. Consumed once by ConfirmCharacter, so a create reached via
+        // the Deck Builder button lands the player in the deckbuilder instead of back at the menu,
+        // while first-run creation still ends on the menu as before.
+        private bool _characterModalOpensDeckBuilder;
+
         private VisualElement _accountModal;
         private VisualElement _accountList;
         private Label _accountError;
@@ -413,9 +419,10 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            Character created;
             try
             {
-                Character created = _account.CreateCharacter(check.Normalized, primary, secondary, db);
+                created = _account.CreateCharacter(check.Normalized, primary, secondary, db);
                 Debug.Log($"[MainMenu] created character '{created.Name}' " +
                           $"({created.PrimaryClass}/{created.SecondaryClass}) id={created.Id} " +
                           $"starter deck={created.DefaultDeckId}");
@@ -429,6 +436,14 @@ namespace Emberfall.Presentation
 
             Hide(_characterModal);
             RefreshIdentity();
+
+            bool enterDeckBuilder = _characterModalOpensDeckBuilder;
+            _characterModalOpensDeckBuilder = false;
+            if (enterDeckBuilder)
+            {
+                DeckbuilderController.PendingCharacterId = created.Id;
+                Go("DeckbuilderSpike");
+            }
         }
 
         // ── Account switcher (testing) ──────────────────────────────────────────────────
@@ -659,7 +674,12 @@ namespace Emberfall.Presentation
         {
             if (_account == null) return;
             var roster = _account.Roster();
-            if (roster.Count == 0) { OpenCharacterModal(); return; }
+            if (roster.Count == 0)
+            {
+                _characterModalOpensDeckBuilder = true;
+                OpenCharacterModal();
+                return;
+            }
 
             DeckbuilderController.PendingCharacterId = roster[0].Id;
             Go("DeckbuilderSpike");

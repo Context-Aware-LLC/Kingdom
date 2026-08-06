@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="128" viewBox="0 0 600 128" preserveAspectRatio="none">
+  <title>Emberfall UI button — ember basalt</title>
+  <desc>A restrained warm charcoal stone slat for 300 by 64 pixel main-menu buttons. The finished artwork is 65 percent opaque.</desc>
+  <defs>
+    <linearGradient id="ember-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#625955"/>
+      <stop offset="0.48" stop-color="#4b4442"/>
+      <stop offset="1" stop-color="#352f31"/>
+    </linearGradient>
+    <linearGradient id="ember-glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9e5f3e" stop-opacity="0.03"/>
+      <stop offset="0.28" stop-color="#c77b4d" stop-opacity="0.18"/>
+      <stop offset="0.72" stop-color="#b96b43" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#8d5039" stop-opacity="0.03"/>
+    </linearGradient>
+    <clipPath id="ember-clip">
+      <rect x="0" y="0" width="600" height="128" rx="12"/>
+    </clipPath>
+  </defs>
+
+  <g opacity="0.65" clip-path="url(#ember-clip)">
+    <rect width="600" height="128" fill="url(#ember-base)"/>
+    <path d="M0 0 H143 L119 32 L52 44 L0 37 Z" fill="#897b73" opacity="0.12"/>
+    <path d="M600 0 H476 L501 37 L566 47 L600 38 Z" fill="#8a7870" opacity="0.10"/>
+    <path d="M0 128 H137 L104 92 L43 84 L0 94 Z" fill="#211d20" opacity="0.16"/>
+    <path d="M600 128 H470 L502 89 L568 82 L600 92 Z" fill="#211d20" opacity="0.18"/>
+    <path d="M0 67 C84 55 134 77 211 66 C288 55 359 76 426 65 C490 54 543 72 600 61 L600 83 C536 91 485 74 421 85 C355 96 287 76 213 88 C137 100 76 80 0 93 Z" fill="url(#ember-glow)"/>
+
+    <!-- Hairline ember fissures at the shoulders; never behind the button label. -->
+    <path d="M7 67 L38 58 L61 67 L94 53 L119 61 L148 46 M593 66 L562 58 L539 68 L508 55 L482 62 L455 48" fill="none" stroke="#241a19" stroke-width="4" opacity="0.65"/>
+    <path d="M7 65 L38 56 L61 65 L94 51 L119 59 L148 44 M593 64 L562 56 L539 66 L508 53 L482 60 L455 46" fill="none" stroke="#d17b49" stroke-width="1.5" opacity="0.55"/>
+    <path d="M36 56 L29 43 M94 51 L103 35 M539 66 L548 80 M508 53 L497 38" fill="none" stroke="#b96540" stroke-width="1.25" opacity="0.42"/>
+
+    <path d="M15 3 H585" stroke="#d6c4b7" stroke-width="3" opacity="0.23"/>
+    <path d="M8 124 H592" stroke="#151114" stroke-width="5" opacity="0.72"/>
+    <path d="M14 119 H586" stroke="#8b7065" stroke-width="2" opacity="0.20"/>
+  </g>
+</svg>

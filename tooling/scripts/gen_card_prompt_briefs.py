@@ -21,19 +21,19 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     table by the card's `class`. Never hardcoded here — parsed at runtime so it cannot drift.
   - World tone, from dev-docs/descriptors/world.md (base + REKINDLING section when relevant).
   - Output path + canonical filename, from setId/artId. ONE rule, no per-class exceptions:
-    art-bakeoff/card-art/<setId>/art_<cardId>/. The old emberward-tidecaller / EMBERFALL split
-    that gen_card_art.py uses is a leftover of the pre-reorg batch files, not a rule worth
-    perpetuating in new tooling — it has already caused two misfiled candidates in one session.
-  - A SCALE CLAUSE derived from cost + attack/health + rarity (see `scale_clause`). This is the
-    direct fix for the failure mode where a 1-cost common renders as a titanic boss monster:
-    the model's default register is maximalist, and it will not scale itself down just because
-    the prompt calls a card "Epic-tier, not the biggest shape" — it needs to be told the actual
-    physical scale in concrete terms.
+    art-pipeline/card-art/<setId>/art_<cardId>/art_<cardId>.png. The PNG stem repeats the
+    enclosing leaf-directory name exactly. The old emberward-tidecaller / EMBERFALL split that
+    gen_card_art.py uses is a leftover of the pre-reorg batch files, not a rule worth perpetuating
+    in new tooling — it has already caused two misfiled candidates in one session.
+  - SCALE and VISUAL POWER clauses derived from mana cost + rarity (see `scale_clause`). These
+    directly fix the failure mode where a cheap card renders as a titanic boss or battlefield-wide
+    catastrophe: the model's default register is maximalist, so lower mana rungs explicitly demand
+    tighter framing, smaller effects, fewer particles, and less environmental destruction.
 
 WHAT IS A SEED (human-authored, tracked, never auto-overwritten):
   tooling/card-art-seeds/<setId>.json, keyed by card id:
     { "subject": "...", "perspective": "...", "background": "...", "tone": "...", "notes": "..." }
-  Deliberately NOT in art-bakeoff/ (untracked, disposable per CLAUDE.md) and NOT inside
+  Deliberately NOT in art-pipeline/ (untracked, disposable per CLAUDE.md) and NOT inside
   unity/Emberfall/Assets/CardData/ (that file is gameplay data feeding the determinism hash;
   art-authoring metadata does not belong mixed into it).
 
@@ -72,7 +72,7 @@ DOCS = pathlib.Path(
 )
 CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
-OUT_ROOT = REPO / "art-bakeoff" / "card-art"
+OUT_ROOT = REPO / "art-pipeline" / "card-art"
 
 CLASSES_MD = DOCS / "dev-docs" / "descriptors" / "classes.md"
 WORLD_MD = DOCS / "dev-docs" / "descriptors" / "world.md"
@@ -82,7 +82,19 @@ WORLD_MD = DOCS / "dev-docs" / "descriptors" / "world.md"
 DELIVERY_TMPL = """DELIVERY
 - 1024x1024 PNG in sRGB.
 - Output Path: {out_dir}
-- Canonical filename: {filename}."""
+- Canonical filename: {filename}.
+- The PNG filename must exactly match its enclosing directory name, plus .png."""
+
+
+def delivery_block(card):
+    """Build the one canonical editor/generation destination for a card.
+
+    Keep this shared between the CLI brief generator and browser editor so neither can
+    accidentally omit the per-card leaf directory again.
+    """
+    stem = f"art_{card['id']}"
+    out_dir = OUT_ROOT / card["setId"] / stem
+    return DELIVERY_TMPL.format(out_dir=f"{out_dir}{os.sep}", filename=f"{stem}.png")
 
 # Reworded from dev-docs/specs/card-generation-prompt.md — see module docstring for why.
 COMPOSITION = """COMPOSITION
@@ -174,6 +186,14 @@ SCALE_TIERS = {
     3: "commanding — one of the biggest, most dramatic shapes in its class.",
 }
 
+VISUAL_POWER_TIERS = {
+    0: "a small, local moment. Keep the subject modest in-frame and any magic no larger than the subject; use sparse particles and no towering or catastrophic staging.",
+    1: "compact skirmish scale. Show one restrained action or effect with room to breathe; no battlefield-wide wave, giant-creature framing, or explosive sky.",
+    2: "substantial but localized. It may dominate an immediate room, gate, or short stretch of street, but not a fortress, city, or landscape; keep secondary effects controlled.",
+    3: "a major encounter. It may dominate one battlefield scene, but should not imply world-ending power unless the card text explicitly demands it.",
+    4: "monumental. Fortress- or landscape-scale staging is allowed only when the card's identity and mechanics support it.",
+}
+
 
 def scale_clause(card):
     cost = card.get("cost", 0)
@@ -186,7 +206,22 @@ def scale_clause(card):
         tier = 2 if cost >= 5 else 1
     else:  # COMMON — capped, regardless of cost, per the Blazewing finding
         tier = 1 if cost >= 4 else 0
-    return f"SCALE (cost {cost}, {rarity.title()}): {SCALE_TIERS[tier]}"
+
+    if cost <= 1:
+        power_tier = 0
+    elif cost <= 3:
+        power_tier = 1
+    elif cost <= 5:
+        power_tier = 2
+    elif cost <= 7:
+        power_tier = 3
+    else:
+        power_tier = 4
+
+    return (
+        f"SCALE (cost {cost}, {rarity.title()}): {SCALE_TIERS[tier]}\n"
+        f"VISUAL POWER (cost {cost}): {VISUAL_POWER_TIERS[power_tier]}"
+    )
 
 
 # --------------------------------------------------------------- placeholder
@@ -209,8 +244,6 @@ def placeholder_subject(card):
 def compose_brief(card, class_descriptors, world_tone, seed):
     cls = card.get("class", "NEUTRAL").lower()
     palette, motifs, mood = class_descriptors.get(cls, ("", "", ""))
-    filename = f"art_{card['id']}.png"
-    out_dir = f"{OUT_ROOT}\\{card['setId']}\\"
 
     subject = (seed or {}).get("subject") or placeholder_subject(card)
     perspective = (seed or {}).get("perspective") or "[perspective unset]"
@@ -220,7 +253,7 @@ def compose_brief(card, class_descriptors, world_tone, seed):
     notes = (seed or {}).get("notes") or ""
 
     header = f"Generate one Emberfall card illustration for {card['name']} ({card['id']})."
-    delivery = DELIVERY_TMPL.format(out_dir=out_dir, filename=filename)
+    delivery = delivery_block(card)
     subj_opp = (
         "SUBJECT AND BACKGROUND OPPOSITION\n"
         f"- Subject class: {card.get('class', 'NEUTRAL').title()}.\n"

@@ -1,0 +1,16 @@
+{
+    "name": "Unity.Addressables.Android",
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "3.0.0",
+            "define": "UNITY_ADDRESSABLES_3_0_OR_NEWER"
+        }
+    ]
+}

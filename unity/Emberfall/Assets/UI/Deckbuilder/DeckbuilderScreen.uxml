@@ -13,11 +13,9 @@
 
         <!-- Header -->
         <ui:VisualElement name="header" class="db-header">
-            <ui:Label text="DECKBUILDER" class="db-title" />
             <ui:VisualElement class="db-header-spacer" />
             <ui:Label name="hero-label" text="Emberward" class="db-hero" />
             <ui:Label name="count-label" text="0 / 30" class="db-count" />
-            <ui:Label name="legality-pill" text="Incomplete" class="db-pill db-pill--invalid" />
         </ui:VisualElement>
 
         <!-- Body: split view -->
@@ -25,13 +23,12 @@
 
             <!-- Left: collection -->
             <ui:VisualElement name="collection-panel" class="db-panel db-collection">
-                <ui:Label text="COLLECTION" class="db-panel-title" />
                 <ui:VisualElement name="filter-row" class="db-filter-row">
                     <ui:Button name="filter-all" text="All" class="db-chip db-chip--on" />
                     <ui:Button name="filter-class" text="Class" class="db-chip" />
                     <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
                 </ui:VisualElement>
-                <ui:ScrollView name="collection-scroll" class="db-list">
+                <ui:ScrollView name="collection-scroll" class="db-list" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                     <ui:VisualElement name="collection-grid" class="db-grid" />
                 </ui:ScrollView>
             </ui:VisualElement>

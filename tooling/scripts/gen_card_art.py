@@ -55,7 +55,7 @@ commons — identity assets first, filler last.
 
 CANDIDATES, NOT SINGLES (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2): candidates land in
 
-    art-bakeoff/card-art/<setId>/<art_file>/cand_<provider>_N.png
+    art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png
 
 with a per-class contact sheet, and a human picks before anything is promoted to
 
@@ -109,7 +109,7 @@ DOCS = pathlib.Path(
 )
 DESIGN = DOCS / "design"
 
-OUT = REPO / "art-bakeoff" / "card-art"
+OUT = REPO / "art-pipeline" / "card-art"
 UNITY_CARDS = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 MANIFEST = OUT / "prompt-manifest.json"
 
@@ -184,7 +184,7 @@ CLASSES = {
     "rekindling":  "card-drafts-rekindling",
 }
 
-# WHERE CANDIDATES LAND under art-bakeoff/card-art/ (Sam, 2026-07-26). The
+# WHERE CANDIDATES LAND under art-pipeline/card-art/ (Sam, 2026-07-26). The
 # original layout was one folder per setId, but every card in the game is
 # setId EMBERFALL, so all 29 cards piled into a single directory. New work goes
 # in its own folder instead: this maps a CLASSES key to its candidate subfolder,

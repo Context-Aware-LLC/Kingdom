@@ -36,6 +36,10 @@ artifacts/
 # Untracked in full, no exceptions.
 art-bakeoff/
 
+# Canonical art pipeline output (2026-08-01). Everything a generator produces lands here —
+# final resting place or staging area en route to Unity import. Untracked in full, no exceptions.
+art-pipeline/
+
 # Python bytecode from the tooling/scripts generators
 __pycache__/
 

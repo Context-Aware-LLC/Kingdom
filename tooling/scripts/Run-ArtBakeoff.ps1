@@ -10,7 +10,7 @@
 #   .\tooling\scripts\Run-ArtBakeoff.ps1 -Only art_last_rites     # one prompt (re-roll)
 #   .\tooling\scripts\Run-ArtBakeoff.ps1 -Model gemini-3.1-flash-image   # Nano Banana 2
 #
-# Output: art-bakeoff/<model>/<artId>.png (+ timing report). art-bakeoff/ is
+# Output: art-pipeline/<model>/<artId>.png (+ timing report). art-pipeline/ is
 # gitignored scratch — winners get curated into Assets/ manually after style lock.
 
 param(
@@ -38,7 +38,7 @@ if (-not $apiKey) {
 }
 if (-not $apiKey) { throw "No API key: set GEMINI_API_KEY or put it in the repo-root .env" }
 
-if (-not $OutRoot) { $OutRoot = Join-Path $repoRoot "art-bakeoff" }
+if (-not $OutRoot) { $OutRoot = Join-Path $repoRoot "art-pipeline" }
 $outDir = Join-Path $OutRoot $Model
 New-Item -ItemType Directory -Force $outDir | Out-Null
 

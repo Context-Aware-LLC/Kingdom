@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" preserveAspectRatio="none">
+  <title>Emberfall UI panel — riven shale</title>
+  <desc>A neutral-warm layered shale surface for deck-builder panels. The finished artwork is 65 percent opaque with subdued texture through the content field.</desc>
+  <defs>
+    <linearGradient id="panel-shale-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5e5a58"/>
+      <stop offset="0.5" stop-color="#494648"/>
+      <stop offset="1" stop-color="#343238"/>
+    </linearGradient>
+    <linearGradient id="panel-shale-warmth" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9f6b4e" stop-opacity="0.04"/>
+      <stop offset="0.48" stop-color="#bb7c52" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#8a5d49" stop-opacity="0.035"/>
+    </linearGradient>
+    <clipPath id="panel-shale-clip">
+      <rect x="0" y="0" width="1200" height="800" rx="28"/>
+    </clipPath>
+  </defs>
+
+  <g opacity="0.65" clip-path="url(#panel-shale-clip)">
+    <rect width="1200" height="800" fill="url(#panel-shale-base)"/>
+
+    <!-- Layer bands are broad and low contrast for a readable working surface. -->
+    <path d="M0 103 C151 76 270 123 422 94 C583 63 698 112 865 81 C1009 54 1107 84 1200 69 V170 C1081 185 1003 151 862 180 C697 214 583 169 421 200 C270 229 142 188 0 216 Z" fill="#817b77" opacity="0.085"/>
+    <path d="M0 248 C145 225 282 266 438 241 C601 214 719 255 879 228 C1000 207 1103 224 1200 210 V309 C1092 326 1007 300 878 323 C718 351 600 311 438 337 C280 362 148 327 0 350 Z" fill="#29272d" opacity="0.105"/>
+    <path d="M0 391 C142 367 286 411 447 384 C607 357 732 400 891 374 C1026 351 1118 373 1200 359 V458 C1105 471 1028 449 890 472 C731 499 607 456 447 483 C286 510 143 468 0 492 Z" fill="url(#panel-shale-warmth)"/>
+    <path d="M0 540 C137 514 277 560 435 530 C604 499 719 548 884 519 C1020 495 1115 518 1200 503 V605 C1098 620 1018 596 882 620 C719 649 602 601 435 632 C277 661 136 615 0 641 Z" fill="#777170" opacity="0.07"/>
+    <path d="M0 684 C132 664 277 702 433 677 C600 650 718 693 883 665 C1019 642 1110 665 1200 651 V800 H0 Z" fill="#26242a" opacity="0.10"/>
+
+    <!-- Fine strata and occasional iron seams. -->
+    <path d="M34 228 C177 204 296 246 451 219 C610 191 727 235 886 207 C1012 185 1101 203 1179 192" fill="none" stroke="#b2aaa3" stroke-width="2" opacity="0.12"/>
+    <path d="M22 507 C171 483 294 523 452 497 C613 470 734 513 891 486 C1019 464 1108 482 1189 470" fill="none" stroke="#17151a" stroke-width="4" opacity="0.18"/>
+    <path d="M49 510 C191 489 302 530 456 504 C618 477 736 520 895 493 C1021 472 1104 488 1167 479" fill="none" stroke="#b96d45" stroke-width="1.5" opacity="0.18"/>
+    <path d="M135 126 l28 -7 l24 5 M955 331 l41 -9 l28 7 M546 694 l38 -8 l31 7" fill="none" stroke="#d0c4bb" stroke-width="2" opacity="0.13"/>
+
+    <!-- 48 px nine-slice-safe beveled frame. -->
+    <rect x="4" y="4" width="1192" height="792" rx="24" fill="none" stroke="#b3a59c" stroke-width="7" opacity="0.25"/>
+    <rect x="18" y="18" width="1164" height="764" rx="16" fill="none" stroke="#17151a" stroke-width="4" opacity="0.52"/>
+    <path d="M48 30 H1152 M38 47 V753" fill="none" stroke="#e0d3c8" stroke-width="2" opacity="0.14"/>
+    <path d="M48 770 H1152 M1162 47 V753" fill="none" stroke="#131116" stroke-width="4" opacity="0.46"/>
+
+    <path d="M25 93 L55 56 L102 39 M1175 93 L1145 56 L1098 39 M25 707 L55 744 L102 761 M1175 707 L1145 744 L1098 761" fill="none" stroke="#b4a69d" stroke-width="3" opacity="0.17"/>
+  </g>
+</svg>

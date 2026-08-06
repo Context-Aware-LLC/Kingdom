@@ -12,6 +12,11 @@
 
 /* ---------- Header ---------- */
 .db-header {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 20px;
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-4);
@@ -53,6 +58,7 @@
 }
 .db-panel {
     background-color: var(--surface-2);
+    background-image: ;
     border-radius: var(--space-2);
     padding: var(--space-4);
 }
@@ -90,12 +96,7 @@
     background-color: var(--surface-1);
     border-radius: var(--space-2);
 }
-/* No visible scrollbars anywhere (Sam, 2026-08-01 ruling — see [[no-visible-scrollbars-ruling]]
- * in memory). Wheel/drag scrolling still works; this only hides the track+thumb chrome, which
- * read as generic UI Toolkit default rather than anything in this game's visual language. */
-.db-list .unity-scroller {
-    display: none;
-}
+
 
 /* ---------- Collection wall (§2.9 wall tile — the REAL card, baked by CardFaceBaker, not a
  * UI Toolkit re-implementation of the card front) ---------- */
@@ -107,23 +108,15 @@
 .card-tile {
     width: 276px;
     height: 387px;
+    /* margin-left/margin-right are runtime-computed per row by
+     * DeckbuilderController.LayoutCollectionGrid (fixed tile size, variable gutter, no dead
+     * space on the right edge); only the top/bottom 8px here actually applies. */
     margin: var(--space-2);
     background-color: var(--surface-3);   /* shows through until the bake resolves */
     -unity-background-scale-mode: scale-to-fit;
     border-radius: var(--space-2);
 }
 .card-tile--disabled { opacity: 0.4; }
-.tile-copies {
-    position: absolute;
-    top: var(--space-2);
-    right: var(--space-2);
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    background-color: rgba(11, 14, 19, 0.75);
-    border-radius: 999px;
-    padding: 2px var(--space-2);
-}
 
 /* Deck-side row (§2.3 full tiles are collection-only for now; the deck list stays a legible
  * full-width row for L1–L5 proof) */
@@ -140,8 +133,8 @@
 }
 .card-row--disabled { opacity: 0.4; }
 .card-cost {
-    width: 30px;
-    height: 30px;
+    width: 100%;
+    height: 100%;
     -unity-text-align: middle-center;
     -unity-font-style: bold;
     font-size: var(--type-body);
@@ -162,13 +155,6 @@
     margin-right: var(--space-3);
     background-color: var(--rarity-common);
 }
-.card-copies {
-    font-size: var(--type-label);
-    color: var(--ink-2);
-    min-width: 40px;
-    -unity-text-align: middle-right;
-}
-
 /* ---------- Deck side ---------- */
 .db-deck-name {
     font-size: var(--type-h1);
@@ -245,3 +231,18 @@
     background-color: var(--surface-3);
 }
 .db-button:disabled { opacity: 0.35; }
+
+/* No visible scrollbars anywhere (Sam, 2026-08-01 ruling — see [[no-visible-scrollbars-ruling]]
+ * in memory). Wheel/drag scrolling still works; this only hides the track+thumb chrome, which
+ * read as generic UI Toolkit default rather than anything in this game's visual language. */
+ #collection-scroll .unity-scroller {
+    display: none;
+}
+
+#collection-scroll .unity-scroller--vertical {
+    display: none;
+}
+
+#collection-scroll .unity-scroll-view__vertical-scroller {
+    display: none;
+}

@@ -48,6 +48,10 @@ namespace Emberfall.Presentation
         private Label _legalityPill;
         private Label _heroLabel;
         private Button _saveButton;
+        private Button _filterAllButton;
+        private Button _filterClassButton;
+        private Button _filterNeutralButton;
+        private CardFilter _activeFilter;   // null = All (no constraint)
 
         private void OnEnable()
         {
@@ -86,6 +90,7 @@ namespace Emberfall.Presentation
             InitFaceBaker();
             BuildCollectionGrid();
             WireDeckList();
+            WireCollectionFilters();
             WireChrome();
             Refresh();
         }
@@ -143,13 +148,17 @@ namespace Emberfall.Presentation
         private void CacheElements()
         {
             _collectionGrid = _root.Q<VisualElement>("collection-grid");
+            _collectionGrid.RegisterCallback<GeometryChangedEvent>(QueueCollectionLayout);
             _deckList       = _root.Q<ListView>("deck-list");
             _curve          = _root.Q<VisualElement>("curve-strip");
             _legalityBox    = _root.Q<VisualElement>("legality-box");
             _countLabel     = _root.Q<Label>("count-label");
-            _legalityPill   = _root.Q<Label>("legality-pill");
+            // _legalityPill   = _root.Q<Label>("legality-pill");
             _heroLabel      = _root.Q<Label>("hero-label");
             _saveButton     = _root.Q<Button>("save-button");
+            _filterAllButton     = _root.Q<Button>("filter-all");
+            _filterClassButton   = _root.Q<Button>("filter-class");
+            _filterNeutralButton = _root.Q<Button>("filter-neutral");
 
             if (_heroLabel != null)
             {
@@ -172,10 +181,6 @@ namespace Emberfall.Presentation
                 tile.AddToClassList("card-tile");
                 tile.userData = def;
 
-                var copies = new Label { name = "copies" };
-                copies.AddToClassList("tile-copies");
-                tile.Add(copies);
-
                 tile.RegisterCallback<ClickEvent>(_ => AddCopy(def));
 
                 string defId = def.Id;
@@ -188,6 +193,96 @@ namespace Emberfall.Presentation
                 _collectionGrid.Add(tile);
                 _collectionTiles[def.Id] = tile;
             }
+
+            QueueCollectionLayout();
+        }
+
+        // ---- Collection grid gutter (Sam, 2026-08-02): tile size is fixed — a bake-cache wall,
+        // never stretched to fill space — so the only lever is the gutter between tiles. Recomputed
+        // per row on every resize (deck panel opening/closing, window resize) so full rows always
+        // span the panel edge to edge instead of packing left with dead space on the right; a
+        // partial last row stays left-aligned at the same gutter rather than spreading apart. This
+        // is the manual equivalent of CSS Grid's `repeat(auto-fill, TileWidth)` + `justify-content:
+        // space-between`, which UI Toolkit's flexbox-only layout has no direct way to express.
+        private const float CardTileWidth = 276f;  // must match .card-tile width in deckbuilder.uss
+        private const float MinGutter = 16f;        // floor == --space-4; never squeeze tighter than that token
+        private bool _collectionLayoutQueued;
+
+        /// <summary>Defers to the next scheduler tick instead of running inline. The grid's own
+        /// GeometryChangedEvent is the trigger, and Yoga fires that mid-layout-pass — mutating
+        /// margins synchronously from inside it edits the tree while Yoga is still walking it, so
+        /// only whichever tiles it hasn't visited yet pick up the new values. That tears a single
+        /// pass into two different geometries across rows and never converges, since the mutation
+        /// re-triggers the same event. Coalesces bursts (resize + filter click) into one pass.</summary>
+        private void QueueCollectionLayout(GeometryChangedEvent evt = default)
+        {
+            if (_collectionLayoutQueued) return;
+            _collectionLayoutQueued = true;
+            _collectionGrid.schedule.Execute(() =>
+            {
+                _collectionLayoutQueued = false;
+                LayoutCollectionGrid();
+            });
+        }
+
+        // A row solved to land EXACTLY on the available width is a floating-point tie: the tile's
+        // real resolved width (measured live: 275.9598px, not the authored 276px) never matches
+        // CardTileWidth to the decimal, so the row Yoga actually lays out overshoots by a hair and
+        // it silently wraps one tile early — our margins still assumed the wider row, so the tile
+        // that should've been last-in-row lands first-in-next-row with its trailing margin zeroed,
+        // flush against its new neighbour. This margin keeps every row comfortably under budget.
+        private const float RowSafetyMargin = 2f;
+
+        private void LayoutCollectionGrid()
+        {
+            float available = _collectionGrid.resolvedStyle.width - RowSafetyMargin;
+            if (available <= 0f) return;
+
+            int columns = Mathf.Max(1, Mathf.FloorToInt((available + MinGutter) / (CardTileWidth + MinGutter)));
+            float gutter = columns > 1 ? (available - columns * CardTileWidth) / (columns - 1) : 0f;
+
+            // Visibility and spacing are computed together: a filtered-out tile takes no row slot,
+            // so the column math below must walk only the tiles the active filter keeps.
+            var visible = new List<VisualElement>(_pool.Count);
+            foreach (var def in _pool)
+            {
+                if (!_collectionTiles.TryGetValue(def.Id, out var tile)) continue;
+                bool show = CardQuery.Matches(def, _activeFilter);
+                tile.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+                if (show) visible.Add(tile);
+            }
+
+            for (int i = 0; i < visible.Count; i++)
+            {
+                bool endOfRow = (i % columns) == columns - 1 || i == visible.Count - 1;
+                visible[i].style.marginLeft = 0f;
+                visible[i].style.marginRight = endOfRow ? 0f : gutter;
+            }
+        }
+
+        // ---- Collection filter chips (All / Class / Neutral): the three that already exist in
+        // the UXML, previously unwired — clicking them did nothing. Class = either half of the
+        // character's pairing, excluding neutral; Neutral = CardClass.NEUTRAL only; All = no
+        // constraint. Filtering itself lives in CardQuery (EF-035, .NET-side and testable) — this
+        // just toggles per-tile visibility and re-runs the grid layout pass.
+        private void WireCollectionFilters()
+        {
+            _filterAllButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(null, _filterAllButton));
+            _filterClassButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(
+                new CardFilter { Classes = new[] { _character.PrimaryClass, _character.SecondaryClass } },
+                _filterClassButton));
+            _filterNeutralButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(
+                new CardFilter { Classes = new[] { CardClass.NEUTRAL } },
+                _filterNeutralButton));
+        }
+
+        private void ApplyCollectionFilter(CardFilter filter, Button active)
+        {
+            _activeFilter = filter;
+            _filterAllButton.EnableInClassList("db-chip--on", active == _filterAllButton);
+            _filterClassButton.EnableInClassList("db-chip--on", active == _filterClassButton);
+            _filterNeutralButton.EnableInClassList("db-chip--on", active == _filterNeutralButton);
+            QueueCollectionLayout();
         }
 
         private void RefreshCollectionTiles()
@@ -195,11 +290,6 @@ namespace Emberfall.Presentation
             foreach (var def in _pool)
             {
                 if (!_collectionTiles.TryGetValue(def.Id, out VisualElement tile)) continue;
-
-                int count = _deck.CountOf(def.Id);
-                int max = DeckValidator.MaxCopies(def.Rarity);
-                var copies = tile.Q<Label>("copies");
-                if (copies != null) copies.text = count > 0 ? $"{count}/{max}" : $"·/{max}";
 
                 tile.EnableInClassList("card-tile--disabled", !DeckValidator.CanAdd(_deck, _character, def));
             }
@@ -214,6 +304,16 @@ namespace Emberfall.Presentation
             _deckList.makeItem = MakeCardRow;
             _deckList.bindItem = BindDeckRow;
             _deckList.RegisterCallback<ClickEvent>(OnDeckClick);
+
+            // No visible scrollbars anywhere (Sam, 2026-08-01 ruling — see [[no-visible-scrollbars-ruling]]
+            // in memory). ListView doesn't expose verticalScrollerVisibility itself — only its
+            // internal ScrollView does — so this can't be set from UXML like collection-scroll's.
+            var innerScroll = _deckList.Q<ScrollView>();
+            if (innerScroll != null)
+            {
+                innerScroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+                innerScroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            }
         }
 
         private void BindDeckRow(VisualElement row, int index)
@@ -222,7 +322,7 @@ namespace Emberfall.Presentation
             if (!_db.TryGet(entry.CardId, out var def)) { row.style.display = DisplayStyle.None; return; }
             row.style.display = DisplayStyle.Flex;
             row.userData = def;
-            SetCardRow(row, def, entry.Count, DeckValidator.MaxCopies(def.Rarity));
+            SetCardRow(row, def);
             row.EnableInClassList("card-row--disabled", false);
         }
 
@@ -239,22 +339,19 @@ namespace Emberfall.Presentation
         {
             var row = new VisualElement();
             row.AddToClassList("card-row");
-            var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
-            var dot  = new VisualElement { name = "dot" }; dot.AddToClassList("card-rarity-dot");
+            // var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
+            // var dot  = new VisualElement { name = "dot" }; dot.AddToClassList("card-rarity-dot");
             var name = new Label { name = "name" };   name.AddToClassList("card-name");
-            var copies = new Label { name = "copies" }; copies.AddToClassList("card-copies");
-            row.Add(cost); row.Add(dot); row.Add(name); row.Add(copies);
+            //  row.Add(cost); row.add(dot); removed from the line below for offending someones sensibilities
+             row.Add(name);
             return row;
         }
 
-        private static void SetCardRow(VisualElement row, CardDefinition def, int count, int max)
+        private static void SetCardRow(VisualElement row, CardDefinition def)
         {
-            row.Q<Label>("cost").text = def.Cost.ToString();
+            // row.Q<Label>("cost").text = def.Cost.ToString();
             row.Q<Label>("name").text = def.Name;
-            row.Q<Label>("copies").text = count > 0 ? $"{count}/{max}" : $"·/{max}";
 
-            var dot = row.Q<VisualElement>("dot");
-            SwapPrefixedClass(dot, "rarity--", RarityClass(def.Rarity));
             SwapPrefixedClass(row, "edge--", ClassEdgeClass(def.Class));
         }
 
@@ -340,9 +437,9 @@ namespace Emberfall.Presentation
 
             _countLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
 
-            _legalityPill.text = result.IsValid ? "Legal" : "Incomplete";
-            _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
-            _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
+            // _legalityPill.text = result.IsValid ? "Legal" : "Incomplete";
+            // _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
+            // _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
 
             _legalityBox.Clear();
             foreach (var v in result.Violations)

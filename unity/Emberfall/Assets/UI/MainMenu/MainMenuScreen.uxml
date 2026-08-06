@@ -8,17 +8,17 @@
             <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
             <ui:Label name="identity-sub" text="" class="mm-identity__sub"/>
         </ui:Button>
-        <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly"/>
+        <ui:Button name="btn-switch-account btn-main" text="Switch account" class="mm-devonly"/>
         <ui:VisualElement name="brand" class="mm-brand">
             <ui:Label text="EMBERFALL" class="mm-wordmark"/>
             <ui:Label text="A duel of embers" class="mm-tagline"/>
         </ui:VisualElement>
         <ui:VisualElement name="menu" class="mm-menu">
-            <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
-            <ui:Button name="btn-single-player" text="Single Player" class="mm-button"/>
-            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button"/>
-            <ui:Button name="btn-store" text="Store" class="mm-button"/>
-            <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
+            <ui:Button name="btn-find-game btn-main" text="Find Game" class="mm-button mm-button--cta"/>
+            <ui:Button name="btn-single-player btn-main" text="Single Player" class="mm-button"/>
+            <ui:Button name="btn-deck-builde rbtn-main" text="Deck Builder" class="mm-button"/>
+            <ui:Button name="btn-store btn-main" text="Store" class="mm-button"/>
+            <ui:Button name="btn-leaderboards btn-main" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer">
             <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version"/>
