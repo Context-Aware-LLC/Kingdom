@@ -13,7 +13,12 @@
   <Project Path="Unity.Addressables.Android.Editor.csproj" />
   <Project Path="Emberfall.Net.Client.csproj" />
   <Project Path="Emberfall.Net.Protocol.csproj" />
+  <Project Path="Unity.VectorGraphics.Tests.csproj" />
   <Project Path="Unity.Addressables.Android.Tests.csproj" />
+  <Project Path="Unity.InternalAPIEditorBridge.003.csproj" />
   <Project Path="Emberfall.AI.csproj" />
+  <Project Path="Unity.VectorGraphics.Editor.csproj" />
+  <Project Path="Unity.VectorGraphics.csproj" />
   <Project Path="Emberfall.Core.Serialization.csproj" />
+  <Project Path="Unity.VectorGraphics.Editor.Tests.csproj" />
 </Solution>
