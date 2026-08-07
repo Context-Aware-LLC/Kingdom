@@ -61,8 +61,7 @@
 }
 
 .roster-intro,
-.create-help,
-.character-detail {
+.create-help {
     font-size: var(--type-body);
     color: var(--ink-2);
     white-space: normal;
@@ -148,30 +147,6 @@
 .class--gravekeep { color: var(--class-gravekeep); }
 .class--verdant { color: var(--class-verdant); }
 
-.character-detail {
-    margin-bottom: var(--space-1);
-}
-
-.queue-pill {
-    align-self: flex-start;
-    margin-top: var(--space-2);
-    padding: var(--space-1) var(--space-3);
-    border-radius: 999px;
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    white-space: normal;
-}
-
-.queue-pill--ready {
-    color: var(--surface-0);
-    background-color: var(--positive);
-}
-
-.queue-pill--draft {
-    color: var(--surface-0);
-    background-color: var(--warning);
-}
-
 /* ---- Deck strip (Sam, 2026-08-07) ------------------------------------------------------
  * The deck switcher and the deck name used to live at the top of the deckbuilder's right-hand
  * panel. They live here now: a character row is mostly empty space, and a deck is a thing you
@@ -220,16 +195,17 @@
     border-color: var(--accent);
 }
 
-/* The deck chosen to take into a match. Distinct from --default, which is a stored preference:
- * this one is a live selection that lasts until Continue. */
+/* The deck chosen to take into a match. Three ring colours, three meanings, no overlap: gold is
+ * the stored default, blue is this session's pick, and green is reserved for "playable" on the
+ * count. */
 .deck-plate--selected {
     background-color: var(--surface-3);
-    border-color: var(--positive);
+    border-color: var(--mana);
 }
 
 .deck-plate--selected .deck-plate-art {
     border-width: 2px;
-    border-color: var(--positive);
+    border-color: var(--mana);
 }
 
 .deck-plate-name {
@@ -243,24 +219,18 @@
     overflow: hidden;
 }
 
+/* Queue standing, said without a word: the count goes green when the deck is playable. Not a
+ * dimming for the other case — nothing in a collection surface gets greyed out (Sam, 2026-08-07,
+ * the same ruling that took the disabled tint off the deckbuilder's card wall). */
 .deck-plate-count {
     font-size: var(--type-caption);
     color: var(--ink-2);
 }
 
-/* Draft state is a WORD, not a dimming. Sam, 2026-08-07: nothing in a collection surface gets
- * greyed out — the same ruling that took the disabled tint off the deckbuilder's card wall. */
-.deck-plate-tag {
-    margin-top: var(--space-1);
-    padding: 0 var(--space-2);
-    border-radius: 999px;
-    font-size: var(--type-caption);
+.deck-plate-count--ready {
+    color: var(--positive);
     -unity-font-style: bold;
-    color: var(--surface-0);
 }
-
-.deck-plate-tag--ready { background-color: var(--positive); }
-.deck-plate-tag--draft { background-color: var(--warning); }
 
 .deck-plate--new .deck-plate-art {
     align-items: center;
@@ -348,16 +318,6 @@
     margin-top: var(--space-4);
 }
 
-.match-pick {
-    flex-grow: 1;
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    -unity-text-align: middle-right;
-    margin-right: var(--space-4);
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
 
 .create-title,
 .delete-title {

@@ -43,7 +43,6 @@
           have. Hidden entirely outside a match pick.
         -->
         <ui:VisualElement name="match-bar" class="match-bar">
-            <ui:Label name="match-pick" text="Pick a queue-ready deck." class="match-pick" />
             <ui:Button name="match-continue" text="Continue" class="roster-button roster-button--cta" />
         </ui:VisualElement>
 

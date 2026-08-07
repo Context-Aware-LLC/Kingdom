@@ -117,7 +117,6 @@ namespace Emberfall.Presentation
         private int _pendingDeleteDeckCount;
 
         private VisualElement _matchBar;
-        private Label _matchPickLabel;
         private Button _matchContinue;
 
         private VisualElement _deckModal;
@@ -209,7 +208,6 @@ namespace Emberfall.Presentation
             _deleteError = _root.Q<Label>("delete-error");
 
             _matchBar = _root.Q<VisualElement>("match-bar");
-            _matchPickLabel = _root.Q<Label>("match-pick");
             _matchContinue = _root.Q<Button>("match-continue");
 
             _deckModal = _root.Q<VisualElement>("deck-modal");
@@ -346,10 +344,10 @@ namespace Emberfall.Presentation
             // one deck per character — a character with none has nothing for the queue to reach for
             // and nothing to open — so the last one refuses rather than confirming, and says why
             // here instead of in a console warning the player will never see.
-            bool isDefault = summary.IsDefault;
-            _deckSetDefaultButton?.SetEnabled(!isDefault);
+            bool alreadyDefault = summary.IsDefault || siblingCount == 1;
+            _deckSetDefaultButton?.SetEnabled(!alreadyDefault);
             if (_deckSetDefaultButton != null)
-                _deckSetDefaultButton.tooltip = isDefault
+                _deckSetDefaultButton.tooltip = alreadyDefault
                     ? $"Already {character.Name}'s default deck"
                     : $"The deck {character.Name} takes into a match";
 
@@ -622,7 +620,7 @@ namespace Emberfall.Presentation
                 _rosterList.Add(BuildCharacterRow(character, decks));
 
             RefreshCreatePolicy(roster.Count > 0);
-            RefreshMatchBar(roster, decks);
+            RefreshMatchBar();
             SetStatus("");
         }
 
@@ -634,9 +632,6 @@ namespace Emberfall.Presentation
         /// </summary>
         private VisualElement BuildCharacterRow(Character character, IReadOnlyList<DeckList> decks)
         {
-            DeckList defaultDeck = CharacterQuery.DefaultDeckOf(character, decks);
-            QueueCheck queue = QueueEligibility.Check(defaultDeck, character, _db);
-
             var row = new VisualElement();
             row.AddToClassList("character-row");
             row.AddToClassList("character-row--" + ClassSlug(character.PrimaryClass));
@@ -663,16 +658,10 @@ namespace Emberfall.Presentation
             pairing.Add(secondary);
             identity.Add(pairing);
 
-            var power = new Label($"Hero power: {Pretty(character.PrimaryClass)}");
-            power.AddToClassList("character-detail");
-            identity.Add(power);
-
-            // Character-level standing is still the DEFAULT deck's standing — that is the deck the
-            // queue reaches for. Each plate carries its own beside it.
-            var eligibility = new Label(queue.IsEligible ? "Queue ready" : $"Draft · {queue.Reason}");
-            eligibility.AddToClassList("queue-pill");
-            eligibility.AddToClassList(queue.IsEligible ? "queue-pill--ready" : "queue-pill--draft");
-            identity.Add(eligibility);
+            // "Hero power: Verdant" used to sit here, and a Queue ready / Draft pill under it. Both
+            // cut (Sam, 2026-08-07): the hero power is always the primary class, which the pairing
+            // right above already states and the player already knows, and the pill duplicated in
+            // words what the deck plates carry per deck.
 
             var delete = new Button { text = "Delete" };
             delete.AddToClassList("delete-character");
@@ -700,33 +689,37 @@ namespace Emberfall.Presentation
             CharacterDecks owned = DeckQuery.ForCharacter(character, decks, _db);
 
             // A DefaultDeckId naming a deleted deck is left dangling on purpose (Character.cs:
-            // "surfaced, never repaired"). The deckbuilder used to do the surfacing; the pointer is a
-            // roster-level fact and the roster is what draws it now.
-            if (!owned.DefaultResolved && !string.IsNullOrEmpty(character.DefaultDeckId))
+            // "surfaced, never repaired") — but only where the dangle means something. With a single
+            // deck there is nothing to be ambiguous about: it is the only thing the queue can reach
+            // for, so it is drawn as the default and nothing is reported (Sam, 2026-08-07).
+            bool soleDeckIsDefault = owned.Count == 1 && !owned.DefaultResolved;
+            if (!owned.DefaultResolved && !soleDeckIsDefault && !string.IsNullOrEmpty(character.DefaultDeckId))
             {
-                var hint = new Label($"{character.Name} has no default deck — the one it pointed at was deleted.");
+                var hint = new Label("Default deck was deleted. Pick another.");
                 hint.AddToClassList("deck-strip-hint");
                 strip.Add(hint);
             }
 
             foreach (DeckSummary summary in owned.Decks)
-                strip.Add(BuildDeckPlate(character, summary, owned.Count));
+                strip.Add(BuildDeckPlate(character, summary, owned.Count, soleDeckIsDefault));
 
             strip.Add(BuildNewDeckPlate(character));
 
             return strip;
         }
 
-        private VisualElement BuildDeckPlate(Character character, DeckSummary summary, int siblingCount)
+        private VisualElement BuildDeckPlate(Character character, DeckSummary summary, int siblingCount,
+                                             bool treatAsDefault = false)
         {
             DeckList deck = summary.Deck;
+            bool isDefault = summary.IsDefault || treatAsDefault;
 
             var plate = new Button();
             plate.AddToClassList("deck-plate");
-            plate.EnableInClassList("deck-plate--default", summary.IsDefault);
+            plate.EnableInClassList("deck-plate--default", isDefault);
             plate.EnableInClassList("deck-plate--selected",
                 MatchDeckSelection.Choosing && _pickedDeckId == deck.Id);
-            plate.tooltip = summary.IsDefault
+            plate.tooltip = isDefault
                 ? $"{deck.Name} — {character.Name}'s default deck"
                 : deck.Name;
             plate.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
@@ -737,19 +730,20 @@ namespace Emberfall.Presentation
             if (back != null) art.style.backgroundImage = new StyleBackground(back);
             plate.Add(art);
 
-            var name = new Label(summary.IsDefault ? "★ " + deck.Name : deck.Name);
+            var name = new Label(isDefault ? "★ " + deck.Name : deck.Name);
             name.AddToClassList("deck-plate-name");
             plate.Add(name);
 
+            // Queue standing used to be a green or amber chip with a word in it. It is the colour
+            // of the count now (Sam, 2026-08-07) — "30 / 30" in green reads as ready without
+            // spending a word on it, and the reason a draft is a draft is a hover away rather than
+            // a warning on the page.
             var count = new Label($"{deck.TotalCount} / {DeckValidator.DeckSize}");
             count.AddToClassList("deck-plate-count");
+            count.EnableInClassList("deck-plate-count--ready", summary.Queue.IsEligible);
             plate.Add(count);
 
-            var tag = new Label(summary.Queue.IsEligible ? "Ready" : "Draft");
-            tag.AddToClassList("deck-plate-tag");
-            tag.AddToClassList(summary.Queue.IsEligible ? "deck-plate-tag--ready" : "deck-plate-tag--draft");
-            tag.tooltip = summary.Queue.IsEligible ? "" : summary.Queue.Reason;
-            plate.Add(tag);
+            if (!summary.Queue.IsEligible) plate.tooltip = summary.Queue.Reason;
 
             return plate;
         }
@@ -831,6 +825,17 @@ namespace Emberfall.Presentation
                 Debug.LogError($"[CharacterRoster] could not create a {kind} deck for {character.Name}: {ex.Message}");
                 SetDeckError("The new deck could not be saved — see the console.");
                 return;
+            }
+
+            // A character whose default does not resolve — never set, or pointing at a deck that
+            // was deleted — takes this one. That is not the repair Character.DefaultDeckId forbids:
+            // this is the write path, and a deck being created is exactly when a character with no
+            // default should get one. Without it, deleting the default and making another left the
+            // roster reporting a missing default for a character with a single, obvious deck.
+            if (!DeckQuery.ForCharacter(character, _account.Decks(), _db).DefaultResolved)
+            {
+                character.DefaultDeckId = created.Id;
+                _account.Save(character);
             }
 
             Debug.Log($"[CharacterRoster] created {kind} deck '{created.Name}' " +
@@ -950,30 +955,22 @@ namespace Emberfall.Presentation
             _pickedDeckId = "";
         }
 
-        /// <summary>Update the Continue bar to whatever is (or is not) selected. Takes the lists
-        /// <see cref="RebuildRoster"/> has already read — the stores do not cache, so re-asking would
-        /// be two more file reads per repaint.</summary>
-        private void RefreshMatchBar(IReadOnlyList<Character> roster, IReadOnlyList<DeckList> decks)
+        /// <summary>
+        /// Show the Continue bar while choosing, and let it through only once something is picked.
+        ///
+        /// <para>It used to name the selection in a label beside the button — "Kael · Aggro", or
+        /// "Pick a queue-ready deck." before one was chosen. Cut (Sam, 2026-08-07): the selected
+        /// plate already carries a ring, so the label restated in words what the player had just
+        /// clicked, and the empty state was an instruction nobody needed. The two store lookups
+        /// that existed only to feed it went with it.</para>
+        /// </summary>
+        private void RefreshMatchBar()
         {
             if (_matchBar == null) return;
 
             bool choosing = MatchDeckSelection.Choosing;
             Show(_matchBar, choosing);
-            if (!choosing) return;
-
-            bool picked = !string.IsNullOrEmpty(_pickedDeckId);
-            _matchContinue?.SetEnabled(picked);
-            if (_matchPickLabel == null) return;
-
-            Character character = picked ? CharacterQuery.ById(roster, _pickedCharacterId) : null;
-            DeckList deck = null;
-            if (picked)
-                foreach (DeckList d in decks)
-                    if (d.Id == _pickedDeckId) { deck = d; break; }
-
-            _matchPickLabel.text = character == null || deck == null
-                ? "Pick a queue-ready deck."
-                : $"{character.Name} · {deck.Name}";
+            if (choosing) _matchContinue?.SetEnabled(!string.IsNullOrEmpty(_pickedDeckId));
         }
 
         private void RefreshCreatePolicy(bool hasCharacters)
