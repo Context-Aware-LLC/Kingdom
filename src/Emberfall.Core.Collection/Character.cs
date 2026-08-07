@@ -30,13 +30,25 @@ namespace Emberfall.Core.Collection
         /// no legal repair; a default deck is a preference, and the player is expected to change it.
         /// That difference is why this is the one property on this type with a setter.</para>
         ///
-        /// <para><b>A dangling id is surfaced, never repaired.</b> Deleting a deck leaves the
-        /// reference pointing at nothing and <see cref="CharacterQuery.DefaultDeckOf"/> returns null,
-        /// exactly as a deck bound to a deleted character reports L5. Silently re-pointing it at some
-        /// other deck would mean the character opens on a deck the player never chose. Deleting a
-        /// character, by contrast, DOES destroy its decks (<see cref="CharacterDeletion"/>) — the
-        /// difference is consent: that cascade is authorised by a confirm dialog naming the count,
-        /// whereas a silent re-point is a change nobody asked for.</para>
+        /// <para><b>A dangling id is legal here, and healed by the client, not by this assembly.</b>
+        /// Deleting a deck leaves the reference pointing at nothing and
+        /// <see cref="CharacterQuery.DefaultDeckOf"/> returns null, exactly as a deck bound to a
+        /// deleted character reports L5. Nothing in this assembly repairs that: it has no policy for
+        /// which deck should inherit, and a store that quietly rewrote a character on load would make
+        /// "what is saved" depend on who read it last.</para>
+        ///
+        /// <para><b>The UI does repair it, silently</b> (Sam, 2026-08-07 —
+        /// <c>CharacterRosterController.HealDefaultDeck</c> re-points a dangling default at the deck
+        /// the character is already opening on). This REPLACES an earlier rule here that a dangle
+        /// must be surfaced and never repaired, on the grounds that re-pointing means "a deck the
+        /// player never chose". The player did not choose the deleted one either, and deleting your
+        /// default is itself the request to move off it; what they never asked for was an error
+        /// message above their decks naming one that no longer exists. Deleting a character remains
+        /// different — that cascade destroys decks (<see cref="CharacterDeletion"/>) and is
+        /// authorised by a confirm dialog naming the count.</para>
+        ///
+        /// RETIREMENT TRIGGER: a second surface that reads this and draws a default must heal it too,
+        /// or repeat the bug. If a third appears, move HealDefaultDeck somewhere both can call.
         /// </summary>
         public string DefaultDeckId { get; set; }
 

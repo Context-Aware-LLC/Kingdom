@@ -744,33 +744,65 @@ namespace Emberfall.Presentation
             strip.AddToClassList("deck-strip");
             strip.RegisterCallback<GeometryChangedEvent>(_ => QueueStripLayout(strip));
 
-            CharacterDecks owned = DeckQuery.ForCharacter(character, decks, _db);
-
-            // A DefaultDeckId naming a deleted deck is left dangling on purpose (Character.cs:
-            // "surfaced, never repaired") — but only where the dangle means something. With a single
-            // deck there is nothing to be ambiguous about: it is the only thing the queue can reach
-            // for, so it is drawn as the default and nothing is reported (Sam, 2026-08-07).
-            bool soleDeckIsDefault = owned.Count == 1 && !owned.DefaultResolved;
-            if (!owned.DefaultResolved && !soleDeckIsDefault && !string.IsNullOrEmpty(character.DefaultDeckId))
-            {
-                var hint = new Label("Default deck was deleted. Pick another.");
-                hint.AddToClassList("deck-strip-hint");
-                strip.Add(hint);
-            }
+            CharacterDecks owned = HealDefaultDeck(character, DeckQuery.ForCharacter(character, decks, _db));
 
             foreach (DeckSummary summary in owned.Decks)
-                strip.Add(BuildDeckPlate(character, summary, owned.Count, soleDeckIsDefault));
+                strip.Add(BuildDeckPlate(character, summary, owned.Count, !owned.DefaultResolved));
 
             strip.Add(BuildNewDeckPlate(character));
 
             return strip;
         }
 
+        /// <summary>
+        /// Roll a character with no resolvable default onto the deck it is already opening on, and
+        /// say nothing about it (Sam, 2026-08-07).
+        ///
+        /// <para><b>This deliberately overrides <c>Character.DefaultDeckId</c>'s original
+        /// "surfaced, never repaired" rule</b>, and that rule's own text has been updated to match —
+        /// a contract the code contradicts is worse than either version of it. The rule's reason was
+        /// that re-pointing means "a deck the player never chose". Sam's counter, and it is the
+        /// better read: the player did not choose the deleted one either, and deleting your default
+        /// IS the request to move off it. What they never asked for is an error message above their
+        /// decks about a deck that no longer exists.</para>
+        ///
+        /// <para>Repairs on the read path, which is normally the wrong place for a write. It is here
+        /// because the damage predates the fix — collections in the wild already carry dangling
+        /// pointers — and a dangle that is neither repaired nor reported is invisible state that
+        /// keeps drawing the wrong star. Idempotent: the second visit finds nothing to do.</para>
+        /// </summary>
+        private CharacterDecks HealDefaultDeck(Character character, CharacterDecks owned)
+        {
+            if (owned.DefaultResolved || owned.Count == 0) return owned;
+
+            DeckList landing = owned.Opening?.Deck;
+            if (landing == null) return owned;
+
+            try
+            {
+                character.DefaultDeckId = landing.Id;
+                _account.Save(character);
+            }
+            catch (Exception ex)
+            {
+                // Draw it as the default anyway — the caller falls back on !DefaultResolved — and
+                // keep the failure out of the player's way. It costs a star, not a deck.
+                Debug.LogWarning($"[CharacterRoster] could not re-point {character.Name}'s default " +
+                                 $"deck to '{landing.Name}': {ex.Message}");
+                return owned;
+            }
+
+            Debug.Log($"[CharacterRoster] {character.Name} had no default deck; rolled onto '{landing.Name}'.");
+            return DeckQuery.ForCharacter(character, _account.Decks(), _db);
+        }
+
         private VisualElement BuildDeckPlate(Character character, DeckSummary summary, int siblingCount,
                                              bool treatAsDefault = false)
         {
             DeckList deck = summary.Deck;
-            bool isDefault = summary.IsDefault || treatAsDefault;
+            // treatAsDefault covers the healed-but-unsaved case; DeckQuery sorts the opening deck
+            // first, so it applies to that one only.
+            bool isDefault = summary.IsDefault || (treatAsDefault && ReferenceEquals(deck, FirstDeckOf(character)));
 
             var plate = new VisualElement();
             plate.AddToClassList("deck-plate");
@@ -805,6 +837,12 @@ namespace Emberfall.Presentation
             BindDeckTaps(plate, character, deck, summary, siblingCount);
             return plate;
         }
+
+        /// <summary>The deck a character opens on, for the case where the stored pointer could not
+        /// be repaired. Cheap enough per plate at roster scale, and it re-reads rather than caching
+        /// so it cannot disagree with what the strip drew.</summary>
+        private DeckList FirstDeckOf(Character character)
+            => DeckQuery.ForCharacter(character, _account.Decks(), _db).Opening?.Deck;
 
         /// <summary>How long a single tap waits to see whether it is really the first half of a
         /// double tap. Long enough for a deliberate double, short enough that opening the menu does

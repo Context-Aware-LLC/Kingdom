@@ -244,15 +244,9 @@
 .deck-plate--new:hover .deck-plate-art { border-color: var(--accent); }
 .deck-plate--new:hover .deck-plate-plus { color: var(--accent); }
 
-/* Two or more decks and none of them named as the default — surfaced, never repaired. Not shown
- * for a character with a single deck, which is its own default by elimination. */
-.deck-strip-hint {
-    width: 100%;
-    margin-bottom: var(--space-2);
-    font-size: var(--type-label);
-    color: var(--warning);
-    white-space: normal;
-}
+/* There is no deck-strip-hint any more. A character whose default deck was deleted rolls onto
+ * another one silently (Sam, 2026-08-07) — an error message above somebody's decks, about a deck
+ * they deleted on purpose, is not news they can act on. */
 
 /* ---- Deck modal panes ---- */
 .deck-pane {
