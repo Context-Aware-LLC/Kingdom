@@ -229,5 +229,45 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(Ids(DeckQuery.ForCharacter(character, decks, LiveCardSet.Db)), Does.Not.Contain("d-orphan"));
             Assert.That(DeckQuery.Orphans(decks, new[] { character }).Single().Id, Is.EqualTo("d-orphan"));
         }
+
+        [Test]
+        public void The_Roster_And_Its_Orphans_Account_For_Every_Saved_Deck()
+        {
+            // What the deck-pick screen relies on to be honest (§2.11). It draws one row per
+            // character from ForCharacter and one trailing row from Orphans; if those two together
+            // could miss a deck, a deck would exist on disk with no surface in the game that shows
+            // it — which is exactly the state an orphan was in before the trailing row existed.
+            var roster = new[] { Rotbloom() };
+            var decks = new[]
+            {
+                Empty("d1", "chr-1"), Empty("d2", "chr-1"),
+                Empty("d3", "chr-GONE"), Empty("d4", ""),
+            };
+
+            var drawn = roster.SelectMany(c => Ids(DeckQuery.ForCharacter(c, decks, LiveCardSet.Db)))
+                              .Concat(DeckQuery.Orphans(decks, roster).Select(d => d.Id))
+                              .ToList();
+
+            Assert.That(drawn, Is.Unique, "A deck drawn twice is a deck the player can edit from two places.");
+            Assert.That(drawn, Is.EquivalentTo(decks.Select(d => d.Id)));
+        }
+
+        [Test]
+        public void An_Orphans_Reason_Is_The_Shared_L5_Message()
+        {
+            // The orphan row shows QueueCheck.Reason verbatim rather than copy of its own. Pinned
+            // because the failure is silent: a hand-written "this character is gone" on the row
+            // would still READ correctly while having stopped agreeing with the gate that produced
+            // it, and nothing in the game compares the two.
+            var roster = Array.Empty<Character>();
+            var orphan = DeckQuery.Orphans(new[] { Legal(Rotbloom(), "d1") }, roster).Single();
+
+            QueueCheck queue = QueueEligibility.Check(orphan, roster, LiveCardSet.Db);
+
+            Assert.That(queue.IsEligible, Is.False, "An orphan is never selectable at deck pick.");
+            Assert.That(queue.Reason, Is.Not.Empty, "Disabled without a reason is a dead end.");
+            Assert.That(queue.Validation.Violations.Any(v => v.Rule == DeckRule.L5_CharacterBound), Is.True);
+            Assert.That(queue.Reason, Is.EqualTo(queue.Validation.Violations[0].Message));
+        }
     }
 }

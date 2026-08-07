@@ -153,6 +153,14 @@ namespace Emberfall.Presentation
         /// <summary>How many decks that character has — what decides whether Delete is offered.</summary>
         private int _menuSiblingCount;
 
+        /// <summary>
+        /// True while the open dialog is about an <b>orphan</b> — a deck whose bound Character is
+        /// gone, so <see cref="_menuCharacter"/> is null and every character-shaped affordance in
+        /// this dialog is meaningless. The one action it offers is Delete
+        /// (collection-deckbuilder.md §5 O-4), so the dialog opens straight on that pane.
+        /// </summary>
+        private bool _menuOrphan;
+
         /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
         private string _pendingCardBackId = "";
         private string _pendingShowcaseCardId = "";
@@ -353,7 +361,9 @@ namespace Emberfall.Presentation
             _deckDeleteButton?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Delete));
             _deckModalCancel?.RegisterCallback<ClickEvent>(_ =>
             {
-                if (_deckPane == DeckPane.Menu || _deckPane == DeckPane.New) CloseDeckDialog();
+                // An orphan's dialog has no menu to go back to — its only pane IS Delete — so Cancel
+                // there means close, the same as it does on the two self-committing panes.
+                if (_menuOrphan || _deckPane == DeckPane.Menu || _deckPane == DeckPane.New) CloseDeckDialog();
                 else ShowDeckPane(DeckPane.Menu);
             });
             _deckModalConfirm?.RegisterCallback<ClickEvent>(_ => ConfirmDeckPane());
@@ -410,6 +420,35 @@ namespace Emberfall.Presentation
             _deckModal?.RemoveFromClassList("delete-modal--hidden");
         }
 
+        /// <summary>
+        /// What an orphaned deck's plate opens: the reason it cannot be played, and Delete.
+        ///
+        /// <para><b>Delete and nothing else</b> (collection-deckbuilder.md §5 O-4, RESOLVED Sam
+        /// 2026-07-26). §2.11 gives every unselectable chooser row an <c>Edit</c> that opens the
+        /// deckbuilder, but the deckbuilder reaches a decklist only <i>through</i> a Character
+        /// (§2.6a) and an orphan has none — so an Edit here would be a button that can only fail.
+        /// Rebinding the deck to some other Character is deliberately not offered either: it is the
+        /// silent repair the rest of §3 refuses, and preserving a deck past its Character is
+        /// export's job. That is why this opens on the Delete pane rather than on a menu whose
+        /// every other entry would be dead.</para>
+        ///
+        /// <para>The reason shown is <see cref="QueueCheck.Reason"/> — the same L5 string the queue
+        /// gate produces, never restated here.</para>
+        /// </summary>
+        private void OpenOrphanDialog(DeckList deck, QueueCheck queue)
+        {
+            _menuOrphan = true;
+            _menuCharacter = null;
+            _menuDeck = deck;
+            _menuSiblingCount = 0;
+            _menuQueueReady = false;
+
+            Show(_deckSelectButton, false);
+            ShowDeckPane(DeckPane.Delete);
+            if (_deckModalSub != null) _deckModalSub.text = queue.Reason;
+            _deckModal?.RemoveFromClassList("delete-modal--hidden");
+        }
+
         private void ShowDeckPane(DeckPane pane)
         {
             // New is the one pane with no deck behind it yet, so the guard is on the panes that
@@ -433,10 +472,12 @@ namespace Emberfall.Presentation
                     DeckPane.Rename => "Rename deck",
                     DeckPane.Image => "Deck image",
                     DeckPane.CardBack => "Card back",
-                    DeckPane.Delete => "Delete deck?",
+                    // An orphan opens on this pane, so the deck's own name has to be the title —
+                    // there is no menu pane before it to have said which deck this is about.
+                    DeckPane.Delete => _menuOrphan ? _menuDeck.Name : "Delete deck?",
                     _ => _menuDeck.Name,
                 };
-            Show(_deckModalSub, pane == DeckPane.Menu);
+            Show(_deckModalSub, pane == DeckPane.Menu || _menuOrphan);
 
             bool selfCommitting = pane == DeckPane.Menu || pane == DeckPane.New;
             if (_deckModalCancel != null) _deckModalCancel.text = selfCommitting ? "Close" : "Back";
@@ -457,9 +498,12 @@ namespace Emberfall.Presentation
             if (pane == DeckPane.CardBack)
                 BuildCardBackGrid();
             if (pane == DeckPane.Delete && _deckDeleteMessage != null)
-                _deckDeleteMessage.text =
-                    $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
-                    "The cards themselves stay in your collection.";
+                _deckDeleteMessage.text = _menuOrphan
+                    ? "The character this deck was built for is gone, so it can no longer be " +
+                      $"played or edited. Deleting it clears it from this list; its {_menuDeck.TotalCount} " +
+                      "cards stay in your collection."
+                    : $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
+                      "The cards themselves stay in your collection.";
         }
 
         /// <summary>
@@ -620,7 +664,14 @@ namespace Emberfall.Presentation
         /// </summary>
         private void DeleteOpenDeck()
         {
-            if (_menuCharacter == null || _menuDeck == null) return;
+            if (_menuDeck == null) return;
+
+            // An orphan is exempt from both guards below, and for the same reason: they exist to
+            // keep a Character from being left with nothing to play, and an orphan has no Character
+            // to protect. Deleting the last one strands nobody — it is the whole point of the row.
+            if (_menuOrphan) { DeleteOrphan(); return; }
+
+            if (_menuCharacter == null) return;
             if (_menuSiblingCount <= 1)
             {
                 // Unreachable through the disabled button; if the count ever disagrees with the
@@ -646,11 +697,36 @@ namespace Emberfall.Presentation
             RebuildRoster();
         }
 
+        /// <summary>
+        /// Delete an orphan. The deck store is the only thing touched: there is no character record
+        /// to keep in step, and nothing points at this deck any more — that is what made it an
+        /// orphan.
+        /// </summary>
+        private void DeleteOrphan()
+        {
+            string goneName = _menuDeck.Name;
+            try
+            {
+                _account.DeleteDeck(_menuDeck.Id);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CharacterRoster] could not delete orphaned deck '{goneName}': {ex.Message}");
+                SetDeckError("The deck could not be deleted — see the console.");
+                return;
+            }
+
+            Debug.Log($"[CharacterRoster] deleted orphaned deck '{goneName}'.");
+            CloseDeckDialog();
+            RebuildRoster();
+        }
+
         private void CloseDeckDialog()
         {
             _deckModal?.AddToClassList("delete-modal--hidden");
             _menuCharacter = null;
             _menuDeck = null;
+            _menuOrphan = false;
             _menuSiblingCount = 0;
             _menuQueueReady = false;
             _pendingCardBackId = "";
@@ -699,6 +775,14 @@ namespace Emberfall.Presentation
             foreach (Character character in roster)
                 _rosterList.Add(BuildCharacterRow(character, decks));
 
+            // Last, and only when there are any. An orphan belongs to no character, so it can sit in
+            // no character's row (DeckQuery.Orphans) — this screen is the one surface that shows it
+            // at all, and leaving it out is what made a crash-stranded deck invisible rather than
+            // gone.
+            IReadOnlyList<DeckList> orphans = DeckQuery.Orphans(decks, roster);
+            if (orphans.Count > 0)
+                _rosterList.Add(BuildOrphanRow(orphans));
+
             RefreshCreatePolicy(roster.Count > 0);
             RefreshMatchBar();
             SetStatus("");
@@ -738,6 +822,80 @@ namespace Emberfall.Presentation
             row.Add(BuildDeckStrip(character, decks));
             row.Add(delete);
             return row;
+        }
+
+        /// <summary>
+        /// The decks no character claims, in one row under the roster.
+        ///
+        /// <para><b>Why they are here at all.</b> Nothing produces an orphan on purpose — deleting a
+        /// character destroys its decks — so what reaches this row is crash residue: a death between
+        /// the two writes character creation makes, or a damaged decks.json. Left out of the roster
+        /// it is invisible state that costs the player storage and can never be cleared; drawn here
+        /// it is one row that explains itself and offers the way out.</para>
+        ///
+        /// <para>The row deliberately does <b>not</b> look like a character. There is no name, no
+        /// class spine, no "+" to add another (nothing could own it) and no Delete-character button.
+        /// No plate carries the gold queue border, because an orphan fails L5 by construction and
+        /// none of them can ever be selected.</para>
+        /// </summary>
+        private VisualElement BuildOrphanRow(IReadOnlyList<DeckList> orphans)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("character-row");
+            row.AddToClassList("character-row--orphan");
+
+            var identity = new VisualElement();
+            identity.AddToClassList("character-identity");
+
+            var name = new Label(orphans.Count == 1 ? "1 deck with no character"
+                                                    : $"{orphans.Count} decks with no character");
+            name.AddToClassList("character-name");
+            name.AddToClassList("character-name--orphan");
+            identity.Add(name);
+
+            var note = new Label("The character each was built for is gone. They cannot be played " +
+                                 "or edited — open one to clear it.");
+            note.AddToClassList("orphan-note");
+            identity.Add(note);
+
+            var strip = new VisualElement();
+            strip.AddToClassList("deck-strip");
+            strip.RegisterCallback<GeometryChangedEvent>(_ => QueueStripLayout(strip));
+            foreach (DeckList orphan in orphans)
+                strip.Add(BuildOrphanPlate(orphan));
+
+            row.Add(identity);
+            row.Add(strip);
+            return row;
+        }
+
+        /// <summary>
+        /// One orphan's plate. Same picture as any other deck — it is still the player's deck — but
+        /// never queue-ready, never a default, and both taps lead to the same place.
+        ///
+        /// <para><b>Double tap does not open the deckbuilder.</b> Everywhere else it does; here the
+        /// editor has no character to open on and would fail. Sending both gestures to the same
+        /// dialog is what keeps this row from being a dead end.</para>
+        /// </summary>
+        private VisualElement BuildOrphanPlate(DeckList deck)
+        {
+            // The roster form of the gate: the deck's CharacterId resolves to nobody, which IS the
+            // L5 violation. Read from the same gate the queue reads, so the sentence on this plate
+            // can never drift from the one that refused it.
+            QueueCheck queue = QueueEligibility.Check(deck, _account.Roster(), _db);
+
+            var plate = new VisualElement();
+            plate.AddToClassList("deck-plate");
+            plate.AddToClassList("deck-plate--orphan");
+
+            var art = new VisualElement();
+            art.AddToClassList("deck-plate-art");
+            art.tooltip = $"{deck.Name} — {queue.Reason}";
+            ShowcaseArt(deck, art);
+            plate.Add(art);
+
+            plate.RegisterCallback<ClickEvent>(_ => OpenOrphanDialog(deck, queue));
+            return plate;
         }
 
         /// <summary>
