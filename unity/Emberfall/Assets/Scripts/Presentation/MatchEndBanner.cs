@@ -8,7 +8,7 @@ namespace Emberfall.Presentation
     /// End-of-match presentation: a translucent scrim over the board with the verdict
     /// ("VICTORY" / "DEFEAT" / "DRAW") from the local seat's perspective. Built procedurally
     /// on demand by GameBootstrap.OnMatchEnded — same primitives-only approach as HeroPlateView.
-    /// M1 scope: static banner; entrance animation and rewards flow are post-M1.
+    /// The banner remains visible briefly, then returns every match mode to the main menu.
     /// </summary>
     public static class MatchEndBanner
     {
@@ -49,6 +49,7 @@ namespace Emberfall.Presentation
                 _                       => "Neither hero survives",
             };
 
+            root.AddComponent<MatchEndMenuReturn>();
             return root;
         }
 
