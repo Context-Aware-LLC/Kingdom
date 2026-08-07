@@ -151,13 +151,20 @@ jobs:
 
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.
-      # The standing substitute is tools/ci/unity-verify.ps1 (EF-001) — it drives a LOCAL
-      # headless Editor, so it runs on a machine with a seat before pushing, never here.
+      # TWO local substitutes, and they are not interchangeable:
+      #   tools/ci/unity-compile.ps1 — COMPILES the 12 Emberfall assemblies via dotnet. No
+      #     Editor, no license, no domain reload, ~1 min. This is the pre-push gate, and the
+      #     one to run when an Editor is already open (it is a single-writer resource).
+      #   tools/ci/unity-verify.ps1  — drives a LOCAL headless Editor and runs HeadlessVerify's
+      #     self-checks (EF-001). Fuller, slower; run before a release.
+      # Compile coverage is the gap that actually bit: on 2026-08-06 a csproj-only
+      # InternalsVisibleTo (invisible to Unity, which builds from the .asmdef) plus three
+      # refactor-stale call sites passed every stage here and put the Editor in Safe Mode.
       # RETIREMENT TRIGGER: when a Unity seat lands, replace this echo with the real job
       # and drop the pre-push requirement from the agent AGENTS.md briefs.
       - name: "Stages 7–8 · Unity E-series + PlayMode (informational — no Unity seat at M1)"
         continue-on-error: true
-        run: echo "No paid Unity seat at M1 (ci-gates.md §7 Q1). These become blocking at M2 with a Unity Pro/Build Server seat. Local pre-push gate is tools/ci/unity-verify.ps1"
+        run: echo "No paid Unity seat at M1 (ci-gates.md §7 Q1). These become blocking at M2 with a Unity Pro/Build Server seat. Local pre-push gates are tools/ci/unity-compile.ps1 (fast, always) and tools/ci/unity-verify.ps1 (full, pre-release)."
 
       # ── Stage 9 — On-device perf gate (manual, milestone boundary) ──────────────
       - name: "Stage 9 · On-device perf gate D8 (manual device job)"
