@@ -79,6 +79,40 @@ namespace Emberfall.Net.Protocol.Tests
         }
 
         [Test]
+        public void SubmitDeck_RoundTrips_With_Classes_And_Cards()
+        {
+            // EF-071 — the deck-submission message. Classes travel as strict enum names; card lines as
+            // {cardId, count}. Legality is not the codec's business (server-side), only the shape.
+            var cards = new List<DeckCardLine>
+            {
+                new DeckCardLine("ember_recruit", 2),
+                new DeckCardLine("core_stoneback", 1),
+            };
+            var m = RoundTrip<SubmitDeckMsg>(
+                new SubmitDeckMsg("char-7", CardClass.GRAVEKEEP, CardClass.VERDANT, cards));
+            Assert.That(m.CharacterId, Is.EqualTo("char-7"));
+            Assert.That(m.PrimaryClass, Is.EqualTo(CardClass.GRAVEKEEP));
+            Assert.That(m.SecondaryClass, Is.EqualTo(CardClass.VERDANT));
+            Assert.That(m.Cards, Has.Count.EqualTo(2));
+            Assert.That((m.Cards[0].CardId, m.Cards[0].Count), Is.EqualTo(("ember_recruit", 2)));
+            Assert.That((m.Cards[1].CardId, m.Cards[1].Count), Is.EqualTo(("core_stoneback", 1)));
+        }
+
+        [Test]
+        public void SubmitDeck_With_A_Non_Enum_Class_Is_Refused()
+        {
+            // Strict enum-name parse (WirePrimitives): a class the server does not define is a BadField,
+            // never a silent default. Belt-and-braces with the server-side legality check.
+            var bytes = ProtocolCodec.Encode(
+                new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT,
+                    new List<DeckCardLine> { new DeckCardLine("x", 1) }), M, Seq);
+            string json = Encoding.UTF8.GetString(bytes).Replace("\"primaryClass\":\"GRAVEKEEP\"", "\"primaryClass\":\"WIZARD\"");
+            var res = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+            Assert.That(res.Ok, Is.False);
+            Assert.That(res.Error, Is.EqualTo(ProtocolError.BadField));
+        }
+
+        [Test]
         public void Snapshot_RoundTrips_With_Hash_And_State()
         {
             var s = CanonicalStateFixtures.BuildSeedState();

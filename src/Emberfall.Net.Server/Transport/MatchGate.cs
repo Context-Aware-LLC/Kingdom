@@ -103,6 +103,9 @@ namespace Emberfall.Net.Server.Transport
             /// server-assigned fallback" — either the player never set one or theirs was refused,
             /// and the two are deliberately indistinguishable from here down.</summary>
             string DisplayName,
+            /// <summary>The seat's own revalidated deck (EF-071), or null when it submitted none and
+            /// is to be dealt the prebuilt fallback for its seat.</summary>
+            SeatDeck? Deck,
             TaskCompletionSource<Seating?> Seated);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
@@ -113,8 +116,10 @@ namespace Emberfall.Net.Server.Transport
                 return _accounts.TryGetValue(id.Value, out var a) ? a : ((AccountId, AccountId)?)null;
         }
 
-        /// <summary>Drive one fresh socket: hello, pair, then run its receive loop until it dies.</summary>
-        public async Task HandleFreshAsync(WebSocket socket, CancellationToken ct)
+        /// <summary>Drive one fresh socket: hello, (optional deck), pair, then run its receive loop until
+        /// it dies. <paramref name="expectDeck"/> is set by the <c>/ws?deck=1</c> route (EF-071): the
+        /// socket then owes a <see cref="SubmitDeckMsg"/> as its second handshake frame.</summary>
+        public async Task HandleFreshAsync(WebSocket socket, CancellationToken ct, bool expectDeck = false)
         {
             var conn = new WebSocketConnection(socket);
 
@@ -186,7 +191,45 @@ namespace Emberfall.Net.Server.Transport
             //    trusted-looking state (§4.2).
             string checkedName = PlayerName.Check(hello.DisplayName).Normalized;   // "" when refused
 
-            Seating? seating = await PairAsync(conn, account, checkedName, ct);
+            // EF-071: a /ws?deck=1 client submits its deck as the SECOND handshake frame, revalidated
+            // server-side HERE — an illegal deck is refused at the handshake and never becomes a match
+            // (never trust the client; VULN-001 "Client-supplied deck lists"). A plain /ws client
+            // (expectDeck=false) submits nothing and is dealt the prebuilt fallback for its seat, so this
+            // is purely additive — existing clients are untouched. Bounded by the SAME deadline as the
+            // hello so a /ws?deck=1 socket that then goes silent cannot hold the connection open forever.
+            SeatDeck? submitted = null;
+            if (expectDeck)
+            {
+                byte[]? deckFrame;
+                using (var deckCts = CancellationTokenSource.CreateLinkedTokenSource(ct))
+                {
+                    deckCts.CancelAfter(TimeSpan.FromMilliseconds(_opts.HelloTimeoutMs));
+                    deckFrame = await ReceiveOneAsync(socket, deckCts.Token);
+                }
+                if (deckFrame is null)
+                {
+                    conn.Close(1008, "deck timeout");
+                    await conn.PumpTask;
+                    return;
+                }
+                var deckRes = ProtocolCodec.Decode(deckFrame);
+                if (!deckRes.Ok || deckRes.Message is not SubmitDeckMsg deckMsg)
+                {
+                    conn.Close(1008, "expected deck");
+                    await conn.PumpTask;
+                    return;
+                }
+                var outcome = DeckSubmission.Validate(deckMsg, _db);
+                if (!outcome.Accepted)
+                {
+                    conn.Close(1008, CloseReason("deck rejected: " + outcome.Reason));
+                    await conn.PumpTask;
+                    return;
+                }
+                submitted = outcome.Seat;
+            }
+
+            Seating? seating = await PairAsync(conn, account, checkedName, submitted, ct);
             if (seating is null)
             {
                 conn.Close(1013, "server full");
@@ -230,13 +273,14 @@ namespace Emberfall.Net.Server.Transport
         }
 
         private async Task<Seating?> PairAsync(
-            WebSocketConnection conn, AccountId account, string displayName, CancellationToken ct)
+            WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
+            CancellationToken ct)
         {
             var ticket = new MatchmakingTicket(
                 Guid.NewGuid().ToString("N"),
                 _ratingForAccount(account));
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var waiter = new WaitingPlayer(ticket, conn, account, displayName, mySeating);
+            var waiter = new WaitingPlayer(ticket, conn, account, displayName, submitted, mySeating);
 
             lock (_lock)
             {
@@ -347,8 +391,20 @@ namespace Emberfall.Net.Server.Transport
                     first.Account, second.Account,                                // FIFO seat order
                     TelemetrySources.Classify(first.Account, second.Account));
 
+                // EF-071: deal from each seat's SUBMITTED deck where present, else the prebuilt fallback
+                // for that seat. HP + spark stay whatever the prebuilt pair uses (PrebuiltDecks' interim
+                // 20 HP) — a submitted deck changes only the cards and the hero class, never the match's
+                // balance dials, so this makes no balance decision. Both seats absent ⇒ the exact fixed
+                // pair the gate deals today.
+                var fallback = _decks.NextMatch();
+                var seat0 = first.Deck ?? SeatDeck.FromFallback(fallback, 0);
+                var seat1 = second.Deck ?? SeatDeck.FromFallback(fallback, 1);
+                var setup = new MatchSetup(
+                    seat0.HeroClass, seat0.Deck, seat1.HeroClass, seat1.Deck,
+                    fallback.HeroMaxHealth, fallback.SparkTokenId);
+
                 var session = new MatchSession(
-                    id, seed, _opts, _time, _db, _decks.NextMatch(), _replay, p0, p1,
+                    id, seed, _opts, _time, _db, setup, _replay, p0, p1,
                     _telemetry, attribution,
                     NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1));
                 var pump = new SessionPump(session);
@@ -392,6 +448,12 @@ namespace Emberfall.Net.Server.Transport
                 throw;
             }
         }
+
+        /// <summary>A WebSocket close reason is capped at 123 UTF-8 bytes (RFC 6455). A validator reason
+        /// naming a card can approach that, so it is truncated defensively — the close still carries the
+        /// gist and the pump never faults on an over-long control frame.</summary>
+        private static string CloseReason(string reason)
+            => reason.Length <= 120 ? reason : reason.Substring(0, 117) + "...";
 
         private static ulong MintSeed()
         {
