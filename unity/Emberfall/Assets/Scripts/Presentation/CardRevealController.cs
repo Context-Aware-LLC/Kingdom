@@ -23,6 +23,7 @@ namespace Emberfall.Presentation
 
         private bool       _pressActive;
         private InstanceId _pressCard;
+        private bool       _wasPointerHeld;
 
         internal static CardRevealController Create(Transform parent, InputRouter router)
         {
@@ -81,18 +82,28 @@ namespace Emberfall.Presentation
 
         private void Update()
         {
-            float now = Time.unscaledTime;
+            float now         = Time.unscaledTime;
+            bool  pointerHeld = PointerHeld();
 
             // Release is POLLED, not taken from OnMouseUp. OnMouseUp is not delivered when the
             // collider is destroyed mid-press — a card played from hand is exactly that — and a
             // press left active would strand the panel on screen with no way to dismiss it.
-            if (_pressActive && !PointerHeld())
+            if (_pressActive && !pointerHeld)
             {
                 _pressActive = false;
                 InstanceId pressed = _pressCard;
                 if (_model.Release(now)) CancelPressSelection(pressed);
             }
 
+            // Dismiss a sticky reveal when the player presses something that is not a card.
+            // OnPointerDown (from CardRevealTrigger.OnMouseDown) sets _pressActive in the same
+            // frame it fires, so if a new press arrived without setting _pressActive the player
+            // tapped the board, a hero, or empty space — all of which should close the panel.
+            bool newPress = pointerHeld && !_wasPointerHeld;
+            if (newPress && !_pressActive && _model.Source == HoverRevealModel.RevealSource.Sticky)
+                _model.Cancel();
+
+            _wasPointerHeld = pointerHeld;
 
             _model.Tick(now);
             if (Blocked() && _model.Visible) _model.Cancel();
