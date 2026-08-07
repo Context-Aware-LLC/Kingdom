@@ -27,7 +27,7 @@ namespace Emberfall.Editor
     {
         private static readonly string[] KnownPrefixes =
         {
-            "backgrounds/", "fonts/", "loading/", "cards/",
+            "backgrounds/", "fonts/", "orbs/", "cards/",
             "ui/", "card_art/", "materials/",
         };
 
@@ -38,7 +38,7 @@ namespace Emberfall.Editor
         // '{', '/', and whitespace are excluded from each name word to reject interpolation
         // holes, multi-segment file paths, and long prose respectively.
         private static readonly Regex AddressLiteral = new Regex(
-            @"(?<!\$)""((?:backgrounds|fonts|loading|cards|ui|card_art|materials)/[^""\{\s/]+(?:\s[^""\{\s/]+)?)""",
+            @"(?<!\$)""((?:backgrounds|fonts|orbs|cards|ui|card_art|materials)/[^""\{\s/]+(?:\s[^""\{\s/]+)?)""",
             RegexOptions.Compiled);
 
         private static readonly Regex LineComment  = new Regex(@"//[^\n]*", RegexOptions.Compiled);

@@ -197,7 +197,7 @@ namespace Emberfall.Presentation
             //    default sprite material honors alpha (LoadingOverlay precedent). In Art/Backgrounds/
             //    so CardArtPostprocessor imports it full-res (4096/2048), not the 2048 default.
             var plateTex = LoadAsset<Texture2D>(
-                "Assets/Art/Backgrounds/VersusPlate_Causeway.png", "backgrounds/VersusPlate_Causeway");
+                "Assets/Art/Backgrounds/Versus/VersusPlate_Causeway.png", "backgrounds/VersusPlate_Causeway");
             if (plateTex != null)
             {
                 var pgo = new GameObject("Plate");
@@ -231,7 +231,7 @@ namespace Emberfall.Presentation
 
                 int v = Mathf.Clamp(data.OrbVariant, 0, OrbNames.Length - 1);
                 var orbTex = LoadAsset<Texture2D>(
-                    $"Assets/Art/Loading/Orb_{OrbNames[v]}.png", $"loading/Orb_{OrbNames[v]}");
+                    $"Assets/Art/Orbs/Orb_{OrbNames[v]}.png", $"orbs/Orb_{OrbNames[v]}");
                 if (orbTex != null) _orbMat.SetTexture(MainTexId, orbTex);
 
                 quad.GetComponent<MeshRenderer>().sharedMaterial = _orbMat;

@@ -61,14 +61,20 @@ namespace Emberfall.Editor
 
             var bgGroup = GetGroup(settings, "Backgrounds");
             AddFolderAssets(settings, bgGroup, "Assets/Art/Backgrounds", "backgrounds", "t:Texture2D");
-            var loadingGroup = GetGroup(settings, "Loading");
-            AddFolderAssets(settings, loadingGroup, "Assets/Art/Loading", "loading", "t:Texture2D");
+            // Assets/Art/Loading was a staging folder: of its ten textures exactly three were
+            // ever loaded (the orbs), and the other seven only looked live because this scan
+            // registered the folder wholesale. Orbs now have their own root; the rest went to
+            // art-pipeline/junk/. Backgrounds is scanned recursively and addresses by FILE NAME,
+            // so Backgrounds/Loading/ and Backgrounds/Versus/ need no entry of their own and
+            // keep the addresses they already had.
+            var orbsGroup = GetGroup(settings, "Orbs");
+            AddFolderAssets(settings, orbsGroup, "Assets/Art/Orbs", "orbs", "t:Texture2D");
             var fontsGroup = GetGroup(settings, "Fonts");
             AddFolderAssets(settings, fontsGroup, "Assets/Art/Fonts", "fonts", "t:TMP_FontAsset");
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
-            Debug.Log("[AddressablesSetup] groups synced: UI_Core, CardArt_CORE, CardArt_EMBERFALL, CardData, Backgrounds, Loading, Fonts");
+            Debug.Log("[AddressablesSetup] groups synced: UI_Core, CardArt_CORE, CardArt_EMBERFALL, CardData, Backgrounds, Orbs, Fonts");
         }
 
         private static void MigrateCardDataOutOfResources()

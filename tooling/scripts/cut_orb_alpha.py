@@ -1,6 +1,6 @@
 """Cut a loading/versus orb concept to a feathered circular alpha.
 
-Reproduces the as-built recipe of `Art/Loading/Orb_StormGlass.png` (2026-07-19), recovered
+Reproduces the as-built recipe of `Art/Orbs/Orb_StormGlass.png` (2026-07-19), recovered
 by fitting the shipped file back against its concept:
 
   1. crop a square around the sphere (side 878 of 1024, centred (514,507) for StormGlass),
@@ -35,7 +35,7 @@ R_SOLID = 485.0
 R_ZERO = 502.0
 REFERENCE_MASK = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", "unity", "Emberfall", "Assets", "Art", "Loading", "Orb_StormGlass.png",
+    "..", "..", "unity", "Emberfall", "Assets", "Art", "Orbs", "Orb_StormGlass.png",
 )
 
 

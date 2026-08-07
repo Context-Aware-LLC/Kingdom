@@ -13,6 +13,9 @@ namespace Emberfall.Editor
     ///   Assets/Art/Cards/&lt;setId&gt;/&lt;artId&gt;.png  — streamed card illustrations
     ///   Assets/Art/Hero/&lt;heroId&gt;.png            — hero portraits (same treatment)
     ///   Assets/Art/Backgrounds/...               — full-screen imagery (menus/splash): full res desktop, lighter mobile
+    ///                                              Matched at ANY depth, so Backgrounds/Loading/
+    ///                                              and Backgrounds/Versus/ inherit it for free.
+    ///   Assets/Art/Orbs/...                      — elemental spheres composited into plate centres
     ///   Assets/Art/UI/...                        — frames/gems/icons/plates (atlas, no mips)
     ///   Assets/Art/VFX/Textures/...              — FX masks/flipbooks (linear data)
     /// </summary>
@@ -22,6 +25,7 @@ namespace Emberfall.Editor
         const string CardsRoot = "Assets/Art/Cards/";
         const string HeroRoot = "Assets/Art/Hero/";
         const string BackgroundsRoot = "Assets/Art/Backgrounds/";
+        const string OrbsRoot = "Assets/Art/Orbs/";
         const string UiRoot = "Assets/Art/UI/";
         const string VfxRoot = "Assets/Art/VFX/Textures/";
 
@@ -65,6 +69,7 @@ namespace Emberfall.Editor
             }
 
             if (path.StartsWith(BackgroundsRoot)) { ApplyBackground(importer); return; }
+            if (path.StartsWith(OrbsRoot)) { ApplyOrb(importer); return; }
             if (path.StartsWith(UiRoot)) { ApplyUiAtlas(importer); return; }
             if (path.StartsWith(VfxRoot)) { ApplyVfxMap(importer); return; }
 
@@ -97,6 +102,24 @@ namespace Emberfall.Editor
             SetPlatform(importer, "Standalone", 4096, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 2048, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 2048, TextureImporterFormat.ASTC_6x6);
+        }
+
+        // Orbs (Assets/Art/Orbs/): the elemental sphere composited into the CENTRE of a loading
+        // or versus plate, at whatever size that plate calls for. Deliberately NOT the
+        // background lane even though the settings are close, because an orb sits in FRONT of
+        // the plate - filing it under "Backgrounds" would be a lie the day the two treatments
+        // diverge. Not the UI lane either: these are 1-2 MB full-alpha spheres and atlasing
+        // them would blow the atlas for no packing win.
+        //
+        // Mips OFF - an orb is drawn at or near its native size over a plate, never minified
+        // into the distance. Alpha is load-bearing (VersusOverlay composites it), so no crunch.
+        static void ApplyOrb(TextureImporter importer)
+        {
+            ApplySpriteCommon(importer);
+            importer.mipmapEnabled = false;
+            SetPlatform(importer, "Standalone", 2048, TextureImporterFormat.BC7);
+            SetPlatform(importer, "Android", 1024, TextureImporterFormat.ASTC_6x6);
+            SetPlatform(importer, "iPhone", 1024, TextureImporterFormat.ASTC_6x6);
         }
 
         // UI atlas sources (frames/gems/icons/plates): fixed pixel size, mips OFF.
