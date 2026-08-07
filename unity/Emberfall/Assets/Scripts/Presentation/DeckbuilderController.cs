@@ -456,26 +456,43 @@ namespace Emberfall.Presentation
             RefreshCollectionTiles();
             RebuildCurve();
 
-            var result = DeckValidator.Validate(_deck, _character, _db);
-
             _countLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
 
             // _legalityPill.text = result.IsValid ? "Legal" : "Incomplete";
             // _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
             // _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
+            // (restore the DeckValidator.Validate call above if this pill ever comes back)
 
+            RefreshVanishedCards();
+        }
+
+        // ---- The legality box says exactly one thing (Sam, 2026-08-07) ------------------------
+        //
+        // It used to print every DeckValidator violation. Each of the others has a better surface
+        // on this screen than a sentence:
+        //
+        //   L1 size       — "8 / 30" states it two lines up, with both numbers instead of one.
+        //   L2/L3 copies  — the wall TEACHES it. A card you already hold every copy of fades to
+        //                   0.1; one you hold half of does not. A few minutes of play and nobody
+        //                   needs it spelled out again, which a sentence can never achieve.
+        //   L4 class      — unreachable. BuildPool only admits cards AllowsClass accepts, so an
+        //                   off-class card cannot be added here in the first place.
+        //
+        // What is left has no other surface at all. BindDeckRow HIDES the row of a card the
+        // database no longer knows, while TotalCount still counts it — so a deck holding a card a
+        // balance patch deleted opens showing "29 / 30" above 29 rows, with nothing to explain the
+        // gap. DeckValidator names this case explicitly as expected after a patch.
+        //
+        // Swept locally rather than filtered out of Violations because the vanished-card report
+        // and the off-class report share DeckRule.L4_ClassMembership, and telling them apart would
+        // mean adding to a shared enum the spec marks LOCKED for a purely cosmetic reason.
+        private void RefreshVanishedCards()
+        {
             _legalityBox.Clear();
-            foreach (var v in result.Violations)
+            foreach (var e in _deck.Entries)
             {
-                // L1 is already on screen as "8 / 30", two lines up, with both numbers instead of
-                // one — so "Add 22 more cards." was the same fact said twice (Sam, 2026-08-07).
-                // Only L1 is dropped: every other violation names a specific card ("Only 2 of X",
-                // "X is not a STONE/TEMPEST card") and has nowhere else on this screen to appear.
-                // The predicate is untouched — Validate is shared with the server's match-join
-                // check, and this is a display decision.
-                if (v.Rule == DeckRule.L1_Size) continue;
-
-                var msg = new Label(v.Message);
+                if (_db.TryGet(e.CardId, out _)) continue;
+                var msg = new Label($"Unknown card '{e.CardId}'.");
                 msg.AddToClassList("legality-msg");
                 _legalityBox.Add(msg);
             }
