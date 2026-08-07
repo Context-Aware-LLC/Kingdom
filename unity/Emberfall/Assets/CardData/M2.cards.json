@@ -737,7 +737,7 @@
   },
   {
     "id": "tide_maren_avatar",
-    "name": "Maren\u0027s Avatar",
+    "name": "Maren's Avatar",
     "type": "MINION",
     "cost": 7,
     "attack": 5,
@@ -771,7 +771,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_maren_avatar"
+    "artId": "art/tide_marens_avatar"
   },
   {
     "id": "tide_deep_channel",

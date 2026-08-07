@@ -7,15 +7,22 @@ Reuses gen_card_prompt_briefs.py for everything that script already gets right: 
 text, class palette lookup, world tone, the scale clause, and the background-opposition hint.
 This file adds only the browser UI and per-card draft persistence on top.
 
-Drafts are saved as plain text to art-pipeline/card-art/<setId>/art_<cardId>/draft.txt — right
-next to where that card's generated candidates land, so art you like has its prompt sitting beside it.
+Drafts are saved as plain text to art-pipeline/card-art/<setId>/<art_file>/draft.txt — genuinely
+next to where that card's generated candidates land, so art you like has its prompt beside it.
 Untracked, same as the rest of art-pipeline/ (2026-08-02: an earlier version of this file kept
 drafts under tooling/card-art-seeds/drafts/ and claimed that location was git-tracked for safety;
 it never actually was — tooling/card-art-seeds/* has been gitignored the whole time).
 
-"Has art" is checked against the PROMOTED location,
-unity/Emberfall/Assets/Art/Cards/<setId>/art_<cardId>.png — not the pipeline's candidates folder,
-because the question this tool answers is "does the shipped game have art for this card yet."
+That adjacency was a claim, not a fact, until 2026-08-06: drafts were keyed by setId while
+gen_card_art.py keyed candidates by a CLASS group, so for 92 of 260 cards the prompt sat in a
+different directory from the art it produced. Both are keyed by setId now — directory is the
+expansion, class lives in the filename.
+
+<art_file> is the row's artId with "/" flattened to "_", READ from the row rather than rebuilt
+as "art_<cardId>". See art_file().
+
+"Has art" means promoted art OR a candidate waiting to be picked — a card with candidates on
+disk does not need a brief written again.
 
 Usage:
   python tooling/scripts/card_art_editor.py --port 8765
@@ -44,7 +51,9 @@ from gen_card_prompt_briefs import (  # noqa: E402
 )
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DRAFTS_DIR = REPO / "art-pipeline" / "card-art" 
+# Drafts AND candidates, same tree, same key: art-pipeline/card-art/<setId>/<art_file>/.
+# One constant, because they are one directory - that is the point of the 2026-08-06 change.
+CANDIDATES_DIR = REPO / "art-pipeline" / "card-art"
 PROMOTED_ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 HTML_PATH = pathlib.Path(__file__).resolve().parent / "card_art_editor.html"
 
@@ -75,12 +84,32 @@ def list_sets_cached():
         _sets_cache["mtimes"] = mtimes
     return _sets_cache["sets"]
 
-def draft_path(set_id, card_id):
-    return DRAFTS_DIR / set_id / f"art_{card_id}" / "draft.txt"
+def art_file(card):
+    """THE one place this file decides an art filename, and it READS the row's artId rather
+    than re-deriving it from the card id. This used to build "art_<cardId>", which is correct
+    only while every row happens to be authored as artId "art/<cardId>". One row authored
+    otherwise and has_art() reports False for a card that HAS art, so the card reappears in
+    the "needs a brief" list and is generated a second time. Same derivation as
+    gen_card_art.art_file()."""
+    return card["artId"].replace("/", "_")
 
 
-def has_art(set_id, card_id):
-    return (PROMOTED_ART_DIR / set_id / f"art_{card_id}.png").exists()
+def draft_path(card):
+    """Drafts live beside that card's candidates. Both are keyed by setId — the directory is
+    the expansion, the class lives in the filename (Sam, 2026-08-06). Before that, candidates
+    were keyed by a class group while drafts were keyed by setId, so for 92 of 260 cards the
+    prompt sat in a different folder from the art it produced."""
+    return CANDIDATES_DIR / card["setId"] / art_file(card) / "draft.txt"
+
+
+def has_art(card):
+    """Promoted art, or any candidate waiting to be picked. Returns a real bool — both
+    branches must, or every card reads as "needs art" and gets re-briefed."""
+    stem = art_file(card)
+    if (PROMOTED_ART_DIR / card["setId"] / f"{stem}.png").exists():
+        return True
+    cand_dir = CANDIDATES_DIR / card["setId"] / stem
+    return cand_dir.is_dir() and any(cand_dir.glob("cand_*.png"))
 
 
 def compose_blank(card, class_descriptors, world_tone):
@@ -118,8 +147,8 @@ def card_summary(card):
         "health": card.get("health"),
         "class": card.get("class"),
         "rarity": card.get("rarity"),
-        "hasArt": has_art(card["setId"], card["id"]),
-        "hasDraft": draft_path(card["setId"], card["id"]).exists(),
+        "hasArt": has_art(card),
+        "hasDraft": draft_path(card).exists(),
     }
 def scale(rarity):
     scale_text = ["common", "uncommon", "rare", "legendary"]
@@ -182,7 +211,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"error": f"no such card {card_id!r} in set {set_id!r}"}, 404)
                 return
             card = cards[0]
-            dp = draft_path(set_id, card_id)
+            dp = draft_path(card)
             if dp.exists():
                 text = dp.read_text(encoding="utf-8")
             else:
@@ -211,7 +240,14 @@ class Handler(BaseHTTPRequestHandler):
             # separate "authoritative" copy anymore; art-pipeline/ is untracked in full,
             # same as everything else the generation pipeline produces. Plain overwrite
             # on every save, no versioning.
-            dp = draft_path(set_id, card_id)
+            #
+            # The row is loaded rather than the path being built from card_id, because the
+            # filename comes from the row's artId. See art_file().
+            cards = load_cards(set_id, card_ids=[card_id])
+            if not cards:
+                self._json({"error": f"no such card {card_id!r} in set {set_id!r}"}, 404)
+                return
+            dp = draft_path(cards[0])
             dp.parent.mkdir(parents=True, exist_ok=True)
             dp.write_text(body, encoding="utf-8")
 

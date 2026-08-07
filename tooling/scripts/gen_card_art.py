@@ -198,24 +198,16 @@ CLASSES = {
     "rekindling":  "card-drafts-rekindling",
 }
 
-# WHERE CANDIDATES LAND under art-pipeline/card-art/ (Sam, 2026-07-26). The
-# original layout was one folder per setId, but every card in the game is
-# setId EMBERFALL, so all 29 cards piled into a single directory. New work goes
-# in its own folder instead: this maps a CLASSES key to its candidate subfolder,
-# falling back to the card's setId for the two batches already on disk under it.
+# WHERE CANDIDATES LAND under art-pipeline/card-art/ — the card's setId, and nothing else
+# (Sam, 2026-08-06): "separated by expansion at the directory level, class at the file name
+# level." A class-keyed candidate folder used to live here, which meant a card's draft.txt
+# (written under setId by card_art_editor.py) and its candidates (written under the class
+# group) landed in DIFFERENT directories for 92 of 260 cards — so the prompt was not beside
+# the art it produced, which is the whole point of the candidates folder.
 #
-# This is the BAKE-OFF path only. The promotion target is untouched — a picked
-# candidate still goes to unity/.../Art/Cards/<setId>/art_<cardId>.png, the
-# folder contract CardArtPostprocessor.cs enforces. See final_path().
-OUT_GROUP = {
-    "weapon-rerolls": "weapon-rerolls",
-    "batch2": "emberward-tidecaller",
-    "batch3": "emberward-tidecaller",
-    "clockwright": "clockwright",
-    "nightveil":   "nightveil",
-    "stonewarden": "stonewarden",
-    "tempest":     "tempest",
-}
+# The candidate directory now matches the promotion directory, which
+# CardArtPostprocessor.cs already enforces: unity/.../Art/Cards/<setId>/. One rule, one
+# place. See card_dir() and final_path().
 
 # ------------------------------------------------------------- style block
 #
@@ -400,7 +392,6 @@ def load_cards() -> list[dict]:
                     "artId": row["artId"],
                     "file": art_file(row["artId"]),
                     "setId": row.get("setId", "EMBERFALL"),
-                    "outGroup": OUT_GROUP.get(cls, row.get("setId", "EMBERFALL")),
                     "rarity": row.get("rarity", "COMMON"),
                     "cost": row.get("cost", 0),
                     "class": cls,
@@ -435,7 +426,7 @@ def build_prompt(card: dict, provider: str) -> str:
 # ------------------------------------------------------------- generation
 
 def card_dir(card: dict) -> pathlib.Path:
-    return OUT / card["outGroup"] / card["file"]
+    return OUT / card["setId"] / card["file"]
 
 
 def final_path(card: dict) -> pathlib.Path:
@@ -764,8 +755,10 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
         d.text((x, top + SMALL + 4), f"@ {SMALL}px (board read)", fill=DIM, font=font(13))
         y += row_h
 
-    # Sheet sits alongside the candidate folders it summarises, not at the root.
-    dest = OUT / rows[0][0]["outGroup"] / f"SHEET_{cls}.png"
+    # Sheet sits alongside the candidate folders it summarises, not at the root. One sheet
+    # per (setId, class): a class spans several expansions, and keying off rows[0] put the
+    # whole sheet in whichever set happened to sort first.
+    dest = OUT / rows[0][0]["setId"] / f"SHEET_{cls}.png"
     dest.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(dest)
     print(f"{cls}: {len(rows)} card(s) -> {dest.relative_to(REPO)}  ({sheet.width}x{sheet.height})")
@@ -876,8 +869,9 @@ def main() -> int:
         return 0
 
     if args.sheet_only:
-        for cls in sorted({c["class"] for c in cards}):
-            contact_sheet([c for c in cards if c["class"] == cls], cls)
+        for set_id, cls in sorted({(c["setId"], c["class"]) for c in cards}):
+            contact_sheet([c for c in cards
+                           if c["class"] == cls and c["setId"] == set_id], cls)
         return 0
 
     if not 1 <= candidates <= 4:
@@ -905,8 +899,9 @@ def main() -> int:
     skipped = {cid: why for cid, (_, why) in results.items() if why}
     write_manifest(cards, new_records)
     if not args.to_unity:
-        for cls in sorted({c["class"] for c in cards}):
-            contact_sheet([c for c in cards if c["class"] == cls], cls)
+        for set_id, cls in sorted({(c["setId"], c["class"]) for c in cards}):
+            contact_sheet([c for c in cards
+                           if c["class"] == cls and c["setId"] == set_id], cls)
 
     made = sum(len(v) for v in new_records.values())
     by_id = {c["id"]: c for c in cards}
