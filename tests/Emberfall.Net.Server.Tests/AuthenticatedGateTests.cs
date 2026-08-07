@@ -33,8 +33,8 @@ namespace Emberfall.Net.Server.Tests
     public sealed class AuthenticatedGateTests
     {
         private const string DeviceToken = "auth-gate-test-device-token-fixed";
-        private const string Subject     = "supabase-user-abc-123";
-        private const string Email       = "player@example.com";
+        private const string Subject = "supabase-user-abc-123";
+        private const string Email = "player@example.com";
 
         // ── 1. Valid token → authenticated account ───────────────────────────────
 
@@ -155,12 +155,12 @@ namespace Emberfall.Net.Server.Tests
             string replays = Path.Combine(Path.GetTempPath(), "emberfall-auth-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
             {
-                Urls          = "http://127.0.0.1:0",
-                CardsDir      = SessionHarness.CardDataDir(),
-                ReplaysDir    = replays,
-                Options       = new ServerOptions { EngineContractVersion = "interfaces.v4" },
+                Urls = "http://127.0.0.1:0",
+                CardsDir = SessionHarness.CardDataDir(),
+                ReplaysDir = replays,
+                Options = new ServerOptions { EngineContractVersion = "interfaces.v4" },
                 TokenVerifier = verifier,
-                AccountStore  = store,
+                AccountStore = store,
             });
             await built.App.StartAsync();
             try

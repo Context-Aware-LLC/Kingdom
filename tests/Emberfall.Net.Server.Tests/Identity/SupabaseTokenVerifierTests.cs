@@ -143,7 +143,7 @@ namespace Emberfall.Net.Server.Tests.Identity
         public async Task Alg_None_Token_Is_Rejected()
         {
             // A "none" algorithm token has no signature — the header, payload, and trailing dot.
-            string header  = Base64UrlEncode(Encoding.UTF8.GetBytes(@"{""alg"":""none"",""typ"":""JWT""}"));
+            string header = Base64UrlEncode(Encoding.UTF8.GetBytes(@"{""alg"":""none"",""typ"":""JWT""}"));
             string payload = Base64UrlEncode(Encoding.UTF8.GetBytes(
                 @"{""sub"":""attacker"",""aud"":""authenticated""," +
                 @"""iss"":""https://test.supabase.co/auth/v1"",""exp"":9999999999}"));

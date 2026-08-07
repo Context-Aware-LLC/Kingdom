@@ -129,20 +129,20 @@ namespace Emberfall.Net.Server.Identity
             {
                 return result.Exception switch
                 {
-                    SecurityTokenExpiredException          => TokenVerificationResult.Fail(TokenVerificationFailure.Expired),
-                    SecurityTokenNotYetValidException      => TokenVerificationResult.Fail(TokenVerificationFailure.NotYetValid),
-                    SecurityTokenInvalidIssuerException    => TokenVerificationResult.Fail(TokenVerificationFailure.WrongIssuer),
-                    SecurityTokenInvalidAudienceException  => TokenVerificationResult.Fail(TokenVerificationFailure.WrongAudience),
+                    SecurityTokenExpiredException => TokenVerificationResult.Fail(TokenVerificationFailure.Expired),
+                    SecurityTokenNotYetValidException => TokenVerificationResult.Fail(TokenVerificationFailure.NotYetValid),
+                    SecurityTokenInvalidIssuerException => TokenVerificationResult.Fail(TokenVerificationFailure.WrongIssuer),
+                    SecurityTokenInvalidAudienceException => TokenVerificationResult.Fail(TokenVerificationFailure.WrongAudience),
                     SecurityTokenSignatureKeyNotFoundException => TokenVerificationResult.Fail(TokenVerificationFailure.UnknownKid),
                     SecurityTokenInvalidSignatureException => TokenVerificationResult.Fail(TokenVerificationFailure.SignatureInvalid),
                     SecurityTokenInvalidAlgorithmException => TokenVerificationResult.Fail(TokenVerificationFailure.AlgorithmRejected),
-                    _                                      => TokenVerificationResult.Fail(TokenVerificationFailure.Malformed),
+                    _ => TokenVerificationResult.Fail(TokenVerificationFailure.Malformed),
                 };
             }
 
             var claims = result.Claims;
             string subject = claims.TryGetValue("sub", out object? subObj) ? subObj?.ToString() ?? "" : "";
-            string email   = claims.TryGetValue("email", out object? emailObj) ? emailObj?.ToString() ?? "" : "";
+            string email = claims.TryGetValue("email", out object? emailObj) ? emailObj?.ToString() ?? "" : "";
             // Supabase uses email_confirmed_at (ISO timestamp) rather than the standard email_verified bool.
             bool emailVerified = claims.TryGetValue("email_confirmed_at", out object? ecaObj)
                 && !string.IsNullOrEmpty(ecaObj?.ToString());
