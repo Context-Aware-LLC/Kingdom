@@ -249,7 +249,7 @@ READABLE AT 220 PIXELS. One clear subject, strong silhouette, high value
 contrast between subject and background. If it needs squinting at full size it
 is dead on the board.
 
-Painterly digital illustration: confident bskirmishwork, saturated accent lighting,
+Painterly digital illustration: confident brushwork, saturated accent lighting,
 readable shapes. NOT photoreal, NOT a 3D render, NOT anime or cel-shaded.
 
 SUBJECT AND BACKGROUND MUST OPPOSE EACH OTHER. The class palette governs the
@@ -413,6 +413,107 @@ def load_cards() -> list[dict]:
 
     cards.sort(key=lambda c: (RARITY_ORDER.get(c["rarity"], 9), -c["cost"], c["id"]))
     return cards
+
+
+# ------------------------------------------------- the OTHER per-card source
+#
+# `load_cards` above reads the per-card paragraph out of docs/design/card-drafts-*.md.
+# That covers 162 card ids and every one of them already has art on disk; the 83 cards
+# that still need art appear in NO drafts file, so this script could not reach a single
+# one of them (measured 2026-08-07 on master 9077356). Their direction lives instead in
+# the reviewed seed corpus, tooling/card-art-seeds/<setId>.json — four fields per card,
+# approved by Sam on NOR-223 before any image was generated.
+#
+# `--from-seeds` swaps source 3 (CARD) for that corpus and leaves sources 1 and 2 alone:
+# STYLE is still STYLE_BLOCKS[provider], so the two providers stay a controlled
+# comparison, and the class house look is still house-level prose rather than anything
+# invented here. The class descriptors and world tone come from the same
+# dev-docs/descriptors files gen_card_prompt_briefs.py reads, so a card's seed composes
+# to the same direction whichever of the two scripts you ask.
+#
+# This is opt-in, not a union with load_cards(): a bare run must keep selecting exactly
+# the cards it selected yesterday.
+
+
+def _briefs_module():
+    """gen_card_prompt_briefs, imported from this directory regardless of cwd."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import gen_card_prompt_briefs as briefs
+
+    return briefs
+
+
+def load_seed_cards() -> list[dict]:
+    briefs = _briefs_module()
+
+    rows: list[dict] = []
+    for fp in sorted((REPO / "unity" / "Emberfall" / "Assets" / "CardData").glob("*.cards.json")):
+        rows.extend(json.loads(fp.read_text(encoding="utf-8")))
+
+    seeds_dir = REPO / "tooling" / "card-art-seeds"
+    seeds: dict[str, dict] = {}
+    for fp in sorted(seeds_dir.glob("*.json")):
+        seeds.update(json.loads(fp.read_text(encoding="utf-8")))
+    if not seeds:
+        raise ValueError(f"no seeds found under {seeds_dir}")
+
+    class_descriptors = briefs.load_class_descriptors()
+    world_tone: dict[str, str] = {}
+
+    cards: list[dict] = []
+    for row in rows:
+        seed = seeds.get(row["id"])
+        if not seed:
+            continue
+        cls = row.get("class", "NEUTRAL").lower()
+        set_id = row.get("setId", "EMBERFALL")
+        if set_id not in world_tone:
+            world_tone[set_id] = briefs.load_world_tone(set_id)
+        palette, motifs, mood = class_descriptors.get(cls, ("", "", ""))
+
+        house = "\n".join(
+            [
+                f"Class: {cls.title()}.",
+                f"Palette: {palette}",
+                f"Motifs: {motifs}",
+                f"Mood: {seed.get('tone') or mood}",
+                "",
+                world_tone[set_id],
+            ]
+        ).strip()
+
+        core_lines = [
+            briefs.scale_clause(row),
+            seed["subject"].strip(),
+            f"Perspective: {seed['perspective'].strip()}",
+            f"Background: {seed['background'].strip()}",
+            "The subject and the background must oppose each other in hue, value, or "
+            "temperature — never a grey subject on a grey ground.",
+        ]
+        if (seed.get("notes") or "").strip():
+            core_lines.append(seed["notes"].strip())
+
+        cards.append(
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "artId": row["artId"],
+                "file": art_file(row["artId"]),
+                "setId": set_id,
+                "rarity": row.get("rarity", "COMMON"),
+                "cost": row.get("cost", 0),
+                "class": cls,
+                "house": house,
+                "core": "\n".join(core_lines),
+            }
+        )
+
+    cards.sort(key=lambda c: (RARITY_ORDER.get(c["rarity"], 9), -c["cost"], c["id"]))
+    return cards
+
+
+def has_promoted_art(card: dict) -> bool:
+    return final_path(card).exists()
 
 
 def build_prompt(card: dict, provider: str) -> str:
@@ -674,7 +775,13 @@ def generate(card: dict, provider: str, key: str, candidates: int,
                 "prompt": prompt,
             }
         )
-    return records
+    # (records, skip reason) — the shape the docstring promises and the shape main() unpacks.
+    # This used to `return records`, a bare list, which main() then unpacked as a 2-tuple. That
+    # only survives when the list happens to hold exactly two items, so the default gemini pass
+    # (2 candidates) worked by coincidence while --to-unity (always 1 image) and any card whose
+    # requests all failed (0 images) raised ValueError instead. It raised AFTER the images were
+    # written, so the run lost its manifest — the record of which prompt produced which file.
+    return records, None
 
 
 def write_manifest(cards: list[dict], new_records: dict[str, list[dict]]) -> None:
@@ -808,7 +915,16 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true",
                     help="print the fully composed prompt per card, generate nothing")
     ap.add_argument("--card", action="append", metavar="ID", help="single card id (repeatable)")
-    ap.add_argument("--class", dest="cls", choices=sorted(CLASSES), help="one class only")
+    ap.add_argument("--class", dest="cls", metavar="NAME",
+                    help=f"one class only; docs source: {', '.join(sorted(CLASSES))}. "
+                         "With --from-seeds the name is the card's own class "
+                         "(neutral, clockwright, ...)")
+    ap.add_argument("--from-seeds", dest="from_seeds", action="store_true",
+                    help="take the per-card direction from the reviewed seed corpus "
+                         "(tooling/card-art-seeds/) instead of docs/design/card-drafts-*.md; "
+                         "this is the only source that reaches the cards still missing art")
+    ap.add_argument("--only-missing-art", dest="only_missing_art", action="store_true",
+                    help="restrict to cards with no promoted png under Assets/Art/Cards/<setId>/")
     ap.add_argument("--candidates", type=int, default=None, metavar="N",
                     help="candidates per card (default 2 gemini / 1 openai, clamp 1-4)")
     ap.add_argument("--skip-existing", dest="skip", action="store_true", default=True,
@@ -831,13 +947,24 @@ def main() -> int:
         return 2
 
     try:
-        cards = load_cards()
-    except (OSError, ValueError, json.JSONDecodeError) as e:
+        cards = load_seed_cards() if args.from_seeds else load_cards()
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as e:
         print(f"card load failed: {e}", file=sys.stderr)
         return 2
 
+    if args.only_missing_art:
+        before = len(cards)
+        cards = [c for c in cards if not has_promoted_art(c)]
+        print(f"--only-missing-art: {before} card(s) in source, "
+              f"{len(cards)} with no promoted png, {before - len(cards)} already have art")
+
     selected = bool(args.cls or args.card)
     if args.cls:
+        known = sorted({c["class"] for c in cards})
+        if args.cls not in known:
+            print(f"unknown class {args.cls!r}; this source has: {', '.join(known)}",
+                  file=sys.stderr)
+            return 2
         cards = [c for c in cards if c["class"] == args.cls]
     if args.card:
         wanted = set(args.card)

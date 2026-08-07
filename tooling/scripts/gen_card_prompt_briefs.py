@@ -181,7 +181,16 @@ def load_world_tone(set_id):
             base = body
         elif title == "rekindling expansion" and set_id == "REKINDLING":
             rekindling = body
-    return (base + ("\n\n" + rekindling if rekindling else "")).strip()
+    tone = (base + ("\n\n" + rekindling if rekindling else "")).strip()
+    # world.md closes each section with a "**Provenance:** [doc](path) §3 ..." citation. That
+    # is bookkeeping for a human reading the descriptor, and every consumer of this function
+    # pastes the result into an IMAGE prompt whose own STYLE block says "no text, no letters".
+    # Sending markdown link syntax and section marks to an image model is at best noise and at
+    # worst something it tries to draw, so drop the citation and keep the tone prose.
+    return _PROVENANCE.sub("", tone).strip()
+
+
+_PROVENANCE = re.compile(r"^\s*\*{0,2}Provenance:?\*{0,2}.*$", re.M)
 
 
 def load_seeds(set_id):
