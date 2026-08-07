@@ -1,9 +1,9 @@
 {
   "hero_power_blueprint": {
-    "subject": "A single warm parchment blueprint unfurls in midair above a brass drafting table while an articulated steel compass pins one corner and traces a clean arc-blue construction line across an unfinished gear assembly. Three small brass components rise from the page into their intended positions, making planning feel precise and physical rather than magical spectacle.",
-    "perspective": "Close overhead three-quarter view with the parchment, compass, arc-blue line, and rising components centered inside the middle 70%.",
-    "background": "A cool charcoal workshop bench with blurred iron tools and deep blue-grey shadow, opposing the parchment amber and polished brass focal objects.",
-    "notes": "Show no readable labels, numerals, diagrams, hands, finished construct, or city-scale plan; the blueprint itself is the one subject."
+    "subject": "One warm parchment blueprint forms a compact amber disk beneath a single dark-steel drafting compass, whose two legs frame one simple arc-blue gear outline. The sheet, compass, and one blue line read together as a bold centered emblem rather than a busy workbench scene.",
+    "perspective": "Straight overhead macro view with the blueprint-and-compass emblem centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
+    "background": "A deep cool-charcoal field with only hazy iron texture far behind it, separating the warm amber parchment, dark compass, and bright arc-blue line.",
+    "notes": "Hero power art must read at icon size. No table, loose components, extra gears, tools, readable labels, numerals, hands, finished construct, or detail outside the central circle."
   },
   "token_gear_wisp": {
     "subject": "A palm-sized Gear Wisp formed from three mismatched brass cogs orbiting a bright arc-blue core, with two tiny copper stabilizer fins and a loose coil spring trailing like a tail. It hovers with a slight mechanical wobble, newly assembled and useful rather than cute or animal-like.",
@@ -12,16 +12,16 @@
     "notes": "Keep it visibly smaller and simpler than Assembly Drone: no limbs, face, swarm, tools, text, or large machinery."
   },
   "hero_power_shadow_mark": {
-    "subject": "A narrow blade-silver assassin's seal pressed into a small disk of black sealing wax, its center pierced by one toxic-lime pinprick while midnight-purple shadow smoke curls inward toward the mark. The seal rests beside a closed bone-white glove, suggesting a chosen target without depicting the victim.",
-    "perspective": "Tight top-down close view with the wax seal, silver edge, and green puncture centered as one instantly readable symbol-like object.",
-    "background": "A warm amber-brown wooden table lit by a distant candle, providing strong temperature and value contrast behind the black wax and cold silver.",
-    "notes": "No letters, runes, target reticle, skull icon, blood, victim, readable contract, or UI symbol; the mark must remain an original physical seal."
+    "subject": "One round disk of shadow-black sealing wax bears a broad blade-silver crescent impression and one toxic-lime pinprick at its center, with a thin midnight-purple smoke halo hugging the rim. The high-contrast seal reads as one physical icon with a clean circular silhouette.",
+    "perspective": "Straight overhead macro view with the complete wax seal centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
+    "background": "A warm amber-brown leather field with soft golden haze, providing strong temperature and value contrast behind the black wax and cold silver.",
+    "notes": "Hero power art must read at icon size. No glove, letters, runes, target reticle, skull icon, blood, victim, readable contract, UI symbol, or detail outside the central circle."
   },
   "hero_power_earthwall": {
-    "subject": "Three interlocking granite slabs thrust upward from cracked ground into a compact crescent wall, their iron-black bases wedged together and thin pale-quartz seams glowing where the stones lock. Small moss patches and one rusted-bronze brace make the barrier feel old, repaired, and immovable.",
-    "perspective": "Low frontal three-quarter view at ground height with the complete crescent barrier centered and both ends visible inside the middle 70%.",
+    "subject": "One compact crescent wall built from three interlocking cool-grey granite slabs rises from a narrow base, its iron-black feet wedged together and two pale-quartz seams glowing where the stones lock. One rusted-bronze brace makes the single barrier feel old, repaired, and immovable.",
+    "perspective": "Low frontal three-quarter icon view with the complete crescent barrier centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A warm ember-orange dusk over a softly blurred ruined road, separating the cool grey stone wall from the horizon.",
-    "notes": "No defender, castle, giant cliff, explosive eruption, carved writing, or projectile; this is a local protective wall."
+    "notes": "Hero power art must read at icon size. No defender, castle, giant cliff, explosive eruption, carved writing, projectile, or detail outside the central circle; this is one local protective wall."
   },
   "token_stone_shard": {
     "subject": "A knee-high wedge of dark granite stands upright on two broad rubble feet, its front face naturally split into a shield-like plane with one pale-quartz eye glowing from a narrow crack. A rusted-bronze staple binds a broken corner and a tuft of moss grows from the rear seam.",
@@ -30,9 +30,9 @@
     "notes": "Bulwark reads through the broad planted wedge. Keep it smaller and more primitive than Pebble Sentinel, with no arms, weapon, mouth, or giant scale."
   },
   "hero_power_chain_spark": {
-    "subject": "One marble-sized cyan spark leaps between two suspended storm-silver conductor rings, leaving a sharp gold-white double-trace that bends once at each ring. The second ring has just begun to glow, capturing the instant energy chains onward without becoming a full lightning storm.",
-    "perspective": "Macro side-on three-quarter view with both conductor rings and the complete zigzag spark path centered inside the middle 70%.",
-    "background": "A deep charcoal stormcloud chamber with soft violet-grey vapor, maximizing contrast around the cyan and gold-white electrical line.",
-    "notes": "No caster, enemy figures, readable apparatus labels, giant bolt, explosion, or more than two rings; keep the effect compact and controlled."
+    "subject": "One palm-sized storm-silver double-ring conductor holds a bright cyan spark across its open center, leaving one sharp gold-white zigzag between the joined rings. The compact device and spark read together as one controlled circular emblem, not a full lightning storm.",
+    "perspective": "Straight-on macro icon view with the complete double-ring conductor centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
+    "background": "A deep charcoal field with soft hazy violet-grey vapor, maximizing value contrast around the storm-silver rings and cyan-gold spark.",
+    "notes": "Hero power art must read at icon size. No caster, enemy figures, labels, giant bolt, explosion, extra rings, or detail outside the central circle."
   }
 }

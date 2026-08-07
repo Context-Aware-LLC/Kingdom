@@ -26,7 +26,7 @@
   "rekind_neutral_salvaged_golem": {
     "subject": "A sturdy humanoid golem assembled from useful wreckage: one granite shoulder, one riveted iron shoulder, cedar support beams, and a bronze boiler chest lit by a warm amber core. It lifts a single broken lintel with both hands while its mismatched legs remain squarely planted.",
     "perspective": "Slight low-angle full-body three-quarter view with the golem, raised lintel, and both planted feet inside the middle 70%.",
-    "background": "A pale cool-grey rebuilding yard under soft overcast light, keeping the mixed warm wood and bronze parts distinct from the rubble.",
+    "background": "A deep cobalt-blue canvas screen and hazy teal work-yard shadow, separating the cool grey granite and iron silhouette while the warm cedar beams, bronze chest, and amber core remain distinct.",
     "notes": "Bulwark is conveyed by load-bearing strength. No junk pile silhouette, giant size, weapon, extra workers, glowing runes, wheels, or chaotic scrap spikes."
   },
   "rekind_neutral_bannerman": {
@@ -306,10 +306,10 @@
     "notes": "Shroud is concealment through stillness. No crouching rooftop pose, bow, dagger attack, glowing eyes, multiple scouts, giant smoke cloud, or copied Veilborn Scout corner."
   },
   "rekind_night_ink_viper": {
-    "subject": "A hand-length viper with glossy shadow-black scales swims through a shallow spill of midnight-purple ink, its narrow bone-white belly and one toxic-lime fang briefly breaking the surface. The rear half dissolves into the ink without losing the small natural snake silhouette.",
-    "perspective": "Macro top-down three-quarter view with the entire curved viper, ink wake, pale belly edge, and single venom fang centered.",
+    "subject": "A hand-length viper with glossy shadow-black scales swims through a shallow spill of midnight-purple ink, its narrow bone-white belly and one toxic-lime fang briefly breaking the surface. One cropped warm-brown hand jerks away at the frame edge and drops an ivory quill as the rear half of the snake dissolves into the ink.",
+    "perspective": "Macro top-down three-quarter view with the entire curved viper, ink wake, pale belly edge, and single venom fang centered while the recoiling hand stays subordinate at the outer edge.",
     "background": "A warm amber parchment worktable with soft candlelight, creating maximum contrast around the black-purple snake and green focal point.",
-    "notes": "Venom is one fang; Shroud is the ink merge. No giant serpent, quill, readable writing, venom spray, extra snakes, open mouth, or magical rune."
+    "notes": "Venom is one fang; Shroud is the ink merge. The single dropped quill and recoiling hand show fear without competing with the snake. No giant serpent, readable writing, venom spray, extra snakes, open mouth, or magical rune."
   },
   "rekind_night_marked_for_death": {
     "subject": "A plain bone-white ceramic mask hangs against a warm wall as one hair-thin blade-silver scratch crosses its lower edge and a toxic-lime droplet settles precisely at the line's endpoint. Midnight-purple shadow has begun closing around the mask from both sides, leaving the mark unavoidable but restrained.",
@@ -396,9 +396,9 @@
     "notes": "No readable oath, full casters, lightning storm, giant portal, tornado, flags, creature face in the cloud, or overlapping extra staffs."
   },
   "rekind_tempest_vael": {
-    "subject": "Vael is a powerful humanoid elemental formed from a compact charcoal thunderhead wrapped in layered storm-silver armor ribbons, lunging forward with two distinct gold-white arm arcs that strike on opposite sides of one centered cyan core. A calm mask-like face remains visible between wind-torn cloud crests.",
+    "subject": "Vael is a powerful humanoid elemental formed from a compact charcoal thunderhead wrapped in layered storm-silver armor ribbons, lunging forward with two distinct gold-white arm arcs that strike on opposite sides of one centered cyan core. Below the calm mask-like face, two tiny ochre-clad watchkeepers recoil behind a broken parapet as the dark elemental bears down on them.",
     "perspective": "Low dynamic medium-full three-quarter view with Vael's face, cyan core, complete lunging torso, and both separated arm arcs inside the middle 70%.",
     "background": "A warm ember-orange sky above a pale ochre plateau, silhouetting the dark elemental while preserving the two bright strike paths.",
-    "notes": "Doublestrike is two arm arcs in one action. No giant titan scale, weapon, crown, wings, army, full tornado body, or duplicate of Zael's upright storm-lord pose."
+    "notes": "Doublestrike is two arm arcs in one action. Keep the two frightened watchkeepers tiny and subordinate to Vael. No giant titan scale, weapon, crown, wings, army, full tornado body, or duplicate of Zael's upright storm-lord pose."
   }
 }

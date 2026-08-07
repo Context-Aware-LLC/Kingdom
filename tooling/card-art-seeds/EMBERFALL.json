@@ -330,10 +330,10 @@
     "notes": "One revenant and one lantern only. No chains around the whole body, screaming ghost, skull swarm, graveyard battle, or duplicate of the larger bulwark token."
   },
   "neutral_venomscale_drake": {
-    "subject": "A lean hound-sized drake crouches along a broken aqueduct, its overlapping slate-grey scales edged in moss green and its throat pouch glowing a restrained toxic lime. One clear venom bead gathers at a short ivory fang while narrow bronze-brown wing membranes fold tightly against the body.",
+    "subject": "A lean hound-sized drake crouches along a broken aqueduct, its overlapping slate-grey scales edged in moss green and its throat pouch glowing a restrained toxic lime. One clear venom bead gathers at a short ivory fang while, below the parapet, one tiny ochre-clad aqueduct worker drops a pale bucket and scrambles away from the creature.",
     "perspective": "Low side-on three-quarter portrait with the drake's complete head-to-tail silhouette, folded wings, and venom bead centered and unobscured.",
     "background": "A warm dusty coral sunset over pale ruined arches, opposing the cool slate body and toxic-green throat.",
-    "notes": "Venom is one bead, not a spray. Keep it hound-sized and naturalistic, with no giant dragon scale, fire breath, rider, hoard, extra heads, or airborne attack."
+    "notes": "Venom is one bead, not a spray. Keep the fleeing worker tiny and subordinate and the drake's folded bronze-brown wings fully readable. No giant dragon scale, fire breath, rider, hoard, extra heads, or airborne attack."
   },
   "neutral_duneborn_construct": {
     "subject": "A broad four-legged construct rises from wind-packed sand, built around a dark iron frame clad in sun-bleached sandstone plates and held by aged-bronze straps. Its wedge-shaped front slab lowers into a defensive brace while a small amber furnace-eye glows beneath the overhang.",
@@ -348,10 +348,10 @@
     "notes": "This is a usable weapon-like quill, not a bird or magic wand. No readable writing, book, hand, multiple quills, flame plume, or oversized sword proportions."
   },
   "ember_cinderplate_golem": {
-    "subject": "A compact Emberward golem lunges from one planted foot, its body assembled from overlapping char-black furnace plates with molten-orange seams and a blunt ember-red shoulder ram. One gold spark sprays from a cracked elbow as the forward fist drives low, emphasizing dangerous speed over durability.",
+    "subject": "A compact Emberward golem lunges from one planted foot, its body assembled from overlapping char-black furnace plates with molten-orange seams and a blunt ember-red shoulder ram. One gold spark sprays from a cracked elbow as the forward fist drives through a low barricade, while one tiny pale-clad yard watchman recoils behind the far edge to make the golem's dangerous speed feel immediate.",
     "perspective": "Low dynamic three-quarter action view with the entire golem, forward fist, and planted rear foot contained within the central frame.",
     "background": "A pale cold-grey ash yard under blue smoke, opposing the dark armor and molten seams while leaving the silhouette clean.",
-    "notes": "The 6/3 profile reads as high force and brittle construction. No giant scale, defensive shield, weapon, volcano, humanoid face, or explosion filling the frame."
+    "notes": "The 6/3 profile reads as high force and brittle construction. Keep the lone watchman tiny and subordinate. No giant scale, defensive shield, weapon, volcano, humanoid face, or explosion filling the frame."
   },
   "ember_magmacore_warden": {
     "subject": "A massive but doorway-scale elemental warden plants both fists like buttresses, its char-black basalt torso enclosing one deep molten-orange magma core behind thick gold-riveted ribs. Ember-red heat vents rise from the shoulders while broad cracked-rock forearms form a protective arch.",
