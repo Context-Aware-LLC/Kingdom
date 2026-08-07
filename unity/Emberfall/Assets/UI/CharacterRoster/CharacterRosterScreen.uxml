@@ -58,6 +58,8 @@
                 <ui:Label name="deck-modal-sub" text="" class="create-help" />
 
                 <ui:VisualElement name="deck-menu-pane" class="deck-pane">
+                    <!-- Match pick only. Every other action below is offered from both doors. -->
+                    <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />

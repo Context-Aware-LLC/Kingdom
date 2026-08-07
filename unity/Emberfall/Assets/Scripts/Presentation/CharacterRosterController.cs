@@ -135,6 +135,8 @@ namespace Emberfall.Presentation
         private VisualElement _deckDeletePane;
         private Label _deckDeleteMessage;
         private TextField _deckRenameField;
+        private Button _deckSelectButton;
+        private Button _deckEditButton;
         private Button _deckSetDefaultButton;
         private Button _deckDeleteButton;
         private Button _deckModalCancel;
@@ -225,6 +227,8 @@ namespace Emberfall.Presentation
             _deckDeletePane = _root.Q<VisualElement>("deck-delete-pane");
             _deckDeleteMessage = _root.Q<Label>("deck-delete-message");
             _deckRenameField = _root.Q<TextField>("deck-rename-field");
+            _deckSelectButton = _root.Q<Button>("deck-select");
+            _deckEditButton = _root.Q<Button>("deck-edit");
             _deckSetDefaultButton = _root.Q<Button>("deck-set-default");
             _deckDeleteButton = _root.Q<Button>("deck-delete");
             _deckModalCancel = _root.Q<Button>("deck-modal-cancel");
@@ -309,6 +313,7 @@ namespace Emberfall.Presentation
         {
             _root.Q<Button>("deck-new-generated")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Generated));
             _root.Q<Button>("deck-new-blank")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Blank));
+            _deckSelectButton?.RegisterCallback<ClickEvent>(_ => PickForMatch());
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => EditOpenDeck());
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
@@ -354,6 +359,22 @@ namespace Emberfall.Presentation
                 _deckDeleteButton.tooltip = canDelete
                     ? ""
                     : $"{character.Name}'s only deck. Make another first.";
+
+            // Select is the match door's one addition to this dialog, and while it is showing it
+            // — not Edit — is the primary action: picking is why the player opened the screen.
+            bool choosing = MatchDeckSelection.Choosing;
+            bool alreadyPicked = choosing && _pickedDeckId == deck.Id;
+            _menuQueueReady = summary.Queue.IsEligible;
+
+            Show(_deckSelectButton, choosing);
+            _deckEditButton?.EnableInClassList("roster-button--cta", !choosing);
+            _deckEditButton?.EnableInClassList("roster-button--ghost", choosing);
+            if (choosing && _deckSelectButton != null)
+            {
+                _deckSelectButton.SetEnabled(summary.Queue.IsEligible && !alreadyPicked);
+                _deckSelectButton.text = alreadyPicked ? "Selected" : "Select this deck";
+                _deckSelectButton.tooltip = summary.Queue.IsEligible ? "" : summary.Queue.Reason;
+            }
 
             ShowDeckPane(DeckPane.Menu);
             _deckModal?.RemoveFromClassList("delete-modal--hidden");
@@ -557,6 +578,7 @@ namespace Emberfall.Presentation
             _menuCharacter = null;
             _menuDeck = null;
             _menuSiblingCount = 0;
+            _menuQueueReady = false;
             _pendingCardBackId = "";
             _deckPane = DeckPane.Menu;
         }
@@ -605,9 +627,10 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// One row shape for both doors (Sam, 2026-08-07). Find Game used to render its own
-        /// text-button variant of this screen; it renders these plates now, and the only difference
-        /// is what a plate click means — options here, selection there.
+        /// One row for both doors (Sam, 2026-08-07). Find Game used to render its own text-button
+        /// variant of this screen. It renders exactly this now — same rows, same plates, same
+        /// options behind a plate, same Delete. Everything the match door adds sits outside the
+        /// row: one extra action in the deck dialog, and a Continue bar under the list.
         /// </summary>
         private VisualElement BuildCharacterRow(Character character, IReadOnlyList<DeckList> decks)
         {
@@ -651,19 +674,14 @@ namespace Emberfall.Presentation
             eligibility.AddToClassList(queue.IsEligible ? "queue-pill--ready" : "queue-pill--draft");
             identity.Add(eligibility);
 
+            var delete = new Button { text = "Delete" };
+            delete.AddToClassList("delete-character");
+            delete.tooltip = $"Delete {character.Name} and every deck bound to it";
+            delete.clicked += () => OpenDeleteDialog(character);
+
             row.Add(identity);
             row.Add(BuildDeckStrip(character, decks));
-
-            // Destroying a character is not something a match picker offers.
-            if (!MatchDeckSelection.Choosing)
-            {
-                var delete = new Button { text = "Delete" };
-                delete.AddToClassList("delete-character");
-                delete.tooltip = $"Delete {character.Name} and every deck bound to it";
-                delete.clicked += () => OpenDeleteDialog(character);
-                row.Add(delete);
-            }
-
+            row.Add(delete);
             return row;
         }
 
@@ -694,9 +712,6 @@ namespace Emberfall.Presentation
             foreach (DeckSummary summary in owned.Decks)
                 strip.Add(BuildDeckPlate(character, summary, owned.Count));
 
-            // "+" is on the match screen too. It offers a GENERATED deck as well as a blank one, so
-            // it is a way to reach the queue rather than a dead end — and nothing on this screen is
-            // urgent, because entering the queue takes a second, deliberate press of Continue.
             strip.Add(BuildNewDeckPlate(character));
 
             return strip;
@@ -706,18 +721,15 @@ namespace Emberfall.Presentation
         {
             DeckList deck = summary.Deck;
 
-            bool choosing = MatchDeckSelection.Choosing;
-
             var plate = new Button();
             plate.AddToClassList("deck-plate");
             plate.EnableInClassList("deck-plate--default", summary.IsDefault);
-            plate.EnableInClassList("deck-plate--selected", choosing && _pickedDeckId == deck.Id);
-            plate.tooltip = choosing
-                ? (summary.Queue.IsEligible ? $"Play {character.Name} with {deck.Name}" : summary.Queue.Reason)
-                : (summary.IsDefault ? $"{deck.Name} — {character.Name}'s default deck" : deck.Name);
-            plate.clicked += choosing
-                ? (Action)(() => PickForMatch(character, summary))
-                : () => OpenDeckDialog(character, deck, summary, siblingCount);
+            plate.EnableInClassList("deck-plate--selected",
+                MatchDeckSelection.Choosing && _pickedDeckId == deck.Id);
+            plate.tooltip = summary.IsDefault
+                ? $"{deck.Name} — {character.Name}'s default deck"
+                : deck.Name;
+            plate.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
 
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
@@ -869,21 +881,27 @@ namespace Emberfall.Presentation
         private string _pickedCharacterId = "";
         private string _pickedDeckId = "";
 
+        /// <summary>Whether the deck the dialog is about can be queued with — read once when it
+        /// opens, so Select and its refusal cannot disagree.</summary>
+        private bool _menuQueueReady;
+
         /// <summary>
-        /// Mark a deck as the one to play. A draft is not selectable — it says why instead, because
-        /// the plate already shows a Draft tag and the useful half is the reason behind it.
+        /// Mark the open deck as the one to play. It does NOT enter the queue — that is Continue's
+        /// job. A button labelled Select, pressed from inside an options dialog, should not be the
+        /// thing that drops the player into matchmaking.
         /// </summary>
-        private void PickForMatch(Character character, DeckSummary summary)
+        private void PickForMatch()
         {
-            if (!summary.Queue.IsEligible)
+            if (_menuCharacter == null || _menuDeck == null) return;
+            if (!_menuQueueReady)
             {
-                SetStatus($"{summary.Deck.Name} is not queue ready: {summary.Queue.Reason}", isError: true);
+                SetDeckError("This deck is not queue ready yet.");
                 return;
             }
 
-            _pickedCharacterId = character.Id;
-            _pickedDeckId = summary.Deck.Id;
-            SetStatus("");
+            _pickedCharacterId = _menuCharacter.Id;
+            _pickedDeckId = _menuDeck.Id;
+            CloseDeckDialog();
             RebuildRoster();
         }
 
@@ -994,7 +1012,7 @@ namespace Emberfall.Presentation
 
         private void RefreshPowerHint()
         {
-            if (_powerHint != null)
+            if (_powerHint is not null)
                 _powerHint.text = $"Hero power: {Pretty(SelectedPrimary())}";
         }
 
