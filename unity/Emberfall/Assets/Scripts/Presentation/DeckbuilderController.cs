@@ -467,6 +467,14 @@ namespace Emberfall.Presentation
             _legalityBox.Clear();
             foreach (var v in result.Violations)
             {
+                // L1 is already on screen as "8 / 30", two lines up, with both numbers instead of
+                // one — so "Add 22 more cards." was the same fact said twice (Sam, 2026-08-07).
+                // Only L1 is dropped: every other violation names a specific card ("Only 2 of X",
+                // "X is not a STONE/TEMPEST card") and has nowhere else on this screen to appear.
+                // The predicate is untouched — Validate is shared with the server's match-join
+                // check, and this is a display decision.
+                if (v.Rule == DeckRule.L1_Size) continue;
+
                 var msg = new Label(v.Message);
                 msg.AddToClassList("legality-msg");
                 _legalityBox.Add(msg);
