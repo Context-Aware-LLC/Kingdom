@@ -1,0 +1,10 @@
+@import url("unity-theme://default");
+@import url("/Assets/UI/Deckbuilder/theme.uss");
+
+/* Runtime GenericDropdownMenu instances are attached to the PanelSettings root rather than beneath
+ * the DropdownField that opened them. This rule must live in the panel theme: a stylesheet attached
+ * by MainMenuScreen.uxml cannot reach that reparented overlay. The default theme supplies both the
+ * light popup surface and its matching dark text token; make the missing connection explicit. */
+.unity-base-dropdown__label {
+    color: var(--unity-colors-dropdown-text);
+}
