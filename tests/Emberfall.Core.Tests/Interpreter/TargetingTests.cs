@@ -178,6 +178,41 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(b.CurrentHealth, Is.EqualTo(1));
         }
 
+        /// <summary>A card that asks for no target refuses one, whether it has no rules at all or
+        /// only untargeted ones. This used to be accepted: a branch labelled "compatibility for
+        /// pre-TargetSpec content" let an unsolicited live-character target through on any card with
+        /// no <c>TargetSpec</c> anywhere. No such content exists or can be authored — a selector is
+        /// required by <c>CardJson.TargetFromElement</c> and by <c>TargetedRuleAction</c>'s
+        /// constructor — so the branch only widened this VULN-001 surface. These cases are the
+        /// replacement contract; they fail if the permissive path ever returns.</summary>
+        [Test]
+        public void A_Card_That_Asks_For_No_Target_Refuses_An_Unsolicited_One()
+        {
+            var vanilla = Minion("vanilla");
+            RuleDefinition draw = TestRules.Rule("draw", Trigger.ON_CAST, new DrawAction(1));
+            var untargeted = Spell("untargeted_draw", draw);
+            var db = new FakeCardDatabase().Register(vanilla).Register(untargeted);
+            var state = State();
+            CardInstance victim = Board(state, 1, vanilla);
+            var target = new[] { new TargetRef(victim.Id) };
+            PlayerId caster = state.Players[0].Id;
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(Targeting.ValidatePlayerChoices(state, db, caster, vanilla,
+                    Trigger.ON_PLAY, target), Is.False,
+                    "a minion with no rules must not accept a target");
+                Assert.That(Targeting.ValidatePlayerChoices(state, db, caster, untargeted,
+                    Trigger.ON_CAST, target), Is.False,
+                    "a spell whose only rule is untargeted must not accept a target");
+
+                // The accept case, so this is not merely asserting "always false".
+                Assert.That(Targeting.ValidatePlayerChoices(state, db, caster, untargeted,
+                    Trigger.ON_CAST, System.Array.Empty<TargetRef>()), Is.True,
+                    "the same spell with no targets attached is a legal play");
+            });
+        }
+
         [Test]
         public void Player_Choice_Plan_Exposes_Binding_Order_Counts_And_Distinctness()
         {
