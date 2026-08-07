@@ -223,7 +223,7 @@ namespace Emberfall.Editor
                 attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: new[] { kw }, effects: Array.Empty<EffectDef>(),
-                cardText: "", flavorText: "", artId: "art_verify", setId: SetId.CORE,
+                cardText: "", flavorText: "", artId: "verify", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static int Pass(string name)

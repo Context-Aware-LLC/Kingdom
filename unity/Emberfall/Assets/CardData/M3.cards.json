@@ -33,7 +33,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_reclaimed_scout"
+    "artId": "reclaimed_scout"
   },
   {
     "id": "rekind_neutral_alliance_messenger",
@@ -66,7 +66,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_alliance_messenger"
+    "artId": "alliance_messenger"
   },
   {
     "id": "rekind_neutral_restored_bulwark",
@@ -84,7 +84,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_restored_bulwark"
+    "artId": "restored_bulwark"
   },
   {
     "id": "rekind_neutral_salvaged_golem",
@@ -102,7 +102,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_salvaged_golem"
+    "artId": "salvaged_golem"
   },
   {
     "id": "rekind_neutral_bannerman",
@@ -139,7 +139,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_new_dawn_bannerman"
+    "artId": "new_dawn_bannerman"
   },
   {
     "id": "rekind_neutral_bridge_warden",
@@ -177,7 +177,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_bridge_warden"
+    "artId": "bridge_warden"
   },
   {
     "id": "rekind_neutral_truce_pact",
@@ -212,7 +212,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_truce_pact"
+    "artId": "truce_pact"
   },
   {
     "id": "rekind_neutral_aric",
@@ -269,7 +269,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/neutral_aric_first_among_equals"
+    "artId": "aric_first_among_equals"
   },
   {
     "id": "rekind_ember_vanguard_conscript",
@@ -286,7 +286,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_vanguard_conscript"
+    "artId": "ember_vanguard_conscript"
   },
   {
     "id": "rekind_ember_brazier_keeper",
@@ -301,7 +301,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_brazier_keeper"
+    "artId": "ember_brazier_keeper"
   },
   {
     "id": "rekind_ember_forge_warden",
@@ -337,7 +337,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_forge_warden"
+    "artId": "ember_forge_warden"
   },
   {
     "id": "rekind_ember_reclaimed_fortress",
@@ -394,7 +394,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_reclaimed_fortress"
+    "artId": "ember_reclaimed_fortress"
   },
   {
     "id": "rekind_ember_coalition_blazer",
@@ -428,7 +428,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/ember_coalition_blazer"
+    "artId": "ember_coalition_blazer"
   },
   {
     "id": "rekind_ember_rekindled_flame",
@@ -483,7 +483,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_rekindled_flame"
+    "artId": "ember_rekindled_flame"
   },
   {
     "id": "rekind_ember_pyre_commander",
@@ -538,7 +538,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/ember_pyre_commander"
+    "artId": "ember_pyre_commander"
   },
   {
     "id": "rekind_ember_general_kira",
@@ -596,7 +596,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/ember_general_kira_flame_reunified"
+    "artId": "ember_general_kira_flame_reunified"
   },
   {
     "id": "rekind_tide_harbinger",
@@ -612,7 +612,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_harbinger"
+    "artId": "tide_harbinger"
   },
   {
     "id": "rekind_tide_saltshore_scout",
@@ -647,7 +647,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/tide_saltshore_scout"
+    "artId": "tide_saltshore_scout"
   },
   {
     "id": "rekind_tide_reef_reclaimer",
@@ -665,7 +665,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_reef_reclaimer"
+    "artId": "tide_reef_reclaimer"
   },
   {
     "id": "rekind_tide_channel_mender",
@@ -720,7 +720,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/tide_channel_mender"
+    "artId": "tide_channel_mender"
   },
   {
     "id": "rekind_tide_tidal_emissary",
@@ -776,7 +776,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/tide_tidal_emissary"
+    "artId": "tide_tidal_emissary"
   },
   {
     "id": "rekind_tide_shoreline_pact",
@@ -830,7 +830,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/tide_shoreline_pact"
+    "artId": "tide_shoreline_pact"
   },
   {
     "id": "rekind_tide_deepwater_alliance",
@@ -882,7 +882,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/tide_deepwater_alliance"
+    "artId": "tide_deepwater_alliance"
   },
   {
     "id": "rekind_tide_marens_peacebroker",
@@ -939,7 +939,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_marens_peacebroker"
+    "artId": "tide_marens_peacebroker"
   },
   {
     "id": "rekind_grave_memorial_wisp",
@@ -976,7 +976,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/grave_memorial_wisp"
+    "artId": "grave_memorial_wisp"
   },
   {
     "id": "rekind_grave_tomb_warden",
@@ -1012,7 +1012,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_tomb_warden"
+    "artId": "grave_tomb_warden"
   },
   {
     "id": "rekind_grave_last_honor",
@@ -1062,7 +1062,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/grave_last_honor"
+    "artId": "grave_last_honor"
   },
   {
     "id": "rekind_grave_grave_builder",
@@ -1096,7 +1096,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/grave_builder"
+    "artId": "grave_builder"
   },
   {
     "id": "rekind_grave_pact_of_mourning",
@@ -1151,7 +1151,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/grave_pact_of_mourning"
+    "artId": "grave_pact_of_mourning"
   },
   {
     "id": "rekind_grave_risen_champion",
@@ -1189,7 +1189,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_risen_champion"
+    "artId": "grave_risen_champion"
   },
   {
     "id": "rekind_grave_mass_rebirth",
@@ -1223,7 +1223,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/grave_mass_rebirth"
+    "artId": "grave_mass_rebirth"
   },
   {
     "id": "rekind_token_risen_guardian",
@@ -1239,7 +1239,7 @@
     "setId": "REKINDLING",
     "collectible": false,
     "tribe": "UNDEAD",
-    "artId": "art/neutral_token_risen_guardian"
+    "artId": "token_risen_guardian"
   },
   {
     "id": "rekind_grave_caretaker_solen",
@@ -1276,7 +1276,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_caretaker_solen"
+    "artId": "grave_caretaker_solen"
   },
   {
     "id": "rekind_verdant_sapling_tender",
@@ -1313,7 +1313,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_sapling_tender"
+    "artId": "verdant_sapling_tender"
   },
   {
     "id": "rekind_verdant_thornsprout_cub",
@@ -1329,7 +1329,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_thornsprout_cub"
+    "artId": "verdant_thornsprout_cub"
   },
   {
     "id": "rekind_verdant_rebloom_vine",
@@ -1384,7 +1384,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_rebloom_vine"
+    "artId": "verdant_rebloom_vine"
   },
   {
     "id": "rekind_verdant_overgrowth_dryad",
@@ -1420,7 +1420,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_overgrowth_dryad"
+    "artId": "verdant_overgrowth_dryad"
   },
   {
     "id": "rekind_verdant_blossoming_pact",
@@ -1475,7 +1475,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_blossoming_pact"
+    "artId": "verdant_blossoming_pact"
   },
   {
     "id": "rekind_verdant_rootswell_champion",
@@ -1512,7 +1512,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_rootswell_champion"
+    "artId": "verdant_rootswell_champion"
   },
   {
     "id": "rekind_verdant_wildbloom_surge",
@@ -1565,7 +1565,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_wildbloom_surge"
+    "artId": "verdant_wildbloom_surge"
   },
   {
     "id": "rekind_verdant_praxis",
@@ -1604,7 +1604,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/verdant_praxis_seed_of_new_ages"
+    "artId": "verdant_praxis_seed_of_new_ages"
   },
   {
     "id": "rekind_clock_repair_drone",
@@ -1640,7 +1640,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/clock_repair_drone"
+    "artId": "clock_repair_drone"
   },
   {
     "id": "rekind_clock_blueprint_archive",
@@ -1673,7 +1673,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/clock_blueprint_archive"
+    "artId": "clock_blueprint_archive"
   },
   {
     "id": "rekind_clock_tinkers_gambit",
@@ -1723,7 +1723,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/clock_tinkers_gambit"
+    "artId": "clock_tinkers_gambit"
   },
   {
     "id": "rekind_clock_reconstructed_automaton",
@@ -1741,7 +1741,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/clock_reconstructed_automaton"
+    "artId": "clock_reconstructed_automaton"
   },
   {
     "id": "rekind_clock_assembly_line",
@@ -1792,7 +1792,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/clock_assembly_line"
+    "artId": "clock_assembly_line"
   },
   {
     "id": "rekind_clock_mainspring_halberd",
@@ -1825,7 +1825,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/clock_mainspring_halberd"
+    "artId": "clock_mainspring_halberd"
   },
   {
     "id": "rekind_clock_upgrade_protocol",
@@ -1860,7 +1860,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/clock_upgrade_protocol"
+    "artId": "clock_upgrade_protocol"
   },
   {
     "id": "rekind_clock_masterwork_constructor",
@@ -1914,7 +1914,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/clock_masterwork_constructor"
+    "artId": "clock_masterwork_constructor"
   },
   {
     "id": "rekind_clock_cogsworth",
@@ -1971,7 +1971,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/clock_cogsworth_the_grand_rebuilder"
+    "artId": "clock_cogsworth_the_grand_rebuilder"
   },
   {
     "id": "rekind_night_shadow_scout",
@@ -1988,7 +1988,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_shadow_scout"
+    "artId": "night_shadow_scout"
   },
   {
     "id": "rekind_night_ink_viper",
@@ -2007,7 +2007,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/night_ink_viper"
+    "artId": "night_ink_viper"
   },
   {
     "id": "rekind_night_marked_for_death",
@@ -2041,7 +2041,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_marked_for_death"
+    "artId": "night_marked_for_death"
   },
   {
     "id": "rekind_night_veilborn_spy",
@@ -2079,7 +2079,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_veilborn_spy"
+    "artId": "night_veilborn_spy"
   },
   {
     "id": "rekind_night_contract_kill",
@@ -2129,7 +2129,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_contract_kill"
+    "artId": "night_contract_kill"
   },
   {
     "id": "rekind_night_network_operative",
@@ -2166,7 +2166,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_network_operative"
+    "artId": "night_network_operative"
   },
   {
     "id": "rekind_night_double_agent",
@@ -2224,7 +2224,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_double_agent"
+    "artId": "night_double_agent"
   },
   {
     "id": "rekind_night_seraphine",
@@ -2281,7 +2281,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/night_seraphine_whisper_queen"
+    "artId": "night_seraphine_whisper_queen"
   },
   {
     "id": "rekind_stone_stone_layer",
@@ -2299,7 +2299,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/stone_layer"
+    "artId": "stone_layer"
   },
   {
     "id": "rekind_stone_quarry_worker",
@@ -2316,7 +2316,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_quarry_worker"
+    "artId": "stone_quarry_worker"
   },
   {
     "id": "rekind_stone_earthen_rampart",
@@ -2373,7 +2373,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_earthen_rampart"
+    "artId": "stone_earthen_rampart"
   },
   {
     "id": "rekind_stone_boulder_sentinel",
@@ -2411,7 +2411,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_boulder_sentinel"
+    "artId": "stone_boulder_sentinel"
   },
   {
     "id": "rekind_stone_iron_foundation",
@@ -2464,7 +2464,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_iron_foundation"
+    "artId": "stone_iron_foundation"
   },
   {
     "id": "rekind_stone_fortified_colossus",
@@ -2481,7 +2481,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_fortified_colossus"
+    "artId": "stone_fortified_colossus"
   },
   {
     "id": "rekind_stone_unbreakable_wall",
@@ -2499,7 +2499,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/stone_unbreakable_wall"
+    "artId": "stone_unbreakable_wall"
   },
   {
     "id": "rekind_stone_aldric",
@@ -2556,7 +2556,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/stone_aldric_the_fortifier"
+    "artId": "stone_aldric_the_fortifier"
   },
   {
     "id": "rekind_tempest_static_wisp",
@@ -2573,7 +2573,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_static_wisp"
+    "artId": "storm_static_wisp"
   },
   {
     "id": "rekind_tempest_galecleaver",
@@ -2606,7 +2606,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_galecleaver"
+    "artId": "storm_galecleaver"
   },
   {
     "id": "rekind_tempest_chain_caller",
@@ -2642,7 +2642,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_chain_caller"
+    "artId": "storm_chain_caller"
   },
   {
     "id": "rekind_tempest_lightning_lash",
@@ -2676,7 +2676,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_lightning_lash"
+    "artId": "storm_lightning_lash"
   },
   {
     "id": "rekind_tempest_storm_channeler",
@@ -2693,7 +2693,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_channeler"
+    "artId": "storm_channeler"
   },
   {
     "id": "rekind_tempest_voltaic_sentinel",
@@ -2751,7 +2751,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_voltaic_sentinel"
+    "artId": "storm_voltaic_sentinel"
   },
   {
     "id": "rekind_tempest_thunderstrike",
@@ -2805,7 +2805,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_thunderstrike"
+    "artId": "storm_thunderstrike"
   },
   {
     "id": "rekind_tempest_stormcallers_pact",
@@ -2878,7 +2878,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "art/storm_stormcallers_pact"
+    "artId": "storm_stormcallers_pact"
   },
   {
     "id": "rekind_tempest_vael",
@@ -2937,6 +2937,6 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/storm_vael_the_stormbringer"
+    "artId": "storm_vael_the_stormbringer"
   }
 ]

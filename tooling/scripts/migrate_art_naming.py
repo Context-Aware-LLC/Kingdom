@@ -1,17 +1,22 @@
 """Canonical art naming migration: expansion at the directory level, class at the filename level.
 
 RULE (Sam, 2026-08-06):
-    unity/Emberfall/Assets/Art/Cards/<setId>/art_<classToken>[_<role>]_<name>.png
+    unity/Emberfall/Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png
+    unity/Emberfall/Assets/Art/Cards/<setId>/[<role>_]<name>.png          (NEUTRAL)
 
     - The DIRECTORY is the expansion (setId). Nothing else keys a directory.
-    - The FILENAME leads with the card's CLASS token. Neutral cards say "neutral".
+    - The FILENAME leads with the card's CLASS token. NEUTRAL carries no token at all -
+      the ABSENCE of one is what means neutral.
+    - There is no "art_" prefix. It was the flattened form of an "art/" namespace that had
+      exactly one value across all 260 rows, so it distinguished nothing. Unity never needed
+      it: ArtIds.ToFileName is a bare Replace('/', '_').
     - <role> is "hero_power" or "token" for the non-collectible rows, so a token still
       reads as a token once its old "token_" prefix is no longer carrying that meaning.
     - <name> is the card's NAME slugified, not its id. Deriving from the name is lossless:
       the old prefixes were sometimes part of the real name ("Stone Sentry" is a NEUTRAL
       card, so stripping "stone" as a class prefix would have destroyed it). When the
       slugified name already begins with the class token it is not repeated, which is why
-      Ember Recruit lands at art/ember_recruit rather than art/ember_ember_recruit.
+      Ember Recruit lands at ember_recruit rather than ember_ember_recruit.
 
 Class tokens are abbreviations, not class names: STONEWARDEN is "stone" (it was "ward",
 which collided with EMBERWARD's "ember" in the worst possible way — a prefix match on
@@ -80,14 +85,28 @@ def role_of(card: dict) -> str:
 
 
 def new_art_id(card: dict) -> str:
-    token = CLASS_TOKEN[(card.get("class") or "NEUTRAL").upper()]
+    """NO "art/" NAMESPACE, AND NEUTRAL CARDS CARRY NO TOKEN (Sam, 2026-08-06).
+
+    The "art/" segment was in all 260 artIds and never had a second value, so it encoded
+    nothing — it existed only to be flattened back into the "art_" filename prefix. Unity never
+    required it: ArtIds.ToFileName is a bare Replace('/', '_'), and AddressablesArtCatalog's
+    StartsWith("art_") branch already falls through to using the filename as the artId.
+
+    Absence of a class token now MEANS neutral, so neutral cards are just their name. The one
+    place that reads ambiguously is EMBERFALL/stone_sentry.png — the NEUTRAL card Stone Sentry,
+    which scans as a STONEWARDEN ("stone") card. Known and accepted; it is one card, not the
+    systemic prefix collision this scheme replaced.
+    """
+    cls = (card.get("class") or "NEUTRAL").upper()
     base = slug(card["name"])
+    if cls == "NEUTRAL":
+        return "_".join(p for p in (role_of(card), base) if p)
+    token = CLASS_TOKEN[cls]
     if base == token:
         base = ""
     elif base.startswith(token + "_"):
         base = base[len(token) + 1:]
-    parts = [p for p in (token, role_of(card), base) if p]
-    return "art/" + "_".join(parts)
+    return "_".join(p for p in (token, role_of(card), base) if p)
 
 
 def art_file(art_id: str) -> str:
@@ -161,7 +180,8 @@ def main() -> int:
     by_class = collections.Counter(p["class"] for p in changed)
     print("\nrenames by class:")
     for cls, n in sorted(by_class.items()):
-        print(f"   {cls:12s} {n:3d}   token={CLASS_TOKEN[cls]}")
+        tok = "(none - absence means neutral)" if cls == "NEUTRAL" else CLASS_TOKEN[cls]
+        print(f"   {cls:12s} {n:3d}   token={tok}")
 
     print("\nsample (first 3 per class):")
     shown = collections.Counter()

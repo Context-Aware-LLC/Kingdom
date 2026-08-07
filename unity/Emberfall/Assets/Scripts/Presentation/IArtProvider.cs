@@ -16,8 +16,11 @@ namespace Emberfall.Presentation
 
     public static class ArtIds
     {
-        // Card data uses "art/<cardId>" ids; asset filenames use the flat "art_<cardId>"
-        // form (dev-docs/specs/card-generation-prompt.md:18 — filenames never contain path separators).
+        // An artId IS the asset filename (2026-08-06). Card data used to namespace them as
+        // "art/<cardId>", flattened to "art_<cardId>" on disk; that namespace had one value
+        // across every row and was dropped. This stays a Replace rather than an identity so a
+        // future namespaced id (should one ever be introduced) still flattens correctly -
+        // filenames never contain path separators.
         public static string ToFileName(string artId) =>
             string.IsNullOrEmpty(artId) ? "" : artId.Replace('/', '_');
     }

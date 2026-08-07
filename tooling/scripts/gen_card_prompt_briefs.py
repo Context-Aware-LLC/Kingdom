@@ -21,10 +21,10 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     table by the card's `class`. Never hardcoded here — parsed at runtime so it cannot drift.
   - World tone, from dev-docs/descriptors/world.md (base + REKINDLING section when relevant).
   - Output path + canonical filename, from setId/artId. ONE rule, no per-class exceptions:
-    art-pipeline/card-art/<setId>/art_<cardId>/art_<cardId>.png. The PNG stem repeats the
-    enclosing leaf-directory name exactly. The old emberward-tidecaller / EMBERFALL split that
-    gen_card_art.py uses is a leftover of the pre-reorg batch files, not a rule worth perpetuating
-    in new tooling — it has already caused two misfiled candidates in one session.
+    art-pipeline/card-art/<setId>/<artId>/<artId>.png. The PNG stem repeats the enclosing
+    leaf-directory name exactly. gen_card_art.py used to key candidates by a CLASS group
+    instead, which put a card's draft and its candidates in different directories for 92 of
+    260 cards; that split was retired 2026-08-06 and both are keyed by setId now.
   - SCALE and VISUAL POWER clauses, FOR MINIONS ONLY, derived from mana cost and body size (see
     `scale_clause`). These directly fix the failure mode where a cheap card renders as a titanic
     boss or battlefield-wide catastrophe: the model's default register is maximalist, so lower
@@ -104,6 +104,11 @@ def art_file(card):
 
     This lived in three places (here, card_art_editor.py, gen_card_art.py) and two of them
     were guessing. Import it; do not re-derive it.
+
+    The Replace is a no-op today: the "art/" namespace was dropped 2026-08-06 (it had one
+    value across every row, so it named nothing), leaving artId == filename. It stays because
+    a namespaced id, if one is ever introduced, must still flatten - filenames never contain
+    path separators.
     """
     return card["artId"].replace("/", "_")
 

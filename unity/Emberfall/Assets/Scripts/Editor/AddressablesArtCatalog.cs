@@ -26,12 +26,15 @@ namespace Emberfall.Editor
             foreach (AddressableAssetEntry entry in entries)
             {
                 if (entry.address == null || !entry.address.StartsWith(Prefix)) continue;
-                // Address "card_art/art_emberling_pup" ↔ artId "art/emberling_pup"
-                // (ArtIds.ToFileName flattens '/' to '_'; only the first segment is a path separator).
-                string fileName = entry.address.Substring(Prefix.Length);
-                // Inverse of ArtIds.ToFileName for the "art/<cardId>" scheme: only the leading
-                // "art_" is a flattened separator; underscores inside cardIds must survive.
-                string artId = fileName.StartsWith("art_") ? "art/" + fileName.Substring(4) : fileName;
+                // Address "card_art/neutral_emberling_pup" ↔ artId "neutral_emberling_pup".
+                //
+                // An artId is now the filename, with no un-flattening step. The old scheme put
+                // every artId under an "art/" namespace and this line was its inverse, stripping
+                // the leading "art_" back to "art/". That namespace had exactly one value across
+                // all 260 rows, so it distinguished nothing, and it was dropped 2026-08-06.
+                // Reinstating a prefix rule here would silently mangle any card whose name
+                // happens to start with the same letters.
+                string artId = entry.address.Substring(Prefix.Length);
                 _byArtId[artId] = new ArtCatalogEntry(entry.address, entry.guid);
             }
         }

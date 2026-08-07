@@ -59,12 +59,13 @@ namespace Emberfall.Presentation
             Tint(_plate, PlateColor);
 
             // Portrait quad — front of the plate; art resolves by class artId
-            // ("art/hero_emberward" → art_hero_emberward.png, dev-docs/specs/card-generation-prompt.md:18).
+            // ("hero_emberward" → hero_emberward.png). The old "art/" namespace was dropped
+            // 2026-08-06: it had one value across every artId, so it distinguished nothing.
             _portrait = MakeQuad(transform, "Portrait",
                 new Vector3(0f, 0.05f, -0.005f), new Vector3(PlateW * 0.90f, PlateH * 0.78f, 1f));
             MaterialCatalog.Assign(_portrait, MaterialCatalog.CardArt);
             _portrait.gameObject.SetActive(false);
-            artProvider?.LoadArt($"art/hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
+            artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
             // Hero name — above the portrait.
             // Font sizes track the plate: they were set against the old 1.15 plate, so they

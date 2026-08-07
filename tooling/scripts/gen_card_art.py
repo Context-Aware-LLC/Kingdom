@@ -55,7 +55,7 @@ commons — identity assets first, filler last.
 
 CANDIDATES, NOT SINGLES (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2): candidates land in
 
-    art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png
+    art-pipeline/card-art/<setId>/<card_id>.png
 
 with a per-class contact sheet, and a human picks before anything is promoted to
 

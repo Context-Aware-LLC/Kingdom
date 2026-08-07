@@ -12,7 +12,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_recruit"
+    "artId": "ember_recruit"
   },
   {
     "id": "ember_zealot",
@@ -29,7 +29,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_zealot"
+    "artId": "ember_zealot"
   },
   {
     "id": "flame_bolt",
@@ -40,7 +40,7 @@
     "rarity": "COMMON",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_flame_bolt",
+    "artId": "ember_flame_bolt",
     "rules": [
       {
         "id": "rule_1",
@@ -78,7 +78,7 @@
     "tribe": "DRAGON",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_cinder_drake"
+    "artId": "ember_cinder_drake"
   },
   {
     "id": "tide_initiate",
@@ -93,7 +93,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_initiate"
+    "artId": "tide_initiate"
   },
   {
     "id": "tide_oracle",
@@ -110,7 +110,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_oracle"
+    "artId": "tide_oracle"
   },
   {
     "id": "frost_ripple",
@@ -121,7 +121,7 @@
     "rarity": "COMMON",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_frost_ripple",
+    "artId": "tide_frost_ripple",
     "rules": [
       {
         "id": "rule_1",
@@ -158,7 +158,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_wave_caller"
+    "artId": "tide_wave_caller"
   },
   {
     "id": "stone_sentry",
@@ -176,7 +176,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_stone_sentry"
+    "artId": "stone_sentry"
   },
   {
     "id": "wandering_scout",
@@ -192,7 +192,7 @@
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_wandering_scout"
+    "artId": "wandering_scout"
   },
   {
     "id": "core_emberling",
@@ -210,7 +210,7 @@
     "tribe": "BEAST",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_emberling_pup"
+    "artId": "emberling_pup"
   },
   {
     "id": "core_stoneback",
@@ -227,7 +227,7 @@
     "rules": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_stoneback_sentry"
+    "artId": "stoneback_sentry"
   },
   {
     "id": "core_hollow_acolyte",
@@ -241,7 +241,7 @@
     "keywords": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_hollow_acolyte",
+    "artId": "hollow_acolyte",
     "rules": [
       {
         "id": "rule_1",
@@ -274,7 +274,7 @@
     "keywords": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_gravelight_lantern_bearer",
+    "artId": "gravelight_lantern_bearer",
     "rules": [
       {
         "id": "rule_1",
@@ -311,7 +311,7 @@
     "rules": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_aegis_templar"
+    "artId": "aegis_templar"
   },
   {
     "id": "core_veilstalker",
@@ -328,7 +328,7 @@
     "rules": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_veilstalker"
+    "artId": "veilstalker"
   },
   {
     "id": "core_grove_mender",
@@ -341,7 +341,7 @@
     "rarity": "RARE",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_grove_mender",
+    "artId": "grove_mender",
     "rules": [
       {
         "id": "rule_1",
@@ -380,7 +380,7 @@
     "rules": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_arclight_adept"
+    "artId": "arclight_adept"
   },
   {
     "id": "core_bonehound",
@@ -398,7 +398,7 @@
     "tribe": "UNDEAD",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_ravenous_bonehound"
+    "artId": "ravenous_bonehound"
   },
   {
     "id": "core_throneless_king",
@@ -417,7 +417,7 @@
     "tribe": "UNDEAD",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/neutral_throneless_king"
+    "artId": "throneless_king"
   },
   {
     "id": "ember_cinder_lance",
@@ -430,7 +430,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_cinder_lance",
+    "artId": "ember_cinder_lance",
     "rules": []
   },
   {
@@ -442,7 +442,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_scorch",
+    "artId": "ember_scorch",
     "rules": [
       {
         "id": "rule_1",
@@ -479,7 +479,7 @@
     "tribe": "CONSTRUCT",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_overheat_golem",
+    "artId": "ember_overheat_golem",
     "rules": [
       {
         "id": "rule_1",
@@ -509,7 +509,7 @@
     "rarity": "EPIC",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_twin_flame_strike",
+    "artId": "ember_twin_flame_strike",
     "rules": [
       {
         "id": "rule_1",
@@ -548,7 +548,7 @@
     "tribe": "ELEMENTAL",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/ember_pyras_wrath",
+    "artId": "ember_pyras_wrath",
     "rules": [
       {
         "id": "rule_1",
@@ -581,7 +581,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_frostbind",
+    "artId": "tide_frostbind",
     "rules": [
       {
         "id": "rule_1",
@@ -613,7 +613,7 @@
     "rarity": "RARE",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_undertow",
+    "artId": "tide_undertow",
     "rules": [
       {
         "id": "rule_1",
@@ -648,7 +648,7 @@
     "keywords": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_hollow_tide_siren",
+    "artId": "tide_hollow_tide_siren",
     "rules": [
       {
         "id": "rule_1",
@@ -687,7 +687,7 @@
     "tribe": "SPIRIT",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_reefguard_wisp"
+    "artId": "tide_reefguard_wisp"
   },
   {
     "id": "tide_deep_bargain",
@@ -698,7 +698,7 @@
     "rarity": "RARE",
     "setId": "CORE",
     "collectible": true,
-    "artId": "art/tide_marens_deep_bargain",
+    "artId": "tide_marens_deep_bargain",
     "rules": [
       {
         "id": "rule_1",
@@ -728,7 +728,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/neutral_token_the_spark",
+    "artId": "token_the_spark",
     "rules": [
       {
         "id": "rule_1",
@@ -761,7 +761,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/neutral_token_wisp",
+    "artId": "token_wisp",
     "rules": []
   },
   {
@@ -773,7 +773,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/ember_hero_power_searing_bolt",
+    "artId": "ember_hero_power_searing_bolt",
     "rules": [
       {
         "id": "rule_1",
@@ -806,7 +806,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/tide_hero_power_tidal_ward",
+    "artId": "tide_hero_power_tidal_ward",
     "rules": [
       {
         "id": "rule_1",
@@ -837,7 +837,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/grave_hero_power_toll_the_bell",
+    "artId": "grave_hero_power_toll_the_bell",
     "rules": [
       {
         "id": "rule_1",
@@ -870,7 +870,7 @@
     "rarity": "COMMON",
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/verdant_hero_power_quicken",
+    "artId": "verdant_hero_power_quicken",
     "rules": [
       {
         "id": "rule_1",
@@ -909,7 +909,7 @@
     "rules": [],
     "setId": "CORE",
     "collectible": false,
-    "artId": "art/tide_token_wisp"
+    "artId": "tide_token_wisp"
   },
   {
     "_comment": "EF-012 fixture card. Fixture-only: it exists to give turn_end_toll an ON_TURN_END subscriber and is deliberately NOT in the shipping cards/** tree. Appending a definition here is inert for the other three fixtures — decks are explicit id lists and the hasher walks state, never the db — which the unrebaselined R1 run proves.",

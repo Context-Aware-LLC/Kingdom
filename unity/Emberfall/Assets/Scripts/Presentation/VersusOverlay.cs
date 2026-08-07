@@ -271,7 +271,7 @@ namespace Emberfall.Presentation
             rend.sharedMaterial = mat;
             rend.sortingOrder = SortBase + 5;   // above the plate, below the orb
 
-            _artProvider?.LoadArt($"art/hero_{heroClass.ToString().ToLowerInvariant()}", sprite =>
+            _artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", sprite =>
             {
                 if (_destroyed || sprite == null) return;
                 mat.SetTexture(MainTexId, sprite.texture);

@@ -15,7 +15,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_galewind_runner"
+    "artId": "galewind_runner"
   },
   {
     "id": "neutral_razorcoil_adder",
@@ -33,7 +33,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_razorcoil_adder"
+    "artId": "razorcoil_adder"
   },
   {
     "id": "neutral_phantom_duelist",
@@ -50,7 +50,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_phantom_duelist"
+    "artId": "phantom_duelist"
   },
   {
     "id": "neutral_doublestrike_hawk",
@@ -68,7 +68,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_doublestrike_hawk"
+    "artId": "doublestrike_hawk"
   },
   {
     "id": "neutral_lifeclaw_bat",
@@ -87,7 +87,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_lifeclaw_bat"
+    "artId": "lifeclaw_bat"
   },
   {
     "id": "neutral_spellwarden",
@@ -104,7 +104,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_spellwarden"
+    "artId": "spellwarden"
   },
   {
     "id": "neutral_ironclad_bulwark",
@@ -123,7 +123,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_ironclad_bulwark"
+    "artId": "ironclad_bulwark"
   },
   {
     "id": "neutral_soulbound_revenant",
@@ -175,7 +175,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/neutral_soulbound_revenant"
+    "artId": "soulbound_revenant"
   },
   {
     "id": "neutral_venomscale_drake",
@@ -193,7 +193,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/neutral_venomscale_drake"
+    "artId": "venomscale_drake"
   },
   {
     "id": "neutral_duneborn_construct",
@@ -233,7 +233,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/neutral_duneborn_construct"
+    "artId": "duneborn_construct"
   },
   {
     "id": "neutral_bog_crawler",
@@ -251,7 +251,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/neutral_bog_crawler"
+    "artId": "bog_crawler"
   },
   {
     "id": "neutral_searing_quill",
@@ -266,7 +266,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/neutral_searing_quill"
+    "artId": "searing_quill"
   },
   {
     "id": "ember_blazewing",
@@ -284,7 +284,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/ember_blazewing"
+    "artId": "ember_blazewing"
   },
   {
     "id": "ember_scalded_striker",
@@ -322,7 +322,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_scalded_striker"
+    "artId": "ember_scalded_striker"
   },
   {
     "id": "ember_fusillade",
@@ -376,7 +376,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_fusillade"
+    "artId": "ember_fusillade"
   },
   {
     "id": "ember_cinderplate_golem",
@@ -410,7 +410,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "art/ember_cinderplate_golem"
+    "artId": "ember_cinderplate_golem"
   },
   {
     "id": "ember_vanguard_drake",
@@ -449,7 +449,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "DRAGON",
-    "artId": "art/ember_vanguard_drake"
+    "artId": "ember_vanguard_drake"
   },
   {
     "id": "ember_scorch_blade",
@@ -485,7 +485,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_scorch_blade"
+    "artId": "ember_scorch_blade"
   },
   {
     "id": "ember_magmacore_warden",
@@ -503,7 +503,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/ember_magmacore_warden"
+    "artId": "ember_magmacore_warden"
   },
   {
     "id": "ember_heat_surge",
@@ -554,7 +554,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/ember_heat_surge"
+    "artId": "ember_heat_surge"
   },
   {
     "id": "tide_venomfin",
@@ -572,7 +572,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/tide_venomfin"
+    "artId": "tide_venomfin"
   },
   {
     "id": "tide_frostwhisper",
@@ -590,7 +590,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_frostwhisper"
+    "artId": "tide_frostwhisper"
   },
   {
     "id": "tide_icescale_whelp",
@@ -608,7 +608,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "art/tide_icescale_whelp"
+    "artId": "tide_icescale_whelp"
   },
   {
     "id": "tide_glacial_echo",
@@ -658,7 +658,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_glacial_echo"
+    "artId": "tide_glacial_echo"
   },
   {
     "id": "tide_icecrown_herald",
@@ -695,7 +695,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_icecrown_herald"
+    "artId": "tide_icecrown_herald"
   },
   {
     "id": "tide_abyssal_devourer",
@@ -733,7 +733,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_abyssal_devourer"
+    "artId": "tide_abyssal_devourer"
   },
   {
     "id": "tide_maren_avatar",
@@ -771,7 +771,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "ELEMENTAL",
-    "artId": "art/tide_marens_avatar"
+    "artId": "tide_marens_avatar"
   },
   {
     "id": "tide_deep_channel",
@@ -804,7 +804,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_deep_channel"
+    "artId": "tide_deep_channel"
   },
   {
     "id": "tide_coldsnap_knife",
@@ -839,7 +839,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/tide_coldsnap_knife"
+    "artId": "tide_coldsnap_knife"
   },
   {
     "id": "grave_deathweaver",
@@ -873,7 +873,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_deathweaver"
+    "artId": "grave_deathweaver"
   },
   {
     "id": "grave_spectral_wolf",
@@ -912,7 +912,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_spectral_wolf"
+    "artId": "grave_spectral_wolf"
   },
   {
     "id": "grave_boneshield_sentinel",
@@ -931,7 +931,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_boneshield_sentinel"
+    "artId": "grave_boneshield_sentinel"
   },
   {
     "id": "grave_bone_horde",
@@ -963,7 +963,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_bone_horde"
+    "artId": "grave_bone_horde"
   },
   {
     "id": "grave_plague_bringer",
@@ -1000,7 +1000,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_plague_bringer"
+    "artId": "grave_plague_bringer"
   },
   {
     "id": "grave_echoing_knell",
@@ -1035,7 +1035,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/grave_echoing_knell"
+    "artId": "grave_echoing_knell"
   },
   {
     "id": "grave_warden_of_dusk",
@@ -1093,7 +1093,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "UNDEAD",
-    "artId": "art/grave_warden_of_dusk"
+    "artId": "grave_warden_of_dusk"
   },
   {
     "id": "verdant_venomthorn",
@@ -1112,7 +1112,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_venomthorn"
+    "artId": "verdant_venomthorn"
   },
   {
     "id": "verdant_windroot_sprinter",
@@ -1151,7 +1151,7 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "BEAST",
-    "artId": "art/verdant_windroot_sprinter"
+    "artId": "verdant_windroot_sprinter"
   },
   {
     "id": "verdant_greatroot_speaker",
@@ -1168,7 +1168,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_greatroot_speaker"
+    "artId": "verdant_greatroot_speaker"
   },
   {
     "id": "verdant_primal_mend",
@@ -1225,7 +1225,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_primal_mend"
+    "artId": "verdant_primal_mend"
   },
   {
     "id": "verdant_world_titan",
@@ -1243,7 +1243,7 @@
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_world_titan"
+    "artId": "verdant_world_titan"
   },
   {
     "id": "verdant_thorn_swarm",
@@ -1317,6 +1317,6 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "art/verdant_thorn_swarm"
+    "artId": "verdant_thorn_swarm"
   }
 ]

@@ -21,8 +21,9 @@ namespace Emberfall.Tools.CardCi
     ///
     /// Usage: Emberfall.Tools.CardCi &lt;cardDataDir&gt; [artDir]
     ///   cardDataDir  directory scanned recursively for *.cards.json
-    ///   artDir       optional; directory scanned recursively for art files. artId "art/&lt;name&gt;"
-    ///                must resolve to "art_&lt;name&gt;.&lt;ext&gt;" (the dev-docs/specs/card-generation-prompt.md:18).
+    ///   artDir       optional; directory scanned recursively for art files. artId "&lt;name&gt;"
+    ///                must resolve to "&lt;name&gt;.&lt;ext&gt;". The old "art/" namespace and its
+    ///                flattened "art_" filename prefix were dropped 2026-08-06.
     /// </summary>
     internal static class Program
     {
@@ -130,7 +131,7 @@ namespace Emberfall.Tools.CardCi
                 foreach (var def in allCards)
                 {
                     if (string.IsNullOrEmpty(def.ArtId)) continue; // C-series already flags shape issues
-                    string expected = def.ArtId.Replace('/', '_'); // "art/flame_bolt" -> "art_flame_bolt"
+                    string expected = def.ArtId.Replace('/', '_'); // artId is the filename; no namespace to flatten
                     if (!artFiles.Contains(expected))
                     {
                         Console.WriteLine($"warn  {cardFileOf[def.Id]}:{def.Id}: ART-MISSING — '{def.ArtId}' has no {expected}.<png|jpg> under {artDir} (placeholder policy applies; not blocking).");
