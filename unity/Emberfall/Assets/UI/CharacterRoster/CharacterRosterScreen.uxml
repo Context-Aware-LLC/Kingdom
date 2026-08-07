@@ -51,10 +51,16 @@
                     <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
+                    <ui:Button name="deck-set-default" text="Set as default" class="roster-button roster-button--ghost deck-action" />
+                    <ui:Button name="deck-delete" text="Delete deck" class="roster-button roster-button--danger deck-action" />
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-rename-pane" class="deck-pane">
                     <ui:TextField name="deck-rename-field" label="Name" max-length="24" class="roster-field" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="deck-delete-pane" class="deck-pane">
+                    <ui:Label name="deck-delete-message" text="" class="delete-message" />
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-back-pane" class="deck-pane">

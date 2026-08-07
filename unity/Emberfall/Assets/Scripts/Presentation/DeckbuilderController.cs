@@ -20,10 +20,11 @@ namespace Emberfall.Presentation
     /// scene loads, or the roster's first character when that is empty (so the scene still opens
     /// standalone in the Editor).</para>
     ///
-    /// <para><b>One deck, for the whole visit.</b> The switcher bar, the "+" and the name field moved
-    /// to the CharacterRoster scene (Sam, 2026-08-07) — that is where a deck is chosen, created,
-    /// renamed and given a card back now. What is left here is the editing of the 30: this screen
-    /// cannot change which deck it is on, and <c>Back</c> saves and returns to the roster.</para>
+    /// <para><b>One deck, for the whole visit.</b> Every deck-management control moved to the
+    /// CharacterRoster scene (Sam, 2026-08-07) — the switcher bar, the "+", the name field, Set
+    /// Default and Delete Deck. That screen is where a deck is chosen, created, renamed, given a
+    /// card back, made default and destroyed. What is left here is the editing of the 30: this
+    /// screen cannot change which deck it is on, and <c>Back</c> saves and returns to the roster.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// DeckbuilderScreen.uxml.
@@ -59,8 +60,6 @@ namespace Emberfall.Presentation
         private Button _filterClassButton;
         private Button _filterNeutralButton;
         private CardFilter _activeFilter;   // null = All (no constraint)
-        private Button _setDefaultButton;
-        private Button _deleteDeckButton;
 
         private void OnEnable()
         {
@@ -102,7 +101,6 @@ namespace Emberfall.Presentation
             WireDeckList();
             WireCollectionFilters();
             WireChrome();
-            RefreshDeckActions();
             Refresh();
         }
 
@@ -180,8 +178,6 @@ namespace Emberfall.Presentation
             _filterAllButton     = _root.Q<Button>("filter-all");
             _filterClassButton   = _root.Q<Button>("filter-class");
             _filterNeutralButton = _root.Q<Button>("filter-neutral");
-            _setDefaultButton = _root.Q<Button>("set-default-button");
-            _deleteDeckButton = _root.Q<Button>("delete-deck-button");
 
             if (_heroLabel != null)
             {
@@ -417,9 +413,6 @@ namespace Emberfall.Presentation
         {
             if (_deckLabel != null) _deckLabel.text = _deck.Name;
 
-            _setDefaultButton?.RegisterCallback<ClickEvent>(_ => SetDefaultDeck());
-            _deleteDeckButton?.RegisterCallback<ClickEvent>(_ => DeleteOpenDeck());
-
             // The only way out, and it saves. The alternative is a confirm dialog on a screen whose
             // whole model is "an illegal deck is a savable draft" — there is nothing to lose by
             // writing it. There is deliberately no second Save button beside it (Sam, 2026-08-07):
@@ -429,85 +422,6 @@ namespace Emberfall.Presentation
                 SaveDeck();
                 Go("CharacterRoster");
             });
-        }
-
-        // ---- Deck lifecycle (collection-deckbuilder-spec §2.6) ----
-
-        /// <summary>
-        /// Enable the two actions that can be illegal, reading the store rather than a cached list —
-        /// delete writes, and a cached count is the copy that goes stale without saying so.
-        ///
-        /// <para>A character with zero decks is a screen that will not load: <c>OnEnable</c> opens
-        /// <c>DecksOf(...).Opening</c> and bails when it is null. So the floor is one deck, enforced
-        /// by disabling Delete rather than confirmed in a dialog.</para>
-        /// </summary>
-        private void RefreshDeckActions()
-        {
-            CharacterDecks decks = _account.DecksOf(_character, _db);
-            _deleteDeckButton?.SetEnabled(decks.Count > 1);
-            _setDefaultButton?.SetEnabled(_character.DefaultDeckId != _deck.Id);
-        }
-
-        /// <summary>Point the screen at a deck already known to exist, and repaint everything that
-        /// reads from it. The one place <c>_deck</c> is reassigned after load — reached only by
-        /// <see cref="DeleteOpenDeck"/>, which has to land somewhere.</summary>
-        private void OpenDeck(DeckList deck)
-        {
-            _deck = deck;
-            if (_deckLabel != null) _deckLabel.text = _deck.Name;
-            RefreshDeckActions();
-            Refresh();
-        }
-
-        /// <summary>
-        /// Delete the open deck and fall back to this character's default.
-        ///
-        /// <para><b>The dangling default is left dangling.</b> Deleting the deck a character
-        /// defaults to does NOT clear <see cref="Character.DefaultDeckId"/> — that is the documented
-        /// contract on the field itself ("a dangling id is surfaced, never repaired"), because
-        /// silently re-pointing it means the character opens on a deck the player never chose. The
-        /// CharacterRoster's deck strip surfaces it instead — that moved with the switcher.</para>
-        /// </summary>
-        private void DeleteOpenDeck()
-        {
-            CharacterDecks before = _account.DecksOf(_character, _db);
-            if (before.Count <= 1)
-            {
-                Debug.LogWarning($"[Deckbuilder] '{_character.Name}' has only this deck, and a " +
-                                 "character needs one to open the deckbuilder at all. Not deleting.");
-                return;
-            }
-
-            string goneId = _deck.Id, goneName = _deck.Name;
-            _account.DeleteDeck(goneId);
-
-            DeckList next = _account.DecksOf(_character, _db).Opening?.Deck;
-            if (next == null)
-            {
-                // Unreachable via the count guard above; if the store ever disagrees, say so rather
-                // than dereference null on the next repaint.
-                Debug.LogError($"[Deckbuilder] Deleted '{goneName}' and {_character.Name} now has no " +
-                               "deck to open. Reopen the deckbuilder.");
-                return;
-            }
-
-            OpenDeck(next);
-            Debug.Log($"[Deckbuilder] Deleted '{goneName}'; opened '{_deck.Name}'.");
-        }
-
-        /// <summary>Make the open deck this character's default — what the roster shows and what
-        /// the queue reaches for. Writes the deck before the pointer, so the id can never name
-        /// something that is not on disk yet.</summary>
-        private void SetDefaultDeck()
-        {
-            if (_character.DefaultDeckId == _deck.Id) return;
-
-            _account.Save(_deck);
-            _character.DefaultDeckId = _deck.Id;
-            _account.Save(_character);
-
-            RefreshDeckActions();
-            Debug.Log($"[Deckbuilder] '{_deck.Name}' is now {_character.Name}'s default deck.");
         }
 
         /// <summary>Persist the deck as-is. Never legality-gated (collection-deckbuilder-spec §1,

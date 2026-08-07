@@ -125,7 +125,11 @@ namespace Emberfall.Presentation
         private VisualElement _deckBackPane;
         private VisualElement _deckBackGrid;
         private Label _deckBackNote;
+        private VisualElement _deckDeletePane;
+        private Label _deckDeleteMessage;
         private TextField _deckRenameField;
+        private Button _deckSetDefaultButton;
+        private Button _deckDeleteButton;
         private Button _deckModalCancel;
         private Button _deckModalConfirm;
 
@@ -133,6 +137,9 @@ namespace Emberfall.Presentation
         /// than re-read per pane: the dialog is modal, so nothing can change them underneath it.</summary>
         private Character _menuCharacter;
         private DeckList _menuDeck;
+
+        /// <summary>How many decks that character has — what decides whether Delete is offered.</summary>
+        private int _menuSiblingCount;
 
         /// <summary>The back highlighted in the picker, committed only by Save.</summary>
         private string _pendingCardBackId = "";
@@ -201,7 +208,11 @@ namespace Emberfall.Presentation
             _deckBackPane = _root.Q<VisualElement>("deck-back-pane");
             _deckBackGrid = _root.Q<VisualElement>("deck-back-grid");
             _deckBackNote = _root.Q<Label>("deck-back-note");
+            _deckDeletePane = _root.Q<VisualElement>("deck-delete-pane");
+            _deckDeleteMessage = _root.Q<Label>("deck-delete-message");
             _deckRenameField = _root.Q<TextField>("deck-rename-field");
+            _deckSetDefaultButton = _root.Q<Button>("deck-set-default");
+            _deckDeleteButton = _root.Q<Button>("deck-delete");
             _deckModalCancel = _root.Q<Button>("deck-modal-cancel");
             _deckModalConfirm = _root.Q<Button>("deck-modal-confirm");
         }
@@ -268,7 +279,7 @@ namespace Emberfall.Presentation
         /// <summary>Which pane of the deck dialog is showing. Cancel means "back to the menu" from
         /// anywhere but <see cref="Menu"/>, where it means "close" — one button, because a dialog
         /// with both a Back and a Close is a dialog nobody reads.</summary>
-        private enum DeckPane { Menu, Rename, CardBack }
+        private enum DeckPane { Menu, Rename, CardBack, Delete }
 
         private DeckPane _deckPane = DeckPane.Menu;
 
@@ -277,6 +288,8 @@ namespace Emberfall.Presentation
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => EditOpenDeck());
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
+            _deckSetDefaultButton?.RegisterCallback<ClickEvent>(_ => SetDefaultDeck());
+            _deckDeleteButton?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Delete));
             _deckModalCancel?.RegisterCallback<ClickEvent>(_ =>
             {
                 if (_deckPane == DeckPane.Menu) CloseDeckDialog();
@@ -286,10 +299,11 @@ namespace Emberfall.Presentation
             _deckRenameField?.RegisterValueChangedCallback(_ => SetDeckError(""));
         }
 
-        private void OpenDeckDialog(Character character, DeckList deck, DeckSummary summary)
+        private void OpenDeckDialog(Character character, DeckList deck, DeckSummary summary, int siblingCount)
         {
             _menuCharacter = character;
             _menuDeck = deck;
+            _menuSiblingCount = siblingCount;
             _pendingCardBackId = deck.CardBackId;
 
             if (_deckModalSub != null)
@@ -298,6 +312,24 @@ namespace Emberfall.Presentation
                 string mark = summary.IsDefault ? $"{character.Name}'s default · " : "";
                 _deckModalSub.text = $"{mark}{deck.TotalCount} / {DeckValidator.DeckSize} · {standing}";
             }
+
+            // Set-as-default is meaningless on the deck that already is one. Delete has a floor of
+            // one deck per character — a character with none has nothing for the queue to reach for
+            // and nothing to open — so the last one refuses rather than confirming, and says why
+            // here instead of in a console warning the player will never see.
+            bool isDefault = summary.IsDefault;
+            _deckSetDefaultButton?.SetEnabled(!isDefault);
+            if (_deckSetDefaultButton != null)
+                _deckSetDefaultButton.tooltip = isDefault
+                    ? $"Already {character.Name}'s default deck"
+                    : $"The deck {character.Name} takes into a match";
+
+            bool canDelete = siblingCount > 1;
+            _deckDeleteButton?.SetEnabled(canDelete);
+            if (_deckDeleteButton != null)
+                _deckDeleteButton.tooltip = canDelete
+                    ? ""
+                    : $"{character.Name}'s only deck. Make another first.";
 
             ShowDeckPane(DeckPane.Menu);
             _deckModal?.RemoveFromClassList("delete-modal--hidden");
@@ -312,6 +344,7 @@ namespace Emberfall.Presentation
             Show(_deckMenuPane, pane == DeckPane.Menu);
             Show(_deckRenamePane, pane == DeckPane.Rename);
             Show(_deckBackPane, pane == DeckPane.CardBack);
+            Show(_deckDeletePane, pane == DeckPane.Delete);
 
             // Only the sub-line's facts belong to the deck as a whole; the panes retitle above it.
             if (_deckModalTitle != null)
@@ -319,17 +352,28 @@ namespace Emberfall.Presentation
                 {
                     DeckPane.Rename => "Rename deck",
                     DeckPane.CardBack => "Card back",
+                    DeckPane.Delete => "Delete deck?",
                     _ => _menuDeck.Name,
                 };
             Show(_deckModalSub, pane == DeckPane.Menu);
 
             if (_deckModalCancel != null) _deckModalCancel.text = pane == DeckPane.Menu ? "Close" : "Back";
             Show(_deckModalConfirm, pane != DeckPane.Menu);
+            if (_deckModalConfirm != null)
+            {
+                _deckModalConfirm.text = pane == DeckPane.Delete ? "Delete deck" : "Save";
+                _deckModalConfirm.EnableInClassList("roster-button--danger", pane == DeckPane.Delete);
+                _deckModalConfirm.EnableInClassList("roster-button--cta", pane != DeckPane.Delete);
+            }
 
             if (pane == DeckPane.Rename)
                 _deckRenameField?.SetValueWithoutNotify(_menuDeck.Name);
             if (pane == DeckPane.CardBack)
                 BuildCardBackGrid();
+            if (pane == DeckPane.Delete && _deckDeleteMessage != null)
+                _deckDeleteMessage.text =
+                    $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
+                    "The cards themselves stay in your collection.";
         }
 
         private void BuildCardBackGrid()
@@ -373,6 +417,8 @@ namespace Emberfall.Presentation
         {
             if (_menuDeck == null) return;
 
+            if (_deckPane == DeckPane.Delete) { DeleteOpenDeck(); return; }
+
             if (_deckPane == DeckPane.Rename)
             {
                 string name = (_deckRenameField?.value ?? "").Trim();
@@ -403,6 +449,69 @@ namespace Emberfall.Presentation
             RebuildRoster();
         }
 
+        /// <summary>Make this deck the character's default — what the roster marks and what the queue
+        /// reaches for. Writes the deck before the pointer, so the id can never name something that
+        /// is not on disk yet.</summary>
+        private void SetDefaultDeck()
+        {
+            if (_menuCharacter == null || _menuDeck == null) return;
+            if (_menuCharacter.DefaultDeckId == _menuDeck.Id) return;
+
+            try
+            {
+                _account.Save(_menuDeck);
+                _menuCharacter.DefaultDeckId = _menuDeck.Id;
+                _account.Save(_menuCharacter);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CharacterRoster] could not set '{_menuDeck.Name}' as default: {ex.Message}");
+                SetDeckError("The default could not be saved — see the console.");
+                return;
+            }
+
+            Debug.Log($"[CharacterRoster] '{_menuDeck.Name}' is now {_menuCharacter.Name}'s default deck.");
+            CloseDeckDialog();
+            RebuildRoster();
+        }
+
+        /// <summary>
+        /// Delete the deck this dialog is about.
+        ///
+        /// <para><b>A dangling default is left dangling.</b> Deleting the deck a character defaults
+        /// to does NOT clear <see cref="Character.DefaultDeckId"/> — that is the documented contract
+        /// on the field itself ("a dangling id is surfaced, never repaired"), because silently
+        /// re-pointing it means the character opens on a deck the player never chose. The strip says
+        /// so instead, on the next rebuild.</para>
+        /// </summary>
+        private void DeleteOpenDeck()
+        {
+            if (_menuCharacter == null || _menuDeck == null) return;
+            if (_menuSiblingCount <= 1)
+            {
+                // Unreachable through the disabled button; if the count ever disagrees with the
+                // store, refuse rather than leave a character with nothing to play.
+                SetDeckError($"{_menuCharacter.Name} needs at least one deck.");
+                return;
+            }
+
+            string goneName = _menuDeck.Name;
+            try
+            {
+                _account.DeleteDeck(_menuDeck.Id);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CharacterRoster] could not delete '{goneName}': {ex.Message}");
+                SetDeckError("The deck could not be deleted — see the console.");
+                return;
+            }
+
+            Debug.Log($"[CharacterRoster] deleted '{goneName}' from {_menuCharacter.Name}.");
+            CloseDeckDialog();
+            RebuildRoster();
+        }
+
         private void EditOpenDeck()
         {
             if (_menuCharacter == null || _menuDeck == null) return;
@@ -416,6 +525,7 @@ namespace Emberfall.Presentation
             _deckModal?.AddToClassList("delete-modal--hidden");
             _menuCharacter = null;
             _menuDeck = null;
+            _menuSiblingCount = 0;
             _pendingCardBackId = "";
             _deckPane = DeckPane.Menu;
         }
@@ -542,13 +652,13 @@ namespace Emberfall.Presentation
             }
 
             foreach (DeckSummary summary in owned.Decks)
-                strip.Add(BuildDeckPlate(character, summary));
+                strip.Add(BuildDeckPlate(character, summary, owned.Count));
 
             strip.Add(BuildNewDeckPlate(character));
             return strip;
         }
 
-        private VisualElement BuildDeckPlate(Character character, DeckSummary summary)
+        private VisualElement BuildDeckPlate(Character character, DeckSummary summary, int siblingCount)
         {
             DeckList deck = summary.Deck;
 
@@ -558,7 +668,7 @@ namespace Emberfall.Presentation
             plate.tooltip = summary.IsDefault
                 ? $"{deck.Name} — {character.Name}'s default deck"
                 : deck.Name;
-            plate.clicked += () => OpenDeckDialog(character, deck, summary);
+            plate.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
 
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");

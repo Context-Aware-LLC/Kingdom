@@ -162,24 +162,9 @@
     background-color: var(--rarity-common);
 }
 /* ---------- Deck side ---------- */
-/* The deck switcher (EF-046) and the name field lived here. They are on the CharacterRoster
- * screen now (Sam, 2026-08-07) — this panel edits one deck and cannot change which. */
-.db-deck-actions {
-    flex-direction: row;
-    margin-bottom: var(--space-3);
-}
-.db-button--small {
-    height: 36px;
-    min-width: 0;
-    flex-grow: 1;
-    font-size: var(--type-label);
-    padding: 0 var(--space-3);
-    margin-right: var(--space-2);
-}
-/* The trailing button zeroes its own margin inline in the UXML: UI Toolkit has no
- * :last-child (no structural pseudo-classes at all), and an unsupported selector is
- * a silent parse failure, not a no-op. */
-.db-button--danger { color: var(--negative); }
+/* The deck switcher (EF-046), the name field, Set Default and Delete Deck lived here. They are
+ * all on the CharacterRoster screen now (Sam, 2026-08-07) — this panel edits one deck's 30 and
+ * cannot change which deck, which deck is default, or whether it exists. */
 
 .db-curve {
     flex-direction: row;
