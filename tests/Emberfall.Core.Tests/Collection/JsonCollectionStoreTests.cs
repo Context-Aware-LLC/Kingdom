@@ -212,7 +212,9 @@ namespace Emberfall.Core.Tests.Collection
             var store = Decks();
             var deck = new DeckList
             {
-                Id = "deck-1", CharacterId = "chr-1", Name = "Rotvine",
+                Id = "deck-1",
+                CharacterId = "chr-1",
+                Name = "Rotvine",
                 ShowcaseCardId = "grave_bell_novice",
             };
             store.Save(deck);

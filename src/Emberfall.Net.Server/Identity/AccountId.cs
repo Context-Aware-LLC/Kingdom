@@ -38,6 +38,20 @@ namespace Emberfall.Net.Server.Identity
 
         public bool IsAttributed => !string.IsNullOrEmpty(Value);
 
+        /// <summary>
+        /// An authenticated player's stable identity, wrapping the account store's
+        /// <c>player_id</c> (EF-074c). The store already derives <c>player_id</c> as a SHA-256
+        /// hash of the credential (EF-072), so this factory does not hash again.
+        /// </summary>
+        public static AccountId FromAuthenticatedAccount(string playerId)
+        {
+            if (string.IsNullOrEmpty(playerId))
+                throw new ArgumentException(
+                    "A player id is required to create an authenticated AccountId.",
+                    nameof(playerId));
+            return new AccountId(playerId);
+        }
+
         public static AccountId FromDeviceToken(string deviceToken)
         {
             if (string.IsNullOrEmpty(deviceToken))

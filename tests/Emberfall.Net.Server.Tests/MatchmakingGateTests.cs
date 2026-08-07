@@ -136,7 +136,6 @@ namespace Emberfall.Net.Server.Tests
                 CardsDir = SessionHarness.CardDataDir(),
                 ReplaysDir = replays,
                 MatchmakingQueue = queue,
-                Options = new ServerOptions { EngineContractVersion = "interfaces.v4" },
             });
 
             await built.App.StartAsync();
@@ -146,7 +145,7 @@ namespace Emberfall.Net.Server.Tests
                 var wsUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws");
                 using var socket = new ClientWebSocket();
                 await socket.ConnectAsync(wsUri, CancellationToken.None);
-                await SendHelloAsync(socket, TokenA, "interfaces.v3");
+                await SendHelloAsync(socket, TokenA, IncompatibleContractVersion);
 
                 var buffer = new byte[256];
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -167,10 +166,15 @@ namespace Emberfall.Net.Server.Tests
             }
         }
 
+        /// <summary>A version the gate must refuse, derived from the live one so it stays a mismatch
+        /// after a contract bump. A literal here silently stops testing anything the day
+        /// <see cref="ProtocolContract.Version"/> moves onto it.</summary>
+        private const string IncompatibleContractVersion = ProtocolContract.Version + ".not-this-one";
+
         private static Task SendHelloAsync(
             ClientWebSocket ws,
             string deviceToken,
-            string contractVersion = "interfaces.v4")
+            string contractVersion = ProtocolContract.Version)
         {
             byte[] frame = ProtocolCodec.Encode(
                 new HelloMsg(deviceToken, contractVersion, "test", "matchmaking-gate-tests"),

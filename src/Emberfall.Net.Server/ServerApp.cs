@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
@@ -48,6 +49,20 @@ namespace Emberfall.Net.Server
         public Func<AccountId, int>? MatchmakingRatingForAccount { get; init; }
 
         /// <summary>
+        /// Supabase JWT verifier (EF-074a/c). Null → auth tokens in HelloMsg are rejected with
+        /// 1008 "authentication not configured". Populated from <c>EMBERFALL_SUPABASE_URL</c> in
+        /// production; injected directly in tests. Absent tokens always take the guest path.
+        /// </summary>
+        public IIdentityTokenVerifier? TokenVerifier { get; init; }
+
+        /// <summary>
+        /// Account persistence seam (EF-072/c). Null → authenticated identity is derived directly
+        /// from the subject hash without a store lookup; email is not persisted. Populated from
+        /// <c>EMBERFALL_ACCOUNTS_DB</c> in production; injected directly in tests.
+        /// </summary>
+        public IAccountStore? AccountStore { get; init; }
+
+        /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
         /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
         /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
@@ -67,6 +82,20 @@ namespace Emberfall.Net.Server
                 ? null
                 : new TelemetryDrain(sink.Path, dbConn!);
 
+            // EF-074c: Supabase JWT verifier (optional — absent means auth tokens are rejected;
+            // guest connects are always accepted). Mirrors the telemetry-drain pattern.
+            string? supabaseUrl = Environment.GetEnvironmentVariable("EMBERFALL_SUPABASE_URL");
+            IIdentityTokenVerifier? tokenVerifier = string.IsNullOrWhiteSpace(supabaseUrl)
+                ? null
+                : new SupabaseTokenVerifier(supabaseUrl);
+
+            // EF-072/074c: durable account store (optional — absent means email is not persisted
+            // and authenticated identity is derived from the subject hash alone).
+            string? accountsDb = Environment.GetEnvironmentVariable("EMBERFALL_ACCOUNTS_DB");
+            IAccountStore? accountStore = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresAccountStore(accountsDb!, new SystemTimeSource());
+
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
@@ -74,6 +103,8 @@ namespace Emberfall.Net.Server
                 ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
                 Telemetry = sink,
                 TelemetryDrain = drain,
+                TokenVerifier = tokenVerifier,
+                AccountStore = accountStore,
             };
         }
 
@@ -134,7 +165,9 @@ namespace Emberfall.Net.Server
                 new JsonlReplayStore(cfg.ReplaysDir),
                 matchmaking,
                 ratingForAccount,
-                cfg.Telemetry);
+                cfg.Telemetry,
+                cfg.TokenVerifier,
+                cfg.AccountStore);
 
             var app = builder.Build();
             app.UseWebSockets();

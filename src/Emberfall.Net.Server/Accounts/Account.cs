@@ -16,5 +16,9 @@ namespace Emberfall.Net.Server.Accounts
         string PlayerId,
         string CredentialKind,
         string CredentialHash,
-        DateTimeOffset CreatedAt);
+        DateTimeOffset CreatedAt,
+        /// <summary>Verified email at link time (EF-074c). The player's recovery path — stored so
+        /// Supabase can send a magic link if the device is lost. Null for pre-EF-074c accounts and
+        /// for guest accounts that never presented an auth token.</summary>
+        string? Email = null);
 }

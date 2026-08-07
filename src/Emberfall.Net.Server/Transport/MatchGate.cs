@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
+using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
@@ -43,6 +45,8 @@ namespace Emberfall.Net.Server.Transport
         private readonly ITelemetrySink _telemetry;
         private readonly IMatchmakingQueue _matchmaking;
         private readonly Func<AccountId, int> _ratingForAccount;
+        private readonly IIdentityTokenVerifier? _tokenVerifier;
+        private readonly IAccountStore? _accountStore;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
@@ -59,7 +63,8 @@ namespace Emberfall.Net.Server.Transport
 
         public MatchGate(
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
-            IReplayStore replay, ITelemetrySink? telemetry = null)
+            IReplayStore replay, ITelemetrySink? telemetry = null,
+            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null)
             : this(
                 opts,
                 time,
@@ -68,14 +73,17 @@ namespace Emberfall.Net.Server.Transport
                 replay,
                 new BandWideningMatchmakingQueue(time, opts.Matchmaking),
                 _ => opts.Matchmaking.DefaultRating,
-                telemetry)
+                telemetry,
+                tokenVerifier,
+                accountStore)
         {
         }
 
         public MatchGate(
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
             IReplayStore replay, IMatchmakingQueue matchmaking,
-            Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null)
+            Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null,
+            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null)
         {
             _opts = opts;
             _time = time;
@@ -85,6 +93,8 @@ namespace Emberfall.Net.Server.Transport
             _matchmaking = matchmaking ?? throw new ArgumentNullException(nameof(matchmaking));
             _ratingForAccount = ratingForAccount ?? throw new ArgumentNullException(nameof(ratingForAccount));
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
+            _tokenVerifier = tokenVerifier;
+            _accountStore = accountStore;
         }
 
         public int LiveSessions
@@ -160,19 +170,50 @@ namespace Emberfall.Net.Server.Transport
                 return;
             }
 
-            // ── VULN-003 (security/known-vulnerabilities, LATENT — trigger row "Attaching anything of
-            //    value to an account"). THIS IS THE LINE THAT ARMS IT. hello.DeviceToken is a string
-            //    the client chose, and this is the whole of our identity check: there is none. That is
-            //    adequate while an account holds nothing — the collection is local files on the
-            //    player's own disk and there is no accounts table — so presenting someone else's token
-            //    buys their telemetry attribution and nothing more.
-            //    The moment an account holds an entitlement, a purchase, a rating or a claimed name,
-            //    whoever holds this string IS that player, with no password to change and no session
-            //    to revoke. Read VULN-003 §4 before keying anything of value off the AccountId below:
-            //    value attaches to an authenticated identity, never to a bearer token, and a
-            //    guest→account conversion must be one-way — a token that still resolves after linking
-            //    is a permanent back door into the account it was meant to protect.
-            var account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
+            // ── EF-074c (NOR-229). AuthToken present → verified against Supabase JWKS via
+            //    IIdentityTokenVerifier; on success the subject hash is resolved through IAccountStore
+            //    to a stable player_id. An invalid token CLOSES the socket — no silent fallback to
+            //    guest, because a downgrade is how a rejected credential still gets in.
+            //    AuthToken absent → guest path (AccountId.FromDeviceToken), unchanged.
+            //
+            //    VULN-003 latent item 2 in security.md remains standing: its trigger is value
+            //    attaching to an account, and this ticket attaches none. See security.md §Latent.
+            AccountId account;
+            if (!string.IsNullOrEmpty(hello.AuthToken))
+            {
+                if (_tokenVerifier is null)
+                {
+                    conn.Close(1008, "authentication not configured");
+                    await conn.PumpTask;
+                    return;
+                }
+                var verifyResult = await _tokenVerifier.VerifyAsync(hello.AuthToken, ct);
+                if (!verifyResult.IsSuccess)
+                {
+                    conn.Close(1008, "token rejected");
+                    await conn.PumpTask;
+                    return;
+                }
+                var identity = verifyResult.Identity!;
+                string subHash = HashCredential(identity.Subject);
+                if (_accountStore is not null)
+                {
+                    var acct = await _accountStore.ResolveOrCreateAsync("supabase", subHash, identity.Email, ct);
+                    // Log linkage: player_id is already a hash; email is hashed (§4.5 — never log raw).
+                    Console.Error.WriteLine("[auth] authenticated player_id={0} email_h={1}",
+                        acct.PlayerId, HashCredential(identity.Email));
+                    account = AccountId.FromAuthenticatedAccount(acct.PlayerId);
+                }
+                else
+                {
+                    // No account store configured — derive identity from the subject hash directly.
+                    account = AccountId.FromAuthenticatedAccount(subHash);
+                }
+            }
+            else
+            {
+                account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
+            }
 
             // ── VULN-002 §4 (EF-073). THIS IS THE HALF THAT COUNTS. hello.DisplayName is a string
             //    the PEER chose and our client renders; their client's copy of PlayerName.Check is
@@ -447,6 +488,17 @@ namespace Emberfall.Net.Server.Transport
                 second.Seated.TrySetResult(null);
                 throw;
             }
+        }
+
+        /// <summary>16 hex bytes (128 bits) of SHA-256. Same shape as <see cref="AccountId"/>'s value.
+        /// Used to hash the Supabase subject and email before they touch a log line (§4.5).</summary>
+        private static string HashCredential(string value)
+        {
+            Span<byte> digest = stackalloc byte[32];
+            SHA256.HashData(Encoding.UTF8.GetBytes(value), digest);
+            var sb = new StringBuilder(32);
+            for (int i = 0; i < 16; i++) sb.Append(digest[i].ToString("x2"));
+            return sb.ToString();
         }
 
         /// <summary>A WebSocket close reason is capped at 123 UTF-8 bytes (RFC 6455). A validator reason

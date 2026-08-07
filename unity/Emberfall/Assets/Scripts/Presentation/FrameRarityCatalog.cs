@@ -113,8 +113,8 @@ namespace Emberfall.Presentation
 
         // Takes the type as well as the rarity for the reason spelled out on SpellFrameRarity:
         // these sockets describe the frame that is actually drawn, and a spell's frame is not
-        // its rarity's. There is deliberately no bare-rarity overload — one would compile at
-        // every call site and silently misplace the digits on every epic spell.
+        // its rarity's. There is deliberately no bare-rarity version of this method — one would
+        // compile at every call site and silently misplace the digits on every epic spell.
         public static FrameSockets Sockets(CardType type, Rarity rarity) =>
             SocketsForFrame(type == CardType.SPELL ? SpellFrameRarity(rarity) : rarity);
 

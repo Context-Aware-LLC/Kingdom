@@ -36,7 +36,8 @@ namespace Emberfall.Net.Server.Accounts
             await cmd.ExecuteNonQueryAsync(ct);
         }
 
-        public async Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash, CancellationToken ct = default)
+        public async Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
+            string? email = null, CancellationToken ct = default)
         {
             InMemoryAccountStore.Require(credentialKind, credentialHash);
             string playerId = AccountIdentity.DerivePlayerId(credentialKind, credentialHash);
@@ -46,19 +47,20 @@ namespace Emberfall.Net.Server.Accounts
             await conn.OpenAsync(ct);
 
             await using (var ins = new NpgsqlCommand(
-                "insert into account (player_id, credential_kind, credential_hash, created_at) " +
-                "values ($1,$2,$3,$4) on conflict (credential_kind, credential_hash) do nothing", conn))
+                "insert into account (player_id, credential_kind, credential_hash, email, created_at) " +
+                "values ($1,$2,$3,$4,$5) on conflict (credential_kind, credential_hash) do nothing", conn))
             {
                 ins.Parameters.Add(P(NpgsqlDbType.Text, playerId));
                 ins.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
                 ins.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
+                ins.Parameters.Add(P(NpgsqlDbType.Text, (object?)email ?? DBNull.Value));
                 ins.Parameters.Add(P(NpgsqlDbType.TimestampTz, createdAt.UtcDateTime));
                 await ins.ExecuteNonQueryAsync(ct);
             }
 
             // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
             await using var sel = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, created_at from account " +
+                "select player_id, credential_kind, credential_hash, email, created_at from account " +
                 "where credential_kind=$1 and credential_hash=$2", conn);
             sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
             sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
@@ -73,7 +75,7 @@ namespace Emberfall.Net.Server.Accounts
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, created_at from account where player_id=$1", conn);
+                "select player_id, credential_kind, credential_hash, email, created_at from account where player_id=$1", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
             await using var r = await cmd.ExecuteReaderAsync(ct);
             if (!await r.ReadAsync(ct)) return null;
@@ -82,7 +84,8 @@ namespace Emberfall.Net.Server.Accounts
 
         private static Account ReadAccount(NpgsqlDataReader r)
             => new Account(r.GetString(0), r.GetString(1), r.GetString(2),
-                new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(3), DateTimeKind.Utc)));
+                new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(4), DateTimeKind.Utc)),
+                r.IsDBNull(3) ? null : r.GetString(3));
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)
             => new NpgsqlParameter { NpgsqlDbType = type, Value = value ?? DBNull.Value };
