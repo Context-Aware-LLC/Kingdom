@@ -40,6 +40,21 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public string CardBackId { get; set; } = "";
 
+        /// <summary>
+        /// The card whose art represents this deck, or empty to let the client pick one.
+        ///
+        /// <para><b>This is what a deck is recognised by</b> (Sam, 2026-08-07). Deck names are not
+        /// drawn on the roster; the image is the identity, and the player chooses it from the cards
+        /// in the deck. A name still exists and is still editable — it is what the dialog is titled
+        /// and what a duplicate is disambiguated by — it is simply not the thing you scan for.</para>
+        ///
+        /// <para><b>Unvalidated, like <see cref="CardBackId"/> and for a stronger reason:</b> this id
+        /// may name a card a balance patch deleted, or one the player has since removed from the
+        /// deck. Neither is a corrupt deck. The client falls back when it cannot resolve the art, and
+        /// the id is left alone so that putting the card back restores the image the player chose.</para>
+        /// </summary>
+        public string ShowcaseCardId { get; set; } = "";
+
         public List<DeckEntry> Entries { get; } = new List<DeckEntry>();
 
         public int TotalCount

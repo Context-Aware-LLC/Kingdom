@@ -22,7 +22,7 @@
 
             <ui:VisualElement name="roster-create-panel" class="roster-panel roster-panel--create">
                 <ui:Label name="create-title" text="Create your first character" class="create-title" />
-                <ui:Label text="A pairing is permanent and ordered. Your primary class supplies the hero power." class="create-help" />
+                <ui:Label text="You get the power of the first choice and the cards of bothrdered. Your primary class supplies the hero power." class="create-help" />
                 <ui:TextField name="character-name" label="Name" max-length="16" class="roster-field" />
                 <ui:DropdownField name="primary-class" label="Primary" class="roster-field" />
                 <ui:DropdownField name="secondary-class" label="Secondary" class="roster-field" />
@@ -33,7 +33,7 @@
                 <ui:DropdownField name="starter-deck" label="Starter deck" class="roster-field" />
                 <ui:Label name="starter-help" text="Your first character starts with a playable generated deck." class="create-help create-help--starter" />
                 <ui:Label name="create-error" text="" class="create-error" />
-                <ui:Button name="create-character" text="Create and open decks" class="roster-button roster-button--cta create-button" />
+                <ui:Button name="create-character" text="Create" class="roster-button roster-button--cta create-button" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -60,6 +60,7 @@
                     <!-- Match pick only. Every other action below is offered from both doors. -->
                     <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
+                    <ui:Button name="deck-image" text="Deck image" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-set-default" text="Set as default" class="roster-button roster-button--ghost deck-action" />
@@ -75,6 +76,13 @@
                     <ui:Button name="deck-new-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-new-blank" text="Start blank" class="roster-button roster-button--ghost deck-action" />
                     <ui:Label name="deck-new-note" text="" class="create-help create-help--starter" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="deck-image-pane" class="deck-pane">
+                    <ui:ScrollView name="deck-image-scroll" mode="Vertical" class="deck-image-scroll">
+                        <ui:VisualElement name="deck-image-grid" class="deck-back-grid" />
+                    </ui:ScrollView>
+                    <ui:Label name="deck-image-note" text="" class="create-help create-help--starter" />
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-rename-pane" class="deck-pane">

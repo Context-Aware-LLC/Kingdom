@@ -93,6 +93,7 @@ namespace Emberfall.Presentation
         private PlayerAccount _account;
         private ICardDatabase _db;
         private IUiSpriteProvider _uiSprites;
+        private IArtProvider _art;
 
         private VisualElement _rosterList;
         private Label _rosterCount;
@@ -128,6 +129,9 @@ namespace Emberfall.Presentation
         private VisualElement _deckBackPane;
         private VisualElement _deckBackGrid;
         private Label _deckBackNote;
+        private VisualElement _deckImagePane;
+        private VisualElement _deckImageGrid;
+        private Label _deckImageNote;
         private VisualElement _deckNewPane;
         private Label _deckNewNote;
         private Button _deckNewGenerated;
@@ -149,8 +153,9 @@ namespace Emberfall.Presentation
         /// <summary>How many decks that character has — what decides whether Delete is offered.</summary>
         private int _menuSiblingCount;
 
-        /// <summary>The back highlighted in the picker, committed only by Save.</summary>
+        /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
         private string _pendingCardBackId = "";
+        private string _pendingShowcaseCardId = "";
 
         private void OnEnable()
         {
@@ -168,6 +173,11 @@ namespace Emberfall.Presentation
             WireDeckDialog();
 
             _uiSprites = CardBackCatalog.NewProvider();
+#if UNITY_EDITOR
+            _art = new EditorArtProvider();
+#else
+            _art = new AddressableArtProvider();
+#endif
 
             try
             {
@@ -219,6 +229,9 @@ namespace Emberfall.Presentation
             _deckBackPane = _root.Q<VisualElement>("deck-back-pane");
             _deckBackGrid = _root.Q<VisualElement>("deck-back-grid");
             _deckBackNote = _root.Q<Label>("deck-back-note");
+            _deckImagePane = _root.Q<VisualElement>("deck-image-pane");
+            _deckImageGrid = _root.Q<VisualElement>("deck-image-grid");
+            _deckImageNote = _root.Q<Label>("deck-image-note");
             _deckNewPane = _root.Q<VisualElement>("deck-new-pane");
             _deckNewNote = _root.Q<Label>("deck-new-note");
             _deckNewGenerated = _root.Q<Button>("deck-new-generated");
@@ -303,7 +316,7 @@ namespace Emberfall.Presentation
         /// <summary>Which pane of the deck dialog is showing. Cancel means "back to the menu" from
         /// anywhere but <see cref="Menu"/>, where it means "close" — one button, because a dialog
         /// with both a Back and a Close is a dialog nobody reads.</summary>
-        private enum DeckPane { Menu, New, Rename, CardBack, Delete }
+        private enum DeckPane { Menu, New, Rename, Image, CardBack, Delete }
 
         private DeckPane _deckPane = DeckPane.Menu;
 
@@ -312,6 +325,7 @@ namespace Emberfall.Presentation
             _root.Q<Button>("deck-new-generated")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Generated));
             _root.Q<Button>("deck-new-blank")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Blank));
             _deckSelectButton?.RegisterCallback<ClickEvent>(_ => PickForMatch());
+            _root.Q<Button>("deck-image")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Image));
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => EditOpenDeck());
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
@@ -332,6 +346,7 @@ namespace Emberfall.Presentation
             _menuDeck = deck;
             _menuSiblingCount = siblingCount;
             _pendingCardBackId = deck.CardBackId;
+            _pendingShowcaseCardId = deck.ShowcaseCardId;
 
             if (_deckModalSub != null)
             {
@@ -388,6 +403,7 @@ namespace Emberfall.Presentation
 
             Show(_deckNewPane, pane == DeckPane.New);
             Show(_deckMenuPane, pane == DeckPane.Menu);
+            Show(_deckImagePane, pane == DeckPane.Image);
             Show(_deckRenamePane, pane == DeckPane.Rename);
             Show(_deckBackPane, pane == DeckPane.CardBack);
             Show(_deckDeletePane, pane == DeckPane.Delete);
@@ -398,6 +414,7 @@ namespace Emberfall.Presentation
                 {
                     DeckPane.New => $"New deck for {_menuCharacter?.Name}",
                     DeckPane.Rename => "Rename deck",
+                    DeckPane.Image => "Deck image",
                     DeckPane.CardBack => "Card back",
                     DeckPane.Delete => "Delete deck?",
                     _ => _menuDeck.Name,
@@ -418,12 +435,58 @@ namespace Emberfall.Presentation
                 RefreshNewDeckPane();
             if (pane == DeckPane.Rename)
                 _deckRenameField?.SetValueWithoutNotify(_menuDeck.Name);
+            if (pane == DeckPane.Image)
+                BuildShowcaseGrid();
             if (pane == DeckPane.CardBack)
                 BuildCardBackGrid();
             if (pane == DeckPane.Delete && _deckDeleteMessage != null)
                 _deckDeleteMessage.text =
                     $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
                     "The cards themselves stay in your collection.";
+        }
+
+        /// <summary>
+        /// Every distinct card in the deck, as pickable art. Empty for an empty deck, which is the
+        /// honest answer: a deck with no cards has nothing of its own to be recognised by.
+        /// </summary>
+        private void BuildShowcaseGrid()
+        {
+            if (_deckImageGrid == null) return;
+            _deckImageGrid.Clear();
+
+            CardDefinition current =
+                !string.IsNullOrEmpty(_pendingShowcaseCardId) && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
+                    ? picked
+                    : ShowcaseOf(_menuDeck);
+            foreach (DeckEntry entry in _menuDeck.Entries)
+            {
+                if (!_db.TryGet(entry.CardId, out CardDefinition def)) continue;
+                CardDefinition choice = def;
+
+                var option = new Button();
+                option.AddToClassList("deck-back-option");
+                option.EnableInClassList("deck-back-option--on", current != null && current.Id == choice.Id);
+                option.tooltip = choice.Name;
+                option.clicked += () =>
+                {
+                    _pendingShowcaseCardId = choice.Id;
+                    BuildShowcaseGrid();     // selection is the only state, so redrawing is the update
+                };
+
+                var art = new VisualElement();
+                art.AddToClassList("deck-plate-art");
+                _art.LoadArt(choice.ArtId, sprite =>
+                {
+                    if (sprite != null) art.style.backgroundImage = new StyleBackground(sprite);
+                });
+                option.Add(art);
+                _deckImageGrid.Add(option);
+            }
+
+            if (_deckImageNote != null)
+                _deckImageNote.text = _menuDeck.Entries.Count == 0
+                    ? "Put some cards in this deck first — its picture comes from one of them."
+                    : "";
         }
 
         private void BuildCardBackGrid()
@@ -478,6 +541,10 @@ namespace Emberfall.Presentation
                     return;
                 }
                 _menuDeck.Name = name;
+            }
+            else if (_deckPane == DeckPane.Image)
+            {
+                _menuDeck.ShowcaseCardId = _pendingShowcaseCardId;
             }
             else if (_deckPane == DeckPane.CardBack)
             {
@@ -578,6 +645,7 @@ namespace Emberfall.Presentation
             _menuSiblingCount = 0;
             _menuQueueReady = false;
             _pendingCardBackId = "";
+            _pendingShowcaseCardId = "";
             _deckPane = DeckPane.Menu;
         }
 
@@ -636,32 +704,18 @@ namespace Emberfall.Presentation
             row.AddToClassList("character-row");
             row.AddToClassList("character-row--" + ClassSlug(character.PrimaryClass));
 
+            // The character's name, and nothing else (Sam, 2026-08-07). The pairing, the hero power
+            // and the queue pill all went the same way, and for one reason: this block repeats down
+            // the whole list beside every deck the character owns, so anything on it is a line the
+            // player re-reads for information they had after the first row. The class is already in
+            // the row's coloured spine, and the cards in each deck are the class made visible.
             var identity = new VisualElement();
             identity.AddToClassList("character-identity");
 
             var name = new Label(character.Name);
             name.AddToClassList("character-name");
+            name.tooltip = $"{Pretty(character.PrimaryClass)} → {Pretty(character.SecondaryClass)}";
             identity.Add(name);
-
-            var pairing = new VisualElement();
-            pairing.AddToClassList("character-pairing");
-            var primary = new Label(Pretty(character.PrimaryClass));
-            primary.AddToClassList("pair-class");
-            primary.AddToClassList("class--" + ClassSlug(character.PrimaryClass));
-            var arrow = new Label("→");
-            arrow.AddToClassList("pair-arrow");
-            var secondary = new Label(Pretty(character.SecondaryClass));
-            secondary.AddToClassList("pair-class");
-            secondary.AddToClassList("class--" + ClassSlug(character.SecondaryClass));
-            pairing.Add(primary);
-            pairing.Add(arrow);
-            pairing.Add(secondary);
-            identity.Add(pairing);
-
-            // "Hero power: Verdant" used to sit here, and a Queue ready / Draft pill under it. Both
-            // cut (Sam, 2026-08-07): the hero power is always the primary class, which the pairing
-            // right above already states and the player already knows, and the pill duplicated in
-            // words what the deck plates carry per deck.
 
             var delete = new Button { text = "Delete" };
             delete.AddToClassList("delete-character");
@@ -714,38 +768,87 @@ namespace Emberfall.Presentation
             DeckList deck = summary.Deck;
             bool isDefault = summary.IsDefault || treatAsDefault;
 
-            var plate = new Button();
+            var plate = new VisualElement();
             plate.AddToClassList("deck-plate");
             plate.EnableInClassList("deck-plate--default", isDefault);
             plate.EnableInClassList("deck-plate--selected",
                 MatchDeckSelection.Choosing && _pickedDeckId == deck.Id);
-            plate.tooltip = isDefault
-                ? $"{deck.Name} — {character.Name}'s default deck"
-                : deck.Name;
-            plate.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
 
+            // The deck IS its image (Sam, 2026-08-07). No name on the plate: two decks tell each
+            // other apart by the card the player chose to front them with, the same way a physical
+            // deck is known by its sleeve rather than a label.
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
-            Sprite back = CardBackCatalog.SpriteFor(deck.CardBackId, _uiSprites);
-            if (back != null) art.style.backgroundImage = new StyleBackground(back);
+            art.tooltip = summary.Queue.IsEligible
+                ? $"{deck.Name} — {deck.TotalCount} / {DeckValidator.DeckSize}"
+                : $"{deck.Name} — {summary.Queue.Reason}";
+            ShowcaseArt(deck, art);
             plate.Add(art);
 
-            var name = new Label(isDefault ? "★ " + deck.Name : deck.Name);
-            name.AddToClassList("deck-plate-name");
-            plate.Add(name);
-
-            // Queue standing used to be a green or amber chip with a word in it. It is the colour
-            // of the count now (Sam, 2026-08-07) — "30 / 30" in green reads as ready without
-            // spending a word on it, and the reason a draft is a draft is a hover away rather than
-            // a warning on the page.
             var count = new Label($"{deck.TotalCount} / {DeckValidator.DeckSize}");
             count.AddToClassList("deck-plate-count");
             count.EnableInClassList("deck-plate-count--ready", summary.Queue.IsEligible);
             plate.Add(count);
 
-            if (!summary.Queue.IsEligible) plate.tooltip = summary.Queue.Reason;
+            var functions = new Button { text = isDefault ? "★ Functions" : "Functions" };
+            functions.AddToClassList("deck-plate-functions");
+            functions.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
+            plate.Add(functions);
 
             return plate;
+        }
+
+        /// <summary>
+        /// Paint a deck's chosen card art onto <paramref name="target"/>, falling back in order.
+        ///
+        /// <para><b>Every deck has a picture from the moment it exists.</b> An unset deck shows its
+        /// most expensive card — a passable stand-in for "what this deck is about", and always a
+        /// card the player actually owns in it. A deck with no cards at all, or whose art has not
+        /// been generated, shows the card back. Nothing renders as a blank rectangle, because the
+        /// image is the only thing distinguishing one plate from another.</para>
+        ///
+        /// <para>The chosen id is NOT repaired when it resolves to nothing (see
+        /// <c>DeckList.ShowcaseCardId</c>): a card removed and later put back restores the picture
+        /// the player picked, which silently rewriting the id would destroy.</para>
+        /// </summary>
+        private void ShowcaseArt(DeckList deck, VisualElement target)
+        {
+            void Paint(Sprite sprite)
+            {
+                if (sprite != null) target.style.backgroundImage = new StyleBackground(sprite);
+            }
+
+            Sprite fallback = CardBackCatalog.SpriteFor(deck.CardBackId, _uiSprites);
+            Paint(fallback);
+
+            CardDefinition showcase = ShowcaseOf(deck);
+            if (showcase == null || string.IsNullOrEmpty(showcase.ArtId)) return;
+
+            // LoadArt may complete synchronously, so the fallback is painted first and this
+            // overwrites it rather than the other way round.
+            _art.LoadArt(showcase.ArtId, Paint);
+        }
+
+        /// <summary>The card fronting a deck: the player's pick when it still resolves, otherwise
+        /// the priciest card in it — ties broken by name so the same deck always shows the same
+        /// card rather than reshuffling with the entry order.</summary>
+        private CardDefinition ShowcaseOf(DeckList deck)
+        {
+            if (!string.IsNullOrEmpty(deck.ShowcaseCardId)
+                && deck.CountOf(deck.ShowcaseCardId) > 0
+                && _db.TryGet(deck.ShowcaseCardId, out CardDefinition chosen))
+                return chosen;
+
+            CardDefinition best = null;
+            foreach (DeckEntry entry in deck.Entries)
+            {
+                if (!_db.TryGet(entry.CardId, out CardDefinition def)) continue;
+                if (best == null
+                    || def.Cost > best.Cost
+                    || (def.Cost == best.Cost && string.CompareOrdinal(def.Name, best.Name) < 0))
+                    best = def;
+            }
+            return best;
         }
 
         private VisualElement BuildNewDeckPlate(Character character)
@@ -762,10 +865,6 @@ namespace Emberfall.Presentation
             plus.AddToClassList("deck-plate-plus");
             art.Add(plus);
             plate.Add(art);
-
-            var name = new Label("New deck");
-            name.AddToClassList("deck-plate-name");
-            plate.Add(name);
 
             return plate;
         }

@@ -111,6 +111,7 @@ namespace Emberfall.Core.Collection
                     w.WriteString("characterId", d.CharacterId);
                     w.WriteString("name", d.Name);
                     w.WriteString("cardBackId", d.CardBackId);
+                    w.WriteString("showcaseCardId", d.ShowcaseCardId);
                     w.WriteStartArray("cards");
                     foreach (var e in d.Entries)
                     {
@@ -153,6 +154,7 @@ namespace Emberfall.Core.Collection
                     // as "the player never chose one" and renders identically. Not checked against a
                     // catalog — see DeckList.CardBackId for why an unknown back is not a read error.
                     CardBackId = Str(el, "cardBackId") ?? "",
+                    ShowcaseCardId = Str(el, "showcaseCardId") ?? "",
                 };
 
                 if (el.TryGetProperty("cards", out var cards) && cards.ValueKind == JsonValueKind.Array)

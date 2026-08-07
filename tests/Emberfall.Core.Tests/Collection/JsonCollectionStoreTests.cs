@@ -204,6 +204,28 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         [Test]
+        public void A_Deck_Round_Trips_Its_Showcase_Card_Even_When_It_Is_No_Longer_In_The_Deck()
+        {
+            // The image a deck is recognised by. It is allowed to name a card the deck no longer
+            // holds: the client falls back for the render, and keeping the id means putting the card
+            // back restores the picture the player chose rather than silently losing it.
+            var store = Decks();
+            var deck = new DeckList
+            {
+                Id = "deck-1", CharacterId = "chr-1", Name = "Rotvine",
+                ShowcaseCardId = "grave_bell_novice",
+            };
+            store.Save(deck);
+            store.Save(new DeckList { Id = "deck-2", CharacterId = "chr-1", Name = "Unset" });
+
+            var loaded = Decks().LoadAll();
+
+            Assert.That(loaded[0].ShowcaseCardId, Is.EqualTo("grave_bell_novice"));
+            Assert.That(loaded[0].Entries, Is.Empty, "…and the card it names is not in the deck at all.");
+            Assert.That(loaded[1].ShowcaseCardId, Is.Empty);
+        }
+
+        [Test]
         public void A_Deck_Written_Before_Card_Backs_Existed_Still_Loads()
         {
             // The additive-field contract, from the storage side: cardBackId is absent from every

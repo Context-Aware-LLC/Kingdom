@@ -102,11 +102,11 @@
 .character-row--gravekeep { border-left-color: var(--class-gravekeep); }
 .character-row--verdant { border-left-color: var(--class-verdant); }
 
-/* The character's own identity — name, pairing, hero power, and how its default deck stands.
- * A plain block, not a button: since the decks moved here from the deckbuilder, opening a
- * character means opening one of ITS DECKS, and there is no longer a "just the character"
- * destination for a click on this to go to. Fixed-width so the deck strip beside it starts on
- * the same column down the whole list. */
+/* The character's name, and nothing else (Sam, 2026-08-07). This block repeats beside every
+ * deck the character owns, so anything on it is a line the player re-reads for information they
+ * had after the first row. Fixed-width so the deck strip starts on the same column down the
+ * whole list. A plain block, not a button: opening a character means opening one of ITS DECKS,
+ * and there is no "just the character" destination left for a click to go to. */
 .character-identity {
     width: 26%;
     min-width: 240px;
@@ -124,34 +124,16 @@
     margin-bottom: var(--space-2);
 }
 
-.character-pairing {
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: var(--space-2);
-}
-
-.pair-class {
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-}
-
-.pair-arrow {
-    font-size: var(--type-h2);
-    color: var(--ink-2);
-    margin-left: var(--space-2);
-    margin-right: var(--space-2);
-}
-
-.class--emberward { color: var(--class-emberward); }
-.class--tidecaller { color: var(--class-tidecaller); }
-.class--gravekeep { color: var(--class-gravekeep); }
-.class--verdant { color: var(--class-verdant); }
+/* The pairing used to be spelled out under the name. The row's coloured spine carries the
+ * primary class now, and the decks carry the rest (Sam, 2026-08-07). */
 
 /* ---- Deck strip (Sam, 2026-08-07) ------------------------------------------------------
  * The deck switcher and the deck name used to live at the top of the deckbuilder's right-hand
  * panel. They live here now: a character row is mostly empty space, and a deck is a thing you
- * pick BEFORE you open an editor for it, not a tab inside one. Each deck is drawn as a card —
- * its own card back — because that is what a player recognises a deck by.
+ * pick BEFORE you open an editor for it, not a tab inside one.
+ *
+ * A deck is drawn as ONE CARD and carries no name (Sam, 2026-08-07): the art the player chose
+ * from inside it is the identity, the way a physical deck is known by its sleeve.
  */
 .deck-strip {
     flex-grow: 1;
@@ -174,13 +156,12 @@
     color: var(--ink-1);
 }
 
-.deck-plate:hover {
-    background-color: var(--surface-2);
-    border-color: var(--surface-3);
+.deck-image-scroll {
+    max-height: 320px;
 }
 
-/* The card itself. scale-and-crop rather than stretch: a back is a full-bleed pattern or a
- * centred emblem, and letterboxing either one reads as a bug. */
+/* The card itself — the art of whichever card fronts the deck. scale-and-crop rather than
+ * stretch: card art is not this aspect and letterboxing it reads as a bug. */
 .deck-plate-art {
     width: 108px;
     height: 152px;
@@ -208,15 +189,25 @@
     border-color: var(--mana);
 }
 
-.deck-plate-name {
+/* The plate's one control. A deck carries no name here — the art is the identity — so this is
+ * also the only text on it, and it stays a single word. */
+.deck-plate-functions {
     width: 100%;
-    margin-top: var(--space-2);
-    font-size: var(--type-label);
+    height: 28px;
+    min-width: 0;
+    margin: var(--space-2) 0 0 0;
+    padding: 0;
+    border-width: 0;
+    border-radius: var(--space-1);
+    font-size: var(--type-caption);
     -unity-font-style: bold;
-    -unity-text-align: middle-center;
     color: var(--ink-1);
-    text-overflow: ellipsis;
-    overflow: hidden;
+    background-color: var(--surface-3);
+}
+
+.deck-plate-functions:hover {
+    color: var(--surface-0);
+    background-color: var(--accent);
 }
 
 /* Queue standing, said without a word: the count goes green when the deck is playable. Not a
@@ -249,8 +240,8 @@
 .deck-plate--new:hover .deck-plate-art { border-color: var(--accent); }
 .deck-plate--new:hover .deck-plate-plus { color: var(--accent); }
 
-/* A default deck the character points at was deleted — surfaced, never repaired. It used to be
- * the deckbuilder's job to say so; the pointer is a roster-level fact, so it says so here. */
+/* Two or more decks and none of them named as the default — surfaced, never repaired. Not shown
+ * for a character with a single deck, which is its own default by elimination. */
 .deck-strip-hint {
     width: 100%;
     margin-bottom: var(--space-2);
@@ -290,6 +281,18 @@
 .deck-back-option--on {
     border-color: var(--accent);
     background-color: var(--surface-3);
+}
+
+/* Pickers label their options; deck plates on the roster do not. A card back has no other name,
+ * and the deck-image grid identifies its cards by tooltip because the art is the point. */
+.deck-back-option .deck-plate-name {
+    width: 100%;
+    margin-top: var(--space-2);
+    font-size: var(--type-caption);
+    -unity-text-align: middle-center;
+    color: var(--ink-2);
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .delete-character {
