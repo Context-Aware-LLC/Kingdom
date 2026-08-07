@@ -170,10 +170,11 @@ namespace Emberfall.Net.Server.Tests
         private static Task SendHelloAsync(
             ClientWebSocket ws,
             string deviceToken,
-            string contractVersion = "interfaces.v4")
+            string? contractVersion = null)
         {
             byte[] frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, contractVersion, "test", "matchmaking-gate-tests"),
+                new HelloMsg(deviceToken, contractVersion ?? SessionHarness.CurrentContractVersion,
+                             "test", "matchmaking-gate-tests"),
                 ProtocolCodec.PreMatch,
                 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);

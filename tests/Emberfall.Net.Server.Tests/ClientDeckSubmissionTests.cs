@@ -177,7 +177,7 @@ namespace Emberfall.Net.Server.Tests
 
                 // A deck carrying an id that is not in the server DB — the injection VULN-001 warns about.
                 await SendAsync(attacker, ProtocolCodec.Encode(
-                    new HelloMsg("device-evil", "interfaces.v4", "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
+                    new HelloMsg("device-evil", SessionHarness.CurrentContractVersion, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
                 var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
                 lines[0] = new DeckCardLine("no_such_card_zzz", lines[0].Count);
                 await SendAsync(attacker, ProtocolCodec.Encode(
@@ -200,10 +200,10 @@ namespace Emberfall.Net.Server.Tests
                 using var c1 = new ClientWebSocket();
                 await c0.ConnectAsync(wsUri, CancellationToken.None);
                 await SendAsync(c0, ProtocolCodec.Encode(
-                    new HelloMsg("device-a", "interfaces.v4", "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
+                    new HelloMsg("device-a", SessionHarness.CurrentContractVersion, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
                 await c1.ConnectAsync(wsUri, CancellationToken.None);
                 await SendAsync(c1, ProtocolCodec.Encode(
-                    new HelloMsg("device-b", "interfaces.v4", "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
+                    new HelloMsg("device-b", SessionHarness.CurrentContractVersion, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
 
                 var s0 = await ExpectAsync<MatchStartMsg>(c0);
                 var s1 = await ExpectAsync<MatchStartMsg>(c1);
@@ -261,7 +261,7 @@ namespace Emberfall.Net.Server.Tests
         private static async Task SubmitAsync(ClientWebSocket ws, string token, CardClass primary, CardClass secondary)
         {
             await SendAsync(ws, ProtocolCodec.Encode(
-                new HelloMsg(token, "interfaces.v4", "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
+                new HelloMsg(token, SessionHarness.CurrentContractVersion, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
             await SendAsync(ws, ProtocolCodec.Encode(
                 new SubmitDeckMsg("c", primary, secondary, LegalLines(primary, secondary)), ProtocolCodec.PreMatch, 1));
         }

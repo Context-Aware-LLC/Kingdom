@@ -127,10 +127,12 @@ namespace Emberfall.Net.Client.Tests
         public async Task MatchStart_Engine_Contract_Must_Exactly_Match_Client()
         {
             using var peer = new LoopbackServerPeer();
+            // The client keeps its DEFAULT contract version: pairing has to succeed before the
+            // mismatched MatchStartMsg below can be the subject. Spelling the version out here is
+            // what broke this test when EF-074b bumped interfaces.v4 → v5.
             using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions
             {
                 DeviceToken = "test-device-0",
-                ContractVersion = "interfaces.v4",
             });
             using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);

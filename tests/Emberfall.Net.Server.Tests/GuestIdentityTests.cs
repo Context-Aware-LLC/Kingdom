@@ -220,7 +220,7 @@ namespace Emberfall.Net.Server.Tests
         private static Task SendHelloAsync(ClientWebSocket ws, string deviceToken)
         {
             var frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, "interfaces.v4", "test", "identity-tests"),
+                new HelloMsg(deviceToken, SessionHarness.CurrentContractVersion, "test", "identity-tests"),
                 ProtocolCodec.PreMatch, 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);
         }
