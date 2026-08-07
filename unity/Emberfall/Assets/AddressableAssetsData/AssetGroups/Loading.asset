@@ -14,52 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Loading
   m_GUID: d5913412c4de0d044b61c49cba11a856
-  m_SerializeEntries:
-  - m_GUID: 15b5ddec5d942564b8324c38fe6c79a3
-    m_Address: loading/LoadingPlate_Base
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1830ef611d421dd4491ce5333beb1eca
-    m_Address: loading/T_WordmarkGrain
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 26461fcf10a38d64c8831da7b490e958
-    m_Address: loading/OrbConcept_Confluence
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 86f26d0fb45d3375d68b613f0db8a6f1
-    m_Address: loading/Orb_HollowCore
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a34b21388b27fc24cbf4b22fde16d9e0
-    m_Address: loading/LoadingPlate_Core16x9
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c2a7717fe893f3448b654580f09f3d86
-    m_Address: loading/OrbConcept_HollowCore
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c857dcb326f61144faa2c3beb7db0398
-    m_Address: loading/Orb_StormGlass
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: eb100a6f0e0775f4f8a57a1ca21510a6
-    m_Address: loading/OrbConcept_StormGlass
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fd32bfdb1876a80d68581925d03a30f4
-    m_Address: loading/Orb_Confluence
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
   m_SchemaSet:

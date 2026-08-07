@@ -15,8 +15,48 @@ MonoBehaviour:
   m_GroupName: CardArt_REKINDLING
   m_GUID: 6cf09b507d2ec234ba1d9448da3e4797
   m_SerializeEntries:
+  - m_GUID: 0f0fee8241304cbab96e3bd3296072bc
+    m_Address: card_art/stone_fortified_colossus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 38af97f55e2a468b9d04c96c97d14d65
+    m_Address: card_art/stone_earthen_rampart
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e6563731dee45dd8b9a2d862b3662bf
+    m_Address: card_art/stone_unbreakable_wall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 53e788054c0d999428301b18a1c1fba3
-    m_Address: card_art/art_rekind_tide_harbinger
+    m_Address: card_art/tide_harbinger
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a051871b7ee64ea6b5a5308607b3290f
+    m_Address: card_art/stone_aldric_the_fortifier
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9cd39cbac6140b88082554469c5b03f
+    m_Address: card_art/stone_quarry_worker
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd8901f42d724408be028c82e8880702
+    m_Address: card_art/stone_boulder_sentinel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1d6ee8a852247069a707bd2d9aaf7fd
+    m_Address: card_art/stone_layer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6af8e7683914203862aad57df9e2859
+    m_Address: card_art/stone_iron_foundation
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

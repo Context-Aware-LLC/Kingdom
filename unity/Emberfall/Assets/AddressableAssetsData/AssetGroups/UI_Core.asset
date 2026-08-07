@@ -146,7 +146,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
-    m_Address: ui/icon_kw_divine_shield
+    m_Address: ui/icon_kw_aegis
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -176,7 +176,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b8ad200ed8d8d1742ac6def4daf3c58c
-    m_Address: ui/icon_kw_spell_damage
+    m_Address: ui/icon_kw_arcane_surge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1dc52688f0c16142a6e765c906d3023
-    m_Address: ui/icon_kw_battlecry
+    m_Address: ui/icon_kw_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

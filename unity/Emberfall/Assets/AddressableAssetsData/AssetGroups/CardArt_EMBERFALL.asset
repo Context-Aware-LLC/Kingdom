@@ -16,587 +16,737 @@ MonoBehaviour:
   m_GUID: c822dcf5640f1324e8e1a90a7c71000f
   m_SerializeEntries:
   - m_GUID: 0451fb6009a369740a88d41176641cb1
-    m_Address: card_art/art_flame_bolt
+    m_Address: card_art/ember_flame_bolt
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 052340d525929764bbaf77b8dd40c098
-    m_Address: card_art/art_grave_sable_watcher
+    m_Address: card_art/grave_sable_watcher
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 067d8e2fa0537bd48b28d9836f3ded57
-    m_Address: card_art/art_relic_corpse_cart
+    m_Address: card_art/corpse_cart
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06930a0503481b14697418d0a4d42888
-    m_Address: card_art/art_night_shadow_blade
+    m_Address: card_art/night_shadow_blade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0bc50cebe929ccb469a77a82628a5a37
+    m_Address: card_art/stone_earth_barrier
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0c29fb00967981848adcb917b4827069
-    m_Address: card_art/art_verdant_sapsurge
+    m_Address: card_art/verdant_sapsurge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0c2ef241c8bab034f8c1c516bf4bb7ec
-    m_Address: card_art/art_tide_fathom_crush
+    m_Address: card_art/tide_fathom_crush
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0e179d8967dcca3459591c8c7cbc171f
-    m_Address: card_art/art_grave_last_rites
+    m_Address: card_art/grave_last_rites
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 107437511fc13594fb724043bef77430
-    m_Address: card_art/art_verdant_thornfang_matron
+    m_Address: card_art/verdant_thornfang_matron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11af8991209bc724696138770455c2ee
+    m_Address: card_art/stone_boulderhide
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1298b2450e67e64a00c61882067cbb25
+    m_Address: card_art/stone_living_monolith
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 147657089d46f5446b198a97001082b6
-    m_Address: card_art/art_clock_mass_recall
+    m_Address: card_art/clock_mass_recall
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1695d8d05a93cab4c8efba5849eee56d
-    m_Address: card_art/art_ward_granite_guardian
+    m_Address: card_art/stone_granite_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 17496e1e85dd25a4aa30b30cc5c07675
-    m_Address: card_art/art_stone_sentry
+    m_Address: card_art/stone_sentry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 18a02120480548e4abb5c45611189a4a
-    m_Address: card_art/art_frost_ripple
+    m_Address: card_art/tide_frost_ripple
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cac0667002d74b43a71187b344fab0e
-    m_Address: card_art/art_verdant_wild_bloom
+    m_Address: card_art/verdant_wild_bloom
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2640e5c49177d4542a4ff8f3bc897bff
-    m_Address: card_art/art_ember_scorch_blade
+    m_Address: card_art/ember_scorch_blade
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27483a35eacdf3444866199d4b4a9e04
-    m_Address: card_art/art_relic_bound_revenant
+    m_Address: card_art/bound_revenant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2783981052364213bd2307471ae05fe3
+    m_Address: card_art/storm_static_discharge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 28054ab380fb3b7428b16b4e42640162
-    m_Address: card_art/art_ember_slagshell_bulwark
+    m_Address: card_art/ember_slagshell_bulwark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2901ae6a082ab42458a0134c1e1f4422
-    m_Address: card_art/art_ember_fusillade
+    m_Address: card_art/ember_fusillade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a2702aaf5092af488d90fba86c4f8ba
+    m_Address: card_art/stone_rock_golem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ad429463a058654bb35c21669b9e272
-    m_Address: card_art/art_verdant_worldroot_behemoth
+    m_Address: card_art/verdant_world_root_behemoth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c586e3472b3e219e648774fc7574ce1
+    m_Address: card_art/clock_the_great_mechanism
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ce04a04f19c91b41a488f85a37882a5
-    m_Address: card_art/art_grave_warden_of_dusk
+    m_Address: card_art/grave_warden_of_dusk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2eae1c13dfdafc346aadd20b99bb2f10
+    m_Address: card_art/storm_chain_lightning
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2f5203d64df2ab642ba70149c5e48130
-    m_Address: card_art/art_clock_bronze_frame
+    m_Address: card_art/clock_bronze_frame
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2fc80945610494442aa5af25856ee6ac
-    m_Address: card_art/art_verdant_seedling_rite
+    m_Address: card_art/verdant_seedling_rite
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 30bbbfce399544b4587ddafcf43bb058
-    m_Address: card_art/art_ember_emberdrinker
+    m_Address: card_art/ember_emberdrinker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 322afd87a2b1f764daf6fee1db3e31c5
-    m_Address: card_art/art_grave_chained_revenant
+    m_Address: card_art/grave_chained_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 344028a6d839885429647f9bd6b4dcf1
-    m_Address: card_art/art_storm_hurricane
+    m_Address: card_art/storm_hurricane
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 34d88d4acb4baaa4aa4befd64e000b04
-    m_Address: card_art/art_canopy_guardian
+    m_Address: card_art/canopy_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35b893b107fb4784a99b31da6a46272c
-    m_Address: card_art/art_verdant_rootweaver
+    m_Address: card_art/verdant_rootweaver
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 37409d8366764a5ba45031a113fd1618
+    m_Address: card_art/tide_deep_channel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 39c19a24cd469b8459f6e086d9a124da
-    m_Address: card_art/art_night_shadow_stalker
+    m_Address: card_art/night_shadow_stalker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3aa67a9d3c754154b898245f5c9f8ac0
-    m_Address: card_art/art_night_finish_the_job
+    m_Address: card_art/night_finish_the_job
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3dfed8b750bb45a494a5562b91d82957
+    m_Address: card_art/tide_glacial_echo
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3e7b70083c4df9f43a4917aa08c525de
-    m_Address: card_art/art_grave_spectral_wolf
+    m_Address: card_art/grave_spectral_wolf
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3fc6b7f2e92e882459328a6c0fb129d2
-    m_Address: card_art/art_tide_deepfrost_spear
+    m_Address: card_art/tide_deepfrost_spear
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40fbd71823b95cb4e93ef14f3c2cf88a
-    m_Address: card_art/art_verdant_grasping_thornvine
+    m_Address: card_art/verdant_grasping_thornvine
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4163c1a5cba852340b51cfdbe7d34369
-    m_Address: card_art/art_clock_assembly_drone
+    m_Address: card_art/clock_assembly_drone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 42a9af08e64a4814fbb5aa2c52ead22c
-    m_Address: card_art/art_tide_icecrown_herald
+    m_Address: card_art/tide_icecrown_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 433760b319246be4caaf6804d35456fe
-    m_Address: card_art/art_clock_snap_bolt
+    m_Address: card_art/clock_snap_bolt
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43d6df88a759b2241870220f2f2cf294
-    m_Address: card_art/art_clock_spring_coil
+    m_Address: card_art/clock_spring_coil
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 44cf84dea53b76d43861893e1882790c
-    m_Address: card_art/art_verdant_mosshide_stag
+    m_Address: card_art/verdant_mosshide_stag
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46eebc9ae9712bd4096dc1405b7cb385
-    m_Address: card_art/art_neutral_bog_crawler
+    m_Address: card_art/bog_crawler
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 48d1eca9259e3b64da5cd95f4e6afed5
-    m_Address: card_art/art_storm_zael_of_the_struck_sky
+    m_Address: card_art/storm_zael_of_the_struck_sky
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48e04f01b91740588a29edf3e96e4d31
+    m_Address: card_art/lifeclaw_bat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b150d40d27dfc140b8a15a90e38b3dd
-    m_Address: card_art/art_ember_forgeheart_colossus
+    m_Address: card_art/ember_forgeheart_colossus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4ff22fd7e03a1f24596c672530c418cd
-    m_Address: card_art/art_neutral_phantom_duelist
+    m_Address: card_art/phantom_duelist
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51795eae9bdebad49a497feb0d58bd06
-    m_Address: card_art/art_verdant_thornback_cub
+    m_Address: card_art/verdant_thornback_cub
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5278fcfc1e7ec22459b812dbbabaedf0
-    m_Address: card_art/art_ember_scalded_striker
+    m_Address: card_art/ember_scalded_striker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 53c9d3564841ef54aa35aad0b57708c4
-    m_Address: card_art/art_verdant_thorn_swarm
+    m_Address: card_art/verdant_thorn_swarm
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 555f515b28c83344187fb9df52dbb257
-    m_Address: card_art/art_core_thistleguard_sprig
+    m_Address: card_art/thistleguard_sprig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 59ea0aa18c5b96441a17b6bff2921d2c
-    m_Address: card_art/art_tide_hoarfrost_lash
+    m_Address: card_art/tide_hoarfrost_lash
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5af790d5d86e6624fa7931048d5f9e24
-    m_Address: card_art/art_wave_caller
+    m_Address: card_art/tide_wave_caller
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5da9e10bf90a48949a554d5bbfe09ec7
-    m_Address: card_art/art_neutral_doublestrike_hawk
+    m_Address: card_art/doublestrike_hawk
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e0bb383c903ae94ca262f375812fcc0
-    m_Address: card_art/art_tide_glacierborn_leviathan
+    m_Address: card_art/tide_glacierborn_leviathan
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60caacfddd2b444d93d9f16b3dc68d0c
+    m_Address: card_art/grave_bone_horde
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 61c90461d740d674995dbb9a41cb1ad8
-    m_Address: card_art/art_grave_last_rite
+    m_Address: card_art/grave_last_rite
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69c5a2f2a22565a40a52748fe7554774
-    m_Address: card_art/art_grave_sorrows_blessing
+    m_Address: card_art/grave_sorrows_blessing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6cde57061e0d30c41be99246e95789d0
-    m_Address: card_art/art_ember_zealot
+    m_Address: card_art/ember_zealot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e53345b82944a9ebb8da08f7c1d97ed
+    m_Address: card_art/verdant_greatroot_speaker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 70447bd993be10f4eb77c98546b50ae8
-    m_Address: card_art/art_ward_pebble_sentinel
+    m_Address: card_art/stone_pebble_sentinel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7096e4501c1f5c6e38795592f2405317
+    m_Address: card_art/stone_earthen_blessing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 715ff72d77585b3468d0b1932ad28b13
-    m_Address: card_art/art_night_fade_out
+    m_Address: card_art/night_fade_out
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7174b2284ed23c54c8e267524763083d
-    m_Address: card_art/art_ember_vanguard_drake
+    m_Address: card_art/ember_vanguard_drake
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71eea5635520cfd45ab21c230cbb8982
-    m_Address: card_art/art_grave_ashen_archivist
+    m_Address: card_art/grave_ashen_archivist
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73ffc2d3bea815c4b9770f325b785da2
-    m_Address: card_art/art_verdant_thalens_ancient
+    m_Address: card_art/verdant_thalens_ancient
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 75bc42f263a89304f8ed100994b81019
-    m_Address: card_art/art_grave_tollkeeper_moth
+    m_Address: card_art/grave_tollkeepers_moth
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 76670ba006a00c74faf8e270b731123d
-    m_Address: card_art/art_tide_abyssal_devourer
+    m_Address: card_art/tide_abyssal_devourer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79975a4a19639304d9d9294b9d65b1f3
-    m_Address: card_art/art_grave_bell_novice
+    m_Address: card_art/grave_bell_novice
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c1d75d2e26f3f04986de4a1c83991fb
-    m_Address: card_art/art_clock_temporal_rewinder
+    m_Address: card_art/clock_temporal_rewinder
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 805a47ea73f30ae4bb889cba55294358
-    m_Address: card_art/art_grave_harrower_of_ash
+    m_Address: card_art/grave_harrower_of_ash
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 82330093e4f99f64097343881b8ea666
-    m_Address: card_art/art_night_vanishing_act
+    m_Address: card_art/night_vanishing_act
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8394e293d4e36e649b251398b2421329
-    m_Address: card_art/art_verdant_menders_bloom
+    m_Address: card_art/verdant_menders_bloom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 843c1df1906136649a9ef6ff97d04767
+    m_Address: card_art/stone_throw
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 85ffd97f0098cb4419dbd838c512401e
-    m_Address: card_art/art_ember_stoke_the_coals
+    m_Address: card_art/ember_stoke_the_coals
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86b3c476a62642368c108d47861f3344
+    m_Address: card_art/tide_coldsnap_knife
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8798d6986ca7be64f9564758b07737c7
-    m_Address: card_art/art_grave_charnel_priest
+    m_Address: card_art/grave_charnel_priest
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89e9d918c9560214e88a086de23e00c7
-    m_Address: card_art/art_storm_thunder_hoof
+    m_Address: card_art/storm_thunder_hoof
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ee925debd20fc2039e93840083de24e
+    m_Address: card_art/stone_rain
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9146f2c8394f4d44abce8fc1dee7481e
+    m_Address: card_art/storm_static_shock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94ae0954b2994945a45eeced840a48f6
+    m_Address: card_art/verdant_primal_mend
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9528314bd3dd7c44181cb03bef779f55
-    m_Address: card_art/art_bonewright
+    m_Address: card_art/bonewright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 955cea3024864f1468b9e0d1b022f63b
+    m_Address: card_art/storm_gust_sprite
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 981d12bbc1a9deb498f8cb5cb82ed4a7
-    m_Address: card_art/art_night_lurk_wisp
+    m_Address: card_art/night_lurk_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98d45c89bfc8d8846a1d78c9fa83cd1e
-    m_Address: card_art/art_ember_ashfall_wyrm
+    m_Address: card_art/ember_ashfall_wyrm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a144f3560b649ffb576fb578c8d923c
+    m_Address: card_art/storm_tempest_striker
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a58a32fe17d479887d957fd04f7a619
+    m_Address: card_art/storm_lightning_storm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a709547e358d00d2f04624868b38e45
+    m_Address: card_art/stone_stomp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9d671807379fe2b449244dedfdfaa1a5
-    m_Address: card_art/art_clock_gear_imp
+    m_Address: card_art/clock_gear_imp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9e04968b3dd67cc42aa6b908eadd6549
-    m_Address: card_art/art_clock_chrono_construct
+    m_Address: card_art/clock_chrono_construct
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9f4ba82978c611d41a58908ce9921b4d
-    m_Address: card_art/art_grave_graven_bell
+    m_Address: card_art/grave_graven_bell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0406593d61fc354895b5ffe5a8b8861
-    m_Address: card_art/art_tide_initiate
+    m_Address: card_art/tide_initiate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1cf67aed4bf14748be01e5536878d34
-    m_Address: card_art/art_tide_oracle
+    m_Address: card_art/tide_oracle
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a483fc4f067c4024daa5bc90da962f26
-    m_Address: card_art/art_elderwood_colossus
+    m_Address: card_art/elderwood_colossus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a49838da921fcd045a3d742469b02d99
-    m_Address: card_art/art_night_viper_fang
+    m_Address: card_art/night_viper_fang
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a66637171296ff940ad4097baaccd4a1
-    m_Address: card_art/art_tide_hollowshell_warden
+    m_Address: card_art/tide_hollowshell_warden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a68b5f2dadb055a4db239bbc1afd48f0
-    m_Address: card_art/art_grave_bell_maul
+    m_Address: card_art/grave_maul
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7a34ab4947148249db2114f0b0643d2
+    m_Address: card_art/storm_crackle
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a88fa54dbd403b043a745537d1de33d3
-    m_Address: card_art/art_bell_maul
+    m_Address: card_art/bell_maul
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aaf3dd58ae8089b4e8b5eeee3214e60d
-    m_Address: card_art/art_ward_siege_golem
+    m_Address: card_art/stone_siege_golem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b0da1bf65224a584790cc79cc095e679
-    m_Address: card_art/art_core_choking_vines
+    m_Address: card_art/choking_vines
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b2f55e6756959024a988b8273a2d853c
-    m_Address: card_art/art_grave_custodian
+    m_Address: card_art/grave_gravekeep_custodian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b353c062830e40a458fab9fb257622f0
-    m_Address: card_art/art_tide_maren_avatar
+    m_Address: card_art/tide_marens_avatar
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b38c3d1aa0cbca64486a26cf97a9fe01
-    m_Address: card_art/art_clock_modular_stalker
+    m_Address: card_art/clock_modular_stalker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b710845155427c24bbb617d69329bcaf
-    m_Address: card_art/art_grave_gatewatch_whelp
+    m_Address: card_art/grave_gatewatch_whelp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b905a8d8af67cd4469e2c2bc841d778c
-    m_Address: card_art/art_clock_clockwork_sniper
+    m_Address: card_art/clock_clockwork_sniper
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bd236c53f820ce14e89a87b8f90cfabc
-    m_Address: card_art/art_verdant_bramblehide_guardian
+    m_Address: card_art/verdant_bramblehide_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bd481e2ddbf41324888dc3b20d61aae1
-    m_Address: card_art/art_verdant_venomthorn
+    m_Address: card_art/verdant_venomthorn
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf4802f50b7135c41a20a13d770f02c6
-    m_Address: card_art/art_ember_blazewing
+    m_Address: card_art/ember_blazewing
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bfe5f01322e7f844b8e330b0183189e2
-    m_Address: card_art/art_grave_sealed_gate_keeper
+    m_Address: card_art/grave_keeper_of_the_sealed_gate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1f9ae42b8bf648419f6db364b72bc78
-    m_Address: card_art/art_night_shadow_walk
+    m_Address: card_art/night_shadow_walk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8208b2726d84f039d61a8147377d3ed
+    m_Address: card_art/grave_echoing_knell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: caef4cb9896190043a72b3aa6bf74e01
-    m_Address: card_art/art_verdant_canopy_seer
+    m_Address: card_art/verdant_canopy_seer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cb699771f3d71e249a79fed283ebfa78
-    m_Address: card_art/art_storm_spark_imp
+    m_Address: card_art/storm_spark_imp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc7eda77f1ed44569d1496709582b508
+    m_Address: card_art/tide_frostwhisper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdd6cf9767f94a9b935dbacbd2402d38
+    m_Address: card_art/grave_boneshield_sentinel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1533a8d7068d694d93ce1bab83d5699
-    m_Address: card_art/art_ward_duras_the_ironmount
+    m_Address: card_art/stone_duras_the_ironmount
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1779c627d9fe6c4387ef235cb8ecf8d
-    m_Address: card_art/art_neutral_galewind_runner
+    m_Address: card_art/galewind_runner
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d213fc25225a10bc9b05780ffa572aa2
+    m_Address: card_art/stone_colossus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d51219daf7af3e142aa1106a49dbf4a6
-    m_Address: card_art/art_verdant_elderroot_colossus
+    m_Address: card_art/verdant_elderroot_colossus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d942cdf6fa7b1064c834b9d4d3d4c813
-    m_Address: card_art/art_grave_deathweaver
+    m_Address: card_art/grave_deathweaver
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d9c466795b60abf4a8395a40d6b1cbbd
-    m_Address: card_art/art_grave_wailing_chorus
+    m_Address: card_art/grave_wailing_chorus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db143749e9970a0428093b1717ff7c94
-    m_Address: card_art/art_tide_drowned_titan
+    m_Address: card_art/tide_drowned_titan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfeaa0bd2be34c640812ee519ac393d6
-    m_Address: card_art/art_grave_last_gate_warden
+    m_Address: card_art/grave_last_gate_warden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0b8061f770922443a22ca18cbd8dd8f
-    m_Address: card_art/art_wandering_scout
+    m_Address: card_art/wandering_scout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0edf5257df145448d7809917c41dc0c
+    m_Address: card_art/tide_icescale_whelp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e354c3944f1e03b42b4778b78d45381e
-    m_Address: card_art/art_night_death_mark
+    m_Address: card_art/night_death_mark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e4806b7fc77d9994f8d784de7d132355
-    m_Address: card_art/art_clock_overclocker
+    m_Address: card_art/clock_overclocker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e4c28d2ff47dd0c48ad3a513ea8810f7
-    m_Address: card_art/art_verdant_world_titan
+    m_Address: card_art/verdant_world_titan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e72332e336cf0e349857ffb6d3627db9
-    m_Address: card_art/art_night_venom_asp
+    m_Address: card_art/night_venom_asp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e7a71078e4e89cc4cb17c5bb7646d5c4
-    m_Address: card_art/art_tide_venomfin
+    m_Address: card_art/tide_venomfin
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eba85c29fc803eb42b753cad1cd1d8f7
-    m_Address: card_art/art_night_shadow_dart
+    m_Address: card_art/night_shadow_dart
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee0f76134025e684d81ecfda8bb36f60
+    m_Address: card_art/storm_lightning_bolt
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f09055eb55e944a4893e2bcd374073ce
-    m_Address: card_art/art_night_void_shriek
+    m_Address: card_art/night_void_shriek
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f104bc6a4396ce24cb9a34ce2c989729
-    m_Address: card_art/art_verdant_ironbark_elder
+    m_Address: card_art/verdant_ironbark_elder
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f507a8cf0763d8540838bf18a941ffc0
-    m_Address: card_art/art_verdant_windroot_sprinter
+    m_Address: card_art/verdant_windroot_sprinter
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6f5edc28ed7fae47a0cc48dc8a1eb35
-    m_Address: card_art/art_clock_gear_overhaul
+    m_Address: card_art/clock_gear_overhaul
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f70dd1252d484ed459e38edef795c405
-    m_Address: card_art/art_cinder_drake
+    m_Address: card_art/ember_cinder_drake
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f7c5dcdede1fc0d47a7ba57436b6928b
-    m_Address: card_art/art_ember_recruit
+    m_Address: card_art/ember_recruit
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd0d2c6b551722645b91e9f9c2df7a15
-    m_Address: card_art/art_night_kira_blade_of_shadows
+    m_Address: card_art/night_kira_blade_of_shadows
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd3fa8a4fa04f0c47a527d1884dcc32c
-    m_Address: card_art/art_ember_kiln_warden
+    m_Address: card_art/ember_kiln_warden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fdf6d30057d0f4748a69342a708ef2d7
-    m_Address: card_art/art_neutral_razorcoil_adder
+    m_Address: card_art/razorcoil_adder
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fe74160637d67a742b4497297167f664
-    m_Address: card_art/art_grave_plague_bringer
+    m_Address: card_art/grave_plague_bringer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: feab56e4d6ccf6b43970401f75eba86a
+    m_Address: card_art/storm_wind_rider
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

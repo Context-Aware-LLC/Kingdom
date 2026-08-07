@@ -16,192 +16,192 @@ MonoBehaviour:
   m_GUID: 4fcd2abf9b7874746b2b6813d64eb1c1
   m_SerializeEntries:
   - m_GUID: 001eb38d96cb25a4ab7f3192bce2b177
-    m_Address: card_art/art_hero_emberward
+    m_Address: card_art/hero_emberward
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 08d33cc2d0eef1441bc23c36071025d0
-    m_Address: card_art/art_hero_power_toll_the_bell
+    m_Address: card_art/grave_hero_power_toll_the_bell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0c3d9b602c451b649904b87ad3df8e09
-    m_Address: card_art/art_tide_frostbind
+    m_Address: card_art/tide_frostbind
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10aabc05934cd0a44ab413d1b5eab5b3
-    m_Address: card_art/art_core_stoneback
+    m_Address: card_art/stoneback_sentry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cf80b394dcaa41459ca099be99ceda2
-    m_Address: card_art/art_hero_power_searing_bolt
+    m_Address: card_art/ember_hero_power_searing_bolt
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 221c306fd2ba8b84cbf9b175b2aed9be
-    m_Address: card_art/art_core_veilstalker
+    m_Address: card_art/veilstalker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a234e08b68ddfb4d9d27c6f12b3b5ca
-    m_Address: card_art/art_nameless_bell
+    m_Address: card_art/nameless_bell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a8446fc7d78cd747bb5efa147ee6331
-    m_Address: card_art/art_token_wisp_1_1
+    m_Address: card_art/token_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ea9709b522ad4a43be804abdac8fa97
-    m_Address: card_art/art_core_bonehound
+    m_Address: card_art/ravenous_bonehound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3a2f890befd410e439c056bab9628635
-    m_Address: card_art/art_hero_gravekeep
+    m_Address: card_art/hero_gravekeep
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b9ac410c19d8e24a909d470670b2e25
-    m_Address: card_art/art_tide_siren
+    m_Address: card_art/tide_hollow_tide_siren
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4032b546faf1e544ca8647f4fa64371a
-    m_Address: card_art/art_token_thorn_cub
+    m_Address: card_art/token_thorn_cub
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4a172684b04b1e94f814e5e51608850a
-    m_Address: card_art/art_hero_power_tidal_ward
+    m_Address: card_art/tide_hero_power_tidal_ward
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b1e6e7f23f633d41949fc6fec633990
-    m_Address: card_art/art_core_throneless_king
+    m_Address: card_art/throneless_king
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 555c15b3029922e48aeaac9fbefc2b93
-    m_Address: card_art/art_bronzegate_warden
+    m_Address: card_art/bronzegate_warden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56ad92607bff7ca478df793c378fec37
-    m_Address: card_art/art_core_lantern_bearer
+    m_Address: card_art/gravelight_lantern_bearer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6dbe77c06590205448d3566db990038a
-    m_Address: card_art/art_core_emberling
+    m_Address: card_art/emberling_pup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7ab3a59080811194195b8a4f709f125f
-    m_Address: card_art/art_tide_reefguard
+    m_Address: card_art/tide_reefguard_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8014240f8de949f43aee1d021c31238f
-    m_Address: card_art/art_token_revenant
+    m_Address: card_art/token_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 85a7bbe4a822b91468c54eef9929ad33
-    m_Address: card_art/art_token_spark_coin
+    m_Address: card_art/token_the_spark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 864ed0bfe8a545a458cd09958e0fac5c
-    m_Address: card_art/art_ember_cinder_lance
+    m_Address: card_art/ember_cinder_lance
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8a1270e22ed5b294e9970eb0b49a7b87
-    m_Address: card_art/art_shieldbreaker
+    m_Address: card_art/shieldbreaker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b5dd77eed70c52428ef2858f0369339
-    m_Address: card_art/art_tide_undertow
+    m_Address: card_art/tide_undertow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8db92d31ebfea4c419b3f4d7caa9ea41
-    m_Address: card_art/art_core_grove_mender
+    m_Address: card_art/grove_mender
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ec58938553cffe4b99d557e40d89103
-    m_Address: card_art/art_hero_power_quicken
+    m_Address: card_art/verdant_hero_power_quicken
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91bdbd6fca827e14db97a3f98f3c7a54
-    m_Address: card_art/art_core_arclight_adept
+    m_Address: card_art/arclight_adept
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 93160918b9bcf27448f72f5fe0c10636
-    m_Address: card_art/art_token_tide_wisp
+    m_Address: card_art/tide_token_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9885088a63ee9f94aa6aa1671cdee725
-    m_Address: card_art/art_ember_overheat_golem
+    m_Address: card_art/ember_overheat_golem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ce9c692eebbf314fa6428928194404c
-    m_Address: card_art/art_hero_tidecaller
+    m_Address: card_art/hero_tidecaller
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9dde26689ef040540843b6d727266802
-    m_Address: card_art/art_ember_pyras_wrath
+    m_Address: card_art/ember_pyras_wrath
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a33142ca8a8b16242845a63e191549fd
-    m_Address: card_art/art_core_aegis_templar
+    m_Address: card_art/aegis_templar
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bdee2f3219e3a0440904e689424a64c1
-    m_Address: card_art/art_core_hollow_acolyte
+    m_Address: card_art/hollow_acolyte
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0cd2374a545c0e428e48ed5f9202608
-    m_Address: card_art/art_ember_twin_flame
+    m_Address: card_art/ember_twin_flame_strike
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1e483cbd6f102a489dc29056f4bdf77
-    m_Address: card_art/art_token_shade
+    m_Address: card_art/token_shade
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7d46df061a92624cb972e37127ed754
-    m_Address: card_art/art_ember_scorch
+    m_Address: card_art/ember_scorch
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d49f17df00bdb254292e6f34dbfd3429
-    m_Address: card_art/art_tide_deep_bargain
+    m_Address: card_art/tide_marens_deep_bargain
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: da0f9c361fd54dd4aafacdc9d3b516c5
-    m_Address: card_art/art_twinstrike_sentinel
+    m_Address: card_art/twinstrike_sentinel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e40dba5df342fdd42bb5a5a69ac84fbd
-    m_Address: card_art/art_hero_verdant
+    m_Address: card_art/hero_verdant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
