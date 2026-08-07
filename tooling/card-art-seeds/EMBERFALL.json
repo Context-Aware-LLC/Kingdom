@@ -1,0 +1,302 @@
+{
+  "clock_assembly_drone": {
+    "subject": "A compact hovering workshop drone with a round brass body, four articulated tool arms, and one bright arc-blue lens. It is assembling a single tiny Gear Wisp beneath itself: three loose cogs and a blue spark just beginning to form a simple face-like core. The drone is practical, balanced, and about the size of a large toolbox.",
+    "perspective": "Eye-level three-quarter view with the drone centered and the nascent Gear Wisp directly beneath it as a clearly subordinate effect; generous margin around both.",
+    "background": "A shadowed assembly alcove of cool iron shelving and blurred hanging chains, punctuated by restrained amber task lights that separate the polished brass body.",
+    "notes": "Keep the drone as the one primary subject. The summoned Gear Wisp is small, unfinished, and visually secondary; no swarm of helpers."
+  },
+  "clock_bronze_frame": {
+    "subject": "A small, narrow humanoid construct whose body is literally a freestanding bronze armature: open rib-like struts, precise hinge joints, a round arc-blue core, and no bulky armor. It stands on a workbench and presents a freshly ejected blank parchment sheet from a slot in its chest, like a quiet mechanical herald. The design is useful and slightly worn, not heroic or intimidating.",
+    "perspective": "Close three-quarter view at workbench height, with the complete compact silhouette and chest mechanism readable inside the middle 70%.",
+    "background": "A dark clockmaker's workshop of charcoal iron and cool blue shadow, with only a few dim amber bench lamps and softly blurred tools; strong value contrast behind the polished bronze frame.",
+    "notes": "Its card draw is represented by one blank parchment sheet emerging from the mechanism. No writing, symbols, diagrams, or extra figures."
+  },
+  "clock_clockwork_sniper": {
+    "subject": "A compact humanoid Clockwright construct crouches behind a waist-high stone parapet, roughly human-sized rather than towering. Its narrow brass torso, oiled-steel joints, and single arc-blue lens are built for precision, not intimidation. One forearm unfolds into a restrained spring-driven bolt caster aligned with the glowing lens; at its tip, a small needle-thin arc-blue aiming spark marks the instant before firing. The opposite three-fingered hand braces naturally on the parapet. A few exposed gears turn at the shoulder, but the silhouette stays clean and practical.",
+    "perspective": "Medium eye-level three-quarter view across a workshop parapet, with the entire compact construct and its aiming arm visible inside the middle 70%.",
+    "background": "A pale, cold blue-grey dawn seen through a broken workshop window, softly lit and uncluttered; the darker brass-and-steel construct reads crisply against it.",
+    "notes": "No enormous rifle, cannon, muzzle explosion, target reticle, scope markings, ammunition belt, cape, or battlefield destruction. Scraped from the draft brief this card was generated from (clock_clockwork_sniper)."
+  },
+  "clock_gear_overhaul": {
+    "subject": "One large damaged gear of cold blued steel and oxidized turquoise copper suspended in a precise ring of ivory-ceramic repair tools as cracked teeth are removed and two fresh molten-gold teeth click into place. Below it, only the blurred shoulders of a few small constructs catch the same measured golden pulse, implying a coordinated upgrade without creating competing subjects.",
+    "perspective": "Slightly top-down close view centered on the repaired gear and the circle of tools; the gear fills the middle of the image with clean negative space around its silhouette.",
+    "background": "A furnace-lit overhaul bay washed in dusty coral, burnt sienna, and soft rose smoke. The turquoise-and-blue steel gear reads cool and crisp against the warm matte setting, with no black void behind it.",
+    "notes": "Palette priority: oxidized turquoise and blued steel subject against dusty coral and burnt-sienna atmosphere, with molten gold as the focal accent; avoid an arc-blue glow. Show improvement through exact replacement and alignment, not destruction. No readable plans, letters, numerals, or giant blast."
+  },
+  "clock_mass_recall": {
+    "subject": "A vast Clockwright recall mechanism has opened like a horizontal mechanical iris: three concentric brass rings rotate backward around a brilliant arc-blue center while copper mainsprings rewind in perfect unison. One solid humanoid construct is being recalled into the aperture, cleanly separating into large armor plates, gears, and limbs that travel backward along precise curved paths; its intact upper torso remains the readable secondary silhouette, not a crowd. A few tiny distant parts from other recalled machines arc toward the same center to imply battlefield-wide scale without becoming competing subjects. The effect is orderly and exact, like time reversing a careful assembly process—not an explosion, vortex, or portal to another place.",
+    "perspective": "Steep three-quarter view into a huge circular recall aperture, with its bright center and the recalled construct's torso inside the middle 70%.",
+    "background": "A cavernous near-black assembly hall of charcoal stone and unlit iron gantries; the brass mechanism, pale recalled parts, and arc-blue rings carry nearly all the light.",
+    "notes": "No clock numerals, writing, diagrams, or rune-like marks. Scraped from the draft brief this card was generated from (clock_mass_recall)."
+  },
+  "clock_modular_stalker": {
+    "subject": "A sleek quadrupedal hunting construct shaped like a low mechanical panther, built from interchangeable matte black-steel modules joined by pale brass locking rings. It prowls across a frost-white stone beam with one paw lifted; two small magenta-violet memory cores are visible inside opened flank compartments, designed to release intact if the body is destroyed. A few hairline arc-blue seams remain secondary. Its silhouette is agile and predatory but still machine-like.",
+    "perspective": "Low side three-quarter view at beam height, showing the entire stalking body from head to tail and keeping both glowing flank cores readable in the central area.",
+    "background": "An open ruined viaduct during pale ember-snow, with a hazy ash-pink sky, bone-white masonry, and muted mauve distance. The near-black stalker reads as a clean dark silhouette against the bright outdoor background.",
+    "notes": "Palette priority: ash pink, bone white, and mauve environment; matte black and pale brass subject; two magenta-violet cores; arc-blue only in hairline seams. The two memory cores quietly foreshadow drawing two cards on death. No gore, no prey, no pack, and no oversized monster staging."
+  },
+  "clock_overclocker": {
+    "subject": "A lean, precise humanoid construct of blackened steel and pale nickel turning the red-hot governor wheel mounted in its own open chest. Verdigris-copper fingers lock onto the wheel as thin copper-orange synchronization pulses travel through a few connected cables toward indistinct friendly constructs beyond the focal plane. A single tiny arc-blue indicator remains as a restrained Clockwright signature. Its posture is controlled and technical, not berserk.",
+    "perspective": "Waist-up low three-quarter view focused on the hands, governor wheel, and single bright chest core, with the full head silhouette safely inside the middle 70%.",
+    "background": "A high-key foundry flooded with pale pearl steam, chalk-white masonry, and diffuse mint daylight. Distant constructs are soft grey silhouettes, giving the dark body and hot vermilion-orange governor strong value and temperature contrast.",
+    "notes": "Palette priority: pale pearl and mint background; black steel, nickel, and verdigris subject; hot vermilion-orange focal mechanism; arc-blue only as one tiny indicator. The team-wide buff is a controlled synchronization pulse, not an explosion. Keep all other constructs indistinct and secondary."
+  },
+  "clock_snap_bolt": {
+    "subject": "A palm-sized clockwork launcher at the instant its compressed spring snaps straight, driving a single heavy bronze bolt forward inside a tight ribbon of arc-blue force. The mechanism is crisp and legible: cocked jaws, released coil, one projectile, one compact impact against a cracked iron practice plate.",
+    "perspective": "Dynamic extreme three-quarter close-up along the bolt's path, with the launcher and impact both inside the central composition and the action reading left-to-right without cropping the mechanism.",
+    "background": "A dim charcoal test bay with muted steel walls and faint amber work lights; the small arc-blue discharge supplies the sharpest color and value contrast.",
+    "notes": "This is a cost-1 spell: a quick, local mechanical strike, not lightning from the sky and not a battlefield explosion. No people or additional targets."
+  },
+  "clock_spring_coil": {
+    "subject": "A squat defensive construct built around one enormous tightly wound brass mainspring. Four short oiled-steel legs brace wide while curved bronze plates overlap around the coil like a shield shell; a tiny arc-blue eye peers from beneath the upper plate. It blocks a workshop passage with stubborn mechanical weight rather than aggression.",
+    "perspective": "Low frontal three-quarter view, close enough to make the coiled spring and braced stance the unmistakable silhouette, while keeping every limb visible.",
+    "background": "A tall, nearly black foundry corridor with cold steel walls and a warm furnace glow far behind the construct, leaving the bronze coil bright against deep shadow.",
+    "notes": "Bulwark should read through stance and construction alone: planted, compact, difficult to move. No giant scale, attack pose, or explosive magic."
+  },
+  "clock_temporal_rewinder": {
+    "subject": "A dark antique-bronze rewind dial operated by one articulated mechanical hand of black iron. As the dial turns backward, a single mid-sized construct is drawn into a controlled translucent lavender-and-pale-cyan time loop and separates cleanly into ordered armor plates, gears, and springs that travel toward a compact aperture; one blank parchment card slips from the dial housing.",
+    "perspective": "Oblique close view with the rewind dial as the central focal point, the dissolving construct fully visible behind it, and the mechanical hand entering from below.",
+    "background": "An almost white temporal chamber dissolved into foggy ivory, faint peach, and cool lilac planes. The dark bronze dial and hand make a graphic silhouette against the luminous high-key void rather than another dark workshop.",
+    "notes": "Palette priority: luminous ivory and lilac background, dark bronze focal mechanism, translucent lavender and pale cyan magic, with no orange furnace glow. Communicate returning one minion and drawing one card. The separated pieces remain orderly and intact, not shattered; no writing or numerals on the dial or parchment."
+  },
+  "clock_the_great_mechanism": {
+    "subject": "A colossal autonomous clockwork engine shaped like a walking astronomical observatory: a broad oiled-steel body wrapped in interlocking brass rings, enormous counterweighted shoulders, and a crown of slowly turning gears surrounding one brilliant arc-blue lens. Its chest is open just enough to reveal a precise blue-white mainspring core, while one massive shield-like forearm plants forward as it advances. Tarnished copper cabling and suspended pendulums show immense functional complexity without visual clutter. The machine is ancient but exquisitely maintained, implacable rather than angry; no pilot, no exposed human figure, no writing, numerals, or rune-like marks.",
+    "perspective": "Monumental low-angle three-quarter view, looking up from the foundry floor; the central core and gear-crown remain inside the middle 70%.",
+    "background": "A nearly black, cavernous ruined foundry with cold charcoal masonry and only a few distant falling orange embers; the bright brass silhouette and arc-blue core stand against deep value contrast.",
+    "notes": "Scraped from the draft brief this card was generated from (clock_the_great_mechanism)."
+  },
+  "ember_scalded_striker": {
+    "subject": "A lean Emberward skirmisher in patched char-black leather and a few rusted iron plates, lunging through a tight cloud of cooling steam with one short ember-red spear. Fresh scald marks discolor the metal of one gauntlet but the fighter is alert and controlled; a single compact cinder pulse snaps from the spear tip toward a small cracked stone training effigy at the edge of the action.",
+    "perspective": "Low close three-quarter action view with the skirmisher's full silhouette, spear, and one clearly secondary practice target contained inside the central composition.",
+    "background": "A rain-dark blue stone alley at night, with cool slate walls, dim cyan stormlight, and sparse steam that makes the molten-orange spear edge and gold sparks read sharply.",
+    "notes": "Skirmish reads through one quick forward step; Herald damage is the single restrained cinder pulse. Keep the fighter human-sized and workmanlike, with no banner, army, giant fire wave, gore, or battlefield explosion."
+  },
+  "grave_deathweaver": {
+    "subject": "A slight hooded undead artisan seated at a compact funerary loom of iron-grey rods and worn bronze gears. Bone-white fingers guide one sickly green-gold soul-thread through a narrow strip of completely blank ivory parchment; at the instant the thread snaps, the finished blank strip slips free into one waiting hand. The figure is solemn and diligent, not a grand reaper or combatant.",
+    "perspective": "Intimate eye-level three-quarter view focused on the complete seated silhouette, both hands, the small loom, and the single blank parchment strip, all centered with clean margins.",
+    "background": "A warm amber memorial workshop with dark cedar shelves, softly blurred candle niches, and muted ember-glow, providing warm value contrast behind the cool bone and iron subject.",
+    "notes": "Deathrattle and card draw read through the snapped soul-thread releasing one blank parchment strip. No writing, symbols, extra cards, spider anatomy, giant loom, weapon, gore, or explosive magic."
+  },
+  "neutral_bog_crawler": {
+    "subject": "A small low-slung marsh beast with a broad wedge-shaped head, six quick jointed legs, a bronze-brown plated back, mossy ridges, and two bright lantern-amber eyes. It scrambles out of shallow water toward the viewer, flinging one tight fan of droplets while its full compact body remains readable; the creature feels ancient, weathered, and adapted to ruined wetlands.",
+    "perspective": "Very low eye-level three-quarter view just above the waterline, with the crawler's complete silhouette centered and its forward motion aimed slightly across the frame rather than directly into camera.",
+    "background": "A cool blue-grey twilight bog among half-submerged foundation stones, pale reeds, and thin silver mist, providing muted value and temperature contrast behind the warm bronze-brown beast.",
+    "notes": "Skirmish reads as one quick local lunge. Keep it dog-sized at most, with no giant monster scale, no venom spray, no swarm, and no catastrophic splash."
+  },
+  "neutral_doublestrike_hawk": {
+    "subject": "A large natural hawk with stone-grey flight feathers, warm bronze-brown shoulders, pale cream throat, and sharp lantern-amber eyes banking hard above a ruined watch road. One powerful downstroke creates two closely spaced translucent feather-traces behind each wing, communicating a rapid second beat while remaining unmistakably one bird. Its talons are tucked and its body is controlled rather than attacking prey.",
+    "perspective": "Dynamic close three-quarter flight view from slightly below, with the hawk's full wingspan, tail, head, and both paired wingbeat traces contained inside the middle composition.",
+    "background": "A cool overcast blue-grey sky above weathered stone towers and muted green hills, with a narrow shaft of pale light separating the warm bird from the subdued landscape.",
+    "notes": "Doublestrike is shown only by the paired wingbeat traces, never a second hawk. Keep it a large real hawk rather than a giant eagle, with no rider, prey, lightning, tornado, attack gore, or flock."
+  },
+  "neutral_galewind_runner": {
+    "subject": "A lean dog-sized cliff beast with long springing legs, weathered stone-grey hide, a moss-dark mane, and two swept-back ear-fins edged in aged bronze. It races along a broken causeway with its body stretched through one quick stride, kicking up a narrow ribbon of dust and loose grass while the ear-fins flatten into the wind. The animal is agile and practical rather than magical or majestic.",
+    "perspective": "Low side-on three-quarter action view with the runner's complete silhouette and all four feet readable inside the central composition, leaving clear margin ahead of its stride.",
+    "background": "A cool pale-blue dawn over muted ruined walls and distant grey hills, with soft crosswind mist and no storm; the warm bronze ear edges and lantern-amber eye stand out against the restrained setting.",
+    "notes": "Skirmish reads through one fast local sprint. Keep it dog-sized and grounded, with no wings, rider, lightning, tornado, herd, giant leap, or battlefield-wide wind effect."
+  },
+  "neutral_phantom_duelist": {
+    "subject": "A solitary human-sized duelist in a weathered grey travel coat, tarnished bronze half-mask, and plain iron rapier, standing in a restrained side-on guard. The trailing edge of the coat and one boot dissolve into a thin veil of translucent dust and mist, making the figure seem half-present without turning into a glowing apparition. The posture is precise and wary, not triumphant.",
+    "perspective": "Eye-level full-body three-quarter portrait with the complete rapier and fading silhouette centered safely inside the frame and ample negative space around the guard pose.",
+    "background": "A pale blue moonlit courtyard of cool weathered stone, low silver fog, and one distant warm lantern, creating quiet value contrast around the grey-and-bronze figure.",
+    "notes": "Shroud reads through only the vanishing coat edge and foot. Show no opponent, attack impact, skull face, giant spectral aura, dramatic spell circle, text, crest, or heroic victory pose."
+  },
+  "neutral_razorcoil_adder": {
+    "subject": "A forearm-length adder wound into one tight spring-like coil on a cracked stone. Its overlapping charcoal-grey scales have thin aged-bronze cutting edges, a moss-green stripe runs beneath the spine, and one small lantern-amber eye fixes on the viewer. A single clear venom bead hangs from one short ivory fang as the head rises only a few inches above the coil.",
+    "perspective": "Close low three-quarter portrait with the entire compact coil, raised head, fang, and tail tip centered and fully visible, using nearby gravel for unmistakable small scale.",
+    "background": "A cool blue-grey ruin floor at twilight with pale fog, soft slate masonry, and sparse dead grass, kept muted so the bronze-edged coil and amber eye read immediately.",
+    "notes": "Venom is the single bead on one fang; Razorcoil is expressed by the layered scale edges. No giant snake, open cavernous mouth, metal weapon blades, venom spray, extra snakes, or magical cloud."
+  },
+  "night_death_mark": {
+    "subject": "A slim blade-silver Nightveil knife has just touched the center of one warm bronze breastplate. At the contact point, a small three-pronged toxic-lime venom stain spreads through a handful of hairline cracks no wider than a palm. A shadow-black gloved hand and short section of midnight-purple sleeve enter from one side, partially dissolving into a single thin smoke ribbon that curls away. The target is represented only by the anonymous armored torso—no second face, no struggle, no crowd. The moment should feel quiet, surgical, and final rather than explosive. The mark is an organic poison fracture, not a written symbol or glowing rune.",
+    "perspective": "Tight chest-level close-up of one armored target and the marking blade, with the small venom fracture centered and plenty of quiet surrounding armor.",
+    "background": "A softly blurred amber-lit guardroom with warm bronze and ochre stone; the blade-silver edge, black shadow, and toxic-lime mark remain the only cool accents.",
+    "notes": "No skull emblem, giant magic circle, shower of particles, blood, city-scale darkness, or dramatic sky. Scraped from the draft brief this card was generated from (night_death_mark)."
+  },
+  "night_fade_out": {
+    "subject": "A single masked courier in pale blade-silver armor stepping backward into a paper-thin doorway of shadow. Their trailing leg and cloak fragment into orderly charcoal card-shaped planes while one completely blank ivory card floats outward toward the viewer. The figure is retreating safely, not being destroyed.",
+    "perspective": "Rooftop-height three-quarter action view, full courier visible with the shadow doorway and blank card grouped tightly around the central focal area.",
+    "background": "A vivid coral-orange sunset over terracotta rooftops and warm peach clouds, creating strong temperature contrast with the cool silver figure and teal-black doorway.",
+    "notes": "Palette priority: coral, terracotta, and peach background; pale silver subject; deep teal-black shadow aperture; no purple or lime glow. Show return-to-hand plus one card without any letters, symbols, or UI."
+  },
+  "night_finish_the_job": {
+    "subject": "One black-gloved assassin's hand drawing a hair-thin silver wire precisely across the already cracked shoulder joint of a damaged pale-steel construct. The construct's existing fracture glows dull coral; the wire is about to sever the weakened joint, with no gore and no visible victim face.",
+    "perspective": "Tight oblique close-up centered on glove, wire, and damaged joint; the decisive action is clear at thumbnail size.",
+    "background": "A cold cyan-and-white tiled bathhouse flooded with diffuse winter light, clean and spare rather than smoky or subterranean.",
+    "notes": "Palette priority: icy cyan and white setting; black glove and silver wire; one dull coral fracture. Communicate exploiting existing damage, not inflicting a giant new wound."
+  },
+  "night_kira_blade_of_shadows": {
+    "subject": "Kira is a lean adult woman and spirit-assassin caught mid-lunge, her angular face clearly visible beneath an asymmetric bone-white forelock and swept-back dark hair. She wears layered shadow-silk and close silver scale pieces with no hood and no bulky armor. One long blade crosses forward in a clean diagonal while a shorter reverse-grip blade guards her flank; both are blade-silver with a restrained toxic-lime venom sheen only along their edges. Her trailing leg and cloak dissolve into midnight-purple shadow smoke, but her face, hands, and weapon silhouettes remain crisp. Her expression is controlled and merciless, not snarling. Keep her entire head and both blades visible; no extra fighters, no skull costume, no glowing glyphs.",
+    "perspective": "Eye-level dynamic three-quarter view at the instant she steps out of shadow, with her face and crossing blade silhouette centered inside the middle 70%.",
+    "background": "A collapsed bell-tower passage lit by low amber lanterns and ember-glow, soft and out of focus; warm ochre stone and smoky orange light sharply rim the cool black-purple assassin.",
+    "notes": "Scraped from the draft brief this card was generated from (night_kira_blade_of_shadows)."
+  },
+  "night_lurk_wisp": {
+    "subject": "A palm-sized shadow spirit with the compact silhouette of a folded moth, a tiny bone-white mask, and two pinprick lime eyes. It flattens itself into the narrow shade beneath a sunlit stone step, wispy purple-black edges almost indistinguishable from the cast shadow. Small and watchful, not monstrous.",
+    "perspective": "Ground-level close view across the step, with the tiny masked wisp centered and fully readable despite its concealment.",
+    "background": "A bright abandoned courtyard of warm ivory limestone and powder-blue sky, hard noon light casting one crisp dark refuge beneath the step.",
+    "notes": "Palette priority: high-key ivory and powder blue environment; tiny purple-black subject with bone-white mask and minimal lime eyes. Shroud is concealment through scale and placement, not a huge smoke effect."
+  },
+  "night_shadow_blade": {
+    "subject": "A single elegant curved weapon resting diagonally on a pale stone plinth: matte shadow-black metal, a razor-thin blade-silver edge, and a dark violet cloth grip. A narrow veil of shadow slips off the blade and wraps around one small anonymous ally silhouette reflected in the polished plinth, implying granted concealment.",
+    "perspective": "Slightly top-down product-like hero view with the entire weapon centered and the reflected ally kept subtle and secondary.",
+    "background": "An open parchment-amber shrine at sunrise, with cream stone, soft apricot light, and sparse architectural shapes—bright and airy, not a black chamber.",
+    "notes": "Palette priority: cream, parchment amber, and apricot setting; black-silver weapon; restrained violet shadow, no toxic lime. The weapon remains the one unmistakable subject."
+  },
+  "night_shadow_dart": {
+    "subject": "A single narrow blade-silver throwing dart slicing through the air, wrapped in a tight black-violet shadow wake with one bead of toxic lime venom at its tip. It has just pierced a small hanging metal target, producing a compact star of impact rather than an explosion.",
+    "perspective": "Fast side-on macro composition aligned with the dart's flight; keep the complete dart and target impact in the central area.",
+    "background": "A training gallery hung with broad vermilion-red silk panels in warm daylight, deliberately simple and softly blurred so the cool silver dart reads instantly.",
+    "notes": "Palette priority: vermilion and warm cream background; silver-black projectile; tiny lime venom accent. Cost-1 local strike only—no lightning, battlefield, or giant magical blast."
+  },
+  "night_shadow_stalker": {
+    "subject": "A sleek panther-sized beast made of matte shadow-black fur and thin midnight-purple smoke, stalking low through tall grass. Its shoulder, paws, and tail vanish intermittently into soft-edged shadow while a narrow bone-white facial marking anchors the head. No rider and no armor.",
+    "perspective": "Low side three-quarter view through the grass, showing the complete prowling silhouette from nose to tail inside the middle 70%.",
+    "background": "A broad field of dry golden wheat under clear honey afternoon light, with pale distant ruins and no dark forest or night sky.",
+    "notes": "Palette priority: luminous gold and honey background; matte black and restrained plum subject; bone-white face accent, no lime glow. Shroud should read as disappearing edges, not a cloud engulfing the image."
+  },
+  "night_shadow_walk": {
+    "subject": "A broad, controlled ribbon of living midnight-purple shadow sweeping across a fortified plaza like a low tide. Several armored enemy silhouettes are lifted backward—not injured—into a sequence of thin upright mirror-portals, their forms flattening into reflections as they leave the scene. One bone-white masked guide walks calmly at the front edge of the shadow, the single clear focal figure.",
+    "perspective": "Elevated wide three-quarter view showing the shadow's path across one plaza, with the masked guide centered and enemy silhouettes clearly secondary.",
+    "background": "A brilliant snow-covered cobalt morning: white masonry, crisp blue shadows, and a clear cyan sky, with no fire or enclosed dungeon.",
+    "notes": "Palette priority: snow white, cobalt, and cyan environment; rich midnight-purple shadow; bone-white focal mask; tiny silver portal rims, no lime accent. Epic but localized to one plaza—no citywide catastrophe."
+  },
+  "night_vanishing_act": {
+    "subject": "A masked Nightveil illusionist sweeping one enormous midnight-purple cloak in a circular gesture. Behind the cloak's arc, three friendly silhouettes dissolve neatly from feet upward into thin black ribbons, clearly subordinate to the central performer and not individualized characters.",
+    "perspective": "Wide eye-level stage-like composition with the illusionist centered, full cloak arc readable, and dissolving silhouettes contained behind it.",
+    "background": "A misty pale-aqua plaza with oxidized copper statues, soft sea-green paving, and overcast pearl light; the dark cloak cuts a bold graphic shape through the cool high-key space.",
+    "notes": "Palette priority: pale aqua, sea green, and pearl environment; saturated midnight-purple cloak; bone-white mask; minimal black vanish ribbons. No lime magic and no literal theater curtains or text."
+  },
+  "night_venom_asp": {
+    "subject": "A sizable but naturalistic hooded asp with bone-white scales patterned by glossy black chevrons and a vivid toxic-lime throat. It winds upright through a single black orchid trellis, hood open and fangs visible, elegant and controlled rather than gigantic.",
+    "perspective": "Low close three-quarter portrait with the full upper coil and hood centered, leaving margin around the head and clean silhouette.",
+    "background": "A deep wine-magenta conservatory filled with soft burgundy glass and muted orchid shapes, lit from behind by a pale pink moon.",
+    "notes": "Palette priority: wine, burgundy, and pink background; bone-white and black serpent; concentrated toxic-lime throat and venom. Rare-card presence, but still an animal-scale asp."
+  },
+  "night_viper_fang": {
+    "subject": "A small, lean viper no longer than a forearm, coiled around a chipped alabaster garden finial. Its scales are glossy charcoal with subtle plum iridescence, one blade-silver fang exposed, and a restrained chartreuse venom bead. The animal is poised and precise rather than rearing dramatically.",
+    "perspective": "Close eye-level three-quarter view, complete coil and head visible with generous margin and the single fang as the focal detail.",
+    "background": "A pale rose salt garden at dawn with chalk-white stone, blush mist, and muted peach light, keeping the dark snake separate from the high-key setting.",
+    "notes": "Palette priority: blush, chalk white, and peach environment; charcoal-plum snake; one silver fang and small chartreuse venom bead. Modest common-card scale, no giant serpent."
+  },
+  "night_void_shriek": {
+    "subject": "A sleek, wingless Nightveil spirit rises from a tapering column of shadow-smoke, its upper body shaped like a narrow predatory manta with long blade-edged shoulders and two folded scythe-like arms. A smooth bone-white faceplate has split vertically into a deep lightless mouth as it releases one visible circular shriek-wave edged in toxic lime and blade-silver. The wave extinguishes the nearest amber flames as it passes, while the spirit's outer edges vanish into midnight-purple wisps—suggesting enemies struck and allies concealed without depicting a crowd. Its silhouette must remain elegant and lethal, not bulky or monstrous. One spirit only; no wings, tentacles, floating skulls, letters, sigils, or runes.",
+    "perspective": "Eye-level close three-quarter view at the instant of the shriek; the spirit's skull-like face and the first shock ring dominate the central 70%.",
+    "background": "A ruined processional hall glowing with dim amber braziers and warm ochre dust; the cool black-purple spirit cuts across the soft firelit masonry.",
+    "notes": "Scraped from the draft brief this card was generated from (night_void_shriek)."
+  },
+  "storm_chain_lightning": {
+    "subject": "One jagged gold-white lightning filament with a thin cyan double-trace leaps across three waist-high bronze ward-posts in a clear descending sequence: a bright first impact, a smaller second jump, then a final weak spark. Treat the entire chained path as one central graphic subject. The posts are simple environmental anchors, not characters. Add three tight thunder-rings and restrained sparks, with the last visibly fading.",
+    "perspective": "Slight overhead three-quarter view so one zigzagging energy path and its three successive contacts read immediately.",
+    "background": "A muted earth-brown ruin court with three weathered bronze ward-posts, subdued and overcast to make the lightning path luminous.",
+    "notes": "No caster, no enemies, no branching web, no giant storm cloud, and no battlefield-wide devastation. Scraped from the draft brief this card was generated from (storm_chain_lightning)."
+  },
+  "storm_gust_sprite": {
+    "subject": "A small nimble wind elemental, child-sized but nonhuman, formed from a charcoal storm-knot wrapped in two curling storm-silver ribbons of air. Its cyan eyes and tiny gold-white sparks punctuate a clean, playful silhouette. Both ribbon-arms snap forward in quick succession, leaving two distinct crescent gust traces that visually suggest a double strike. Keep it airy and mischievous rather than monstrous, with no wings, no clothing, no weapons, no extra creatures, and only a few loose dust motes.",
+    "perspective": "Dynamic eye-level three-quarter view of a small airborne figure, centered, with the full silhouette and twin motion traces visible.",
+    "background": "A warm dim ruined market lane with lantern amber, dusty umber masonry, and soft ember glow, subdued behind the cool bright sprite.",
+    "notes": "Scraped from the draft brief this card was generated from (storm_gust_sprite)."
+  },
+  "storm_hurricane": {
+    "subject": "A single immense hurricane forms as a clean double helix: two distinct storm-silver wind columns orbit one shared charcoal eye, each wrapped by its own continuous gold-white lightning trace. The paired funnels repeatedly cross without merging, creating an unmistakable two-strike rhythm from bottom to top. Thin cyan pressure rings flare where the spirals cross, while ash, roof tiles, and a few tiny ember fragments sweep upward around the outer edge to show force without cluttering the center. No person or creature inside the storm; the weather effect itself is the one subject. Keep the twin structure readable rather than a chaotic cloud explosion; no faces in the clouds, no letters, symbols, or rune-shaped lightning.",
+    "perspective": "Ground-level view looking slightly upward into a centered twin-helix cyclone, with both lightning traces clearly separated inside the middle 70%.",
+    "background": "A desaturated ochre ruin plain beneath a pale grey sky, with low broken walls and dull earth tones; the cyan storm-silver funnel and gold-white double traces own all the saturation.",
+    "notes": "Scraped from the draft brief this card was generated from (storm_hurricane)."
+  },
+  "storm_lightning_bolt": {
+    "subject": "One compact forked lightning bolt snaps from a small charcoal storm wisp into a waist-high broken standing stone in a ruined courtyard. The gold-white core carries a thin cyan double-trace and one tight thunder-ring at impact. Show a few bright chips and a small scorch mark, not an explosion. The lightning is the sole subject; no caster, no victim, no giant sky-filling storm, and no wide environmental destruction. Convey dangerous recoil through one faint broken afterimage curling back toward the cloud.",
+    "perspective": "Tight ground-level view looking slightly upward along one diagonal bolt, with the strike point centered.",
+    "background": "Muted brown-grey ruins under a dull overcast sky, grounded and low saturation so the electric gold-white and cyan strike stays distinct.",
+    "notes": "Scraped from the draft brief this card was generated from (storm_lightning_bolt)."
+  },
+  "storm_spark_imp": {
+    "subject": "A fist-sized elemental imp made from one charcoal-black core wrapped in sharp storm-silver and cyan electrical filaments. Two tiny horn-like arcs crown its head while a matched pair of gold-white spark arms snap forward in synchronized double traces, creating a crisp two-beat gesture without forming a second creature. Its compact silhouette is mischievous and volatile rather than demonic or threatening.",
+    "perspective": "Ground-level close three-quarter action view as the tiny imp skips across a rain-dark stone, with the complete body and both parallel spark traces contained in the central composition.",
+    "background": "A muted overcast courtyard of wet brown earth, dull slate rubble, and soft grey rain, kept low-saturation so the restrained cyan and gold-white sparks read instantly.",
+    "notes": "Doublestrike is shown only by the paired spark-arm traces. Keep the discharge no larger than the imp, with sparse particles, no lightning from the sky, no battlefield blast, and no extra creatures."
+  },
+  "storm_thunder_hoof": {
+    "subject": "A stocky bison-sized Tempest beast with the build of a mountain ram lowers its head and takes the first powerful stride of a short charge. Its coarse charcoal-and-storm-silver coat lifts slightly with static; two forward-curving dark horns carry a faint cyan edge, and each front hoof kicks up one small gold-white spark on contact with the road. A single short lightning thread joins the hooves close to the ground—no surrounding storm. The animal is muscular and durable but recognizably mortal, not an elemental titan. Keep all four legs readable.",
+    "perspective": "Low but natural side three-quarter view of a bison-sized beast beginning a short charge, with all four hooves and both horns inside the middle 70%.",
+    "background": "A muted ochre quarry road under a plain overcast sky, with dull earth and low broken stone; the storm-silver hide and small cyan-gold sparks provide restrained contrast.",
+    "notes": "No rider, armor, giant antlers, glowing whole body, tornado, thundercloud vortex, landscape-spanning bolt, airborne pose, or shattered terrain. Scraped from the draft brief this card was generated from (storm_thunder_hoof)."
+  },
+  "storm_wind_rider": {
+    "subject": "A lean humanoid air elemental rides a single curved blade of compressed wind just above the rooftops, crouched like a skirmisher banking into a fast close-range charge. Its body is charcoal cloud wrapped in storm-silver streamers, with cyan eyes and sparse gold-white sparks along the wind blade. The rider and its wind arc read as one unified silhouette, not a rider plus mount. Keep the motion local and agile: one short double-trace, a few roof tiles rattling, no tornado, no weapon, no army, and no citywide storm.",
+    "perspective": "Low dynamic three-quarter view, the rider banking toward the viewer but fully contained in the center safe area.",
+    "background": "Warm muted clay rooftops and amber-lit chimneys at dusk, motion-softened so the bright cool elemental remains the single readable subject.",
+    "notes": "Scraped from the draft brief this card was generated from (storm_wind_rider)."
+  },
+  "storm_zael_of_the_struck_sky": {
+    "subject": "Zael is a towering humanoid storm elemental formed from charcoal thundercloud, wind-torn silver rain sheets, and a hard cyan-white core. A jagged sky-fire wound splits the chest vertically as if the heavens struck him and never stopped burning. His two long arms sweep in opposing directions, each ending in a separate gold-white lightning arc, producing a clear double-strike silhouette rather than a tangled explosion. A stern face emerges from the cloud mass beneath a broken halo of two thin thunder-rings. His lower body tapers into a powerful spiral of wind above the ground. One figure only; no wings, no weapon, no ornate armor, no letters or rune-shaped lightning.",
+    "perspective": "Low-angle three-quarter view of an airborne figure twisting into a twin-armed strike; the face, split chest-light, and paired lightning arcs stay within the central 70%.",
+    "background": "A muted ochre ash plain with toppled pale stone under a dull overcast horizon, almost entirely desaturated and grounded; the saturated cyan and gold-white storm body dominates by hue and brightness.",
+    "notes": "Scraped from the draft brief this card was generated from (storm_zael_of_the_struck_sky)."
+  },
+  "tide_venomfin": {
+    "subject": "A small amphibious reef beast with a low teal body, a broad crescent dorsal fin, translucent seafoam webbing, pale moon-silver spines, and two cold blue eyes. It rises halfway from a shallow pool, exposing one bead of luminous turquoise venom at the tip of a delicate hollow fin-spine; its slick scales and compact profile feel patient and dangerous rather than monstrous.",
+    "perspective": "Water-level close three-quarter portrait with the entire creature and crescent fin centered, generous margin around the silhouette, and the single venom bead readable at thumbnail size.",
+    "background": "A warm dim tide grotto lit by amber candles and distant ember-glow reflected across wet ochre rock, contrasting with the cool teal beast and pale mist.",
+    "notes": "Venom is represented only by the one luminous bead and hollow spine. Keep the beast no larger than a house cat, with no giant teeth, attack splash, toxic cloud, extra animals, or catastrophic wave."
+  },
+  "verdant_venomthorn": {
+    "subject": "A squat badger-sized plant beast built from knotted living roots, cedar-brown bark plates, and a dense crown of golden-honey thorn quills. It braces sideways across a narrow path with all four root-paws planted, while one dark emerald drop of venom hangs from the longest forward thorn. Fresh green shoots curl between the bark plates, making it feel stubbornly alive and defensive.",
+    "perspective": "Low frontal three-quarter view at the creature's eye level, with its complete broad silhouette and thorn crown centered and every planted paw visible.",
+    "background": "A pale blue-grey twilight clearing among cool weathered stones and thin silver mist, muted and spacious so the warm bark, green growth, and honey-gold thorns remain distinct.",
+    "notes": "Taunt reads through the path-blocking stance; Venom reads through one restrained drop. Keep it badger-sized, passive and sturdy rather than attacking, with no giant tree scale, toxic cloud, extra beasts, or explosive growth."
+  },
+  "verdant_windroot_sprinter": {
+    "subject": "A small, wiry beast built like a greyhound crossed with a fern — legs of braided root, a body of quick fibrous grass, no bigger than a large dog. Low to the ground, mid-stride, ears back, moving fast and low rather than rearing up.",
+    "perspective": "Low, ground-level, side-on — emphasize speed and horizontal motion, not height.",
+    "background": "An open stretch of pale blue-grey dawn mist over chalky ground, cool and understated, with no dense green foliage behind the beast. The spare, high-key setting cleanly separates the warm russet-root and fern-gold body.",
+    "notes": "Palette priority: pale blue-grey and chalk background; warm russet, fern-gold, and muted olive subject; a faint honey-gold healing glow trails from its footfalls. Restore 2 Health to your hero on play, so the glow stays small and easy to miss, not a spectacle."
+  },
+  "ward_boulderhide": {
+    "subject": "A squat four-legged stone guardian shaped like a stubborn pack animal, built from overlapping rounded granite plates that form a natural armored hide. Its small head is tucked safely behind high shoulder boulders; two pale quartz eyes glow beneath the brow. Rusted bronze bands brace the joints and sparse moss settles in sheltered seams. It plants itself sideways across a damaged doorway as a living bulwark. Make it sturdy and defensive rather than aggressive, compact rather than massive, with no weapon and no humanoid armor.",
+    "perspective": "Eye-level three-quarter view, centered on a low broad silhouette with all four planted feet visible.",
+    "background": "A narrow ruined gate passage warmed by amber lanterns and dusty dusk light, soft enough to separate the cool grey construct.",
+    "notes": "Scraped from the draft brief this card was generated from (stone_boulderhide)."
+  },
+  "ward_duras_the_ironmount": {
+    "subject": "Duras is a colossal living fortress-construct built from interlocked iron-grey granite slabs, with a mountain-like torso, battlement-shaped shoulders, and thick rusted-bronze braces holding the stone together. Pale quartz veins form a restrained inner glow across the chest and under a severe cliff-brow; sparse moss gathers only in protected cracks. Both immense fists are planted on the broken causeway as his arched forearms form a sheltering gate around the viewer, visually granting protection without showing other characters. His anatomy should feel architectural and original rather than like a human enlarged in stone. One clear subject, calm and unyielding; no handheld weapon, no castle on his back, no writing or carved runes.",
+    "perspective": "Heroic ground-level frontal view with a slight upward tilt, emphasizing a mountain-wide shoulder line and two planted fists while keeping the face and chest centered.",
+    "background": "A shattered fortress causeway under a luminous ember-red dawn, with warm dusty orange atmosphere and tiny distant masonry; the cool iron-grey colossus reads as one dark, immovable mass against the bright horizon.",
+    "notes": "Scraped from the draft brief this card was generated from (stone_duras_the_ironmount)."
+  },
+  "ward_earth_barrier": {
+    "subject": "A waist-high crescent of interlocking granite slabs pushes up through cracked cobbles in one tight protective arc. Pale quartz veins join the slabs like natural mortar, and a few mossy roots cinch them together. The barrier itself is the sole focal subject; behind it, only the indistinct lower silhouette of one protected traveler may be implied through dust, never becoming a competing figure. Show fresh earth at the base and a restrained halo of pale stone-light.",
+    "perspective": "Close low-angle view of a compact crescent wall rising in the center, with its protective curve clearly readable.",
+    "background": "A warm ember-lit alley of scorched plaster and dark timber, pushed into soft focus behind the cool pale barrier.",
+    "notes": "No fortress wall, no enormous magical dome, and no violent eruption. Scraped from the draft brief this card was generated from (stone_earth_barrier)."
+  },
+  "ward_granite_guardian": {
+    "subject": "A sturdy Stonewarden construct stands squarely in one gatehouse doorway, about one-and-a-half times human height—broad enough to block the entrance, but nowhere near a colossus. Its body is assembled from practical granite slabs with iron-black joints, two rusted bronze shoulder clamps, narrow pale-quartz eyes, and small patches of moss in old seams. Both thick forearms are held across the opening in a simple defensive posture, with no separate shield or weapon. Its feet remain fully visible and firmly planted on ordinary flagstones. Calm, durable, and workmanlike rather than legendary.",
+    "perspective": "Straight eye-level view from several paces away, showing the complete doorway-sized guardian and clear planted stance without a heroic low-angle exaggeration.",
+    "background": "A modest rebuilt gatehouse lit by warm amber lanterns at dusk, with simple ochre plaster and timber behind the cool grey construct.",
+    "notes": "No battlement shoulders, mountain anatomy, glowing chest core, raised fortress wall, debris explosion, tiny people for scale, or dramatic skyline. Scraped from the draft brief this card was generated from (stone_granite_guardian)."
+  },
+  "ward_pebble_sentinel": {
+    "subject": "A knee-high defensive construct assembled from five rounded granite fieldstones, with two broad pebble arms locked together like a tiny barricade. A narrow rusted-bronze band holds its torso stones in place, pale quartz eyes glow beneath a slab-like brow, and small patches of moss soften the joints. It plants its short feet stubbornly between two fallen wall blocks, protective and immovable despite its humble size.",
+    "perspective": "Low close three-quarter view at the construct's eye level, with its complete compact silhouette centered and obvious scale cues from loose masonry and a discarded iron nail nearby.",
+    "background": "A ruined watch-post doorway lit by warm amber lantern light and sparse drifting embers, with dark timber and softly blurred ochre stone behind the cool granite subject.",
+    "notes": "Bulwark reads through the locked-arm stance and planted feet. Keep it knee-high, endearing but not cute, with no giant proportions, attack pose, weapon, or explosive magic."
+  },
+  "ward_rock_golem": {
+    "subject": "A workmanlike humanoid golem assembled from angular quarry blocks, roughly twice a person's width but only modestly taller than a doorway. It braces in a patient guarding stance with broad forearms held together like a shield. Its face is a simple iron-black inset plate with two pale quartz eyes; rusted bronze clamps hold the shoulders and knees, and thin moss marks its age. Keep the design plain, practical, and visibly less imposing than a granite guardian or siege golem.",
+    "perspective": "Slight low-angle full-body portrait, centered, with both feet and the complete head safely inside the central frame area.",
+    "background": "A warm dim quarry workshop at dusk with amber braziers, weathered timber braces, and muted clay walls.",
+    "notes": "No weapon, no ornate armor, no colossal scale, and no roaring pose. Scraped from the draft brief this card was generated from (stone_rock_golem)."
+  },
+  "ward_siege_golem": {
+    "subject": "A purpose-built Stonewarden siege golem advances through a shattered gate: squat, broad, and brutally functional, made from interlocking granite blocks bound by iron-black pivots and rusted bronze hoops. One shoulder and forearm fuse into a massive wedge-shaped breaching shield, while the opposite hand presses into the earth and sends a pale quartz reinforcement pulse through its own cracked armor. Its low head is tucked safely behind the shield, with two small quartz eyes under a slab brow. Unlike Duras, it is a finite battlefield engine rather than a living fortress—heavy enough to hold a breach, compact enough to fit through one. Sparse moss in old seams, no rider, no handheld weapon, no wheels, no castle on its back, no carved writing or runes.",
+    "perspective": "Low three-quarter view from just outside a breached gate, showing its wedge-shaped shield shoulder and planted stance as one broad silhouette.",
+    "background": "A warm smoke-filled fortress breach under amber-orange afternoon light, with distant burning dust and softened brickwork; the cool granite golem remains the dark foreground mass.",
+    "notes": "Scraped from the draft brief this card was generated from (stone_siege_golem)."
+  },
+  "ward_stone_throw": {
+    "subject": "A compact volley of five fist-sized granite stones skips outward in one low, fan-shaped sweep across the courtyard, launched by a barely visible shove of earth from a cracked paving stone. Make the leading stone the clear focal subject, with pale quartz chips and thin moss seams catching the light. The action suggests a modest defensive spell striking several nearby foes without showing any enemies. Keep the effect physical and weighty: dust puffs, two short impact chips, no explosion, no giant boulder, no caster, and no battlefield-wide destruction.",
+    "perspective": "Low three-quarter view at cobblestone height, close enough that the thrown stones make a readable sweeping arc while the source remains centered.",
+    "background": "A warm, dim amber-lit ruin courtyard with charred timber and muted ember glow, kept soft and subordinate behind the cool granite projectiles.",
+    "notes": "Scraped from the draft brief this card was generated from (stone_throw)."
+  }
+}
