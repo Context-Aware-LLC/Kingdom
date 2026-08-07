@@ -65,6 +65,17 @@
                     <ui:Button name="deck-delete" text="Delete deck" class="roster-button roster-button--danger deck-action" />
                 </ui:VisualElement>
 
+                <!--
+                  What "+" opens. The same two starter shapes character creation offers, for the
+                  same reason: a blank deck is 30 decisions away from playable, and a player who
+                  came here from Find Game wants one they can queue with.
+                -->
+                <ui:VisualElement name="deck-new-pane" class="deck-pane">
+                    <ui:Button name="deck-new-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta deck-action" />
+                    <ui:Button name="deck-new-blank" text="Start blank" class="roster-button roster-button--ghost deck-action" />
+                    <ui:Label name="deck-new-note" text="" class="create-help create-help--starter" />
+                </ui:VisualElement>
+
                 <ui:VisualElement name="deck-rename-pane" class="deck-pane">
                     <ui:TextField name="deck-rename-field" label="Name" max-length="24" class="roster-field" />
                 </ui:VisualElement>

@@ -204,6 +204,38 @@ namespace Emberfall.Session
         }
 
         /// <summary>
+        /// Add a deck to an existing character and persist it, generated or blank.
+        ///
+        /// <para>The sibling of <see cref="CreateCharacter"/> for the roster's "+" plate, and here for
+        /// the same reason that one is: the core assembly mints no ids and holds no clock, so
+        /// somebody has to know that an id is a GUID and that the seed comes from it. Seeding from
+        /// the deck's own id rather than a clock keeps a generated deck a function of its identity —
+        /// re-running a crashed create cannot produce a different 30.</para>
+        ///
+        /// <para>Check <see cref="DefaultDeckGenerator.CanGenerate"/> before asking for
+        /// <see cref="StarterDeck.Generated"/>; a pool too thin for a legal 30 throws rather than
+        /// returning something illegal.</para>
+        /// </summary>
+        /// <exception cref="DeckGenerationException">Generated was asked for and the pool cannot supply a legal 30.</exception>
+        public DeckList CreateDeck(Character character, ICardDatabase db, string name,
+                                   StarterDeck kind = StarterDeck.Blank)
+        {
+            if (character == null) throw new ArgumentNullException(nameof(character));
+
+            string deckId = NewId();
+            DeckList deck = kind == StarterDeck.Generated
+                ? DefaultDeckGenerator.Generate(character, db, new DeterministicRandom(SeedFrom(deckId)), deckId, name)
+                : new DeckList { Id = deckId, CharacterId = character.Id, Name = name };
+
+            // Generate() builds the deck already bound (L5), but a blank one is bound here — and the
+            // binding is the whole reason a deck cannot be created anywhere but against a character.
+            deck.CharacterId = character.Id;
+
+            _decks.Save(deck);
+            return deck;
+        }
+
+        /// <summary>
         /// The decks a delete would destroy — what the confirm dialog must name before the player
         /// authorises the cascade (§2.6). Call this, then <see cref="DeleteCharacter"/>.
         /// </summary>

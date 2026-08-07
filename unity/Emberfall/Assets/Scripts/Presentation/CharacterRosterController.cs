@@ -129,6 +129,9 @@ namespace Emberfall.Presentation
         private VisualElement _deckBackPane;
         private VisualElement _deckBackGrid;
         private Label _deckBackNote;
+        private VisualElement _deckNewPane;
+        private Label _deckNewNote;
+        private Button _deckNewGenerated;
         private VisualElement _deckDeletePane;
         private Label _deckDeleteMessage;
         private TextField _deckRenameField;
@@ -216,6 +219,9 @@ namespace Emberfall.Presentation
             _deckBackPane = _root.Q<VisualElement>("deck-back-pane");
             _deckBackGrid = _root.Q<VisualElement>("deck-back-grid");
             _deckBackNote = _root.Q<Label>("deck-back-note");
+            _deckNewPane = _root.Q<VisualElement>("deck-new-pane");
+            _deckNewNote = _root.Q<Label>("deck-new-note");
+            _deckNewGenerated = _root.Q<Button>("deck-new-generated");
             _deckDeletePane = _root.Q<VisualElement>("deck-delete-pane");
             _deckDeleteMessage = _root.Q<Label>("deck-delete-message");
             _deckRenameField = _root.Q<TextField>("deck-rename-field");
@@ -295,12 +301,14 @@ namespace Emberfall.Presentation
         /// <summary>Which pane of the deck dialog is showing. Cancel means "back to the menu" from
         /// anywhere but <see cref="Menu"/>, where it means "close" — one button, because a dialog
         /// with both a Back and a Close is a dialog nobody reads.</summary>
-        private enum DeckPane { Menu, Rename, CardBack, Delete }
+        private enum DeckPane { Menu, New, Rename, CardBack, Delete }
 
         private DeckPane _deckPane = DeckPane.Menu;
 
         private void WireDeckDialog()
         {
+            _root.Q<Button>("deck-new-generated")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Generated));
+            _root.Q<Button>("deck-new-blank")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Blank));
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => EditOpenDeck());
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
@@ -308,7 +316,7 @@ namespace Emberfall.Presentation
             _deckDeleteButton?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Delete));
             _deckModalCancel?.RegisterCallback<ClickEvent>(_ =>
             {
-                if (_deckPane == DeckPane.Menu) CloseDeckDialog();
+                if (_deckPane == DeckPane.Menu || _deckPane == DeckPane.New) CloseDeckDialog();
                 else ShowDeckPane(DeckPane.Menu);
             });
             _deckModalConfirm?.RegisterCallback<ClickEvent>(_ => ConfirmDeckPane());
@@ -353,10 +361,13 @@ namespace Emberfall.Presentation
 
         private void ShowDeckPane(DeckPane pane)
         {
-            if (_menuDeck == null) return;
+            // New is the one pane with no deck behind it yet, so the guard is on the panes that
+            // read _menuDeck rather than on entry.
+            if (_menuDeck == null && pane != DeckPane.New) return;
             _deckPane = pane;
             SetDeckError("");
 
+            Show(_deckNewPane, pane == DeckPane.New);
             Show(_deckMenuPane, pane == DeckPane.Menu);
             Show(_deckRenamePane, pane == DeckPane.Rename);
             Show(_deckBackPane, pane == DeckPane.CardBack);
@@ -366,6 +377,7 @@ namespace Emberfall.Presentation
             if (_deckModalTitle != null)
                 _deckModalTitle.text = pane switch
                 {
+                    DeckPane.New => $"New deck for {_menuCharacter?.Name}",
                     DeckPane.Rename => "Rename deck",
                     DeckPane.CardBack => "Card back",
                     DeckPane.Delete => "Delete deck?",
@@ -373,8 +385,9 @@ namespace Emberfall.Presentation
                 };
             Show(_deckModalSub, pane == DeckPane.Menu);
 
-            if (_deckModalCancel != null) _deckModalCancel.text = pane == DeckPane.Menu ? "Close" : "Back";
-            Show(_deckModalConfirm, pane != DeckPane.Menu);
+            bool selfCommitting = pane == DeckPane.Menu || pane == DeckPane.New;
+            if (_deckModalCancel != null) _deckModalCancel.text = selfCommitting ? "Close" : "Back";
+            Show(_deckModalConfirm, !selfCommitting);
             if (_deckModalConfirm != null)
             {
                 _deckModalConfirm.text = pane == DeckPane.Delete ? "Delete deck" : "Save";
@@ -382,6 +395,8 @@ namespace Emberfall.Presentation
                 _deckModalConfirm.EnableInClassList("roster-button--cta", pane != DeckPane.Delete);
             }
 
+            if (pane == DeckPane.New)
+                RefreshNewDeckPane();
             if (pane == DeckPane.Rename)
                 _deckRenameField?.SetValueWithoutNotify(_menuDeck.Name);
             if (pane == DeckPane.CardBack)
@@ -679,10 +694,10 @@ namespace Emberfall.Presentation
             foreach (DeckSummary summary in owned.Decks)
                 strip.Add(BuildDeckPlate(character, summary, owned.Count));
 
-            // A brand-new deck is empty, and an empty deck can never be queue ready — so "+" is a
-            // dead end in the match picker even though it is the obvious next thing everywhere else.
-            if (!MatchDeckSelection.Choosing)
-                strip.Add(BuildNewDeckPlate(character));
+            // "+" is on the match screen too. It offers a GENERATED deck as well as a blank one, so
+            // it is a way to reach the queue rather than a dead end — and nothing on this screen is
+            // urgent, because entering the queue takes a second, deliberate press of Continue.
+            strip.Add(BuildNewDeckPlate(character));
 
             return strip;
         }
@@ -733,7 +748,7 @@ namespace Emberfall.Presentation
             plate.AddToClassList("deck-plate");
             plate.AddToClassList("deck-plate--new");
             plate.tooltip = $"Start another deck for {character.Name}";
-            plate.clicked += () => NewDeck(character);
+            plate.clicked += () => OpenNewDeckDialog(character);
 
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
@@ -749,38 +764,66 @@ namespace Emberfall.Presentation
             return plate;
         }
 
-        /// <summary>
-        /// Create an empty deck for this character and stay here.
-        ///
-        /// <para><b>Empty, not generated</b> — the deckbuilder's rule, kept when this moved:
-        /// <see cref="DefaultDeckGenerator"/> exists to hand a brand-new character something playable
-        /// on day one, and running it here would hand a player who asked for a blank deck 30 cards to
-        /// dismantle first.</para>
-        ///
-        /// <para><b>And it does not open the deckbuilder.</b> The old "+" was inside the editor, so
-        /// opening the new deck was the only thing it could do. From here the next thing a player
-        /// wants is usually to name it, which is a plate away.</para>
-        /// </summary>
-        private void NewDeck(Character character)
+        /// <summary>"+" asks which kind first, rather than assuming (Sam, 2026-08-07).</summary>
+        private void OpenNewDeckDialog(Character character)
         {
             if (_account == null || character == null) return;
 
+            _menuCharacter = character;
+            _menuDeck = null;
+            _menuSiblingCount = 0;
+
+            ShowDeckPane(DeckPane.New);
+            _deckModal?.RemoveFromClassList("delete-modal--hidden");
+        }
+
+        /// <summary>
+        /// Offer Generated only when the pairing's pool can actually supply a legal 30 — the thin-pool
+        /// case is real (see <see cref="DefaultDeckGenerator.CanGenerate"/>), and a button that throws
+        /// is worse than one that is not there.
+        /// </summary>
+        private void RefreshNewDeckPane()
+        {
+            bool canGenerate = _menuCharacter != null && DefaultDeckGenerator.CanGenerate(_menuCharacter, _db);
+            _deckNewGenerated?.SetEnabled(canGenerate);
+            if (_deckNewNote != null)
+                _deckNewNote.text = canGenerate
+                    ? "A generated deck is legal and playable straight away. A blank one is yours to build."
+                    : $"{_menuCharacter?.Name}'s pairing doesn't have enough cards for a full deck yet, " +
+                      "so only a blank draft is available.";
+        }
+
+        /// <summary>
+        /// Create a deck for the character the "+" dialog is about and stay on this screen.
+        ///
+        /// <para><b>Both shapes are offered, and neither is assumed.</b> The deckbuilder's old "+"
+        /// always made an empty deck — correct there, because a player who reached for it was already
+        /// inside an editor. Here it is also the way somebody at the Find Game door gets something
+        /// they can queue with, so refusing to generate would make "+" a dead end on that screen.</para>
+        ///
+        /// <para><b>It does not open the deckbuilder.</b> A generated deck needs no editing, and the
+        /// next thing a blank one wants is a name, which is one plate-click away.</para>
+        /// </summary>
+        private void NewDeck(StarterDeck kind)
+        {
+            Character character = _menuCharacter;
+            if (_account == null || character == null) return;
+
+            DeckList created;
             try
             {
-                _account.Save(new DeckList
-                {
-                    Id = PlayerAccount.NewId(),
-                    CharacterId = character.Id,   // L5: bound at birth, never inferred later
-                    Name = UnusedDeckName(character),
-                });
+                created = _account.CreateDeck(character, _db, UnusedDeckName(character), kind);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[CharacterRoster] could not create a deck for {character.Name}: {ex.Message}");
-                SetStatus("The new deck could not be saved — see the console.", isError: true);
+                Debug.LogError($"[CharacterRoster] could not create a {kind} deck for {character.Name}: {ex.Message}");
+                SetDeckError("The new deck could not be saved — see the console.");
                 return;
             }
 
+            Debug.Log($"[CharacterRoster] created {kind} deck '{created.Name}' " +
+                      $"({created.TotalCount} cards) for {character.Name}.");
+            CloseDeckDialog();
             RebuildRoster();
         }
 
