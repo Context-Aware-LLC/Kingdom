@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: hero_power_searing_bolt
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"hero_power_searing_bolt","name":"Searing Bolt","type":"HERO_POWER","cost":2,"class":"EMBERWARD","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"DAMAGE","amount":1,"target":{"selector":"ANY_CHARACTER"}}}],"setId":"CORE","collectible":false,"artId":"art/hero_power_searing_bolt"}'
+  _json: '{"id":"hero_power_searing_bolt","name":"Searing Bolt","type":"HERO_POWER","cost":2,"class":"EMBERWARD","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"DAMAGE","amount":1,"target":{"selector":"ANY_CHARACTER"}}}],"setId":"CORE","collectible":false,"artId":"ember_hero_power_searing_bolt"}'

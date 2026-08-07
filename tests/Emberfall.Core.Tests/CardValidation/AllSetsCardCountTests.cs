@@ -99,11 +99,19 @@ namespace Emberfall.Core.Tests.CardValidation
             })));
             string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(projection)));
 
-            Assert.That(hash, Is.EqualTo("6BB9A79E56FC54F5DF4DB773796008651E0BFE1561BFB547D9EF600919A37A7B"),
+            // Re-pinned 2026-08-06 for the art rename, which dropped the `art/` namespace and the
+            // set prefix from every artId (`art/core_aegis_templar` -> `aegis_templar`). ArtId is one
+            // of the projected identity fields, so renaming all 260 moves this hash. Verified before
+            // re-pinning that artId is the ONLY field that changed, across every row and every baked
+            // CardDefinitionSO. Update this pin only for a reviewed whole-token identity change.
+            Assert.That(hash, Is.EqualTo("2C1475A9FD2FE19C105C985368F5F43122A3D0D4092B03B7EFEABD502539132B"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
+            // An artId no longer tracks the card id: art is named for the subject, not the token's
+            // stat line, so the 5/5 survival token draws `token_revenant` like every other token.
+            // The whole-token identity this test guards is the RULE REFERENCE below, not the artId.
             var survivalToken = all.Single(card => card.Id == "token_revenant_5_5_bulwark");
-            Assert.That(survivalToken.ArtId, Is.EqualTo("art/token_revenant_5_5_bulwark"));
+            Assert.That(survivalToken.ArtId, Is.EqualTo("token_revenant"));
             var gateKeeperRule = all.Single(card => card.Id == "grave_sealed_gate_keeper").Rules.Single();
             Assert.That(ReferencedCardId(gateKeeperRule.Action),
                 Is.EqualTo(survivalToken.Id),

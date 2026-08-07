@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: token_wisp_1_1
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"token_wisp_1_1","name":"Wisp","type":"MINION","cost":0,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"rules":[],"setId":"CORE","collectible":false,"artId":"art/token_wisp_1_1"}'
+  _json: '{"id":"token_wisp_1_1","name":"Wisp","type":"MINION","cost":0,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"rules":[],"setId":"CORE","collectible":false,"artId":"token_wisp"}'

@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: tide_deep_bargain
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"tide_deep_bargain","name":"Maren''s Deep Bargain","type":"SPELL","cost":3,"class":"TIDECALLER","rarity":"RARE","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"DRAW","count":2}}],"setId":"CORE","collectible":true,"artId":"art/tide_deep_bargain"}'
+  _json: '{"id":"tide_deep_bargain","name":"Maren''s Deep Bargain","type":"SPELL","cost":3,"class":"TIDECALLER","rarity":"RARE","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"DRAW","count":2}}],"setId":"CORE","collectible":true,"artId":"tide_marens_deep_bargain"}'

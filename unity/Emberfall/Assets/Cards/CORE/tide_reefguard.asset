@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: tide_reefguard
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"tide_reefguard","name":"Reefguard Wisp","type":"MINION","cost":2,"attack":0,"health":5,"class":"TIDECALLER","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"tribe":"SPIRIT","setId":"CORE","collectible":true,"artId":"art/tide_reefguard"}'
+  _json: '{"id":"tide_reefguard","name":"Reefguard Wisp","type":"MINION","cost":2,"attack":0,"health":5,"class":"TIDECALLER","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"tribe":"SPIRIT","setId":"CORE","collectible":true,"artId":"tide_reefguard_wisp"}'

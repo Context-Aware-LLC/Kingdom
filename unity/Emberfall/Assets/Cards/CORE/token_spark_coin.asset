@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: token_spark_coin
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"token_spark_coin","name":"The Spark","type":"SPELL","cost":0,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"GAIN_MANA","amount":1,"manaKind":"TEMPORARY"}}],"setId":"CORE","collectible":false,"artId":"art/token_spark_coin"}'
+  _json: '{"id":"token_spark_coin","name":"The Spark","type":"SPELL","cost":0,"class":"NEUTRAL","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"GAIN_MANA","amount":1,"manaKind":"TEMPORARY"}}],"setId":"CORE","collectible":false,"artId":"token_the_spark"}'

@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: wave_caller
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"wave_caller","name":"Wave Caller","type":"MINION","cost":4,"attack":3,"health":6,"class":"TIDECALLER","rarity":"RARE","keywords":[],"rules":[],"setId":"EMBERFALL","collectible":true,"artId":"art/wave_caller"}'
+  _json: '{"id":"wave_caller","name":"Wave Caller","type":"MINION","cost":4,"attack":3,"health":6,"class":"TIDECALLER","rarity":"RARE","keywords":[],"rules":[],"setId":"EMBERFALL","collectible":true,"artId":"tide_wave_caller"}'

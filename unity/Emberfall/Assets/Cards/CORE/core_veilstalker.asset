@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: core_veilstalker
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"core_veilstalker","name":"Veilstalker","type":"MINION","cost":3,"attack":3,"health":3,"class":"NEUTRAL","rarity":"RARE","keywords":["SHROUD"],"rules":[],"setId":"CORE","collectible":true,"artId":"art/core_veilstalker"}'
+  _json: '{"id":"core_veilstalker","name":"Veilstalker","type":"MINION","cost":3,"attack":3,"health":3,"class":"NEUTRAL","rarity":"RARE","keywords":["SHROUD"],"rules":[],"setId":"CORE","collectible":true,"artId":"veilstalker"}'
