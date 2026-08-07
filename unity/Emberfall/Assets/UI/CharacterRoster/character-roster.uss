@@ -103,6 +103,27 @@
 .character-row--gravekeep { border-left-color: var(--class-gravekeep); }
 .character-row--verdant { border-left-color: var(--class-verdant); }
 
+/* The decks no character claims (collection-deckbuilder.md §5 O-4). It uses the character row's
+ * shape so the plates inside it size the same way, and then reads as clearly NOT a character: the
+ * spine is the destructive red rather than a class colour, and the identity block carries a
+ * sentence where every other row carries a name. It is only ever drawn when there is at least one,
+ * so a healthy collection never sees it. */
+.character-row--orphan {
+    border-left-color: var(--negative);
+    background-color: var(--surface-0);
+}
+
+.character-name--orphan {
+    font-size: var(--type-h2);
+    color: var(--ink-2);
+}
+
+.orphan-note {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    white-space: normal;
+}
+
 /* The character's name, and nothing else (Sam, 2026-08-07). This block repeats beside every
  * deck the character owns, so anything on it is a line the player re-reads for information they
  * had after the first row. Narrow, and fixed-width so the deck strip starts on the same column
@@ -195,6 +216,19 @@
 .deck-plate--selected {
     background-color: var(--surface-3);
     border-color: var(--mana);
+}
+
+/* An orphan's plate. The art is NOT dimmed — refuse the deck, never the picture (Sam's collection
+ * ruling) — and it never takes the gold ready edge, because it fails L5 by construction. What
+ * marks it is the dashed-looking muted ring: present enough to say "this one is different", quiet
+ * enough that it does not compete with gold. */
+.deck-plate--orphan .deck-plate-art {
+    border-width: 3px;
+    border-color: var(--class-neutral);
+}
+
+.deck-plate--orphan:hover .deck-plate-art {
+    border-color: var(--negative);
 }
 
 /* The plate has no button (Sam, 2026-08-07). It is the picture, and the picture is the control:
