@@ -52,6 +52,14 @@
     max-width: 520px;
 }
 
+.character-roster--match-pick .roster-panel--list {
+    margin-right: 0;
+}
+
+.character-roster--match-pick .roster-panel--create {
+    display: none;
+}
+
 .roster-intro,
 .create-help,
 .character-detail {
@@ -177,6 +185,77 @@
 
 .delete-character:hover {
     background-color: var(--surface-3);
+}
+
+.character-row--match-pick {
+    flex-direction: column;
+    padding: var(--space-4);
+}
+
+.match-character-details {
+    margin-bottom: var(--space-3);
+}
+
+.match-deck-choices {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.match-deck-choice {
+    min-height: 48px;
+    margin: 0 var(--space-2) var(--space-2) 0;
+    padding: var(--space-2) var(--space-4);
+    border-width: 0;
+    border-radius: var(--space-2);
+    color: var(--surface-0);
+    background-color: var(--positive);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+}
+
+.match-deck-choice:hover {
+    background-color: var(--accent);
+}
+
+.match-deck-draft {
+    min-width: 280px;
+    margin: 0 var(--space-2) var(--space-2) 0;
+    padding: var(--space-3);
+    border-radius: var(--space-2);
+    background-color: var(--surface-3);
+}
+
+.match-deck-draft-name {
+    color: var(--ink-2);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+}
+
+.match-deck-draft-reason {
+    margin-top: var(--space-1);
+    color: var(--warning);
+    font-size: var(--type-label);
+    white-space: normal;
+}
+
+.match-deck-edit {
+    align-self: flex-start;
+    min-width: 96px;
+    min-height: 44px;
+    margin-top: var(--space-2);
+    border-width: 0;
+    border-radius: var(--space-2);
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+
+.match-deck-empty {
+    min-height: 48px;
+    color: var(--ink-2);
+    font-size: var(--type-body);
+    -unity-text-align: middle-left;
 }
 
 .create-title,

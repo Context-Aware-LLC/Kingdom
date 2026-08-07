@@ -12,7 +12,7 @@
 
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
-                <ui:Label text="Choose a character to open its decks." class="roster-intro" />
+                <ui:Label name="roster-intro" text="Choose a character to open its decks." class="roster-intro" />
                 <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll">
                     <ui:VisualElement name="roster-list" class="roster-list" />
                     <ui:Label name="empty-state" text="No characters yet. Create your first one in the sidebar." class="roster-empty" />
@@ -20,7 +20,7 @@
                 <ui:Label name="status" text="" class="roster-status" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="roster-panel roster-panel--create">
+            <ui:VisualElement name="roster-create-panel" class="roster-panel roster-panel--create">
                 <ui:Label name="create-title" text="Create your first character" class="create-title" />
                 <ui:Label text="A pairing is permanent and ordered. Your primary class supplies the hero power." class="create-help" />
                 <ui:TextField name="character-name" label="Name" max-length="16" class="roster-field" />

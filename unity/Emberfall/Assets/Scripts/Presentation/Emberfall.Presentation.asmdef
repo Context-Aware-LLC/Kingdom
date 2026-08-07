@@ -10,6 +10,7 @@
     "Emberfall.Session",
     "Emberfall.AI",
     "Emberfall.Net.Client",
+    "Emberfall.Net.Protocol",
     "Unity.TextMeshPro",
     "Unity.Addressables",
     "Unity.ResourceManager"

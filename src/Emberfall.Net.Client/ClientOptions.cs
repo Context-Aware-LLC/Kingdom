@@ -1,4 +1,5 @@
 using System;
+using Emberfall.Net.Protocol;
 
 namespace Emberfall.Net.Client
 {
@@ -77,6 +78,13 @@ namespace Emberfall.Net.Client
         /// is the check that counts, and this end cannot make a name legal by asserting it.</para>
         /// </summary>
         public string DisplayName { get; init; } = "";
+
+        /// <summary>
+        /// The saved deck selected for this fresh match. When present, the session opts the socket
+        /// into the server's additive <c>/ws?deck=1</c> handshake and sends this as the second frame,
+        /// immediately after <see cref="HelloMsg"/>. Null preserves the prebuilt-deck path.
+        /// </summary>
+        public SubmitDeckMsg? DeckSubmission { get; init; }
 
         /// <summary>The contract version this client was built against, sent in the hello so the
         /// server can compare (it previously never learned the client's).</summary>

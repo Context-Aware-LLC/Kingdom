@@ -10,6 +10,64 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
+    /// Scene-to-scene handoff for the character explicitly chosen at the Find Game door. The id is
+    /// consumed once by <see cref="NetworkedGameBootstrap"/>; the deck itself is reloaded from disk
+    /// there so a stale object can never cross a scene boundary.
+    /// </summary>
+    internal static class MatchDeckSelection
+    {
+        private static string _characterId = "";
+        private static string _deckId = "";
+
+        public static bool Choosing { get; private set; }
+
+        public static void BeginChoosing()
+        {
+            Choosing = true;
+            _characterId = "";
+            _deckId = "";
+        }
+
+        public static void Cancel()
+        {
+            Choosing = false;
+            _characterId = "";
+            _deckId = "";
+        }
+
+        public static void Select(string characterId, string deckId)
+        {
+            if (string.IsNullOrEmpty(characterId))
+                throw new ArgumentException("A match deck selection needs a character id.", nameof(characterId));
+            if (string.IsNullOrEmpty(deckId))
+                throw new ArgumentException("A match deck selection needs a deck id.", nameof(deckId));
+            _characterId = characterId;
+            _deckId = deckId;
+            Choosing = false;
+        }
+
+        public static MatchDeckChoice Take()
+        {
+            var selected = new MatchDeckChoice(_characterId, _deckId);
+            _characterId = "";
+            _deckId = "";
+            return selected;
+        }
+    }
+
+    internal readonly struct MatchDeckChoice
+    {
+        public readonly string CharacterId;
+        public readonly string DeckId;
+
+        public MatchDeckChoice(string characterId, string deckId)
+        {
+            CharacterId = characterId;
+            DeckId = deckId;
+        }
+    }
+
+    /// <summary>
     /// The character doorway into the deckbuilder. It reads the local roster fresh from disk, shows
     /// each ordered class pairing with its default deck and queue standing, and is the only runtime
     /// surface that creates or deletes characters.
@@ -37,6 +95,7 @@ namespace Emberfall.Presentation
 
         private VisualElement _rosterList;
         private Label _rosterCount;
+        private Label _rosterIntro;
         private Label _emptyState;
         private Label _status;
 
@@ -90,6 +149,7 @@ namespace Emberfall.Presentation
         {
             _rosterList = _root.Q<VisualElement>("roster-list");
             _rosterCount = _root.Q<Label>("roster-count");
+            _rosterIntro = _root.Q<Label>("roster-intro");
             _emptyState = _root.Q<Label>("empty-state");
             _status = _root.Q<Label>("status");
 
@@ -110,7 +170,15 @@ namespace Emberfall.Presentation
 
         private void WireChrome()
         {
-            _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => Go("MainMenu"));
+            _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ =>
+            {
+                MatchDeckSelection.Cancel();
+                Go("MainMenu");
+            });
+            if (_rosterIntro != null && MatchDeckSelection.Choosing)
+                _rosterIntro.text = "Choose one of your queue-ready decks to enter the match.";
+            if (MatchDeckSelection.Choosing)
+                _root.AddToClassList("character-roster--match-pick");
         }
 
         private void WireCreateForm()
@@ -190,6 +258,8 @@ namespace Emberfall.Presentation
 
         private VisualElement BuildCharacterRow(Character character, IReadOnlyList<DeckList> decks)
         {
+            if (MatchDeckSelection.Choosing) return BuildMatchCharacterRow(character, decks);
+
             DeckList defaultDeck = CharacterQuery.DefaultDeckOf(character, decks);
             QueueCheck queue = QueueEligibility.Check(defaultDeck, character, _db);
 
@@ -246,10 +316,97 @@ namespace Emberfall.Presentation
             return row;
         }
 
+        private VisualElement BuildMatchCharacterRow(Character character, IReadOnlyList<DeckList> decks)
+        {
+            CharacterDecks choices = DeckQuery.ForCharacter(character, decks, _db);
+            var row = new VisualElement();
+            row.AddToClassList("character-row");
+            row.AddToClassList("character-row--match-pick");
+            row.AddToClassList("character-row--" + ClassSlug(character.PrimaryClass));
+
+            var details = new VisualElement();
+            details.AddToClassList("match-character-details");
+            var name = new Label(character.Name);
+            name.AddToClassList("character-name");
+            details.Add(name);
+            var pairing = new Label($"{Pretty(character.PrimaryClass)} → {Pretty(character.SecondaryClass)}");
+            pairing.AddToClassList("character-detail");
+            details.Add(pairing);
+            var power = new Label($"Hero power: {Pretty(character.PrimaryClass)}");
+            power.AddToClassList("character-detail");
+            details.Add(power);
+            row.Add(details);
+
+            var deckChoices = new VisualElement();
+            deckChoices.AddToClassList("match-deck-choices");
+            int ready = 0;
+            for (int i = 0; i < choices.Decks.Count; i++)
+            {
+                DeckSummary summary = choices.Decks[i];
+                DeckList deck = summary.Deck;
+                string defaultMark = summary.IsDefault ? " · Default" : "";
+                if (summary.Queue.IsEligible)
+                {
+                    var choose = new Button { text = $"{deck.Name}{defaultMark} · {deck.TotalCount} / 30" };
+                    choose.AddToClassList("match-deck-choice");
+                    choose.tooltip = $"Play {character.Name} with {deck.Name}";
+                    choose.clicked += () => ChooseForMatch(character, deck);
+                    deckChoices.Add(choose);
+                    ready++;
+                }
+                else
+                {
+                    var draft = new VisualElement();
+                    draft.AddToClassList("match-deck-draft");
+                    var draftName = new Label($"{deck.Name}{defaultMark} · {deck.TotalCount} / 30");
+                    draftName.AddToClassList("match-deck-draft-name");
+                    draft.Add(draftName);
+                    var reason = new Label($"Draft · {summary.Queue.Reason}");
+                    reason.AddToClassList("match-deck-draft-reason");
+                    draft.Add(reason);
+                    var edit = new Button { text = "Edit" };
+                    edit.AddToClassList("match-deck-edit");
+                    edit.clicked += () => OpenDeckForEdit(character.Id, deck.Id);
+                    draft.Add(edit);
+                    deckChoices.Add(draft);
+                }
+            }
+
+            if (ready == 0)
+            {
+                var none = new Label("No queue-ready decks. Edit a draft to continue.");
+                none.AddToClassList("match-deck-empty");
+                deckChoices.Add(none);
+            }
+            row.Add(deckChoices);
+            return row;
+        }
+
         private void OpenCharacter(string characterId)
         {
             DeckbuilderController.PendingCharacterId = characterId;
+            DeckbuilderController.PendingDeckId = "";
             Go("DeckbuilderSpike");
+        }
+
+        private void OpenDeckForEdit(string characterId, string deckId)
+        {
+            DeckbuilderController.PendingCharacterId = characterId;
+            DeckbuilderController.PendingDeckId = deckId;
+            Go("DeckbuilderSpike");
+        }
+
+        private void ChooseForMatch(Character character, DeckList deck)
+        {
+            QueueCheck queue = QueueEligibility.Check(deck, character, _db);
+            if (!queue.IsEligible)
+            {
+                SetStatus($"{deck.Name} is not queue ready: {queue.Reason}", isError: true);
+                return;
+            }
+
+            MatchDeckSelection.Select(character.Id, deck.Id);
+            Go("BoardNetworked");
         }
 
         private void RefreshCreatePolicy(bool hasCharacters)

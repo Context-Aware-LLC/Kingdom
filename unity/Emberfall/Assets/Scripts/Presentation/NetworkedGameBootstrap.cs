@@ -1,13 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Emberfall.AI;
 using Emberfall.Core;
+using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using Emberfall.Net.Client;
+using Emberfall.Net.Protocol;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -105,6 +108,18 @@ namespace Emberfall.Presentation
                 yield break;
             }
 
+            SubmitDeckMsg selectedDeck;
+            try
+            {
+                selectedDeck = ConsumeSelectedDeck(db);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NetworkedGameBootstrap] selected deck unavailable: {ex.Message}");
+                BootFailed("Selected deck is unavailable — choose it again");
+                yield break;
+            }
+
             // ── C-G1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
             // This client was previously constructed with default ClientOptions, so OnDesyncCapture
             // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
@@ -135,6 +150,7 @@ namespace Emberfall.Presentation
                 // "never set", whereas the "You" this screen renders locally is a string the server
                 // RESERVES (VULN-002 §4.3) and would refuse. The server re-checks whatever we send.
                 DisplayName = PlayerAccount.LocalDisplayNameOr(""),
+                DeckSubmission = selectedDeck,
                 DevCapture = Debug.isDebugBuild,
                 OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
                 OnMisattribution = m => Debug.LogWarning(
@@ -189,6 +205,55 @@ namespace Emberfall.Presentation
 
             Debug.Log($"[NetworkedGameBootstrap] LIVE — seat {_net.Seat} as {_net.Player}.");
             WireMatch(db);
+        }
+
+        private static SubmitDeckMsg ConsumeSelectedDeck(ICardDatabase db)
+        {
+            MatchDeckChoice choice = MatchDeckSelection.Take();
+            if (string.IsNullOrEmpty(choice.CharacterId) || string.IsNullOrEmpty(choice.DeckId))
+            {
+                Debug.LogWarning("[NetworkedGameBootstrap] no match deck was selected; using the server's prebuilt fallback.");
+                return null;
+            }
+
+            PlayerAccount account = PlayerAccount.Local;
+            Character selected = null;
+            IReadOnlyList<Character> roster = account.Roster();
+            for (int i = 0; i < roster.Count; i++)
+            {
+                if (roster[i].Id == choice.CharacterId)
+                {
+                    selected = roster[i];
+                    break;
+                }
+            }
+            if (selected == null)
+                throw new InvalidOperationException("The selected character no longer exists.");
+
+            DeckList deck = null;
+            IReadOnlyList<DeckList> decks = account.Decks();
+            for (int i = 0; i < decks.Count; i++)
+            {
+                if (decks[i].Id == choice.DeckId && decks[i].CharacterId == selected.Id)
+                {
+                    deck = decks[i];
+                    break;
+                }
+            }
+            if (deck == null)
+                throw new InvalidOperationException("The selected deck no longer exists.");
+
+            QueueCheck queue = QueueEligibility.Check(deck, selected, db);
+            if (!queue.IsEligible)
+                throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
+
+            var lines = new List<DeckCardLine>(deck.Entries.Count);
+            for (int i = 0; i < deck.Entries.Count; i++)
+            {
+                DeckEntry entry = deck.Entries[i];
+                lines.Add(new DeckCardLine(entry.CardId, entry.Count));
+            }
+            return new SubmitDeckMsg(selected.Id, selected.PrimaryClass, selected.SecondaryClass, lines);
         }
 
         private void WireMatch(ICardDatabase db)

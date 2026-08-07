@@ -429,16 +429,19 @@ namespace Emberfall.Presentation
         }
 
         // ---- Destinations (stubbed — navigation is a later pass) ----
-        // Find Game → BoardNetworked.unity (server matchmaking; the only destination with a backend today).
+        // Find Game → CharacterRoster → BoardNetworked (pick first, then enter server matchmaking).
         /// <summary>
-        /// Find Game → <c>BoardNetworked</c>.
+        /// Find Game → <c>CharacterRoster</c> → <c>BoardNetworked</c>.
         ///
-        /// <para><b>There is no queue screen to build.</b> That scene's <c>NetworkedGameBootstrap</c>
-        /// already connects, sends its hello and waits, and the server's gate pairs whoever is waiting
-        /// with the next arrival (<c>MatchGate.PairAsync</c>) — so this one scene load is the entire
-        /// matchmaking entry point. Two clients that both press this find each other.</para>
+        /// <para>The existing character roster is the deck-selection step: it already shows each
+        /// character's default deck and queue eligibility. A queue-ready choice then loads the board,
+        /// whose network bootstrap submits that exact deck before pairing.</para>
         /// </summary>
-        private void OnFindGame() => Go("BoardNetworked");
+        private void OnFindGame()
+        {
+            MatchDeckSelection.BeginChoosing();
+            Go("CharacterRoster");
+        }
 
         /// <summary>Single Player → <c>Board</c>, the local vs-AI slice (<c>GameBootstrap</c>).</summary>
         private void OnSinglePlayer() => Go("Board");
@@ -471,7 +474,11 @@ namespace Emberfall.Presentation
         /// Deck Builder → CharacterRoster.unity. The roster owns character selection, creation and
         /// deletion; the Main Menu never does.
         /// </summary>
-        private void OnDeckBuilder() => Go("CharacterRoster");
+        private void OnDeckBuilder()
+        {
+            MatchDeckSelection.Cancel();
+            Go("CharacterRoster");
+        }
 
         // Store stays in this scene: its full-screen UI Toolkit panel owns the purchase/reveal flow.
         private void OnStore() => _shop?.Open();
