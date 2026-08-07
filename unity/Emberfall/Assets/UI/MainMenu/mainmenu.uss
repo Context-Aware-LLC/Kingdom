@@ -259,6 +259,11 @@
     border-radius: var(--space-1);
     color: var(--ink-1);
 }
+/* The selected class is permanent player-facing data; style its text directly instead of depending
+ * on the popup input's inherited color. */
+.mm-modal__dropdown .unity-base-popup-field__text {
+    color: var(--ink-1);
+}
 /* Reserves its line whether or not there is an error, so confirming does not shift the buttons. */
 .mm-modal__error {
     font-size: var(--type-caption);
