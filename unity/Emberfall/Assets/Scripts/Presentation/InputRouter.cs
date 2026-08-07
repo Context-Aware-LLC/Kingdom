@@ -489,7 +489,16 @@ namespace Emberfall.Presentation
             faceGo.name = "Face";
             faceGo.transform.SetParent(_bannerGo.transform, false);
             faceGo.transform.localScale = new Vector3(4.6f, 0.42f, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());
+            // Edit-mode safe: InputGestureVerify builds this router outside play mode, and plain
+            // Destroy there logs an error and leaves the collider behind. Same conversion as
+            // ManaTrayView — a view only needs it once an editor tool constructs it.
+            var faceCollider = faceGo.GetComponent<MeshCollider>();
+            if (faceCollider != null)
+            {
+                if (Application.isPlaying) Destroy(faceCollider);
+                else DestroyImmediate(faceCollider);
+            }
+
             var face = faceGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(face, MaterialCatalog.Plate);
             var mpb = new MaterialPropertyBlock();
