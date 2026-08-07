@@ -298,5 +298,71 @@
     "perspective": "Low three-quarter view at cobblestone height, close enough that the thrown stones make a readable sweeping arc while the source remains centered.",
     "background": "A warm, dim amber-lit ruin courtyard with charred timber and muted ember glow, kept soft and subordinate behind the cool granite projectiles.",
     "notes": "Scraped from the draft brief this card was generated from (stone_throw)."
+  },
+  "token_revenant_5_5_bulwark": {
+    "subject": "A broad undead gate guardian stands behind a slab-shaped relic shield, its iron-grey funeral armor bound with heavy bronze chains and pale burial linen. Sickly green-gold grave-light burns through the visor and along one planted boot as the revenant braces the shield against an unseen impact.",
+    "perspective": "Low full-body three-quarter view with the revenant's complete shield, helmet, and planted stance centered inside the middle 70%.",
+    "background": "A warm amber-lit ruined gate with dusty ochre stone and distant braziers, separating the cold iron and bone-white guardian from the setting.",
+    "notes": "Bulwark is the dominant read. Keep it one human-sized undead guardian, not a giant, king, skeleton crowd, or duplicate of Bound Revenant."
+  },
+  "token_thorn_cub_1_2": {
+    "subject": "A fox-sized quadruped cub grown from braided cedar-brown roots, with two broad leaf ears, a fresh green sprout-tail, and a short ridge of soft honey-gold thorns protecting its shoulders. It plants its forepaws on a cracked stone and peers forward with curious amber sap eyes.",
+    "perspective": "Low close three-quarter portrait at the cub's eye level with its whole small body and sprout-tail centered and readable.",
+    "background": "A cool blue-grey ruin floor in soft morning mist, providing clean value and temperature contrast behind the warm wood and fresh green growth.",
+    "notes": "Keep it unmistakably young and fox-sized, with no antlers, armor, giant fangs, roaring pose, extra cubs, or dense foliage obscuring the silhouette."
+  },
+  "neutral_spellwarden": {
+    "subject": "A weathered settlement scholar in a stone-grey coat raises a round aged-bronze warding plate as three small arcane sparks spiral into a restrained amber knot above its blank center. A moss-green sash and practical satchel mark a traveling keeper of dangerous magic rather than a robed wizard.",
+    "perspective": "Eye-level waist-up three-quarter portrait with the scholar, bronze plate, and compact spark knot centered and the hand gesture clearly visible.",
+    "background": "A pale cool-blue archive ruin with blurred shelves and broken masonry, opposing the warm bronze and amber focal light.",
+    "notes": "Arcane Surge reads as gathered energy, not a blast. No readable glyphs, spellbook text, ornate staff, hooded cultist, giant aura, or extra figures."
+  },
+  "neutral_ironclad_bulwark": {
+    "subject": "A squat ironclad settlement construct braces behind two overlapping riveted shield plates, its body built from iron-black boiler sections, aged-bronze hinges, and a single warm lantern-amber core. A pale translucent aegis sheen hugs only the forward plates while its broad feet bite into the road.",
+    "perspective": "Low frontal three-quarter view with both shield plates, glowing core, and planted feet forming one compact centered silhouette.",
+    "background": "A pale cold-grey causeway under thin blue mist, making the near-black iron mass and warm core read clearly.",
+    "notes": "Bulwark and Aegis should read together without a magical bubble. No weapon, humanoid knight, castle-scale body, cannon, spikes, or attack pose."
+  },
+  "neutral_soulbound_revenant": {
+    "subject": "A slender revenant in torn stone-grey traveling clothes kneels beside a cracked bronze soul-lantern, one translucent bone-white hand tethered to its warm amber flame by a single taut green-gold filament. Its bowed iron mask and still posture suggest obligation rather than aggression.",
+    "perspective": "Eye-level medium three-quarter view with the kneeling revenant, lantern, and complete tether line centered inside the frame.",
+    "background": "A cool moon-blue roadside shrine of weathered stone and sparse silver mist, contrasting with the lantern's warm focal glow.",
+    "notes": "One revenant and one lantern only. No chains around the whole body, screaming ghost, skull swarm, graveyard battle, or duplicate of the larger bulwark token."
+  },
+  "neutral_venomscale_drake": {
+    "subject": "A lean hound-sized drake crouches along a broken aqueduct, its overlapping slate-grey scales edged in moss green and its throat pouch glowing a restrained toxic lime. One clear venom bead gathers at a short ivory fang while narrow bronze-brown wing membranes fold tightly against the body.",
+    "perspective": "Low side-on three-quarter portrait with the drake's complete head-to-tail silhouette, folded wings, and venom bead centered and unobscured.",
+    "background": "A warm dusty coral sunset over pale ruined arches, opposing the cool slate body and toxic-green throat.",
+    "notes": "Venom is one bead, not a spray. Keep it hound-sized and naturalistic, with no giant dragon scale, fire breath, rider, hoard, extra heads, or airborne attack."
+  },
+  "neutral_duneborn_construct": {
+    "subject": "A broad four-legged construct rises from wind-packed sand, built around a dark iron frame clad in sun-bleached sandstone plates and held by aged-bronze straps. Its wedge-shaped front slab lowers into a defensive brace while a small amber furnace-eye glows beneath the overhang.",
+    "perspective": "Low full-body three-quarter view near sand level with all four feet, front slab, and compact pack-animal silhouette visible in the center.",
+    "background": "A cool indigo predawn desert with blue-violet dunes and a pale horizon, separating the warm sandstone and bronze body.",
+    "notes": "Bulwark reads through the lowered slab. No humanoid golem, pyramid, giant statue, weapon, sand tornado, carved text, or decorative runes."
+  },
+  "neutral_searing_quill": {
+    "subject": "A single long bronze-and-ivory writing quill lies diagonally above a dark stone tablet, its feather burned to ember-red filaments and its sharpened metal nib glowing molten orange. One curling line of heat scorches the tablet surface without forming any letter or symbol.",
+    "perspective": "Tight top-down three-quarter close view with the entire quill, hot nib, and short scorch trail centered inside the middle 70%.",
+    "background": "A cool charcoal-grey scribe's bench with pale ash dust and muted blue shadow, maximizing contrast around the ember-red feather and molten nib.",
+    "notes": "This is a usable weapon-like quill, not a bird or magic wand. No readable writing, book, hand, multiple quills, flame plume, or oversized sword proportions."
+  },
+  "ember_cinderplate_golem": {
+    "subject": "A compact Emberward golem lunges from one planted foot, its body assembled from overlapping char-black furnace plates with molten-orange seams and a blunt ember-red shoulder ram. One gold spark sprays from a cracked elbow as the forward fist drives low, emphasizing dangerous speed over durability.",
+    "perspective": "Low dynamic three-quarter action view with the entire golem, forward fist, and planted rear foot contained within the central frame.",
+    "background": "A pale cold-grey ash yard under blue smoke, opposing the dark armor and molten seams while leaving the silhouette clean.",
+    "notes": "The 6/3 profile reads as high force and brittle construction. No giant scale, defensive shield, weapon, volcano, humanoid face, or explosion filling the frame."
+  },
+  "ember_magmacore_warden": {
+    "subject": "A massive but doorway-scale elemental warden plants both fists like buttresses, its char-black basalt torso enclosing one deep molten-orange magma core behind thick gold-riveted ribs. Ember-red heat vents rise from the shoulders while broad cracked-rock forearms form a protective arch.",
+    "perspective": "Low frontal three-quarter portrait with the full warden, both bracing fists, and bright central core centered and safely inside the frame.",
+    "background": "A pale blue-grey mountain pass veiled in cold steam, creating strong temperature contrast with the molten core and dark volcanic body.",
+    "notes": "Bulwark is a stable arched stance, not a shield spell. No lava giant scale, erupting volcano, weapon, roaring mouth, wings, or uncontrolled inferno."
+  },
+  "ember_heat_surge": {
+    "subject": "A single compressed wave of transparent heat rolls forward across cracked black forge tiles, bending the air into a clear lens and lifting a narrow crest of molten-orange sparks. The foremost tile flashes ember red along its fracture just before the wave passes.",
+    "perspective": "Very low ground-level side view with the heat lens, spark crest, and glowing cracked tile forming one centered horizontal action.",
+    "background": "A cool desaturated steel-blue foundry corridor fading into pale smoke, so the warm distortion and sparks remain the sole focal energy.",
+    "notes": "Show heat through refraction and a restrained spark crest, not a fireball, explosion, lava flood, caster, enemy, or text-like pattern."
   }
 }
