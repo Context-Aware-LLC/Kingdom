@@ -76,6 +76,14 @@ Usage:
     --candidates N             default 2 (gemini) / 1 (openai), clamped to 1-4
     --skip-existing            default ON; --no-skip-existing to re-roll
     --sheet-only               rebuild the contact sheets from what is on disk
+    --to-unity                 write straight to Assets/, skipping candidates
+
+DIRECT-TO-UNITY (--to-unity) writes one image per card to the promoted path and
+skips the candidates step entirely. The destination filename is fixed by the card
+id, so it cannot land beside its predecessor the way a candidate does; the outgoing
+image is copied to <card_dir>/replaced_<utc>.png before the overwrite instead.
+--skip-existing then means "this card is already promoted", so a run can deliver
+art it did not generate. Every run prints that split explicitly.
 """
 
 import argparse
@@ -551,16 +559,62 @@ def _conform(dest: pathlib.Path, tag: str) -> str:
     return f"{w}x{h} NOT SQUARE"
 
 
-def generate(card: dict, provider: str, key: str, candidates: int,
-             skip: bool) -> list[dict]:
-    """Returns one manifest record per image actually written."""
-    spec = PROVIDERS[provider]
-    have = existing(card, provider)
-    if skip and len(have) >= candidates:
-        print(f"[{card['file']}] skip ({len(have)} {provider} candidate(s) on disk)",
-              flush=True)
-        return []
+def preserve_promoted(card: dict) -> pathlib.Path | None:
+    """Copy the CURRENT promoted image aside before anything overwrites it.
 
+    In candidates mode nothing can destroy an image: numbering always continues past
+    what is on disk, so a re-roll lands BESIDE its predecessor. Writing straight into
+    Assets/ has no such property — the destination filename is fixed by the card id, so
+    a second run overwrites the first and the previous image is gone. Sam's standing rule
+    ("a re-roll lands beside the previous candidate, never over it") needs a mechanism
+    here, and this is it: the outgoing image is copied into the card's pipeline folder as
+    replaced_<utc>.png first. Deleting it is Sam's call, not the script's.
+
+    Overwrite-in-place is still what happens to the .png itself — the .meta beside it
+    carries the guid the Addressables entry points at, and replacing the pair mints a new
+    guid and silently orphans that entry.
+    """
+    dest = final_path(card)
+    if not dest.exists():
+        return None
+    keep_dir = card_dir(card)
+    keep_dir.mkdir(parents=True, exist_ok=True)
+    keep = keep_dir / f"replaced_{time.strftime('%Y%m%dT%H%M%S', time.gmtime())}.png"
+    keep.write_bytes(dest.read_bytes())
+    return keep
+
+
+def check_meta(card: dict) -> str | None:
+    """A .png in Assets/ with no .meta beside it is INVISIBLE in a player build, and
+    nothing in Unity or CI complains. Generating the .meta is the Editor's job; committing
+    it is a separate and easy-to-forget step. Returned so the run summary can say it once,
+    loudly, rather than burying it per-card."""
+    meta = final_path(card).with_name(final_path(card).name + ".meta")
+    return None if meta.exists() else str(meta.relative_to(REPO))
+
+
+def generate(card: dict, provider: str, key: str, candidates: int,
+             skip: bool, to_unity: bool = False) -> tuple[list[dict], str | None]:
+    """Returns (one manifest record per image actually written, skip reason or None)."""
+    spec = PROVIDERS[provider]
+
+    if to_unity:
+        # Straight into Assets/: the destination is a single fixed filename, so "enough
+        # candidates on disk" is meaningless. The only question is whether the card is
+        # already promoted — and answering "yes, skip" is exactly how a batch comes back
+        # looking like it regenerated art it merely left alone.
+        if skip and final_path(card).exists():
+            reason = "already promoted"
+            print(f"[{card['file']}] skip - {reason} (NOT generated this run)", flush=True)
+            return [], reason
+    else:
+        have = existing(card, provider)
+        if skip and len(have) >= candidates:
+            reason = f"{len(have)} {provider} candidate(s) on disk"
+            print(f"[{card['file']}] skip ({reason})", flush=True)
+            return [], reason
+
+    have = existing(card, provider)
     prompt = build_prompt(card, provider)
     dest_dir = card_dir(card)
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -575,6 +629,10 @@ def generate(card: dict, provider: str, key: str, candidates: int,
     # now means "add N more", not "redo the first N".
     base = len(have)
     n_new = (candidates - base) if skip else candidates
+    # One fixed destination filename means a second image this run would overwrite the
+    # first. Candidates are a candidates-mode concept; direct-to-Unity is always one.
+    if to_unity:
+        base, n_new = 0, 1
 
     records: list[dict] = []
     for k in range(n_new):
@@ -591,11 +649,20 @@ def generate(card: dict, provider: str, key: str, candidates: int,
             print(f"[{tag}] FAILED {err}", flush=True)
             continue
 
-        dest = dest_dir / f"cand_{provider}_{i + 1}.png"
+        if to_unity:
+            kept = preserve_promoted(card)
+            dest = final_path(card)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if kept is not None:
+                print(f"[{tag}] previous image preserved -> {kept.relative_to(REPO)}",
+                      flush=True)
+        else:
+            dest = dest_dir / f"cand_{provider}_{i + 1}.png"
         dest.write_bytes(raw)
         dims = _conform(dest, tag)
         took = time.time() - t0
-        print(f"[{tag}] -> {dest.relative_to(OUT)}  "
+        shown = dest.relative_to(REPO) if to_unity else dest.relative_to(OUT)
+        print(f"[{tag}] -> {shown}  "
               f"({len(raw)/1e6:.1f} MB, {dims}, {took:.0f}s)", flush=True)
         records.append(
             {
@@ -750,6 +817,9 @@ def main() -> int:
                     help="re-roll candidates even if they exist")
     ap.add_argument("--sheet-only", action="store_true",
                     help="rebuild contact sheets from what is already on disk")
+    ap.add_argument("--to-unity", dest="to_unity", action="store_true",
+                    help="write straight to Assets/Art/Cards/<setId>/ instead of candidates; "
+                         "always 1 image per card, and the outgoing image is preserved first")
     args = ap.parse_args()
 
     provider = args.provider
@@ -784,10 +854,16 @@ def main() -> int:
         for card in cards:
             print("=" * 78)
             print(f"{card['id']}  [{card['class']} / {card['rarity']} / {card['cost']} mana]")
-            print(f"  provider {provider} ({spec['model']}) x{candidates} candidate(s)")
+            n = 1 if args.to_unity else candidates
+            print(f"  provider {provider} ({spec['model']}) x{n} "
+                  f"{'image (direct)' if args.to_unity else 'candidate(s)'}")
             print(f"  file     {card['file']}.png  ({EDGE}x{EDGE})")
-            print(f"  cands    {card_dir(card).relative_to(REPO)}/cand_{provider}_N.png")
-            print(f"  final    {final_path(card).relative_to(REPO)}")
+            if args.to_unity:
+                print(f"  writes   {final_path(card).relative_to(REPO)}"
+                      f"{'  (OVERWRITES; previous preserved)' if final_path(card).exists() else ''}")
+            else:
+                print(f"  cands    {card_dir(card).relative_to(REPO)}/cand_{provider}_N.png")
+                print(f"  final    {final_path(card).relative_to(REPO)}")
             print("-" * 78)
             print(build_prompt(card, provider))
             print()
@@ -821,17 +897,44 @@ def main() -> int:
               file=sys.stderr)
         return 2
 
-    print(estimate(provider, len(cards) * candidates))
+    print(estimate(provider, len(cards) * (1 if args.to_unity else candidates)))
     OUT.mkdir(parents=True, exist_ok=True)
-    new_records = {c["id"]: generate(c, provider, key, candidates, args.skip) for c in cards}
+    results = {c["id"]: generate(c, provider, key, candidates, args.skip, args.to_unity)
+               for c in cards}
+    new_records = {cid: recs for cid, (recs, _) in results.items()}
+    skipped = {cid: why for cid, (_, why) in results.items() if why}
     write_manifest(cards, new_records)
-    for cls in sorted({c["class"] for c in cards}):
-        contact_sheet([c for c in cards if c["class"] == cls], cls)
+    if not args.to_unity:
+        for cls in sorted({c["class"] for c in cards}):
+            contact_sheet([c for c in cards if c["class"] == cls], cls)
 
     made = sum(len(v) for v in new_records.values())
-    print(f"\n{made} image(s) generated -> {OUT}")
-    print("Human picks one candidate per card, then promote it to "
-          f"{UNITY_CARDS.relative_to(REPO)}/<setId>/<art_file>.png")
+    by_id = {c["id"]: c for c in cards}
+
+    # DELIVERED IS NOT GENERATED. A skipped card still has art on disk, so a batch whose
+    # output is read as "here is the art" reports images that this run never touched —
+    # which reads downstream as the generator emitting duplicates of an earlier run.
+    # Say the split out loud, every run, and name the skipped cards.
+    print(f"\n{len(cards)} card(s): {made} image(s) generated, {len(skipped)} skipped")
+    if skipped:
+        print("SKIPPED - art already on disk, NOT generated this run "
+              "(pass --no-skip-existing to re-roll):")
+        for cid in sorted(skipped):
+            print(f"    {by_id[cid]['file']}  ({skipped[cid]})")
+
+    if args.to_unity:
+        print(f"\nWrote directly to {UNITY_CARDS.relative_to(REPO)}/<setId>/<art_file>.png")
+        missing = [m for m in (check_meta(by_id[cid]) for cid in new_records if new_records[cid])
+                   if m]
+        if missing:
+            print(f"\n{len(missing)} promoted .png has NO .meta beside it. Unity must generate "
+                  "it and it must be committed, or the card is INVISIBLE in a player build:")
+            for m in missing:
+                print(f"    {m}")
+    else:
+        print(f"\n{made} image(s) -> {OUT}")
+        print("Human picks one candidate per card, then promote it to "
+              f"{UNITY_CARDS.relative_to(REPO)}/<setId>/<art_file>.png")
     return 0 if made or args.skip else 1
 
 
