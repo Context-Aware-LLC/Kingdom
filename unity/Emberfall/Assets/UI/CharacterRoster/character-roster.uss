@@ -105,13 +105,14 @@
 
 /* The character's name, and nothing else (Sam, 2026-08-07). This block repeats beside every
  * deck the character owns, so anything on it is a line the player re-reads for information they
- * had after the first row. Fixed-width so the deck strip starts on the same column down the
- * whole list. A plain block, not a button: opening a character means opening one of ITS DECKS,
+ * had after the first row. Narrow, and fixed-width so the deck strip starts on the same column
+ * down the whole list — it holds one word, and every pixel it does not take is a pixel of deck
+ * art. A plain block, not a button: opening a character means opening one of ITS DECKS,
  * and there is no "just the character" destination left for a click to go to. */
 .character-identity {
-    width: 26%;
-    min-width: 240px;
-    max-width: 340px;
+    width: 18%;
+    min-width: 170px;
+    max-width: 260px;
     flex-shrink: 0;
     align-items: flex-start;
     padding: var(--space-4);
@@ -176,21 +177,23 @@
     overflow: hidden;
 }
 
-.deck-plate--default .deck-plate-art {
-    border-width: 2px;
+/* GOLD MEANS READY TO PLAY (Sam, 2026-08-07). It is the only thing on a plate that says so —
+ * the "17 / 30" caption and the Ready/Draft chip before it are both gone. A deck short of 30, or
+ * holding something illegal, simply has no gold edge.
+ *
+ * The default deck is NOT a border. It is the star on the plate's Functions button, because gold
+ * now means something else and a second ring colour on the same element would be read as one
+ * state, not two.
+ *
+ * The match pick is the OUTER ring on the plate, so a picked deck still shows its gold inner edge
+ * — two concentric rings, two independent facts. */
+.deck-plate-art--ready {
+    border-width: 3px;
     border-color: var(--accent);
 }
 
-/* The deck chosen to take into a match. Three ring colours, three meanings, no overlap: gold is
- * the stored default, blue is this session's pick, and green is reserved for "playable" on the
- * count. */
 .deck-plate--selected {
     background-color: var(--surface-3);
-    border-color: var(--mana);
-}
-
-.deck-plate--selected .deck-plate-art {
-    border-width: 2px;
     border-color: var(--mana);
 }
 
@@ -213,19 +216,6 @@
 .deck-plate-functions:hover {
     color: var(--surface-0);
     background-color: var(--accent);
-}
-
-/* Queue standing, said without a word: the count goes green when the deck is playable. Not a
- * dimming for the other case — nothing in a collection surface gets greyed out (Sam, 2026-08-07,
- * the same ruling that took the disabled tint off the deckbuilder's card wall). */
-.deck-plate-count {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-}
-
-.deck-plate-count--ready {
-    color: var(--positive);
-    -unity-font-style: bold;
 }
 
 .deck-plate--new .deck-plate-art {

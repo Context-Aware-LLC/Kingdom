@@ -789,10 +789,10 @@ namespace Emberfall.Presentation
             ShowcaseArt(deck, art);
             plate.Add(art);
 
-            var count = new Label($"{deck.TotalCount} / {DeckValidator.DeckSize}");
-            count.AddToClassList("deck-plate-count");
-            count.EnableInClassList("deck-plate-count--ready", summary.Queue.IsEligible);
-            plate.Add(count);
+            // Queue standing is the GOLD BORDER and nothing else (Sam, 2026-08-07). It replaced a
+            // "17 / 30" caption, which replaced a Ready/Draft chip — each pass trading words for
+            // something the eye reads without stopping. A deck with a gold edge is ready to play.
+            art.EnableInClassList("deck-plate-art--ready", summary.Queue.IsEligible);
 
             var functions = new Button { text = isDefault ? "★ Functions" : "Functions" };
             functions.AddToClassList("deck-plate-functions");
@@ -809,13 +809,20 @@ namespace Emberfall.Presentation
         // queries nor aspect-ratio, so both halves of that are a layout pass: the strip measures
         // itself, decides how many squares fit, and grows them to fill the row.
 
-        /// <summary>Below this a deck image stops reading as a picture and starts reading as an
-        /// icon; the strip wraps to fewer columns rather than going under it.</summary>
-        private const float MinPlate = 132f;
+        /// <summary>
+        /// The size a deck image wants to be. <b>Columns are solved from this, never from
+        /// <see cref="MinPlate"/></b> — solving from the floor fits as many plates as are legally
+        /// allowed and then makes every one of them the smallest it may be, which is exactly how a
+        /// character with two decks ended up using a third of its row.
+        /// </summary>
+        private const float PreferredPlate = 300f;
 
-        /// <summary>Above this a single deck is just eating the row. One or two decks stay this
-        /// size rather than stretching to the full width of the strip.</summary>
-        private const float MaxPlate = 232f;
+        /// <summary>Below this a deck image stops reading as a picture and starts reading as an
+        /// icon. Only reached when the strip is narrower than one preferred plate.</summary>
+        private const float MinPlate = 180f;
+
+        /// <summary>Above this a single deck is just eating the row.</summary>
+        private const float MaxPlate = 420f;
 
         /// <summary>Must match .deck-plate's margin-right and .deck-strip's wrap spacing (--space-3).</summary>
         private const float PlateGutter = 12f;
@@ -853,8 +860,16 @@ namespace Emberfall.Presentation
             float available = strip.resolvedStyle.width - RowSafetyMargin;
             if (available <= 0f) return;
 
-            int columns = Mathf.Max(1, Mathf.FloorToInt((available + PlateGutter) / (MinPlate + PlateGutter)));
-            float side = Mathf.Min(MaxPlate, (available - (columns - 1) * PlateGutter) / columns);
+            // Never more columns than there are plates: a character with two decks in a strip wide
+            // enough for four should get two BIG squares, not two small ones and empty space.
+            int plates = 0;
+            foreach (VisualElement child in strip.Children())
+                if (child.ClassListContains("deck-plate")) plates++;
+            if (plates == 0) return;
+
+            int fits = Mathf.Max(1, Mathf.FloorToInt((available + PlateGutter) / (PreferredPlate + PlateGutter)));
+            int columns = Mathf.Min(fits, plates);
+            float side = Mathf.Clamp((available - (columns - 1) * PlateGutter) / columns, MinPlate, MaxPlate);
 
             foreach (VisualElement child in strip.Children())
             {
