@@ -180,7 +180,7 @@ namespace Emberfall.Editor
         // to judge a trade. Printed stats here would be confidently wrong.
         private static int ContentUsesLiveStateOverPrint()
         {
-            CardDefinition def = MinionWith(Keyword.TAUNT, attack: 2, health: 3);
+            CardDefinition def = MinionWith(Keyword.BULWARK, attack: 2, health: 3);
             var live = new StubLive { Attack = 5, Health = 1 };
 
             CardRevealContent c = CardRevealContent.Build(def, live);
