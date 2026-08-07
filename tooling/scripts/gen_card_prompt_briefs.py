@@ -210,16 +210,42 @@ VISUAL_POWER_TIERS = {
 
 
 def scale_clause(card):
+    """COST AND BODY DECIDE SIZE. RARITY DOES NOT (Sam, 2026-08-06).
+
+    This used to be rarity-first, with COMMON hard-capped at tier 1 no matter what it cost.
+    That cap came from the Blazewing finding — a cheap card rendered as a titanic boss — but it
+    fixed the wrong variable. Blazewing was CHEAP, not common; rarity is a drop-rate and an
+    identity signal, not a statement about how big the thing is. The cap meant an 8-cost common
+    was told to look "solid but unremarkable" while the VISUAL POWER line, which has always been
+    cost-driven, told the same brief "monumental" — the two clauses contradicted each other
+    inside one prompt.
+
+    Cost is the spine now, so the Blazewing protection still holds: a 1-cost anything stays
+    tier 0. Rarity can only ever RAISE, never suppress.
+    """
     cost = card.get("cost", 0)
     rarity = card.get("rarity", "COMMON")
-    if rarity == "LEGENDARY":
-        tier = 3
-    elif rarity == "EPIC":
+    attack = card.get("attack") or 0
+    health = card.get("health") or 0
+    body = attack + health if card.get("type") == "MINION" else 0
+
+    if cost <= 1:
+        tier = 0
+    elif cost <= 3:
+        tier = 1
+    elif cost <= 5:
         tier = 2
-    elif rarity == "RARE":
-        tier = 2 if cost >= 5 else 1
-    else:  # COMMON — capped, regardless of cost, per the Blazewing finding
-        tier = 1 if cost >= 4 else 0
+    else:
+        tier = 3
+
+    # A body far larger than its rung reads big whatever it cost or however common it is.
+    if body >= 12 or attack >= 7 or health >= 8:
+        tier = min(3, tier + 1)
+
+    # LEGENDARY is an identity asset and should never be drawn diminutively — but a 1-cost
+    # legendary is still a 1-cost thing, so this raises by one rather than jumping to the top.
+    if rarity == "LEGENDARY":
+        tier = min(3, tier + 1)
 
     if cost <= 1:
         power_tier = 0

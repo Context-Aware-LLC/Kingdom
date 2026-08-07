@@ -141,13 +141,15 @@ def card_summary(card):
         "hasArt": has_art(card),
         "hasDraft": draft_path(card).exists(),
     }
-def scale(rarity):
-    scale_text = ["common", "uncommon", "rare", "legendary"]
-    _scale_tier = scale_text.index(rarity)
-    scale_helper = ["small and unglamorous — modest scale, nothing here should read as imposing or dramatic.", "solid but unremarkable in scale — competent, not extraordinary.", "sizable — a genuine mid-to-late-game presence, but not the biggest thing on the board.", "commanding — one of the biggest, most dramatic shapes in its class."]
-    _scale =  scale_helper[_scale_tier]
-    return _scale
-    
+# A rarity-only scale() lived here and is deliberately gone (2026-08-06). It was never called
+# — compose_blank() has always used the shared scale_clause() — and it could not have worked:
+# it indexed ["common","uncommon","rare","legendary"] with the row's rarity, which is uppercase
+# and includes EPIC, so every lookup raised ValueError. It also encoded exactly the rule Sam
+# asked to remove: size read off rarity alone, so an expensive common was drawn small.
+#
+# Sizing lives in gen_card_prompt_briefs.scale_clause(), keyed on cost and body with rarity
+# only ever raising. One definition, both front-ends. Do not re-add a local copy.
+
 
 class Handler(BaseHTTPRequestHandler):
     def _json(self, obj, status=200):
