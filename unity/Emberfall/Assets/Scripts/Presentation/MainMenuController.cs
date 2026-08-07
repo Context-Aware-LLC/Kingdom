@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -14,13 +13,12 @@ namespace Emberfall.Presentation
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
     /// <para>Each destination has a named handler so a scene-loader drops straight in. The Store opens
-    /// its in-scene panel; Deck Builder opens the create-character step when the device has no
-    /// characters; the remaining unfinished destinations still log their intent.</para>
+    /// its in-scene panel; Deck Builder opens the character roster; the remaining unfinished
+    /// destinations still log their intent.</para>
     ///
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
-    /// asked once, here, and the answer plus the first character are the first collection files ever
-    /// written on the machine (<see cref="PlayerAccount"/>). Everything is local: no display name
-    /// travels the wire yet, so the opponent still sees a seat id.</para>
+    /// asked once here. Character creation lives on the roster screen, never on this menu. Everything
+    /// is local: no display name travels the wire yet, so the opponent still sees a seat id.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MainMenuScreen.uxml and whose Panel Settings is MainMenuPanelSettings.
@@ -28,23 +26,9 @@ namespace Emberfall.Presentation
     [RequireComponent(typeof(UIDocument))]
     public sealed class MainMenuController : MonoBehaviour
     {
-        /// <summary>
-        /// The classes a character may pair. NEUTRAL is excluded — it is the shared pool every
-        /// character already gets, not a class you can be (<c>Character.IsValidPairing</c>). Ordered
-        /// as the enum is, so the list does not reshuffle between builds.
-        /// </summary>
-        private static readonly CardClass[] PairableClasses =
-        {
-            CardClass.EMBERWARD, CardClass.TIDECALLER, CardClass.GRAVEKEEP, CardClass.VERDANT,
-        };
-
         private VisualElement _root;
         private PlayerAccount _account;
         private LoadingOverlay _loading;
-
-        // Loaded on first use rather than at OnEnable: the card database is only needed to generate a
-        // starter deck, and pulling it in makes the front door wait on Addressables for nothing.
-        private ICardDatabase _db;
 
         private Label _identityName;
         private Label _identitySub;
@@ -55,20 +39,6 @@ namespace Emberfall.Presentation
         private TextField _nameField;
         private Button _nameCancel;
         private bool _nameRequired;
-
-        private VisualElement _characterModal;
-        private Label _characterTitle;
-        private Label _characterError;
-        private TextField _characterNameField;
-        private DropdownField _characterPrimary;
-        private DropdownField _characterSecondary;
-        private Button _characterCancel;
-
-        // Set right before OpenCharacterModal by OnDeckBuilder only — the first-run continuation
-        // (ConfirmName) leaves it false. Consumed once by ConfirmCharacter, so a create reached via
-        // the Deck Builder button lands the player in the deckbuilder instead of back at the menu,
-        // while first-run creation still ends on the menu as before.
-        private bool _characterModalOpensDeckBuilder;
 
         private VisualElement _accountModal;
         private VisualElement _accountList;
@@ -112,7 +82,6 @@ namespace Emberfall.Presentation
 
             BindIdentity();
             BindNameModal();
-            BindCharacterModal();
             BindAccountModal();
 
             // A corrupt collection file must not brick the front door. The stores throw rather than
@@ -283,167 +252,9 @@ namespace Emberfall.Presentation
             Hide(_nameModal);
             RefreshIdentity();
 
-            // First run continues straight into a character — a named player with no character has
-            // nothing to play, and this is the only moment we know they are new. On later renames it
-            // must not fire, or every name change would reopen the create form.
-            if (_nameRequired && _account.Roster().Count == 0) OpenCharacterModal();
-        }
-
-        // ── Character modal ─────────────────────────────────────────────────────────────
-
-        private void BindCharacterModal()
-        {
-            _characterModal = _root.Q<VisualElement>("character-modal");
-            _characterTitle = _root.Q<Label>("character-title");
-            _characterError = _root.Q<Label>("character-error");
-            _characterNameField = _root.Q<TextField>("character-name-field");
-            _characterPrimary = _root.Q<DropdownField>("character-primary");
-            _characterSecondary = _root.Q<DropdownField>("character-secondary");
-            _characterCancel = _root.Q<Button>("btn-character-cancel");
-
-            Wire("btn-character-confirm", ConfirmCharacter);
-            Wire("btn-character-cancel", () => Hide(_characterModal));
-
-            var choices = new List<string>(PairableClasses.Length);
-            foreach (CardClass c in PairableClasses) choices.Add(Pretty(c));
-
-            if (_characterPrimary != null)
-            {
-                _characterPrimary.choices = choices;
-                _characterPrimary.index = 0;
-                // The secondary list depends on the primary (a pairing must be two distinct classes),
-                // so it is rebuilt rather than filtered at confirm time — an impossible option the
-                // player can select is a worse form than one they cannot.
-                _characterPrimary.RegisterValueChangedCallback(_ => RebuildSecondaryChoices());
-            }
-            if (_characterSecondary != null)
-            {
-                _characterSecondary.choices = new List<string>(choices);
-                _characterSecondary.RegisterValueChangedCallback(_ => SetError(_characterError, ""));
-            }
-            if (_characterNameField != null)
-                _characterNameField.RegisterValueChangedCallback(_ => SetError(_characterError, ""));
-
-            // Once at bind time, not only on open: until this runs the secondary list is the UXML
-            // default (all four classes, including the primary) with no value selected. OpenCharacter
-            // Modal rebuilds it anyway, so nothing user-visible depended on it — which is exactly why
-            // it would have sat there being wrong.
-            RebuildSecondaryChoices();
-        }
-
-        private void OpenCharacterModal()
-        {
-            if (_account == null) return;
-
-            bool first = _account.Roster().Count == 0;
-            if (_characterTitle != null)
-                _characterTitle.text = first ? "Create your first character" : "Create a character";
-            if (_characterCancel != null)
-                _characterCancel.text = first ? "Later" : "Cancel";
-            if (_characterNameField != null) _characterNameField.SetValueWithoutNotify("");
-
-            RebuildSecondaryChoices();
-            SetError(_characterError, "");
-            Show(_characterModal);
-            _characterNameField?.Focus();
-        }
-
-        /// <summary>Every class except the chosen primary — the pairing must be two distinct classes.</summary>
-        private void RebuildSecondaryChoices()
-        {
-            SetError(_characterError, "");
-            if (_characterSecondary == null) return;
-
-            CardClass primary = SelectedPrimary();
-            var choices = new List<string>(PairableClasses.Length - 1);
-            foreach (CardClass c in PairableClasses)
-                if (c != primary) choices.Add(Pretty(c));
-
-            string previous = _characterSecondary.value;
-            _characterSecondary.choices = choices;
-            int keep = previous == null ? -1 : choices.IndexOf(previous);
-            _characterSecondary.index = keep >= 0 ? keep : 0;
-        }
-
-        private CardClass SelectedPrimary()
-        {
-            int i = _characterPrimary?.index ?? 0;
-            return PairableClasses[Mathf.Clamp(i, 0, PairableClasses.Length - 1)];
-        }
-
-        private CardClass SelectedSecondary()
-        {
-            CardClass primary = SelectedPrimary();
-            string chosen = _characterSecondary?.value;
-            foreach (CardClass c in PairableClasses)
-                if (c != primary && Pretty(c) == chosen) return c;
-
-            // The dropdown is rebuilt from PairableClasses, so this is unreachable unless the list and
-            // the enum drift apart. Falling back to the first legal partner keeps the form usable.
-            foreach (CardClass c in PairableClasses)
-                if (c != primary) return c;
-            return CardClass.NEUTRAL;   // refused by IsValidPairing, which is the correct outcome
-        }
-
-        private void ConfirmCharacter()
-        {
-            if (_account == null) return;
-
-            // Character names are held to the same rules as the player's own: both are
-            // player-authored strings rendered in a nameplate-sized box, and two rule sets for one
-            // constraint is how they drift apart.
-            NameCheck check = PlayerName.Check(_characterNameField?.value ?? "");
-            if (!check.IsValid) { SetError(_characterError, check.Reason); return; }
-
-            ICardDatabase db;
-            try
-            {
-                db = _db ??= CardDatabaseLoader.Load();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MainMenu] card database load failed: {ex.Message}");
-                SetError(_characterError, "Card data could not be loaded — see the console.");
-                return;
-            }
-
-            CardClass primary = SelectedPrimary();
-            CardClass secondary = SelectedSecondary();
-
-            // Asked before creating rather than after failing: a pairing whose pool cannot supply a
-            // legal 30 is a card-pool shortfall, and the form should say so instead of throwing.
-            if (!PlayerAccount.CanCreate(primary, secondary, db))
-            {
-                SetError(_characterError,
-                    $"{Pretty(primary)} + {Pretty(secondary)} doesn't have enough cards for a deck yet.");
-                return;
-            }
-
-            Character created;
-            try
-            {
-                created = _account.CreateCharacter(check.Normalized, primary, secondary, db);
-                Debug.Log($"[MainMenu] created character '{created.Name}' " +
-                          $"({created.PrimaryClass}/{created.SecondaryClass}) id={created.Id} " +
-                          $"starter deck={created.DefaultDeckId}");
-            }
-            catch (Exception ex) when (ex is DeckGenerationException || ex is ArgumentException)
-            {
-                Debug.LogError($"[MainMenu] character creation failed: {ex.Message}");
-                SetError(_characterError, ex.Message);
-                return;
-            }
-
-            Hide(_characterModal);
-            RefreshIdentity();
-
-            bool enterDeckBuilder = _characterModalOpensDeckBuilder;
-            _characterModalOpensDeckBuilder = false;
-            if (enterDeckBuilder)
-            {
-                DeckbuilderController.PendingCharacterId = created.Id;
-                Go("DeckbuilderSpike");
-            }
+            // Keep the first-run continuation, but move it to the roster: character creation never
+            // lives on the Main Menu.
+            if (_nameRequired && _account.Roster().Count == 0) Go("CharacterRoster");
         }
 
         // ── Account switcher (testing) ──────────────────────────────────────────────────
@@ -617,13 +428,6 @@ namespace Emberfall.Presentation
             if (label != null) label.text = string.IsNullOrEmpty(message) ? " " : message;
         }
 
-        /// <summary>Enum name as a player reads it: EMBERWARD → Emberward.</summary>
-        private static string Pretty(CardClass c)
-        {
-            string raw = c.ToString();
-            return raw.Length == 0 ? raw : char.ToUpperInvariant(raw[0]) + raw.Substring(1).ToLowerInvariant();
-        }
-
         // ---- Destinations (stubbed — navigation is a later pass) ----
         // Find Game → BoardNetworked.unity (server matchmaking; the only destination with a backend today).
         /// <summary>
@@ -664,26 +468,10 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Deck Builder → DeckbuilderSpike.unity. With an empty roster there is nothing to build for,
-        /// so this opens character creation instead — the only entry point to it until S6 is built.
-        ///
-        /// <para>No character switcher exists yet (that's S6's sidebar, still unbuilt), so a roster of
-        /// more than one opens the first character's own deck rather than offering a choice.</para>
+        /// Deck Builder → CharacterRoster.unity. The roster owns character selection, creation and
+        /// deletion; the Main Menu never does.
         /// </summary>
-        private void OnDeckBuilder()
-        {
-            if (_account == null) return;
-            var roster = _account.Roster();
-            if (roster.Count == 0)
-            {
-                _characterModalOpensDeckBuilder = true;
-                OpenCharacterModal();
-                return;
-            }
-
-            DeckbuilderController.PendingCharacterId = roster[0].Id;
-            Go("DeckbuilderSpike");
-        }
+        private void OnDeckBuilder() => Go("CharacterRoster");
 
         // Store stays in this scene: its full-screen UI Toolkit panel owns the purchase/reveal flow.
         private void OnStore() => _shop?.Open();

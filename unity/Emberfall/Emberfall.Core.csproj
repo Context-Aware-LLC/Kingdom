@@ -43,7 +43,7 @@
     <UnityVersion>6000.5.1f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -59,8 +59,17 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Characters.cs">
       <Link>Characters.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\DerivedStats.cs">
+      <Link>DerivedStats.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\EffectInterpreter.cs">
       <Link>EffectInterpreter.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\EffectSourceContext.cs">
+      <Link>EffectSourceContext.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Targeting.cs">
+      <Link>Targeting.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Projection\EventVisibility.cs">
       <Link>Projection\EventVisibility.cs</Link>
@@ -92,8 +101,14 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\LocalMatchHost.cs">
       <Link>LocalMatchHost.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\AuraEngine.cs">
+      <Link>AuraEngine.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\Projection\GameStateProjector.cs">
       <Link>Projection\GameStateProjector.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\OrderedTriggerSources.cs">
+      <Link>OrderedTriggerSources.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core\PrebuiltDecks.cs">
       <Link>PrebuiltDecks.cs</Link>

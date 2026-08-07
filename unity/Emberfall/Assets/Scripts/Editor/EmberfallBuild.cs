@@ -19,6 +19,7 @@ namespace Emberfall.Editor
         private const string ScenePath = "Assets/Scenes/BoardNetworked.unity";
         private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
         private const string LocalScenePath = "Assets/Scenes/Board.unity";
+        private const string RosterScenePath = "Assets/Scenes/CharacterRoster.unity";
         private const string DeckbuilderScenePath = "Assets/Scenes/DeckbuilderSpike.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
         private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
@@ -53,7 +54,7 @@ namespace Emberfall.Editor
                 // Menu first — it is the boot scene and the only screen that can switch accounts.
                 // Both board scenes ride along so Find Game and Single Player actually go somewhere,
                 // and the deckbuilder so its own menu button isn't a dead end in this build too.
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath },
                 locationPathName = DevOutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.Development,
@@ -128,7 +129,7 @@ namespace Emberfall.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
                 var options = new BuildPlayerOptions
                 {
-                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath },
                     locationPathName   = AndroidOutputPath,
                     target             = BuildTarget.Android,
                     targetGroup        = BuildTargetGroup.Android,
@@ -158,7 +159,7 @@ namespace Emberfall.Editor
                 // Menu first — testers enter through MainMenu and navigate from there.
                 // Find Game, Single Player and Deck Builder each need their target scene
                 // present or the button is a dead end in the shipping build.
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath },
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
@@ -213,7 +214,7 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// Put the four playable scenes in <c>EditorBuildSettings</c>, menu first.
+        /// Put the five playable scenes in <c>EditorBuildSettings</c>, menu first.
         ///
         /// <para><b>This is what makes scene navigation work in the EDITOR.</b>
         /// <c>SceneManager.LoadScene(name)</c> resolves against the build list, so with an empty list —
@@ -224,7 +225,7 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
         public static void SyncSceneList()
         {
-            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, DeckbuilderScenePath };
+            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath };
             var entries = new EditorBuildSettingsScene[paths.Length];
             for (int i = 0; i < paths.Length; i++)
                 entries[i] = new EditorBuildSettingsScene(paths[i], enabled: true);

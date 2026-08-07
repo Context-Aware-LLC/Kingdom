@@ -18,8 +18,11 @@ namespace Emberfall.Presentation
     /// <para>Opens one real <see cref="Character"/>'s deck from <see cref="PlayerAccount.Local"/> —
     /// <see cref="PendingCharacterId"/>, set by <c>MainMenuController.OnDeckBuilder</c> before this
     /// scene loads, or the roster's first character when that is empty (so the scene still opens
-    /// standalone in the Editor). There is no character switcher yet — S6's sidebar is separate,
-    /// unbuilt scope — so today this is always the one character's own deck.</para>
+    /// standalone in the Editor).</para>
+    ///
+    /// <para>All of <b>that character's</b> decks are reachable from the switcher bar — open, create,
+    /// delete and set-default (EF-046). Switching character happens on the CharacterRoster scene;
+    /// <c>Done</c> saves this deck and returns there.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// DeckbuilderScreen.uxml.
@@ -52,6 +55,13 @@ namespace Emberfall.Presentation
         private Button _filterClassButton;
         private Button _filterNeutralButton;
         private CardFilter _activeFilter;   // null = All (no constraint)
+        private VisualElement _deckBar;
+        private Button _openChip;            // the chip for _deck, retitled in place while renaming
+        private bool _openChipIsDefault;
+        private TextField _nameField;
+        private Label _defaultHint;
+        private Button _setDefaultButton;
+        private Button _deleteDeckButton;
 
         private void OnEnable()
         {
@@ -92,6 +102,7 @@ namespace Emberfall.Presentation
             WireDeckList();
             WireCollectionFilters();
             WireChrome();
+            RebuildDeckBar();
             Refresh();
         }
 
@@ -159,6 +170,11 @@ namespace Emberfall.Presentation
             _filterAllButton     = _root.Q<Button>("filter-all");
             _filterClassButton   = _root.Q<Button>("filter-class");
             _filterNeutralButton = _root.Q<Button>("filter-neutral");
+            _deckBar          = _root.Q<VisualElement>("deck-bar");
+            _nameField        = _root.Q<TextField>("deck-name");
+            _defaultHint      = _root.Q<Label>("default-hint");
+            _setDefaultButton = _root.Q<Button>("set-default-button");
+            _deleteDeckButton = _root.Q<Button>("delete-deck-button");
 
             if (_heroLabel != null)
             {
@@ -391,14 +407,220 @@ namespace Emberfall.Presentation
         // ---- Chrome (name field, buttons) ----
         private void WireChrome()
         {
-            var nameField = _root.Q<TextField>("deck-name");
-            if (nameField != null)
+            if (_nameField != null)
             {
-                nameField.value = _deck.Name;
-                nameField.RegisterValueChangedCallback(e => _deck.Name = e.newValue);
+                _nameField.SetValueWithoutNotify(_deck.Name);
+                // Rename is a deck edit like any other: it lands in memory here and reaches disk
+                // through Save, the switcher's save-on-leave, or Done. It is never a separate write.
+                // Retitles the open chip in place rather than rebuilding the bar: RebuildDeckBar
+                // re-reads every deck from the store, and per keystroke that is a file read per
+                // character typed.
+                _nameField.RegisterValueChangedCallback(e =>
+                {
+                    _deck.Name = e.newValue;
+                    if (_openChip != null) _openChip.text = ChipLabel(_deck.Name, _openChipIsDefault);
+                });
             }
+            _setDefaultButton?.RegisterCallback<ClickEvent>(_ => SetDefaultDeck());
+            _deleteDeckButton?.RegisterCallback<ClickEvent>(_ => DeleteOpenDeck());
             _saveButton?.RegisterCallback<ClickEvent>(_ => SaveDeck());
-            _root.Q<Button>("done-button")?.RegisterCallback<ClickEvent>(_ => Go("MainMenu"));
+
+            // Done saves. The alternative is a confirm dialog on a screen whose whole model is
+            // "an illegal deck is a savable draft" — there is nothing to lose by writing it.
+            _root.Q<Button>("done-button")?.RegisterCallback<ClickEvent>(_ =>
+            {
+                SaveDeck();
+                Go("CharacterRoster");
+            });
+        }
+
+        // ---- Deck switcher and lifecycle (collection-deckbuilder-spec §2.6) ----
+
+        /// <summary>
+        /// Rebuild the switcher from disk, default first — <see cref="DeckQuery.ForCharacter"/>'s
+        /// order, so the bar and the queue never disagree about which deck is "the" deck.
+        ///
+        /// <para>Reads the store rather than caching a list: create, delete and set-default all
+        /// write, and a cached switcher is the copy that goes stale without saying so.</para>
+        /// </summary>
+        private void RebuildDeckBar()
+        {
+            if (_deckBar == null) return;
+            _deckBar.Clear();
+
+            CharacterDecks decks = _account.DecksOf(_character, _db);
+
+            _openChip = null;
+            foreach (var summary in decks.Decks)
+            {
+                DeckList deck = summary.Deck;
+                bool open = deck.Id == _deck.Id;
+
+                // The open deck's name lives in _deck (the player may be mid-rename); every other
+                // chip reads the stored copy.
+                var chip = new Button { text = ChipLabel(open ? _deck.Name : deck.Name, summary.IsDefault) };
+                chip.AddToClassList("db-deck-chip");
+                chip.EnableInClassList("db-deck-chip--on", open);
+                chip.EnableInClassList("db-deck-chip--draft", summary.IsDraft);
+                chip.clicked += () => SwitchTo(deck.Id);
+                _deckBar.Add(chip);
+
+                if (open) { _openChip = chip; _openChipIsDefault = summary.IsDefault; }
+            }
+
+            var add = new Button { text = "+" };
+            add.AddToClassList("db-deck-chip");
+            add.AddToClassList("db-deck-chip--new");
+            add.clicked += NewDeck;
+            _deckBar.Add(add);
+
+            // A character with zero decks is a screen that will not load: OnEnable opens
+            // DecksOf(...).Opening and bails when it is null. So the floor is one deck, enforced
+            // here rather than confirmed in a dialog — and "+" is right beside it.
+            _deleteDeckButton?.SetEnabled(decks.Count > 1);
+            _setDefaultButton?.SetEnabled(_character.DefaultDeckId != _deck.Id);
+
+            // A DefaultDeckId naming a deleted deck is left dangling on purpose (Character.cs:
+            // "surfaced, never repaired"), so this screen is what does the surfacing.
+            bool dangling = !decks.DefaultResolved && !string.IsNullOrEmpty(_character.DefaultDeckId);
+            if (_defaultHint != null)
+            {
+                _defaultHint.text = dangling
+                    ? $"{_character.Name} has no default deck — the one it pointed at was deleted."
+                    : "";
+                _defaultHint.style.display = dangling ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        }
+
+        /// <summary>
+        /// Open another of this character's decks, persisting the outgoing one first.
+        ///
+        /// <para>Saving on the way out is not a convenience: <c>_deck</c> is the only copy of the
+        /// edits made since the last write, and repointing it would drop them with no undo and no
+        /// prompt. Save is never legality-gated (see <see cref="SaveDeck"/>), so a half-built draft
+        /// survives the switch exactly as it stands.</para>
+        /// </summary>
+        private void SwitchTo(string deckId)
+        {
+            if (_deck != null && deckId == _deck.Id) return;
+            _account.Save(_deck);
+
+            DeckList next = null;
+            foreach (var s in _account.DecksOf(_character, _db).Decks)
+                if (s.Deck.Id == deckId) { next = s.Deck; break; }
+
+            if (next == null)
+            {
+                Debug.LogError($"[Deckbuilder] Deck '{deckId}' is no longer on disk; staying on '{_deck.Name}'.");
+                RebuildDeckBar();
+                return;
+            }
+
+            OpenDeck(next);
+        }
+
+        /// <summary>Default decks lead with a marker. Text, not an icon: there is no icon set on this
+        /// screen yet, and a coloured chip alone would collide with the open-deck highlight.</summary>
+        private static string ChipLabel(string name, bool isDefault) => isDefault ? "* " + name : name;
+
+        /// <summary>Point the screen at a deck already known to exist, and repaint everything that
+        /// reads from it. The one place <c>_deck</c> is reassigned after load.</summary>
+        private void OpenDeck(DeckList deck)
+        {
+            _deck = deck;
+            _nameField?.SetValueWithoutNotify(_deck.Name);
+            RebuildDeckBar();
+            Refresh();
+        }
+
+        /// <summary>
+        /// Create an empty deck for this character and open it.
+        ///
+        /// <para><b>Empty, not generated.</b> <see cref="DefaultDeckGenerator"/> exists to hand a
+        /// brand-new character something playable on day one; running it here would hand a player
+        /// who asked for a blank deck 30 cards to dismantle first.</para>
+        /// </summary>
+        private void NewDeck()
+        {
+            _account.Save(_deck);
+
+            var deck = new DeckList
+            {
+                Id = PlayerAccount.NewId(),
+                CharacterId = _character.Id,     // L5: bound at birth, never inferred later
+                Name = UnusedDeckName(),
+            };
+            _account.Save(deck);                 // on disk before it is open, so the switcher can see it
+
+            OpenDeck(deck);
+            Debug.Log($"[Deckbuilder] New deck '{_deck.Name}' for {_character.Name}.");
+        }
+
+        /// <summary>"New Deck", then "New Deck 2" — a duplicate name is legal but indistinguishable
+        /// in the switcher, which is the only place a deck is chosen.</summary>
+        private string UnusedDeckName()
+        {
+            const string root = "New Deck";
+            var taken = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in _account.DecksOf(_character, _db).Decks) taken.Add(s.Deck.Name);
+
+            if (!taken.Contains(root)) return root;
+            for (int n = 2; ; n++)
+            {
+                string candidate = root + " " + n;
+                if (!taken.Contains(candidate)) return candidate;
+            }
+        }
+
+        /// <summary>
+        /// Delete the open deck and fall back to this character's default.
+        ///
+        /// <para><b>The dangling default is left dangling.</b> Deleting the deck a character
+        /// defaults to does NOT clear <see cref="Character.DefaultDeckId"/> — that is the documented
+        /// contract on the field itself ("a dangling id is surfaced, never repaired"), because
+        /// silently re-pointing it means the character opens on a deck the player never chose.
+        /// <see cref="RebuildDeckBar"/> surfaces it instead.</para>
+        /// </summary>
+        private void DeleteOpenDeck()
+        {
+            CharacterDecks before = _account.DecksOf(_character, _db);
+            if (before.Count <= 1)
+            {
+                Debug.LogWarning($"[Deckbuilder] '{_character.Name}' has only this deck, and a " +
+                                 "character needs one to open the deckbuilder at all. Not deleting.");
+                return;
+            }
+
+            string goneId = _deck.Id, goneName = _deck.Name;
+            _account.DeleteDeck(goneId);
+
+            DeckList next = _account.DecksOf(_character, _db).Opening?.Deck;
+            if (next == null)
+            {
+                // Unreachable via the count guard above; if the store ever disagrees, say so rather
+                // than dereference null on the next repaint.
+                Debug.LogError($"[Deckbuilder] Deleted '{goneName}' and {_character.Name} now has no " +
+                               "deck to open. Reopen the deckbuilder.");
+                return;
+            }
+
+            OpenDeck(next);
+            Debug.Log($"[Deckbuilder] Deleted '{goneName}'; opened '{_deck.Name}'.");
+        }
+
+        /// <summary>Make the open deck this character's default — what the roster shows and what
+        /// the queue reaches for. Writes the deck before the pointer, so the id can never name
+        /// something that is not on disk yet.</summary>
+        private void SetDefaultDeck()
+        {
+            if (_character.DefaultDeckId == _deck.Id) return;
+
+            _account.Save(_deck);
+            _character.DefaultDeckId = _deck.Id;
+            _account.Save(_character);
+
+            RebuildDeckBar();
+            Debug.Log($"[Deckbuilder] '{_deck.Name}' is now {_character.Name}'s default deck.");
         }
 
         /// <summary>Persist the deck as-is. Never legality-gated (collection-deckbuilder-spec §1,

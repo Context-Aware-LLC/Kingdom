@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Board.unity
     guid: 79c99a66ebcd5344da5f90d341d77438
   - enabled: 1
+    path: Assets/Scenes/CharacterRoster.unity
+    guid: a2aea21712614ae4284ff0be96041f1f
+  - enabled: 1
     path: Assets/Scenes/DeckbuilderSpike.unity
     guid: f92dcb8fdaeb8be479ad29e244edf2af
   m_configObjects:

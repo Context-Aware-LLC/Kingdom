@@ -43,7 +43,7 @@
     <UnityVersion>6000.5.1f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -56,6 +56,9 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\WebSocketTransport.cs">
       <Link>WebSocketTransport.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\Shop\ShopFlow.cs">
+      <Link>Shop\ShopFlow.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\IWireTransport.cs">
       <Link>IWireTransport.cs</Link>
     </Compile>
@@ -67,9 +70,6 @@
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\ClientOptions.cs">
       <Link>ClientOptions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\src\Emberfall.Net.Client\Shop\ShopFlow.cs">
-      <Link>Shop\ShopFlow.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Net.Client\Loopback\LoopbackTransport.cs">
       <Link>Loopback\LoopbackTransport.cs</Link>

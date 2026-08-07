@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -30,6 +31,7 @@ namespace Emberfall.Editor
                 RunCheck("A5WireVerify",         A5WireVerify.Run),
                 RunCheck("CardSetValidator",     CardSetValidator.RunAndLog),
                 RunCheck("UxmlIntegrityCheck",   UxmlIntegrityCheck.Check),
+                RunCheck("CharacterRosterVerify", CharacterRosterVerify.Check),
                 RunCheck("PlayerAccountSelfCheck", PlayerAccountTools.SelfCheck),
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
@@ -51,11 +53,15 @@ namespace Emberfall.Editor
         private static (string Name, bool Passed) RunCheck(string name, Action check)
         {
             bool hadError = false;
+            var capturedErrors = new List<string>();
 
             void Handler(string message, string stackTrace, LogType type)
             {
                 if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
+                {
                     hadError = true;
+                    capturedErrors.Add($"{type}: {message}");
+                }
             }
 
             Application.logMessageReceived += Handler;
@@ -72,7 +78,11 @@ namespace Emberfall.Editor
                 Application.logMessageReceived -= Handler;
             }
 
+            foreach (string captured in capturedErrors)
+                Debug.LogWarning($"[HeadlessVerify] {name} captured {captured}");
+
             return (name, !hadError);
         }
     }
+
 }

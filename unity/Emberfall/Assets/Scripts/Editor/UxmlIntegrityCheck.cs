@@ -32,6 +32,7 @@ namespace Emberfall.Editor
         private static readonly string[] Screens =
         {
             "Assets/UI/MainMenu/MainMenuScreen.uxml",
+            "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml",
             "Assets/UI/Deckbuilder/DeckbuilderScreen.uxml",
         };
 

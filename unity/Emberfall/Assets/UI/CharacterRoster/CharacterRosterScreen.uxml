@@ -1,0 +1,52 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="../Deckbuilder/theme.uss" />
+    <Style src="character-roster.uss" />
+    <ui:VisualElement name="root" class="emb-root character-roster">
+        <ui:VisualElement class="roster-header">
+            <ui:VisualElement class="roster-heading">
+                <ui:Label text="Characters" class="roster-title" />
+                <ui:Label name="roster-count" text="0 characters" class="roster-count" />
+            </ui:VisualElement>
+            <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="roster-body">
+            <ui:VisualElement class="roster-panel roster-panel--list">
+                <ui:Label text="Choose a character to open its decks." class="roster-intro" />
+                <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll">
+                    <ui:VisualElement name="roster-list" class="roster-list" />
+                    <ui:Label name="empty-state" text="No characters yet. Create your first one in the sidebar." class="roster-empty" />
+                </ui:ScrollView>
+                <ui:Label name="status" text="" class="roster-status" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="roster-panel roster-panel--create">
+                <ui:Label name="create-title" text="Create your first character" class="create-title" />
+                <ui:Label text="A pairing is permanent and ordered. Your primary class supplies the hero power." class="create-help" />
+                <ui:TextField name="character-name" label="Name" max-length="16" class="roster-field" />
+                <ui:DropdownField name="primary-class" label="Primary" class="roster-field" />
+                <ui:DropdownField name="secondary-class" label="Secondary" class="roster-field" />
+                <ui:VisualElement class="create-order-row">
+                    <ui:Label name="power-hint" text="Hero power: Emberward" class="power-hint" />
+                    <ui:Button name="swap-classes" text="Swap order" class="roster-button roster-button--small roster-button--ghost" />
+                </ui:VisualElement>
+                <ui:DropdownField name="starter-deck" label="Starter deck" class="roster-field" />
+                <ui:Label name="starter-help" text="Your first character starts with a playable generated deck." class="create-help create-help--starter" />
+                <ui:Label name="create-error" text="" class="create-error" />
+                <ui:Button name="create-character" text="Create and open decks" class="roster-button roster-button--cta create-button" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden">
+            <ui:VisualElement class="delete-dialog">
+                <ui:Label text="Delete character?" class="delete-title" />
+                <ui:Label name="delete-message" text="" class="delete-message" />
+                <ui:Label name="delete-error" text="" class="create-error" />
+                <ui:VisualElement class="delete-actions">
+                    <ui:Button name="cancel-delete" text="Cancel" class="roster-button roster-button--ghost" />
+                    <ui:Button name="confirm-delete" text="Delete character" class="roster-button roster-button--danger" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

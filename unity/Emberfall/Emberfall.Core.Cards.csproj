@@ -43,7 +43,7 @@
     <UnityVersion>6000.5.1f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -56,14 +56,32 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\CardValidator.cs">
       <Link>CardValidator.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\RuleDefinition.cs">
+      <Link>RuleDefinition.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\EffectSourceModel.cs">
+      <Link>EffectSourceModel.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\CardTextGenerator.cs">
+      <Link>CardTextGenerator.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\CardJson.cs">
       <Link>CardJson.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\KeywordSemantics.cs">
+      <Link>KeywordSemantics.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\CardInterfaces.cs">
       <Link>CardInterfaces.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\AuraCapabilities.cs">
+      <Link>AuraCapabilities.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\CardDefinition.cs">
       <Link>CardDefinition.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Cards\RuleLifetimeCapabilities.cs">
+      <Link>RuleLifetimeCapabilities.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>

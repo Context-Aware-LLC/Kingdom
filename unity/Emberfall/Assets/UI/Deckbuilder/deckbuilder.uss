@@ -154,6 +154,70 @@
     background-color: var(--rarity-common);
 }
 /* ---------- Deck side ---------- */
+/* ---------- Deck switcher (EF-046) ----------
+ * One chip per deck of the open character, default first and marked, then "+".
+ * Scrolls horizontally rather than wrapping: the bar sits above the deck name and a
+ * second row of chips would push the 30-card list off a phone screen.
+ */
+.db-deck-bar-scroll {
+    flex-shrink: 0;
+    max-height: 44px;
+    margin-bottom: var(--space-2);
+}
+.db-deck-bar {
+    flex-direction: row;
+    align-items: center;
+}
+.db-deck-chip {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: 999px;
+    padding: var(--space-1) var(--space-4);
+    margin-right: var(--space-2);
+    margin-left: 0;
+    height: 36px;
+    max-width: 220px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.db-deck-chip--on {
+    color: var(--surface-0);
+    background-color: var(--mana);
+    -unity-font-style: bold;
+}
+/* A draft is a legal thing to keep, not an error — dimmed, never red. */
+.db-deck-chip--draft { opacity: 0.72; }
+.db-deck-chip--new {
+    min-width: 36px;
+    -unity-font-style: bold;
+}
+
+.db-default-hint {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    white-space: normal;
+    margin-bottom: var(--space-2);
+}
+.db-deck-actions {
+    flex-direction: row;
+    margin-bottom: var(--space-3);
+}
+.db-button--small {
+    height: 36px;
+    min-width: 0;
+    flex-grow: 1;
+    font-size: var(--type-label);
+    padding: 0 var(--space-3);
+    margin-right: var(--space-2);
+}
+/* The trailing button zeroes its own margin inline in the UXML: UI Toolkit has no
+ * :last-child (no structural pseudo-classes at all), and an unsupported selector is
+ * a silent parse failure, not a no-op. */
+.db-button--danger { color: var(--negative); }
+
 .db-deck-name {
     font-size: var(--type-h1);
     margin-bottom: var(--space-3);

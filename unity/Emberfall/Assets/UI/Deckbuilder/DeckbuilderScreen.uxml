@@ -35,7 +35,19 @@
 
             <!-- Right: deck -->
             <ui:VisualElement name="deck-panel" class="db-panel db-deck">
+                <!--
+                  deck-bar is built at runtime: one chip per deck of this character, default first
+                  and marked, plus a trailing "+" that creates an empty one.
+                -->
+                <ui:ScrollView name="deck-bar-scroll" class="db-deck-bar-scroll" mode="Horizontal" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden">
+                    <ui:VisualElement name="deck-bar" class="db-deck-bar" />
+                </ui:ScrollView>
                 <ui:TextField name="deck-name" value="New Deck" class="db-deck-name" />
+                <ui:Label name="default-hint" text="" class="db-default-hint" />
+                <ui:VisualElement name="deck-actions" class="db-deck-actions">
+                    <ui:Button name="set-default-button" text="Set Default" class="db-button db-button--ghost db-button--small" />
+                    <ui:Button name="delete-deck-button" text="Delete Deck" class="db-button db-button--ghost db-button--small db-button--danger" style="margin-right: 0;" />
+                </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve" />
                 <ui:ListView name="deck-list" class="db-list" />
                 <ui:VisualElement name="legality-box" class="db-legality" />

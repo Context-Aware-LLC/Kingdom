@@ -43,7 +43,7 @@
     <UnityVersion>6000.5.1f1</UnityVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.2.2\Analyzers\Microsoft.Unity.Analyzers.dll" />
+    <Analyzer Include="C:\Users\User\.vscode\extensions\visualstudiotoolsforunity.vstuc-1.3.1\Analyzers\Microsoft.Unity.Analyzers.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.SourceGenerators.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.Properties.SourceGenerator.dll" />
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Data\Tools\BuildPipeline\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
@@ -65,8 +65,14 @@
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\DeckQuery.cs">
       <Link>DeckQuery.cs</Link>
     </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\BoosterPackOpener.cs">
+      <Link>BoosterPackOpener.cs</Link>
+    </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\ICollectionStore.cs">
       <Link>ICollectionStore.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\PackPityState.cs">
+      <Link>PackPityState.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\CollectionPaths.cs">
       <Link>CollectionPaths.cs</Link>
@@ -85,6 +91,9 @@
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\CharacterDeletion.cs">
       <Link>CharacterDeletion.cs</Link>
+    </Compile>
+    <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\BoosterPack.cs">
+      <Link>BoosterPack.cs</Link>
     </Compile>
     <Compile Include="C:\Users\User\Documents\tcg-hearthlike\src\Emberfall.Core.Collection\PlayerProfile.cs">
       <Link>PlayerProfile.cs</Link>

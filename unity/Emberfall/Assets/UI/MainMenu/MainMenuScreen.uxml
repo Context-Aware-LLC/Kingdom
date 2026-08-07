@@ -16,7 +16,7 @@
         <ui:VisualElement name="menu" class="mm-menu">
             <ui:Button name="btn-find-game btn-main" text="Find Game" class="mm-button mm-button--cta"/>
             <ui:Button name="btn-single-player btn-main" text="Single Player" class="mm-button"/>
-            <ui:Button name="btn-deck-builde rbtn-main" text="Deck Builder" class="mm-button"/>
+            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button"/>
             <ui:Button name="btn-store btn-main" text="Store" class="mm-button"/>
             <ui:Button name="btn-leaderboards btn-main" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
@@ -32,20 +32,6 @@
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-name-cancel" text="Cancel" class="mm-modal__button"/>
                     <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="character-modal" class="mm-modal mm-modal--hidden">
-            <ui:VisualElement name="character-panel" class="mm-modal__panel">
-                <ui:Label name="character-title" text="Create your first character" class="mm-modal__title"/>
-                <ui:Label name="character-help" text="A character is a permanent pair of classes — its card pool is both, plus neutrals. The hero power always comes from the primary, and the pairing can never be changed." class="mm-modal__help"/>
-                <ui:TextField name="character-name-field" max-length="16" class="mm-modal__field"/>
-                <ui:DropdownField name="character-primary" label="Primary" class="mm-modal__dropdown"/>
-                <ui:DropdownField name="character-secondary" label="Secondary" class="mm-modal__dropdown"/>
-                <ui:Label name="character-error" text=" " class="mm-modal__error"/>
-                <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-character-cancel" text="Later" class="mm-modal__button"/>
-                    <ui:Button name="btn-character-confirm" text="Create" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
