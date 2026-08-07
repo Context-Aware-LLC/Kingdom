@@ -94,8 +94,9 @@ namespace Emberfall.Net.Client
         public string AuthToken { get; init; } = "";
 
         /// <summary>The contract version this client was built against, sent in the hello so the
-        /// server can compare (it previously never learned the client's).</summary>
-        public string ContractVersion { get; init; } = "interfaces.v5";
+        /// server can compare (it previously never learned the client's). Never a literal — see
+        /// <see cref="ProtocolContract.Version"/> for why the two ends share one.</summary>
+        public string ContractVersion { get; init; } = ProtocolContract.Version;
 
         public IClientClock Clock { get; init; } = new SystemClientClock();
 
