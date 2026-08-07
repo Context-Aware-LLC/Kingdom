@@ -12,7 +12,6 @@
 
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
-                <ui:Label name="roster-intro" text="Choose a character to open its decks." class="roster-intro" />
                 <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll">
                     <ui:VisualElement name="roster-list" class="roster-list" />
                     <ui:Label name="empty-state" text="No characters yet. Create your first one in the sidebar." class="roster-empty" />
@@ -22,7 +21,7 @@
 
             <ui:VisualElement name="roster-create-panel" class="roster-panel roster-panel--create">
                 <ui:Label name="create-title" text="Create your first character" class="create-title" />
-                <ui:Label text="You get the power of the first choice and the cards of bothrdered. Your primary class supplies the hero power." class="create-help" />
+                <ui:Label text="First choice is your hero power. Play both classes cards." class="create-help" />
                 <ui:TextField name="character-name" label="Name" max-length="16" class="roster-field" />
                 <ui:DropdownField name="primary-class" label="Primary" class="roster-field" />
                 <ui:DropdownField name="secondary-class" label="Secondary" class="roster-field" />
@@ -59,12 +58,12 @@
                 <ui:VisualElement name="deck-menu-pane" class="deck-pane">
                     <!-- Match pick only. Every other action below is offered from both doors. -->
                     <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
-                    <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-image" text="Deck image" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-set-default" text="Set as default" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-delete" text="Delete deck" class="roster-button roster-button--danger deck-action" />
+                    <ui:Label text="Double tap the deck to edit it." class="deck-edit-hint" />
                 </ui:VisualElement>
 
                 <!--

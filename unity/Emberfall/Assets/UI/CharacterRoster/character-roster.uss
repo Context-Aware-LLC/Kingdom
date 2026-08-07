@@ -197,25 +197,34 @@
     border-color: var(--mana);
 }
 
-/* The plate's one control. A deck carries no name here — the art is the identity — so this is
- * also the only text on it, and it stays a single word. */
-.deck-plate-functions {
-    width: 100%;
-    height: 28px;
-    min-width: 0;
-    margin: var(--space-2) 0 0 0;
-    padding: 0;
-    border-width: 0;
-    border-radius: var(--space-1);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    background-color: var(--surface-3);
+/* The plate has no button (Sam, 2026-08-07). It is the picture, and the picture is the control:
+ * one tap opens the functions, two open the deckbuilder. So the only affordance it can offer is
+ * the hover itself. */
+.deck-plate:hover .deck-plate-art {
+    border-width: 3px;
+    border-color: var(--ink-1);
 }
 
-.deck-plate-functions:hover {
-    color: var(--surface-0);
-    background-color: var(--accent);
+.deck-plate--default .deck-plate-art:hover,
+.deck-plate-art--ready:hover {
+    border-color: var(--ink-1);
+}
+
+/* The default marker, over the art's top-left. A glyph rather than a word, and not a border —
+ * gold is spoken for. */
+.deck-plate-star {
+    position: absolute;
+    top: var(--space-1);
+    left: var(--space-2);
+    font-size: var(--type-h2);
+    color: var(--accent);
+}
+
+.deck-edit-hint {
+    margin-top: var(--space-2);
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    -unity-text-align: middle-center;
 }
 
 .deck-plate--new .deck-plate-art {

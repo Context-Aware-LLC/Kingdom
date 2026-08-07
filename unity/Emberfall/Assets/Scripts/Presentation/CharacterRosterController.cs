@@ -140,7 +140,6 @@ namespace Emberfall.Presentation
         private Label _deckDeleteMessage;
         private TextField _deckRenameField;
         private Button _deckSelectButton;
-        private Button _deckEditButton;
         private Button _deckSetDefaultButton;
         private Button _deckDeleteButton;
         private Button _deckModalCancel;
@@ -253,7 +252,6 @@ namespace Emberfall.Presentation
             _deckDeleteMessage = _root.Q<Label>("deck-delete-message");
             _deckRenameField = _root.Q<TextField>("deck-rename-field");
             _deckSelectButton = _root.Q<Button>("deck-select");
-            _deckEditButton = _root.Q<Button>("deck-edit");
             _deckSetDefaultButton = _root.Q<Button>("deck-set-default");
             _deckDeleteButton = _root.Q<Button>("deck-delete");
             _deckModalCancel = _root.Q<Button>("deck-modal-cancel");
@@ -340,7 +338,6 @@ namespace Emberfall.Presentation
             _root.Q<Button>("deck-new-blank")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Blank));
             _deckSelectButton?.RegisterCallback<ClickEvent>(_ => PickForMatch());
             _root.Q<Button>("deck-image")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Image));
-            _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => EditOpenDeck());
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
             _deckSetDefaultButton?.RegisterCallback<ClickEvent>(_ => SetDefaultDeck());
@@ -387,15 +384,12 @@ namespace Emberfall.Presentation
                     ? ""
                     : $"{character.Name}'s only deck. Make another first.";
 
-            // Select is the match door's one addition to this dialog, and while it is showing it
-            // — not Edit — is the primary action: picking is why the player opened the screen.
+            // Select is the match door's one addition to this dialog.
             bool choosing = MatchDeckSelection.Choosing;
             bool alreadyPicked = choosing && _pickedDeckId == deck.Id;
             _menuQueueReady = summary.Queue.IsEligible;
 
             Show(_deckSelectButton, choosing);
-            _deckEditButton?.EnableInClassList("roster-button--cta", !choosing);
-            _deckEditButton?.EnableInClassList("roster-button--ghost", choosing);
             if (choosing && _deckSelectButton != null)
             {
                 _deckSelectButton.SetEnabled(summary.Queue.IsEligible && !alreadyPicked);
@@ -643,14 +637,6 @@ namespace Emberfall.Presentation
             RebuildRoster();
         }
 
-        private void EditOpenDeck()
-        {
-            if (_menuCharacter == null || _menuDeck == null) return;
-            string characterId = _menuCharacter.Id, deckId = _menuDeck.Id;
-            CloseDeckDialog();
-            OpenDeckForEdit(characterId, deckId);
-        }
-
         private void CloseDeckDialog()
         {
             _deckModal?.AddToClassList("delete-modal--hidden");
@@ -808,12 +794,54 @@ namespace Emberfall.Presentation
             // something the eye reads without stopping. A deck with a gold edge is ready to play.
             art.EnableInClassList("deck-plate-art--ready", summary.Queue.IsEligible);
 
-            var functions = new Button { text = isDefault ? "★ Functions" : "Functions" };
-            functions.AddToClassList("deck-plate-functions");
-            functions.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
-            plate.Add(functions);
+            // The default deck, marked on the art rather than in a caption — gold is spoken for.
+            if (isDefault)
+            {
+                var star = new Label("★");
+                star.AddToClassList("deck-plate-star");
+                art.Add(star);
+            }
 
+            BindDeckTaps(plate, character, deck, summary, siblingCount);
             return plate;
+        }
+
+        /// <summary>How long a single tap waits to see whether it is really the first half of a
+        /// double tap. Long enough for a deliberate double, short enough that opening the menu does
+        /// not feel like it stalled.</summary>
+        private const long DoubleTapWindowMs = 220;
+
+        /// <summary>
+        /// Single tap opens the deck's functions, double tap opens the deckbuilder (Sam,
+        /// 2026-08-07). The plate carries no button of its own — it is the picture, and the picture
+        /// is the control.
+        ///
+        /// <para><b>The single tap is deferred, not immediate.</b> UI Toolkit delivers a double
+        /// click as two ClickEvents, the first with clickCount 1 — so acting on it at once means
+        /// every double tap flashes the functions dialog open and then loads a scene out from under
+        /// it. Waiting one double-tap window and cancelling is what makes the two gestures
+        /// distinct rather than nested.</para>
+        /// </summary>
+        private void BindDeckTaps(VisualElement plate, Character character, DeckList deck,
+                                  DeckSummary summary, int siblingCount)
+        {
+            IVisualElementScheduledItem pendingSingle = null;
+
+            plate.RegisterCallback<ClickEvent>(evt =>
+            {
+                pendingSingle?.Pause();
+                pendingSingle = null;
+
+                if (evt.clickCount >= 2)
+                {
+                    OpenDeckForEdit(character.Id, deck.Id);
+                    return;
+                }
+
+                pendingSingle = plate.schedule
+                    .Execute(() => OpenDeckDialog(character, deck, summary, siblingCount))
+                    .StartingIn(DoubleTapWindowMs);
+            });
         }
 
         // ---- Plate sizing (Sam, 2026-08-07) ------------------------------------------------
@@ -850,9 +878,9 @@ namespace Emberfall.Presentation
         private const float RowsPerScreen = 2f;
 
         /// <summary>Everything in a row that is not the square, top to bottom: the strip's padding,
-        /// the plate's padding and border, the Functions button under the art, and the gap to the
-        /// next row. Must be kept in step with character-roster.uss.</summary>
-        private const float RowChrome = 104f;
+        /// the plate's padding and border, and the gap to the next row. Must be kept in step with
+        /// character-roster.uss.</summary>
+        private const float RowChrome = 68f;
 
         /// <summary>Must match .deck-plate's margin-right and .deck-strip's wrap spacing (--space-3).</summary>
         private const float PlateGutter = 12f;
