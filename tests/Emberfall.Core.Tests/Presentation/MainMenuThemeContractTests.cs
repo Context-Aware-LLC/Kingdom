@@ -28,7 +28,11 @@ namespace Emberfall.Core.Tests.Presentation
             string themeMeta = File.ReadAllText(themeMetaPath);
             string panelSettings = File.ReadAllText(panelSettingsPath);
             string screenStyles = File.ReadAllText(screenStylesPath);
-            Match guid = Regex.Match(themeMeta, "^guid: ([0-9a-f]{32})$", RegexOptions.Multiline);
+            // `\r?$` and not `$`: under RegexOptions.Multiline .NET anchors `$` before the `\n`
+            // alone, so on a CRLF checkout the `\r` sits between the hex and the anchor and the
+            // match fails. This file arrives LF or CRLF depending on the clone, which made the
+            // assertion pass for the author and fail on rebase into a checkout that normalised it.
+            Match guid = Regex.Match(themeMeta, @"^guid: ([0-9a-f]{32})\r?$", RegexOptions.Multiline);
 
             Assert.Multiple(() =>
             {
