@@ -222,8 +222,11 @@ namespace Emberfall.Editor
                 id: "verify_minion", name: "Verify Minion", type: CardType.MINION, cost: 1,
                 attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-                keywords: new[] { kw }, effects: Array.Empty<EffectDef>(),
-                cardText: "", flavorText: "", artId: "verify", setId: SetId.CORE,
+                // `effects:`/`EffectDef` were removed with the legacy effect model (8a86fc0) and
+                // `cardText:` with the switch to generated text (eec7c6c). Typed rules replace
+                // both; this fixture needs none, so an empty list is the faithful translation.
+                keywords: new[] { kw }, rules: Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "verify", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
 
         private static int Pass(string name)

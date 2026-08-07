@@ -88,8 +88,12 @@ namespace Emberfall.Presentation
         {
             var sb = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(def.CardText))
-                sb.Append(def.CardText);
+            // CardDefinition.CardText was removed in eec7c6c: rules text is GENERATED from the
+            // typed rule model now, so there is no stored string to read. CardQuery.cs does the
+            // same thing for its search index — that is the precedent this mirrors.
+            string rulesText = CardTextGenerator.Generate(def);
+            if (!string.IsNullOrEmpty(rulesText))
+                sb.Append(rulesText);
 
             if (keywords != null)
             {

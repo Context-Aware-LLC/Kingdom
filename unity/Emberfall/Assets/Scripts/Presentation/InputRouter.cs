@@ -593,9 +593,13 @@ namespace Emberfall.Presentation
         /// selecting. Toggling once more restores the pre-press state exactly, whichever way it
         /// went — which is the only reason this takes the card and not just its id.</para>
         ///
-        /// <para><b>RETIREMENT TRIGGER.</b> This exists only because the click dispatches on PRESS.
-        /// When EF-048's pointer abstraction moves it to release, the long-press should suppress
-        /// the dispatch instead of undoing it — delete this method and
+        /// <para><b>RETIREMENT TRIGGER, HALF DISCHARGED 2026-08-06.</b> This existed because the
+        /// click dispatched on PRESS. EF-048's pointer abstraction has since moved ordinary
+        /// selection to <c>PointerPhase.Released</c>, so that half is gone — a press no longer arms
+        /// anything to undo, and only a tap-armed gesture can outlive the gesture that set it.
+        /// <b>The MULLIGAN toggle still fires on press</b> (<c>OnPointerPressed</c>), and that is
+        /// the only reason this method survives. When mulligan toggling also moves to release, the
+        /// long press should suppress the dispatch instead of undoing it — delete this method and
         /// <c>CardRevealController.CancelPressSelection</c> in that same change.</para>
         /// </summary>
         public void CancelSelection(ClickableCard card)
@@ -604,14 +608,21 @@ namespace Emberfall.Presentation
 
             if (IsMulliganActive())
             {
-                // Mirrors OnCardClicked's mulligan arm exactly; anything it ignored, this must too.
-                if (card.OwnerId == _p0Id && card.Zone == Zone.Hand) ToggleMulliganCard(card);
+                // Mirrors OnPointerPressed's mulligan arm exactly; anything it ignored, this must
+                // too. That arm still fires on PRESS, which is the only reason this method survives.
+                if (card.OwnerId == _p0Id && card.Zone == Zone.Hand)
+                    ToggleMulliganCard(card.CardId, card.Presenter);
                 return;
             }
 
-            if (_state == State.Idle) return;
-            if (!_selectedId.Equals(card.CardId)) return;
-            ClearSelection();
+            // Translated out of the retired _state/_selectedId selection model (112ea66 merged a
+            // body written against it onto fields that no longer exist, which is what broke the
+            // Unity build). ArmedByTap is the modern "this card is primed": the only gesture that
+            // outlives the press+release that set it, so it is the only one a long-press read can
+            // leave behind. Pressed/Dragging are torn down by the release itself.
+            if (_gesture != Gesture.ArmedByTap) return;
+            if (!_source.Id.Equals(card.CardId)) return;
+            CancelGesture();
         }
 
         // In-match concede (C-G1-3), invoked by the settings overlay's confirm. Deliberately
