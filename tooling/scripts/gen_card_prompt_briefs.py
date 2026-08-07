@@ -86,13 +86,27 @@ DELIVERY_TMPL = """DELIVERY
 - The PNG filename must exactly match its enclosing directory name, plus .png."""
 
 
+def art_file(card):
+    """THE definition of a card's art filename, for every script in this directory.
+
+    It READS the row's artId; it does not rebuild "art_<cardId>". Those two agree only while
+    every row happens to be authored as artId "art/<cardId>", and the moment one is not, a
+    caller looks for art that exists under a name it never checks — reporting the card as
+    having none, which puts it back in the generation queue.
+
+    This lived in three places (here, card_art_editor.py, gen_card_art.py) and two of them
+    were guessing. Import it; do not re-derive it.
+    """
+    return card["artId"].replace("/", "_")
+
+
 def delivery_block(card):
     """Build the one canonical editor/generation destination for a card.
 
     Keep this shared between the CLI brief generator and browser editor so neither can
     accidentally omit the per-card leaf directory again.
     """
-    stem = f"art_{card['id']}"
+    stem = art_file(card)
     out_dir = OUT_ROOT / card["setId"] / stem
     return DELIVERY_TMPL.format(out_dir=f"{out_dir}{os.sep}", filename=f"{stem}.png")
 

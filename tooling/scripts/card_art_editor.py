@@ -43,6 +43,7 @@ from gen_card_prompt_briefs import (  # noqa: E402
     COMPOSITION,
     NEGATIVE_PROMPT,
     STYLE,
+    art_file,
     delivery_block,
     load_cards,
     load_class_descriptors,
@@ -83,16 +84,6 @@ def list_sets_cached():
         })
         _sets_cache["mtimes"] = mtimes
     return _sets_cache["sets"]
-
-def art_file(card):
-    """THE one place this file decides an art filename, and it READS the row's artId rather
-    than re-deriving it from the card id. This used to build "art_<cardId>", which is correct
-    only while every row happens to be authored as artId "art/<cardId>". One row authored
-    otherwise and has_art() reports False for a card that HAS art, so the card reappears in
-    the "needs a brief" list and is generated a second time. Same derivation as
-    gen_card_art.art_file()."""
-    return card["artId"].replace("/", "_")
-
 
 def draft_path(card):
     """Drafts live beside that card's candidates. Both are keyed by setId — the directory is

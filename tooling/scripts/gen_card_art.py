@@ -363,7 +363,14 @@ def _card_prompts(section: str) -> dict[str, tuple[str, str]]:
 
 
 def art_file(art_id: str) -> str:
-    """artId 'art/grave_last_rite' -> 'art_grave_last_rite' (§1: art_<cardId>)."""
+    """artId 'art/grave_last_rite' -> 'art_grave_last_rite'.
+
+    Takes the artId STRING; gen_card_prompt_briefs.art_file() takes the card row and is the
+    definition the brief generator and the browser editor share. Same rule, verified equal
+    across all 260 rows. If you change one, change the other - the two that used to disagree
+    here rebuilt the name as "art_<cardId>" instead of reading artId, which silently reported
+    cards as having no art.
+    """
     return art_id.replace("/", "_")
 
 
