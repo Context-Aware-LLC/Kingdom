@@ -1562,10 +1562,18 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            string noun = _pendingDeleteDeckCount == 1 ? "deck" : "decks";
-            if (_deleteMessage != null)
-                _deleteMessage.text = $"Deleting {character.Name} also deletes " +
-                                      $"{_pendingDeleteDeckCount} {noun}. This cannot be undone.";
+            // The deck clause is the whole point of this dialog (§2.6, §3): the cascade is only honest
+            // if the player is told what it takes with it. A count of zero has nothing to warn about,
+            // and "also deletes 0 decks" reads as a bug rather than an all-clear — so that case drops
+            // the clause instead of printing it.
+            string warning = _pendingDeleteDeckCount switch
+            {
+                0 => $"Deleting {character.Name} cannot be undone.",
+                1 => $"Deleting {character.Name} also deletes its only deck. This cannot be undone.",
+                _ => $"Deleting {character.Name} also deletes its {_pendingDeleteDeckCount} decks. " +
+                     "This cannot be undone.",
+            };
+            if (_deleteMessage != null) _deleteMessage.text = warning;
             if (_deleteError != null) _deleteError.text = "";
             _deleteModal?.RemoveFromClassList("delete-modal--hidden");
         }
