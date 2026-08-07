@@ -96,6 +96,7 @@ namespace Emberfall.Presentation
         private IArtProvider _art;
 
         private VisualElement _rosterList;
+        private ScrollView _rosterScroll;
         private Label _rosterCount;
         private Label _rosterIntro;
         private Label _emptyState;
@@ -198,6 +199,19 @@ namespace Emberfall.Presentation
         private void CacheElements()
         {
             _rosterList = _root.Q<VisualElement>("roster-list");
+            _rosterScroll = _root.Q<ScrollView>("roster-scroll");
+            // A strip re-solves itself when its own width changes, which misses the case that
+            // matters most for RowsPerScreen: a window that got shorter without getting narrower.
+            // The strips' widths are identical then, so none of them fire, and plates keep a height
+            // budget from a viewport that no longer exists.
+            _rosterScroll?.RegisterCallback<GeometryChangedEvent>(_ =>
+            {
+                foreach (VisualElement row in _rosterList.Children())
+                {
+                    VisualElement strip = row.Q<VisualElement>(className: "deck-strip");
+                    if (strip != null) QueueStripLayout(strip);
+                }
+            });
             _rosterCount = _root.Q<Label>("roster-count");
             _rosterIntro = _root.Q<Label>("roster-intro");
             _emptyState = _root.Q<Label>("empty-state");
@@ -821,8 +835,24 @@ namespace Emberfall.Presentation
         /// icon. Only reached when the strip is narrower than one preferred plate.</summary>
         private const float MinPlate = 180f;
 
-        /// <summary>Above this a single deck is just eating the row.</summary>
-        private const float MaxPlate = 420f;
+        /// <summary>An absolute guard, not the working ceiling — <see cref="RowsPerScreen"/> is what
+        /// actually stops a plate growing. This only catches a viewport tall enough to make a single
+        /// deck absurd.</summary>
+        private const float MaxPlate = 560f;
+
+        /// <summary>
+        /// How many character rows a screenful should show (Sam, 2026-08-07). This is the real
+        /// ceiling on plate size: a plate is as large as it can be while two rows still fit, so the
+        /// list reads as a short scroll through a few big characters rather than a long one through
+        /// many small ones. A character with enough decks to wrap past one plate-row is taller than
+        /// its share, which is correct — it has more to show.
+        /// </summary>
+        private const float RowsPerScreen = 2f;
+
+        /// <summary>Everything in a row that is not the square, top to bottom: the strip's padding,
+        /// the plate's padding and border, the Functions button under the art, and the gap to the
+        /// next row. Must be kept in step with character-roster.uss.</summary>
+        private const float RowChrome = 104f;
 
         /// <summary>Must match .deck-plate's margin-right and .deck-strip's wrap spacing (--space-3).</summary>
         private const float PlateGutter = 12f;
@@ -869,7 +899,15 @@ namespace Emberfall.Presentation
 
             int fits = Mathf.Max(1, Mathf.FloorToInt((available + PlateGutter) / (PreferredPlate + PlateGutter)));
             int columns = Mathf.Min(fits, plates);
-            float side = Mathf.Clamp((available - (columns - 1) * PlateGutter) / columns, MinPlate, MaxPlate);
+            float fromWidth = (available - (columns - 1) * PlateGutter) / columns;
+
+            // Height has the final say. Without it a wide window makes plates so tall that one
+            // character fills the screen, and the list stops reading as a list.
+            float fromHeight = MaxPlate;
+            float viewport = _rosterScroll?.resolvedStyle.height ?? 0f;
+            if (viewport > 0f) fromHeight = viewport / RowsPerScreen - RowChrome;
+
+            float side = Mathf.Clamp(Mathf.Min(fromWidth, fromHeight), MinPlate, MaxPlate);
 
             foreach (VisualElement child in strip.Children())
             {
