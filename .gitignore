@@ -29,6 +29,81 @@ artifacts/
 
 # NOTE: *.csproj / *.slnx / *.asmdef are NOW tracked source — the deterministic core is real
 # code under src/ and tests/. Do not blanket-ignore project files anymore.
+#
+# This is why the stock Unity .gitignore CANNOT be pasted in whole. Its `*.csproj`, `*.sln` and
+# `*.slnx` lines would cover 17 hand-authored project files under src/ and tests/ plus the root
+# Emberfall.slnx — the actual build. Only Unity's own generated ones are ignored, below.
+#
+# The other half of that template is inert here for a different reason: it assumes the Unity
+# project sits at the REPO ROOT, so every `/`-anchored rule (`/[Ll]ibrary/`, `/[Aa]ssets/...`)
+# matches nothing when the project lives at unity/Emberfall/. The rules below are unanchored or
+# re-anchored on purpose. Do not "restore" the leading slashes.
+
+# ── Unity-generated project files ─────────────────────────────────────────────
+# Regenerated from the .asmdef on every domain reload, so they churn constantly and are not
+# source. 23 of these were tracked until 2026-08-07 and dirtied `git status` on every reload.
+/unity/Emberfall/*.csproj
+/unity/Emberfall/*.sln
+
+# ── Unity / toolchain scratch ─────────────────────────────────────────────────
+# Native build tree from the Android IL2CPP toolchain. 55 files, 2.3 MB, were tracked.
+.utmp/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+*.log
+sysinfo.txt
+mono_crash.*
+crashlytics-build.properties
+# The whole folder, not just *.log: Unity generates a .meta beside each log, and a rule that
+# took the log but left its .meta would leave an orphaned .meta tracked forever.
+unity/Emberfall/Assets/UnityMCP/Log/
+
+# Editors / IDEs
+.vs/
+.gradle/
+ExportedObj/
+.consulo/
+*.DotSettings.user
+unity/Emberfall/Assets/Plugins/Editor/JetBrains*
+
+# Build and debug artefacts
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Blender writes a .blend1 backup beside every save
+*.blend1
+*.blend1.meta
+
+# Player build outputs. NOT *.unitypackage — one is vendored inside the embedded
+# com.unity.addressables.android package and is legitimately tracked.
+*.apk
+*.aab
+*.app
+
+# Generated scenes and caches inside Assets/
+unity/Emberfall/Assets/[Ii]nit[Tt]est[Ss]cene*.unity*
+unity/Emberfall/Assets/[Ss]ceneDependencyCache*
+unity/Emberfall/Assets/Unity.VisualScripting.Generated/
+
+# Addressables build output. AddressableAssetsData/AssetGroups/*.asset is TRACKED source —
+# the group definitions and their addresses — so only the generated members are listed.
+/ServerData
+unity/Emberfall/Assets/StreamingAssets/aa*
+unity/Emberfall/Assets/AddressableAssetsData/link.xml*
+unity/Emberfall/Assets/Addressables_Temp*
+unity/Emberfall/Assets/AddressableAssetsData/*/*.bin*
 
 # Art generation candidates. Nothing in here is load-bearing (Sam, 2026-07-31): every final
 # version already lives where it belongs under Assets/. The folder is kept only because it is
