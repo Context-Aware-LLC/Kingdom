@@ -158,7 +158,6 @@ namespace Emberfall.Net.Server.Tests
                 Urls = "http://127.0.0.1:0",
                 CardsDir = SessionHarness.CardDataDir(),
                 ReplaysDir = replays,
-                Options = new ServerOptions { EngineContractVersion = "interfaces.v4" },
                 TokenVerifier = verifier,
                 AccountStore = store,
             });
@@ -178,7 +177,7 @@ namespace Emberfall.Net.Server.Tests
         private static Task SendHelloAsync(ClientWebSocket ws, string deviceToken, string authToken = "")
         {
             var frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, "interfaces.v4", "test", "auth-gate-tests",
+                new HelloMsg(deviceToken, ProtocolContract.Version, "test", "auth-gate-tests",
                              DisplayName: "", AuthToken: authToken),
                 ProtocolCodec.PreMatch, 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);
