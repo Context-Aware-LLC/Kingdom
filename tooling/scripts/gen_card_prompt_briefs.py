@@ -25,10 +25,18 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     enclosing leaf-directory name exactly. The old emberward-tidecaller / EMBERFALL split that
     gen_card_art.py uses is a leftover of the pre-reorg batch files, not a rule worth perpetuating
     in new tooling — it has already caused two misfiled candidates in one session.
-  - SCALE and VISUAL POWER clauses derived from mana cost + rarity (see `scale_clause`). These
-    directly fix the failure mode where a cheap card renders as a titanic boss or battlefield-wide
-    catastrophe: the model's default register is maximalist, so lower mana rungs explicitly demand
-    tighter framing, smaller effects, fewer particles, and less environmental destruction.
+  - SCALE and VISUAL POWER clauses, FOR MINIONS ONLY, derived from mana cost and body size (see
+    `scale_clause`). These directly fix the failure mode where a cheap card renders as a titanic
+    boss or battlefield-wide catastrophe: the model's default register is maximalist, so lower
+    mana rungs explicitly demand tighter framing, smaller effects, fewer particles, and less
+    environmental destruction. Rarity does NOT feed size — it is a drop rate, not a claim about
+    how big the thing is — and can only ever raise a tier, never suppress one.
+  - SPELLS get no size tier at all (Sam, 2026-08-06): a spell has no body to be large or small,
+    and tiering it pushes toward generic magical effects. It is told instead to deliver what its
+    NAME leads the viewer to picture, at the intensity the name implies rather than the mana.
+  - WEAPONS and HERO POWERS likewise get no size tier: both render into a CIRCULAR SOCKET on the
+    hero frame rather than a card frame (HeroSocketsView builds them as socket art), so they are
+    told to read as one centred object legible as a silhouette at icon size, corners empty.
 
 WHAT IS A SEED (human-authored, tracked, never auto-overwritten):
   tooling/card-art-seeds/<setId>.json, keyed by card id:
@@ -209,8 +217,33 @@ VISUAL_POWER_TIERS = {
 }
 
 
+SPELL_INTENT = (
+    "READS FROM THE NAME (spell). A spell has no body, so it has no size — it is not staged by\n"
+    "cost or rarity at all. The illustration's whole job is to deliver what \"{name}\" leads a\n"
+    "player to picture before they read a word of the text. Chase the image the title puts in\n"
+    "the viewer's head and commit to it. A specific, evocative reading of the name beats a\n"
+    "generic magical effect at any mana cost; match the intensity the NAME implies, not the mana."
+)
+
+ICON_INTENT = (
+    "READS AS AN ICON ({kind}) — do not stage this like a card illustration. It is rendered into\n"
+    "a CIRCULAR SOCKET on the hero frame (HeroSocketsView builds it as socket art), not into a\n"
+    "card frame. Compose ONE object, centred, whole, and legible as a silhouette at icon size.\n"
+    "No scene, no environment, no narrative staging, and nothing that matters near the corners —\n"
+    "the circle crops them. Size tiers do not apply: the subject is the object itself, and what\n"
+    "\"{name}\" suggests it looks like is the only brief that matters."
+)
+
+
 def scale_clause(card):
-    """COST AND BODY DECIDE SIZE. RARITY DOES NOT (Sam, 2026-08-06).
+    """COST AND BODY DECIDE SIZE, FOR MINIONS ONLY. RARITY DOES NOT (Sam, 2026-08-06).
+
+    SPELLS AND WEAPONS GET NO SIZE TIER AT ALL. Tiering assumes the subject is a creature that
+    can be large or small; a spell has no body, and a weapon is an object in a circular socket
+    on the hero frame rather than a scene. Telling either one to look "commanding" or "modest"
+    pushes toward generic staging and away from the thing that actually sells them — for a
+    spell, what its NAME makes the viewer expect to see; for a weapon or hero power, reading
+    cleanly as a single silhouette at icon size.
 
     This used to be rarity-first, with COMMON hard-capped at tier 1 no matter what it cost.
     That cap came from the Blazewing finding — a cheap card rendered as a titanic boss — but it
@@ -225,9 +258,18 @@ def scale_clause(card):
     """
     cost = card.get("cost", 0)
     rarity = card.get("rarity", "COMMON")
+    card_type = card.get("type", "MINION")
+    name = card.get("name", "this card")
+
+    if card_type == "SPELL":
+        return SPELL_INTENT.format(name=name)
+    if card_type in ("WEAPON", "HERO_POWER"):
+        kind = "weapon" if card_type == "WEAPON" else "hero power"
+        return ICON_INTENT.format(kind=kind, name=name)
+
     attack = card.get("attack") or 0
     health = card.get("health") or 0
-    body = attack + health if card.get("type") == "MINION" else 0
+    body = attack + health
 
     if cost <= 1:
         tier = 0
