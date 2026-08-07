@@ -11,18 +11,13 @@
 
     <ui:VisualElement name="root" class="emb-root deckbuilder">
 
-        <!-- Header -->
         <!--
-          deck-label is read-only. Renaming moved to the character roster with the deck switcher
-          (Sam, 2026-08-07) — this screen opens on exactly one deck and cannot change which, so all
-          it owes the player is a reminder of which one that is.
+          No header (Sam, 2026-08-07). It carried the character's name and the deck's, and both are
+          on the previous screen: the character is named once on its roster row, and the deck name
+          sits under the plate you clicked to get here. Repeating them cost the collection wall a
+          band of vertical space to tell the player something they had just read. The card count
+          moved down into the deck panel, where it labels the list it counts.
         -->
-        <ui:VisualElement name="header" class="db-header">
-            <ui:Label name="deck-label" text="" class="db-deck-title" />
-            <ui:VisualElement class="db-header-spacer" />
-            <ui:Label name="hero-label" text="Emberward" class="db-hero" />
-            <ui:Label name="count-label" text="0 / 30" class="db-count" />
-        </ui:VisualElement>
 
         <!-- Body: split view -->
         <ui:VisualElement name="body" class="db-body">
@@ -39,12 +34,12 @@
                 </ui:ScrollView>
             </ui:VisualElement>
 
-            <!-- Right: deck -->
             <!--
               Right: the deck. Set Default and Delete Deck went to the roster's deck dialog with
               the rest of deck management (Sam, 2026-08-07) — what is left here edits the 30.
             -->
             <ui:VisualElement name="deck-panel" class="db-panel db-deck">
+                <ui:Label name="count-label" text="0 / 30" class="db-count" />
                 <ui:VisualElement name="curve-strip" class="db-curve" />
                 <ui:ListView name="deck-list" class="db-list" />
                 <ui:VisualElement name="legality-box" class="db-legality" />

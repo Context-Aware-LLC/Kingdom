@@ -54,8 +54,6 @@ namespace Emberfall.Presentation
         private VisualElement _legalityBox;
         private Label _countLabel;
         private Label _legalityPill;
-        private Label _heroLabel;
-        private Label _deckLabel;
         private Button _filterAllButton;
         private Button _filterClassButton;
         private Button _filterNeutralButton;
@@ -173,17 +171,9 @@ namespace Emberfall.Presentation
             _legalityBox    = _root.Q<VisualElement>("legality-box");
             _countLabel     = _root.Q<Label>("count-label");
             // _legalityPill   = _root.Q<Label>("legality-pill");
-            _heroLabel      = _root.Q<Label>("hero-label");
-            _deckLabel      = _root.Q<Label>("deck-label");
             _filterAllButton     = _root.Q<Button>("filter-all");
             _filterClassButton   = _root.Q<Button>("filter-class");
             _filterNeutralButton = _root.Q<Button>("filter-neutral");
-
-            if (_heroLabel != null)
-            {
-                _heroLabel.text = $"{_character.Name} · {Pretty(_character.PrimaryClass)}/{Pretty(_character.SecondaryClass)}";
-                _heroLabel.style.color = ClassColorToken(_character.PrimaryClass);
-            }
         }
 
         // ---- Collection wall (§2.9): one persistent tile per pool card, built once. Not
@@ -411,8 +401,6 @@ namespace Emberfall.Presentation
         // ---- Chrome (buttons) ----
         private void WireChrome()
         {
-            if (_deckLabel != null) _deckLabel.text = _deck.Name;
-
             // The only way out, and it saves. The alternative is a confirm dialog on a screen whose
             // whole model is "an illegal deck is a savable draft" — there is nothing to lose by
             // writing it. There is deliberately no second Save button beside it (Sam, 2026-08-07):
@@ -523,21 +511,5 @@ namespace Emberfall.Presentation
             var all = prefix == "rarity--" ? AllRarity : AllEdge;
             foreach (var c in all) e.EnableInClassList(c, c == keep);
         }
-
-        /// <summary>Enum name as a player reads it: EMBERWARD → Emberward.</summary>
-        private static string Pretty(CardClass c)
-        {
-            string raw = c.ToString();
-            return raw.Length == 0 ? raw : char.ToUpperInvariant(raw[0]) + raw.Substring(1).ToLowerInvariant();
-        }
-
-        private static Color ClassColorToken(CardClass c) => c switch
-        {
-            CardClass.EMBERWARD => new Color(229 / 255f, 96 / 255f, 42 / 255f),
-            CardClass.TIDECALLER => new Color(31 / 255f, 138 / 255f, 143 / 255f),
-            CardClass.GRAVEKEEP => new Color(126 / 255f, 107 / 255f, 158 / 255f),
-            CardClass.VERDANT => new Color(75 / 255f, 154 / 255f, 84 / 255f),
-            _ => new Color(138 / 255f, 143 / 255f, 152 / 255f),
-        };
     }
 }

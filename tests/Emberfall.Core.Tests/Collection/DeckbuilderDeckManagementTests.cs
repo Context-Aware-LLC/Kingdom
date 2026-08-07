@@ -8,16 +8,20 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
-    /// The deck-management sequence <c>DeckbuilderController</c>'s switcher performs (EF-046):
-    /// create a second deck, switch, set-default, delete — each step going through the real stores
-    /// rather than an in-memory list, because every one of them is a write and the switcher rebuilds
-    /// itself by re-reading.
+    /// The deck-management sequence the UI performs (EF-046): create a second deck, switch,
+    /// set-default, delete — each step going through the real stores rather than an in-memory list,
+    /// because every one of them is a write and the surface rebuilds itself by re-reading.
+    ///
+    /// <para>That surface was <c>DeckbuilderController</c>'s switcher bar when these were written;
+    /// it is <c>CharacterRosterController</c>'s deck strip and its per-deck dialog since 2026-08-07.
+    /// Nothing here changed with the move, which is the point of testing the core behaviours rather
+    /// than the screen.</para>
     ///
     /// <para><b>Why this exists next to <see cref="DeckQueryTests"/>, which already covers ordering.</b>
     /// Those tests pin <see cref="DeckQuery.ForCharacter"/> against hand-built arrays. These pin the
     /// round trip the UI actually makes: store write, store re-read, next answer. A contract that holds
     /// for an array literal and breaks once it has been through JSON is exactly the failure the
-    /// deckbuilder would hit and these would miss.</para>
+    /// UI would hit and these would miss.</para>
     ///
     /// <para>The UI is not under test here — it is a MonoBehaviour and cannot be. What is under test is
     /// every core behaviour that screen's correctness rests on, so that a change to one of them fails
@@ -49,7 +53,7 @@ namespace Emberfall.Core.Tests.Collection
         private static Character Ashwarden(string defaultDeckId = "") =>
             new Character("chr-1", "Ashwarden", CardClass.EMBERWARD, CardClass.TIDECALLER, defaultDeckId);
 
-        /// <summary>The switcher's own call, re-read from disk every time — as the screen does.</summary>
+        /// <summary>The deck strip's own call, re-read from disk every time — as the screen does.</summary>
         private CharacterDecks Switcher(Character character) =>
             DeckQuery.ForCharacter(character, Decks().LoadAll(), LiveCardSet.Db);
 
@@ -62,7 +66,7 @@ namespace Emberfall.Core.Tests.Collection
             Characters().Save(character);
             Decks().Save(DefaultDeckGenerator.Generate(character, LiveCardSet.Db, new DeterministicRandom(7), "starter"));
 
-            // What DeckbuilderController.NewDeck writes: empty, new id, bound at birth.
+            // What CharacterRosterController.NewDeck writes: empty, new id, bound at birth.
             Decks().Save(new DeckList { Id = "d2", CharacterId = character.Id, Name = "New Deck" });
 
             var switcher = Switcher(character);
@@ -128,7 +132,7 @@ namespace Emberfall.Core.Tests.Collection
 
             Assert.That(Switcher(character).Decks[0].Deck.Id, Is.EqualTo("d1"));
 
-            // DeckbuilderController.SetDefaultDeck: write the deck, then point the character at it.
+            // CharacterRosterController.SetDefaultDeck: write the deck, then point the character at it.
             character.DefaultDeckId = "d2";
             Characters().Save(character);
 
@@ -164,7 +168,7 @@ namespace Emberfall.Core.Tests.Collection
         {
             // The contract is on Character.DefaultDeckId itself: "a dangling id is surfaced, never
             // repaired". Silently re-pointing would open the character on a deck nobody chose, so the
-            // deckbuilder must NOT clear this — it renders the dangle instead. This test is what stops
+            // roster must NOT clear this — it renders the dangle instead. This test is what stops
             // a later "tidy-up" from quietly adding the repair.
             var character = Ashwarden(defaultDeckId: "d1");
             Characters().Save(character);
@@ -186,8 +190,9 @@ namespace Emberfall.Core.Tests.Collection
         [Test]
         public void After_Deleting_The_Open_Deck_There_Is_Still_Something_To_Open()
         {
-            // DeckbuilderController.DeleteOpenDeck lands on DecksOf(...).Opening. That must be
-            // non-null whenever the delete was allowed at all, or the screen dereferences null.
+            // A delete is followed by a rebuild that re-reads DecksOf(...), and DeckbuilderController
+            // opens on .Opening. That must be non-null whenever the delete was allowed at all, or the
+            // next screen dereferences null.
             var character = Ashwarden(defaultDeckId: "d1");
             Characters().Save(character);
             Decks().Save(DefaultDeckGenerator.Generate(character, LiveCardSet.Db, new DeterministicRandom(1), "d1"));

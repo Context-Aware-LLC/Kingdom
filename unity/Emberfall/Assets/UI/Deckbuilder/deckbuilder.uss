@@ -9,45 +9,16 @@
     padding: var(--space-4);
 }
 
-/* ---------- Header ---------- */
-.db-header {
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 100%;
-    min-height: 20px;
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: var(--space-4);
-}
-.db-title {
-    font-size: var(--type-display);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-}
+/* The screen had a header carrying the character's name, the deck's name and the count. It is
+ * gone (Sam, 2026-08-07): the first two are on the roster, one screen back. db-header-spacer
+ * survives because the footer still uses it. */
 .db-header-spacer { flex-grow: 1; }
-/* Which deck this is. Read-only — renaming is on the roster with the rest of deck management. */
-.db-deck-title {
-    font-size: var(--type-h1);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    max-width: 40%;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-}
-.db-hero {
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    color: var(--class-emberward);
-    margin-right: var(--space-6);
-}
+/* n / 30, at the top of the deck panel, labelling the list below it. */
 .db-count {
     font-size: var(--type-h1);
     -unity-font-style: bold;
     color: var(--ink-1);
-    margin-right: var(--space-4);
-    min-width: 96px;
+    margin-bottom: var(--space-3);
     -unity-text-align: middle-right;
 }
 .db-pill {
