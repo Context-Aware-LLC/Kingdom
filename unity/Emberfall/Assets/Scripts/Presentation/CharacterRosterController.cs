@@ -116,6 +116,10 @@ namespace Emberfall.Presentation
         private Character _pendingDelete;
         private int _pendingDeleteDeckCount;
 
+        private VisualElement _matchBar;
+        private Label _matchPickLabel;
+        private Button _matchContinue;
+
         private VisualElement _deckModal;
         private Label _deckModalTitle;
         private Label _deckModalSub;
@@ -199,6 +203,10 @@ namespace Emberfall.Presentation
             _deleteMessage = _root.Q<Label>("delete-message");
             _deleteError = _root.Q<Label>("delete-error");
 
+            _matchBar = _root.Q<VisualElement>("match-bar");
+            _matchPickLabel = _root.Q<Label>("match-pick");
+            _matchContinue = _root.Q<Button>("match-continue");
+
             _deckModal = _root.Q<VisualElement>("deck-modal");
             _deckModalTitle = _root.Q<Label>("deck-modal-title");
             _deckModalSub = _root.Q<Label>("deck-modal-sub");
@@ -224,10 +232,18 @@ namespace Emberfall.Presentation
                 MatchDeckSelection.Cancel();
                 Go("MainMenu");
             });
-            if (_rosterIntro != null && MatchDeckSelection.Choosing)
-                _rosterIntro.text = "Choose one of your queue-ready decks to enter the match.";
             if (MatchDeckSelection.Choosing)
+            {
+                if (_rosterIntro != null)
+                    _rosterIntro.text = "Choose one of your queue-ready decks, then Continue.";
                 _root.AddToClassList("character-roster--match-pick");
+            }
+            _matchContinue?.RegisterCallback<ClickEvent>(_ => ContinueToMatch());
+            // Disabled until a plate is picked. Set here as well as in RefreshMatchBar because a
+            // collection that fails to open never reaches a rebuild, and a live Continue on a screen
+            // with no rows is a button that looks like the way forward and is not.
+            _matchContinue?.SetEnabled(false);
+            Show(_matchBar, MatchDeckSelection.Choosing);
         }
 
         private void WireCreateForm()
@@ -569,13 +585,17 @@ namespace Emberfall.Presentation
                 _rosterList.Add(BuildCharacterRow(character, decks));
 
             RefreshCreatePolicy(roster.Count > 0);
+            RefreshMatchBar(roster, decks);
             SetStatus("");
         }
 
+        /// <summary>
+        /// One row shape for both doors (Sam, 2026-08-07). Find Game used to render its own
+        /// text-button variant of this screen; it renders these plates now, and the only difference
+        /// is what a plate click means — options here, selection there.
+        /// </summary>
         private VisualElement BuildCharacterRow(Character character, IReadOnlyList<DeckList> decks)
         {
-            if (MatchDeckSelection.Choosing) return BuildMatchCharacterRow(character, decks);
-
             DeckList defaultDeck = CharacterQuery.DefaultDeckOf(character, decks);
             QueueCheck queue = QueueEligibility.Check(defaultDeck, character, _db);
 
@@ -616,14 +636,19 @@ namespace Emberfall.Presentation
             eligibility.AddToClassList(queue.IsEligible ? "queue-pill--ready" : "queue-pill--draft");
             identity.Add(eligibility);
 
-            var delete = new Button { text = "Delete" };
-            delete.AddToClassList("delete-character");
-            delete.tooltip = $"Delete {character.Name} and every deck bound to it";
-            delete.clicked += () => OpenDeleteDialog(character);
-
             row.Add(identity);
             row.Add(BuildDeckStrip(character, decks));
-            row.Add(delete);
+
+            // Destroying a character is not something a match picker offers.
+            if (!MatchDeckSelection.Choosing)
+            {
+                var delete = new Button { text = "Delete" };
+                delete.AddToClassList("delete-character");
+                delete.tooltip = $"Delete {character.Name} and every deck bound to it";
+                delete.clicked += () => OpenDeleteDialog(character);
+                row.Add(delete);
+            }
+
             return row;
         }
 
@@ -654,7 +679,11 @@ namespace Emberfall.Presentation
             foreach (DeckSummary summary in owned.Decks)
                 strip.Add(BuildDeckPlate(character, summary, owned.Count));
 
-            strip.Add(BuildNewDeckPlate(character));
+            // A brand-new deck is empty, and an empty deck can never be queue ready — so "+" is a
+            // dead end in the match picker even though it is the obvious next thing everywhere else.
+            if (!MatchDeckSelection.Choosing)
+                strip.Add(BuildNewDeckPlate(character));
+
             return strip;
         }
 
@@ -662,13 +691,18 @@ namespace Emberfall.Presentation
         {
             DeckList deck = summary.Deck;
 
+            bool choosing = MatchDeckSelection.Choosing;
+
             var plate = new Button();
             plate.AddToClassList("deck-plate");
             plate.EnableInClassList("deck-plate--default", summary.IsDefault);
-            plate.tooltip = summary.IsDefault
-                ? $"{deck.Name} — {character.Name}'s default deck"
-                : deck.Name;
-            plate.clicked += () => OpenDeckDialog(character, deck, summary, siblingCount);
+            plate.EnableInClassList("deck-plate--selected", choosing && _pickedDeckId == deck.Id);
+            plate.tooltip = choosing
+                ? (summary.Queue.IsEligible ? $"Play {character.Name} with {deck.Name}" : summary.Queue.Reason)
+                : (summary.IsDefault ? $"{deck.Name} — {character.Name}'s default deck" : deck.Name);
+            plate.clicked += choosing
+                ? (Action)(() => PickForMatch(character, summary))
+                : () => OpenDeckDialog(character, deck, summary, siblingCount);
 
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
@@ -767,72 +801,6 @@ namespace Emberfall.Presentation
             }
         }
 
-        private VisualElement BuildMatchCharacterRow(Character character, IReadOnlyList<DeckList> decks)
-        {
-            CharacterDecks choices = DeckQuery.ForCharacter(character, decks, _db);
-            var row = new VisualElement();
-            row.AddToClassList("character-row");
-            row.AddToClassList("character-row--match-pick");
-            row.AddToClassList("character-row--" + ClassSlug(character.PrimaryClass));
-
-            var details = new VisualElement();
-            details.AddToClassList("match-character-details");
-            var name = new Label(character.Name);
-            name.AddToClassList("character-name");
-            details.Add(name);
-            var pairing = new Label($"{Pretty(character.PrimaryClass)} → {Pretty(character.SecondaryClass)}");
-            pairing.AddToClassList("character-detail");
-            details.Add(pairing);
-            var power = new Label($"Hero power: {Pretty(character.PrimaryClass)}");
-            power.AddToClassList("character-detail");
-            details.Add(power);
-            row.Add(details);
-
-            var deckChoices = new VisualElement();
-            deckChoices.AddToClassList("match-deck-choices");
-            int ready = 0;
-            for (int i = 0; i < choices.Decks.Count; i++)
-            {
-                DeckSummary summary = choices.Decks[i];
-                DeckList deck = summary.Deck;
-                string defaultMark = summary.IsDefault ? " · Default" : "";
-                if (summary.Queue.IsEligible)
-                {
-                    var choose = new Button { text = $"{deck.Name}{defaultMark} · {deck.TotalCount} / 30" };
-                    choose.AddToClassList("match-deck-choice");
-                    choose.tooltip = $"Play {character.Name} with {deck.Name}";
-                    choose.clicked += () => ChooseForMatch(character, deck);
-                    deckChoices.Add(choose);
-                    ready++;
-                }
-                else
-                {
-                    var draft = new VisualElement();
-                    draft.AddToClassList("match-deck-draft");
-                    var draftName = new Label($"{deck.Name}{defaultMark} · {deck.TotalCount} / 30");
-                    draftName.AddToClassList("match-deck-draft-name");
-                    draft.Add(draftName);
-                    var reason = new Label($"Draft · {summary.Queue.Reason}");
-                    reason.AddToClassList("match-deck-draft-reason");
-                    draft.Add(reason);
-                    var edit = new Button { text = "Edit" };
-                    edit.AddToClassList("match-deck-edit");
-                    edit.clicked += () => OpenDeckForEdit(character.Id, deck.Id);
-                    draft.Add(edit);
-                    deckChoices.Add(draft);
-                }
-            }
-
-            if (ready == 0)
-            {
-                var none = new Label("No queue-ready decks. Edit a draft to continue.");
-                none.AddToClassList("match-deck-empty");
-                deckChoices.Add(none);
-            }
-            row.Add(deckChoices);
-            return row;
-        }
-
         private void OpenCharacter(string characterId)
         {
             DeckbuilderController.PendingCharacterId = characterId;
@@ -847,17 +815,104 @@ namespace Emberfall.Presentation
             Go("DeckbuilderSpike");
         }
 
-        private void ChooseForMatch(Character character, DeckList deck)
+        // ---- Match pick: select a deck, then continue (Sam, 2026-08-07) --------------------
+
+        /// <summary>
+        /// The plate the player has chosen to play, or empty. Held on the controller rather than
+        /// pushed into <see cref="MatchDeckSelection"/> as it is clicked: that static is the
+        /// scene-to-scene handoff <c>NetworkedGameBootstrap</c> consumes, and writing it before
+        /// Continue would mean backing out to the main menu left a match choice armed.
+        /// </summary>
+        private string _pickedCharacterId = "";
+        private string _pickedDeckId = "";
+
+        /// <summary>
+        /// Mark a deck as the one to play. A draft is not selectable — it says why instead, because
+        /// the plate already shows a Draft tag and the useful half is the reason behind it.
+        /// </summary>
+        private void PickForMatch(Character character, DeckSummary summary)
         {
+            if (!summary.Queue.IsEligible)
+            {
+                SetStatus($"{summary.Deck.Name} is not queue ready: {summary.Queue.Reason}", isError: true);
+                return;
+            }
+
+            _pickedCharacterId = character.Id;
+            _pickedDeckId = summary.Deck.Id;
+            SetStatus("");
+            RebuildRoster();
+        }
+
+        /// <summary>
+        /// Enter matchmaking with the selected deck, re-checking eligibility against disk on the way
+        /// out. The check is not paranoia: the selection survives a trip to the deckbuilder and back,
+        /// so the deck that was queue ready when it was picked may not be by the time Continue is
+        /// pressed.
+        /// </summary>
+        private void ContinueToMatch()
+        {
+            if (string.IsNullOrEmpty(_pickedDeckId)) return;
+
+            Character character = CharacterQuery.ById(_account.Roster(), _pickedCharacterId);
+            DeckList deck = null;
+            foreach (DeckList d in _account.Decks())
+                if (d.Id == _pickedDeckId) { deck = d; break; }
+
+            // RebuildRoster ends by clearing the status line, so the rebuild has to happen BEFORE
+            // the message that explains it — the other way round the player sees a cleared pick and
+            // no reason for it.
+            if (character == null || deck == null)
+            {
+                ClearPick();
+                RebuildRoster();
+                SetStatus("That deck is no longer there. Pick another.", isError: true);
+                return;
+            }
+
             QueueCheck queue = QueueEligibility.Check(deck, character, _db);
             if (!queue.IsEligible)
             {
+                ClearPick();
+                RebuildRoster();
                 SetStatus($"{deck.Name} is not queue ready: {queue.Reason}", isError: true);
                 return;
             }
 
             MatchDeckSelection.Select(character.Id, deck.Id);
             Go("BoardNetworked");
+        }
+
+        private void ClearPick()
+        {
+            _pickedCharacterId = "";
+            _pickedDeckId = "";
+        }
+
+        /// <summary>Update the Continue bar to whatever is (or is not) selected. Takes the lists
+        /// <see cref="RebuildRoster"/> has already read — the stores do not cache, so re-asking would
+        /// be two more file reads per repaint.</summary>
+        private void RefreshMatchBar(IReadOnlyList<Character> roster, IReadOnlyList<DeckList> decks)
+        {
+            if (_matchBar == null) return;
+
+            bool choosing = MatchDeckSelection.Choosing;
+            Show(_matchBar, choosing);
+            if (!choosing) return;
+
+            bool picked = !string.IsNullOrEmpty(_pickedDeckId);
+            _matchContinue?.SetEnabled(picked);
+            if (_matchPickLabel == null) return;
+
+            Character character = picked ? CharacterQuery.ById(roster, _pickedCharacterId) : null;
+            DeckList deck = null;
+            if (picked)
+                foreach (DeckList d in decks)
+                    if (d.Id == _pickedDeckId) { deck = d; break; }
+
+            _matchPickLabel.text = character == null || deck == null
+                ? "Pick a queue-ready deck."
+                : $"{character.Name} · {deck.Name}";
         }
 
         private void RefreshCreatePolicy(bool hasCharacters)

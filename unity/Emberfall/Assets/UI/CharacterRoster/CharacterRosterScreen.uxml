@@ -38,6 +38,16 @@
         </ui:VisualElement>
 
         <!--
+          Find Game's third step. The first two — pick a character, pick one of its decks — are the
+          same rows the deck-management door draws; this bar is the only thing that door does not
+          have. Hidden entirely outside a match pick.
+        -->
+        <ui:VisualElement name="match-bar" class="match-bar">
+            <ui:Label name="match-pick" text="Pick a queue-ready deck." class="match-pick" />
+            <ui:Button name="match-continue" text="Continue" class="roster-button roster-button--cta" />
+        </ui:VisualElement>
+
+        <!--
           What a deck plate opens. One dialog, three panes — the menu, then whichever action was
           picked — because a deck's name and its card back are both edited from here now and two
           separate modals would be two separate places to leave a deck half-renamed.
