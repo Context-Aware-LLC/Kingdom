@@ -34,6 +34,17 @@ language feature inside the core compiles nowhere and breaks Unity's consumption
 the `.csproj` before using anything modern. Confirm with:
 `git grep -h '<TargetFramework>' -- 'src/**/*.csproj' | sort | uniq -c`
 
+**A friend assembly declared in a `.csproj` does not exist as far as Unity is concerned.** Every
+`src/` project is built by two toolchains: dotnet reads the `.csproj`, Unity reads the `.asmdef`
+and never opens the `.csproj` at all. An `.asmdef` has no friend mechanism, so
+`<InternalsVisibleTo>` items are silently dropped — **`dotnet build` and CI stay green while
+Unity cannot compile the consumer.** Declare friends as `[assembly: InternalsVisibleTo(...)]` in
+a `.cs` file, which both toolchains compile. This cost a session on 2026-08-06: an `internal`
+field read across two assemblies took down every Unity assembly downstream of it, surfacing as a
+Burst *"Failed to resolve assembly: 'Emberfall.AI'"* and a vanished `Emberfall/` menu — neither of
+which points at an access modifier. The live declarations are in
+`src/Emberfall.Core.Contracts/AssemblyInfo.cs`; that file carries the retirement trigger.
+
 ## Source of truth
 
 - **Your task brief is the source of truth.** For un-built behavior, ask the operator rather

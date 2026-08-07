@@ -18,11 +18,9 @@
     <!-- Firewall, layer 1: no Unity engine refs are even available here. -->
   </PropertyGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Emberfall.Core" />
-    <InternalsVisibleTo Include="Emberfall.Core.Serialization" />
-    <InternalsVisibleTo Include="Emberfall.Net.Protocol" />
-    <InternalsVisibleTo Include="Emberfall.Core.Tests" />
-  </ItemGroup>
+  <!-- Friend assemblies are declared in AssemblyInfo.cs, NOT here. Unity builds this project
+       from its .asmdef and never reads this file, so a csproj-only friend is invisible to it -
+       which silently broke every Unity assembly downstream of Contracts on 2026-08-06. See the
+       comment in AssemblyInfo.cs before moving them back. -->
 
 </Project>
