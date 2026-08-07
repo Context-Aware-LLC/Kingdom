@@ -88,8 +88,13 @@ namespace Emberfall.Presentation
         /// <summary>Awaiting a second choice: a slot placement followed by a herald target.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
-        public const string AimBanner = "Drag to a target — Esc cancels";
-        public const string AttackBanner = "Drag to a target to attack — Esc cancels";
+        // No cancel hint. Cancelling is releasing on nothing — see Resolve, where a null subject
+        // means "this drop meant nothing" — which is the same gesture with a mouse or a finger and
+        // needs no instruction. The banner used to end in "— Esc cancels", which named a key that
+        // does not exist on the mobile-first target and bought nothing on desktop, where Escape
+        // still cancels (InputRouter's KeyCode.Escape branch) whether or not the banner says so.
+        public const string AimBanner = "Drag to a target";
+        public const string AttackBanner = "Drag to a target to attack";
 
         private readonly PlayerId _p0Id;
         private readonly ICardDatabase _db;
