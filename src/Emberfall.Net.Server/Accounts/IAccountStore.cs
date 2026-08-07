@@ -29,7 +29,11 @@ namespace Emberfall.Net.Server.Accounts
         /// <see cref="Account.PlayerId"/>, across restarts and — for the durable store — across
         /// processes and races.
         /// </summary>
-        Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash, CancellationToken ct = default);
+        /// <param name="email">Verified email at link time (EF-074c, VULN-003 §4.2). The player's
+        /// recovery path; stored on first sight, never updated — Supabase holds the authoritative
+        /// email. Null for guest accounts that have never signed in.</param>
+        Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
+            string? email = null, CancellationToken ct = default);
 
         /// <summary>The account with this <see cref="Account.PlayerId"/>, or null if unknown.</summary>
         Task<Account?> FindByPlayerIdAsync(string playerId, CancellationToken ct = default);
@@ -71,7 +75,8 @@ namespace Emberfall.Net.Server.Accounts
 
         public InMemoryAccountStore(ITimeSource time) => _time = time;
 
-        public Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash, CancellationToken ct = default)
+        public Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
+            string? email = null, CancellationToken ct = default)
         {
             Require(credentialKind, credentialHash);
             string credKey = credentialKind + "\n" + credentialHash;
@@ -84,7 +89,8 @@ namespace Emberfall.Net.Server.Accounts
                 var account = new Account(
                     AccountIdentity.DerivePlayerId(credentialKind, credentialHash),
                     credentialKind, credentialHash,
-                    DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
+                    DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs),
+                    email);
                 _byCredential[credKey] = account;
                 _byPlayerId[account.PlayerId] = account;
                 return Task.FromResult(account);
