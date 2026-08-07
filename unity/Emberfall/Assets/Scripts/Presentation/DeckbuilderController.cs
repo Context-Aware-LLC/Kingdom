@@ -33,6 +33,9 @@ namespace Emberfall.Presentation
         /// <summary>Which character to open, set by the caller before loading this scene.</summary>
         public static string PendingCharacterId;
 
+        /// <summary>Which saved deck to open, or empty to use that character's normal opening deck.</summary>
+        public static string PendingDeckId;
+
         private PlayerAccount _account;
         private Character _character;
         private ICardDatabase _db;
@@ -88,7 +91,8 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            _deck = _account.DecksOf(_character, _db).Opening?.Deck;
+            CharacterDecks characterDecks = _account.DecksOf(_character, _db);
+            _deck = FindPendingDeck(characterDecks.Decks) ?? characterDecks.Opening?.Deck;
             if (_deck == null)
             {
                 Debug.LogError($"[Deckbuilder] '{_character.Name}' has no deck to open.");
@@ -122,6 +126,16 @@ namespace Emberfall.Presentation
             if (string.IsNullOrEmpty(PendingCharacterId)) return null;
             foreach (var c in roster)
                 if (c.Id == PendingCharacterId) return c;
+            return null;
+        }
+
+        private static DeckList FindPendingDeck(IReadOnlyList<DeckSummary> decks)
+        {
+            string pending = PendingDeckId;
+            PendingDeckId = "";
+            if (string.IsNullOrEmpty(pending)) return null;
+            for (int i = 0; i < decks.Count; i++)
+                if (decks[i].Deck.Id == pending) return decks[i].Deck;
             return null;
         }
 

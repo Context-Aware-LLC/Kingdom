@@ -157,7 +157,8 @@ namespace Emberfall.Net.Client
 
             SetState(ConnectionState.Connecting);
             _matchStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            await _transport.ConnectAsync(uri, ct).ConfigureAwait(false);
+            SubmitDeckMsg? deck = _opts.DeckSubmission;
+            await _transport.ConnectAsync(deck is null ? uri : WithDeckOptIn(uri), ct).ConfigureAwait(false);
 
             // The hello is the FIRST frame on a fresh socket — before pairing, before the pump.
             // Sent inline rather than from the pump loop so it cannot be reordered behind a
@@ -172,9 +173,26 @@ namespace Emberfall.Net.Client
                     ProtocolCodec.PreMatch, 0),
                 ct).ConfigureAwait(false);
 
+            if (deck is not null)
+            {
+                await _transport.SendAsync(
+                    ProtocolCodec.Encode(deck, ProtocolCodec.PreMatch, 1),
+                    ct).ConfigureAwait(false);
+                _outSeq = 1;
+            }
+
             SetState(ConnectionState.Pairing);
             StartPump();
             await _matchStarted.Task.ConfigureAwait(false);
+        }
+
+        private static Uri WithDeckOptIn(Uri uri)
+        {
+            var builder = new UriBuilder(uri);
+            string query = builder.Query;
+            if (query.StartsWith("?", StringComparison.Ordinal)) query = query.Substring(1);
+            builder.Query = string.IsNullOrEmpty(query) ? "deck=1" : query + "&deck=1";
+            return builder.Uri;
         }
 
         private void StartPump()
