@@ -678,6 +678,9 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // Every strip about to be discarded takes its pending layout tick with it. A detached
+            // element's scheduler may never run, so without this the set only grows.
+            _stripLayoutQueued.Clear();
             _rosterList.Clear();
             if (_rosterCount != null)
                 _rosterCount.text = roster.Count == 1 ? "1 character" : $"{roster.Count} characters";
@@ -739,6 +742,7 @@ namespace Emberfall.Presentation
         {
             var strip = new VisualElement();
             strip.AddToClassList("deck-strip");
+            strip.RegisterCallback<GeometryChangedEvent>(_ => QueueStripLayout(strip));
 
             CharacterDecks owned = DeckQuery.ForCharacter(character, decks, _db);
 
@@ -796,6 +800,72 @@ namespace Emberfall.Presentation
             plate.Add(functions);
 
             return plate;
+        }
+
+        // ---- Plate sizing (Sam, 2026-08-07) ------------------------------------------------
+        //
+        // A plate is a SQUARE rendering of the art at the largest sensible size for the space it
+        // has — not a card-shaped thumbnail at a fixed 108x152. UI Toolkit has neither media
+        // queries nor aspect-ratio, so both halves of that are a layout pass: the strip measures
+        // itself, decides how many squares fit, and grows them to fill the row.
+
+        /// <summary>Below this a deck image stops reading as a picture and starts reading as an
+        /// icon; the strip wraps to fewer columns rather than going under it.</summary>
+        private const float MinPlate = 132f;
+
+        /// <summary>Above this a single deck is just eating the row. One or two decks stay this
+        /// size rather than stretching to the full width of the strip.</summary>
+        private const float MaxPlate = 232f;
+
+        /// <summary>Must match .deck-plate's margin-right and .deck-strip's wrap spacing (--space-3).</summary>
+        private const float PlateGutter = 12f;
+
+        /// <summary>.deck-plate padding (--space-2) plus its 2px border, both sides — the difference
+        /// between the plate's outer width and the square inside it.</summary>
+        private const float PlateChrome = 20f;
+
+        /// <summary>A row solved to land exactly on the available width is a floating-point tie;
+        /// see LayoutCollectionGrid in DeckbuilderController for the wrap-one-early failure this
+        /// avoids.</summary>
+        private const float RowSafetyMargin = 2f;
+
+        private readonly HashSet<VisualElement> _stripLayoutQueued = new HashSet<VisualElement>();
+
+        /// <summary>
+        /// Defer to the next scheduler tick rather than resizing inline. The trigger is the strip's
+        /// own GeometryChangedEvent, which Yoga fires mid-layout-pass — writing widths from inside
+        /// it edits the tree while Yoga is still walking it, so only the children it has not
+        /// visited pick up the new values, and the mutation re-fires the event. Same hazard, same
+        /// fix, as DeckbuilderController.QueueCollectionLayout.
+        /// </summary>
+        private void QueueStripLayout(VisualElement strip)
+        {
+            if (!_stripLayoutQueued.Add(strip)) return;
+            strip.schedule.Execute(() =>
+            {
+                _stripLayoutQueued.Remove(strip);
+                LayoutDeckStrip(strip);
+            });
+        }
+
+        private void LayoutDeckStrip(VisualElement strip)
+        {
+            float available = strip.resolvedStyle.width - RowSafetyMargin;
+            if (available <= 0f) return;
+
+            int columns = Mathf.Max(1, Mathf.FloorToInt((available + PlateGutter) / (MinPlate + PlateGutter)));
+            float side = Mathf.Min(MaxPlate, (available - (columns - 1) * PlateGutter) / columns);
+
+            foreach (VisualElement child in strip.Children())
+            {
+                if (!child.ClassListContains("deck-plate")) continue;
+                child.style.width = side;
+
+                VisualElement art = child.Q<VisualElement>(className: "deck-plate-art");
+                if (art == null) continue;
+                art.style.width = side - PlateChrome;
+                art.style.height = side - PlateChrome;   // square: the whole point of the pass
+            }
         }
 
         /// <summary>

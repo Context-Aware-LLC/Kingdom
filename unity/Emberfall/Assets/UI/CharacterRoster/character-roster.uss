@@ -85,10 +85,11 @@
     -unity-text-align: middle-center;
 }
 
+/* No min-height: the plates decide how tall a row is now, and they are sized to the space the
+ * strip actually has (CharacterRosterController.LayoutDeckStrip). */
 .character-row {
     flex-direction: row;
     align-items: stretch;
-    min-height: 232px;
     margin-bottom: var(--space-3);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
@@ -144,8 +145,10 @@
     overflow: hidden;
 }
 
+/* width, and the art's square side, are written per row by LayoutDeckStrip. The value here is
+ * only what a plate looks like for the frame before that pass runs. */
 .deck-plate {
-    width: 128px;
+    width: 132px;
     align-items: center;
     margin: 0 var(--space-3) var(--space-3) 0;
     padding: var(--space-2);
@@ -160,11 +163,13 @@
     max-height: 320px;
 }
 
-/* The card itself — the art of whichever card fronts the deck. scale-and-crop rather than
- * stretch: card art is not this aspect and letterboxing it reads as a bug. */
+/* The art of whichever card fronts the deck, rendered SQUARE (Sam, 2026-08-07) — a deck is not
+ * a card-shaped thumbnail here. scale-and-crop rather than stretch: card art is not square, and
+ * letterboxing it reads as a bug where cropping reads as framing. The plate strip overwrites
+ * these two values every layout pass; they are the picker's size, and the plate's first frame. */
 .deck-plate-art {
-    width: 108px;
-    height: 152px;
+    width: 112px;
+    height: 112px;
     border-radius: var(--space-1);
     background-color: var(--surface-3);
     -unity-background-scale-mode: scale-and-crop;
