@@ -127,10 +127,14 @@ namespace Emberfall.Net.Client.Tests
         public async Task MatchStart_Engine_Contract_Must_Exactly_Match_Client()
         {
             using var peer = new LoopbackServerPeer();
+            // c0 keeps the DEFAULT contract version on purpose: the pairing handshake below is a real
+            // one, so pinning a literal here makes StartPairAsync itself fail the moment the default
+            // moves past it — which is what took this test down on the v4 → v5 bump (EF-074b). The
+            // mismatch under test is the injected MatchStart, and it derives from the live version so
+            // it stays a mismatch across every future bump.
             using var c0 = new NetworkedMatchSession(peer.Transport0, new ClientOptions
             {
                 DeviceToken = "test-device-0",
-                ContractVersion = "interfaces.v4",
             });
             using var c1 = new NetworkedMatchSession(peer.Transport1, new ClientOptions { DeviceToken = "test-device-1" });
             await StartPairAsync(peer, c0, c1);
@@ -138,7 +142,7 @@ namespace Emberfall.Net.Client.Tests
             var mismatch = new MatchStartMsg(
                 c0.Player,
                 c0.Seat,
-                "interfaces.v3",
+                ProtocolContract.Version + ".not-this-one",
                 new OpponentInfo(new PlayerId("opponent"), "Opponent"),
                 SnapshotMsg.Of(c0.Current));
 
