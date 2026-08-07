@@ -89,7 +89,7 @@
 .character-row {
     flex-direction: row;
     align-items: stretch;
-    min-height: 184px;
+    min-height: 232px;
     margin-bottom: var(--space-3);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
@@ -103,19 +103,19 @@
 .character-row--gravekeep { border-left-color: var(--class-gravekeep); }
 .character-row--verdant { border-left-color: var(--class-verdant); }
 
-.character-select {
-    flex-grow: 1;
+/* The character's own identity — name, pairing, hero power, and how its default deck stands.
+ * A plain block, not a button: since the decks moved here from the deckbuilder, opening a
+ * character means opening one of ITS DECKS, and there is no longer a "just the character"
+ * destination for a click on this to go to. Fixed-width so the deck strip beside it starts on
+ * the same column down the whole list. */
+.character-identity {
+    width: 26%;
+    min-width: 240px;
+    max-width: 340px;
+    flex-shrink: 0;
     align-items: flex-start;
-    background-color: transparent;
-    border-width: 0;
-    border-radius: 0;
     padding: var(--space-4);
-    margin: 0;
     color: var(--ink-1);
-}
-
-.character-select:hover {
-    background-color: var(--surface-3);
 }
 
 .character-name {
@@ -170,6 +170,144 @@
 .queue-pill--draft {
     color: var(--surface-0);
     background-color: var(--warning);
+}
+
+/* ---- Deck strip (Sam, 2026-08-07) ------------------------------------------------------
+ * The deck switcher and the deck name used to live at the top of the deckbuilder's right-hand
+ * panel. They live here now: a character row is mostly empty space, and a deck is a thing you
+ * pick BEFORE you open an editor for it, not a tab inside one. Each deck is drawn as a card —
+ * its own card back — because that is what a player recognises a deck by.
+ */
+.deck-strip {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    overflow: hidden;
+}
+
+.deck-plate {
+    width: 128px;
+    align-items: center;
+    margin: 0 var(--space-3) var(--space-3) 0;
+    padding: var(--space-2);
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: var(--space-2);
+    background-color: transparent;
+    color: var(--ink-1);
+}
+
+.deck-plate:hover {
+    background-color: var(--surface-2);
+    border-color: var(--surface-3);
+}
+
+/* The card itself. scale-and-crop rather than stretch: a back is a full-bleed pattern or a
+ * centred emblem, and letterboxing either one reads as a bug. */
+.deck-plate-art {
+    width: 108px;
+    height: 152px;
+    border-radius: var(--space-1);
+    background-color: var(--surface-3);
+    -unity-background-scale-mode: scale-and-crop;
+    overflow: hidden;
+}
+
+.deck-plate--default .deck-plate-art {
+    border-width: 2px;
+    border-color: var(--accent);
+}
+
+.deck-plate-name {
+    width: 100%;
+    margin-top: var(--space-2);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--ink-1);
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.deck-plate-count {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+}
+
+/* Draft state is a WORD, not a dimming. Sam, 2026-08-07: nothing in a collection surface gets
+ * greyed out — the same ruling that took the disabled tint off the deckbuilder's card wall. */
+.deck-plate-tag {
+    margin-top: var(--space-1);
+    padding: 0 var(--space-2);
+    border-radius: 999px;
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    color: var(--surface-0);
+}
+
+.deck-plate-tag--ready { background-color: var(--positive); }
+.deck-plate-tag--draft { background-color: var(--warning); }
+
+.deck-plate--new .deck-plate-art {
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: var(--surface-3);
+    background-color: var(--surface-1);
+}
+
+.deck-plate-plus {
+    font-size: var(--type-display);
+    -unity-font-style: bold;
+    color: var(--ink-2);
+}
+
+.deck-plate--new:hover .deck-plate-art { border-color: var(--accent); }
+.deck-plate--new:hover .deck-plate-plus { color: var(--accent); }
+
+/* A default deck the character points at was deleted — surfaced, never repaired. It used to be
+ * the deckbuilder's job to say so; the pointer is a roster-level fact, so it says so here. */
+.deck-strip-hint {
+    width: 100%;
+    margin-bottom: var(--space-2);
+    font-size: var(--type-label);
+    color: var(--warning);
+    white-space: normal;
+}
+
+/* ---- Deck modal panes ---- */
+.deck-pane {
+    margin-bottom: var(--space-2);
+}
+
+.deck-action {
+    align-self: stretch;
+    margin-bottom: var(--space-2);
+}
+
+.deck-back-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-bottom: var(--space-2);
+}
+
+.deck-back-option {
+    width: 128px;
+    align-items: center;
+    margin: 0 var(--space-3) var(--space-3) 0;
+    padding: var(--space-2);
+    border-width: 2px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    background-color: var(--surface-1);
+    color: var(--ink-1);
+}
+
+.deck-back-option--on {
+    border-color: var(--accent);
+    background-color: var(--surface-3);
 }
 
 .delete-character {

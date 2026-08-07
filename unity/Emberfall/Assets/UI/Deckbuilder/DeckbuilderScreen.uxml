@@ -12,7 +12,13 @@
     <ui:VisualElement name="root" class="emb-root deckbuilder">
 
         <!-- Header -->
+        <!--
+          deck-label is read-only. Renaming moved to the character roster with the deck switcher
+          (Sam, 2026-08-07) — this screen opens on exactly one deck and cannot change which, so all
+          it owes the player is a reminder of which one that is.
+        -->
         <ui:VisualElement name="header" class="db-header">
+            <ui:Label name="deck-label" text="" class="db-deck-title" />
             <ui:VisualElement class="db-header-spacer" />
             <ui:Label name="hero-label" text="Emberward" class="db-hero" />
             <ui:Label name="count-label" text="0 / 30" class="db-count" />
@@ -35,15 +41,6 @@
 
             <!-- Right: deck -->
             <ui:VisualElement name="deck-panel" class="db-panel db-deck">
-                <!--
-                  deck-bar is built at runtime: one chip per deck of this character, default first
-                  and marked, plus a trailing "+" that creates an empty one.
-                -->
-                <ui:ScrollView name="deck-bar-scroll" class="db-deck-bar-scroll" mode="Horizontal" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden">
-                    <ui:VisualElement name="deck-bar" class="db-deck-bar" />
-                </ui:ScrollView>
-                <ui:TextField name="deck-name" value="New Deck" class="db-deck-name" />
-                <ui:Label name="default-hint" text="" class="db-default-hint" />
                 <ui:VisualElement name="deck-actions" class="db-deck-actions">
                     <ui:Button name="set-default-button" text="Set Default" class="db-button db-button--ghost db-button--small" />
                     <ui:Button name="delete-deck-button" text="Delete Deck" class="db-button db-button--ghost db-button--small db-button--danger" style="margin-right: 0;" />
@@ -55,11 +52,14 @@
 
         </ui:VisualElement>
 
-        <!-- Footer -->
+        <!--
+          Footer. One button, not two (Sam, 2026-08-07): Save and Done did the same write, and a
+          screen whose whole model is "an illegal deck is a savable draft" has nothing to confirm on
+          the way out. Back saves and leaves.
+        -->
         <ui:VisualElement name="footer" class="db-footer">
-            <ui:Button name="done-button" text="Done" class="db-button db-button--ghost" />
+            <ui:Button name="done-button" text="Back" class="db-button db-button--ghost" />
             <ui:VisualElement class="db-header-spacer" />
-            <ui:Button name="save-button" text="Save Deck" class="db-button db-button--cta" />
         </ui:VisualElement>
 
     </ui:VisualElement>

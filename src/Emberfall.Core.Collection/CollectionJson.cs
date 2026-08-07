@@ -110,6 +110,7 @@ namespace Emberfall.Core.Collection
                     w.WriteString("id", d.Id);
                     w.WriteString("characterId", d.CharacterId);
                     w.WriteString("name", d.Name);
+                    w.WriteString("cardBackId", d.CardBackId);
                     w.WriteStartArray("cards");
                     foreach (var e in d.Entries)
                     {
@@ -147,6 +148,11 @@ namespace Emberfall.Core.Collection
                     // not merely against the database.
                     CharacterId = Str(el, "characterId") ?? "",
                     Name = Str(el, "name") ?? "New Deck",
+                    // Optional and additive, the same shape as a character's defaultDeckId: a deck
+                    // written before card backs existed reads back with none, which is the same state
+                    // as "the player never chose one" and renders identically. Not checked against a
+                    // catalog — see DeckList.CardBackId for why an unknown back is not a read error.
+                    CardBackId = Str(el, "cardBackId") ?? "",
                 };
 
                 if (el.TryGetProperty("cards", out var cards) && cards.ValueKind == JsonValueKind.Array)

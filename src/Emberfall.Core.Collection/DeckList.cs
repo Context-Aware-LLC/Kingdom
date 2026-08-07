@@ -23,6 +23,23 @@ namespace Emberfall.Core.Collection
         public string Id { get; set; } = "";
         public string CharacterId { get; set; } = "";   // L5: a deck belongs to exactly one Character
         public string Name { get; set; } = "New Deck";
+
+        /// <summary>
+        /// The card back this deck presents, or empty for "whatever the build's default is".
+        ///
+        /// <para><b>Cosmetic, and unvalidated on purpose.</b> Nothing in this assembly knows which
+        /// backs exist — the catalog is art, it lives client-side, and it grows with every set. An id
+        /// naming a back this build has never heard of therefore loads intact and falls back to the
+        /// default at render time, exactly like a card id a balance patch deleted. Refusing it here
+        /// would make a deck unreadable because of a cosmetic.</para>
+        ///
+        /// <para><b>Per deck, not per seat.</b> The back is presented by the deck that is playing, so
+        /// it belongs on the deck rather than on the account — but the seat is still what carries it
+        /// onto the wire, and an opponent's back id is attacker-authored data by the time the client
+        /// resolves it. Nothing sends it today.</para>
+        /// </summary>
+        public string CardBackId { get; set; } = "";
+
         public List<DeckEntry> Entries { get; } = new List<DeckEntry>();
 
         public int TotalCount

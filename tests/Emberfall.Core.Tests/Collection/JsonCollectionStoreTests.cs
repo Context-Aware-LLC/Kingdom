@@ -186,6 +186,48 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         [Test]
+        public void A_Deck_Round_Trips_Its_Card_Back_And_Survives_One_This_Build_Does_Not_Know()
+        {
+            var store = Decks();
+            store.Save(new DeckList { Id = "deck-1", CharacterId = "chr-1", Name = "Chosen", CardBackId = "gravekeep_allover" });
+            store.Save(new DeckList { Id = "deck-2", CharacterId = "chr-1", Name = "Unset" });
+            store.Save(new DeckList { Id = "deck-3", CharacterId = "chr-1", Name = "From a later build", CardBackId = "a_back_from_a_set_that_does_not_ship_yet" });
+
+            var loaded = Decks().LoadAll();
+
+            Assert.That(loaded.Select(d => d.CardBackId), Is.EqualTo(new[]
+            {
+                "gravekeep_allover",
+                "",                                          // never chosen == the build default
+                "a_back_from_a_set_that_does_not_ship_yet",   // unknown is cosmetic, never a read error
+            }));
+        }
+
+        [Test]
+        public void A_Deck_Written_Before_Card_Backs_Existed_Still_Loads()
+        {
+            // The additive-field contract, from the storage side: cardBackId is absent from every
+            // deck any shipped build has written so far, and its absence must not be a format error.
+            var store = Decks();
+            store.Save(new DeckList { Id = "seed" });   // the scope directory exists only once something is written
+            File.WriteAllText(store.FilePath, """
+                {
+                  "schemaVersion": 1,
+                  "decks": [
+                    { "id": "deck-1", "characterId": "chr-1", "name": "Rotvine",
+                      "cards": [ { "id": "grave_bell_novice", "count": 2 } ] }
+                  ]
+                }
+                """);
+
+            var loaded = Decks().LoadAll();
+
+            Assert.That(loaded.Count, Is.EqualTo(1));
+            Assert.That(loaded[0].Name, Is.EqualTo("Rotvine"));
+            Assert.That(loaded[0].CardBackId, Is.Empty);
+        }
+
+        [Test]
         public void Deck_Save_Requires_An_Id()
         {
             Assert.Throws<ArgumentException>(() => Decks().Save(new DeckList { Id = "", Name = "Nameless" }));

@@ -37,6 +37,39 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!--
+          What a deck plate opens. One dialog, three panes — the menu, then whichever action was
+          picked — because a deck's name and its card back are both edited from here now and two
+          separate modals would be two separate places to leave a deck half-renamed.
+        -->
+        <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden">
+            <ui:VisualElement class="delete-dialog">
+                <ui:Label name="deck-modal-title" text="" class="delete-title" />
+                <ui:Label name="deck-modal-sub" text="" class="create-help" />
+
+                <ui:VisualElement name="deck-menu-pane" class="deck-pane">
+                    <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
+                    <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
+                    <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="deck-rename-pane" class="deck-pane">
+                    <ui:TextField name="deck-rename-field" label="Name" max-length="24" class="roster-field" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="deck-back-pane" class="deck-pane">
+                    <ui:VisualElement name="deck-back-grid" class="deck-back-grid" />
+                    <ui:Label name="deck-back-note" text="" class="create-help create-help--starter" />
+                </ui:VisualElement>
+
+                <ui:Label name="deck-modal-error" text="" class="create-error" />
+                <ui:VisualElement class="delete-actions">
+                    <ui:Button name="deck-modal-cancel" text="Close" class="roster-button roster-button--ghost" />
+                    <ui:Button name="deck-modal-confirm" text="Save" class="roster-button roster-button--cta" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden">
             <ui:VisualElement class="delete-dialog">
                 <ui:Label text="Delete character?" class="delete-title" />
