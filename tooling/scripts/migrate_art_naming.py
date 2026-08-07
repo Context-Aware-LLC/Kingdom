@@ -26,7 +26,7 @@ WHAT THIS TOUCHES, all of which must move together:
     1. artId in unity/Emberfall/Assets/CardData/*.cards.json
     2. the art_*.png and its art_*.png.meta, renamed as a PAIR - the .meta carries the guid
        the Addressables entry points at, so the pair moves or the entry orphans
-    3. tests/.../GoldenReplay/cardsets/M1.cards.snapshot.json, which carries a frozen copy
+    3. tests/.../GoldenReplay/cardsets/M1.cards.snapshot.json, which carries an immutable copy
 
 NOT hash-canonical. ArtId appears zero times in GameStateHasher and GameStateSerializer, so
 golden replays and the pinned digest are unaffected by this rename.
@@ -222,7 +222,7 @@ def main() -> int:
             fp.write_text(json.dumps(cards, indent=2, ensure_ascii=False) + "\n",
                           encoding="utf-8")
 
-    # 3. the frozen snapshot the behaviour tests load
+    # 3. the immutable snapshot the behaviour tests load
     snap_n = 0
     if SNAPSHOT.exists():
         snap = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
