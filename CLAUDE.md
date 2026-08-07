@@ -22,7 +22,7 @@ become wrong, and this file is loaded into every session that touches the repo.
 ## Where things are
 
 `src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`,
-not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-bakeoff/` hold source art and
+not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-pipeline/` hold source art and
 generated candidates. `tooling/scripts/` and `tools/ci/` hold automation. See `src/README.md` for
 the engine map.
 
@@ -174,7 +174,7 @@ because the person who arms a latent vulnerability is never the person looking f
 ## Every claim here that can expire carries a RETIREMENT TRIGGER in the code
 
 Generalised from the reciprocal rule above, after a rule in this file outlived its reason and cost
-a session (`art-bakeoff/` was the only copy of the art until the finals were placed; nothing
+a session (`art-pipeline/` was the only copy of the art until the finals were placed; nothing
 prompted anyone to retire the rule once they were).
 
 **A statement about the current state of the world is not documentation — it is a claim with an
@@ -193,20 +193,18 @@ that is simply true. Only pin the ones that a known, named change will invalidat
 
 ## Generated art lands in `art-pipeline/`
 
-**`art-pipeline/` superseded `art-bakeoff/` (Sam, 2026-08-06).** `art-bakeoff/` is gone from disk
-entirely; only its `.gitignore` line and about twenty **legacy one-off generators** (card frames,
-card backs, hero columns, versus plates) still name it. The **card-art pipeline** —
-`gen_card_art.py`, `gen_card_prompt_briefs.py`, `card_art_editor.py`, `Run-ArtBakeoff.ps1` — writes
-to `art-pipeline/`. Everything below is about the card-art pipeline. Both folders are gitignored.
+**`art-pipeline/` superseded `art-bakeoff/`, which is fully retired (Sam, 2026-08-06)** — gone from
+disk, gone from `.gitignore`, and named by no surviving script. Sam repointed every generator and
+deleted the one-offs he will not run again in the same pass. `art-pipeline/` is gitignored in full.
 
 **The default path is candidates-first.** `gen_card_art.py` drops candidates into
-`art-pipeline/card-art/<group>/<art_file>/cand_<provider>_N.png` with a per-class contact sheet, and
-a human picks before anything is promoted. Drafted briefs sit beside them as `draft.txt`, so art you
-like has its prompt next to it.
+`art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png` with a contact sheet per
+(setId, class), and a human picks before anything is promoted. Drafted briefs sit beside them as
+`draft.txt`, so art you like has its prompt next to it.
 
-**`<group>` is NOT reliably the `setId`.** It comes from `OUT_GROUP` keyed by card *class*, falling
-back to `setId` only when the class is unlisted. **Resolving a candidate into a project path is the
-importer's job**, and the folder a candidate sits in does not tell you where it belongs.
+**Candidates and drafts share one key: the `setId`.** A class-keyed candidate group used to live
+here, which put a card's `draft.txt` and its candidates in different directories for 92 of 260
+cards — the adjacency the candidates folder exists to provide, silently absent. Retired 2026-08-06.
 
 **Direct-to-Unity generation is in play (Sam, 2026-08-06)** — for the current run, generation writes
 straight into `Assets/Art/Cards/<setId>/` and skips the candidates step. **The hazard this creates:
@@ -216,11 +214,23 @@ but the candidates folder was the thing preventing a re-roll from destroying the
 Confirm with Sam before re-rolling a card that already has promoted art.
 RETIREMENT TRIGGER: `gen_card_art.py` carries the marker; discharge this paragraph when the run ends.
 
-**The destination is keyed by the card's `setId`, not by the batch or the candidate group:**
-`Assets/Art/Cards/<setId>/art_<cardId>.png`, where the filename is the row's `artId` with `/`
-flattened to `_`. `CardArtPostprocessor` keys import settings off `Assets/Art/Cards/<setId>/`, so
-a file in the wrong set folder **imports with the wrong settings and nothing complains.** Read
-the row's `setId` before copying — it does not always match the batch folder it sits in.
+**Expansion at the directory level, class at the filename level (Sam, 2026-08-06):**
+`Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png`, and `<setId>/[<role>_]<name>.png` for
+NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is `hero_power` or
+`token`. Class tokens are abbreviations that do not match their class names: STONEWARDEN is
+`stone`, TEMPEST is `storm`. **An `artId` IS the filename** — there is no `art/` namespace and no
+`art_` prefix; both were dropped because the namespace had one value across all 260 rows and so
+distinguished nothing. `ArtIds.ToFileName` stays a `Replace('/','_')` against a future namespaced
+id, but nothing today has a separator to flatten.
+
+`CardArtPostprocessor` keys import settings off `Assets/Art/Cards/<setId>/`, so a file in the wrong
+set folder **imports with the wrong settings and nothing complains.** Read the row's `setId` before
+copying.
+
+**`Assets/Art/UI/` subfolders are the opposite — purely organisational.** `EditorUiSpriteProvider`
+searches all of `Assets/Art/UI` recursively by sprite NAME, `AddressablesSetup` addresses that tree
+as `ui/<fileName>`, and the import rule keys on `Assets/Art/UI/` itself. Renaming a subfolder under
+it changes no address and no import setting. Do not reason from `Art/Cards/` to `Art/UI/`.
 
 **Replacing existing art: overwrite the `.png` in place. Never delete the `.png` + `.meta`
 pair.** The `.meta` carries the guid the Addressables entry points at; deleting it mints a new

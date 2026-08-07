@@ -18,25 +18,63 @@ namespace Emberfall.Editor
     /// </summary>
     internal sealed class CardArtPostprocessor : AssetPostprocessor
     {
+        const string ArtRoot = "Assets/Art/";
         const string CardsRoot = "Assets/Art/Cards/";
         const string HeroRoot = "Assets/Art/Hero/";
         const string BackgroundsRoot = "Assets/Art/Backgrounds/";
         const string UiRoot = "Assets/Art/UI/";
         const string VfxRoot = "Assets/Art/VFX/Textures/";
 
+        /// <summary>
+        /// LEAF DIRECTORY NAME = DECLARED TREATMENT, wherever the folder sits (Sam, 2026-08-06).
+        ///
+        /// The root-prefix rules below cannot express "this is full-screen imagery" for anything
+        /// that legitimately lives inside another lane — a full-screen board backdrop under
+        /// Assets/Art/UI/Board/ was silently atlased and un-mipped because an ancestor said "UI".
+        /// A leaf name is the artist's own statement of intent at the moment they drop the file,
+        /// so it outranks whatever the parent tree happens to be called.
+        ///
+        /// Add a name here rather than inventing a new root. Compared case-insensitively.
+        /// </summary>
+        static readonly System.Collections.Generic.Dictionary<string, System.Action<TextureImporter>>
+            LeafTreatments = new(System.StringComparer.OrdinalIgnoreCase)
+            {
+                ["background"] = ApplyBackground,
+            };
+
         void OnPreprocessTexture()
         {
             var importer = (TextureImporter)assetImporter;
             var path = assetPath.Replace('\\', '/');
+            if (!path.StartsWith(ArtRoot)) return;
 
+            // Card illustrations and hero portraits win outright. These are setId-keyed and feed
+            // the shipped card pipeline, so a folder somebody happens to name "background" must
+            // not be able to reclassify them.
             if (path.StartsWith(CardsRoot) || path.StartsWith(HeroRoot))
+            {
                 ApplyIllustration(importer);
-            else if (path.StartsWith(BackgroundsRoot))
-                ApplyBackground(importer);
-            else if (path.StartsWith(UiRoot))
-                ApplyUiAtlas(importer);
-            else if (path.StartsWith(VfxRoot))
-                ApplyVfxMap(importer);
+                return;
+            }
+
+            string leaf = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path)) ?? "";
+            if (LeafTreatments.TryGetValue(leaf, out var treatment))
+            {
+                treatment(importer);
+                return;
+            }
+
+            if (path.StartsWith(BackgroundsRoot)) { ApplyBackground(importer); return; }
+            if (path.StartsWith(UiRoot)) { ApplyUiAtlas(importer); return; }
+            if (path.StartsWith(VfxRoot)) { ApplyVfxMap(importer); return; }
+
+            // NO SILENT DEFAULTS. An unmatched texture used to fall through this method
+            // untouched, importing with whatever Unity guessed and reporting nothing — which is
+            // how Assets/Art/Loading/ shipped on raw defaults without anyone noticing. An asset
+            // under Assets/Art/ that matches no lane is a mistake; say so.
+            Debug.LogWarning(
+                $"[CardArtPostprocessor] '{path}' matched no import lane and is using Unity " +
+                "defaults. Move it under a known root, or name its folder for a leaf treatment.");
         }
 
         // Card illustrations + hero portraits: Sprite, sRGB, mips ON (board zoom),
