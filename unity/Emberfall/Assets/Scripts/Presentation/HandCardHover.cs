@@ -7,8 +7,9 @@ namespace Emberfall.Presentation
     //
     // §8 originally ruled the hovered card "does not move — no lift, no scale", because hand slots
     // were then a flat row where nothing overlapped and nothing was clipped. The fan invalidated
-    // that premise: 30% of every card is now deliberately below the screen edge, and re-sorting
-    // cannot reveal what is off-screen. So the card rises far enough to clear the edge entirely.
+    // that premise: the bottom ~15% of the centre card and ~26% of the outermost cards are below
+    // the screen edge (NOR-147 raised the hand from the earlier 30% / 41%). Re-sorting cannot
+    // reveal what is off-screen, so the card rises far enough to clear the edge entirely.
     //
     // What stays parked is the EXPENSIVE version — the card flying out of the hand and enlarging.
     // That one has to overlap the board, sort above everything, animate back, and survive being
@@ -22,10 +23,9 @@ namespace Emberfall.Presentation
     // no decoupled hover region are needed.
     internal sealed class HandCardHover : MonoBehaviour
     {
-        // Enough to clear the screen edge for every card in the fan. The centre card hides 30% of
-        // its height (0.495 units) and the sag puts the outermost near 41% (0.675), so 0.70 was the
-        // floor that fully exposed the worst case rather than merely improving it. Sam took it to
-        // 0.80 live (2026-08-07) — clearance is no longer the binding constraint, readability is.
+        // Enough to clear the screen edge for every card in the fan. With CentreY = 4.02 the centre
+        // card hides ~15% (0.25 units) and the sag puts the outermost at ~26% (0.43 units); 0.80
+        // clears both. Sam tuned to 0.80 live (2026-08-07) — clearance and readability together.
         internal const float Lift = 0.80f;
 
         // Was "the slightest of scale, just for emphasis" (Sam, 2026-07-24) at 1.05. Sam raised it
@@ -93,11 +93,10 @@ namespace Emberfall.Presentation
         private void OnMouseExit()  => _hovered = false;
 
         /// <summary>
-        /// EF-049. Raises the card from a source that is not the mouse. The lift exists because 30%
-        /// of every hand card is deliberately below the screen edge, and that is just as true under
-        /// a finger as under a cursor — but <c>OnMouseEnter</c>/<c>OnMouseExit</c> never fire on
-        /// touch, so before this the lift simply did not exist on Android. The reveal layer's
-        /// long-press drives it here.
+        /// EF-049 / NOR-147. Raises the card from a source that is not the mouse. Even with the
+        /// hand raised (NOR-147), a small fraction of each card remains below the screen edge, and
+        /// a hover gesture must fully expose it. <c>OnMouseEnter</c>/<c>OnMouseExit</c> never fire
+        /// on touch, so the reveal layer's long-press drives it here instead.
         /// </summary>
         internal void SetExternalReveal(bool revealed) => _externalReveal = revealed;
 
