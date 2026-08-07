@@ -31,7 +31,7 @@ import time
 
 import requests
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "herocolumn"
+OUT = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" / "hp-frames"
 SIZE = "1024x2048"          # aspect 0.5 — the 0.9 x 1.8 world-unit column
 FALLBACK_SIZE = "1024x1536"  # if the API rejects 0.5; crop/letterbox after
 MODEL = "gpt-image-2"

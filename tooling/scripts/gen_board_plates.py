@@ -26,7 +26,7 @@ import time
 
 import requests
 
-OUT = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "board"
+OUT = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" / "background"
 DEFAULT_SIZE = "3696x1664"
 MODEL = "gpt-image-2"
 

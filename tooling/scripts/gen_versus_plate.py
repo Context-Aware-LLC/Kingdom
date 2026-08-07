@@ -23,7 +23,7 @@ import time
 import requests
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SRC = ROOT / "art-bakeoff" / "versus"
+SRC = ROOT / "art-pipeline" / "ui" / "templates" / "versus"
 OUT = SRC / "round3"
 SIZE = "3696x1584"
 MODEL = "gpt-image-2"

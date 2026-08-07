@@ -19,7 +19,7 @@ conform logic as the card-art pipeline). Full bleed, subject fills the frame —
 the OS applies its own mask (rounded square / circle / squircle), so do not
 bake in a border or a circular vignette.
 
-Per repo convention (CLAUDE.md, 2026-07-26): this writes to art-bakeoff/, never
+Per repo convention (CLAUDE.md, 2026-07-26): this writes to art-pipeline/, never
 into the Unity project. Wiring a chosen candidate into PlayerSettings icons is
 a separate, later step.
 
@@ -34,7 +34,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from gen_card_art import EDGE, REPO, _conform, _post_gemini  # noqa: E402
 
-OUT = REPO / "art-bakeoff" / "icons"
+OUT = REPO / "art-pipeline" / "ui" / "brand" / "icons"
 
 COMMON = """
 A launcher/app icon for a dark-fantasy digital game called "Emberfall", square

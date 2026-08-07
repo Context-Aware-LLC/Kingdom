@@ -32,12 +32,10 @@ artifacts/
 
 # Art generation candidates. Nothing in here is load-bearing (Sam, 2026-07-31): every final
 # version already lives where it belongs under Assets/. The folder is kept only because it is
-# good to look at — the whole thing could be deleted and no build, test or asset would change.
-# Untracked in full, no exceptions.
-art-bakeoff/
-
-# Canonical art pipeline output (2026-08-01). Everything a generator produces lands here —
-# final resting place or staging area en route to Unity import. Untracked in full, no exceptions.
+# Canonical art pipeline output. Everything a generator produces lands here — final resting
+# place or staging area en route to Unity import. Untracked in full, no exceptions: the whole
+# thing could be deleted and no build, test or asset would change. Kept because it is good to
+# look at. (Superseded art-bakeoff/, retired 2026-08-06.)
 art-pipeline/
 
 # Python bytecode from the tooling/scripts generators

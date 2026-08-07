@@ -55,7 +55,7 @@ import pathlib
 from PIL import Image, ImageChops, ImageDraw
 
 REPO = pathlib.Path(r"c:\Users\User\Documents\tcg-hearthlike")
-MASTERS = REPO / "art-bakeoff" / "frames"
+MASTERS = REPO / "art-pipeline" / "ui" / "cards" / "frames"
 SHIPPED = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Frames"
 
 # rarity -> (master stem, shipped stem). Sam's untouched GIMP cut is the master;

@@ -23,7 +23,7 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
-SRC = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "cardbacks"
+SRC = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "card-art" / "cardbacks"
 
 PX_PER_UNIT = 117.4
 CARD_W = round(1.17 * PX_PER_UNIT)   # 137
