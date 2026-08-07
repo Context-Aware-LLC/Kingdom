@@ -50,11 +50,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0e179d8967dcca3459591c8c7cbc171f
-    m_Address: card_art/grave_last_rites
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 107437511fc13594fb724043bef77430
     m_Address: card_art/verdant_thornfang_matron
     m_ReadOnly: 0
@@ -167,11 +162,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 344028a6d839885429647f9bd6b4dcf1
     m_Address: card_art/storm_hurricane
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 34d88d4acb4baaa4aa4befd64e000b04
-    m_Address: card_art/canopy_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -435,11 +425,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9528314bd3dd7c44181cb03bef779f55
-    m_Address: card_art/bonewright
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 955cea3024864f1468b9e0d1b022f63b
     m_Address: card_art/storm_gust_sprite
     m_ReadOnly: 0
@@ -480,11 +465,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9f4ba82978c611d41a58908ce9921b4d
-    m_Address: card_art/grave_graven_bell
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a0406593d61fc354895b5ffe5a8b8861
     m_Address: card_art/tide_initiate
     m_ReadOnly: 0
@@ -492,11 +472,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1cf67aed4bf14748be01e5536878d34
     m_Address: card_art/tide_oracle
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a483fc4f067c4024daa5bc90da962f26
-    m_Address: card_art/elderwood_colossus
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -517,11 +492,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a7a34ab4947148249db2114f0b0643d2
     m_Address: card_art/storm_crackle
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a88fa54dbd403b043a745537d1de33d3
-    m_Address: card_art/bell_maul
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

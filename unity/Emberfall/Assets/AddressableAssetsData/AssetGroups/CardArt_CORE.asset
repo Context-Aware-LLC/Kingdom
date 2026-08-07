@@ -45,11 +45,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2a234e08b68ddfb4d9d27c6f12b3b5ca
-    m_Address: card_art/nameless_bell
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a8446fc7d78cd747bb5efa147ee6331
     m_Address: card_art/token_wisp
     m_ReadOnly: 0
@@ -85,11 +80,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 555c15b3029922e48aeaac9fbefc2b93
-    m_Address: card_art/bronzegate_warden
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56ad92607bff7ca478df793c378fec37
     m_Address: card_art/gravelight_lantern_bearer
     m_ReadOnly: 0
@@ -117,11 +107,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 864ed0bfe8a545a458cd09958e0fac5c
     m_Address: card_art/ember_cinder_lance
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8a1270e22ed5b294e9970eb0b49a7b87
-    m_Address: card_art/shieldbreaker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -180,11 +165,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c1e483cbd6f102a489dc29056f4bdf77
-    m_Address: card_art/token_shade
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7d46df061a92624cb972e37127ed754
     m_Address: card_art/ember_scorch
     m_ReadOnly: 0
@@ -192,11 +172,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d49f17df00bdb254292e6f34dbfd3429
     m_Address: card_art/tide_marens_deep_bargain
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: da0f9c361fd54dd4aafacdc9d3b516c5
-    m_Address: card_art/twinstrike_sentinel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
