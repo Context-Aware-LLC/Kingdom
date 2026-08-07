@@ -191,14 +191,32 @@ Placed so far: the `Trigger` enum (`Enums.cs`) and the per-effect loop in `CardV
 **A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
 that is simply true. Only pin the ones that a known, named change will invalidate.
 
-## Generated art lands in `art-bakeoff/`
+## Generated art lands in `art-pipeline/`
 
-**Generation never writes into the Unity project.** Generators drop candidates into
-`art-bakeoff/card-art/<batch>/art_<cardId>/cand_*.png`, organised by batch rather than by where
-the asset will live. **Resolving a candidate into a project path is the importer's job**, after
-generation — the generating session does not have the information to get it right.
+**`art-pipeline/` superseded `art-bakeoff/` (Sam, 2026-08-06).** `art-bakeoff/` is gone from disk
+entirely; only its `.gitignore` line and about twenty **legacy one-off generators** (card frames,
+card backs, hero columns, versus plates) still name it. The **card-art pipeline** —
+`gen_card_art.py`, `gen_card_prompt_briefs.py`, `card_art_editor.py`, `Run-ArtBakeoff.ps1` — writes
+to `art-pipeline/`. Everything below is about the card-art pipeline. Both folders are gitignored.
 
-**The destination is keyed by the card's `setId`, not by the batch:**
+**The default path is candidates-first.** `gen_card_art.py` drops candidates into
+`art-pipeline/card-art/<group>/<art_file>/cand_<provider>_N.png` with a per-class contact sheet, and
+a human picks before anything is promoted. Drafted briefs sit beside them as `draft.txt`, so art you
+like has its prompt next to it.
+
+**`<group>` is NOT reliably the `setId`.** It comes from `OUT_GROUP` keyed by card *class*, falling
+back to `setId` only when the class is unlisted. **Resolving a candidate into a project path is the
+importer's job**, and the folder a candidate sits in does not tell you where it belongs.
+
+**Direct-to-Unity generation is in play (Sam, 2026-08-06)** — for the current run, generation writes
+straight into `Assets/Art/Cards/<setId>/` and skips the candidates step. **The hazard this creates:
+there is no candidate to compare against, so a re-roll overwrites promoted art in place and the
+previous image is gone.** Overwrite-in-place is still the right mechanic for the `.meta` guid (below),
+but the candidates folder was the thing preventing a re-roll from destroying the image it replaced.
+Confirm with Sam before re-rolling a card that already has promoted art.
+RETIREMENT TRIGGER: `gen_card_art.py` carries the marker; discharge this paragraph when the run ends.
+
+**The destination is keyed by the card's `setId`, not by the batch or the candidate group:**
 `Assets/Art/Cards/<setId>/art_<cardId>.png`, where the filename is the row's `artId` with `/`
 flattened to `_`. `CardArtPostprocessor` keys import settings off `Assets/Art/Cards/<setId>/`, so
 a file in the wrong set folder **imports with the wrong settings and nothing complains.** Read
@@ -209,9 +227,9 @@ pair.** The `.meta` carries the guid the Addressables entry points at; deleting 
 one and silently orphans that entry. Overwriting keeps it. New art still needs its generated
 `.meta` committed — a separate and easy-to-forget step.
 
-**`art-bakeoff/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31).** Every final
-version already lives under `Assets/`, so the whole folder could vanish and no build, test or asset
-would change. It is kept because it is good to look at.
+**`art-pipeline/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31, restated for the
+renamed folder 2026-08-06).** Every final version already lives under `Assets/`, so the whole folder
+could vanish and no build, test or asset would change. It is kept because it is good to look at.
 
 **What that changes: nothing there is a deliverable, and losing a candidate is not an incident** —
 do not treat it as recoverable state, do not audit it, do not raise a deletion as a finding.
