@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
+using Emberfall.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UIElements;
 
