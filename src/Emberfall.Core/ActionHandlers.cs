@@ -144,11 +144,19 @@ namespace Emberfall.Core
             {
                 if (!t.IsMinion) continue;
                 var m = t.Minion!;
-                // KNOWN GAP for EF-017b: the enchantment is recorded only when the keyword was NEWLY
-                // added, so a second grant of a keyword the minion already has leaves no record. Once
-                // auras can grant keywords, that makes "aura leaves" strip a keyword a permanent grant
-                // was also holding up. Recording unconditionally is the fix and it is HASH-CANONICAL —
-                // the enchantment list is serialized — so it belongs in the batched rebaseline, not here.
+                // The enchantment is recorded only when the keyword was NEWLY added, so a second grant
+                // of a keyword the minion already has leaves no record. That asymmetry is deliberate
+                // and currently unreachable as a defect: AURA is a stats-only fold (AuraCapabilities
+                // accepts ModifyStatsAction alone, so no aura can grant a keyword), and the one
+                // function whose subtraction the missing record would fool — DerivedStats.RemoveBySource
+                // — has no production caller. Aura teardown goes through RemoveAuras, which drops
+                // entries by IsAura provenance and never touches Keywords at all.
+                //
+                // RETIREMENT TRIGGER: if you widen AuraCapabilities to accept GrantKeywordAction, or
+                // wire RemoveBySource into a runtime path, record the enchantment unconditionally here
+                // (keep the Keywords.Add guard for the set, drop it for the record). It is
+                // HASH-CANONICAL — the enchantment list is serialized — so it lands in a batched
+                // rebaseline, never on its own. Closed as NOR-187, 2026-08-06.
                 if (m.Keywords.Add(kw))
                     m.Enchantments.Add(new Enchantment { Source = ctx.Source.Identity, GrantedKeyword = kw });
                 if (kw == Keyword.AEGIS) m.HasAegisShield = true;
