@@ -102,7 +102,7 @@ namespace Emberfall.Presentation
         private void ApplyArtFit()
         {
             if (artRenderer == null || _artTexture == null || _def == null || _artMpb == null) return;
-            Vector4 win = FrameRarityCatalog.Sockets(_def.Rarity).ArtWindow;
+            Vector4 win = FrameRarityCatalog.Sockets(_def.Type, _def.Rarity).ArtWindow;
             float quadAspect = ((win.z - win.x) * BoardController.CardW)
                              / ((win.w - win.y) * BoardController.CardH);
             float texAspect = (float)_artTexture.width / _artTexture.height;
@@ -247,15 +247,17 @@ namespace Emberfall.Presentation
         }
 
         // Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md §3 ApplyFrame) — stat-plate
-        // visibility keyed by type, frame + digit sockets keyed by rarity. No per-card branching.
+        // visibility keyed by type, frame + digit sockets keyed by type AND rarity. No per-card
+        // branching.
         private void ApplyFrame()
         {
-            // One painted frame per rarity (§3.1). Falls back to the empty-sprite placeholder
+            // One painted frame per rarity, except spells which have their own pair (§3.1 +
+            // FrameRarityCatalog.SpellFrameRarity). Falls back to the empty-sprite placeholder
             // look if the frame asset is missing.
             Sprite frameSprite = null;
             if (frameRenderer != null && _ui != null)
             {
-                frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Rarity));
+                frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity));
                 SetSpritePreserveSize(frameRenderer, frameSprite);
             }
             _hasPaintedFrame = frameSprite != null;
@@ -298,7 +300,7 @@ namespace Emberfall.Presentation
         // TMP world text: fontSize = em height in units × 10.
         private void ApplySockets()
         {
-            var s = FrameRarityCatalog.Sockets(_def.Rarity);
+            var s = FrameRarityCatalog.Sockets(_def.Type, _def.Rarity);
             const float W = BoardController.CardW, H = BoardController.CardH;
             const float z = -0.01f;
 

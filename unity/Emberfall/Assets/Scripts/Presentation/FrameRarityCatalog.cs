@@ -33,12 +33,47 @@ namespace Emberfall.Presentation
             _               => new Color(0.22f, 0.22f, 0.32f),
         };
 
-        // Frame sprite key — one painted frame per rarity, shared by every card type
+        // Frame sprite key. Four painted frames keyed by rarity for minions and weapons
         // (Sam's 2026-07-25 mapping: CarvedStone=common, DarkGilt=rare, IronEmber=epic,
         // AgedGilt=legendary; supersedes both the frame_{type}_{rarity} placeholder scheme
-        // and the 2026-07-24 one-master ruling). Resolves through IUiSpriteProvider.
-        public static string FrameSprite(Rarity rarity) =>
-            $"frame_{rarity.ToString().ToLowerInvariant()}";
+        // and the 2026-07-24 one-master ruling), plus two spell frames added 2026-08-07.
+        // Resolves through IUiSpriteProvider.
+        public static string FrameSprite(CardType type, Rarity rarity) =>
+            type == CardType.SPELL
+                ? $"frame_{Key(SpellFrameRarity(rarity))}_spell"
+                : $"frame_{Key(rarity)}";
+
+        private static string Key(Rarity rarity) => rarity.ToString().ToLowerInvariant();
+
+        /// <summary>
+        /// Which of the two painted SPELL frames a rarity draws (Sam, 2026-08-07): common and rare
+        /// take the stone one, epic takes the gilt one. Only two were painted — spells got frames
+        /// before the four-rarity set did, and this collapse is Sam's choice, not a placeholder.
+        ///
+        /// <para><b>This is the socket key as well as the sprite key, and that is the whole reason
+        /// it exists.</b> Sockets belong to the FRAME, not to the card. An epic spell draws the
+        /// AgedGilt-derived frame, whose mana boss sits ~23px higher than IronEmber's and whose
+        /// digits are 180em rather than 200em — so asking <see cref="Sockets"/> for
+        /// <see cref="Rarity.EPIC"/> would place an epic spell's cost digit against a boss its
+        /// frame does not have there, and size it to fit a socket that is not on the art. Both
+        /// resolvers therefore route through here and neither takes a bare rarity any more.</para>
+        ///
+        /// <para>The two spell frames keep their base frame's transparent art window exactly
+        /// (measured 2026-08-07: common_spell differs from common by 0.0010 of card height,
+        /// legendary_spell from legendary by 0.0000), which is what makes reusing
+        /// <see cref="CarvedStone"/> and <see cref="AgedGilt"/> wholesale correct rather than
+        /// merely close.</para>
+        /// </summary>
+        private static Rarity SpellFrameRarity(Rarity rarity) => rarity switch
+        {
+            Rarity.COMMON => Rarity.COMMON,
+            Rarity.RARE   => Rarity.COMMON,
+            // EPIC, and LEGENDARY only because no legendary spell exists to look wrong on it yet.
+            // RETIREMENT TRIGGER: Sam paints a dedicated legendary spell frame when the first
+            // legendary spell is authored — give LEGENDARY its own arm here, add its FrameSockets
+            // entry below, and drop this note.
+            _             => Rarity.LEGENDARY,
+        };
 
         // ── §3.1 socket table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md, Sam-calibrated 2026-07-25) ──────────────
         // Fractions of the 1456×2048 master frame, measured from the top-left. Digit centers
@@ -76,7 +111,14 @@ namespace Emberfall.Presentation
             new Vector2(0.1175f, 0.0739f), new Vector2(0.1127f, 0.9005f), new Vector2(0.8816f, 0.8970f),
             180f / 2048f, new Vector4(0.0975f, 0.1201f, 0.9032f, 0.5645f));
 
-        public static FrameSockets Sockets(Rarity rarity) => rarity switch
+        // Takes the type as well as the rarity for the reason spelled out on SpellFrameRarity:
+        // these sockets describe the frame that is actually drawn, and a spell's frame is not
+        // its rarity's. There is deliberately no bare-rarity overload — one would compile at
+        // every call site and silently misplace the digits on every epic spell.
+        public static FrameSockets Sockets(CardType type, Rarity rarity) =>
+            SocketsForFrame(type == CardType.SPELL ? SpellFrameRarity(rarity) : rarity);
+
+        private static FrameSockets SocketsForFrame(Rarity frame) => frame switch
         {
             Rarity.RARE      => DarkGilt,
             Rarity.EPIC      => IronEmber,
