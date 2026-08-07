@@ -29,6 +29,9 @@
     <!-- The durable telemetry store (C-G1-8). Only the off-box drain needs a DB driver;
          nothing state-adjacent touches Npgsql, so the Firewall/no-float rules are unaffected. -->
     <PackageReference Include="Npgsql" Version="9.0.3" />
+    <!-- EF-074a / NOR-227: Supabase JWT verification (asymmetric RS256/ES256 only).
+         Do not hand-roll — alg:none and RS/HS confusion are the classic hand-rolled failure modes. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

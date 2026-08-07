@@ -88,6 +88,7 @@ namespace Emberfall.Net.Protocol
                     w.Name("platform"); w.Str(m.Platform);
                     w.Name("buildId"); w.Str(m.BuildId);
                     w.Name("displayName"); w.Str(m.DisplayName);
+                    w.Name("authToken"); w.Str(m.AuthToken);
                     w.EndObject();
                     break;
                 case SubmitDeckMsg m:
@@ -308,10 +309,11 @@ namespace Emberfall.Net.Protocol
                 || deviceToken.Length == 0)
                 return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'deviceToken'", matchId, seq);
 
+            // authToken is optional — absent means guest; the server accepts both (EF-074b/NOR-228).
             return DecodeResult.Success(
                 new HelloMsg(deviceToken, OptStr(body, "clientContractVersion"),
                              OptStr(body, "platform"), OptStr(body, "buildId"),
-                             OptStr(body, "displayName")),
+                             OptStr(body, "displayName"), OptStr(body, "authToken")),
                 matchId, seq);
         }
 

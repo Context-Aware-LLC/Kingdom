@@ -36,6 +36,10 @@ create table if not exists account (
   unique (credential_kind, credential_hash)
 );
 
+-- EF-074c: email is the player's recovery path (VULN-003 §4.2). Added after the initial
+-- schema landed; idempotent on existing tables. Null on accounts created before this column.
+alter table account add column if not exists email text;
+
 -- The append-only grant log. external_txn_id is the idempotency anchor (primary key ⇒ UNIQUE); qty is
 -- signed so a refund is simply a negative grant carrying its OWN transaction id (a refund's id differs
 -- from the purchase's, so it does not conflict with it and nets the balance correctly).

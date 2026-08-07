@@ -25,16 +25,47 @@ namespace Emberfall.Net.Protocol.Tests
         {
             var sent = new HelloMsg(
                 DeviceToken: "8f14e45fce8f4b6ea1c2d3e4f5a6b7c8",
-                ClientContractVersion: "interfaces.v4",
+                ClientContractVersion: "interfaces.v5",
                 Platform: "windows",
                 BuildId: "m2-alpha-7",
-                DisplayName: "Sam Ember");
+                DisplayName: "Sam Ember",
+                AuthToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.stub");
 
             var res = ProtocolCodec.Decode(ProtocolCodec.Encode(sent, M, 0));
 
             Assert.That(res.Ok, Is.True, $"decode failed: {res.Error} {res.Detail}");
             Assert.That(res.Message, Is.InstanceOf<HelloMsg>());
             Assert.That((HelloMsg)res.Message!, Is.EqualTo(sent));
+        }
+
+        [Test]
+        public void Hello_AuthToken_RoundTrips_When_Present()
+        {
+            // EF-074b — a signed-in player sends a Supabase JWT; the codec carries it unchanged.
+            var sent = new HelloMsg(
+                DeviceToken: "device-abc",
+                AuthToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.sig");
+
+            var res = ProtocolCodec.Decode(ProtocolCodec.Encode(sent, M, 1));
+
+            Assert.That(res.Ok, Is.True, $"decode failed: {res.Error} {res.Detail}");
+            var hello = (HelloMsg)res.Message!;
+            Assert.That(hello.AuthToken, Is.EqualTo(sent.AuthToken));
+        }
+
+        [Test]
+        public void Hello_Without_AuthToken_Decodes_As_Guest()
+        {
+            // EF-074b binding constraint 1: absent authToken → empty string → guest path.
+            // A hello from a client that predates EF-074b must decode cleanly.
+            var bytes = System.Text.Encoding.UTF8.GetBytes(
+                "{\"v\":1,\"matchId\":\"m\",\"seq\":0,\"type\":\"hello\",\"body\":{\"deviceToken\":\"abc\"}}");
+
+            var res = ProtocolCodec.Decode(bytes);
+
+            Assert.That(res.Ok, Is.True, $"decode failed: {res.Error} {res.Detail}");
+            Assert.That(((HelloMsg)res.Message!).AuthToken, Is.Empty,
+                "absent authToken must decode as empty string, not a failure");
         }
 
         [Test]
