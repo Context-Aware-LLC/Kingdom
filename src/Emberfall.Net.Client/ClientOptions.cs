@@ -86,9 +86,16 @@ namespace Emberfall.Net.Client
         /// </summary>
         public SubmitDeckMsg? DeckSubmission { get; init; }
 
+        /// <summary>
+        /// The Supabase JWT from whichever sign-in method the player used (magic link, OAuth).
+        /// Empty means guest — the server must behave exactly as it did before EF-074b (NOR-228).
+        /// Do not validate or inspect this here; pass it through to the server unchanged.
+        /// </summary>
+        public string AuthToken { get; init; } = "";
+
         /// <summary>The contract version this client was built against, sent in the hello so the
         /// server can compare (it previously never learned the client's).</summary>
-        public string ContractVersion { get; init; } = "interfaces.v4";
+        public string ContractVersion { get; init; } = "interfaces.v5";
 
         public IClientClock Clock { get; init; } = new SystemClientClock();
 

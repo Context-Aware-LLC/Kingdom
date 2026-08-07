@@ -47,7 +47,7 @@ namespace Emberfall.Net.Server
         // ── Host (design §5/§11) ─────────────────────────────────────────────────
         /// <summary>Max concurrent matches; new pairings refused at cap (RC Q4 ruling).</summary>
         public int MaxSessions { get; init; } = 64;
-        public string EngineContractVersion { get; init; } = "interfaces.v4";
+        public string EngineContractVersion { get; init; } = "interfaces.v5";
 
         /// <summary>Server-owned FIFO/MMR queue policy (EF-070).</summary>
         public Matchmaking.MatchmakingQueueOptions Matchmaking { get; init; } =

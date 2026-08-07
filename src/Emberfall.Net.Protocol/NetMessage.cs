@@ -56,7 +56,11 @@ namespace Emberfall.Net.Protocol
         //
         //    RETIREMENT TRIGGER: if a second renderer ever draws this string, it owns obligation 4
         //    for itself — a length bound is not a clip. Add it to VULN-002 §4 when you write it.
-        string DisplayName = "") : NetMessage;
+        string DisplayName = "",
+        // ── EF-074b — carries the Supabase JWT the player received at sign-in.
+        //    Empty means guest; the server must accept both paths without behaviour change (NOR-228).
+        //    The server verifies this token in EF-074c; this layer is transport only.
+        string AuthToken = "") : NetMessage;
 
     /// <summary>One line of a submitted decklist on the wire: a card definition id and a copy count.
     /// The float-free integer-only shape of <c>Emberfall.Core.Collection.DeckEntry</c>, restated here

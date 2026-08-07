@@ -169,7 +169,7 @@ namespace Emberfall.Net.Client
             await _transport.SendAsync(
                 ProtocolCodec.Encode(
                     new HelloMsg(_opts.DeviceToken, _opts.ContractVersion, _opts.Platform,
-                                 _opts.BuildId, _opts.DisplayName),
+                                 _opts.BuildId, _opts.DisplayName, _opts.AuthToken),
                     ProtocolCodec.PreMatch, 0),
                 ct).ConfigureAwait(false);
 
