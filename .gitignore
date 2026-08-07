@@ -92,6 +92,8 @@ unity/Emberfall/Assets/Plugins/Editor/JetBrains*
 *.aab
 *.app
 
+# Art Pipleine
+/art-pipeline/*
 # Generated scenes and caches inside Assets/
 unity/Emberfall/Assets/[Ii]nit[Tt]est[Ss]cene*.unity*
 unity/Emberfall/Assets/[Ss]ceneDependencyCache*
