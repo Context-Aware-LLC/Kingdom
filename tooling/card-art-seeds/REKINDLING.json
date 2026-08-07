@@ -39,7 +39,7 @@
     "subject": "A broad human warden in layered iron-grey plates stands at the repaired center joint of a timber-and-stone bridge, holding a rectangular aged-bronze toll shield across the body. Moss-green ropes wrap the forearms, and a single warm lantern hangs beneath the bridge rail beside the planted stance.",
     "perspective": "Eye-level full-body frontal three-quarter view with the warden, shield, bridge joint, and both boots centered and unobscured.",
     "background": "A pale cold river gorge and blue-white morning mist open behind the dark armored figure, creating a clean silhouette.",
-    "notes": "Bulwark is quiet control of the crossing. No spear, enemy, castle gate, giant bridge panorama, readable toll sign, crest, or aggressive charge."
+    "notes": "Bulwark is quiet control of the crossing. No spear, enemy, castle gate, giant bridge panorama, readable toll sign, crest, or aggressive lunge."
   },
   "rekind_neutral_truce_pact": {
     "subject": "Two differently armored hands meet over a cracked foundation stone: one in char-black forge leather and one in cool iron-grey mail, both gripping the same plain aged-bronze mason's clamp as it closes a repaired seam. A small warm lantern flame reflects equally on both wrists.",
@@ -63,7 +63,7 @@
     "subject": "A lightly armored Emberward conscript vaults over a low ruined wall, carrying a short blackened-steel hook blade and a round furnace-lid buckler. Patched char-black leathers trail ember-red cloth strips, and one molten-orange boot spark marks the instant of the quick landing.",
     "perspective": "Low dynamic side-on three-quarter view with the complete leaping figure, wall edge, and landing foot contained inside the middle 70%.",
     "background": "A cold pale-grey training yard under blue smoke and overcast light, giving the warm cloth and sparks crisp contrast.",
-    "notes": "Skirmish is one short vault, not a battlefield charge. No army, giant fire trail, heavy armor, spear, heroic banner, or explosive landing."
+    "notes": "Skirmish is one short vault, not a battlefield advance. No army, giant fire trail, heavy armor, spear, heroic banner, or explosive landing."
   },
   "rekind_ember_brazier_keeper": {
     "subject": "A soot-streaked keeper kneels beside a waist-high bronze brazier, using long iron tongs to place one ember-red coal into a careful ring of dim cinders. A char-black apron, thick gloves, and a single gold spark emphasize patient maintenance rather than spellcasting.",

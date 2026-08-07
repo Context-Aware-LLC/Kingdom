@@ -75,7 +75,7 @@
     "subject": "A slight hooded undead artisan seated at a compact funerary loom of iron-grey rods and worn bronze gears. Bone-white fingers guide one sickly green-gold soul-thread through a narrow strip of completely blank ivory parchment; at the instant the thread snaps, the finished blank strip slips free into one waiting hand. The figure is solemn and diligent, not a grand reaper or combatant.",
     "perspective": "Intimate eye-level three-quarter view focused on the complete seated silhouette, both hands, the small loom, and the single blank parchment strip, all centered with clean margins.",
     "background": "A warm amber memorial workshop with dark cedar shelves, softly blurred candle niches, and muted ember-glow, providing warm value contrast behind the cool bone and iron subject.",
-    "notes": "Deathrattle and card draw read through the snapped soul-thread releasing one blank parchment strip. No writing, symbols, extra cards, spider anatomy, giant loom, weapon, gore, or explosive magic."
+    "notes": "Toll and card draw read through the snapped soul-thread releasing one blank parchment strip. No writing, symbols, extra cards, spider anatomy, giant loom, weapon, gore, or explosive magic."
   },
   "neutral_bog_crawler": {
     "subject": "A small low-slung marsh beast with a broad wedge-shaped head, six quick jointed legs, a bronze-brown plated back, mossy ridges, and two bright lantern-amber eyes. It scrambles out of shallow water toward the viewer, flinging one tight fan of droplets while its full compact body remains readable; the creature feels ancient, weathered, and adapted to ruined wetlands.",
@@ -216,13 +216,13 @@
     "notes": "Doublestrike is shown only by the paired spark-arm traces. Keep the discharge no larger than the imp, with sparse particles, no lightning from the sky, no battlefield blast, and no extra creatures."
   },
   "storm_thunder_hoof": {
-    "subject": "A stocky bison-sized Tempest beast with the build of a mountain ram lowers its head and takes the first powerful stride of a short charge. Its coarse charcoal-and-storm-silver coat lifts slightly with static; two forward-curving dark horns carry a faint cyan edge, and each front hoof kicks up one small gold-white spark on contact with the road. A single short lightning thread joins the hooves close to the ground—no surrounding storm. The animal is muscular and durable but recognizably mortal, not an elemental titan. Keep all four legs readable.",
-    "perspective": "Low but natural side three-quarter view of a bison-sized beast beginning a short charge, with all four hooves and both horns inside the middle 70%.",
+    "subject": "A stocky bison-sized Tempest beast with the build of a mountain ram lowers its head and takes the first powerful stride of a short forward lunge. Its coarse charcoal-and-storm-silver coat lifts slightly with static; two forward-curving dark horns carry a faint cyan edge, and each front hoof kicks up one small gold-white spark on contact with the road. A single short lightning thread joins the hooves close to the ground—no surrounding storm. The animal is muscular and durable but recognizably mortal, not an elemental titan. Keep all four legs readable.",
+    "perspective": "Low but natural side three-quarter view of a bison-sized beast beginning a short forward lunge, with all four hooves and both horns inside the middle 70%.",
     "background": "A muted ochre quarry road under a plain overcast sky, with dull earth and low broken stone; the storm-silver hide and small cyan-gold sparks provide restrained contrast.",
     "notes": "No rider, armor, giant antlers, glowing whole body, tornado, thundercloud vortex, landscape-spanning bolt, airborne pose, or shattered terrain. Scraped from the draft brief this card was generated from (storm_thunder_hoof)."
   },
   "storm_wind_rider": {
-    "subject": "A lean humanoid air elemental rides a single curved blade of compressed wind just above the rooftops, crouched like a skirmisher banking into a fast close-range charge. Its body is charcoal cloud wrapped in storm-silver streamers, with cyan eyes and sparse gold-white sparks along the wind blade. The rider and its wind arc read as one unified silhouette, not a rider plus mount. Keep the motion local and agile: one short double-trace, a few roof tiles rattling, no tornado, no weapon, no army, and no citywide storm.",
+    "subject": "A lean humanoid air elemental rides a single curved blade of compressed wind just above the rooftops, crouched like a skirmisher banking into a fast close-range sweep. Its body is charcoal cloud wrapped in storm-silver streamers, with cyan eyes and sparse gold-white sparks along the wind blade. The rider and its wind arc read as one unified silhouette, not a rider plus mount. Keep the motion local and agile: one short double-trace, a few roof tiles rattling, no tornado, no weapon, no army, and no citywide storm.",
     "perspective": "Low dynamic three-quarter view, the rider banking toward the viewer but fully contained in the center safe area.",
     "background": "Warm muted clay rooftops and amber-lit chimneys at dusk, motion-softened so the bright cool elemental remains the single readable subject.",
     "notes": "Scraped from the draft brief this card was generated from (storm_wind_rider)."
@@ -243,7 +243,7 @@
     "subject": "A squat badger-sized plant beast built from knotted living roots, cedar-brown bark plates, and a dense crown of golden-honey thorn quills. It braces sideways across a narrow path with all four root-paws planted, while one dark emerald drop of venom hangs from the longest forward thorn. Fresh green shoots curl between the bark plates, making it feel stubbornly alive and defensive.",
     "perspective": "Low frontal three-quarter view at the creature's eye level, with its complete broad silhouette and thorn crown centered and every planted paw visible.",
     "background": "A pale blue-grey twilight clearing among cool weathered stones and thin silver mist, muted and spacious so the warm bark, green growth, and honey-gold thorns remain distinct.",
-    "notes": "Taunt reads through the path-blocking stance; Venom reads through one restrained drop. Keep it badger-sized, passive and sturdy rather than attacking, with no giant tree scale, toxic cloud, extra beasts, or explosive growth."
+    "notes": "Bulwark reads through the path-blocking stance; Venom reads through one restrained drop. Keep it badger-sized, passive and sturdy rather than attacking, with no giant tree scale, toxic cloud, extra beasts, or explosive growth."
   },
   "verdant_windroot_sprinter": {
     "subject": "A small, wiry beast built like a greyhound crossed with a fern — legs of braided root, a body of quick fibrous grass, no bigger than a large dog. Low to the ground, mid-stride, ears back, moving fast and low rather than rearing up.",
