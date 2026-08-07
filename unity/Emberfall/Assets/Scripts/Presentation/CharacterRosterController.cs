@@ -85,8 +85,8 @@ namespace Emberfall.Presentation
 
         private static readonly List<string> StarterChoices = new List<string>
         {
-            "Generated — queue ready",
-            "Blank — start a draft",
+            "Generated",
+            "Custom",
         };
 
         private VisualElement _root;
@@ -97,7 +97,7 @@ namespace Emberfall.Presentation
 
         private VisualElement _rosterList;
         private ScrollView _rosterScroll;
-        private Label _rosterCount;
+        // private Label _rosterCount;
         private Label _rosterIntro;
         private Label _emptyState;
         private Label _status;
@@ -211,7 +211,7 @@ namespace Emberfall.Presentation
                     if (strip != null) QueueStripLayout(strip);
                 }
             });
-            _rosterCount = _root.Q<Label>("roster-count");
+            // _rosterCount = _root.Q<Label>("roster-count");
             _rosterIntro = _root.Q<Label>("roster-intro");
             _emptyState = _root.Q<Label>("empty-state");
             _status = _root.Q<Label>("status");
@@ -264,6 +264,15 @@ namespace Emberfall.Presentation
             {
                 MatchDeckSelection.Cancel();
                 Go("MainMenu");
+            });
+
+            // The whole card pool, no deck panel (Sam, 2026-08-07). Deliberately does NOT cancel
+            // MatchDeckSelection: browsing the collection mid-queue-pick is a detour, not an
+            // abandonment, and Back returns here with the pick still live.
+            _root.Q<Button>("view-collection")?.RegisterCallback<ClickEvent>(_ =>
+            {
+                CollectionController.ReturnScene = "CharacterRoster";
+                Go("Collection");
             });
             if (MatchDeckSelection.Choosing)
             {
@@ -682,8 +691,8 @@ namespace Emberfall.Presentation
             // element's scheduler may never run, so without this the set only grows.
             _stripLayoutQueued.Clear();
             _rosterList.Clear();
-            if (_rosterCount != null)
-                _rosterCount.text = roster.Count == 1 ? "1 character" : $"{roster.Count} characters";
+            // if (_rosterCount != null)
+            //     _rosterCount.text = roster.Count == 1 ? "1 character" : $"{roster.Count} characters";
             if (_emptyState != null)
                 _emptyState.style.display = roster.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
 

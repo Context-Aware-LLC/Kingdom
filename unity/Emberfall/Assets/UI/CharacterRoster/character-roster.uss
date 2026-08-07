@@ -476,3 +476,7 @@
 #roster-scroll .unity-scroll-view__horizontal-scroller {
     display: none;
 }
+
+.unity-button {
+    border-radius: 4px;
+}

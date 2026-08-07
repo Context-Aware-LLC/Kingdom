@@ -23,13 +23,15 @@ namespace Emberfall.Presentation
     internal sealed class HandCardHover : MonoBehaviour
     {
         // Enough to clear the screen edge for every card in the fan. The centre card hides 30% of
-        // its height (0.495 units) and the sag puts the outermost near 41% (0.675), so 0.70 fully
-        // exposes the worst case rather than merely improving it.
-        internal const float Lift = 0.70f;
+        // its height (0.495 units) and the sag puts the outermost near 41% (0.675), so 0.70 was the
+        // floor that fully exposed the worst case rather than merely improving it. Sam took it to
+        // 0.80 live (2026-08-07) — clearance is no longer the binding constraint, readability is.
+        internal const float Lift = 0.80f;
 
-        // "The slightest of scale, just for emphasis" (Sam, 2026-07-24). Deliberately small: the
-        // lift is what reveals the card, so scale is doing emphasis only, not legibility work.
-        internal const float Scale = 1.05f;
+        // Was "the slightest of scale, just for emphasis" (Sam, 2026-07-24) at 1.05. Sam raised it
+        // to 1.2 live (2026-08-07), which is past emphasis — at this size the scale is doing
+        // legibility work alongside the lift, so treat the two as one tuned pair, not independent.
+        internal const float Scale = 1.2f;
 
         // Reveal is non-blocking, per the standing pace rule — the hand must never gate input
         // behind an animation. Speed is 1/duration: ~0.11s each way (Sam asked for it slower than
