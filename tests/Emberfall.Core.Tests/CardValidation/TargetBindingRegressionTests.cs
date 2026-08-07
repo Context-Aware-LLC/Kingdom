@@ -113,13 +113,13 @@ namespace Emberfall.Core.Tests.CardValidation
         private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules,
-                "", "art/" + id, SetId.CORE, true, null, "", false);
+                "", "art/" + id, SetId.CORE, true, null, "");
 
         private static CardDefinition Minion(string id)
             => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
-                true, null, "", false);
+                true, null, "");
 
         private static GameState State()
         {

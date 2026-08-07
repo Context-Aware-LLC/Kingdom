@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.CardValidation
             var card = new CardDefinition("keyword_only", "Keyword Only", CardType.MINION, 1,
                 1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK, Keyword.LIFEDRAIN }, Array.Empty<RuleDefinition>(),
-                "", "art/keyword_only", SetId.CORE, true, null, "", false);
+                "", "art/keyword_only", SetId.CORE, true, null, "");
 
             Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Lifedrain]"));
         }
@@ -53,7 +53,7 @@ namespace Emberfall.Core.Tests.CardValidation
             var card = new CardDefinition("herald", "Herald", CardType.MINION, 1,
                 1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK }, new[] { DrawRule(new TriggeredActivation(Trigger.ON_PLAY)) },
-                "", "art/herald", SetId.CORE, true, null, "", false);
+                "", "art/herald", SetId.CORE, true, null, "");
 
             Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Herald] Draw a card."));
         }
@@ -80,7 +80,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 var card = new CardDefinition("legacy_marker", "Legacy Marker", CardType.SPELL, 1,
                     null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
                     new[] { row.marker }, new[] { rule }, "", "art/legacy_marker", SetId.CORE,
-                    true, null, "", false);
+                    true, null, "");
 
                 Assert.That(CardTextGenerator.Generate(card), Is.EqualTo(row.expected), row.marker.ToString());
             }

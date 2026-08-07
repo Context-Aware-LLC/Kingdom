@@ -47,13 +47,13 @@ namespace Emberfall.Core.Tests.Determinism
             Array.Empty<Keyword>(),
             new[] { TestRules.Rule("bounce", Trigger.ON_CAST,
                 new ReturnToHandAction(new TargetSpec("ANY_MINION"))) },
-            "", "art/bounce", SetId.CORE, true, null, "", false);
+            "", "art/bounce", SetId.CORE, true, null, "");
 
         private static readonly CardDefinition Vanilla = new CardDefinition(
             "vanilla", "vanilla", CardType.MINION, 1, 2, 2, null,
             CardClass.NEUTRAL, Rarity.COMMON,
             Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(),
-            "", "art/vanilla", SetId.CORE, true, null, "", false);
+            "", "art/vanilla", SetId.CORE, true, null, "");
 
         private static GameState MainPhase(FakeCardDatabase db)
         {

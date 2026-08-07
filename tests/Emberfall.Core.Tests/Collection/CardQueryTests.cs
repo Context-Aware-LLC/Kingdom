@@ -254,7 +254,7 @@ namespace Emberfall.Core.Tests.Collection
                         new DamageAction(2, new TargetSpec("ENEMY_HERO")))
                 },
                 flavorText: flavorText, artId: "", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         // ── sort ──────────────────────────────────────────────────────────────────
 

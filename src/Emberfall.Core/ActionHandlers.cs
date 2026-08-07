@@ -7,8 +7,9 @@ namespace Emberfall.Core
     /// <summary>
     /// The closed set of reusable engine primitives — one <see cref="IActionHandler"/> per
     /// typed <see cref="RuleAction"/> node. There is no per-card code: a card is
-    /// data that composes these verbs. The set grows ONLY through the <c>requiresEngineeringPrimitive</c>
-    /// gate (dev-docs/specs/card-schema.md:40), never per-card. Built once into an immutable, order-independent registry.
+    /// data that composes these verbs. The set grows backend-first — an engine primitive lands
+    /// before any card is authored against it, never per-card, and never with the card shipping
+    /// first (dev-docs/specs/card-schema.md:40). Built once into an immutable, order-independent registry.
     /// </summary>
     internal static class ActionHandlers
     {

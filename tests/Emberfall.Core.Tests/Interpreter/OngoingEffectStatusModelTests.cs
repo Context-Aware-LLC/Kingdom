@@ -45,6 +45,6 @@ namespace Emberfall.Core.Tests.Interpreter
             => new CardDefinition(id, name, CardType.SPELL, 0, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(),
                 Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
-                false, null, "", false);
+                false, null, "");
     }
 }

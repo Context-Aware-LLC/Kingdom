@@ -71,12 +71,12 @@ namespace Emberfall.Core.Tests.Interpreter
             IReadOnlyList<RuleDefinition>? rules = null)
             => new CardDefinition(id, id, CardType.MINION, cost, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "");
 
         private static CardDefinition Spell(string id, int cost, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, cost, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "");
 
         private static PlayCardIntent Play(GameState s, CardInstance card, params InstanceId[] targets)
         {

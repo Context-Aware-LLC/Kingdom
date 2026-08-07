@@ -75,7 +75,6 @@ namespace Emberfall.Editor
                 w.WriteString("artId", def.ArtId);
                 if (!string.IsNullOrEmpty(def.FlavorText)) w.WriteString("flavorText", def.FlavorText);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
-                if (def.RequiresEngineeringPrimitive) w.WriteBoolean("requiresEngineeringPrimitive", true);
 
                 w.WriteStartArray("rules");
                 foreach (var rule in def.Rules)

@@ -277,13 +277,13 @@ namespace Emberfall.Core.Tests.Interpreter
         private static CardDefinition Weapon(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.WEAPON, 0, 1, null, 2,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "",
-                "art/" + id, SetId.CORE, true, null, "", false);
+                "art/" + id, SetId.CORE, true, null, "");
 
         private static CardDefinition Definition(string id, CardType type, int? attack, int? health,
             RuleDefinition[] rules)
             => new CardDefinition(id, id, type, 0, attack, health, null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "",
-                "art/" + id, SetId.CORE, true, null, "", false);
+                "art/" + id, SetId.CORE, true, null, "");
 
         private static (GameState state, CommandProcessor processor, CardInstance spell) Match(
             CardDefinition spellDefinition, params CardDefinition[] additional)

@@ -25,7 +25,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             CardDefinition c = Card("c");
             CardDefinition z = Card("z");
             CardDefinition notCollectible = Card("token", collectible: false);
-            CardDefinition held = Card("held", held: true);
+            CardDefinition held = Card("held", collectible: false);
             var db = new PoolDatabase(new[] { z, held, c, b, notCollectible, a, c });
             var (state, processor, source) = Ready(db, count: 5, seed: 1UL);
             var expectedRng = new DeterministicRandom(1UL);
@@ -81,7 +81,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             var db = new PoolDatabase(new[]
             {
                 Card("not_collectible", collectible: false),
-                Card("held", held: true),
+                Card("held", collectible: false),
             });
             var (state, processor, source) = Ready(db, count: 3, seed: 92UL);
             ulong rngBefore = state.Rng.RawState;
@@ -377,15 +377,18 @@ namespace Emberfall.Core.Tests.CardBehavior
                     : SourceBoundLifetime.Instance,
                 action);
 
+        // `held: true` used to set requiresEngineeringPrimitive, the second way a row could be
+        // excluded from the canonical pool. NOR-224 retired that flag, so collectible:false is the
+        // only exclusion left and both fixtures below express it that way.
         private static CardDefinition Card(string id, CardType type = CardType.MINION,
-            bool collectible = true, bool held = false, IReadOnlyList<RuleDefinition>? rules = null)
+            bool collectible = true, IReadOnlyList<RuleDefinition>? rules = null)
             => new CardDefinition(id, id, type, 1,
                 type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
                 type == CardType.MINION ? 1 : (int?)null,
                 type == CardType.WEAPON ? 1 : (int?)null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(),
                 rules ?? Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
-                collectible, null, "", held);
+                collectible, null, "");
 
         private sealed class PoolDatabase : ICardDatabase
         {

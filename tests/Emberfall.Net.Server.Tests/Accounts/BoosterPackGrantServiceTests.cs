@@ -84,7 +84,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                         @class: CardClass.NEUTRAL, rarity: rarity,
                         keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                         flavorText: "", artId: "art", setId: i % 3 == 0 ? SetId.CORE : SetId.EMBERFALL,
-                        collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false));
+                        collectible: true, tribe: null, factionId: ""));
             return new StubCardDatabase(cards);
         }
 

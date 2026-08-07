@@ -20,6 +20,12 @@ namespace Emberfall.Core.Tests.CardValidation
     /// parsed, validated, reported, with no consumer — every pool filtered on <c>Collectible</c>
     /// alone, so taking that advice bought a green validator and an identical crash.</para>
     ///
+    /// <para><b>Renamed from <c>EngineeringPrimitiveGateTests</c> in NOR-224.</b> The quarantine
+    /// flag that named the old fixture is gone; C14b, the rule it exempted, is permanent and is
+    /// what this fixture was always really testing. There is no exemption now — a row the engine
+    /// cannot resolve is rejected, and <c>chosenBy: RANDOM</c> is the only way to author an
+    /// <c>ANY_*</c> selector on a fired trigger.</para>
+    ///
     /// <para><b>Deliberately does not pin any specific card's id or printed text.</b> The set is
     /// early and volatile (Sam, 2026-08-03) — a test that hard-codes one row's exact wording
     /// breaks on the next content pass for a reason that has nothing to do with this defect.
@@ -28,7 +34,7 @@ namespace Emberfall.Core.Tests.CardValidation
     /// </summary>
     [TestFixture]
     [Category("CardValidation")]
-    public sealed class EngineeringPrimitiveGateTests
+    public sealed class FiredTriggerSelectorTests
     {
         private static readonly HashSet<Trigger> PlayerTargeted = new HashSet<Trigger>
         {
@@ -82,20 +88,21 @@ namespace Emberfall.Core.Tests.CardValidation
 
         // A throwaway fixture, not a live card — these tests exercise the RULE, not any specific
         // row, so they stay valid no matter how the live set changes.
-        private static CardDefinition FiredAnySelectorCard(Trigger trigger, bool gated) => new CardDefinition(
-            id: "test_fired_any_selector", name: "Test",
-            type: trigger == Trigger.ON_CAST ? CardType.SPELL : CardType.MINION, cost: 1,
-            attack: trigger == Trigger.ON_CAST ? null : (int?)1,
-            health: trigger == Trigger.ON_CAST ? null : (int?)1, durability: null,
-            @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
-            keywords: System.Array.Empty<Keyword>(),
-            rules: new[]
-            {
-                TestRules.Rule("rule_1", trigger,
-                    new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION"))),
-            },
-            flavorText: "", artId: "art/x", setId: SetId.CORE,
-            collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
+        private static CardDefinition FiredAnySelectorCard(Trigger trigger, TargetChosenBy? chosenBy = null)
+            => new CardDefinition(
+                id: "test_fired_any_selector", name: "Test",
+                type: trigger == Trigger.ON_CAST ? CardType.SPELL : CardType.MINION, cost: 1,
+                attack: trigger == Trigger.ON_CAST ? null : (int?)1,
+                health: trigger == Trigger.ON_CAST ? null : (int?)1, durability: null,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: System.Array.Empty<Keyword>(),
+                rules: new[]
+                {
+                    TestRules.Rule("rule_1", trigger,
+                        new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION", chosenBy))),
+                },
+                flavorText: "", artId: "art/x", setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "");
 
         private static ValidationReport Validate(CardDefinition def)
             => new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
@@ -103,7 +110,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void C14b_Rejects_An_Explicit_Choice_Selector_On_A_Fired_Trigger()
         {
-            var report = Validate(FiredAnySelectorCard(Trigger.ON_DEATH, gated: false));
+            var report = Validate(FiredAnySelectorCard(Trigger.ON_DEATH));
 
             Assert.That(report.Ok, Is.False, "An ANY_* selector on a fired trigger must not validate clean.");
             Assert.That(report.Issues.Any(i => i.Code == "C14B-SELECTOR-NEEDS-PLAYER-TARGET"
@@ -119,7 +126,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase(Trigger.ON_ATTACK)]
         public void C14b_Covers_Every_Trigger_That_Fires_Without_A_Player(Trigger trigger)
         {
-            var report = Validate(FiredAnySelectorCard(trigger, gated: false));
+            var report = Validate(FiredAnySelectorCard(trigger));
             Assert.That(report.Issues.Any(i => i.Code == "C14B-SELECTOR-NEEDS-PLAYER-TARGET"), Is.True,
                 $"{trigger} passes Array.Empty for chosen targets, so an ANY_* selector throws there too.");
         }
@@ -131,20 +138,25 @@ namespace Emberfall.Core.Tests.CardValidation
             // ON_PLAY / ON_CAST are the only RaiseSelf call sites that carry the player's targets
             // (CommandProcessor.cs:346/354/386/454), so ANY_* is correct grammar there — and plenty
             // of shipping battlecries and spells depend on it.
-            var report = Validate(FiredAnySelectorCard(trigger, gated: false));
+            var report = Validate(FiredAnySelectorCard(trigger));
             Assert.That(report.Issues.Any(i => i.Code == "C14B-SELECTOR-NEEDS-PLAYER-TARGET"), Is.False,
                 "C14b must not fire where the player supplies the target.");
             Assert.That(report.Ok, Is.True);
         }
 
         [Test]
-        public void C14b_Is_Exempted_By_The_Primitive_Gate()
+        public void A_Random_Choice_Is_The_Only_Escape_On_A_Fired_Trigger()
         {
-            // The exemption is only honest because the gate now holds the row out of every pool.
-            var report = Validate(FiredAnySelectorCard(Trigger.ON_DEATH, gated: true));
-            Assert.That(report.Ok, Is.True,
-                "requiresEngineeringPrimitive is the documented way to hold a row for a primitive.");
-            Assert.That(report.RequiresEngineeringPrimitive, Is.True);
+            // What replaced the quarantine. `chosenBy: RANDOM` makes the selector auto-resolvable
+            // — the engine picks — so C14b has nothing to object to. This is the escape the error
+            // message now names, and Memorial Wisp is the shipping row that takes it. Retiring
+            // requiresEngineeringPrimitive removed the OTHER escape, which parked a broken row
+            // rather than fixing it; this one produces a card that actually runs.
+            var report = Validate(FiredAnySelectorCard(Trigger.ON_DEATH, TargetChosenBy.RANDOM));
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14B-SELECTOR-NEEDS-PLAYER-TARGET"), Is.False,
+                "A randomly-chosen target needs no player: " + string.Join(", ", report.Issues.Select(i => i.Code)));
+            Assert.That(report.Ok, Is.True);
         }
     }
 }

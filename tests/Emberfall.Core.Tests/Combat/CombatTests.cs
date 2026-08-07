@@ -72,7 +72,7 @@ namespace Emberfall.Core.Tests.Combat
         private static CardDefinition Minion(string id, int atk, int hp, params Keyword[] kws)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                kws, System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
+                kws, System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "");
 
         private static AttackIntent Attack(GameState s, InstanceId attacker, InstanceId defender)
             => new AttackIntent(s.ActivePlayer, attacker, new TargetRef(defender));
@@ -275,7 +275,7 @@ namespace Emberfall.Core.Tests.Combat
                 rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
                     new HealAction(2, new TargetSpec("FRIENDLY_HERO"))) },
                 flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
             var db = new Support.FakeCardDatabase().Register(weaponDef);
             var proc = new CommandProcessor(db);

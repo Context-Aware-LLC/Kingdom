@@ -28,14 +28,14 @@ namespace Emberfall.Core.Tests.Combat
             => new CardDefinition(
                 id, id, CardType.WEAPON, 1, attack, null, durability,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords ?? Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "");
 
         private static CardDefinition Minion(string id, int attack, int health,
             params Keyword[] keywords)
             => new CardDefinition(
                 id, id, CardType.MINION, 1, attack, health, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords, Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords, Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "");
 
         private static FakeCardDatabase Db() => new FakeCardDatabase()
             .Register(Weapon(Plain, 2, 3))

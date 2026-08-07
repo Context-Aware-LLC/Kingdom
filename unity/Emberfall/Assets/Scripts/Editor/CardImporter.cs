@@ -40,8 +40,8 @@ namespace Emberfall.Editor
     }
 
     /// <summary>
-    /// ICardImporter impl. Refuses to bake a row data-only when RequiresEngineeringPrimitive is set
-    /// or core validation fails (the R3 audit gate, dev-docs/specs/card-schema.md:40) — the window and CI both go
+    /// ICardImporter impl. Refuses to bake a row when core validation fails
+    /// (the R3 audit gate, dev-docs/specs/card-schema.md:40) — the window and CI both go
     /// through this single path so nothing can bake a broken card.
     ///
     /// Deviation from the spec: bakes straight from the flat M1.cards.json array rather than
@@ -117,7 +117,7 @@ namespace Emberfall.Editor
         private ImportResult BakeOne(CardDefinition def, string json)
         {
             var report = _validator.Validate(def, _db);
-            if (report.RequiresEngineeringPrimitive || !report.Ok)
+            if (!report.Ok)
                 return new ImportResult(false, System.Array.Empty<string>(), new[] { report });
 
             string dir = $"{CardsRoot}/{def.SetId}";

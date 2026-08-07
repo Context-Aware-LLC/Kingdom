@@ -170,6 +170,6 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/typed_validator", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
     }
 }

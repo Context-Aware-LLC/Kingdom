@@ -227,7 +227,7 @@ namespace Emberfall.Editor
                 // both; this fixture needs none, so an empty list is the faithful translation.
                 keywords: new[] { kw }, rules: Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "verify", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static int Pass(string name)
         {

@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.Collection
             @class: CardClass.NEUTRAL, rarity: rarity,
             keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
             flavorText: "", artId: "art/" + CardId(set, rarity, i), setId: set,
-            collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+            collectible: true, tribe: null, factionId: "");
 
         /// <summary>
         /// A pool with <paramref name="perRarity"/> cards of every rarity, split across CORE and the

@@ -44,7 +44,7 @@ namespace Emberfall.Core.Tests.Interpreter
             CardDefinition weaponDef = new CardDefinition("blade", "blade", CardType.WEAPON, 1,
                 2, null, 2, CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 System.Array.Empty<RuleDefinition>(), "", "art/blade", SetId.CORE,
-                true, null, "", false);
+                true, null, "");
             var db = new FakeCardDatabase().Register(spell).Register(weaponDef);
             GameState state = State();
             var spellCard = new CardInstance(state.NextInstanceId(), spell.Id, P0) { Zone = Zone.Hand };
@@ -78,7 +78,7 @@ namespace Emberfall.Core.Tests.Interpreter
             CardDefinition minionDef = new CardDefinition("guard", "guard", CardType.MINION, 1,
                 2, 3, null, CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 System.Array.Empty<RuleDefinition>(), "", "art/guard", SetId.CORE,
-                true, null, "", false);
+                true, null, "");
             var db = new FakeCardDatabase().Register(spell).Register(minionDef);
             GameState state = State();
             var spellCard = new CardInstance(state.NextInstanceId(), spell.Id, P0) { Zone = Zone.Hand };
@@ -195,13 +195,13 @@ namespace Emberfall.Core.Tests.Interpreter
             => new CardDefinition(id, id, CardType.MINION, 1, attack, health, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
-                true, null, "", false);
+                true, null, "");
 
         private static CardDefinition Card(string id, CardType type, RuleDefinition[] rules)
             => new CardDefinition(id, id, type, type == CardType.HERO_POWER ? 2 : 1,
                 null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
                 System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE,
-                true, null, "", false);
+                true, null, "");
 
         private static CardInstance Hand(GameState state, int seat, CardDefinition definition)
         {

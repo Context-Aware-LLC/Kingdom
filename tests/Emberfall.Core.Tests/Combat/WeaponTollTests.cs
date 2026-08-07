@@ -40,7 +40,7 @@ namespace Emberfall.Core.Tests.Combat
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static CardDefinition Minion(string id, int atk, int hp)
             => new CardDefinition(
@@ -49,7 +49,7 @@ namespace Emberfall.Core.Tests.Combat
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         /// <summary>Toll: deal <paramref name="dmg"/> to the enemy hero — observable from either door.</summary>
         private static RuleDefinition Rattle(int dmg)
@@ -242,7 +242,7 @@ namespace Emberfall.Core.Tests.Combat
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false));
+                collectible: true, tribe: null, factionId: ""));
             var dummy = OnBoard(s, 1, db.Get("ef020_dummy"));
 
             var r = new CommandProcessor(db).Execute(s,

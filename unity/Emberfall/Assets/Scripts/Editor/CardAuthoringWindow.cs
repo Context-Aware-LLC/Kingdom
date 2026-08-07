@@ -143,7 +143,6 @@ namespace Emberfall.Editor
 
         private static string BadgeFor(ValidationReport core, ValidationReport lint)
         {
-            if (core.RequiresEngineeringPrimitive) return "⛔";
             if (!core.Ok) return "✕";
             if (core.Issues.Any(i => i.Severity == Severity.Warning) || lint.Issues.Any(i => i.Severity == Severity.Warning))
                 return "▲";
@@ -199,10 +198,9 @@ namespace Emberfall.Editor
             card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
 
-            EditorGUILayout.Space();
-            card.RequiresEngineeringPrimitive = EditorGUILayout.Toggle(
-                new GUIContent("requiresEngineeringPrimitive", "Set when an effect can't compose from existing verbs. Blocks data-only bake (guardrails §7)."),
-                card.RequiresEngineeringPrimitive);
+            // The requiresEngineeringPrimitive toggle stood here until NOR-224. It let an author
+            // park a card whose effect no engine verb could compose. Authoring is backend-first
+            // now: the primitive lands first, so there is nothing to declare.
 
             if (EditorGUI.EndChangeCheck())
                 _dirtyIds.Add(card.Id);
@@ -369,12 +367,6 @@ namespace Emberfall.Editor
             var (core, lint) = Validate(card);
             EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
 
-            if (core.RequiresEngineeringPrimitive)
-                EditorGUILayout.HelpBox(
-                    "requiresEngineeringPrimitive is set — this card cannot be baked data-only. " +
-                    "Route to Shepherd+Eng to add a reusable primitive (guardrails §7).",
-                    MessageType.Error);
-
             foreach (var issue in core.Issues)
                 EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}",
                     issue.Severity == Severity.Error ? MessageType.Error : MessageType.Warning);
@@ -382,7 +374,7 @@ namespace Emberfall.Editor
             foreach (var issue in lint.Issues)
                 EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Warning);
 
-            if (core.Ok && !core.RequiresEngineeringPrimitive && core.Issues.Count == 0 && lint.Issues.Count == 0)
+            if (core.Ok && core.Issues.Count == 0 && lint.Issues.Count == 0)
                 EditorGUILayout.HelpBox("Clean.", MessageType.None);
         }
 
@@ -447,10 +439,10 @@ namespace Emberfall.Editor
             if (_selected < 0) return;
             var card = _cards[_selected];
             var (core, _) = Validate(card);
-            if (core.RequiresEngineeringPrimitive || !core.Ok)
+            if (!core.Ok)
             {
                 EditorUtility.DisplayDialog("Bake Blocked",
-                    $"'{card.Id}' has validation errors or requiresEngineeringPrimitive set — fix them before baking.",
+                    $"'{card.Id}' has validation errors — fix them before baking.",
                     "OK");
                 return;
             }
@@ -467,7 +459,7 @@ namespace Emberfall.Editor
         private void OnBakeAll()
         {
             var blocked = _cards.Select(c => (c, report: Validate(c).core))
-                .Where(r => r.report.RequiresEngineeringPrimitive || !r.report.Ok)
+                .Where(r => !r.report.Ok)
                 .ToList();
             if (blocked.Count > 0)
             {

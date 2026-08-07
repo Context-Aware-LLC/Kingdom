@@ -119,7 +119,7 @@ namespace Emberfall.Editor
                 if (i.Severity == Severity.Error) { ok = false; break; }
 
             // Lint never sets the engineering-primitive gate — that's core-validator-owned (C20).
-            return new ValidationReport(ok, issues, false);
+            return new ValidationReport(ok, issues);
         }
     }
 }

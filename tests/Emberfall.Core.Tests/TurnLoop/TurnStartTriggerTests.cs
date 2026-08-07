@@ -40,7 +40,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static CardDefinition Weapon(string id, RuleDefinition[] rules)
             => new CardDefinition(
@@ -49,7 +49,7 @@ namespace Emberfall.Core.Tests.TurnLoop
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         /// <summary>A match where both decks are nothing but <paramref name="cardId"/>, already past mulligan.</summary>
         private static (LocalMatchHost host, GameState state) Match(ICardDatabase db, string cardId, ulong seed)

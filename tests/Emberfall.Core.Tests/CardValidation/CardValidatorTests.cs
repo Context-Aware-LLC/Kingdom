@@ -87,24 +87,21 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Adjacent_Selector_Is_Implemented_Without_A_Primitive_Gate()
+        public void Adjacent_Selector_Is_Implemented_And_Validates_Clean()
         {
             RuleDefinition Adjacent() => Rule(Trigger.ON_PLAY,
                 new DamageAction(1, new TargetSpec("ADJACENT")));
-            CardDefinition Card(bool gated) => new CardDefinition(
+            CardDefinition Card() => new CardDefinition(
                 id: "test_adjacent", name: "Test", type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { Adjacent() },
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: gated);
+                collectible: true, tribe: null, factionId: "");
 
-            var validator = new CardValidator();
-            var ungated = validator.Validate(Card(gated: false), new JsonCardDatabaseTestDouble(new[] { Card(false) }));
-            Assert.That(ungated.Ok, Is.True);
-
-            var gated = validator.Validate(Card(gated: true), new JsonCardDatabaseTestDouble(new[] { Card(true) }));
-            Assert.That(gated.Ok, Is.True);
+            var report = new CardValidator().Validate(Card(), new JsonCardDatabaseTestDouble(new[] { Card() }));
+            Assert.That(report.Ok, Is.True,
+                "ADJACENT resolves automatically — it never needed a quarantine to ship.");
         }
 
         [Test]
@@ -119,7 +116,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
             Assert.That(report.Ok, Is.False);
@@ -148,7 +145,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
             Assert.That(report.Ok, Is.False);
@@ -165,7 +162,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
             Assert.That(report.Ok, Is.False);
@@ -173,18 +170,23 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void RequiresEngineeringPrimitive_Flows_Through_To_Report()
+        public void Rule_Less_Spell_Is_An_Error_With_No_Quarantine_Escape()
         {
+            // C5 used to read "SPELL must have >=1 rule OR set requiresEngineeringPrimitive", and
+            // this fixture was the test that the flag reached the report. NOR-224 retired the flag,
+            // so the escape clause is gone and a rule-less spell is simply invalid.
             var def = new CardDefinition(
                 id: "test_primitive", name: "Test", type: CardType.SPELL, cost: 1,
                 attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: true);
+                collectible: true, tribe: null, factionId: "");
 
             var report = new CardValidator().Validate(def, new JsonCardDatabaseTestDouble(new[] { def }));
-            Assert.That(report.RequiresEngineeringPrimitive, Is.True);
+            Assert.That(report.Ok, Is.False);
+            Assert.That(report.Issues.Any(i => i.Code == "C5-SPELL-RULES" && i.Severity == Severity.Error),
+                "Expected C5-SPELL-RULES; got: " + string.Join(", ", report.Issues.Select(i => i.Code)));
         }
 
         [Test]
@@ -244,7 +246,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: new[] { rule },
                 flavorText: "", artId: "art/x", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static RuleDefinition Rule(Trigger trigger, RuleAction action,
             RuleCondition? condition = null)
@@ -269,7 +271,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: new[] { marker }, rules: System.Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/marker", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
             ValidationReport report = Validator().Validate(def, Db(def));
 

@@ -85,12 +85,12 @@ namespace Emberfall.Core.Tests.Combat
             System.Collections.Generic.IReadOnlyList<Keyword>? keywords = null)
             => new CardDefinition(id, id, CardType.MINION, 1, atk, hp, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "", false);
+                keywords ?? System.Array.Empty<Keyword>(), rules ?? System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true, null, "");
 
         private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 0, null, null, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
-                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
+                System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "");
 
         /// <summary>A minion that pings the enemy hero for 3 whenever THIS minion is healed.</summary>
         private static CardDefinition Wardsong() => Minion("wardsong", 1, 10,

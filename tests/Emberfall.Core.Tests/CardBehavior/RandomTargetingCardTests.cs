@@ -175,7 +175,10 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             var state = State(seed: 23);
             CardDefinition wispDef = _db.Get("rekind_grave_memorial_wisp");
-            Assert.That(wispDef.RequiresEngineeringPrimitive, Is.False);
+            // The Wisp was the last row held behind requiresEngineeringPrimitive; it was released
+            // when the seeded RANDOM target primitive landed, and the flag itself retired in
+            // NOR-224. PoolEligible is the surviving witness that this row reaches live pools.
+            Assert.That(wispDef.PoolEligible, Is.True);
             CardInstance allyA = Board(state, 0, "core_stoneback");
             CardInstance allyB = Board(state, 0, "core_stoneback");
             CardInstance wisp = Board(state, 0, wispDef.Id, health: 1);

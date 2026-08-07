@@ -12,15 +12,11 @@ supply the target, so `ChosenTargets` is non-empty and the selector is never con
 OTHER trigger fires with an empty target list, so its selector MUST be auto-resolvable or the
 card is a live crash the moment it fires.
 
-A row carrying `requiresEngineeringPrimitive: true` is HELD, not an offender: since EF-032a
-that flag excludes the row from `ICardDatabase.AllCollectible()`, so it reaches no deck, no
-pack and no pool, and therefore can never fire. Held rows are printed anyway — a reservation
-the set is carrying is worth seeing, and a silent hold is how content goes missing.
-
-requiresEngineeringPrimitive is a TEMPORARY quarantine (Sam, 2026-08-03), not a standing
-pattern — see the retirement trigger on CardDefinition.PoolEligible. Once card authoring is
-backend-first (no new card ships against a primitive that doesn't exist yet) and this backlog
-clears, the HELD branch below should read zero rows forever; that is the signal to retire it.
+There is no longer any way to park such a row. `requiresEngineeringPrimitive` — a per-row
+quarantine that held a card out of every pool until the engine grew the primitive it needed —
+was retired in NOR-224 once no row set it, so this scan has no HELD category any more: every
+match is an offender. The standing rule is backend-first (Sam, 2026-08-03): no card ships
+against a primitive that doesn't exist yet, so there is nothing to hold.
 
 Exit 1 if any offender is found.
 """
@@ -114,7 +110,6 @@ def main() -> int:
     scanned = 0
     rules = 0
     offenders = []
-    held = []
 
     for path in files:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -143,12 +138,7 @@ def main() -> int:
                     return 2
                 if chosen_by is None and selector not in player_defaults:
                     continue
-                row = (path.name, card["id"], trigger, action.get("type"), selector)
-                # Held out of every pool by the gate — it cannot be drawn, so it cannot fire.
-                if card.get("requiresEngineeringPrimitive") is True:
-                    held.append(row)
-                else:
-                    offenders.append(row)
+                offenders.append((path.name, card["id"], trigger, action.get("type"), selector))
 
     def table(rows):
         print(f"{'file':<16} {'card id':<34} {'trigger':<14} {'action':<10} selector")
@@ -160,12 +150,6 @@ def main() -> int:
     print(f"cards scanned      : {scanned}")
     print(f"rules scanned      : {rules}")
     print(f"offenders          : {len(offenders)}")
-    print(f"held (quarantined) : {len(held)}")
-    if held:
-        print()
-        print("HELD — requiresEngineeringPrimitive is set, so AllCollectible() excludes these rows")
-        print("and they reach no pool. TEMPORARY quarantine (retire this branch once it's empty):")
-        table(held)
     if offenders:
         print()
         print("OFFENDERS — these WILL throw when the trigger fires:")

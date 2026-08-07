@@ -29,13 +29,11 @@ namespace Emberfall.Core.Contracts
     {
         public readonly bool Ok;
         public readonly IReadOnlyList<ValidationIssue> Issues;
-        public readonly bool RequiresEngineeringPrimitive;
 
-        public ValidationReport(bool ok, IReadOnlyList<ValidationIssue> issues, bool requiresEngineeringPrimitive)
+        public ValidationReport(bool ok, IReadOnlyList<ValidationIssue> issues)
         {
             Ok = ok;
             Issues = issues;
-            RequiresEngineeringPrimitive = requiresEngineeringPrimitive;
         }
     }
 }

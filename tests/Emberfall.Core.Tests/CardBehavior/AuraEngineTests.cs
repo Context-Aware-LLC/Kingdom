@@ -15,7 +15,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.MINION, 1, attack, health, null,
                 CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules,
-                "", "art/" + id, SetId.CORE, true, null, "", false);
+                "", "art/" + id, SetId.CORE, true, null, "");
 
         private static RuleDefinition Aura(string id, int attack, int health, string selector = "FRIENDLY_MINIONS")
             => new RuleDefinition(new RuleId(id), AuraActivation.Instance, AlwaysCondition.Instance,

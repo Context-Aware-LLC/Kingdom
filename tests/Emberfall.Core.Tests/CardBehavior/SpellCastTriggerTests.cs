@@ -40,7 +40,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static CardDefinition Spell(string id, int cost, RuleDefinition[] rules)
             => new CardDefinition(
@@ -49,7 +49,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: true, tribe: null, factionId: "");
 
         private static CardDefinition HeroPower(string id, RuleDefinition[] rules)
             => new CardDefinition(
@@ -58,7 +58,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: rules,
                 flavorText: "", artId: "art/" + id, setId: SetId.CORE,
-                collectible: false, tribe: null, factionId: "", requiresEngineeringPrimitive: false);
+                collectible: false, tribe: null, factionId: "");
 
         /// <param name="echoDamage">damage the echo deals to the enemy hero on every spell cast.</param>
         private static FakeCardDatabase Db(int echoDamage = 1, int echoHealth = 3)

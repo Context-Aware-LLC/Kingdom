@@ -101,10 +101,10 @@ namespace Emberfall.Core.Tests.Interpreter
             => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE,
-                true, null, "", false);
+                true, null, "");
 
         private static CardDefinition Spell(string id, RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
-                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "");
     }
 }

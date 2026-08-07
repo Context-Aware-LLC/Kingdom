@@ -40,14 +40,13 @@ namespace Emberfall.Editor
             var art = new AddressablesArtCatalog();
             var guardrails = new StubBalanceGuardrails();
 
-            int clean = 0, warnings = 0, errors = 0, needsPrimitive = 0;
+            int clean = 0, warnings = 0, errors = 0;
 
             foreach (var def in defs)
             {
                 var core = validator.Validate(def, db);
                 var lint = linter.Lint(def, art, guardrails, db);
 
-                if (core.RequiresEngineeringPrimitive) needsPrimitive++;
                 if (!core.Ok) errors++;
                 else if (core.Issues.Count > 0 || lint.Issues.Count > 0) warnings++;
                 else clean++;
@@ -62,8 +61,8 @@ namespace Emberfall.Editor
             foreach (var issue in dupIssues)
                 Debug.LogError($"[CardValidate][Error] {issue.CardId} {issue.Field}: {issue.Message} ({issue.Code})");
 
-            bool gateOk = errors == 0 && needsPrimitive == 0 && dupIssues.Count == 0;
-            string summary = $"[CardValidate] Total={defs.Count} Clean={clean} Warnings={warnings} Errors={errors} NeedsPrimitive={needsPrimitive} Duplicates={dupIssues.Count} GateOk={gateOk}";
+            bool gateOk = errors == 0 && dupIssues.Count == 0;
+            string summary = $"[CardValidate] Total={defs.Count} Clean={clean} Warnings={warnings} Errors={errors} Duplicates={dupIssues.Count} GateOk={gateOk}";
             if (gateOk) Debug.Log(summary);
             else Debug.LogError(summary);
         }

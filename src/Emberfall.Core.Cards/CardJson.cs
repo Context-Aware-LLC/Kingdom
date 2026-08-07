@@ -15,8 +15,11 @@ namespace Emberfall.Core.Cards
     {
         private static readonly HashSet<string> CardProperties = new HashSet<string>(StringComparer.Ordinal)
         {
+            // "requiresEngineeringPrimitive" was removed here in NOR-224 rather than accepted-and-
+            // ignored: RejectUnknownProperties now throws on a row still carrying it, which is the
+            // loud failure a resurrected quarantine row deserves.
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
-            "setId", "tribe", "collectible", "requiresEngineeringPrimitive", "artId",
+            "setId", "tribe", "collectible", "artId",
             "flavorText", "factionId", "keywords", "rules", "_comment"
         };
 
@@ -67,7 +70,6 @@ namespace Emberfall.Core.Cards
             SetId setId = TryEnum<SetId>(el, "setId") ?? SetId.CORE;
             Tribe? tribe = TryEnum<Tribe>(el, "tribe");
             bool collectible = Bool(el, "collectible") ?? true;
-            bool reqPrim = Bool(el, "requiresEngineeringPrimitive") ?? false;
             string artId = Str(el, "artId") ?? "";
             string flavor = Str(el, "flavorText") ?? "";
             string faction = Str(el, "factionId") ?? "";
@@ -85,7 +87,7 @@ namespace Emberfall.Core.Cards
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
             }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, rules, flavor, artId, setId, collectible, tribe, faction, reqPrim);
+                keywords, rules, flavor, artId, setId, collectible, tribe, faction);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)

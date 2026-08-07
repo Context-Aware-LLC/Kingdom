@@ -29,7 +29,6 @@ namespace Emberfall.Editor
         public bool Collectible = true;
         public bool HasTribe; public Tribe Tribe;
         public string FactionId = "";
-        public bool RequiresEngineeringPrimitive;
 
         public static EditableCard FromDefinition(CardDefinition def) => new EditableCard
         {
@@ -54,7 +53,6 @@ namespace Emberfall.Editor
             HasTribe = def.Tribe.HasValue,
             Tribe = def.Tribe ?? default,
             FactionId = def.FactionId,
-            RequiresEngineeringPrimitive = def.RequiresEngineeringPrimitive,
         };
 
         public CardDefinition ToDefinition() => new CardDefinition(
@@ -66,7 +64,7 @@ namespace Emberfall.Editor
             keywords: Keywords, rules: Rules.Select(rule => rule.ToDefinition()).ToList(),
             flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
-            factionId: FactionId, requiresEngineeringPrimitive: RequiresEngineeringPrimitive);
+            factionId: FactionId);
 
         public EditableCard Clone() => FromDefinition(ToDefinition());
     }

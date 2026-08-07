@@ -79,7 +79,7 @@ namespace Emberfall.Core.Tests.Interpreter
             var definition = new CardDefinition("lifedrain_spell", "lifedrain_spell",
                 CardType.SPELL, 1, null, null, null, CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.LIFEDRAIN }, new[] { rule }, "", "art/lifedrain_spell",
-                SetId.CORE, true, null, "", false);
+                SetId.CORE, true, null, "");
             var carrier = new CardInstance(new InstanceId(18), definition.Id, P0)
             {
                 Zone = Zone.Graveyard,
@@ -229,7 +229,7 @@ namespace Emberfall.Core.Tests.Interpreter
                 type == CardType.MINION || type == CardType.WEAPON ? 1 : (int?)null,
                 type == CardType.MINION ? 1 : (int?)null,
                 type == CardType.WEAPON ? 1 : (int?)null,
-                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "", false);
+                CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), rules, "", "art/" + id, SetId.CORE, true, null, "");
 
         private static GameState State()
             => new GameState(new MatchId("source-context"), new DeterministicRandom(3),
