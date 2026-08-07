@@ -879,9 +879,9 @@ namespace Emberfall.Presentation
         /// </summary>
         private VisualElement BuildOrphanPlate(DeckList deck)
         {
-            // The roster overload: the deck's CharacterId resolves to nobody, which IS the L5
-            // violation. Read from the same gate the queue reads, so the sentence on this plate can
-            // never drift from the one that refused it.
+            // The roster form of the gate: the deck's CharacterId resolves to nobody, which IS the
+            // L5 violation. Read from the same gate the queue reads, so the sentence on this plate
+            // can never drift from the one that refused it.
             QueueCheck queue = QueueEligibility.Check(deck, _account.Roster(), _db);
 
             var plate = new VisualElement();
