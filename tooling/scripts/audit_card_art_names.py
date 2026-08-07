@@ -10,13 +10,25 @@ The convention (CLAUDE.md, "Expansion at the directory level, class at the filen
 wrong as a classed row missing one. Class tokens are abbreviations that do not match their class
 names, so this derives the map from the data rather than hardcoding it, and prints what it derived.
 
-Also checks the hazard that has no error message: CardArtPostprocessor keys import settings off
-`Assets/Art/Cards/<setId>/`, so a file sitting in the wrong set folder imports with the wrong
-settings and nothing complains.
+Three further checks, each for something no existing gate reports:
 
-Exit 1 if any mismatch is found.
+* **Wrong set folder.** `AddressablesSetup` builds one `CardArt_<setId>` group per folder on disk,
+  so a file under the wrong `<setId>/` ships in the wrong bundle. It still RENDERS — the address is
+  a flat `card_art/<fileName>` with no set in it — and CardCi still passes, which is exactly why
+  nothing catches it.
+* **Orphan pngs.** A file no card row points at. CardCi only walks rows outward to art, so art with
+  no row is invisible to it. This is how a rename leaves its own predecessor behind.
+* **Byte-identical duplicates.** Two names for one image, compared by SHA-256 rather than by size.
+  An orphan that duplicates a live file is a leftover; an orphan that duplicates nothing may be the
+  only copy of something.
+
+**Never deletes anything.** Orphans are reported, never removed — that call is Sam's.
+
+Exit 1 if any mismatch is found. Orphans and duplicates are reported but do NOT fail the run: they
+are bookkeeping, not breakage.
 """
 import collections
+import hashlib
 import json
 import pathlib
 import sys
@@ -87,10 +99,13 @@ def main():
                                  f"{cls} row carries the {owner} token '{seg}' (expected '{expected}_')"))
 
     # Where the file actually sits vs the setId the row declares.
+    paths = {}
     on_disk = {}
-    for png in ART_ROOT.rglob("*.png"):
+    for png in sorted(ART_ROOT.rglob("*.png")):
         on_disk.setdefault(png.stem, []).append(png.parent.name)
+        paths.setdefault(png.stem, []).append(png)
 
+    referenced = {c["artId"] for _, c in all_rows}
     misplaced, missing = [], []
     for file_name, card in all_rows:
         art, set_id = card["artId"], card.get("setId", "CORE")
@@ -100,11 +115,20 @@ def main():
         elif set_id not in folders:
             misplaced.append((card["id"], set_id, art, ", ".join(sorted(folders))))
 
+    orphans = sorted(stem for stem in on_disk if stem not in referenced)
+
+    # SHA-256 every file so an orphan can be told from a leftover copy of a live one.
+    digests = collections.defaultdict(list)
+    for stem, files in paths.items():
+        for f in files:
+            digests[hashlib.sha256(f.read_bytes()).hexdigest()].append(stem)
+
     print(f"card rows with an artId : {len(all_rows)}")
     print(f"png files under Art/Cards: {sum(len(v) for v in on_disk.values())}")
     print(f"class-token mismatches  : {len(findings)}")
     print(f"wrong set folder        : {len(misplaced)}")
     print(f"artId with no png       : {len(missing)}")
+    print(f"orphan pngs (no row)    : {len(orphans)}")
 
     if findings:
         print()
@@ -116,11 +140,28 @@ def main():
 
     if misplaced:
         print()
-        print("WRONG SET FOLDER (imports with the wrong settings, silently)")
+        print("WRONG SET FOLDER (ships in the wrong Addressables bundle; renders fine, CardCi passes)")
         print(f"{'card id':<36} {'row setId':<11} {'artId':<34} found in")
         print("-" * 110)
         for row in sorted(misplaced):
             print(f"{row[0]:<36} {row[1]:<11} {row[2]:<34} {row[3]}")
+
+    if orphans:
+        print()
+        print("ORPHAN PNGs — no card row points at these. NOT deleted; reported only.")
+        print(f"{'file':<38} {'set folder':<12} status")
+        print("-" * 96)
+        for stem in orphans:
+            twins = [s for s in digests[hashlib.sha256(paths[stem][0].read_bytes()).hexdigest()]
+                     if s != stem]
+            live = [t for t in twins if t in referenced]
+            if live:
+                status = "byte-identical to LIVE " + ", ".join(sorted(live)) + " — leftover"
+            elif twins:
+                status = "byte-identical to orphan " + ", ".join(sorted(twins))
+            else:
+                status = "unique image — the only copy"
+            print(f"{stem + '.png':<38} {on_disk[stem][0]:<12} {status}")
 
     return 1 if (findings or misplaced) else 0
 
