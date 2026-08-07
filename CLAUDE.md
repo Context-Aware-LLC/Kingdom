@@ -234,9 +234,15 @@ NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is 
 distinguished nothing. `ArtIds.ToFileName` stays a `Replace('/','_')` against a future namespaced
 id, but nothing today has a separator to flatten.
 
-`CardArtPostprocessor` keys import settings off `Assets/Art/Cards/<setId>/`, so a file in the wrong
-set folder **imports with the wrong settings and nothing complains.** Read the row's `setId` before
-copying.
+**The set folder decides which BUNDLE a file ships in, not its import settings.**
+`CardArtPostprocessor` keys on `Assets/Art/Cards/` — the root, one rule for every set — so import
+settings are identical wherever under it a file sits. What the `<setId>` folder does decide is
+Addressables group membership: `AddressablesSetup` builds one `CardArt_<setId>` group per folder
+found on disk. A file in the wrong set folder therefore **still renders correctly and still passes
+CardCi** — the address is a flat `card_art/<fileName>` with no set in it — while shipping in the
+wrong bundle. Nothing anywhere reports the mismatch between a row's `setId` and its art's folder;
+`tooling/scripts/audit_card_art_names.py` is the only thing that looks. Read the row's `setId`
+before copying.
 
 **`Assets/Art/UI/` subfolders are the opposite — purely organisational.** `EditorUiSpriteProvider`
 searches all of `Assets/Art/UI` recursively by sprite NAME, `AddressablesSetup` addresses that tree
