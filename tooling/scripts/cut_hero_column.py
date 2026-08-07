@@ -19,9 +19,9 @@ import sys
 
 from PIL import Image, ImageDraw
 
-SRC = pathlib.Path(__file__).resolve().parents[2] / "art-bakeoff" / "herocolumn"
+SRC = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" /"hp-frames"
 UNITY = (pathlib.Path(__file__).resolve().parents[2]
-         / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "HeroColumn")
+         / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
 
 THRESH = 24          # max channel value still counted as "painted black"
 FILL = 128           # marker written into the mask by the flood
@@ -88,7 +88,7 @@ def main() -> int:
         total = Image.open(dest).size
         pct = 100 * px / (total[0] * total[1])
         # Ship the cut version into Unity under the ORIGINAL name so the scene
-        # references keep resolving; the uncut master stays in art-bakeoff.
+        # references keep resolving; the uncut master stays in art-pipeline.
         (UNITY / f.name).write_bytes(dest.read_bytes())
         print(f"{f.stem}: {seeds} seeds flooded, {pct:.1f}% cut -> {dest.name} (+ Unity)")
 
