@@ -48,7 +48,7 @@ namespace Emberfall.Presentation
         // Cached elements.
         private VisualElement _root;
         private VisualElement _collectionGrid;
-        private readonly Dictionary<string, VisualElement> _collectionTiles = new Dictionary<string, VisualElement>();
+        private CardWall _wall;
         private ListView _deckList;
         private VisualElement _curve;
         private VisualElement _legalityBox;
@@ -57,7 +57,6 @@ namespace Emberfall.Presentation
         private Button _filterAllButton;
         private Button _filterClassButton;
         private Button _filterNeutralButton;
-        private CardFilter _activeFilter;   // null = All (no constraint)
 
         private void OnEnable()
         {
@@ -165,7 +164,6 @@ namespace Emberfall.Presentation
         private void CacheElements()
         {
             _collectionGrid = _root.Q<VisualElement>("collection-grid");
-            _collectionGrid.RegisterCallback<GeometryChangedEvent>(QueueCollectionLayout);
             _deckList       = _root.Q<ListView>("deck-list");
             _curve          = _root.Q<VisualElement>("curve-strip");
             _legalityBox    = _root.Q<VisualElement>("legality-box");
@@ -176,104 +174,43 @@ namespace Emberfall.Presentation
             _filterNeutralButton = _root.Q<Button>("filter-neutral");
         }
 
-        // ---- Collection wall (§2.9): one persistent tile per pool card, built once. Not
-        // virtualized — ~90 cards of baked (cached) textures is cheap next to the 13-renderer
-        // hierarchy a virtualized ListView of live cards would need instead. ----
+        // ---- Collection wall: now a shared CardWall (Sam, 2026-08-07) -------------------------
+        //
+        // The tile building, the bake, the per-row gutter solve and the Yoga-safe deferred layout
+        // all moved to CardWall so the Collection screen renders the same wall instead of a second
+        // copy. Everything this screen still owns is the part that is genuinely about a DECK: what
+        // a click does, and which tiles are at their copy cap.
         private void BuildCollectionGrid()
         {
-            _collectionGrid.Clear();
-            _collectionTiles.Clear();
+            _wall = new CardWall(_collectionGrid, _faceBaker);
+            _wall.TileClicked += AddCopy;
 
-            foreach (var def in _pool)
-            {
-                var tile = new VisualElement();
-                tile.AddToClassList("card-tile");
-                tile.userData = def;
+            // The copy-cap fade — the ONLY per-tile deck-state treatment on the wall, and the
+            // reason CardWall exposes a decorator rather than owning this itself: "you already hold
+            // every copy" is a fact about a deck, and the Collection screen has none.
+            //
+            // This deliberately does NOT ask DeckValidator.CanAdd. CanAdd is false for L1 (deck at
+            // 30) and L4 (off-class) too, and keying the fade on it is exactly the bug removed in
+            // c31da55: a deck at 30 refuses every card, so every tile faded and the wall the screen
+            // exists to show went dark at the moment the player stopped building and started
+            // browsing. The fade means one thing only — "you already hold every copy of THIS card
+            // you are allowed" — so it reads the copy cap directly. It can never take more than a
+            // handful of tiles, and clears the moment a copy comes back out.
+            //
+            // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a
+            // Legendary fades at one copy, not two.
+            _wall.TileDecorator = (def, tile) =>
+                tile.EnableInClassList("card-tile--maxed",
+                    _deck.CountOf(def.Id) >= DeckValidator.MaxCopies(def.Rarity));
 
-                tile.RegisterCallback<ClickEvent>(_ => AddCopy(def));
-
-                string defId = def.Id;
-                _faceBaker.Bake(def, tex =>
-                {
-                    if (tex == null) return;
-                    tile.style.backgroundImage = new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
-                });
-
-                _collectionGrid.Add(tile);
-                _collectionTiles[def.Id] = tile;
-            }
-
-            QueueCollectionLayout();
+            _wall.SetPool(_pool);
         }
 
-        // ---- Collection grid gutter (Sam, 2026-08-02): tile size is fixed — a bake-cache wall,
-        // never stretched to fill space — so the only lever is the gutter between tiles. Recomputed
-        // per row on every resize (deck panel opening/closing, window resize) so full rows always
-        // span the panel edge to edge instead of packing left with dead space on the right; a
-        // partial last row stays left-aligned at the same gutter rather than spreading apart. This
-        // is the manual equivalent of CSS Grid's `repeat(auto-fill, TileWidth)` + `justify-content:
-        // space-between`, which UI Toolkit's flexbox-only layout has no direct way to express.
-        private const float CardTileWidth = 276f;  // must match .card-tile width in deckbuilder.uss
-        private const float MinGutter = 16f;        // floor == --space-4; never squeeze tighter than that token
-        private bool _collectionLayoutQueued;
-
-        /// <summary>Defers to the next scheduler tick instead of running inline. The grid's own
-        /// GeometryChangedEvent is the trigger, and Yoga fires that mid-layout-pass — mutating
-        /// margins synchronously from inside it edits the tree while Yoga is still walking it, so
-        /// only whichever tiles it hasn't visited yet pick up the new values. That tears a single
-        /// pass into two different geometries across rows and never converges, since the mutation
-        /// re-triggers the same event. Coalesces bursts (resize + filter click) into one pass.</summary>
-        private void QueueCollectionLayout(GeometryChangedEvent evt = default)
-        {
-            if (_collectionLayoutQueued) return;
-            _collectionLayoutQueued = true;
-            _collectionGrid.schedule.Execute(() =>
-            {
-                _collectionLayoutQueued = false;
-                LayoutCollectionGrid();
-            });
-        }
-
-        // A row solved to land EXACTLY on the available width is a floating-point tie: the tile's
-        // real resolved width (measured live: 275.9598px, not the authored 276px) never matches
-        // CardTileWidth to the decimal, so the row Yoga actually lays out overshoots by a hair and
-        // it silently wraps one tile early — our margins still assumed the wider row, so the tile
-        // that should've been last-in-row lands first-in-next-row with its trailing margin zeroed,
-        // flush against its new neighbour. This margin keeps every row comfortably under budget.
-        private const float RowSafetyMargin = 2f;
-
-        private void LayoutCollectionGrid()
-        {
-            float available = _collectionGrid.resolvedStyle.width - RowSafetyMargin;
-            if (available <= 0f) return;
-
-            int columns = Mathf.Max(1, Mathf.FloorToInt((available + MinGutter) / (CardTileWidth + MinGutter)));
-            float gutter = columns > 1 ? (available - columns * CardTileWidth) / (columns - 1) : 0f;
-
-            // Visibility and spacing are computed together: a filtered-out tile takes no row slot,
-            // so the column math below must walk only the tiles the active filter keeps.
-            var visible = new List<VisualElement>(_pool.Count);
-            foreach (var def in _pool)
-            {
-                if (!_collectionTiles.TryGetValue(def.Id, out var tile)) continue;
-                bool show = CardQuery.Matches(def, _activeFilter);
-                tile.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-                if (show) visible.Add(tile);
-            }
-
-            for (int i = 0; i < visible.Count; i++)
-            {
-                bool endOfRow = (i % columns) == columns - 1 || i == visible.Count - 1;
-                visible[i].style.marginLeft = 0f;
-                visible[i].style.marginRight = endOfRow ? 0f : gutter;
-            }
-        }
-
-        // ---- Collection filter chips (All / Class / Neutral): the three that already exist in
-        // the UXML, previously unwired — clicking them did nothing. Class = either half of the
-        // character's pairing, excluding neutral; Neutral = CardClass.NEUTRAL only; All = no
-        // constraint. Filtering itself lives in CardQuery (EF-035, .NET-side and testable) — this
-        // just toggles per-tile visibility and re-runs the grid layout pass.
+        // ---- Collection filter chips (All / Class / Neutral) ----------------------------------
+        // Class = either half of the character's pairing, excluding neutral; Neutral = NEUTRAL
+        // only; All = no constraint. These three predate CardQueryBar and stay as they are for now
+        // — replacing them with the shared bar is a separate change, and the wall does not care
+        // which of the two feeds it a filter.
         private void WireCollectionFilters()
         {
             _filterAllButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(null, _filterAllButton));
@@ -287,34 +224,10 @@ namespace Emberfall.Presentation
 
         private void ApplyCollectionFilter(CardFilter filter, Button active)
         {
-            _activeFilter = filter;
             _filterAllButton.EnableInClassList("db-chip--on", active == _filterAllButton);
             _filterClassButton.EnableInClassList("db-chip--on", active == _filterClassButton);
             _filterNeutralButton.EnableInClassList("db-chip--on", active == _filterNeutralButton);
-            QueueCollectionLayout();
-        }
-
-        // ---- Copy-cap fade: the ONLY per-tile deck-state treatment on the wall ----------------
-        //
-        // This deliberately does NOT ask DeckValidator.CanAdd. CanAdd is false for L1 (deck at 30)
-        // and L4 (off-class) too, and keying the fade on it is exactly the bug that was removed in
-        // c31da55: a deck at 30 refuses every card, so every tile faded and the wall the screen
-        // exists to show went dark at the moment the player stopped building and started browsing.
-        // The fade means one thing and one thing only — "you already hold every copy of THIS card
-        // you are allowed" — so it reads the copy cap directly. It can never take more than a
-        // handful of tiles with it, and it clears again the moment a copy comes back out.
-        //
-        // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a Legendary
-        // fades at one copy, not two. The legality gate itself has not moved: AddCopy still asks
-        // CanAdd and still refuses silently.
-        private void RefreshCollectionTiles()
-        {
-            foreach (var def in _pool)
-            {
-                if (!_collectionTiles.TryGetValue(def.Id, out var tile)) continue;
-                tile.EnableInClassList("card-tile--maxed",
-                    _deck.CountOf(def.Id) >= DeckValidator.MaxCopies(def.Rarity));
-            }
+            _wall.SetQuery(filter, CardSort.Default);
         }
 
         // ---- Deck ListView ----
@@ -453,7 +366,7 @@ namespace Emberfall.Presentation
         {
             _deckList.itemsSource = _deck.Entries;
             _deckList.RefreshItems();
-            RefreshCollectionTiles();
+            _wall.RefreshTiles();
             RebuildCurve();
 
             _countLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
