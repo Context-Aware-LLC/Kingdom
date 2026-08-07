@@ -294,16 +294,28 @@ namespace Emberfall.Presentation
             QueueCollectionLayout();
         }
 
-        // ---- The collection is never dimmed (Sam, 2026-08-07) --------------------------------
+        // ---- Copy-cap fade: the ONLY per-tile deck-state treatment on the wall ----------------
         //
-        // This used to hang .card-tile--disabled on every card DeckValidator.CanAdd refused, which
-        // meant a deck at 30 greyed out the ENTIRE wall — the art the screen exists to show, turned
-        // off at exactly the moment the player is browsing rather than building. The legality gate
-        // has not moved: AddCopy still asks CanAdd and still refuses. What is gone is the tint, and
-        // with it the class; the count and the legality box are what report a full deck.
+        // This deliberately does NOT ask DeckValidator.CanAdd. CanAdd is false for L1 (deck at 30)
+        // and L4 (off-class) too, and keying the fade on it is exactly the bug that was removed in
+        // c31da55: a deck at 30 refuses every card, so every tile faded and the wall the screen
+        // exists to show went dark at the moment the player stopped building and started browsing.
+        // The fade means one thing and one thing only — "you already hold every copy of THIS card
+        // you are allowed" — so it reads the copy cap directly. It can never take more than a
+        // handful of tiles with it, and it clears again the moment a copy comes back out.
         //
-        // No RefreshCollectionTiles remains because there is now nothing per-tile that depends on
-        // deck state. If something ever does, it must not be an opacity.
+        // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a Legendary
+        // fades at one copy, not two. The legality gate itself has not moved: AddCopy still asks
+        // CanAdd and still refuses silently.
+        private void RefreshCollectionTiles()
+        {
+            foreach (var def in _pool)
+            {
+                if (!_collectionTiles.TryGetValue(def.Id, out var tile)) continue;
+                tile.EnableInClassList("card-tile--maxed",
+                    _deck.CountOf(def.Id) >= DeckValidator.MaxCopies(def.Rarity));
+            }
+        }
 
         // ---- Deck ListView ----
         private void WireDeckList()
@@ -441,6 +453,7 @@ namespace Emberfall.Presentation
         {
             _deckList.itemsSource = _deck.Entries;
             _deckList.RefreshItems();
+            RefreshCollectionTiles();
             RebuildCurve();
 
             var result = DeckValidator.Validate(_deck, _character, _db);
