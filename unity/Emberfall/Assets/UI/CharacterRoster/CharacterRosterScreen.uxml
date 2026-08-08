@@ -110,6 +110,20 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
+        <!--
+          What a character's NAME opens. Not a modal: a small card anchored under the name, over a
+          transparent scrim that catches the click that dismisses it. The row used to carry a
+          standing Delete button, which spent permanent width on the one action nobody wants to
+          reach for by accident (Sam, 2026-08-07).
+        -->
+        <ui:VisualElement name="character-menu" class="character-menu character-menu--hidden">
+            <ui:VisualElement name="character-menu-scrim" class="character-menu-scrim" />
+            <ui:VisualElement name="character-menu-card" class="character-menu-card">
+                <ui:Label name="character-menu-title" text="" class="character-menu-title" />
+                <ui:Button name="character-menu-delete" text="Delete character" class="roster-button roster-button--danger deck-action" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
         <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden">
             <ui:VisualElement class="delete-dialog">
                 <ui:Label text="Delete character?" class="delete-title" />

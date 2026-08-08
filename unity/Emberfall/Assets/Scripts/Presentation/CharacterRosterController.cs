@@ -135,6 +135,11 @@ namespace Emberfall.Presentation
         private Character _pendingDelete;
         private int _pendingDeleteDeckCount;
 
+        private VisualElement _characterMenu;
+        private VisualElement _characterMenuCard;
+        private Label _characterMenuTitle;
+        private Character _menuRowCharacter;
+
         private VisualElement _matchBar;
         private Button _matchContinue;
 
@@ -195,6 +200,7 @@ namespace Emberfall.Presentation
             WireChrome();
             WireCreateForm();
             WireDeleteDialog();
+            WireCharacterMenu();
             WireDeckDialog();
 
             _uiSprites = CardBackCatalog.NewProvider();
@@ -355,6 +361,86 @@ namespace Emberfall.Presentation
         {
             _root.Q<Button>("cancel-delete")?.RegisterCallback<ClickEvent>(_ => CloseDeleteDialog());
             _root.Q<Button>("confirm-delete")?.RegisterCallback<ClickEvent>(_ => ConfirmDelete());
+        }
+
+        // ---- Character menu (Sam, 2026-08-07) ---------------------------------------------------
+        //
+        // Clicking a character's name opens a small card under it. Today it holds one action, and
+        // that is the point: Delete used to be a standing button on every row, one stray tap from
+        // the decks beside it. Behind a deliberate click it costs no width and no accidents.
+        //
+        // Rename is NOT here, deliberately (Sam, 2026-08-07). Character.Name reaches the versus
+        // nameplate, and VULN-002's control binds a second renderer of that string to the pixel
+        // clip and the same PlayerName.Check the creation form runs — an editor for it is that
+        // whole obligation, not a text field.
+
+        private void WireCharacterMenu()
+        {
+            _characterMenu = _root.Q<VisualElement>("character-menu");
+            _characterMenuCard = _root.Q<VisualElement>("character-menu-card");
+            _characterMenuTitle = _root.Q<Label>("character-menu-title");
+
+            _root.Q<VisualElement>("character-menu-scrim")?
+                .RegisterCallback<ClickEvent>(_ => CloseCharacterMenu());
+
+            _root.Q<Button>("character-menu-delete")?.RegisterCallback<ClickEvent>(_ =>
+            {
+                Character subject = _menuRowCharacter;
+                CloseCharacterMenu();
+                if (subject != null) OpenDeleteDialog(subject);
+            });
+        }
+
+        /// <summary>
+        /// Show the menu under <paramref name="anchor"/>, clamped to stay inside the screen.
+        ///
+        /// <para>Coordinates are panel-space (<c>worldBound</c>) converted into the overlay's own
+        /// box, because the overlay is inset to <c>#root</c> and not to the panel — reading
+        /// <c>worldBound</c> and writing it straight to <c>left</c>/<c>top</c> offsets the card by
+        /// the root's padding, which looks like a small alignment bug and is not one.</para>
+        ///
+        /// <para>The vertical clamp waits a tick: the card's height depends on its content and is
+        /// not resolved until it has been laid out visible. The horizontal one does not, because
+        /// <c>.character-menu-card</c> fixes the width.</para>
+        /// </summary>
+        private void OpenCharacterMenu(Character character, VisualElement anchor)
+        {
+            if (_characterMenu == null || _characterMenuCard == null || character == null) return;
+
+            _menuRowCharacter = character;
+            if (_characterMenuTitle != null) _characterMenuTitle.text = character.Name;
+
+            _characterMenu.RemoveFromClassList("character-menu--hidden");
+
+            Rect overlay = _characterMenu.worldBound;
+            Rect target = anchor.worldBound;
+            float left = target.x - overlay.x;
+            float top = target.yMax - overlay.y + MenuAnchorGap;
+
+            if (overlay.width > 0f)
+                left = Mathf.Max(0f, Mathf.Min(left, overlay.width - _characterMenuCard.resolvedStyle.width));
+
+            _characterMenuCard.style.left = left;
+            _characterMenuCard.style.top = top;
+
+            // Flip above the name rather than run off the bottom of the list.
+            _characterMenuCard.schedule.Execute(() =>
+            {
+                float height = _characterMenuCard.resolvedStyle.height;
+                if (height <= 0f || overlay.height <= 0f) return;
+                if (top + height <= overlay.height) return;
+                _characterMenuCard.style.top = Mathf.Max(0f, target.y - overlay.y - height - MenuAnchorGap);
+            });
+        }
+
+        /// <summary>The gap between the name and the card under it — enough to read as attached to
+        /// the name rather than growing out of it.</summary>
+        private const float MenuAnchorGap = 6f;
+
+        private void CloseCharacterMenu()
+        {
+            _characterMenu?.AddToClassList("character-menu--hidden");
+            _menuRowCharacter = null;
         }
 
         // ---- Deck dialog (Sam, 2026-08-07): a plate opens options, not the editor --------------
@@ -780,6 +866,10 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // The menu is anchored to a Label that is about to be destroyed, and holds a Character
+            // the rebuild may have just deleted. Close it before either becomes true.
+            CloseCharacterMenu();
+
             // Every strip about to be discarded takes its pending layout tick with it. A detached
             // element's scheduler may never run, so without this the set only grows.
             _stripLayoutQueued.Clear();
@@ -825,6 +915,11 @@ namespace Emberfall.Presentation
             // It is still the character's name and nothing else. The pairing, the hero power and the
             // queue pill all went the same way, for the same reason: the class is already in the
             // row's coloured spine, and the cards in each deck are the class made visible.
+            //
+            // The name IS the control now — it opens the character's menu, and the row's standing
+            // Delete button is gone with it (Sam, 2026-08-07). This reverses the older note that a
+            // character has no destination a click could go to: the click opens a menu about the
+            // character, not a screen for it, which is the thing that did not exist before.
             var header = new VisualElement();
             header.AddToClassList("character-row-header");
 
@@ -834,15 +929,10 @@ namespace Emberfall.Presentation
             var name = new Label(character.Name);
             name.AddToClassList("character-name");
             name.tooltip = $"{Pretty(character.PrimaryClass)} → {Pretty(character.SecondaryClass)}";
+            name.RegisterCallback<ClickEvent>(_ => OpenCharacterMenu(character, name));
             identity.Add(name);
 
-            var delete = new Button { text = "Delete" };
-            delete.AddToClassList("delete-character");
-            delete.tooltip = $"Delete {character.Name} and every deck bound to it";
-            delete.clicked += () => OpenDeleteDialog(character);
-
             header.Add(identity);
-            header.Add(delete);
 
             row.Add(header);
             row.Add(BuildDeckStrip(character, decks));
