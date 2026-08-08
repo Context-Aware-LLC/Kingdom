@@ -159,6 +159,67 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task A_Deferred_Purchase_Grants_Nothing_And_Is_Not_A_Rejection()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var validator = new StubValidator(StoreReceiptValidation.Pending(
+                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.550", "player-1")));
+            var service = new GemGrantService(ledger, validator, new FixedTime());
+
+            GemGrantOutcome result = await service.GrantAsync(
+                AuthenticatedAccount(), new StoreReceipt("play", "opaque-signed-payload"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Status, Is.EqualTo(GemGrantStatus.Pending));
+                Assert.That(result.Wallet.Gems, Is.EqualTo(0));
+                Assert.That(result.RejectionReason, Is.Empty);
+            });
+            Assert.That(await ledger.HistoryAsync("player-1"), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_Deferred_Purchase_That_Later_Completes_Grants_Exactly_Once()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var purchase = new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.550", "player-1");
+            var receipt = new StoreReceipt("play", "opaque-signed-payload");
+            var deferred = new StubValidator(StoreReceiptValidation.Pending(purchase));
+            var completed = new StubValidator(StoreReceiptValidation.Valid(purchase));
+            var time = new FixedTime();
+
+            GemGrantOutcome pending = await new GemGrantService(ledger, deferred, time)
+                .GrantAsync(AuthenticatedAccount(), receipt);
+            var live = new GemGrantService(ledger, completed, time);
+            GemGrantOutcome cleared = await live.GrantAsync(AuthenticatedAccount(), receipt);
+            GemGrantOutcome callbackAndClient = await live.GrantAsync(AuthenticatedAccount(), receipt);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(pending.Status, Is.EqualTo(GemGrantStatus.Pending));
+                Assert.That(cleared.Status, Is.EqualTo(GemGrantStatus.Granted));
+                Assert.That(callbackAndClient.Status, Is.EqualTo(GemGrantStatus.Replayed));
+            });
+            Assert.That(await ledger.BalanceAsync("player-1", EconomyItems.Gems), Is.EqualTo(550));
+            Assert.That(await ledger.HistoryAsync("player-1"), Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public async Task A_Deferred_Purchase_Bound_To_Another_Player_Is_Rejected_Not_Pending()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var validator = new StubValidator(StoreReceiptValidation.Pending(
+                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.200", "player-1")));
+            var service = new GemGrantService(ledger, validator, new FixedTime());
+
+            GemGrantOutcome result = await service.GrantAsync(
+                AuthenticatedAccount("player-2"), new StoreReceipt("play", "opaque-signed-payload"));
+
+            Assert.That(result.Status, Is.EqualTo(GemGrantStatus.Rejected));
+            Assert.That(await ledger.HistoryAsync("player-2"), Is.Empty);
+        }
+
+        [Test]
         public async Task A_Device_Token_Account_Is_Rejected_Before_Receipt_Validation()
         {
             var ledger = new InMemoryEntitlementLedger();

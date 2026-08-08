@@ -53,35 +53,77 @@ namespace Emberfall.Net.Server.Accounts
         string ProductKey,
         string PlayerId);
 
+    /// <summary>
+    /// What the store said about a receipt. <b>Three states, not two</b> — a receipt can be genuine and
+    /// still not be paid for yet.
+    /// </summary>
+    public enum StoreReceiptStatus
+    {
+        /// <summary>The store confirmed a completed, paid transaction. This is the only state that grants.</summary>
+        Accepted,
+
+        /// <summary>
+        /// A <b>deferred purchase</b>: the store recognises the transaction but payment has not
+        /// completed (Play's <c>PENDING</c> state — cash at a kiosk, a parent's approval, a slow bank).
+        /// The purchase facts are known and the receipt is genuine, so this is <b>not</b> a rejection:
+        /// rejecting it tells an honest player their real receipt is invalid.
+        /// </summary>
+        Deferred,
+
+        /// <summary>The store did not confirm the receipt — forged, malformed, or unknown.</summary>
+        Rejected,
+    }
+
     public sealed class StoreReceiptValidation
     {
-        public bool Accepted { get; }
+        public StoreReceiptStatus Status { get; }
+
+        /// <summary>
+        /// The purchase facts. Present for <see cref="StoreReceiptStatus.Accepted"/> and
+        /// <see cref="StoreReceiptStatus.Deferred"/> alike — a deferred purchase names the same
+        /// transaction id it will carry once it completes — and null for a rejection.
+        /// </summary>
         public ValidatedStorePurchase? Purchase { get; }
+
         public string RejectionReason { get; }
 
         private StoreReceiptValidation(
-            bool accepted,
+            StoreReceiptStatus status,
             ValidatedStorePurchase? purchase,
             string rejectionReason)
         {
-            Accepted = accepted;
+            Status = status;
             Purchase = purchase;
             RejectionReason = rejectionReason;
         }
 
         public static StoreReceiptValidation Valid(ValidatedStorePurchase purchase)
             => new StoreReceiptValidation(
-                true,
+                StoreReceiptStatus.Accepted,
+                purchase ?? throw new ArgumentNullException(nameof(purchase)),
+                "");
+
+        /// <summary>
+        /// The store recognises this transaction but has not been paid for it yet. Nothing is granted
+        /// and nothing is written; the same transaction id grants once when it completes.
+        /// </summary>
+        public static StoreReceiptValidation Pending(ValidatedStorePurchase purchase)
+            => new StoreReceiptValidation(
+                StoreReceiptStatus.Deferred,
                 purchase ?? throw new ArgumentNullException(nameof(purchase)),
                 "");
 
         public static StoreReceiptValidation Invalid(string reason)
-            => new StoreReceiptValidation(false, null, reason ?? "");
+            => new StoreReceiptValidation(StoreReceiptStatus.Rejected, null, reason ?? "");
     }
 
     /// <summary>
     /// Platform adapter seam. Implementations must verify the receipt with the store before returning
     /// an accepted purchase; the economy never grants from client-asserted product or quantity data.
+    ///
+    /// <para><b>An adapter must distinguish "not paid yet" from "not genuine"</b> — see
+    /// <see cref="StoreReceiptStatus.Deferred"/>. Collapsing the two is the defect that makes a player
+    /// who paid at a kiosk see "invalid purchase" for as long as the payment takes to clear.</para>
     /// </summary>
     public interface IStoreReceiptValidator
     {
@@ -94,6 +136,15 @@ namespace Emberfall.Net.Server.Accounts
     {
         Granted,
         Replayed,
+
+        /// <summary>
+        /// The store holds a genuine but unpaid transaction (a deferred purchase). Nothing was granted
+        /// and nothing was written. The client should show the purchase as in progress rather than as a
+        /// failure, and the grant happens when the completed receipt arrives under the same
+        /// transaction id.
+        /// </summary>
+        Pending,
+
         Rejected,
     }
 
@@ -118,6 +169,13 @@ namespace Emberfall.Net.Server.Accounts
     /// Validates store receipts before crossing the replay-once entitlement-ledger seam. The store
     /// transaction id, not receipt bytes or a client-generated id, anchors idempotency. A validated
     /// purchase must also be bound to the same authenticated player that receives the Gems.
+    ///
+    /// <para><b>Only a paid transaction writes.</b> A deferred purchase returns
+    /// <see cref="GemGrantStatus.Pending"/> and touches no ledger row, so the delivery path is
+    /// grant-forward only: there is no state to unwind if the payment never clears. When it does clear,
+    /// the completed receipt carries the same store transaction id and the existing idempotency key
+    /// makes that grant land exactly once — whether it arrives from the client re-submitting or from a
+    /// store callback.</para>
     /// </summary>
     public sealed class GemGrantService
     {
@@ -154,7 +212,7 @@ namespace Emberfall.Net.Server.Accounts
                 await _validator.ValidateAsync(receipt, ct).ConfigureAwait(false);
             if (validation == null)
                 return await RejectedAsync(account, "validator_returned_no_result", ct).ConfigureAwait(false);
-            if (!validation.Accepted || validation.Purchase == null)
+            if (validation.Status == StoreReceiptStatus.Rejected || validation.Purchase == null)
                 return await RejectedAsync(account, validation.RejectionReason, ct).ConfigureAwait(false);
 
             ValidatedStorePurchase purchase = validation.Purchase;
@@ -163,6 +221,15 @@ namespace Emberfall.Net.Server.Accounts
                 !string.Equals(purchase.PlayerId, account.PlayerId, StringComparison.Ordinal) ||
                 !GemBundleCatalog.TryGet(purchase.ProductKey, out GemBundleDefinition bundle))
                 return await RejectedAsync(account, "invalid_validated_purchase", ct).ConfigureAwait(false);
+
+            // A deferred purchase is checked exactly as hard as a completed one — the binding above is
+            // what stops one player's pending transaction being reported against another's wallet — and
+            // then stops short of the ledger. Nothing is written until the store has actually been paid,
+            // so the unpaid window cannot leave a grant behind to unwind.
+            if (validation.Status == StoreReceiptStatus.Deferred)
+                return new GemGrantOutcome(
+                    GemGrantStatus.Pending,
+                    await _economy.GetWalletAsync(account, ct).ConfigureAwait(false));
 
             string source = "store_receipt:" + purchase.Provider;
             var batch = new EntitlementBatch(
