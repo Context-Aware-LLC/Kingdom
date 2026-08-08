@@ -168,7 +168,7 @@ namespace Emberfall.Net.Client
             // which does not encode into a decodable envelope.
             await _transport.SendAsync(
                 ProtocolCodec.Encode(
-                    new HelloMsg(_opts.DeviceToken, _opts.ContractVersion, _opts.Platform,
+                    new HelloMsg(_opts.DeviceToken, _opts.WireContractVersion, _opts.Platform,
                                  _opts.BuildId, _opts.DisplayName, _opts.AuthToken),
                     ProtocolCodec.PreMatch, 0),
                 ct).ConfigureAwait(false);
@@ -297,10 +297,10 @@ namespace Emberfall.Net.Client
 
         private void OnMatchStart(MatchStartMsg ms)
         {
-            if (!string.Equals(ms.EngineContractVersion, _opts.ContractVersion, StringComparison.Ordinal))
+            if (!string.Equals(ms.WireContractVersion, _opts.WireContractVersion, StringComparison.Ordinal))
             {
                 FailContractMismatch(
-                    $"Server engine contract '{ms.EngineContractVersion}' does not match client '{_opts.ContractVersion}'.");
+                    $"Server wire contract '{ms.WireContractVersion}' does not match client '{_opts.WireContractVersion}'.");
                 return;
             }
 

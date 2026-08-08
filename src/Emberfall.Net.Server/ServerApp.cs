@@ -178,7 +178,7 @@ namespace Emberfall.Net.Server
                 status = "ok",
                 sessions = gate.LiveSessions,
                 cap = gate.MaxSessions,
-                contract = cfg.Options.EngineContractVersion,
+                contract = cfg.Options.WireContractVersion,
             }));
 
             app.Map("/ws", async context =>

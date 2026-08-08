@@ -183,6 +183,14 @@ namespace Emberfall.Core.Tests.GoldenReplay
 
             Assert.That((int?)root["schemaVersion"], Is.EqualTo(3),
                 $"'{Path.GetFileName(fixturePath)}' must declare schemaVersion 3.");
+            // NOT the wire contract. `Emberfall.Net.Protocol.ProtocolContract.Version` is a
+            // SEPARATE counter that is deliberately ahead of this one — it moves when the
+            // handshake/message shape changes, this moves when the Core engine contract does.
+            // If you are here because a wire change turned this red, you bumped the wrong one:
+            // revert this literal and leave the fixtures alone. Dragging them along would make
+            // this label stop tracking engine changes, which is the only question it answers
+            // (NOR-240). Bump it only for a genuine Core contract change, with the rebaseline
+            // stub that goes with it.
             Assert.That((string?)root["engineContractVersion"], Is.EqualTo("interfaces.v4"),
                 $"'{Path.GetFileName(fixturePath)}' must declare engine contract interfaces.v4.");
             Assert.That(root.ContainsKey("heroMaxHealth"), Is.True,

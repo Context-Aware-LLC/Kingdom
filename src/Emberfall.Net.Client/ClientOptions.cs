@@ -93,10 +93,11 @@ namespace Emberfall.Net.Client
         /// </summary>
         public string AuthToken { get; init; } = "";
 
-        /// <summary>The contract version this client was built against, sent in the hello so the
-        /// server can compare (it previously never learned the client's). Never a literal — see
-        /// <see cref="ProtocolContract.Version"/> for why the two ends share one.</summary>
-        public string ContractVersion { get; init; } = ProtocolContract.Version;
+        /// <summary>The wire contract version this client was built against, sent in the hello so
+        /// the server can compare (it previously never learned the client's). Never a literal — see
+        /// <see cref="ProtocolContract.Version"/> for why the two ends share one, and for why this
+        /// is <i>not</i> the same counter as the golden replays' <c>engineContractVersion</c>.</summary>
+        public string WireContractVersion { get; init; } = ProtocolContract.Version;
 
         public IClientClock Clock { get; init; } = new SystemClientClock();
 

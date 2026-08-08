@@ -51,8 +51,9 @@ namespace Emberfall.Net.Server
         public int MaxSessions { get; init; } = 64;
         /// <summary>Sent to the client on <c>MatchStartMsg</c> and compared against the client's
         /// <c>HelloMsg.ClientContractVersion</c> at the gate. Never a literal — see
-        /// <see cref="ProtocolContract.Version"/> for why the two ends share one.</summary>
-        public string EngineContractVersion { get; init; } = ProtocolContract.Version;
+        /// <see cref="ProtocolContract.Version"/> for why the two ends share one, and for why this
+        /// is <i>not</i> the same counter as the golden replays' <c>engineContractVersion</c>.</summary>
+        public string WireContractVersion { get; init; } = ProtocolContract.Version;
 
         /// <summary>Server-owned FIFO/MMR queue policy (EF-070).</summary>
         public Matchmaking.MatchmakingQueueOptions Matchmaking { get; init; } =
