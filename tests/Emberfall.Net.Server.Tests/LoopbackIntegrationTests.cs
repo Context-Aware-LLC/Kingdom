@@ -52,9 +52,9 @@ namespace Emberfall.Net.Server.Tests
 
                 // A fresh socket opens with a hello (C-G1-8); the connect is no longer the hello.
                 await SendAsync(c0, ProtocolCodec.Encode(
-                    new HelloMsg("loopback-device-0", SessionHarness.CurrentContractVersion, "test", "loopback"), ProtocolCodec.PreMatch, 0));
+                    new HelloMsg("loopback-device-0", ProtocolContract.Version, "test", "loopback"), ProtocolCodec.PreMatch, 0));
                 await SendAsync(c1, ProtocolCodec.Encode(
-                    new HelloMsg("loopback-device-1", SessionHarness.CurrentContractVersion, "test", "loopback"), ProtocolCodec.PreMatch, 0));
+                    new HelloMsg("loopback-device-1", ProtocolContract.Version, "test", "loopback"), ProtocolCodec.PreMatch, 0));
 
                 var start0 = await ExpectAsync<MatchStartMsg>(c0);
                 var start1 = await ExpectAsync<MatchStartMsg>(c1);

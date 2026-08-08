@@ -88,13 +88,6 @@ namespace Emberfall.Net.Server.Tests.Support
     {
         public const ulong Seed = 0xE17BEEF5EEDUL;
 
-        /// <summary>The contract version a hello must carry to get past <c>MatchGate</c>, read from
-        /// the server's own default rather than restated. The gate compares by exact string, so a
-        /// test that spells the version out is a test that breaks on the next bump — which is how
-        /// EF-074b's <c>interfaces.v4</c> → <c>v5</c> turned 21 unrelated tests red. Tests that
-        /// deliberately present a MISMATCHED version still hard-code one (that is their subject).</summary>
-        public static readonly string CurrentContractVersion = new ServerOptions().EngineContractVersion;
-
         public FakeTime Time { get; } = new FakeTime();
         public FakeConnection Conn0 { get; } = new FakeConnection();
         public FakeConnection Conn1 { get; } = new FakeConnection();

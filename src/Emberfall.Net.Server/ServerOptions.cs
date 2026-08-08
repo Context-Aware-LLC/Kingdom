@@ -1,3 +1,5 @@
+using Emberfall.Net.Protocol;
+
 namespace Emberfall.Net.Server
 {
     /// <summary>
@@ -47,7 +49,10 @@ namespace Emberfall.Net.Server
         // ── Host (design §5/§11) ─────────────────────────────────────────────────
         /// <summary>Max concurrent matches; new pairings refused at cap (RC Q4 ruling).</summary>
         public int MaxSessions { get; init; } = 64;
-        public string EngineContractVersion { get; init; } = "interfaces.v5";
+        /// <summary>Sent to the client on <c>MatchStartMsg</c> and compared against the client's
+        /// <c>HelloMsg.ClientContractVersion</c> at the gate. Never a literal — see
+        /// <see cref="ProtocolContract.Version"/> for why the two ends share one.</summary>
+        public string EngineContractVersion { get; init; } = ProtocolContract.Version;
 
         /// <summary>Server-owned FIFO/MMR queue policy (EF-070).</summary>
         public Matchmaking.MatchmakingQueueOptions Matchmaking { get; init; } =

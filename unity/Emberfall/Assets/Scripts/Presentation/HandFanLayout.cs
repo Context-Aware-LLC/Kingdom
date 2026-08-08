@@ -12,8 +12,8 @@ namespace Emberfall.Presentation
     //   x        pitch = (Footprint - CardW) / (count - 1), centred on 0  [§1.1, locked]
     //   tilt     ±MaxTiltDeg at the outermost card, linear across the hand
     //   sag      centre card highest, edges dropping on a parabola
-    //   y        CentreY sits the fan low enough that the card's bottom third is off-screen;
-    //            top half (name / cost / art) reads, per §8's accepted top-half-only legibility
+    //   y        CentreY sits the fan so roughly the bottom 15% of the centre card is below the
+    //            screen edge, exposing the rules band while keeping the tactile "held in hand" feel
     //   z        a per-index step toward the camera, so overlapping cards have a defined
     //            draw order even where the material is opaque, and so Unity's OnMouseDown —
     //            which fires on the NEAREST collider — resolves overlap topmost-wins (§8)
@@ -46,9 +46,10 @@ namespace Emberfall.Presentation
         internal const float MaxTiltDeg = 18f;    // outermost card's lean
         internal const float Sag        = 0.18f;  // edge cards' drop below the centre card
         // |y| of the centre card. Ortho size 4.6, so the screen edge is y -4.6 and the fraction of
-        // the centre card hidden below it is (CentreY - 3.775) / CardH. Sam set 30% (2026-07-24,
-        // down from the 35% first pass) — solve: 0.30 * 1.65 + 3.775 = 4.27.
-        internal const float CentreY    = 4.27f;
+        // the centre card hidden below it is (CentreY - 3.775) / CardH. Was 30% (4.27); raised to
+        // expose the rules band — the sticky reveal panel is the legibility path, not the hand card
+        // face (NOR-147). ~15% hidden: 0.15 * 1.65 + 3.775 = 4.02.
+        internal const float CentreY    = 4.02f;
         internal const float ZStep      = 0.03f;  // per-index step toward the camera
 
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on

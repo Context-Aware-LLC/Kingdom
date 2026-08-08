@@ -17,8 +17,9 @@ namespace Emberfall.Presentation
     /// <list type="bullet">
     /// <item><b>Mouse</b> — hovering for <see cref="HoverDelaySeconds"/> reveals; leaving hides.
     /// A mouse press does NOT arm a hold (see below).</item>
-    /// <item><b>Touch</b> — pressing and holding for <see cref="HoldSeconds"/> reveals; lifting
-    /// hides.</item>
+    /// <item><b>Touch</b> — pressing and holding for <see cref="HoldSeconds"/> reveals; on release
+    /// the panel goes <i>sticky</i> and stays up until the player presses elsewhere or presses the
+    /// same card again. A new press on any card clears the sticky and starts fresh.</item>
     /// </list>
     ///
     /// <para><b>Hold is armed for touch only, and that is load-bearing.</b> A press that becomes a
@@ -42,7 +43,7 @@ namespace Emberfall.Presentation
         internal const float HoldSeconds = 0.35f;
 
         internal enum PointerKind { Mouse, Touch }
-        internal enum RevealSource { None, Hover, Hold }
+        internal enum RevealSource { None, Hover, Hold, Sticky }
 
         private bool       _hoverActive;
         private InstanceId _hoverKey;
@@ -53,6 +54,11 @@ namespace Emberfall.Presentation
         private PointerKind _pressKind;
         private float       _pressDownAt;
         private bool        _pressConsumed;
+
+        // Sticky reveal: after a touch hold-read is released the panel stays visible. Any new press
+        // on a card clears sticky so the card can be played or re-read without lingering state.
+        private bool       _sticky;
+        private InstanceId _stickyTarget;
 
         /// <summary>True while a reveal should be on screen.</summary>
         internal bool Visible { get; private set; }
@@ -87,6 +93,11 @@ namespace Emberfall.Presentation
 
         internal void PointerDown(InstanceId key, PointerKind kind, float now)
         {
+            // Any new press cancels the sticky reveal. The card can now be played normally or held to
+            // open a fresh reveal. Clearing here rather than in Release keeps the visible state
+            // consistent from the very first frame of the new press.
+            _sticky        = false;
+            _stickyTarget  = default;
             _pressActive   = true;
             _pressKey      = key;
             _pressKind     = kind;
@@ -101,6 +112,14 @@ namespace Emberfall.Presentation
         {
             if (!_pressActive) return false;
             bool wasRead = _pressConsumed;
+            if (wasRead && _pressKind == PointerKind.Touch)
+            {
+                // Promote the completed hold-read to a sticky reveal so the player can lift their
+                // finger and still read at leisure. The card rises back into the fan, but the panel
+                // stays on screen until the player presses elsewhere or presses the card again.
+                _sticky       = true;
+                _stickyTarget = _pressKey;
+            }
             _pressActive   = false;
             _pressConsumed = false;
             Resolve(now);
@@ -117,6 +136,8 @@ namespace Emberfall.Presentation
             _hoverActive   = false;
             _pressActive   = false;
             _pressConsumed = false;
+            _sticky        = false;
+            _stickyTarget  = default;
             Visible        = false;
             Source         = RevealSource.None;
             Target         = default;
@@ -142,6 +163,14 @@ namespace Emberfall.Presentation
                 Visible = true;
                 Target  = _hoverKey;
                 Source  = RevealSource.Hover;
+                return;
+            }
+
+            if (_sticky)
+            {
+                Visible = true;
+                Target  = _stickyTarget;
+                Source  = RevealSource.Sticky;
                 return;
             }
 

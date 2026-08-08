@@ -126,9 +126,10 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// Candidate intersection for one named choice. Unbound legacy effects share one choice, so
-        /// a candidate must satisfy every unbound player-chosen effect; named bindings isolate
-        /// independent effects.
+        /// Candidate intersection for one named choice. An effect with no <c>binding</c> is the
+        /// ordinary authored shape, not a deprecated one (149 of 171 authored targets) — all such
+        /// effects share a single choice, so a candidate must satisfy every unbound player-chosen
+        /// effect on the card. A named binding isolates one effect into its own choice.
         /// </summary>
         public static IReadOnlyList<TargetCandidate> PlayerChoiceCandidates(GameState state,
             ICardDatabase db, PlayerId controller, CardDefinition def, Trigger trigger,
@@ -265,28 +266,26 @@ namespace Emberfall.Core
             CardDefinition def, Trigger trigger, IReadOnlyList<TargetRef> choices, InstanceId? source = null)
         {
             var playerRules = new List<RuleDefinition>();
-            bool hasAnyTargetSpec = false;
             foreach (RuleDefinition rule in def.Rules)
             {
                 if (!RuleSemantics.ActivatesOn(rule, trigger)) continue;
-                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
-                hasAnyTargetSpec |= target != null;
-                if (IsPlayerChosen(target)) playerRules.Add(rule);
+                if (IsPlayerChosen(RuleSemantics.TargetOf(rule.Action))) playerRules.Add(rule);
             }
 
-            // Compatibility for pre-TargetSpec unit/content behavior: an explicit live character can
-            // still feed a selector-less play effect. Authored RANDOM/automatic specs never accept a
-            // client override.
-            if (playerRules.Count == 0)
-            {
-                if (choices.Count == 0) return true;
-                if (hasAnyTargetSpec) return false;
-                foreach (TargetRef choice in choices)
-                    if (!TryCandidate(state, choice.Instance, out TargetCandidate candidate) ||
-                        !candidate.IsCharacter || IsHiddenEnemyMinion(state, state.SeatOf(controller), candidate))
-                        return false;
-                return Distinct(choices);
-            }
+            // No activating rule asks the player to choose, so every target the client sent is
+            // unsolicited and the command is refused. There is no selector-less effect to fall back
+            // FOR: a selector is required by construction, on two levels that both predate this
+            // check — CardJson.TargetFromElement throws FormatException on an action whose `target`
+            // omits `selector`, and TargetedRuleAction's constructor throws on a null TargetSpec. An
+            // action that can take a target therefore always HAS one, and `playerRules.Count == 0`
+            // can only mean the card wanted no player target at all.
+            //
+            // This used to accept unsolicited targets on an untargeted card (live-character +
+            // distinct, then true), labelled as compatibility for "pre-TargetSpec" content. No such
+            // content exists or can exist; the branch only widened what client-authored input this
+            // VULN-001 surface would take. Removed 2026-08-07 under the greenfield ruling: conform
+            // the content to the present model rather than carrying a shim for a past that has none.
+            if (playerRules.Count == 0) return choices.Count == 0;
 
             var consumed = new bool[choices.Count];
             foreach (RuleDefinition rule in playerRules)

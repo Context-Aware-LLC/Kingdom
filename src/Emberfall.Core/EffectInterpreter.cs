@@ -14,8 +14,10 @@ namespace Emberfall.Core
     ///
     /// <para><b>Targeting.</b> Every authored <see cref="TargetSpec"/> is resolved through
     /// <see cref="Targeting"/>, which owns candidate order, filters, bindings, multiplicity and canonical
-    /// RNG use. Selector-less legacy effects retain their verb-relative defaults until the typed-rule
-    /// migration makes every target policy explicit.</para>
+    /// RNG use. Every target policy is explicit: an action that can take a target always carries a
+    /// <see cref="TargetSpec"/> with a selector, enforced at load by <c>CardJson.TargetFromElement</c>
+    /// and at construction by <c>TargetedRuleAction</c>. There is no selector-less effect and no
+    /// verb-relative default to fall back to.</para>
     /// </summary>
     internal sealed class EffectInterpreter
     {

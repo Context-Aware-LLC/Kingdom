@@ -31,6 +31,8 @@ namespace Emberfall.Editor
         {
             int failed = 0;
             failed += TouchLongPressReveals();
+            failed += TouchHoldRevealIsSticky();
+            failed += NewPressOnSameCardDismissesSticky();
             failed += TouchTapDoesNotReveal();
             failed += MousePressNeverArmsHold();
             failed += MouseHoverReveals();
@@ -42,7 +44,7 @@ namespace Emberfall.Editor
             if (failed > 0)
                 Debug.LogError($"[CardRevealVerify] {failed} check(s) FAILED.");
             else
-                Debug.Log("[CardRevealVerify] GREEN — 8/8 checks passed.");
+                Debug.Log("[CardRevealVerify] GREEN — 10/10 checks passed.");
         }
 
         // ── Trigger policy ──────────────────────────────────────────────────────────
@@ -66,9 +68,47 @@ namespace Emberfall.Editor
                 return Fail("TouchLongPressReveals", $"source was {m.Source}, expected Hold");
             if (!m.Release(HoverRevealModel.HoldSeconds + 0.1f))
                 return Fail("TouchLongPressReveals", "release did not report the press as a read");
-            if (m.Visible) return Fail("TouchLongPressReveals", "still visible after release");
 
             return Pass("TouchLongPressReveals");
+        }
+
+        // NOR-147. A touch hold-read goes sticky on release: the panel stays up so the player can
+        // lift their finger and read at leisure. Cancel() is the dismissal path (press elsewhere).
+        private static int TouchHoldRevealIsSticky()
+        {
+            var m = new HoverRevealModel();
+            m.PointerDown(Card(1), HoverRevealModel.PointerKind.Touch, 0f);
+            m.Tick(HoverRevealModel.HoldSeconds);
+            m.Release(HoverRevealModel.HoldSeconds + 0.1f);
+
+            if (!m.Visible)
+                return Fail("TouchHoldRevealIsSticky", "panel hidden after release — expected sticky");
+            if (m.Source != HoverRevealModel.RevealSource.Sticky)
+                return Fail("TouchHoldRevealIsSticky", $"source was {m.Source} after release, expected Sticky");
+            if (!m.Target.Equals(Card(1)))
+                return Fail("TouchHoldRevealIsSticky", $"sticky showing card {m.Target.Value}, expected 1");
+
+            // Cancel (player pressed elsewhere) must dismiss.
+            m.Cancel();
+            if (m.Visible) return Fail("TouchHoldRevealIsSticky", "panel still visible after Cancel");
+            return Pass("TouchHoldRevealIsSticky");
+        }
+
+        // NOR-147. Pressing the same card again while sticky must clear the reveal so the player
+        // can proceed to play the card without the panel blocking their view.
+        private static int NewPressOnSameCardDismissesSticky()
+        {
+            var m = new HoverRevealModel();
+            m.PointerDown(Card(2), HoverRevealModel.PointerKind.Touch, 0f);
+            m.Tick(HoverRevealModel.HoldSeconds);
+            m.Release(HoverRevealModel.HoldSeconds + 0.05f);
+            if (!m.Visible) return Fail("NewPressOnSameCardDismissesSticky", "sticky did not open");
+
+            // Second press on same card clears sticky immediately.
+            m.PointerDown(Card(2), HoverRevealModel.PointerKind.Touch, HoverRevealModel.HoldSeconds + 0.1f);
+            if (m.Visible)
+                return Fail("NewPressOnSameCardDismissesSticky", "panel still up after re-pressing same card");
+            return Pass("NewPressOnSameCardDismissesSticky");
         }
 
         // The other half: a tap must stay a tap. If a short press reported itself as a read, every
