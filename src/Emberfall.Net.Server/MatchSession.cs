@@ -159,7 +159,7 @@ namespace Emberfall.Net.Server
                 var me = _seats[seat];
                 var opp = _seats[1 - seat];
                 Send(seat, new MatchStartMsg(
-                    me.Player, seat, _opts.EngineContractVersion,
+                    me.Player, seat, _opts.WireContractVersion,
                     // VULN-002 §4.2: opp.DisplayName, never a value read off a wire message here.
                     // The Seat holds it precisely so this line cannot be the place a raw name enters.
                     new OpponentInfo(opp.Player, opp.DisplayName),

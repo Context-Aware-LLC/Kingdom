@@ -271,12 +271,12 @@ namespace Emberfall.Net.Protocol.Tests
         public void MatchStart_RoundTrips_And_Never_Carries_A_Seed()
         {
             var s = CanonicalStateFixtures.BuildSeedState();
-            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v4",
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, ProtocolContract.Version,
                 new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
                 ReconnectToken: "tok-3f9a");
             var m = RoundTrip<MatchStartMsg>(msg);
             Assert.That(m.Seat, Is.EqualTo(0));
-            Assert.That(m.EngineContractVersion, Is.EqualTo("interfaces.v4"));
+            Assert.That(m.WireContractVersion, Is.EqualTo(ProtocolContract.Version));
             Assert.That(m.Opponent.DisplayName, Is.EqualTo("Rival"));
             Assert.That(m.Snapshot.VerifyIntegrity(), Is.True);
             Assert.That(m.ReconnectToken, Is.EqualTo("tok-3f9a"),
@@ -288,7 +288,7 @@ namespace Emberfall.Net.Protocol.Tests
         {
             // Forward-compat (A5 §8): a pre-B1 encoder omits the field; decode must not fail.
             var s = CanonicalStateFixtures.BuildSeedState();
-            var msg = new MatchStartMsg(new PlayerId("p0"), 0, "interfaces.v4",
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, ProtocolContract.Version,
                 new OpponentInfo(new PlayerId("p1"), "Rival"), SnapshotMsg.Of(s),
                 ReconnectToken: "tok-strip-me");
             string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(msg, M, 1))

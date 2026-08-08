@@ -23,7 +23,7 @@ namespace Emberfall.Net.Protocol
     /// <c>OpponentInfo</c> — putting identity there would hand every player's stable token to a
     /// stranger.</para>
     /// <para><see cref="ClientContractVersion"/> is the first client→server carrier of the
-    /// contract version; the server previously never learned it (<c>EngineContractVersion</c>
+    /// contract version; the server previously never learned it (<c>WireContractVersion</c>
     /// travels only server→client on <see cref="MatchStartMsg"/>). Carried here, enforced
     /// separately.</para>
     /// <para><see cref="Platform"/>/<see cref="BuildId"/> are funnel provenance (telemetry-spec
@@ -169,7 +169,7 @@ namespace Emberfall.Net.Protocol
     public sealed record MatchStartMsg(
         PlayerId PlayerId,
         int Seat,
-        string EngineContractVersion,
+        string WireContractVersion,
         OpponentInfo Opponent,
         SnapshotMsg Snapshot,
         string ReconnectToken = "") : NetMessage;

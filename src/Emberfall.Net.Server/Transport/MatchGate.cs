@@ -162,7 +162,7 @@ namespace Emberfall.Net.Server.Transport
 
             if (!string.Equals(
                     hello.ClientContractVersion,
-                    _opts.EngineContractVersion,
+                    _opts.WireContractVersion,
                     StringComparison.Ordinal))
             {
                 conn.Close(1002, "contract mismatch");

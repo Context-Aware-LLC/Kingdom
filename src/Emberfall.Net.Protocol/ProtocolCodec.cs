@@ -164,7 +164,7 @@ namespace Emberfall.Net.Protocol
                     w.BeginObject();
                     w.Name("playerId"); w.Str(m.PlayerId.Value);
                     w.Name("seat"); w.I32(m.Seat);
-                    w.Name("engineContractVersion"); w.Str(m.EngineContractVersion);
+                    w.Name("wireContractVersion"); w.Str(m.WireContractVersion);
                     w.Name("opponent");
                     w.BeginObject();
                     w.Name("playerId"); w.Str(m.Opponent.PlayerId.Value);
@@ -511,8 +511,8 @@ namespace Emberfall.Net.Protocol
                 return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'playerId'", matchId, seq);
             if (!body.TryGet("seat", out var seatVal) || !seatVal.TryI32(out int seat) || (seat != 0 && seat != 1))
                 return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'seat'", matchId, seq);
-            if (!body.TryGet("engineContractVersion", out var ecvVal) || !ecvVal.TryStr(out string ecv))
-                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'engineContractVersion'", matchId, seq);
+            if (!body.TryGet("wireContractVersion", out var wcvVal) || !wcvVal.TryStr(out string wcv))
+                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'wireContractVersion'", matchId, seq);
             if (!body.TryGet("opponent", out var oppVal) || oppVal.Kind != JKind.Object
                 || !oppVal.TryGet("playerId", out var opVal) || !opVal.TryStr(out string oppId)
                 || !oppVal.TryGet("displayName", out var dnVal) || !dnVal.TryStr(out string oppName))
@@ -527,7 +527,7 @@ namespace Emberfall.Net.Protocol
             if (body.TryGet("reconnectToken", out var tokVal) && !tokVal.TryStr(out token))
                 return DecodeResult.Fail(ProtocolError.BadField, "bad 'reconnectToken'", matchId, seq);
 
-            var msg = new MatchStartMsg(new PlayerId(player), seat, ecv,
+            var msg = new MatchStartMsg(new PlayerId(player), seat, wcv,
                 new OpponentInfo(new PlayerId(oppId), oppName), snapshot, token);
             return DecodeResult.Success(msg, matchId, seq);
         }
