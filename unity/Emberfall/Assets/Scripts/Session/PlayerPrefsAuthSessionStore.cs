@@ -1,0 +1,121 @@
+using System;
+using Emberfall.Net.Client.Auth;
+using UnityEngine;
+
+namespace Emberfall.Session
+{
+    /// <summary>
+    /// Keeps the signed-in session across launches, in <c>PlayerPrefs</c> beside the device token and
+    /// the active-account pointer.
+    ///
+    /// <para><b>Scoped to the local account, because <c>PlayerPrefs</c> is not.</b> Prefs are keyed on
+    /// companyName/productName, so two seats launched from one machine share the store —
+    /// <see cref="DeviceAccounts"/> exists because of exactly that. An unscoped key here would put
+    /// both seats on one Supabase session, which is the same defect that once had both seats writing
+    /// into one account.</para>
+    ///
+    /// <para><b>Never throws.</b> Every path degrades to <see cref="AuthSession.None"/>, i.e. to
+    /// guest. A player whose stored token is unreadable must still reach the main menu.</para>
+    ///
+    /// <para><b>This is a bearer credential in plaintext prefs.</b> Anything with read access to the
+    /// prefs store can play as that account until the token expires. That is the same exposure the
+    /// device token already has (VULN-003), and it stops being acceptable at the moment value attaches
+    /// to an account — which is the security contract's latent item 2, not this ticket.</para>
+    /// </summary>
+    public sealed class PlayerPrefsAuthSessionStore : IAuthSessionStore
+    {
+        private const string SessionPrefix = "emberfall.auth.session.";
+        private const string PendingPrefix = "emberfall.auth.pending.";
+
+        /// <summary>Field separator. A unit separator cannot occur in a JWT, a base64url verifier, an
+        /// email or a decimal — all of which are the only things written here.</summary>
+        private const char Separator = (char)0x1F;
+
+        private readonly string _scope;
+
+        /// <param name="scope">The local account this session belongs to. Defaults to the signed-in
+        /// one; a corrupt registry falls back to a fixed scope rather than failing.</param>
+        public PlayerPrefsAuthSessionStore(string scope = null)
+        {
+            _scope = string.IsNullOrEmpty(scope) ? ActiveScope() : scope;
+        }
+
+        private static string ActiveScope()
+        {
+            try { return DeviceAccounts.Active.Id; }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Auth] account registry unreadable ({ex.GetType().Name}); " +
+                                 "storing the sign-in against the device scope.");
+                return "device";
+            }
+        }
+
+        private string SessionKey => SessionPrefix + _scope;
+        private string PendingKey => PendingPrefix + _scope;
+
+        public AuthSession Load()
+        {
+            string raw = PlayerPrefs.GetString(SessionKey, string.Empty);
+            if (string.IsNullOrEmpty(raw)) return AuthSession.None;
+
+            string[] parts = raw.Split(Separator);
+            if (parts.Length < 5) return AuthSession.None;
+            if (!long.TryParse(parts[2], out long expiresAtMs)) return AuthSession.None;
+
+            return new AuthSession
+            {
+                AccessToken = parts[0],
+                RefreshToken = parts[1],
+                ExpiresAtMs = expiresAtMs,
+                UserId = parts[3],
+                Email = parts[4],
+            };
+        }
+
+        public void Save(AuthSession session)
+        {
+            if (session == null || !session.IsPresent) { Clear(); return; }
+
+            PlayerPrefs.SetString(SessionKey, string.Join(Separator.ToString(),
+                session.AccessToken,
+                session.RefreshToken,
+                session.ExpiresAtMs.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                session.UserId,
+                session.Email));
+            PlayerPrefs.Save();
+        }
+
+        public void Clear()
+        {
+            PlayerPrefs.DeleteKey(SessionKey);
+            PlayerPrefs.Save();
+        }
+
+        public PendingSignIn LoadPending()
+        {
+            string raw = PlayerPrefs.GetString(PendingKey, string.Empty);
+            if (string.IsNullOrEmpty(raw)) return PendingSignIn.None;
+
+            string[] parts = raw.Split(Separator);
+            if (parts.Length < 3) return PendingSignIn.None;
+
+            return new PendingSignIn { Method = parts[0], AuthorizeUrl = parts[1], CodeVerifier = parts[2] };
+        }
+
+        public void SavePending(PendingSignIn pending)
+        {
+            if (pending == null || !pending.IsStarted) { ClearPending(); return; }
+
+            PlayerPrefs.SetString(PendingKey, string.Join(Separator.ToString(),
+                pending.Method, pending.AuthorizeUrl, pending.CodeVerifier));
+            PlayerPrefs.Save();
+        }
+
+        public void ClearPending()
+        {
+            PlayerPrefs.DeleteKey(PendingKey);
+            PlayerPrefs.Save();
+        }
+    }
+}

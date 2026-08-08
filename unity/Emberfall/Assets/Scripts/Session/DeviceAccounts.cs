@@ -169,6 +169,9 @@ namespace Emberfall.Session
         {
             _active = null;
             PlayerAccount.InvalidateLocal();
+            // The Supabase session is stored per local account (EF-074e), so a switch that left the
+            // provider cached would hand seat two seat one's sign-in.
+            AuthGateway.Invalidate();
         }
 
         /// <summary>

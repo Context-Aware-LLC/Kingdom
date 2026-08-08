@@ -6,7 +6,8 @@
     "Emberfall.Core.Cards",
     "Emberfall.Core",
     "Emberfall.Core.Collection",
-    "Emberfall.Data"
+    "Emberfall.Data",
+    "Emberfall.Net.Client"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

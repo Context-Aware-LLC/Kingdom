@@ -1,0 +1,214 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Emberfall.Net.Client.Auth
+{
+    /// <summary>
+    /// Owns the signed-in session for the life of the app: loads it, keeps it fresh, hands the connect
+    /// path a token, and gives it up when Supabase says the credential is dead.
+    ///
+    /// <para><b>The connect path can never fail here.</b> <see cref="TokenForConnectAsync"/> returns
+    /// the empty string for every unhappy case — no project configured, not signed in, refresh
+    /// refused, network down. Empty is the guest that has worked since before EF-074b, so the worst
+    /// outcome of any auth problem is that the player plays unattributed, never that they cannot
+    /// play. The server has no silent downgrade — it closes the socket on a bad token — so sending a
+    /// token we already know is dead would turn a sign-in problem into a failed match.</para>
+    ///
+    /// <para><b>Capability, not policy.</b> Constructing this signs nobody in and shows nothing. It
+    /// starts a sign-in only when something calls <see cref="BeginMagicLinkAsync"/> or
+    /// <see cref="BeginOAuth"/>. Where and whether that happens is a product decision this type
+    /// deliberately does not make.</para>
+    /// </summary>
+    public sealed class AuthTokenProvider
+    {
+        /// <summary>Refresh this far ahead of expiry. A token that passes the check and then expires
+        /// during the handshake gets the socket closed, and the player sees a failed connect rather
+        /// than a sign-in problem — so the margin has to cover a slow handshake, not just the call.</summary>
+        public const long DefaultRefreshSkewMs = 60_000;
+
+        private readonly IAuthBackend _backend;
+        private readonly IAuthSessionStore _store;
+        private readonly IClientClock _clock;
+        private readonly long _refreshSkewMs;
+        private readonly Action<string>? _log;
+
+        // One refresh at a time. Two screens asking for a token at once would otherwise both spend the
+        // refresh token, and Supabase rotates it — the second call redeems a token the first already
+        // replaced and comes back 4xx, which reads exactly like a revoked credential and would sign
+        // the player out.
+        private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+
+        private AuthSession? _cached;
+
+        public AuthTokenProvider(
+            IAuthBackend backend,
+            IAuthSessionStore store,
+            IClientClock? clock = null,
+            long refreshSkewMs = DefaultRefreshSkewMs,
+            Action<string>? log = null)
+        {
+            _backend = backend ?? throw new ArgumentNullException(nameof(backend));
+            _store = store ?? throw new ArgumentNullException(nameof(store));
+            _clock = clock ?? new SystemClientClock();
+            _refreshSkewMs = refreshSkewMs;
+            _log = log;
+        }
+
+        /// <summary>The session this device holds, read through once and then cached. Never null.</summary>
+        public AuthSession Current
+        {
+            get
+            {
+                if (_cached == null) _cached = _store.Load() ?? AuthSession.None;
+                return _cached;
+            }
+        }
+
+        /// <summary>True when a session is stored. Says nothing about the server accepting it.</summary>
+        public bool IsSignedIn => Current.IsPresent;
+
+        /// <summary>True when this build has a project to sign into at all.</summary>
+        public bool IsConfigured => _backend.IsConfigured;
+
+        /// <summary>Raised after the stored session changes — signed in, refreshed, or signed out.
+        /// Fired on whatever thread did the work; a Unity caller must marshal.</summary>
+        public event Action<AuthSession>? SessionChanged;
+
+        /// <summary>
+        /// The value for <c>ClientOptions.AuthToken</c> on this connect, refreshing first if the token
+        /// is at or near expiry.
+        ///
+        /// <para>Returns the empty string rather than throwing or blocking the boot in every failure
+        /// case. See the type remarks for why that is the correct answer and not a swallowed error.</para>
+        /// </summary>
+        public async Task<string> TokenForConnectAsync(CancellationToken cancellationToken = default)
+        {
+            if (!_backend.IsConfigured) return "";
+
+            AuthSession session = Current;
+            if (!session.IsPresent) return "";
+            if (!session.NeedsRefresh(_clock.NowMs, _refreshSkewMs)) return session.AccessToken;
+
+            AuthResult refreshed = await RefreshAsync(cancellationToken).ConfigureAwait(false);
+            if (refreshed.Ok) return refreshed.Session.AccessToken;
+
+            // The refresh failed. If the token has not actually expired yet — we were only inside the
+            // safety margin — it is still a token the server will accept, and sending it beats
+            // dropping a signed-in player to guest over one bad request. If it HAS expired, the server
+            // would close the socket, so guest is the only outcome that still gets them into a match.
+            AuthSession after = Current;
+            if (after.IsPresent && after.ExpiresAtMs > _clock.NowMs)
+            {
+                _log?.Invoke("[Auth] refresh failed but the current token has not expired; connecting with it.");
+                return after.AccessToken;
+            }
+
+            _log?.Invoke("[Auth] no usable token for this connect; joining as a guest.");
+            return "";
+        }
+
+        /// <summary>
+        /// Trade the stored refresh token for a fresh session.
+        ///
+        /// <para><b>A 4xx clears the session and a network failure does not.</b> Supabase answering
+        /// "no" means the refresh token is revoked or spent and will never work again, so keeping it
+        /// would show the player as signed in forever while every connect silently fell back to guest.
+        /// A request that never arrived says nothing about the credential, so it survives.</para>
+        /// </summary>
+        public async Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
+        {
+            await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                AuthSession session = Current;
+                if (!session.IsPresent)
+                    return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+
+                // Another caller may have refreshed while this one waited on the lock.
+                if (!session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
+                    return AuthResult.Succeeded(session);
+
+                AuthResult result = await _backend.RefreshAsync(session.RefreshToken, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (result.Ok)
+                {
+                    Adopt(result.Session);
+                    return result;
+                }
+
+                if (result.Failure == AuthFailure.Rejected)
+                {
+                    _log?.Invoke("[Auth] Supabase refused the refresh token; signing out. " + result.Detail);
+                    SignOut();
+                }
+                else
+                {
+                    _log?.Invoke("[Auth] refresh did not complete (" + result.Failure + "); keeping the stored session.");
+                }
+
+                return result;
+            }
+            finally
+            {
+                _refreshLock.Release();
+            }
+        }
+
+        /// <summary>Mail a sign-in link and remember the PKCE verifier the returning code needs.</summary>
+        public async Task<AuthResult> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default)
+        {
+            SignInStart start = await _backend.BeginMagicLinkAsync(email, cancellationToken).ConfigureAwait(false);
+            if (start.Result.Ok) _store.SavePending(start.Pending);
+            return start.Result;
+        }
+
+        /// <summary>
+        /// Build a provider's consent URL and remember its verifier. Returns the pending record; the
+        /// caller opens <see cref="PendingSignIn.AuthorizeUrl"/> itself, because how a URL gets in
+        /// front of the player is a platform question and this type has no view.
+        /// </summary>
+        public PendingSignIn BeginOAuth(string provider)
+        {
+            SignInStart start = _backend.BeginOAuth(provider);
+            if (start.Result.Ok) _store.SavePending(start.Pending);
+            return start.Pending;
+        }
+
+        /// <summary>The sign-in waiting to be finished, across a restart. Empty when there is none.</summary>
+        public PendingSignIn Pending => _store.LoadPending() ?? PendingSignIn.None;
+
+        /// <summary>
+        /// Finish the sign-in with the code the redirect carried. On success the session is stored and
+        /// the pending record is dropped; on failure the pending record is dropped too, because an
+        /// auth code is single-use and retrying with the same verifier cannot work.
+        /// </summary>
+        public async Task<AuthResult> CompleteSignInAsync(string authCode, CancellationToken cancellationToken = default)
+        {
+            PendingSignIn pending = Pending;
+            AuthResult result = await _backend.CompleteAsync(pending, authCode, cancellationToken).ConfigureAwait(false);
+
+            _store.ClearPending();
+            if (result.Ok) Adopt(result.Session);
+            return result;
+        }
+
+        /// <summary>Forget the session on this device. Does not revoke it server-side — that is a
+        /// separate call nothing needs yet, and the token expires on its own.</summary>
+        public void SignOut()
+        {
+            _store.Clear();
+            _store.ClearPending();
+            _cached = AuthSession.None;
+            SessionChanged?.Invoke(AuthSession.None);
+        }
+
+        private void Adopt(AuthSession session)
+        {
+            _cached = session ?? AuthSession.None;
+            _store.Save(_cached);
+            SessionChanged?.Invoke(_cached);
+        }
+    }
+}
