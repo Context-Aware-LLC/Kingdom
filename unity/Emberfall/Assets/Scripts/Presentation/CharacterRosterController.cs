@@ -817,11 +817,17 @@ namespace Emberfall.Presentation
             row.AddToClassList("character-row");
             row.AddToClassList("character-row--" + ClassSlug(character.PrimaryClass));
 
-            // The character's name, and nothing else (Sam, 2026-08-07). The pairing, the hero power
-            // and the queue pill all went the same way, and for one reason: this block repeats down
-            // the whole list beside every deck the character owns, so anything on it is a line the
-            // player re-reads for information they had after the first row. The class is already in
-            // the row's coloured spine, and the cards in each deck are the class made visible.
+            // The name sits ABOVE the decks, not beside them (Sam, 2026-08-07). It used to be a
+            // fixed-width column on the left, which cost the strip a fifth of the row for a single
+            // word and was enough to push a third deck onto a second line. A header band costs one
+            // line of height once and hands the strip the row's whole width.
+            //
+            // It is still the character's name and nothing else. The pairing, the hero power and the
+            // queue pill all went the same way, for the same reason: the class is already in the
+            // row's coloured spine, and the cards in each deck are the class made visible.
+            var header = new VisualElement();
+            header.AddToClassList("character-row-header");
+
             var identity = new VisualElement();
             identity.AddToClassList("character-identity");
 
@@ -835,9 +841,11 @@ namespace Emberfall.Presentation
             delete.tooltip = $"Delete {character.Name} and every deck bound to it";
             delete.clicked += () => OpenDeleteDialog(character);
 
-            row.Add(identity);
+            header.Add(identity);
+            header.Add(delete);
+
+            row.Add(header);
             row.Add(BuildDeckStrip(character, decks));
-            row.Add(delete);
             return row;
         }
 
@@ -861,6 +869,9 @@ namespace Emberfall.Presentation
             row.AddToClassList("character-row");
             row.AddToClassList("character-row--orphan");
 
+            var header = new VisualElement();
+            header.AddToClassList("character-row-header");
+
             var identity = new VisualElement();
             identity.AddToClassList("character-identity");
 
@@ -875,13 +886,15 @@ namespace Emberfall.Presentation
             note.AddToClassList("orphan-note");
             identity.Add(note);
 
+            header.Add(identity);
+
             var strip = new VisualElement();
             strip.AddToClassList("deck-strip");
             strip.RegisterCallback<GeometryChangedEvent>(_ => QueueStripLayout(strip));
             foreach (DeckList orphan in orphans)
                 strip.Add(BuildOrphanPlate(orphan));
 
-            row.Add(identity);
+            row.Add(header);
             row.Add(strip);
             return row;
         }
@@ -1073,17 +1086,12 @@ namespace Emberfall.Presentation
         // queries nor aspect-ratio, so both halves of that are a layout pass: the strip measures
         // itself, decides how many squares fit, and grows them to fill the row.
 
-        /// <summary>
-        /// The size a deck image wants to be. <b>Columns are solved from this, never from
-        /// <see cref="MinPlate"/></b> — solving from the floor fits as many plates as are legally
-        /// allowed and then makes every one of them the smallest it may be, which is exactly how a
-        /// character with two decks ended up using a third of its row.
-        /// </summary>
-        private const float PreferredPlate = 300f;
-
-        /// <summary>Below this a deck image stops reading as a picture and starts reading as an
-        /// icon. Only reached when the strip is narrower than one preferred plate.</summary>
-        private const float MinPlate = 180f;
+        /// <summary>An absolute floor, and nothing else (Sam, 2026-08-07). It used to be the point
+        /// below which a plate stopped reading as a picture, which made sense while the strip could
+        /// wrap; a strip that never wraps has to keep shrinking instead, so clamping UP here would
+        /// simply push the last plate out of the row. A strip small enough to reach this has more
+        /// decks than the row can show well — a content problem, not a layout one.</summary>
+        private const float MinPlate = 64f;
 
         /// <summary>An absolute guard, not the working ceiling — <see cref="RowsPerScreen"/> is what
         /// actually stops a plate growing. This only catches a viewport tall enough to make a single
@@ -1099,12 +1107,13 @@ namespace Emberfall.Presentation
         /// </summary>
         private const float RowsPerScreen = 2f;
 
-        /// <summary>Everything in a row that is not the square, top to bottom: the strip's padding,
-        /// the plate's padding and border, and the gap to the next row. Must be kept in step with
-        /// character-roster.uss.</summary>
-        private const float RowChrome = 68f;
+        /// <summary>Everything in a row that is not the square, top to bottom: the name header, the
+        /// strip's padding, the plate's padding and border, and the gap to the next row. Must be
+        /// kept in step with character-roster.uss.</summary>
+        private const float RowChrome = 112f;
 
-        /// <summary>Must match .deck-plate's margin-right and .deck-strip's wrap spacing (--space-3).</summary>
+        /// <summary>Must match .deck-plate's margin-right (--space-3). Every plate carries one,
+        /// including the last, so the width solve charges the strip for <c>plates</c> of them.</summary>
         private const float PlateGutter = 12f;
 
         /// <summary>.deck-plate padding (--space-2) plus its 2px border, both sides — the difference
@@ -1140,24 +1149,29 @@ namespace Emberfall.Presentation
             float available = strip.resolvedStyle.width - RowSafetyMargin;
             if (available <= 0f) return;
 
-            // Never more columns than there are plates: a character with two decks in a strip wide
-            // enough for four should get two BIG squares, not two small ones and empty space.
             int plates = 0;
             foreach (VisualElement child in strip.Children())
                 if (child.ClassListContains("deck-plate")) plates++;
             if (plates == 0) return;
 
-            int fits = Mathf.Max(1, Mathf.FloorToInt((available + PlateGutter) / (PreferredPlate + PlateGutter)));
-            int columns = Mathf.Min(fits, plates);
-            float fromWidth = (available - (columns - 1) * PlateGutter) / columns;
+            // ONE LINE, ALWAYS (Sam, 2026-08-07). The strip used to solve how many plates fit at a
+            // preferred size and let flex-wrap take the remainder onto a second line — so a third
+            // deck did not shrink the other two, it dropped below them. Every plate on the row gets
+            // an equal share of the width instead, and the row grows narrower plates rather than
+            // taller rows. .deck-strip's flex-wrap: nowrap is the other half of this; neither works
+            // alone.
+            float fromWidth = (available - plates * PlateGutter) / plates;
 
-            // Height has the final say. Without it a wide window makes plates so tall that one
-            // character fills the screen, and the list stops reading as a list.
+            // Height still has the final say when there is width to spare. Without it a wide window
+            // makes a lone deck so tall that one character fills the screen, and the list stops
+            // reading as a list.
             float fromHeight = MaxPlate;
             float viewport = _rosterScroll?.resolvedStyle.height ?? 0f;
             if (viewport > 0f) fromHeight = viewport / RowsPerScreen - RowChrome;
 
-            float side = Mathf.Clamp(Mathf.Min(fromWidth, fromHeight), MinPlate, MaxPlate);
+            // Clamped at the bottom only. Clamping up to a comfortable minimum is what would put a
+            // plate back outside the row, which is the wrap in a different costume.
+            float side = Mathf.Max(MinPlate, Mathf.Min(fromWidth, fromHeight, MaxPlate));
 
             foreach (VisualElement child in strip.Children())
             {

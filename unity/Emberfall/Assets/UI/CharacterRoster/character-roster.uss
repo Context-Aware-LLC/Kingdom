@@ -86,10 +86,13 @@
 }
 
 /* No min-height: the plates decide how tall a row is now, and they are sized to the space the
- * strip actually has (CharacterRosterController.LayoutDeckStrip). */
+ * strip actually has (CharacterRosterController.LayoutDeckStrip).
+ *
+ * A COLUMN, not a row (Sam, 2026-08-07): a name band, then the decks under it at the row's full
+ * width. It was three side-by-side columns — name, strip, Delete — and the two text columns took
+ * enough width off the strip to wrap a third deck onto a second line. */
 .character-row {
-    flex-direction: row;
-    align-items: stretch;
+    flex-direction: column;
     margin-bottom: var(--space-3);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
@@ -118,25 +121,34 @@
     color: var(--ink-2);
 }
 
+/* Beside the count now, not under it — the identity block is a row. */
 .orphan-note {
     font-size: var(--type-caption);
     color: var(--ink-2);
+    flex-shrink: 1;
     white-space: normal;
 }
 
-/* The character's name, and nothing else (Sam, 2026-08-07). This block repeats beside every
- * deck the character owns, so anything on it is a line the player re-reads for information they
- * had after the first row. Narrow, and fixed-width so the deck strip starts on the same column
- * down the whole list — it holds one word, and every pixel it does not take is a pixel of deck
- * art. A plain block, not a button: opening a character means opening one of ITS DECKS,
- * and there is no "just the character" destination left for a click to go to. */
+/* The name band over the decks. It holds the name on the left and Delete on the right, and it is
+ * the only thing in the row that is not deck art — which is the point: one line of height buys the
+ * strip the row's whole width, where the old left-hand column charged 18% of it forever. */
+.character-row-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4) 0 var(--space-4);
+}
+
+/* The character's name, and nothing else (Sam, 2026-08-07). Anything else on it is a line the
+ * player re-reads for information they had after the first row. A plain block, not a button:
+ * opening a character means opening one of ITS DECKS, and there is no "just the character"
+ * destination left for a click to go to. */
 .character-identity {
-    width: 18%;
-    min-width: 170px;
-    max-width: 260px;
-    flex-shrink: 0;
-    align-items: flex-start;
-    padding: var(--space-4);
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
     color: var(--ink-1);
 }
 
@@ -144,7 +156,10 @@
     font-size: var(--type-h1);
     -unity-font-style: bold;
     color: var(--ink-1);
-    margin-bottom: var(--space-2);
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 /* The pairing used to be spelled out under the name. The row's coloured spine carries the
@@ -158,12 +173,15 @@
  * A deck is drawn as ONE CARD and carries no name (Sam, 2026-08-07): the art the player chose
  * from inside it is the identity, the way a physical deck is known by its sleeve.
  */
+/* NOWRAP (Sam, 2026-08-07). A deck that does not fit makes every plate on the row narrower; it
+ * never drops to a second line. The row is full-width now precisely so this rarely bites, but the
+ * responsive shrink is the behaviour we want when it does — LayoutDeckStrip divides the width by
+ * the plate count with no wrap point to solve for. */
 .deck-strip {
     flex-grow: 1;
     flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+    flex-wrap: nowrap;
+    padding: var(--space-3) var(--space-4) var(--space-4) var(--space-4);
     overflow: hidden;
 }
 
@@ -171,8 +189,9 @@
  * only what a plate looks like for the frame before that pass runs. */
 .deck-plate {
     width: 132px;
+    flex-shrink: 0;
     align-items: center;
-    margin: 0 var(--space-3) var(--space-3) 0;
+    margin: 0 var(--space-3) 0 0;
     padding: var(--space-2);
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);
@@ -327,14 +346,19 @@
     overflow: hidden;
 }
 
+/* Was a full-height spine down the right edge of the row, which is 112px the deck strip could not
+ * have. It rides the name band now: same destructive colour, a fraction of the footprint. */
 .delete-character {
-    width: 112px;
-    margin: 0;
+    flex-shrink: 0;
+    height: 36px;
+    margin: 0 0 0 var(--space-3);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--space-1);
     background-color: var(--surface-2);
     color: var(--negative);
-    font-size: var(--type-body);
+    font-size: var(--type-label);
     -unity-font-style: bold;
 }
 
