@@ -76,10 +76,14 @@ namespace Emberfall.Presentation
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
 
+            // ShopRuntime.PackagingArt stays an override seam (a test or a future streamed loader
+            // can set it); with nobody overriding it the packaging slots resolve through the same
+            // sprite pipeline as the rest of the meta screens. The gateway has no such default on
+            // purpose — an unbound wallet must read as unavailable, never as zero.
             _shop = new ShopPanelController(
                 _root,
                 ShopRuntime.Gateway,
-                ShopRuntime.PackagingArt);
+                ShopRuntime.PackagingArt ?? new UiSpriteBoosterArtProvider());
 
             BindIdentity();
             BindNameModal();
