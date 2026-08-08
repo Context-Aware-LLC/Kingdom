@@ -9,11 +9,11 @@ namespace Emberfall.Presentation
     // vertical seat are the additions, all Sam's starting values (2026-07-24) and all meant
     // to be dialled by eye:
     //
-    //   x        pitch = (Footprint - CardW) / (count - 1), centred on 0  [§1.1, locked]
+    //   x        pitch = (Footprint - HandCardW) / (count - 1), centred on 0  [§1.1, locked]
     //   tilt     ±MaxTiltDeg at the outermost card, linear across the hand
     //   sag      centre card highest, edges dropping on a parabola
-    //   y        CentreY sits the fan so roughly the bottom 15% of the centre card is below the
-    //            screen edge, exposing the rules band while keeping the tactile "held in hand" feel
+    //   y        CentreY seats the fan so the whole RULES BAND clears the bottom screen edge at
+    //            rest — see CentreY below; the hidden fraction falls out of that, it is not a dial
     //   z        a per-index step toward the camera, so overlapping cards have a defined
     //            draw order even where the material is opaque, and so Unity's OnMouseDown —
     //            which fires on the NEAREST collider — resolves overlap topmost-wins (§8)
@@ -30,12 +30,49 @@ namespace Emberfall.Presentation
         // every unit taken here comes out of the rail. Do not widen without re-checking it.
         internal const float Footprint = 5.0f;
 
+        // A CARD IN HAND IS DRAWN LARGER THAN THE SAME CARD ON THE BOARD (EF-062 / NOR-244).
+        //
+        // WHY. A hand card is 137.3 x 193.7 px on every 1080p phone — 52% of the 265 px collection
+        // tile EF-050's 1.6x acuity margin was measured against. Re-measured at that true size,
+        // rules text at BodyEmFloor (the common case: anything longer than one short line
+        // auto-shrinks to it) reaches only 0.74x the recognition threshold. NO TYPEFACE CHOICE BUYS
+        // BACK A FACTOR OF 1.35 — ONLY SIZE DOES, which is why EF-062 raised this as a finding
+        // rather than re-opening the font ticket.
+        //
+        // WHY 1.44 AND NOT 1.35. 1/0.74 = 1.348 clears threshold at the AUTHORED camera only.
+        // SafeAreaCamera raises orthographicSize to lift the board off the Android gesture bar,
+        // shrinking everything on screen by 6.1% (24 dp gesture bar) to 12.2% (48 dp three-button
+        // bar). 1.348 / 0.939 = 1.436 holds 1.0x through the gesture-bar case, the modern default.
+        // The 48 dp case lands at 0.94x — a KNOWN, QUANTIFIED RESIDUAL, not an oversight: closing
+        // it needs 1.54x, which drives the hand up into the board row.
+        //
+        // Run `python tooling/scripts/device_layout.py` and read §5 and §6 of the stdout. Those
+        // numbers are derived from THIS constant; the ones in this comment are a copy and can rot.
+        //
+        // Public, for the same reason Apply() is: DeckPilePreview (Emberfall.Editor, across an
+        // asmdef boundary) draws the draw-flight's destination card, and a preview that guessed the
+        // size of a hand slot would be judging the animation against a made-up target.
+        //
+        // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget. Moving it,
+        // BoardController.CardH, or FrameRarityCatalog.BodyEmFloor invalidates §5/§6 of
+        // device_layout.py, DeviceLayout.SelfCheck's band-clearance assertion, and CentreY's solve
+        // below — re-run the script and re-solve CentreY in the same commit.
+        public const float RestScale = 1.44f;
+
+        // The card's DRAWN size in hand. Every card-relative number below derives from these and
+        // NOT from BoardController.CardW/CardH — a fan solved against the board-size card would
+        // space a 1.44x card at 1.0x pitch and pivot its tilt about the wrong point.
+        public const float HandCardW = BoardController.CardW * RestScale;   // 1.6848
+        public const float HandCardH = BoardController.CardH * RestScale;   // 2.3760
+
         // §1.1 fixes the footprint so hand count changes overlap, not span. That holds from 5
         // cards up; below it the rule inverts — pitch exceeds the card width and a 2-card hand
         // would sit 3.83 units apart at opposite ends of an empty span. So the footprint is a
         // MAXIMUM: the pitch caps just inside the card width, keeping the fan always slightly
         // overlapped, and the span shrinks under ~5 cards instead of the cards pulling apart.
-        internal const float MaxPitch = 1.05f;    // ≈10% overlap; bites only at 4 cards or fewer
+        // Scaled with the card (was 1.05 against a 1.17-wide card) so "just inside the card width"
+        // still means ~10% overlap; at 1.44x it bites at 3 cards or fewer rather than 4.
+        internal const float MaxPitch = 1.51f;    // ≈10% overlap of HandCardW 1.6848
 
         // The footprint positions the card TOPS, not their centres (Sam, 2026-07-24: "bring the
         // bottom of the fan together more, leave the top pretty much the way it's laid out").
@@ -44,12 +81,39 @@ namespace Emberfall.Presentation
         // makes tilt behave like a real held fan — a pivot below the hand — and makes MaxTiltDeg
         // a pure "how closed is the bottom" dial that leaves the top spread untouched.
         internal const float MaxTiltDeg = 18f;    // outermost card's lean
-        internal const float Sag        = 0.18f;  // edge cards' drop below the centre card
-        // |y| of the centre card. Ortho size 4.6, so the screen edge is y -4.6 and the fraction of
-        // the centre card hidden below it is (CentreY - 3.775) / CardH. Was 30% (4.27); raised to
-        // expose the rules band — the sticky reveal panel is the legibility path, not the hand card
-        // face (NOR-147). ~15% hidden: 0.15 * 1.65 + 3.775 = 4.02.
-        internal const float CentreY    = 4.02f;
+        // Edge cards' drop below the centre card. Scaled with the card (was 0.18 against a
+        // 1.65-tall card) so the arc keeps its shape instead of flattening as the card grows.
+        internal const float Sag        = 0.26f;
+        // |y| of the centre card. Ortho size 4.6, so the screen edge is y -4.6.
+        //
+        // THIS IS NO LONGER A "HOW MUCH HANGS OFF THE BOTTOM" DIAL. It was one twice: Sam set 30%
+        // (4.27, 2026-07-24) when §8 had accepted top-half-only legibility in hand, and NOR-147
+        // raised it to ~15% (4.02) while treating the sticky reveal panel as the legibility path.
+        // Sam then declined that framing (2026-08-07) and ruled that the RESTING card carries the
+        // legibility requirement — so the seat is now solved from the rules band, and the hidden
+        // fraction is whatever falls out of that solve.
+        //
+        // It has to be solved, not nudged: EF-062 measured the band's centre at y -4.600 against a
+        // screen edge at -4.60, and enlarging the card by RestScale makes a taller card hang LOWER,
+        // so 4.02 with a 1.44x card would bury the band 0.33 below the edge. Scaling the text buys
+        // nothing while the text is off-screen.
+        //
+        // Solve, against the worst card in the fan (the outermost — it carries the full Sag):
+        //   band bottom = -(CentreY + Sag) - 0.305 * HandCardH   [CardPresenter seats the band
+        //                 centre 0.20 CardH below the card centre with half-height 0.105 CardH]
+        //   require 0.05 of clearance, which is also where the safe-area boundary sits:
+        //     CentreY <= 4.6 - 0.05 - 0.26 - 0.305*2.376 = 3.565  ->  3.50, with room to spare.
+        //
+        // What falls out at 3.50: the centre card hides 3.7% of its height and the outermost 14.6%.
+        // The card top rises to y -2.312, tucking 0.19 under the board row's bottom edge at -2.125
+        // — the hand overlaps the frame skirt of your own minions and nothing they carry: their
+        // stat bosses sit at -1.993 and their own rules bands bottom out at -1.803.
+        //
+        // RESIDUAL, stated rather than hidden: the outermost card is also tilted 18°, dropping its
+        // band's outer CORNER a further 0.157, to 0.04 below the edge. That is a corner of the text
+        // box on the most-overlapped card in the fan; closing it needs CentreY 3.41, at which point
+        // the centre card stops overhanging the edge at all and the hand stops reading as held.
+        internal const float CentreY    = 3.50f;
         internal const float ZStep      = 0.03f;  // per-index step toward the camera
 
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on
@@ -64,7 +128,7 @@ namespace Emberfall.Presentation
 
             float half  = (count - 1) * 0.5f;
             float pitch = count > 1
-                ? Mathf.Min((Footprint - BoardController.CardW) / (count - 1), MaxPitch)
+                ? Mathf.Min((Footprint - HandCardW) / (count - 1), MaxPitch)
                 : 0f;
 
             for (int i = 0; i < slots.Length; i++)
@@ -76,7 +140,9 @@ namespace Emberfall.Presentation
                 float t      = half > 0f ? offset / half : 0f;  // -1 .. +1
 
                 float rot   = -MaxTiltDeg * t;                  // left card leans left
-                float halfH = BoardController.CardH * 0.5f;
+                float halfH = HandCardH * 0.5f;                 // the DRAWN half-height, so the
+                                                                // tilt pivot below the hand scales
+                                                                // with the card
 
                 // topX is the laid-out position; solve back for the centre the rotation needs.
                 // topX = x - halfH*sin(rot)  =>  x = topX + halfH*sin(rot).

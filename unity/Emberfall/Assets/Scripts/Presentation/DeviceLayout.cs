@@ -154,16 +154,29 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// On-screen pixel width of a card at a given ortho size. 137.3 px on any 1080p phone
-        /// at the authored 4.6 — 52% of the 265 px collection tile EF-050's acuity margin was
-        /// computed against, which is the whole reason EF-062 gates that re-check.
+        /// On-screen pixel width of a card ON THE BOARD at a given ortho size. 137.3 px on any
+        /// 1080p phone at the authored 4.6 — 52% of the 265 px collection tile EF-050's acuity
+        /// margin was computed against, which is the whole reason EF-062 gates that re-check.
+        /// A card IN HAND is drawn larger; see <see cref="HandCardPixelWidth"/>.
         /// </summary>
         public static float CardPixelWidth(int screenH, float orthoSize)
             => BoardController.CardW * screenH / (2f * orthoSize);
 
-        /// <summary>On-screen pixel height of a card. 193.7 px on any 1080p phone at 4.6.</summary>
+        /// <summary>On-screen pixel height of a board card. 193.7 px on any 1080p phone at 4.6.</summary>
         public static float CardPixelHeight(int screenH, float orthoSize)
             => BoardController.CardH * screenH / (2f * orthoSize);
+
+        /// <summary>
+        /// On-screen pixel width of a card IN HAND — the board figure times
+        /// <see cref="HandFanLayout.RestScale"/>. This is the number the rules-text legibility
+        /// re-check is measured against (NOR-244), not <see cref="CardPixelWidth"/>.
+        /// </summary>
+        public static float HandCardPixelWidth(int screenH, float orthoSize)
+            => HandFanLayout.HandCardW * screenH / (2f * orthoSize);
+
+        /// <summary>On-screen pixel height of a card in hand.</summary>
+        public static float HandCardPixelHeight(int screenH, float orthoSize)
+            => HandFanLayout.HandCardH * screenH / (2f * orthoSize);
 
         /// <summary>
         /// Asserts that <see cref="DesignHalfWidth"/> still equals what the board actually
@@ -236,11 +249,26 @@ namespace Emberfall.Presentation
             ok &= Line(sb, zero.IsIdentity,
                 $"empty safeArea -> identity, orthoSize {zero.OrthoSize:F4}");
 
-            // 7. The measured figure EF-062 exists to produce, restated so a harness run
+            // 7. The rules band on the worst card in the fan (outermost, so it carries the full
+            //    sag) must clear the bottom screen edge AT REST. This is the assertion NOR-244
+            //    exists to hold: HandFanLayout.RestScale enlarges the text, and CentreY is what
+            //    puts it on screen to be read — either one moving alone silently undoes the fix.
+            const float bandBottomFrac = 0.305f;   // CardPresenter: centre 0.20 CardH below the
+                                                   // card centre, half-height 0.105 CardH
+            float bandBottom = -(HandFanLayout.CentreY + HandFanLayout.Sag)
+                               - bandBottomFrac * HandFanLayout.HandCardH;
+            ok &= Line(sb, bandBottom > -DesignHalfHeight,
+                $"hand rules band bottom y {bandBottom:F4} > screen edge {-DesignHalfHeight:F2} "
+                + $"— readable at rest, {(bandBottom + DesignHalfHeight):F3} clear");
+
+            // 8. The measured figure EF-062 exists to produce, restated so a harness run
             //    carries it. Not an assertion — a number in the log.
-            sb.AppendLine($"      card in hand @1080p, orthoSize {DesignHalfHeight:F2}: "
+            sb.AppendLine($"      card @1080p, orthoSize {DesignHalfHeight:F2}: board "
                 + $"{CardPixelWidth(1080, DesignHalfHeight):F1} x "
-                + $"{CardPixelHeight(1080, DesignHalfHeight):F1} px");
+                + $"{CardPixelHeight(1080, DesignHalfHeight):F1} px, hand "
+                + $"{HandCardPixelWidth(1080, DesignHalfHeight):F1} x "
+                + $"{HandCardPixelHeight(1080, DesignHalfHeight):F1} px "
+                + $"(x{HandFanLayout.RestScale:F2})");
 
             report = sb.ToString().TrimEnd();
             return ok;

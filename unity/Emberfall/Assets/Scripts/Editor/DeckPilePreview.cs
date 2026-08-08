@@ -159,7 +159,10 @@ namespace Emberfall.Editor
             var sr = go.AddComponent<SpriteRenderer>();
             sr.drawMode = SpriteDrawMode.Sliced;
             sr.sprite   = new EditorUiSpriteProvider().Get("card_back");
-            sr.size     = new Vector2(1.17f, 1.65f);   // BoardController.CardW / CardH
+            // The flight lands in HAND, so the stand-in is a HAND-sized card (NOR-244: a card in
+            // hand draws at HandFanLayout.RestScale). A board-sized quad here would show the flight
+            // settling into a slot far smaller than the card that actually arrives in it.
+            sr.size     = new Vector2(HandFanLayout.HandCardW, HandFanLayout.HandCardH);
             return root;
         }
 
