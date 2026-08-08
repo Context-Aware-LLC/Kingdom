@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Tests.Support;
@@ -36,6 +37,12 @@ namespace Emberfall.Core.Tests.Interpreter
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
                 System.Array.Empty<RuleDefinition>(), "", "art/" + id, SetId.CORE, true,
                 tribe, "");
+
+        private static CardDefinition Minion(string id, params RuleDefinition[] rules)
+            => new CardDefinition(id, id, CardType.MINION, 1, 1, 3, null,
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
+                rules, "", "art/" + id, SetId.CORE, true,
+                null, "");
 
         private static CardDefinition Spell(string id, params RuleDefinition[] rules)
             => new CardDefinition(id, id, CardType.SPELL, 1, null, null, null,
@@ -459,6 +466,66 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(candidates.Select(c => c.Instance),
                 Is.EquivalentTo(new[] { a.Id, b.Id }),
                 "OTHER_FRIENDLY_MINIONS with no source context returns all friendly minions.");
+        }
+
+        [Test]
+        public void OtherFriendlyMinions_Herald_Buffs_Existing_Board_But_Not_Itself()
+        {
+            var buffRule = TestRules.Rule("on_play_buff", Trigger.ON_PLAY,
+                new ModifyStatsAction(1, 1, new TargetSpec("OTHER_FRIENDLY_MINIONS")));
+            var herald = Minion("herald", buffRule);
+            var ally = Minion("ally");
+            var db = new FakeCardDatabase().Register(herald).Register(ally);
+            var state = State();
+            CardInstance existingAlly = Board(state, 0, db.Get("ally"));
+            CardInstance card = ZoneCard(state, 0, db.Get("herald"), Zone.Hand);
+
+            new CommandProcessor(db).Execute(state,
+                new PlayCardIntent(state.Players[0].Id, card.Id, 0,
+                    System.Array.Empty<TargetRef>()));
+
+            CardInstance played = state.Players[0].Board.First(c => c.Id == card.Id);
+            Assert.That(existingAlly.CurrentAttack, Is.EqualTo(2), "Ally was buffed +1 attack.");
+            Assert.That(existingAlly.CurrentHealth, Is.EqualTo(4), "Ally was buffed +1 health.");
+            Assert.That(played.CurrentAttack, Is.EqualTo(1), "Herald did not buff itself.");
+            Assert.That(played.CurrentHealth, Is.EqualTo(3), "Herald health unchanged.");
+        }
+
+        [TestCase("FRIENDLY_MINIONS")]
+        [TestCase("ALL_MINIONS")]
+        public void Automatic_OnPlay_Selectors_Include_Their_Own_Newly_Entered_Body(string selector)
+        {
+            var buffRule = TestRules.Rule("on_play_self_buff", Trigger.ON_PLAY,
+                new ModifyStatsAction(1, 1, new TargetSpec(selector)));
+            var herald = Minion("herald", buffRule);
+            var db = new FakeCardDatabase().Register(herald);
+            var state = State();
+            CardInstance card = ZoneCard(state, 0, db.Get("herald"), Zone.Hand);
+
+            new CommandProcessor(db).Execute(state,
+                new PlayCardIntent(state.Players[0].Id, card.Id, 0,
+                    System.Array.Empty<TargetRef>()));
+
+            CardInstance played = state.Players[0].Board.Single();
+            Assert.That(played.CurrentAttack, Is.EqualTo(2),
+                $"{selector} ON_PLAY must include the played minion itself (+1 attack).");
+            Assert.That(played.CurrentHealth, Is.EqualTo(4),
+                $"{selector} ON_PLAY must include the played minion itself (+1 health).");
+        }
+
+        [Test]
+        public void AnyFriendly_OnPlay_Candidates_Include_The_Newly_Played_Minion()
+        {
+            var herald = Minion("herald");
+            var db = new FakeCardDatabase().Register(herald);
+            var state = State();
+            CardInstance placed = Board(state, 0, db.Get("herald"));
+
+            var candidates = Targeting.ResolutionCandidates(state, db, state.Players[0].Id,
+                new TargetSpec("ANY_FRIENDLY"), source: placed.Id);
+
+            Assert.That(candidates.Select(c => c.Instance), Does.Contain(placed.Id),
+                "ANY_FRIENDLY resolution pool must include the newly entered minion.");
         }
     }
 }

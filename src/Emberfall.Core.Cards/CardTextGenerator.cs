@@ -215,6 +215,8 @@ namespace Emberfall.Core.Cards
                 return "a " + prefix + description.Substring(2);
             if (description.StartsWith("an ", StringComparison.Ordinal))
                 return "a " + prefix + description.Substring(3);
+            if (description.StartsWith("all other ", StringComparison.Ordinal))
+                return "all other " + prefix + description.Substring(10);
             if (description.StartsWith("all ", StringComparison.Ordinal))
                 return "all " + prefix + description.Substring(4);
             int firstSpace = description.IndexOf(' ');

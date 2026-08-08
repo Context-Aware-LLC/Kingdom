@@ -172,9 +172,23 @@ namespace Emberfall.Core.Tests.CardValidation
                 Is.EqualTo("Deal 2 damage to a random damaged minion."));
         }
 
+        [Test]
+        public void Renders_Other_Before_A_Tribe_Filter()
+        {
+            var rule = new RuleDefinition(new RuleId("construct_buff"),
+                new TriggeredActivation(Trigger.ON_PLAY), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new ModifyStatsAction(1, 1, new TargetSpec("OTHER_FRIENDLY_MINIONS",
+                    filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT))));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }),
+                Is.EqualTo("[Herald] Give all other Construct friendly minions +1/+1."));
+        }
+
         [TestCase("SELF", "Deal 1 damage to this.")]
         [TestCase("TRIGGER_SOURCE", "Deal 1 damage to the trigger source.")]
         [TestCase("ADJACENT", "Deal 1 damage to all adjacent minions.")]
+        [TestCase("OTHER_FRIENDLY_MINIONS", "Deal 1 damage to all other friendly minions.")]
         [TestCase("FRIENDLY_WEAPON", "Deal 1 damage to your weapon.")]
         [TestCase("ENEMY_WEAPON", "Deal 1 damage to the enemy weapon.")]
         [TestCase("FRIENDLY_HAND", "Deal 1 damage to all cards in your hand.")]
