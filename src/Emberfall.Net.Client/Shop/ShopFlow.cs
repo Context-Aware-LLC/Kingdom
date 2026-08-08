@@ -57,12 +57,17 @@ namespace Emberfall.Net.Client.Shop
     public readonly struct WalletBalances
     {
         public long Gold { get; }
+
+        /// <summary>
+        /// May be negative. A store refund claws back gems the player has already spent, so the
+        /// balance carries the debt until their next purchase nets it off (EF-080b). Rejecting a
+        /// negative here would make an authoritative wallet snapshot unrepresentable on the client.
+        /// </summary>
         public long Gems { get; }
 
         public WalletBalances(long gold, long gems)
         {
             if (gold < 0) throw new ArgumentOutOfRangeException(nameof(gold));
-            if (gems < 0) throw new ArgumentOutOfRangeException(nameof(gems));
             Gold = gold;
             Gems = gems;
         }

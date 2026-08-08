@@ -21,8 +21,6 @@ namespace Emberfall.Net.Server.Accounts
 
         public WalletBalances(long gold, long gems) : this()
         {
-            if (gold < 0) throw new ArgumentOutOfRangeException(nameof(gold));
-            if (gems < 0) throw new ArgumentOutOfRangeException(nameof(gems));
             Gold = gold;
             Gems = gems;
         }

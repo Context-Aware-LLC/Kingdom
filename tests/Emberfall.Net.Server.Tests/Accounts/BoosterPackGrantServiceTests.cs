@@ -141,8 +141,8 @@ namespace Emberfall.Net.Server.Tests.Accounts
             foreach (var row in history)
                 TestContext.Out.WriteLine($"  {row.ExternalTxnId,-24} {row.Item,-24} {row.Qty,5}  {row.Source}");
 
-            Assert.That(history, Has.Count.EqualTo(Pack.CardCount + 3),
-                "One purchase row, one reservation, one row per slot, plus the completion row.");
+            Assert.That(history, Has.Count.EqualTo(Pack.CardCount + 4),
+                "One purchase row, one reservation, one seed row, one row per slot, plus the completion row.");
             Assert.That(
                 history,
                 Has.Some.Matches<EntitlementGrant>(row =>
@@ -247,7 +247,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                         outcome.Status == PackOpenStatus.AlreadyOpened));
                 Assert.That(outcomes[1].Awards, Has.Count.EqualTo(Pack.CardCount));
             });
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3));
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 4));
             Assert.That((await pityStore.LoadAsync(Player, Pack.Id)).PacksOpened, Is.EqualTo(1));
         }
 
@@ -265,7 +265,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
             Assert.That(await RenderBalances(ledger, Player), Is.EqualTo(expected));
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3));
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 4));
         }
 
         [Test]
@@ -279,7 +279,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
             await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-2");
 
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(2 * (Pack.CardCount + 3)));
+            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(2 * (Pack.CardCount + 4)));
             Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
         }
 
@@ -298,7 +298,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var referenceOutcome = await Service(reference, new InMemoryPackPityStore(), Cards())
                 .OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
 
-            for (int allowed = 0; allowed <= Pack.CardCount; allowed++)
+            for (int allowed = 0; allowed <= Pack.CardCount + 1; allowed++)
             {
                 var ledger = new InMemoryEntitlementLedger();
                 var pityStore = new InMemoryPackPityStore();
@@ -323,11 +323,49 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 Assert.That(resumed.Status, Is.EqualTo(PackOpenStatus.Opened));
                 Assert.That(Render(resumed.Awards), Is.EqualTo(Render(referenceOutcome.Awards)),
                     $"Resuming after {allowed} written rows produced a different pack.");
-                Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 3),
+                Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(Pack.CardCount + 4),
                     "The resume duplicated a row instead of colliding on its transaction id.");
                 Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
                 Assert.That((await pityStore.LoadAsync(Player, Pack.Id)).PacksOpened, Is.EqualTo(1));
             }
+        }
+
+        // ── seed replay ──────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// The seed row written at open time must be sufficient to re-derive the exact same pack.
+        /// This covers the dispute path: read seed + pack index from the ledger, re-roll, compare.
+        /// </summary>
+        [Test]
+        public async Task Seed_Row_Enables_Exact_Replay_Of_A_Disputed_Pack()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var cards = Cards();
+            var service = new BoosterPackGrantService(ledger, new InMemoryPackPityStore(),
+                new FixedPackSeedSource(Seed), cards, new FixedTime());
+            await GrantPackAsync(ledger, Player, Pack, "inst-1");
+
+            var outcome = await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-1");
+
+            // Find the durable seed row.
+            string seedTxnId = BoosterPackGrantService.TxnPrefix + "inst-1" + BoosterPackGrantService.SeedSuffix;
+            var history = await ledger.HistoryAsync(Player);
+            EntitlementGrant? seedRow = null;
+            for (int i = 0; i < history.Count; i++)
+                if (history[i].ExternalTxnId == seedTxnId) { seedRow = history[i]; break; }
+            Assert.That(seedRow, Is.Not.Null, "No seed row found in ledger history.");
+
+            ulong recordedSeed = (ulong)seedRow!.Qty;
+            int recordedPackIndex = int.Parse(
+                seedRow.Source.Substring(BoosterPackGrantService.SeedSourcePrefix.Length));
+
+            // Re-roll from the recorded values. The player owned nothing before their first open.
+            var rerolled = BoosterPackOpener.Open(
+                Pack, Pack.Pool(cards), new OwnedCardCounts(),
+                PackPityState.Fresh, recordedSeed, recordedPackIndex);
+
+            Assert.That(Render(rerolled.Awards), Is.EqualTo(Render(outcome.Awards)),
+                "The recorded seed does not reproduce the original pack.");
         }
 
         // ── input hardening ──────────────────────────────────────────────────────────────────

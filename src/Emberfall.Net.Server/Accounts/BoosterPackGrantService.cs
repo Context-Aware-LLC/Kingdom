@@ -117,6 +117,18 @@ namespace Emberfall.Net.Server.Accounts
         /// <summary>Ledger item prefix for the durable "fully opened" marker.</summary>
         public const string OpenedItemPrefix = "pack_opened:";
 
+        /// <summary>Ledger item prefix for the durable seed row: <c>pack_seed:pack.emberfall</c>.</summary>
+        public const string SeedItemPrefix = "pack_seed:";
+
+        /// <summary>Transaction id suffix for the seed row: <c>packopen:{instanceId}:seed</c>.</summary>
+        public const string SeedSuffix = ":seed";
+
+        /// <summary>
+        /// Source prefix for the seed row. The pack index (the value of <see cref="PackPityState.PacksOpened"/>
+        /// at roll time) follows the colon: <c>pack_open_seed:7</c>.
+        /// </summary>
+        public const string SeedSourcePrefix = "pack_open_seed:";
+
         private readonly IEntitlementLedger _ledger;
         private readonly IPackPityStore _pity;
         private readonly IPackSeedSource _seeds;
@@ -198,11 +210,24 @@ namespace Emberfall.Net.Server.Accounts
             // rows is what makes a half-written open re-roll identically instead of drifting.
             var owned = ProjectOwnership(history, instanceTxnPrefix);
 
-            var result = BoosterPackOpener.Open(pack, pack.Pool(_cards), owned, pity, seed, pity.PacksOpened);
+            int packIndex = pity.PacksOpened;
+            var result = BoosterPackOpener.Open(pack, pack.Pool(_cards), owned, pity, seed, packIndex);
 
             var now = DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
 
-            // 3 — the slots. Each carries its own derived key, so a partial write resumes cleanly.
+            // 3a — record the seed and pack index so a disputed open can be re-rolled from the ledger.
+            //      Written before the slot rows so it is present whenever any slot is durable.
+            await _ledger.GrantAsync(
+                new EntitlementGrant(
+                    playerId,
+                    SeedItemPrefix + pack.Id,
+                    (long)seed,
+                    SeedSourcePrefix + packIndex,
+                    instanceTxnPrefix + "seed",
+                    now),
+                ct).ConfigureAwait(false);
+
+            // 3b — the slots. Each carries its own derived key, so a partial write resumes cleanly.
             for (int slot = 0; slot < result.Awards.Count; slot++)
             {
                 var award = result.Awards[slot];

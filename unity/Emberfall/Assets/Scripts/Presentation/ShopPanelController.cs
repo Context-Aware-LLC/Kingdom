@@ -145,7 +145,7 @@ namespace Emberfall.Presentation
         {
             if (snapshot == null) return;
             if (_gold != null) _gold.text = $"Gold  {snapshot.Wallet.Gold:N0}";
-            if (_gems != null) _gems.text = $"Gems  {snapshot.Wallet.Gems:N0}";
+            if (_gems != null) _gems.text = WalletDisplay.Gems(snapshot.Wallet.Gems);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
         }
