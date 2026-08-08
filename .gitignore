@@ -18,6 +18,8 @@ tcg-hearthlike.code-workspace
 .dotnet-build/
 # CI gate evidence — regenerated every run, never committed
 artifacts/
+# unity-gate.ps1's cached result (commit SHA + pass/fail per stage) — same reason as artifacts/
+.agent/
 
 # Unity (for when the presentation/client code lands)
 [Ll]ibrary/

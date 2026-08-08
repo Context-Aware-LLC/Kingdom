@@ -35,6 +35,21 @@ pwsh tools/ci/unity-verify.ps1
 The fuller gate: drives a real headless Editor and runs `HeadlessVerify.RunAll()`. Slower, needs
 a seat and an idle Editor. Run before a release; run `unity-compile.ps1` before every push.
 
+## Combined compile + test gate (cached)
+
+```powershell
+pwsh tools/ci/unity-gate.ps1
+```
+
+Runs `unity-compile.ps1` then, only if that passes, `unity-verify.ps1` — and writes the result
+to `.agent/unity-gate.json` (gitignored, regenerated every run): timestamp, commit SHA, pass/fail
+per stage, failed assembly/check names, and whether `unity/Emberfall` had uncommitted changes at
+run time. Exits nonzero if either stage fails. Skips the verify stage on a compile failure rather
+than queuing for the single-writer Editor over a break it already caught.
+
+This is what the `/verify` skill runs when no fresh cached result exists for the current commit —
+see `.claude/skills/verify/SKILL.md`. Run it directly the same way you'd run either gate alone.
+
 ## Canonical-vocabulary gate
 
 Run the repository scan with:
