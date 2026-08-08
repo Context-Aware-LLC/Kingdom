@@ -99,11 +99,11 @@ namespace Emberfall.Net.Client.Auth
         /// <see cref="SupabaseAuthConfig.RedirectUrl"/>.</summary>
         Task<SignInStart> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default);
 
-        /// <summary>Mail the player a six-digit code. Succeeds when the mail is away; nothing is held
+        /// <summary>Mail the player an eight-digit code. Succeeds when the mail is away; nothing is held
         /// on this device, so the code can be finished from a fresh launch.</summary>
         Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default);
 
-        /// <summary>Trade a mailed six-digit code for a session.</summary>
+        /// <summary>Trade a mailed eight-digit code for a session.</summary>
         Task<AuthResult> VerifyEmailCodeAsync(string email, string code, CancellationToken cancellationToken = default);
 
         /// <summary>Build the provider's consent URL. Nothing is sent here — the caller opens the URL
@@ -178,7 +178,7 @@ namespace Emberfall.Net.Client.Auth
         }
 
         /// <summary>
-        /// Ask Supabase to mail a six-digit code (Sam, 2026-08-08).
+        /// Ask Supabase to mail an eight-digit code (Sam, 2026-08-08).
         ///
         /// <para><b>No PKCE here, and that is the point.</b> The verifier exists to bind a code coming
         /// back over a redirect to the device that started the sign-in. A code the player reads with
@@ -209,7 +209,7 @@ namespace Emberfall.Net.Client.Auth
         }
 
         /// <summary>
-        /// Redeem a mailed six-digit code for a session.
+        /// Redeem a mailed eight-digit code for a session.
         ///
         /// <para><b>The address must match the one the code was mailed to.</b> Supabase keys the code to
         /// the address, so a player who edits the email field after asking for a code gets a refusal
@@ -225,7 +225,7 @@ namespace Emberfall.Net.Client.Auth
 
             string digits = EmailCode.Normalize(code);
             if (digits.Length != EmailCode.Length)
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter the six-digit code from the email.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter the eight-digit code from the email.");
 
             string body = AuthJson.Object(
                 AuthJson.Field("type", "email"),
@@ -394,7 +394,7 @@ namespace Emberfall.Net.Client.Auth
     }
 
     /// <summary>
-    /// The shape of the six-digit code Supabase mails, in one place so the field, the button's enabled
+    /// The shape of the eight-digit code Supabase mails, in one place so the field, the button's enabled
     /// state and the request all agree on what "a complete code" is.
     ///
     /// <para><b>Normalising is not cosmetic.</b> A code copied out of a mail client arrives with a
@@ -404,8 +404,9 @@ namespace Emberfall.Net.Client.Auth
     /// </summary>
     public static class EmailCode
     {
-        /// <summary>How many digits Supabase's email OTP carries.</summary>
-        public const int Length = 6;
+        /// <summary>How many digits Supabase's email OTP carries. Confirmed 8 against the live
+        /// project on 2026-08-08 (Sam) — Supabase's actual OTP length, not the 6 EF-074e assumed.</summary>
+        public const int Length = 8;
 
         /// <summary>Keep the digits, drop everything else, and stop at <see cref="Length"/>.</summary>
         public static string Normalize(string? code)

@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The first-launch registration overlay (EF-074e / NOR-231). An email address, then the six-digit
+    /// The first-launch registration overlay (EF-074e / NOR-231). An email address, then the eight-digit
     /// code that arrives in the reply — and no way past it.
     ///
     /// <para><b>Sam's ruling, 2026-08-08: registration happens on first load and cannot be skipped.</b>
@@ -170,7 +170,7 @@ namespace Emberfall.Presentation
             if (_title != null) _title.text = "Create your account";
             if (_help != null)
                 _help.text = "Emberfall needs an account before you can play. Enter your email and we " +
-                             "will send you a six-digit code.";
+                             "will send you an eight-digit code.";
 
             Display(_emailField, true);
             Display(_codeField, false);
@@ -189,7 +189,7 @@ namespace Emberfall.Presentation
             _sentTo = email;
 
             if (_title != null) _title.text = "Check your email";
-            if (_help != null) _help.text = $"We sent a six-digit code to {email}. Enter it below.";
+            if (_help != null) _help.text = $"We sent an eight-digit code to {email}. Enter it below.";
 
             Display(_emailField, false);
             Display(_codeField, true);
@@ -245,7 +245,7 @@ namespace Emberfall.Presentation
         private async void Verify()
         {
             string code = EmailCode.Normalize(_codeField?.value ?? "");
-            if (code.Length != EmailCode.Length) { SetError("Enter the six-digit code from the email."); return; }
+            if (code.Length != EmailCode.Length) { SetError("Enter the eight-digit code from the email."); return; }
 
             SetBusy(true, "Signing in…");
             try

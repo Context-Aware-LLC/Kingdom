@@ -58,7 +58,7 @@
         <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--hidden">
             <ui:VisualElement name="signin-panel" class="mm-modal__panel">
                 <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
-                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
+                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you an eight-digit code." class="mm-modal__help"/>
                 <ui:TextField name="signin-email" class="mm-modal__field"/>
                 <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
