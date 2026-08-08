@@ -99,6 +99,13 @@ namespace Emberfall.Net.Client.Auth
         /// <see cref="SupabaseAuthConfig.RedirectUrl"/>.</summary>
         Task<SignInStart> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default);
 
+        /// <summary>Mail the player a six-digit code. Succeeds when the mail is away; nothing is held
+        /// on this device, so the code can be finished from a fresh launch.</summary>
+        Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default);
+
+        /// <summary>Trade a mailed six-digit code for a session.</summary>
+        Task<AuthResult> VerifyEmailCodeAsync(string email, string code, CancellationToken cancellationToken = default);
+
         /// <summary>Build the provider's consent URL. Nothing is sent here — the caller opens the URL
         /// and waits for the redirect.</summary>
         SignInStart BeginOAuth(string provider);
@@ -168,6 +175,67 @@ namespace Emberfall.Net.Client.Auth
             return new SignInStart(
                 AuthResult.Accepted(),
                 new PendingSignIn { Method = "email", AuthorizeUrl = "", CodeVerifier = verifier });
+        }
+
+        /// <summary>
+        /// Ask Supabase to mail a six-digit code (Sam, 2026-08-08).
+        ///
+        /// <para><b>No PKCE here, and that is the point.</b> The verifier exists to bind a code coming
+        /// back over a redirect to the device that started the sign-in. A code the player reads with
+        /// their own eyes and types into this overlay never travels a redirect, so there is nothing to
+        /// bind and nothing to keep. The practical consequence is the one that made Sam pick it: no
+        /// deep link has to be registered on any platform, and a player who force-quits the game between
+        /// the mail arriving and typing it in can still finish, because this device is holding nothing
+        /// that could be lost.</para>
+        ///
+        /// <para>Same <c>otp</c> endpoint as the magic link — the mail Supabase sends carries both a
+        /// link and a code, and which one the player sees is the project's email template, not this
+        /// call.</para>
+        /// </summary>
+        public async Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrWhiteSpace(email))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.");
+
+            string body = AuthJson.ObjectWithRaw(
+                "\"create_user\":true",
+                AuthJson.Field("email", email.Trim()));
+
+            var response = await _http.PostJsonAsync(Url("otp"), body, Headers(), cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.IsSuccess ? AuthResult.Accepted() : Interpret(response);
+        }
+
+        /// <summary>
+        /// Redeem a mailed six-digit code for a session.
+        ///
+        /// <para><b>The address must match the one the code was mailed to.</b> Supabase keys the code to
+        /// the address, so a player who edits the email field after asking for a code gets a refusal
+        /// that reads like a wrong code. The overlay keeps the address it sent to rather than re-reading
+        /// the field, which is why that field is locked once a code is on its way.</para>
+        /// </summary>
+        public async Task<AuthResult> VerifyEmailCodeAsync(
+            string email, string code, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrWhiteSpace(email))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.");
+
+            string digits = EmailCode.Normalize(code);
+            if (digits.Length != EmailCode.Length)
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter the six-digit code from the email.");
+
+            string body = AuthJson.Object(
+                AuthJson.Field("type", "email"),
+                AuthJson.Field("email", email.Trim()),
+                AuthJson.Field("token", digits));
+
+            var response = await _http.PostJsonAsync(Url("verify"), body, Headers(), cancellationToken)
+                .ConfigureAwait(false);
+
+            return ReadSession(response);
         }
 
         public SignInStart BeginOAuth(string provider)
@@ -323,6 +391,39 @@ namespace Emberfall.Net.Client.Auth
             }
             return sb.ToString();
         }
+    }
+
+    /// <summary>
+    /// The shape of the six-digit code Supabase mails, in one place so the field, the button's enabled
+    /// state and the request all agree on what "a complete code" is.
+    ///
+    /// <para><b>Normalising is not cosmetic.</b> A code copied out of a mail client arrives with a
+    /// trailing space, a non-breaking space, or split as "123 456" often enough that rejecting those
+    /// reads to the player as the code being wrong — and their next move is to request another one,
+    /// which invalidates the one they actually have.</para>
+    /// </summary>
+    public static class EmailCode
+    {
+        /// <summary>How many digits Supabase's email OTP carries.</summary>
+        public const int Length = 6;
+
+        /// <summary>Keep the digits, drop everything else, and stop at <see cref="Length"/>.</summary>
+        public static string Normalize(string? code)
+        {
+            if (string.IsNullOrEmpty(code)) return "";
+
+            var sb = new StringBuilder(Length);
+            foreach (char c in code)
+            {
+                if (c < '0' || c > '9') continue;
+                sb.Append(c);
+                if (sb.Length == Length) break;
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>True when <paramref name="code"/> holds a full code once normalised.</summary>
+        public static bool IsComplete(string? code) => Normalize(code).Length == Length;
     }
 
     /// <summary>

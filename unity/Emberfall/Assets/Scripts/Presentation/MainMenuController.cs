@@ -44,6 +44,7 @@ namespace Emberfall.Presentation
         private VisualElement _accountList;
         private Label _accountError;
         private ShopPanelController _shop;
+        private SignInGateController _signIn;
 
         /// <summary>Frame-0 coverage, the same rig GameBootstrap/NetworkedGameBootstrap use
         /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay exists before anything renders. The menu's
@@ -83,6 +84,7 @@ namespace Emberfall.Presentation
             BindIdentity();
             BindNameModal();
             BindAccountModal();
+            _signIn = new SignInGateController(_root, AuthGateway.Provider);
 
             // A corrupt collection file must not brick the front door. The stores throw rather than
             // reporting an empty collection (so the next save cannot overwrite something
@@ -102,8 +104,36 @@ namespace Emberfall.Presentation
             }
 
             RefreshIdentity();
-            if (_account.NeedsDisplayName) OpenNameModal(required: true);
+            BeginFirstRun();
             FinishBootstrap();
+        }
+
+        /// <summary>
+        /// First-run prompts, in the order Sam ruled on 2026-08-08: register, then name yourself.
+        ///
+        /// <para><b>Registration comes first and cannot be skipped.</b> The two prompts are chained
+        /// rather than shown together — the sign-in gate calls back once a session exists, and only
+        /// then does the name prompt open. Opening both would stack two modals on a player who has not
+        /// seen the game yet, and the name is the smaller of the two questions.</para>
+        ///
+        /// <para><b>The menu is revealed underneath either way.</b> Sam asked for the registration
+        /// prompt as an overlay ON the main menu, not instead of it, and the gate's own scrim is what
+        /// stops the buttons behind it being reachable.</para>
+        /// </summary>
+        private void BeginFirstRun()
+        {
+            if (_signIn != null && _signIn.IsRequired)
+            {
+                _signIn.Open(onSignedIn: PromptForNameIfNeeded);
+                return;
+            }
+
+            PromptForNameIfNeeded();
+        }
+
+        private void PromptForNameIfNeeded()
+        {
+            if (_account != null && _account.NeedsDisplayName) OpenNameModal(required: true);
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has

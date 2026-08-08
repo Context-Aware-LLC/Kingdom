@@ -76,8 +76,26 @@ namespace Emberfall.Net.Client.Tests.Auth
             return this;
         }
 
+        public AuthResult EmailCodeSendResult { get; set; } = AuthResult.Accepted();
+        public AuthResult VerifyResult { get; set; } = AuthResult.Failed(AuthFailure.Rejected, "wrong code");
+        public int VerifyCalls { get; private set; }
+        public string? LastVerifiedEmail { get; private set; }
+        public string? LastVerifiedCode { get; private set; }
+
         public Task<SignInStart> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default)
             => Task.FromResult(MagicLinkResult);
+
+        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+            => Task.FromResult(EmailCodeSendResult);
+
+        public Task<AuthResult> VerifyEmailCodeAsync(
+            string email, string code, CancellationToken cancellationToken = default)
+        {
+            VerifyCalls++;
+            LastVerifiedEmail = email;
+            LastVerifiedCode = code;
+            return Task.FromResult(VerifyResult);
+        }
 
         public SignInStart BeginOAuth(string provider) => OAuthResult;
 

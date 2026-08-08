@@ -164,6 +164,30 @@ namespace Emberfall.Net.Client.Auth
             return start.Result;
         }
 
+        /// <summary>Mail the player a six-digit code. Nothing is stored — see
+        /// <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> for why this flow keeps no local
+        /// state, and what that buys.</summary>
+        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+            => _backend.BeginEmailCodeAsync(email, cancellationToken);
+
+        /// <summary>
+        /// Finish a sign-in with the mailed six-digit code. On success the session is stored and
+        /// <see cref="SessionChanged"/> fires.
+        ///
+        /// <para><b>A refusal here does not burn the code.</b> Unlike the redirect flow — where the
+        /// auth code is single-use and a failed exchange has to drop the pending record — a mistyped
+        /// digit leaves the mailed code exactly as valid as it was. Clearing anything on failure would
+        /// force a player who fat-fingered one digit to go back to their inbox.</para>
+        /// </summary>
+        public async Task<AuthResult> VerifyEmailCodeAsync(
+            string email, string code, CancellationToken cancellationToken = default)
+        {
+            AuthResult result = await _backend.VerifyEmailCodeAsync(email, code, cancellationToken)
+                .ConfigureAwait(false);
+            if (result.Ok) Adopt(result.Session);
+            return result;
+        }
+
         /// <summary>
         /// Build a provider's consent URL and remember its verifier. Returns the pending record; the
         /// caller opens <see cref="PendingSignIn.AuthorizeUrl"/> itself, because how a URL gets in
