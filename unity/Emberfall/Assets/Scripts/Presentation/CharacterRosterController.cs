@@ -78,10 +78,27 @@ namespace Emberfall.Presentation
     [RequireComponent(typeof(UIDocument))]
     public sealed class CharacterRosterController : MonoBehaviour
     {
-        private static readonly CardClass[] PairableClasses =
+        /// <summary>
+        /// Every real hero class, in enum order — the four original plus CLOCKWRIGHT, NIGHTVEIL,
+        /// STONEWARDEN and TEMPEST (NOR-243). <b>Derived from <see cref="CardClass"/> minus NEUTRAL,
+        /// not hardcoded.</b> A second hardcoded copy of the class list is exactly what stranded
+        /// four classes here that already had cards and a CI-gated legal deck
+        /// (<c>EveryClassHasALegalDeckTests</c>): the enum and the test grew to eight, this list did
+        /// not, and nothing pointed at the gap. Deriving it means a class is pickable the moment its
+        /// cards land — and a pairing whose pool is still too thin to generate a 30 is caught by
+        /// <see cref="PlayerAccount.CanCreate"/> / <see cref="DefaultDeckGenerator.CanGenerate"/>,
+        /// which fall back to a blank draft rather than crashing.
+        /// </summary>
+        private static readonly CardClass[] PairableClasses = BuildPairableClasses();
+
+        private static CardClass[] BuildPairableClasses()
         {
-            CardClass.EMBERWARD, CardClass.TIDECALLER, CardClass.GRAVEKEEP, CardClass.VERDANT,
-        };
+            var all = (CardClass[])Enum.GetValues(typeof(CardClass));
+            var real = new List<CardClass>(all.Length);
+            foreach (CardClass c in all)
+                if (c != CardClass.NEUTRAL) real.Add(c);
+            return real.ToArray();
+        }
 
         private static readonly List<string> StarterChoices = new List<string>
         {
