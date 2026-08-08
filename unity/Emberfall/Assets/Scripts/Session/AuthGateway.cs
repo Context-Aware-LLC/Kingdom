@@ -11,13 +11,16 @@ namespace Emberfall.Session
     ///
     /// <para><b>This is a capability, not a policy.</b> Touching it signs nobody in and shows nothing.
     /// It answers "what token, if any, goes on this connect", and it exposes the calls a sign-in
-    /// surface will need. WHERE that surface lives, whether it can be skipped, and what happens to a
-    /// guest's collection at sign-in are open product decisions and are deliberately not made here or
-    /// anywhere else in this change.</para>
+    /// surface needs. The policy — registration on first launch, unskippable, six-digit code (Sam,
+    /// 2026-08-08) — lives in <c>SignInGateController</c>, and it is the only thing that opens a
+    /// sign-in. What happens to a device's existing collection at sign-in is still open: that is
+    /// EF-074d and it is unbuilt.</para>
     ///
     /// <para><b>Unconfigured is the current state and it is silent.</b> With no
     /// <see cref="SupabaseAuthSettings"/> asset the whole game plays the guest path it played before
-    /// EF-074 — <c>HelloMsg.AuthToken</c> stays empty and the server behaves exactly as it did.</para>
+    /// EF-074 — <c>HelloMsg.AuthToken</c> stays empty and the server behaves exactly as it did. It is
+    /// also what holds the first-launch gate open: a gate in front of a sign-in that cannot succeed
+    /// would simply stop the game booting. See <c>SignInGateController.IsRequired</c>.</para>
     ///
     /// <para><b>Rebuilt on an account switch.</b> The store is scoped to the signed-in local account,
     /// so <see cref="DeviceAccounts.SwitchTo"/>'s scene reload has to see a fresh provider or seat two
