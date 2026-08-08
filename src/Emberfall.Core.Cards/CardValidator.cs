@@ -275,7 +275,7 @@ namespace Emberfall.Core.Cards
                     Err("C14B-SELECTOR-NEEDS-PLAYER-TARGET", $"{prefix}.action.target.selector",
                         $"'{target.Selector}' is an explicit-choice selector, but {trigger} fires with no player choosing — " +
                         "the interpreter throws on it at runtime. Use an auto-resolvable selector " +
-                        "(SELF / FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
+                        "(SELF / FRIENDLY_MINIONS / OTHER_FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
                         "or a RANDOM target choice.");
 
                 if (target?.Count is int targetCount && targetCount < -1)

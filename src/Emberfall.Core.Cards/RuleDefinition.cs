@@ -326,6 +326,7 @@ namespace Emberfall.Core.Cards
                 case "ENEMY_HERO":
                     return TargetCandidateKinds.Hero;
                 case "FRIENDLY_MINIONS":
+                case "OTHER_FRIENDLY_MINIONS":
                 case "ENEMY_MINIONS":
                 case "ALL_MINIONS":
                 case "ANY_MINION":

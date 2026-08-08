@@ -410,5 +410,55 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(transformed.Id, Is.Not.EqualTo(original.Id));
             Assert.That((transformed.CurrentAttack, transformed.CurrentDurability), Is.EqualTo((4, 3)));
         }
+
+        [Test]
+        public void FriendlyMinions_Includes_Source_Minion_Itself()
+        {
+            var db = new FakeCardDatabase().Register(Minion("body"));
+            var state = State();
+            CardInstance source = Board(state, 0, db.Get("body"));
+            CardInstance ally = Board(state, 0, db.Get("body"));
+
+            var candidates = Targeting.Candidates(state, db, state.Players[0].Id,
+                new TargetSpec("FRIENDLY_MINIONS"), source: source.Id);
+
+            Assert.That(candidates.Select(c => c.Instance),
+                Is.EquivalentTo(new[] { source.Id, ally.Id }),
+                "FRIENDLY_MINIONS must include the source minion (self-inclusion preserved).");
+        }
+
+        [Test]
+        public void OtherFriendlyMinions_Excludes_Source_And_Retains_All_Other_Friendly_Minions()
+        {
+            var db = new FakeCardDatabase().Register(Minion("body"));
+            var state = State();
+            CardInstance source = Board(state, 0, db.Get("body"));
+            CardInstance ally1 = Board(state, 0, db.Get("body"));
+            CardInstance ally2 = Board(state, 0, db.Get("body"));
+            Board(state, 1, db.Get("body"));
+
+            var candidates = Targeting.Candidates(state, db, state.Players[0].Id,
+                new TargetSpec("OTHER_FRIENDLY_MINIONS"), source: source.Id);
+
+            Assert.That(candidates.Select(c => c.Instance),
+                Is.EquivalentTo(new[] { ally1.Id, ally2.Id }),
+                "OTHER_FRIENDLY_MINIONS must exclude the source and exclude enemies.");
+        }
+
+        [Test]
+        public void OtherFriendlyMinions_Without_Source_Returns_All_Friendly_Minions()
+        {
+            var db = new FakeCardDatabase().Register(Minion("body"));
+            var state = State();
+            CardInstance a = Board(state, 0, db.Get("body"));
+            CardInstance b = Board(state, 0, db.Get("body"));
+
+            var candidates = Targeting.Candidates(state, db, state.Players[0].Id,
+                new TargetSpec("OTHER_FRIENDLY_MINIONS"));
+
+            Assert.That(candidates.Select(c => c.Instance),
+                Is.EquivalentTo(new[] { a.Id, b.Id }),
+                "OTHER_FRIENDLY_MINIONS with no source context returns all friendly minions.");
+        }
     }
 }

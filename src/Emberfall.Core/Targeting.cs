@@ -202,6 +202,10 @@ namespace Emberfall.Core
                 case "FRIENDLY_HERO": AddHero(state, friendly, result); break;
                 case "ENEMY_HERO": AddHero(state, enemy, result); break;
                 case "FRIENDLY_MINIONS": AddMinions(state, friendly, result); break;
+                case "OTHER_FRIENDLY_MINIONS":
+                    AddMinions(state, friendly, result);
+                    if (source.HasValue) result.RemoveAll(c => c.Instance == source.Value);
+                    break;
                 case "ENEMY_MINIONS": AddMinions(state, enemy, result); break;
                 case "ALL_MINIONS": AddMinions(state, friendly, result); AddMinions(state, enemy, result); break;
                 case "ANY_CHARACTER": AddCharacters(state, friendly, result); AddCharacters(state, enemy, result); break;

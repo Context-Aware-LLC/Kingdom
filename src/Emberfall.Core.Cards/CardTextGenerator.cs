@@ -157,6 +157,7 @@ namespace Emberfall.Core.Cards
                 case "ENEMY_MINIONS": singular = "an enemy minion"; plural = "enemy minions"; defaultsToAll = true; break;
                 case "FRIENDLY_HERO": singular = "your hero"; plural = "friendly heroes"; defaultsToAll = false; break;
                 case "FRIENDLY_MINIONS": singular = "a friendly minion"; plural = "friendly minions"; defaultsToAll = true; break;
+                case "OTHER_FRIENDLY_MINIONS": singular = "another friendly minion"; plural = "other friendly minions"; defaultsToAll = true; break;
                 case "FRIENDLY_WEAPON": singular = "your weapon"; plural = "friendly weapons"; defaultsToAll = false; break;
                 case "ENEMY_WEAPON": singular = "the enemy weapon"; plural = "enemy weapons"; defaultsToAll = false; break;
                 case "FRIENDLY_HAND": singular = "a card in your hand"; plural = "cards in your hand"; defaultsToAll = true; break;

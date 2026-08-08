@@ -25,7 +25,7 @@ namespace Emberfall.Editor
     {
         private static readonly string[] SelectorOptions =
         {
-            "(none)", "SELF", "FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
+            "(none)", "SELF", "FRIENDLY_MINIONS", "OTHER_FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
             "ENEMY_HERO", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
             "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
             "FRIENDLY_WEAPON", "ENEMY_WEAPON",
