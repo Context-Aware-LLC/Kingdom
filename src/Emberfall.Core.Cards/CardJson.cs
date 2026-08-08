@@ -25,7 +25,7 @@ namespace Emberfall.Core.Cards
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "selector", "chosenBy", "count", "filter", "binding", "distinctFrom"
+            "selector", "chosenBy", "count", "filter", "binding", "distinctFrom", "required"
         };
 
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -291,8 +291,12 @@ namespace Emberfall.Core.Cards
                 }
                 filter = new TargetFilterDef(damaged, tribe);
             }
+            if (target.TryGetProperty("required", out var requiredValue) &&
+                requiredValue.ValueKind != JsonValueKind.True && requiredValue.ValueKind != JsonValueKind.False)
+                throw new FormatException("Card JSON target.required must be a boolean.");
             return new TargetSpec(selector, TryEnum<TargetChosenBy>(target, "chosenBy"),
-                Int(target, "count"), filter, Str(target, "binding"), Str(target, "distinctFrom"));
+                Int(target, "count"), filter, Str(target, "binding"), Str(target, "distinctFrom"),
+                Bool(target, "required") ?? false);
         }
 
         private static void RejectUnknownProperties(JsonElement el, string schemaLevel, HashSet<string> allowed)

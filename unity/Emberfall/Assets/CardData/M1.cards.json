@@ -970,6 +970,7 @@
         "action": {
           "type": "DESTROY",
           "target": {
+            "required": true,
             "selector": "ANY_FRIENDLY_MINION"
           }
         }
@@ -1093,6 +1094,7 @@
         "action": {
           "type": "DESTROY",
           "target": {
+            "required": true,
             "selector": "ANY_FRIENDLY_MINION"
           }
         }
@@ -1253,6 +1255,7 @@
         "action": {
           "type": "DESTROY",
           "target": {
+            "required": true,
             "selector": "ANY_FRIENDLY_MINION"
           }
         }
@@ -3344,6 +3347,7 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
+            "required": true,
             "selector": "ANY_FRIENDLY_MINION",
             "chosenBy": "PLAYER"
           }

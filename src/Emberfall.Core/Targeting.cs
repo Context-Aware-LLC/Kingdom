@@ -77,14 +77,10 @@ namespace Emberfall.Core
         public static bool IsPlayerChosen(TargetSpec? spec)
             => TargetSpec.IsPlayerChosen(spec);
 
-        public static bool RequiresPlayerChoice(CardDefinition def, Trigger trigger)
-        {
-            foreach (RuleDefinition rule in def.Rules)
-                if (RuleSemantics.ActivatesOn(rule, trigger) &&
-                    IsPlayerChosen(RuleSemantics.TargetOf(rule.Action)))
-                    return true;
-            return false;
-        }
+        // RequiresPlayerChoice(def, trigger) lived here and was deleted with its last caller.
+        // "Does this card ask for a target" is now the WRONG question and the name did not say so:
+        // a herald whose candidate set is empty asks for nothing, because the play fizzles instead of
+        // being refused. Ask PlayerChoicePlan and read RequiredCount, which consults the board.
 
         /// <summary>
         /// Build the ordered, binding-aware choice plan a client must satisfy. Effects sharing a
@@ -103,7 +99,7 @@ namespace Emberfall.Core
                 TargetSpec spec = candidateTarget!;
                 IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
                     spec, rule.Action, source);
-                int required = RequiredPlayerCount(spec, candidates.Count);
+                int required = RequiredPlayerCount(spec, def.Type, candidates.Count);
                 if (!byBinding.TryGetValue(spec.Binding, out ChoiceGroup? group))
                 {
                     group = new ChoiceGroup(spec.Binding, required, candidates);
@@ -307,7 +303,7 @@ namespace Emberfall.Core
                     selected.Add(choices[i]);
                 }
 
-                int required = RequiredPlayerCount(spec, candidates.Count);
+                int required = RequiredPlayerCount(spec, def.Type, candidates.Count);
                 if (selected.Count != required || !Distinct(selected)) return false;
                 foreach (TargetRef choice in selected)
                     if (!candidateIds.Contains(choice.Instance)) return false;
@@ -371,8 +367,32 @@ namespace Emberfall.Core
             return selected;
         }
 
-        private static int RequiredPlayerCount(TargetSpec spec, int candidateCount)
-            => spec.Count == -1 ? candidateCount : spec.Count ?? 1;
+        /// <summary>
+        /// How many targets the player OWES for one spec. The whole play is rejected when he supplies
+        /// a different number, so this is also the answer to "is this card playable right now".
+        ///
+        /// <para><b>A shortfall fizzles on a MINION or WEAPON and refuses on a SPELL</b> (Sam,
+        /// 2026-08-07). The body is the difference: a minion whose herald finds nothing is still a
+        /// minion, so demanding a target it cannot have made 15 rows unplayable — a Reinforce herald
+        /// could never be your first minion. A spell that fizzles is pure card-burn with nothing left
+        /// over, so it stays refused and the card stays in hand.</para>
+        ///
+        /// <para><b><see cref="TargetSpec.Required"/> opts back out of the fizzle</b>, for a target
+        /// that is a COST rather than an effect — "sacrifice a friendly minion". An unpayable cost is
+        /// unplayable on every card type, body or not.</para>
+        ///
+        /// <para>Clamping here mirrors <see cref="RequiredAutomaticCount"/>, which has always taken
+        /// as many candidates as exist. The two paths disagreeing is what produced the bug.</para>
+        /// </summary>
+        private static int RequiredPlayerCount(TargetSpec spec, CardType sourceType, int candidateCount)
+        {
+            if (spec.Count == -1) return candidateCount;
+            int authored = spec.Count ?? 1;
+            return CanFizzle(spec, sourceType) ? Math.Min(authored, candidateCount) : authored;
+        }
+
+        private static bool CanFizzle(TargetSpec spec, CardType sourceType)
+            => !spec.Required && (sourceType == CardType.MINION || sourceType == CardType.WEAPON);
 
         private static int RequiredAutomaticCount(TargetSpec spec, int candidateCount)
         {

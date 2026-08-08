@@ -1065,6 +1065,7 @@
         "action": {
           "type": "DESTROY",
           "target": {
+            "required": true,
             "selector": "ANY_FRIENDLY_MINION"
           }
         }

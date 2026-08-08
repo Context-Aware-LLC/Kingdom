@@ -121,6 +121,13 @@ namespace Emberfall.Core.Cards
     /// The complete authored <c>target</c> object. A null <see cref="ChosenBy"/> preserves the
     /// established selector defaults: <c>ANY_*</c> is chosen by the player and set/fixed selectors
     /// resolve automatically. <c>Count == -1</c> means every candidate.
+    ///
+    /// <para><b><see cref="Required"/> marks a target that is a COST, not an effect</b> — "sacrifice
+    /// a friendly minion to play this". A card whose cost cannot be paid is unplayable; every other
+    /// player-chosen target on a MINION or WEAPON fizzles when nothing legal exists, leaving the body
+    /// behind (Sam, 2026-08-07). A SPELL is unplayable either way today, because a spell whose only
+    /// effect fizzles is pure card-burn — so on a spell this flag records intent without changing
+    /// behavior yet.</para>
     /// </summary>
     public sealed class TargetSpec
     {
@@ -147,9 +154,11 @@ namespace Emberfall.Core.Cards
         public TargetFilterDef? Filter { get; }
         public string Binding { get; }
         public string DistinctFrom { get; }
+        public bool Required { get; }
 
         public TargetSpec(string selector, TargetChosenBy? chosenBy = null, int? count = null,
-            TargetFilterDef? filter = null, string? binding = null, string? distinctFrom = null)
+            TargetFilterDef? filter = null, string? binding = null, string? distinctFrom = null,
+            bool required = false)
         {
             Selector = selector;
             ChosenBy = chosenBy;
@@ -157,6 +166,7 @@ namespace Emberfall.Core.Cards
             Filter = filter;
             Binding = binding ?? "";
             DistinctFrom = distinctFrom ?? "";
+            Required = required;
         }
 
         public static bool IsKnownSelector(string selector) => KnownSelectors.Contains(selector);

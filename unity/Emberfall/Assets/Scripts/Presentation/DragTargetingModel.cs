@@ -282,9 +282,15 @@ namespace Emberfall.Presentation
             CardDefinition def, Trigger trigger, InstanceId? source)
         {
             ClearChoicePlan();
+            // A group the engine no longer asks for is skipped, not shown. A herald that fizzles
+            // for want of a target reports RequiredCount 0 (Targeting.RequiredPlayerCount), and an
+            // armed step with nothing to pick is a dead end: nothing glows, every drop reads as a
+            // miss, and the only escape is re-tapping the card. Dropping it here is what lets the
+            // gesture fall through to an ordinary untargeted play.
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, source))
-                _choicePlan.Add(requirement);
+                if (requirement.RequiredCount > 0)
+                    _choicePlan.Add(requirement);
             if (_choicePlan.Count == 0) return false;
             _choiceIndex = 0;
             _awaitingSourceKind = sourceKind;
@@ -447,12 +453,27 @@ namespace Emberfall.Presentation
 
         /// <summary>Mirrors the engine's ValidatePlayCard rule: a play-trigger effect with an
         /// explicit-choice (ANY_*) selector needs a player-chosen target. With no db wired this
-        /// returns false and the engine's rejection is the backstop.</summary>
+        /// returns false and the engine's rejection is the backstop.
+        ///
+        /// <para>This asks what the engine will actually OWE against the board as it stands, not what
+        /// the card definition mentions. A minion herald with no legal target fizzles rather than
+        /// blocking the play, so it needs no aim step and must arm as an ordinary drop — asking the
+        /// definition instead would arm a targeting mode the player can never complete.</para></summary>
         public bool HandCardNeedsTarget(InstanceId cardId)
         {
             if (!TryHandDefinition(cardId, out CardDefinition def)) return false;
             Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
-            return Targeting.RequiresPlayerChoice(def, trigger);
+            return OwesAChoice(def, trigger, cardId);
+        }
+
+        /// <summary>Does the engine owe this card at least one target it can actually be given?</summary>
+        private bool OwesAChoice(CardDefinition def, Trigger trigger, InstanceId? source)
+        {
+            if (_db == null || State == null) return false;
+            foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
+                         State, _db, _p0Id, def, trigger, source))
+                if (requirement.RequiredCount > 0) return true;
+            return false;
         }
 
         private bool HandCardOccupiesBoardSlot(InstanceId cardId)
@@ -476,7 +497,7 @@ namespace Emberfall.Presentation
         public bool HeroPowerNeedsTarget()
         {
             return TryHeroPowerDefinition(out CardDefinition def) &&
-                   Targeting.RequiresPlayerChoice(def, Trigger.ON_CAST);
+                   OwesAChoice(def, Trigger.ON_CAST, null);
         }
 
         public HashSet<InstanceId> SpellTargets(InstanceId cardId)

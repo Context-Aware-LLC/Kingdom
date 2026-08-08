@@ -302,6 +302,15 @@ namespace Emberfall.Core.Cards
                             Err("C14E-TARGET-BINDING-ORDER", $"{prefix}.action.target.distinctFrom",
                                 $"target.distinctFrom '{target.DistinctFrom}' must name a binding from an earlier rule.");
                     }
+                    // C14H — `required` means "this target is a COST; without it the card is
+                    // unplayable". Only a player-chosen target can go unpaid: an automatic or RANDOM
+                    // spec takes whatever exists and never asks, so the flag could not gate anything
+                    // there. Fail closed rather than let a row read as a sacrifice it never enforces.
+                    if (target.Required && !TargetSpec.IsPlayerChosen(target))
+                        Err("C14H-TARGET-REQUIRED-AUTOMATIC", $"{prefix}.action.target.required",
+                            "target.required is meaningful only on a player-chosen target — an " +
+                            "automatic or RANDOM selector resolves to whatever exists and can never " +
+                            "go unpaid.");
                     if (target.Binding.Length > 0) priorTargetBindings.Add(target.Binding);
                 }
 

@@ -28,6 +28,8 @@ namespace Emberfall.Editor
         private const string TargetedMinion = "c_targeted_minion"; // ON_PLAY + ANY_CHARACTER
         private const string PowerFree      = "hp_untargeted";     // hero power, no chosen target
         private const string PowerAim       = "hp_targeted";       // hero power, ANY_CHARACTER
+        private const string FizzleMinion   = "c_fizzle_minion";   // ON_PLAY + ANY_FRIENDLY_MINION
+        private const string CostMinion     = "c_cost_minion";     // same, but target.required
 
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
@@ -450,6 +452,7 @@ namespace Emberfall.Editor
             HeroPowerDrops();
             NoAutoPlace();
             TargetSets();
+            OptionalHeraldNeedsNoAimStep();
         }
 
         // ── The cases ───────────────────────────────────────────────────────────────
@@ -683,6 +686,47 @@ namespace Emberfall.Editor
                 m.TargetsFor(m.BeginSource(PointerSubject.OfCard(s.Players[0].Hand[0].Id, P0, Zone.Hand))) == null);
         }
 
+        /// <summary>
+        /// A herald whose target set is empty FIZZLES rather than blocking the play (Sam,
+        /// 2026-08-07), so it must arm as an ordinary untargeted drop.
+        ///
+        /// <para>THE DEAD END THIS GUARDS. NeedsTarget used to read the card DEFINITION, which does
+        /// not know the board. A Reinforce herald with no friendly minion armed an aim step holding
+        /// zero candidates: nothing glowed, every drop read as a miss, and the only way out was
+        /// re-tapping the card — with no message, because nothing had gone wrong as far as the router
+        /// knew. Ask the plan and read RequiredCount; it consults the board.</para>
+        /// </summary>
+        private static void OptionalHeraldNeedsNoAimStep()
+        {
+            GameState s = NewState();
+            s.Players[0].Board.Clear();                 // nothing friendly to reinforce
+            s.Players[0].Hand.Add(new CardInstance(new InstanceId(20), FizzleMinion, P0) { Zone = Zone.Hand });
+            s.Players[0].Hand.Add(new CardInstance(new InstanceId(21), CostMinion,   P0) { Zone = Zone.Hand });
+            var m = Model(s);
+
+            DragSource fizzle = m.BeginSource(PointerSubject.OfCard(new InstanceId(20), P0, Zone.Hand));
+            Check("a herald with no legal target needs no aim step", !fizzle.NeedsTarget);
+            Check("...and glows nothing", m.TargetsFor(fizzle) == null);
+
+            var played = m.Resolve(fizzle, PointerSubject.OfBoardSlot(P0, 0)) as PlayCardIntent;
+            Check("...and drops straight onto the board with no targets",
+                played != null && played.Targets.Count == 0 && played.BoardSlot == 0);
+            Check("...leaving the machine in Direct, not stranded mid-aim",
+                m.Phase == DragTargetingModel.TargetingPhase.Direct);
+
+            // A COST is not an effect: it stays required, and the engine still refuses the play.
+            DragSource cost = m.BeginSource(PointerSubject.OfCard(new InstanceId(21), P0, Zone.Hand));
+            Check("a required (cost) target is still owed with nothing to pay it", cost.NeedsTarget);
+
+            // Put a friendly minion back and the ordinary herald owes its target again.
+            s.Players[0].Board.Add(Minion(P0, 13));
+            DragSource armed = m.BeginSource(PointerSubject.OfCard(new InstanceId(20), P0, Zone.Hand));
+            Check("the same herald owes a target once one exists", armed.NeedsTarget);
+            Check("...and glows exactly that minion",
+                m.TargetsFor(armed) is HashSet<InstanceId> set && set.Count == 1
+                    && set.Contains(new InstanceId(13)));
+        }
+
         // ── Fixtures ────────────────────────────────────────────────────────────────
 
         private static DragTargetingModel Model(GameState s)
@@ -736,11 +780,26 @@ namespace Emberfall.Editor
                 Rule("hero_power_damage", Trigger.ON_CAST, 1, "ENEMY_HERO"),
             };
 
+            var friendlyReinforce = new[]
+            {
+                new RuleDefinition(new RuleId("herald_reinforce"), new TriggeredActivation(Trigger.ON_PLAY),
+                    AlwaysCondition.Instance, OneShotLifetime.Instance,
+                    new ReinforceAction(new TargetSpec("ANY_FRIENDLY_MINION"))),
+            };
+            var friendlySacrifice = new[]
+            {
+                new RuleDefinition(new RuleId("herald_sacrifice"), new TriggeredActivation(Trigger.ON_PLAY),
+                    AlwaysCondition.Instance, OneShotLifetime.Instance,
+                    new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", required: true))),
+            };
+
             return new InMemoryCardDatabase(new[]
             {
                 Def(Vanilla,        CardType.MINION,     System.Array.Empty<RuleDefinition>()),
                 Def(TargetedSpell,  CardType.SPELL,      anyCharacterCast),
                 Def(TargetedMinion, CardType.MINION,     anyCharacter),
+                Def(FizzleMinion,   CardType.MINION,     friendlyReinforce),
+                Def(CostMinion,     CardType.MINION,     friendlySacrifice),
                 Def(PowerFree,      CardType.HERO_POWER, selfHeal),
                 Def(PowerAim,       CardType.HERO_POWER, anyCharacterCast),
             });
