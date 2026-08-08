@@ -43,8 +43,8 @@ namespace Emberfall.Editor
 
             Debug.Log($"[DeviceLayoutVerify] {(ok ? "PASS" : "FAIL")} — supported landscape "
                       + $"aspect {DeviceLayout.MinAspect:F5}..{DeviceLayout.MaxAspect:F5}, "
-                      + $"card in hand {DeviceLayout.CardPixelWidth(1080, DeviceLayout.DesignHalfHeight):F1}"
-                      + $"x{DeviceLayout.CardPixelHeight(1080, DeviceLayout.DesignHalfHeight):F1} px "
+                      + $"card in hand {DeviceLayout.HandCardPixelWidth(1080, DeviceLayout.DesignHalfHeight):F1}"
+                      + $"x{DeviceLayout.HandCardPixelHeight(1080, DeviceLayout.DesignHalfHeight):F1} px "
                       + "at 1080p.");
         }
 

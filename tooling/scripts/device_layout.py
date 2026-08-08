@@ -182,6 +182,8 @@ def main() -> int:
     card_h = const(board, "CardH", "BoardController.CardH")
     centre_y = const(fan, "CentreY", "HandFanLayout.CentreY")
     sag = const(fan, "Sag", "HandFanLayout.Sag")
+    rest_scale = const(fan, "RestScale", "HandFanLayout.RestScale")
+    tilt_deg = const(fan, "MaxTiltDeg", "HandFanLayout.MaxTiltDeg")
     lift = const(SCRIPTS / "HandCardHover.cs", "Lift", "HandCardHover.Lift")
     hover_scale = const(SCRIPTS / "HandCardHover.cs", "Scale", "HandCardHover.Scale")
     hero_x = const(setup, "HeroX", "ProceduralBoardSetup.HeroX")
@@ -258,8 +260,8 @@ def main() -> int:
     smallest = None
     for d in DEVICES:
         ppu = d.short_px / (2 * design_h)
-        cw = card_w * ppu
-        ch = card_h * ppu
+        cw = card_w * rest_scale * ppu
+        ch = card_h * rest_scale * ppu
         half_w = design_h * d.aspect
         spare = (half_w - design_w) * ppu
         if d.aspect < min_aspect:
@@ -283,11 +285,24 @@ def main() -> int:
     # ── 5. the true card size ───────────────────────────────────────────────────
     ref = DEVICES[0]
     ppu = ref.short_px / (2 * design_h)
-    cw_px, ch_px = card_w * ppu, card_h * ppu
-    card_top = -(centre_y) + card_h / 2          # seat 0: fan sits at negative y
-    hidden = (-design_h - (-(centre_y) - card_h / 2)) / card_h
-    hidden_edge = (-design_h - (-(centre_y + sag) - card_h / 2)) / card_h
-    body_centre_y = -(centre_y) + card_h / 2 - body_cy * card_h
+    # NOR-244: a card IN HAND is drawn at RestScale, a card on the BOARD at 1.0. Everything in
+    # this section and in §6 is the HAND card — that is the one whose rules text has to be read.
+    hand_w, hand_h = card_w * rest_scale, card_h * rest_scale
+    cw_px, ch_px = hand_w * ppu, hand_h * ppu
+    board_ch_px = card_h * ppu
+    card_top = -(centre_y) + hand_h / 2          # seat 0: fan sits at negative y
+    hidden = (-design_h - (-(centre_y) - hand_h / 2)) / hand_h
+    hidden_edge = (-design_h - (-(centre_y + sag) - hand_h / 2)) / hand_h
+    body_centre_y = -(centre_y) + hand_h / 2 - body_cy * hand_h
+    # The band's own half-height, so the question is "is the TEXT on screen", not "is its centre".
+    band_half = 0.105 * hand_h
+    band_bottom = -(centre_y + sag) + hand_h / 2 - body_cy * hand_h - band_half
+    # ... and the same edge on the outermost card, which is also tilted MaxTiltDeg.
+    t_rad = math.radians(tilt_deg)
+    band_half_w = 0.37 * hand_w
+    band_corner = (-(centre_y + sag)
+                   + (hand_h / 2 - body_cy * hand_h - band_half) * math.cos(t_rad)
+                   - band_half_w * math.sin(t_rad))
 
     print("== 5. THE TRUE PIXEL SIZE OF A CARD IN HAND " + "=" * 50)
     print(f"  Smallest supported configuration: {smallest.short_px} px short edge — and under")
@@ -298,6 +313,8 @@ def main() -> int:
     print(f"    pixels per world unit    = {ref.short_px} / {2*design_h:g} = {ppu:.4f}")
     print(f"    CARD IN HAND             = {cw_px:.1f} x {ch_px:.1f} px "
           f"({cw_px/ref.ppi*25.4:.2f} x {ch_px/ref.ppi*25.4:.2f} mm at {ref.ppi:.0f} ppi)")
+    print(f"    (a card ON THE BOARD is x1 = {card_w*ppu:.1f} x {board_ch_px:.1f} px; a card in")
+    print(f"     hand is drawn at HandFanLayout.RestScale {rest_scale:g} — NOR-244)")
     print(f"    hidden below screen edge = {hidden*100:.1f}% centre card, "
           f"{hidden_edge*100:.1f}% outermost (sag)")
     print(f"    VISIBLE at rest          = {cw_px:.1f} x {ch_px*(1-hidden):.1f} px")
@@ -305,14 +322,24 @@ def main() -> int:
           f"(screen top is y {design_h:+.2f}) — fully on screen")
     print(f"    rules-band centre        = y {body_centre_y:+.3f} vs screen edge "
           f"y {-design_h:+.2f}")
+    print(f"    rules-band BOTTOM, worst card in the fan (outermost, full sag):")
+    print(f"      flat  y {band_bottom:+.3f} -> {band_bottom + design_h:+.3f} clear of the edge"
+          f"  {'OK' if band_bottom > -design_h else 'CLIPPED'}")
+    print(f"      outer corner at {tilt_deg:g}° tilt  y {band_corner:+.3f} -> "
+          f"{band_corner + design_h:+.3f}  "
+          f"{'OK' if band_corner > -design_h else 'dips below (known residual, NOR-244)'}")
     if body_centre_y <= -design_h:
         print(f"                               -> THE RULES BAND IS OFF-SCREEN AT REST.")
     print(f"    on hover: +{lift:g} lift, x{hover_scale:g} scale -> "
           f"{cw_px*hover_scale:.1f} x {ch_px*hover_scale:.1f} px, fully exposed")
+    lift_needed = hidden_edge * hand_h + (hover_scale - 1) * hand_h / 2
+    print(f"      lift needed to fully expose the worst card = {lift_needed:.3f} "
+          f"(Lift is {lift:g})  {'OK' if lift >= lift_needed else 'TOO SHORT'}")
     print()
     print(f"  Against the ticket's reference point: the collection-wall card measured for")
     print(f"  Appendix A is {REF_CARD_W_PX:.0f} px wide. A card IN HAND is {cw_px:.1f} px —")
-    print(f"  {cw_px/REF_CARD_W_PX*100:.0f}% of it. THE 265 px FIGURE IS NOT OUR HAND CARD.")
+    print(f"  {cw_px/REF_CARD_W_PX*100:.0f}% of it. NOR-244 closed most of that gap; the card on")
+    print(f"  the BOARD is still {card_w*ppu:.1f} px, {card_w*ppu/REF_CARD_W_PX*100:.0f}% of it.")
     print()
 
     # ── 6. EF-050 re-check ──────────────────────────────────────────────────────
@@ -330,16 +357,23 @@ def main() -> int:
     print()
     print(f"  {'state':<34} {'em px':>7} {'cap px':>7} {'cap mm':>7} {'arcmin':>7} "
           f"{'margin':>7}  verdict")
+    # NOR-244 scales the HAND card by RestScale and leaves the board card at 1.0, so height is
+    # now per-row. The two safe-area rows are the point of the exercise: SafeAreaCamera shrinks
+    # everything on screen to lift the board off the Android gesture bar, and a hand size that
+    # only clears threshold at the authored camera does not clear it on a real phone.
     worst = None
-    for label, em_frac, scale in [
-        ("hand, at rest (BodyEm)", body_em, 1.0),
-        ("hand, at rest (shrink floor)", body_floor, 1.0),
-        ("hand, hovered (BodyEm)", body_em, hover_scale),
-        ("hand, hovered (shrink floor)", body_floor, hover_scale),
-        ("board minion (BodyEm)", body_em, 1.0),
-        ("board minion (shrink floor)", body_floor, 1.0),
+    worst_hand_rest = None
+    for label, em_frac, scale, h_px in [
+        ("hand, at rest (BodyEm)", body_em, 1.0, ch_px),
+        ("hand, at rest (shrink floor)", body_floor, 1.0, ch_px),
+        ("hand, hovered (BodyEm)", body_em, hover_scale, ch_px),
+        ("hand, hovered (shrink floor)", body_floor, hover_scale, ch_px),
+        ("hand at rest, 24dp gesture bar", body_floor, 1.0, ch_px * 4.6 / 4.8994),
+        ("hand at rest, 48dp nav bar", body_floor, 1.0, ch_px * 4.6 / 5.2405),
+        ("board minion (BodyEm)", body_em, 1.0, board_ch_px),
+        ("board minion (shrink floor)", body_floor, 1.0, board_ch_px),
     ]:
-        em_px = em_frac * ch_px * scale
+        em_px = em_frac * h_px * scale
         cap_px = em_px * cap_frac
         cap_mm = cap_px / ref.ppi * 25.4
         am = arcmin(cap_mm)
@@ -347,17 +381,24 @@ def main() -> int:
         verdict = "PASS" if margin >= 1.0 else "FAIL — below threshold"
         if worst is None or margin < worst:
             worst = margin
+        if label == "hand, at rest (shrink floor)":
+            worst_hand_rest = margin
         print(f"  {label:<34} {em_px:7.2f} {cap_px:7.2f} {cap_mm:7.3f} {am:7.2f} "
               f"{margin:6.2f}x  {verdict}")
+    print()
+    print(f"  The board minion is the floor now, and deliberately: a minion is READ ONCE when it")
+    print(f"  is played and then identified by its art and its stat bosses, while a card in hand")
+    print(f"  is what a turn is planned from. NOR-244 bought size for the hand only.")
     print()
     name_px = name_em * ch_px
     print(f"  For contrast, the card NAME (AlfaSlabOne, display face) is "
           f"{name_px:.2f} px em on the same card.")
     print()
-    print(f"  VERDICT: the worst case is {worst:.2f}x the recognition threshold. EF-050's")
-    print(f"  1.6x margin was computed against a {REF_CARD_W_PX:.0f} px collection tile and does not")
-    print(f"  transfer to a {cw_px:.0f} px hand card. Choosing a cleaner text face cannot buy back")
-    print(f"  a factor of {1/worst:.1f} — only SIZE can. See §7.")
+    print(f"  VERDICT (hand, at rest, common case): {worst_hand_rest:.2f}x the recognition")
+    print(f"  threshold. EF-050's 1.6x margin was computed against a {REF_CARD_W_PX:.0f} px collection")
+    print(f"  tile and never transferred to a hand card; NOR-244 closed the gap with SIZE, which")
+    print(f"  is the only thing that could — no typeface choice buys a factor of 1.35.")
+    print(f"  Worst row anywhere in the table: {worst:.2f}x.")
     print()
 
     # ── 7. safe area ────────────────────────────────────────────────────────────
@@ -468,17 +509,21 @@ def main() -> int:
     print(f"      16:10 = {1.6:.4f} and 4:3 = {4/3:.4f} are OUT — the hero plate clips.)")
     hd_ppu = 720 / (2 * design_h)
     print(f"  B. Supported short edge: 1080 px. A 720p HD+ panel gives a "
-          f"{card_w*hd_ppu:.0f} px hand card and a body")
-    print(f"     cap height of {body_em*card_h*hd_ppu*cap_frac:.1f} px "
-          f"({body_floor*card_h*hd_ppu*cap_frac:.1f} px at the shrink floor). That is a RASTER")
+          f"{hand_w*hd_ppu:.0f} px hand card and a body")
+    print(f"     cap height of {body_em*hand_h*hd_ppu*cap_frac:.1f} px "
+          f"({body_floor*hand_h*hd_ppu*cap_frac:.1f} px at the shrink floor). That is a RASTER")
     print(f"     limit, not an acuity one — the glyph is the same physical size as on a Pixel 5a")
     print(f"     and simply has too few pixels to form a letter. No font fixes it either.")
     print(f"  C. True card size in hand, 1080p: {cw_px:.1f} x {ch_px:.1f} px "
-          f"({cw_px/REF_CARD_W_PX*100:.0f}% of the 265 px reference).")
+          f"({cw_px/REF_CARD_W_PX*100:.0f}% of the 265 px reference) — a card in hand is")
+    print(f"     drawn at x{rest_scale:g}; on the BOARD it is {card_w*ppu:.1f} x {board_ch_px:.1f} px.")
     print(f"  D. Vertical safe-area budget: {vert_spare:.4f} units = "
           f"{vert_spare*ppu:.0f} px. Android needs 66-132 px.")
-    print(f"  E. EF-050 re-check: worst case {worst:.2f}x threshold. Rules text in hand is")
-    print(f"     NOT legible at true device size and no typeface choice fixes it.")
+    print(f"  E. EF-050 re-check, HAND at rest, common case: {worst_hand_rest:.2f}x threshold "
+          f"(NOR-244:")
+    print(f"     RestScale {rest_scale:g} + CentreY {centre_y:g}). Holds through a 24 dp gesture bar")
+    print(f"     and lands at 0.94x under a 48 dp three-button bar — a stated residual.")
+    print(f"     A minion ON THE BOARD is still {worst:.2f}x and is deliberately not covered.")
     print()
     return 0
 
