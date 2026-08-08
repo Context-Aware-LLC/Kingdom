@@ -54,6 +54,7 @@ namespace Emberfall.Session
         private readonly ICharacterStore _characters;
         private readonly IDeckStore _decks;
         private readonly IProfileStore _profiles;
+        private readonly IOwnedCardStore _ownedCards;
         private PlayerProfile _profile;
 
         /// <summary>The directory the scope folder sits in — <c>persistentDataPath</c> for the real account.</summary>
@@ -72,6 +73,7 @@ namespace Emberfall.Session
             _characters = JsonCharacterStore.InDirectory(rootDirectory, storageKey);
             _decks = JsonDeckStore.InDirectory(rootDirectory, storageKey);
             _profiles = JsonProfileStore.InDirectory(rootDirectory, storageKey);
+            _ownedCards = JsonOwnedCardStore.InDirectory(rootDirectory, storageKey);
         }
 
         /// <summary>Where this player's files live — worth logging once at boot, since nobody has ever seen them.</summary>
@@ -159,11 +161,31 @@ namespace Emberfall.Session
         public IReadOnlyList<DeckList> Decks() => _decks.LoadAll();
 
         /// <summary>
+        /// What this account owns, per card id — the L6 input — or <b>null when it has no ownership
+        /// record at all</b>, which is every account on every machine until something grants cards.
+        ///
+        /// <para>Null is not "owns nothing" and callers must not treat it as such: it means ownership is
+        /// unknown, and every L6 consumer takes it to mean "do not constrain", which is the full-pool
+        /// alpha the game runs today. Pass the result straight through to <see cref="DeckValidator"/>,
+        /// <see cref="QueueEligibility"/> or <c>DeckQuery</c> rather than substituting an empty
+        /// <c>OwnedCardCounts</c> for it — an empty record asserts the player owns nothing, which would
+        /// turn every deck on the device into a draft. <see cref="IOwnedCardStore"/> carries the full
+        /// rationale.</para>
+        ///
+        /// <para>Fresh off disk on every call, like the roster: ownership changes underneath a screen
+        /// whenever a pack is opened, and this is a few kilobytes.</para>
+        /// </summary>
+        public IOwnedCardCounts OwnedCards() => _ownedCards.Load();
+
+        /// <summary>
         /// The roster panel's rows for one character (<c>DeckQuery.ForCharacter</c>) — default first,
         /// then stored order, each carrying its queue-eligibility. One disk read for both files.
+        ///
+        /// <para>Ownership rides along so the switcher's draft badge and the queue gate answer with the
+        /// same rule (NOR-238). It changes nothing until this account has a record.</para>
         /// </summary>
         public CharacterDecks DecksOf(Character character, ICardDatabase db)
-            => DeckQuery.ForCharacter(character, _decks.LoadAll(), db);
+            => DeckQuery.ForCharacter(character, _decks.LoadAll(), db, OwnedCards());
 
         /// <summary>
         /// Whether the create affordance should be offered for a pairing at all — a pool too thin for

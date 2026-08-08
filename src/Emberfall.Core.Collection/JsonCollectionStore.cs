@@ -327,6 +327,57 @@ namespace Emberfall.Core.Collection
         }
     }
 
+    /// <summary>
+    /// JSON-file <see cref="IOwnedCardStore"/> — one record in one file. Same path, caching and
+    /// atomicity story as <see cref="JsonCharacterStore"/>; see that type.
+    ///
+    /// <para><b>The one store whose Load can return null, and it must stay that way.</b> Every sibling
+    /// here turns a missing file into an empty-but-valid value, because "no characters" and "no decks"
+    /// are the same statement as "none stored". Ownership is not: an absent file means nobody has ever
+    /// told this account what it owns, while an empty file means it owns nothing and every deck it holds
+    /// is a draft. Collapsing the two would make the first launch after L6 landed lock every player out
+    /// of the queue. <see cref="IOwnedCardStore"/> carries the full rationale.</para>
+    /// </summary>
+    public sealed class JsonOwnedCardStore : IOwnedCardStore
+    {
+        private readonly string _filePath;
+
+        public JsonOwnedCardStore(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Owned-card store needs a file path.", nameof(filePath));
+            _filePath = filePath;
+        }
+
+        public static JsonOwnedCardStore InDirectory(string rootDirectory, string storageKey)
+            => new JsonOwnedCardStore(CollectionPaths.OwnedCards(rootDirectory, storageKey));
+
+        public string FilePath => _filePath;
+
+        /// <summary>
+        /// The stored record, or null when this account has never had one. An unreadable file still
+        /// throws <see cref="CollectionFormatException"/> rather than reading as absent: "unknown"
+        /// unlocks the full pool, and silently unlocking it off the back of a corrupt file is the
+        /// entitlement bypass this store exists to prevent.
+        /// </summary>
+        public OwnedCardCounts? Load()
+        {
+            string? json = JsonStoreFile.ReadOrNull(_filePath);
+            return json == null ? null : CollectionJson.ReadOwnedCards(json);
+        }
+
+        /// <summary>
+        /// Replace the record wholesale. Not an upsert, unlike every sibling store here: ownership is a
+        /// projection of a grant history the client does not hold, so a merge would preserve rows the
+        /// authority has since revoked — a dusted card would stay owned forever.
+        /// </summary>
+        public void Save(OwnedCardCounts owned)
+        {
+            if (owned == null) throw new ArgumentNullException(nameof(owned));
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteOwnedCards(owned));
+        }
+    }
+
     /// <summary>The file plumbing the stores share: read-or-null, and a crash-safe write.</summary>
     internal static class JsonStoreFile
     {

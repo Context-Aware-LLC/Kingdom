@@ -46,6 +46,15 @@ namespace Emberfall.Core.Collection
     /// M3, and it gates the queue without changing what a deck may contain while you build it. When
     /// that lands it lands here, once, and both call sites move with it.</para>
     ///
+    /// <para><b>It landed (NOR-238), and it landed exactly there.</b> Every entry point below now takes
+    /// an optional <see cref="IOwnedCardCounts"/>; null is the full-pool alpha and enforces L1-L5 as
+    /// before. Nothing else in the client had to learn what L6 is.</para>
+    ///
+    /// <para><b>Still computed fresh, still never stored.</b> A deck whose cards stop being owned — a
+    /// card dusted, an account restored from an older ledger — becomes a draft the next time this is
+    /// called, and nothing rewrites the deck to match. Saving stays ungated (§1, Sam 2026-07-26): the
+    /// deck survives intact and is eligible again the moment the copies come back.</para>
+    ///
     /// <para>Deck submission is client-authored input; the server re-runs this, never trusting the
     /// client's answer (`security/known-vulnerabilities/VULN-001` §4, trigger "Client-supplied deck
     /// lists"). <see cref="DeckValidator.Validate"/> resolves every card through
@@ -54,8 +63,9 @@ namespace Emberfall.Core.Collection
     public static class QueueEligibility
     {
         /// <summary>The gate, with its reason. One evaluation serves both the badge and the copy.</summary>
-        public static QueueCheck Check(DeckList? deck, Character? character, ICardDatabase db) =>
-            new QueueCheck(DeckValidator.Validate(deck, character, db));
+        public static QueueCheck Check(DeckList? deck, Character? character, ICardDatabase db,
+                                       IOwnedCardCounts? owned = null) =>
+            new QueueCheck(DeckValidator.Validate(deck, character, db, owned));
 
         /// <summary>
         /// The gate for a caller holding a roster rather than a resolved character — match-join, which
@@ -63,23 +73,28 @@ namespace Emberfall.Core.Collection
         /// to nothing yields the L5 violation, which is the orphaned-deck case reporting itself
         /// (§3): the deck is denied the queue and says why, and nothing is repaired.
         /// </summary>
-        public static QueueCheck Check(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db) =>
-            Check(deck, CharacterQuery.ById(roster, deck?.CharacterId ?? ""), db);
+        public static QueueCheck Check(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
+                                       IOwnedCardCounts? owned = null) =>
+            Check(deck, CharacterQuery.ById(roster, deck?.CharacterId ?? ""), db, owned);
 
         /// <summary>Bool-only convenience for a caller that has no use for the reason.</summary>
-        public static bool IsEligible(DeckList? deck, Character? character, ICardDatabase db) =>
-            Check(deck, character, db).IsEligible;
+        public static bool IsEligible(DeckList? deck, Character? character, ICardDatabase db,
+                                      IOwnedCardCounts? owned = null) =>
+            Check(deck, character, db, owned).IsEligible;
 
         /// <summary>Bool-only convenience for a caller that has no use for the reason.</summary>
-        public static bool IsEligible(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db) =>
-            Check(deck, roster, db).IsEligible;
+        public static bool IsEligible(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
+                                      IOwnedCardCounts? owned = null) =>
+            Check(deck, roster, db, owned).IsEligible;
 
         /// <summary>True iff this deck is a draft — listed everywhere, selectable nowhere.</summary>
-        public static bool IsDraft(DeckList? deck, Character? character, ICardDatabase db) =>
-            Check(deck, character, db).IsDraft;
+        public static bool IsDraft(DeckList? deck, Character? character, ICardDatabase db,
+                                   IOwnedCardCounts? owned = null) =>
+            Check(deck, character, db, owned).IsDraft;
 
         /// <summary>True iff this deck is a draft — listed everywhere, selectable nowhere.</summary>
-        public static bool IsDraft(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db) =>
-            Check(deck, roster, db).IsDraft;
+        public static bool IsDraft(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
+                                   IOwnedCardCounts? owned = null) =>
+            Check(deck, roster, db, owned).IsDraft;
     }
 }

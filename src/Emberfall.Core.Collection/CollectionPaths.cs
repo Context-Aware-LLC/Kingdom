@@ -35,6 +35,15 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public const string AccountsFileName = "accounts.json";
 
+        /// <summary>
+        /// What this account owns, per card id (<see cref="IOwnedCardStore"/>). A fourth file in the
+        /// scope rather than a section of any existing one, for the reason the profile is its own file:
+        /// ownership changes every time a pack is opened and the roster does not, and neither should be
+        /// at risk of the other's write. <b>Its absence is meaningful</b> — see
+        /// <see cref="IOwnedCardStore"/> for why "no file" is not "owns nothing".
+        /// </summary>
+        public const string OwnedCardsFileName = "owned-cards.json";
+
         /// <summary>Longest storage key we will turn into a directory name (a UUID is 36).</summary>
         private const int MaxKeyLength = 64;
 
@@ -50,6 +59,9 @@ namespace Emberfall.Core.Collection
 
         public static string Profile(string rootDirectory, string storageKey)
             => Path.Combine(ScopeDirectory(rootDirectory, storageKey), ProfileFileName);
+
+        public static string OwnedCards(string rootDirectory, string storageKey)
+            => Path.Combine(ScopeDirectory(rootDirectory, storageKey), OwnedCardsFileName);
 
         /// <summary>
         /// The device's account registry — the one collection file that takes no storage key, because

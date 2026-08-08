@@ -5,37 +5,9 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Collection
 {
-    /// <summary>How many copies of each card a player already holds — the input to duplicate protection.</summary>
-    /// <remarks>
-    /// An interface rather than a dictionary parameter because the authority differs by caller: the
-    /// server projects it off <c>IEntitlementLedger</c> balances, a test hands over a literal, and the
-    /// client (which never decides an open — ADR-0004) only ever renders the result.
-    /// </remarks>
-    public interface IOwnedCardCounts
-    {
-        /// <summary>Copies of this card the player owns. 0 for a card they have never seen.</summary>
-        int CopiesOwned(string cardId);
-    }
-
-    /// <summary>The trivial dictionary-backed <see cref="IOwnedCardCounts"/> for tests, dev and projections.</summary>
-    public sealed class OwnedCardCounts : IOwnedCardCounts
-    {
-        private readonly Dictionary<string, int> _counts;
-
-        public OwnedCardCounts() => _counts = new Dictionary<string, int>(StringComparer.Ordinal);
-
-        public OwnedCardCounts(IReadOnlyDictionary<string, int> counts)
-        {
-            _counts = new Dictionary<string, int>(StringComparer.Ordinal);
-            if (counts != null)
-                foreach (var kv in counts) _counts[kv.Key] = kv.Value;
-        }
-
-        public int CopiesOwned(string cardId)
-            => cardId != null && _counts.TryGetValue(cardId, out int n) ? n : 0;
-
-        public void Set(string cardId, int copies) => _counts[cardId] = copies;
-    }
+    // IOwnedCardCounts and OwnedCardCounts moved to OwnedCards.cs (NOR-238) — same namespace, same
+    // members. They are the collection's ownership model now, not the pack opener's dupe-protection
+    // input, because DeckValidator L6 reads them too.
 
     /// <summary>Why a slot's rarity is higher than the dice said. <see cref="None"/> = the dice said so.</summary>
     public enum PackUpgrade

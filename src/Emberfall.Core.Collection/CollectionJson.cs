@@ -41,6 +41,7 @@ namespace Emberfall.Core.Collection
         private const string DecksProperty = "decks";
         private const string ProfileProperty = "profile";
         private const string AccountsProperty = "accounts";
+        private const string OwnedCardsProperty = "ownedCards";
 
         // ---- characters ----------------------------------------------------------------
 
@@ -261,6 +262,67 @@ namespace Emberfall.Core.Collection
                 i++;
             }
             return result;
+        }
+
+        // ---- owned cards ---------------------------------------------------------------
+
+        /// <summary>
+        /// What this account owns, per card id — rows sorted by card id
+        /// (<see cref="OwnedCardCounts.Entries"/>), so an unchanged collection writes identical bytes.
+        ///
+        /// <para>An array of {id, copies} rather than a JSON object keyed by card id: an object would
+        /// make every card id a property name, and a property name is exactly where a hand-edited or
+        /// hostile file gets to collide with <c>schemaVersion</c>. The array keeps card ids as values,
+        /// where the reader already treats them as untrusted strings.</para>
+        /// </summary>
+        public static string WriteOwnedCards(OwnedCardCounts owned)
+        {
+            var buffer = new System.IO.MemoryStream();
+            using (var w = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
+            {
+                w.WriteStartObject();
+                w.WriteNumber("schemaVersion", SchemaVersion);
+                w.WriteStartArray(OwnedCardsProperty);
+                foreach (var row in owned.Entries())
+                {
+                    w.WriteStartObject();
+                    w.WriteString("id", row.Key);
+                    w.WriteNumber("copies", row.Value);
+                    w.WriteEndObject();
+                }
+                w.WriteEndArray();
+                w.WriteEndObject();
+            }
+            return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
+        }
+
+        /// <summary>
+        /// Read an ownership record back. Tolerant on card ids for the same reason a decklist is: an id
+        /// is a string until the database resolves it, and a card a balance patch removed is still a
+        /// card the player was granted. A missing or non-numeric <c>copies</c> reads as 0 — a recorded
+        /// row with no count is a record that the player has met this card and holds none of it, which
+        /// is a real state (every copy dusted) and not a corrupt file.
+        ///
+        /// <para><b>A negative count is clamped to 0, not rejected.</b> Server-side, ownership is the
+        /// signed sum of an append-only ledger, so a refund is a negative grant and a projection can
+        /// legitimately arrive at less than nothing after a correction. L6 compares against copies used,
+        /// where "less than none" and "none" mean the same refusal.</para>
+        /// </summary>
+        public static OwnedCardCounts ReadOwnedCards(string json)
+        {
+            var owned = new OwnedCardCounts();
+            using var doc = ParseEnvelope(json, OwnedCardsProperty, out var rows);
+            int i = 0;
+            foreach (var el in rows.EnumerateArray())
+            {
+                string cardId = Req(el, "id", OwnedCardsProperty, i);
+                int copies = el.TryGetProperty("copies", out var n) && n.ValueKind == JsonValueKind.Number
+                    ? n.GetInt32()
+                    : 0;
+                owned.Set(cardId, copies < 0 ? 0 : copies);
+                i++;
+            }
+            return owned;
         }
 
         // ---- shared --------------------------------------------------------------------

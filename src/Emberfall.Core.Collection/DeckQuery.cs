@@ -93,8 +93,15 @@ namespace Emberfall.Core.Collection
         ///
         /// <para>A null Character returns empty rather than every orphan — see
         /// <see cref="Orphans"/> for the deck whose owner is gone.</para>
+        ///
+        /// <para><paramref name="owned"/> reaches <see cref="QueueEligibility"/> untouched (NOR-238). The
+        /// switcher's draft badge and the queue gate have to be the same sentence, so the row cannot be
+        /// allowed to judge a deck by a rule the gate does not apply — a deck badged ready that
+        /// match-join then refuses is precisely the disagreement this query exists to prevent. Null is
+        /// the full-pool alpha, exactly as everywhere else.</para>
         /// </summary>
-        public static CharacterDecks ForCharacter(Character? character, IEnumerable<DeckList> decks, ICardDatabase db)
+        public static CharacterDecks ForCharacter(Character? character, IEnumerable<DeckList> decks,
+                                                  ICardDatabase db, IOwnedCardCounts? owned = null)
         {
             var rows = new List<DeckSummary>();
             if (character == null || decks == null)
@@ -107,7 +114,7 @@ namespace Emberfall.Core.Collection
             {
                 bool isDefault = wantsDefault && defaultAt < 0 && deck.Id == character.DefaultDeckId;
                 if (isDefault) defaultAt = rows.Count;
-                rows.Add(new DeckSummary(deck, isDefault, QueueEligibility.Check(deck, character, db)));
+                rows.Add(new DeckSummary(deck, isDefault, QueueEligibility.Check(deck, character, db, owned)));
             }
 
             // Default to the front, everything else stable behind it.

@@ -45,6 +45,13 @@ namespace Emberfall.Presentation
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
         private CardFaceBaker _faceBaker;
 
+        /// <summary>
+        /// This account's ownership record (L6), or null when it has none — the full-pool alpha, which
+        /// is every machine until a grant path writes one. Read once per visit: nothing opens a pack
+        /// from inside the deckbuilder, so it cannot change while this screen is up.
+        /// </summary>
+        private IOwnedCardCounts _owned;
+
         // Cached elements.
         private VisualElement _root;
         private VisualElement _collectionGrid;
@@ -67,6 +74,7 @@ namespace Emberfall.Presentation
             {
                 _account = PlayerAccount.Local;
                 _db = CardDatabaseLoader.Load();
+                _owned = _account.OwnedCards();
             }
             catch (Exception ex)
             {
@@ -144,7 +152,7 @@ namespace Emberfall.Presentation
                 foreach (var def in _pool)
                 {
                     if (_deck.TotalCount >= target) break;
-                    if (DeckValidator.CanAdd(_deck, _character, def)) { AddCopy(def); progressed = true; }
+                    if (DeckValidator.CanAdd(_deck, _character, def, _owned)) { AddCopy(def); progressed = true; }
                 }
             }
         }
@@ -199,9 +207,16 @@ namespace Emberfall.Presentation
             //
             // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a
             // Legendary fades at one copy, not two.
+            //
+            // NOR-238 replaced MaxCopies with CopyLimit — min(MaxCopies, copies you own), or MaxCopies
+            // alone when this account has no ownership record. The fade's ONE meaning is unchanged and
+            // that is why it could absorb L6 rather than needing a treatment of its own: "you already
+            // hold every copy of THIS card you are allowed" is the same sentence whether the limit came
+            // from the format or from your collection. A card you own none of therefore fades at zero
+            // copies in the deck, which is exactly what AddCopy will refuse.
             _wall.TileDecorator = (def, tile) =>
                 tile.EnableInClassList("card-tile--maxed",
-                    _deck.CountOf(def.Id) >= DeckValidator.MaxCopies(def.Rarity));
+                    _deck.CountOf(def.Id) >= DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
 
             _wall.SetPool(_pool);
         }
@@ -293,7 +308,8 @@ namespace Emberfall.Presentation
         // ---- Mutations ----
         private void AddCopy(CardDefinition def)
         {
-            if (!DeckValidator.CanAdd(_deck, _character, def)) return;   // L1 ceiling / L2/L3 cap / L4 off-class
+            // L1 ceiling / L2/L3 cap / L4 off-class / L6 you don't own another copy.
+            if (!DeckValidator.CanAdd(_deck, _character, def, _owned)) return;
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
             if (i >= 0) _deck.Entries[i] = _deck.Entries[i].With(_deck.Entries[i].Count + 1);
             else        _deck.Entries.Add(new DeckEntry(def.Id, 1));
@@ -399,16 +415,38 @@ namespace Emberfall.Presentation
         // Swept locally rather than filtered out of Violations because the vanished-card report
         // and the off-class report share DeckRule.L4_ClassMembership, and telling them apart would
         // mean adding to a shared enum the spec marks LOCKED for a purely cosmetic reason.
+        //
+        // L6 ownership joins it (NOR-238) for the identical reason, and it is the one rule this screen
+        // cannot teach: the wall's fade says "you are at the limit for this card", which is the right
+        // sentence for a deck being built and the wrong one for a deck being reopened. AddCopy can
+        // never produce an L6 violation — it refuses the add — so the only way to see one is to open a
+        // deck that was legal when it was saved and has since stopped being: a card dusted, an account
+        // restored from an older ledger. That deck is still perfectly savable (§1) and simply cannot
+        // queue, and without this line nothing anywhere would say why.
         private void RefreshVanishedCards()
         {
             _legalityBox.Clear();
+
             foreach (var e in _deck.Entries)
-            {
-                if (_db.TryGet(e.CardId, out _)) continue;
-                var msg = new Label($"Unknown card '{e.CardId}'.");
-                msg.AddToClassList("legality-msg");
-                _legalityBox.Add(msg);
-            }
+                if (!_db.TryGet(e.CardId, out _))
+                    AddLegalityMessage($"Unknown card '{e.CardId}'.");
+
+            // The ownership copy is NOT restated here — it is lifted out of the validator's own
+            // violations, the way QueueCheck.Reason lifts its sentence. Two screens printing their own
+            // wording for one rule is how the deck-pick row and this box end up telling a player
+            // different things about the same deck.
+            if (_owned == null) return;
+            var result = DeckValidator.Validate(_deck, _character, _db, _owned);
+            foreach (var v in result.Violations)
+                if (v.Rule == DeckRule.L6_Ownership)
+                    AddLegalityMessage(v.Message);
+        }
+
+        private void AddLegalityMessage(string text)
+        {
+            var msg = new Label(text);
+            msg.AddToClassList("legality-msg");
+            _legalityBox.Add(msg);
         }
 
         private void RebuildCurve()
