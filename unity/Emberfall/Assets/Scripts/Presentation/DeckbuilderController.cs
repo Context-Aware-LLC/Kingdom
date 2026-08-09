@@ -58,7 +58,6 @@ namespace Emberfall.Presentation
         private CardWall _wall;
         private ListView _deckList;
         private VisualElement _curve;
-        private VisualElement _legalityBox;
         private Label _countLabel;
         private Label _legalityPill;
         private Button _filterAllButton;
@@ -174,7 +173,6 @@ namespace Emberfall.Presentation
             _collectionGrid = _root.Q<VisualElement>("collection-grid");
             _deckList       = _root.Q<ListView>("deck-list");
             _curve          = _root.Q<VisualElement>("curve-strip");
-            _legalityBox    = _root.Q<VisualElement>("legality-box");
             _countLabel     = _root.Q<Label>("count-label");
             // _legalityPill   = _root.Q<Label>("legality-pill");
             _filterAllButton     = _root.Q<Button>("filter-all");
@@ -391,62 +389,6 @@ namespace Emberfall.Presentation
             // _legalityPill.EnableInClassList("db-pill--valid", result.IsValid);
             // _legalityPill.EnableInClassList("db-pill--invalid", !result.IsValid);
             // (restore the DeckValidator.Validate call above if this pill ever comes back)
-
-            RefreshVanishedCards();
-        }
-
-        // ---- The legality box says exactly one thing (Sam, 2026-08-07) ------------------------
-        //
-        // It used to print every DeckValidator violation. Each of the others has a better surface
-        // on this screen than a sentence:
-        //
-        //   L1 size       — "8 / 30" states it two lines up, with both numbers instead of one.
-        //   L2/L3 copies  — the wall TEACHES it. A card you already hold every copy of fades to
-        //                   0.1; one you hold half of does not. A few minutes of play and nobody
-        //                   needs it spelled out again, which a sentence can never achieve.
-        //   L4 class      — unreachable. BuildPool only admits cards AllowsClass accepts, so an
-        //                   off-class card cannot be added here in the first place.
-        //
-        // What is left has no other surface at all. BindDeckRow HIDES the row of a card the
-        // database no longer knows, while TotalCount still counts it — so a deck holding a card a
-        // balance patch deleted opens showing "29 / 30" above 29 rows, with nothing to explain the
-        // gap. DeckValidator names this case explicitly as expected after a patch.
-        //
-        // Swept locally rather than filtered out of Violations because the vanished-card report
-        // and the off-class report share DeckRule.L4_ClassMembership, and telling them apart would
-        // mean adding to a shared enum the spec marks LOCKED for a purely cosmetic reason.
-        //
-        // L6 ownership joins it (NOR-238) for the identical reason, and it is the one rule this screen
-        // cannot teach: the wall's fade says "you are at the limit for this card", which is the right
-        // sentence for a deck being built and the wrong one for a deck being reopened. AddCopy can
-        // never produce an L6 violation — it refuses the add — so the only way to see one is to open a
-        // deck that was legal when it was saved and has since stopped being: a card dusted, an account
-        // restored from an older ledger. That deck is still perfectly savable (§1) and simply cannot
-        // queue, and without this line nothing anywhere would say why.
-        private void RefreshVanishedCards()
-        {
-            _legalityBox.Clear();
-
-            foreach (var e in _deck.Entries)
-                if (!_db.TryGet(e.CardId, out _))
-                    AddLegalityMessage($"Unknown card '{e.CardId}'.");
-
-            // The ownership copy is NOT restated here — it is lifted out of the validator's own
-            // violations, the way QueueCheck.Reason lifts its sentence. Two screens printing their own
-            // wording for one rule is how the deck-pick row and this box end up telling a player
-            // different things about the same deck.
-            if (_owned == null) return;
-            var result = DeckValidator.Validate(_deck, _character, _db, _owned);
-            foreach (var v in result.Violations)
-                if (v.Rule == DeckRule.L6_Ownership)
-                    AddLegalityMessage(v.Message);
-        }
-
-        private void AddLegalityMessage(string text)
-        {
-            var msg = new Label(text);
-            msg.AddToClassList("legality-msg");
-            _legalityBox.Add(msg);
         }
 
         // Bar height is pixels, not Length.Percent — curve-col is content-sized (no explicit

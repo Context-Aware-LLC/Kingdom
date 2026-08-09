@@ -39,22 +39,21 @@
               the rest of deck management (Sam, 2026-08-07) — what is left here edits the 30.
             -->
             <ui:VisualElement name="deck-panel" class="db-panel db-deck">
-                <ui:Label name="count-label" text="0 / 30" class="db-count" />
+                <!--
+                  Back lives here now, not in a footer row of its own (Sam, 2026-08-09): the
+                  legality box below it never had anything to say — this screen can't produce an
+                  illegal deck (SaveDeck is never legality-gated) — so it's gone, and Back moved up
+                  next to the count instead of being squeezed into what was left of the footer.
+                  It still saves and leaves; see WireChrome.
+                -->
+                <ui:VisualElement name="deck-header" class="db-deck-header">
+                    <ui:Button name="done-button" text="Back" class="db-button db-button--ghost db-button--back" />
+                    <ui:Label name="count-label" text="0 / 30" class="db-count" />
+                </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve" />
                 <ui:ListView name="deck-list" class="db-list" />
-                <ui:VisualElement name="legality-box" class="db-legality" />
             </ui:VisualElement>
 
-        </ui:VisualElement>
-
-        <!--
-          Footer. One button, not two (Sam, 2026-08-07): Save and Done did the same write, and a
-          screen whose whole model is "an illegal deck is a savable draft" has nothing to confirm on
-          the way out. Back saves and leaves.
-        -->
-        <ui:VisualElement name="footer" class="db-footer">
-            <ui:Button name="done-button" text="Back" class="db-button db-button--ghost" />
-            <ui:VisualElement class="db-header-spacer" />
         </ui:VisualElement>
 
     </ui:VisualElement>

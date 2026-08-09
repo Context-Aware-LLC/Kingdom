@@ -10,15 +10,19 @@
 }
 
 /* The screen had a header carrying the character's name, the deck's name and the count. It is
- * gone (Sam, 2026-08-07): the first two are on the roster, one screen back. db-header-spacer
- * survives because the footer still uses it. */
-.db-header-spacer { flex-grow: 1; }
-/* n / 30, at the top of the deck panel, labelling the list below it. */
+ * gone (Sam, 2026-08-07): the first two are on the roster, one screen back. */
+/* Back + count share a row at the top of the deck panel (Sam, 2026-08-09) — Back used to be its
+ * own footer row below the legality box, which is gone (see deck-header's UXML comment). */
+.db-deck-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+}
 .db-count {
     font-size: var(--type-h1);
     -unity-font-style: bold;
     color: var(--ink-1);
-    margin-bottom: var(--space-3);
     -unity-text-align: middle-right;
 }
 .db-pill {
@@ -169,16 +173,6 @@
     margin-top: 2px;
 }
 
-.db-legality {
-    margin-top: var(--space-3);
-    min-height: 24px;
-}
-.legality-msg {
-    font-size: var(--type-label);
-    color: var(--warning);
-    margin-bottom: var(--space-1);
-}
-
 /* ---------- Rarity / class modifiers (token-driven; set from C# by enum) ---------- */
 .rarity--common    { background-color: var(--rarity-common); }
 .rarity--rare      { background-color: var(--rarity-rare); }
@@ -191,12 +185,7 @@
 .edge--gravekeep  { border-left-color: var(--class-gravekeep); }
 .edge--verdant    { border-left-color: var(--class-verdant); }
 
-/* ---------- Footer / buttons ---------- */
-.db-footer {
-    flex-direction: row;
-    align-items: center;
-    margin-top: var(--space-2);
-}
+/* ---------- Buttons ---------- */
 .db-button {
     font-size: var(--type-body);
     -unity-font-style: bold;
@@ -205,6 +194,13 @@
     border-width: 0;
     border-radius: var(--space-2);
     padding: 0 var(--space-6);
+}
+/* Back sits in the deck-header row (§ deck side), not a full-height CTA — shorter and narrower
+ * than .db-button's default so it reads as a corner control next to the count, not a footer. */
+.db-button--back {
+    height: 36px;
+    min-width: 84px;
+    padding: 0 var(--space-4);
 }
 .db-button--cta {
     color: var(--surface-0);
