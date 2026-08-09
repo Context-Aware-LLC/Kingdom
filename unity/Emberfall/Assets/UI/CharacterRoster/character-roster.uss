@@ -768,11 +768,17 @@
     white-space: normal;
 }
 
-/* Still reserved-but-empty (NOR-278): the traits/playstyle bullets. Kept in the layout with a
- * minimum height so the overlay does not resize the day that copy is authored. */
+/* Traits/playstyle bullets, filled from hero-detail.json (NOR-281). */
 .hero-detail-bullets {
     min-height: 72px;
     margin-bottom: var(--space-3);
+}
+
+.hero-detail-bullet {
+    font-size: var(--type-body);
+    color: var(--ink-2);
+    white-space: normal;
+    margin-bottom: var(--space-1);
 }
 
 /* Filled from the class's hero power card since NOR-291. The minimum height is now a floor for a

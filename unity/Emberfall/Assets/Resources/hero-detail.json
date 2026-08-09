@@ -1,0 +1,68 @@
+{
+  "entries": [
+    {
+      "heroClass": "EMBERWARD",
+      "traits": [
+        "Plays fast and punishes slow opponents early",
+        "Burn spells finish games from range when the board stalls",
+        "Trades resources aggressively to stay ahead on tempo"
+      ]
+    },
+    {
+      "heroClass": "TIDECALLER",
+      "traits": [
+        "Builds persistent board presence from the hero power alone",
+        "Frost spells lock down key minions while Wisps apply pressure",
+        "Rewards patience: tempo accumulates over many turns"
+      ]
+    },
+    {
+      "heroClass": "GRAVEKEEP",
+      "traits": [
+        "Survives long enough to win through attrition",
+        "Undead cards rise again or fuel death-trigger chains",
+        "Excels in long games where life-total margins decide the match"
+      ]
+    },
+    {
+      "heroClass": "VERDANT",
+      "traits": [
+        "Sustains through punishment and grows the board simultaneously",
+        "Nature minions are stubborn and hard to clear efficiently",
+        "Rewards outlasting: the longer the game, the bigger the advantage"
+      ]
+    },
+    {
+      "heroClass": "CLOCKWRIGHT",
+      "traits": [
+        "Draws through the deck to assemble powerful combinations",
+        "Mechanical constructs synergize with specific card sequences",
+        "Rewards tight sequencing and knowing your deck's key plays"
+      ]
+    },
+    {
+      "heroClass": "NIGHTVEIL",
+      "traits": [
+        "Protects key pieces from removal and targeted spells",
+        "Shroud forces opponents to clear with area damage or ignore the threat",
+        "Winning the targeting game creates decisive board swings"
+      ]
+    },
+    {
+      "heroClass": "STONEWARDEN",
+      "traits": [
+        "Every hero power activation places a 0/3 Bulwark blocker in front of the hero",
+        "Stalls aggression while building toward high-value defensive plays",
+        "Stone cards grind the opponent down through sheer durability"
+      ]
+    },
+    {
+      "heroClass": "TEMPEST",
+      "traits": [
+        "Chips away at opposing boards with random but distributed damage",
+        "Synergizes with token swarms: more targets means more ping value",
+        "Punishes clustered small minions and snowballs from board control"
+      ]
+    }
+  ]
+}

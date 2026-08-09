@@ -601,8 +601,7 @@ namespace Emberfall.Presentation
                     ? "Selecting this hero locks in its Hero Power."
                     : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_createPicks[0])}'s.";
 
-            // Traits/playstyle bullets stay reserved-but-empty (NOR-278): that copy is not authored.
-            _createDetailBullets?.Clear();
+            FillTraitBullets(heroClass);
 
             FillHeroPower(heroClass);
 
@@ -610,6 +609,19 @@ namespace Emberfall.Presentation
             if (_createDetailSelect != null) _createDetailSelect.text = selected ? "Deselect" : "Select";
 
             ShowCreateView(CreateView.Detail);
+        }
+
+        /// <summary>Fill the trait bullets for one class from presentation copy (NOR-281).</summary>
+        private void FillTraitBullets(CardClass heroClass)
+        {
+            if (_createDetailBullets == null) return;
+            _createDetailBullets.Clear();
+            foreach (string trait in HeroDetailCopy.TraitsFor(heroClass))
+            {
+                var bullet = new Label("• " + trait);
+                bullet.AddToClassList("hero-detail-bullet");
+                _createDetailBullets.Add(bullet);
+            }
         }
 
         /// <summary>
