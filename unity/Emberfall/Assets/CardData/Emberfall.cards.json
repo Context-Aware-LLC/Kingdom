@@ -874,7 +874,6 @@
         }
       }
     ],
-  
     "setId": "CORE",
     "collectible": false,
     "artId": "grave_hero_power_toll_the_bell"
@@ -3986,6 +3985,43 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "stone_duras_the_ironmount"
+  },
+  {
+    "id": "ward_earthwardens_maul",
+    "name": "Earthwarden's Maul",
+    "type": "WEAPON",
+    "cost": 3,
+    "attack": 2,
+    "durability": 3,
+    "class": "STONEWARDEN",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "BULWARK",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
+          }
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "stone_earthwardens_maul"
   },
   {
     "id": "storm_spark_imp",

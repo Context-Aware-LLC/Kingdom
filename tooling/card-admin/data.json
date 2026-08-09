@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 260,
+  "totalCards": 261,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,11 +22,11 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 260,
+    "total": 261,
     "typeSplit": {
       "MINION": 171,
       "SPELL": 71,
-      "WEAPON": 10,
+      "WEAPON": 11,
       "HERO_POWER": 8
     },
     "keywordFrequency": {
@@ -45,7 +45,7 @@
       "LIFEDRAIN": 2
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 32,
+      "ANY_FRIENDLY_MINION": 33,
       "FRIENDLY_MINIONS": 32,
       "ANY_MINION": 24,
       "ENEMY_MINIONS": 24,
@@ -60,7 +60,7 @@
       "0": 8,
       "1": 32,
       "2": 62,
-      "3": 57,
+      "3": 58,
       "4": 45,
       "5": 23,
       "6": 15,
@@ -70,7 +70,7 @@
     },
     "rarityBreakdown": {
       "COMMON": 123,
-      "RARE": 83,
+      "RARE": 84,
       "EPIC": 32,
       "LEGENDARY": 22
     },
@@ -416,11 +416,11 @@
       }
     },
     "STONEWARDEN": {
-      "total": 23,
+      "total": 24,
       "typeSplit": {
         "MINION": 15,
         "SPELL": 7,
-        "WEAPON": 0,
+        "WEAPON": 1,
         "HERO_POWER": 1
       },
       "keywordFrequency": {
@@ -429,7 +429,7 @@
       },
       "selectorFrequency": {
         "FRIENDLY_MINIONS": 8,
-        "ANY_FRIENDLY_MINION": 3,
+        "ANY_FRIENDLY_MINION": 4,
         "ENEMY_MINIONS": 3,
         "FRIENDLY_HERO": 1
       },
@@ -437,7 +437,7 @@
         "0": 1,
         "1": 3,
         "2": 6,
-        "3": 4,
+        "3": 5,
         "4": 3,
         "5": 1,
         "6": 2,
@@ -446,7 +446,7 @@
       },
       "rarityBreakdown": {
         "COMMON": 11,
-        "RARE": 7,
+        "RARE": 8,
         "EPIC": 3,
         "LEGENDARY": 2
       },
@@ -3246,6 +3246,26 @@
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "stone_duras_the_ironmount",
+      "sourceFile": "Emberfall.cards.json"
+    },
+    {
+      "id": "ward_earthwardens_maul",
+      "name": "Earthwarden's Maul",
+      "type": "WEAPON",
+      "cost": 3,
+      "attack": 2,
+      "health": null,
+      "durability": 3,
+      "class": "STONEWARDEN",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "EMBERFALL",
+      "collectible": true,
+      "artId": "stone_earthwardens_maul",
       "sourceFile": "Emberfall.cards.json"
     },
     {

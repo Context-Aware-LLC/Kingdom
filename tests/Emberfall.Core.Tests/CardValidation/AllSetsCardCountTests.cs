@@ -52,17 +52,18 @@ namespace Emberfall.Core.Tests.CardValidation
             var emberfall = LoadSet(SetFiles[0]);
             var rekindling = LoadSet(SetFiles[1]);
 
-            // 187 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file, plus
+            // 188 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file, plus
             // clock_mainspring_halberd and storm_galecleaver (NOR audit 2026-08-09: CLOCKWRIGHT's and
             // TEMPEST's signature weapons were filed under REKINDLING by mistake — Sam confirmed every
-            // hero power and weapon belongs in Emberfall, moved them back).
-            Assert.That(emberfall.Count, Is.EqualTo(187), "Emberfall set count mismatch (card_inventory.py: 187)");
+            // hero power and weapon belongs in Emberfall, moved them back), plus
+            // ward_earthwardens_maul (NOR-316: STONEWARDEN's signature weapon, added 2026-08-09).
+            Assert.That(emberfall.Count, Is.EqualTo(188), "Emberfall set count mismatch (card_inventory.py: 188)");
             // 73 = the former 75 minus the two signature weapons moved into Emberfall above.
             Assert.That(rekindling.Count, Is.EqualTo(73), "Rekindling set count mismatch (card_inventory.py: 73)");
 
             var combined = emberfall.Concat(rekindling).ToList();
-            Assert.That(combined.Count, Is.EqualTo(260),
-                "Total card count across Emberfall+Rekindling must match CardCi output (card_inventory.py: 260).");
+            Assert.That(combined.Count, Is.EqualTo(261),
+                "Total card count across Emberfall+Rekindling must match CardCi output (card_inventory.py: 261).");
         }
 
         [Test]
@@ -82,7 +83,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Canonical_Card_Identity_Projection_Is_Pinned()
         {
             var all = SetFiles.SelectMany(LoadSet).ToList();
-            Assert.That(all.Count, Is.EqualTo(260));
+            Assert.That(all.Count, Is.EqualTo(261));
 
             string projection = string.Join("\n", all.Select(card => string.Join("\u001f", new[]
             {
@@ -100,13 +101,10 @@ namespace Emberfall.Core.Tests.CardValidation
             })));
             string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(projection)));
 
-            // Re-pinned 2026-08-09: clock_mainspring_halberd and storm_galecleaver moved from
-            // REKINDLING to EMBERFALL (renamed off their rekind_ prefix in the same move — Sam
-            // confirmed every hero power and weapon ships in Emberfall, not gated behind the
-            // Rekindling pack). Id and setId are both projected identity fields for those two rows;
-            // every other row's identity is unchanged. Update this pin only for a reviewed
-            // whole-token identity change.
-            Assert.That(hash, Is.EqualTo("281037264854CF17012DF8EDC412CF21F1128ECE22F1FB74B6E0E5355091E061"),
+            // Re-pinned 2026-08-09: ward_earthwardens_maul added (NOR-316 — STONEWARDEN's signature
+            // weapon, the only class missing one). New row appended after ward_duras_the_ironmount;
+            // all prior rows unchanged.
+            Assert.That(hash, Is.EqualTo("E38F55C93EF7B85D34CB4AB93E8AD4EE929BC4C43F8732732D3EF387B08057F1"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's

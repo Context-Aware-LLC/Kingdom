@@ -87,7 +87,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void All_260_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
+        public void All_261_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
         {
             var cards = LoadAllCards();
             var markers = new HashSet<Keyword>
@@ -102,7 +102,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 .Select(card => card.Id)
                 .ToList();
 
-            Assert.That(cards, Has.Count.EqualTo(260));
+            Assert.That(cards, Has.Count.EqualTo(261));
             Assert.That(authored, Is.Empty,
                 "action-derived presentation markers must not also be authored as carrier keywords");
 
@@ -272,8 +272,8 @@ namespace Emberfall.Core.Tests.CardValidation
                 rendered++;
             }
 
-            Assert.That(cards.Count, Is.EqualTo(260));
-            Assert.That(rendered, Is.EqualTo(260));
+            Assert.That(cards.Count, Is.EqualTo(261));
+            Assert.That(rendered, Is.EqualTo(261));
         }
 
         private static List<CardDefinition> LoadAllCards()

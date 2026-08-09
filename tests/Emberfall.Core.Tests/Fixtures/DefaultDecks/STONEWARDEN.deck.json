@@ -6,7 +6,15 @@
   "seed": 64159285255,
   "entries": [
     {
-      "id": "core_arclight_adept",
+      "id": "cinder_drake",
+      "count": 2
+    },
+    {
+      "id": "core_bonehound",
+      "count": 2
+    },
+    {
+      "id": "core_choking_vines",
       "count": 1
     },
     {
@@ -14,31 +22,15 @@
       "count": 1
     },
     {
-      "id": "core_hollow_acolyte",
-      "count": 1
-    },
-    {
-      "id": "core_stoneback",
-      "count": 1
-    },
-    {
-      "id": "ember_ashfall_wyrm",
-      "count": 1
-    },
-    {
       "id": "ember_blazewing",
-      "count": 2
+      "count": 1
     },
     {
       "id": "ember_cinder_lance",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "ember_cinderplate_golem",
-      "count": 1
-    },
-    {
-      "id": "ember_heat_surge",
+      "id": "ember_forgeheart_colossus",
       "count": 2
     },
     {
@@ -46,48 +38,56 @@
       "count": 1
     },
     {
-      "id": "ember_recruit",
-      "count": 1
-    },
-    {
-      "id": "ember_scalded_striker",
-      "count": 1
-    },
-    {
-      "id": "ember_scorch",
+      "id": "ember_scorch_blade",
       "count": 2
+    },
+    {
+      "id": "ember_twin_flame",
+      "count": 1
+    },
+    {
+      "id": "ember_vanguard_drake",
+      "count": 1
     },
     {
       "id": "flame_bolt",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "neutral_duneborn_construct",
-      "count": 2
+      "id": "neutral_bog_crawler",
+      "count": 1
     },
     {
-      "id": "neutral_soulbound_revenant",
-      "count": 2
+      "id": "neutral_galewind_runner",
+      "count": 1
+    },
+    {
+      "id": "neutral_spellwarden",
+      "count": 1
+    },
+    {
+      "id": "relic_bound_revenant",
+      "count": 1
     },
     {
       "id": "relic_corpse_cart",
       "count": 1
     },
     {
-      "id": "ward_duras_the_ironmount",
+      "id": "ward_earth_barrier",
       "count": 1
     },
     {
-      "id": "ward_rock_golem",
+      "id": "ward_earthen_blessing",
+      "count": 1
+    },
+    {
+      "id": "ward_granite_guardian",
+      "count": 1
+    },
+    {
+      "id": "ward_pebble_sentinel",
       "count": 2
-    },
-    {
-      "id": "ward_siege_golem",
-      "count": 1
-    },
-    {
-      "id": "ward_stomp",
-      "count": 1
     },
     {
       "id": "ward_stone_rain",
@@ -95,7 +95,7 @@
     },
     {
       "id": "ward_stone_throw",
-      "count": 1
+      "count": 2
     }
   ]
 }

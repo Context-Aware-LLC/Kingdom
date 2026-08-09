@@ -36,7 +36,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void All_260_Live_Cards_Explicitly_Bind_Each_Multi_Rule_Player_Choice()
+        public void All_261_Live_Cards_Explicitly_Bind_Each_Multi_Rule_Player_Choice()
         {
             IReadOnlyList<CardDefinition> cards = LoadAllSets();
             var unbound = cards.SelectMany(card => card.Rules
@@ -55,7 +55,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 .Select(group => $"{group.Card}:{group.Trigger}")
                 .ToList();
 
-            Assert.That(cards, Has.Count.EqualTo(260));
+            Assert.That(cards, Has.Count.EqualTo(261));
             Assert.That(unbound, Is.Empty,
                 "cards with multiple simultaneous player choices must name their bindings");
         }

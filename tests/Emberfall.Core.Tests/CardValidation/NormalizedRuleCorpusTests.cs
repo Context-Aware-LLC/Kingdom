@@ -38,7 +38,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     }
                 }
             }
-            Assert.That(rows, Is.EqualTo(260));
+            Assert.That(rows, Is.EqualTo(261));
         }
     }
 }
