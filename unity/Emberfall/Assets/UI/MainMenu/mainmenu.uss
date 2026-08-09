@@ -314,6 +314,53 @@
 .mm-modal--gate {
     background-color: rgba(11, 14, 19, 0.96);
 }
+
+/* ---------- Gate sizing and typography (NOR-283) ----------
+ * Every rule below is scoped to .mm-modal--gate on purpose. The ordinary modals (rename, accounts)
+ * are things a player opens on top of a menu they can already read; this one is the ENTIRE first
+ * launch, on a phone held at arm's length, and it was inheriting a 520px box with 13px help text
+ * built for a desktop monitor. On a handset that reads as a small floating dialog on an empty
+ * screen rather than the screen itself.
+ *
+ * Sized in percentages, not pixels: the panel settings scale to a 1920x1080 reference, so a fixed
+ * width is a fixed FRACTION of a monitor and a much smaller one of a wide phone canvas.
+ * Do not fold these values back into .mm-modal__* — that would resize three unrelated modals.
+ */
+.mm-modal--gate .mm-modal__panel {
+    width: 62%;
+    min-width: 640px;
+    max-width: 92%;
+    padding: var(--space-12);
+    border-radius: var(--space-4);
+}
+.mm-modal--gate .mm-modal__title {
+    font-size: 46px;
+}
+.mm-modal--gate .mm-modal__help {
+    font-size: 26px;
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-8);
+}
+.mm-modal--gate .mm-modal__field {
+    font-size: 30px;
+    margin-bottom: var(--space-3);
+}
+.mm-modal--gate .mm-modal__field > .unity-base-text-field__input {
+    padding: var(--space-4);
+}
+.mm-modal--gate .mm-modal__error {
+    font-size: 24px;
+    min-height: 30px;
+    margin-bottom: var(--space-6);
+}
+/* Touch targets, not pointer targets: 84px against a 1080-tall reference is roughly a fingertip on
+ * a phone in landscape, where the 44px desktop height is about half of one. */
+.mm-modal--gate .mm-modal__button {
+    font-size: 28px;
+    height: 84px;
+    padding: 0 var(--space-12);
+    margin-left: var(--space-4);
+}
 /* The code is six characters the player is copying by eye off another screen. Wide tracking and a
  * larger face is the difference between reading it back once and reading it back three times. */
 .mm-signin__code {
@@ -324,15 +371,21 @@
 .mm-signin__code > .unity-base-text-field__input {
     -unity-text-align: middle-center;
 }
+/* Must out-specify .mm-modal--gate .mm-modal__field above, which would otherwise shrink the code
+ * back to ordinary field size — the code field carries both classes. */
+.mm-modal--gate .mm-signin__code {
+    font-size: 56px;
+    letter-spacing: 16px;
+}
 /* A text link, not a third button: resending is a recovery, and giving it a button's weight puts it
  * in competition with the thing the player should actually be doing. */
 .mm-signin__resend {
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     color: var(--ink-2);
-    font-size: var(--type-caption);
+    font-size: 24px;
     align-self: flex-end;
-    padding: var(--space-2) 0 0 0;
+    padding: var(--space-4) 0 0 0;
     margin-top: var(--space-2);
 }
 .mm-signin__resend:hover {
