@@ -50,8 +50,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c3d9b602c451b649904b87ad3df8e09
+    m_Address: card_art/tide_frostbind
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 107437511fc13594fb724043bef77430
     m_Address: card_art/verdant_thornfang_matron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10aabc05934cd0a44ab413d1b5eab5b3
+    m_Address: card_art/stoneback_sentry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -90,6 +100,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 221c306fd2ba8b84cbf9b175b2aed9be
+    m_Address: card_art/veilstalker
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2640e5c49177d4542a4ff8f3bc897bff
     m_Address: card_art/ember_scorch_blade
     m_ReadOnly: 0
@@ -120,6 +135,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a8446fc7d78cd747bb5efa147ee6331
+    m_Address: card_art/token_wisp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ad429463a058654bb35c21669b9e272
     m_Address: card_art/verdant_world_root_behemoth
     m_ReadOnly: 0
@@ -132,6 +152,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ce04a04f19c91b41a488f85a37882a5
     m_Address: card_art/grave_warden_of_dusk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ea9709b522ad4a43be804abdac8fa97
+    m_Address: card_art/ravenous_bonehound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,6 +210,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b9ac410c19d8e24a909d470670b2e25
+    m_Address: card_art/tide_hollow_tide_siren
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3dfed8b750bb45a494a5562b91d82957
     m_Address: card_art/tide_glacial_echo
     m_ReadOnly: 0
@@ -197,6 +227,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3fc6b7f2e92e882459328a6c0fb129d2
     m_Address: card_art/tide_deepfrost_spear
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4032b546faf1e544ca8647f4fa64371a
+    m_Address: card_art/token_thorn_cub
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -250,8 +285,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b1e6e7f23f633d41949fc6fec633990
+    m_Address: card_art/throneless_king
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4ff22fd7e03a1f24596c672530c418cd
     m_Address: card_art/phantom_duelist
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 500af5ec30c1269164adba705ff353a7
+    m_Address: card_art/stone_token_shard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -272,6 +317,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 555f515b28c83344187fb9df52dbb257
     m_Address: card_art/thistleguard_sprig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56ad92607bff7ca478df793c378fec37
+    m_Address: card_art/gravelight_lantern_bearer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -310,8 +360,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69da8e25079846fc8b19afd6db05ca20
+    m_Address: card_art/venomscale_drake
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6cde57061e0d30c41be99246e95789d0
     m_Address: card_art/ember_zealot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6dbe77c06590205448d3566db990038a
+    m_Address: card_art/emberling_pup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -365,8 +425,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ab3a59080811194195b8a4f709f125f
+    m_Address: card_art/tide_reefguard_wisp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c1d75d2e26f3f04986de4a1c83991fb
     m_Address: card_art/clock_temporal_rewinder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8014240f8de949f43aee1d021c31238f
+    m_Address: card_art/token_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -390,8 +460,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 85a7bbe4a822b91468c54eef9929ad33
+    m_Address: card_art/token_the_spark
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 85ffd97f0098cb4419dbd838c512401e
     m_Address: card_art/ember_stoke_the_coals
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 864ed0bfe8a545a458cd09958e0fac5c
+    m_Address: card_art/ember_cinder_lance
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -410,6 +490,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b5dd77eed70c52428ef2858f0369339
+    m_Address: card_art/tide_undertow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8db92d31ebfea4c419b3f4d7caa9ea41
+    m_Address: card_art/grove_mender
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8ee925debd20fc2039e93840083de24e
     m_Address: card_art/stone_rain
     m_ReadOnly: 0
@@ -417,6 +507,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9146f2c8394f4d44abce8fc1dee7481e
     m_Address: card_art/storm_static_shock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91bdbd6fca827e14db97a3f98f3c7a54
+    m_Address: card_art/arclight_adept
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93160918b9bcf27448f72f5fe0c10636
+    m_Address: card_art/tide_token_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -432,6 +532,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 981d12bbc1a9deb498f8cb5cb82ed4a7
     m_Address: card_art/night_lurk_wisp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9885088a63ee9f94aa6aa1671cdee725
+    m_Address: card_art/ember_overheat_golem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -455,8 +560,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9abd9c40fcd749c58295873acf5eda2a
+    m_Address: card_art/ironclad_bulwark
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9d671807379fe2b449244dedfdfaa1a5
     m_Address: card_art/clock_gear_imp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dde26689ef040540843b6d727266802
+    m_Address: card_art/ember_pyras_wrath
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -472,6 +587,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1cf67aed4bf14748be01e5536878d34
     m_Address: card_art/tide_oracle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a33142ca8a8b16242845a63e191549fd
+    m_Address: card_art/aegis_templar
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -540,6 +660,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bdee2f3219e3a0440904e689424a64c1
+    m_Address: card_art/hollow_acolyte
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf4802f50b7135c41a20a13d770f02c6
     m_Address: card_art/ember_blazewing
     m_ReadOnly: 0
@@ -550,8 +675,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0cd2374a545c0e428e48ed5f9202608
+    m_Address: card_art/ember_twin_flame_strike
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1f9ae42b8bf648419f6db364b72bc78
     m_Address: card_art/night_shadow_walk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7d46df061a92624cb972e37127ed754
+    m_Address: card_art/ember_scorch
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -592,6 +727,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d213fc25225a10bc9b05780ffa572aa2
     m_Address: card_art/stone_colossus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d49f17df00bdb254292e6f34dbfd3429
+    m_Address: card_art/tide_marens_deep_bargain
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ff8a4e3589644759ce6863180633d05
+    m_Address: card_art/grave_caretaker_solen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 38af97f55e2a468b9d04c96c97d14d65
     m_Address: card_art/stone_earthen_rampart
     m_ReadOnly: 0
@@ -30,8 +35,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47e323f9865e4c6d973531e275f9d4c8
+    m_Address: card_art/tide_marens_peacebroker
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 53e788054c0d999428301b18a1c1fba3
     m_Address: card_art/tide_harbinger
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b2487e71b8d48dcbd64e34c3e6d3a73
+    m_Address: card_art/aric_first_among_equals
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65a240359c174c22a8d42937dcf2361c
+    m_Address: card_art/night_seraphine_whisper_queen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8df6ee036ca344cf81164e4d7250cba2
+    m_Address: card_art/verdant_praxis_seed_of_new_ages
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -47,6 +72,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cd8901f42d724408be028c82e8880702
     m_Address: card_art/stone_boulder_sentinel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0552fa78cfe445db43fe248114223a1
+    m_Address: card_art/ember_general_kira_flame_reunified
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dfa239abbaf346ada4bcde4055b416a8
+    m_Address: card_art/clock_cogsworth_the_grand_rebuilder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9f4cfd8a02e4c5dac232b05655d88bd
+    m_Address: card_art/storm_vael_the_stormbringer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
