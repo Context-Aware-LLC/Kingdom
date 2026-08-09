@@ -195,7 +195,7 @@
 .db-footer {
     flex-direction: row;
     align-items: center;
-    margin-top: var(--space-4);
+    margin-top: var(--space-2);
 }
 .db-button {
     font-size: var(--type-body);

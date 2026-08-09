@@ -449,6 +449,13 @@ namespace Emberfall.Presentation
             _legalityBox.Add(msg);
         }
 
+        // Bar height is pixels, not Length.Percent — curve-col is content-sized (no explicit
+        // height, since .db-curve uses align-items: flex-end rather than stretch), so a percent
+        // height has no parent size to resolve against and silently collapses to 0. This is why
+        // the curve never showed anything. maxBarPx is db-curve's 56px strip minus the cost
+        // label's line height + margin below each bar.
+        private const float CurveMaxBarPx = 36f;
+
         private void RebuildCurve()
         {
             _curve.Clear();
@@ -466,7 +473,7 @@ namespace Emberfall.Presentation
             {
                 var col = new VisualElement(); col.AddToClassList("curve-col");
                 var bar = new VisualElement(); bar.AddToClassList("curve-bar");
-                bar.style.height = Length.Percent(100f * counts[i] / peak);
+                bar.style.height = CurveMaxBarPx * counts[i] / peak;
                 var label = new Label(i < buckets - 1 ? i.ToString() : "7+");
                 label.AddToClassList("curve-label");
                 col.Add(bar); col.Add(label);
