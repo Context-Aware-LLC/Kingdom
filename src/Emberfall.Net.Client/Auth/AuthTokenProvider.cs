@@ -129,8 +129,9 @@ namespace Emberfall.Net.Client.Auth
                 if (!session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
                     return AuthResult.Succeeded(session);
 
-                AuthResult result = await _backend.RefreshAsync(session.RefreshToken, cancellationToken)
-                    .ConfigureAwait(false);
+                // No ConfigureAwait(false): Adopt() below is a Unity PlayerPrefs write — see the note
+                // on Adopt for why this await must keep the caller's synchronization context.
+                AuthResult result = await _backend.RefreshAsync(session.RefreshToken, cancellationToken);
 
                 if (result.Ok)
                 {
@@ -159,7 +160,10 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>Mail a sign-in link and remember the PKCE verifier the returning code needs.</summary>
         public async Task<AuthResult> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default)
         {
-            SignInStart start = await _backend.BeginMagicLinkAsync(email, cancellationToken).ConfigureAwait(false);
+            // No ConfigureAwait(false): SavePending below is a Unity PlayerPrefs write, which Unity
+            // requires to run on the thread that called in here. Capturing the caller's context (the
+            // default) is what guarantees that, not an oversight — see the identical note on Adopt.
+            SignInStart start = await _backend.BeginMagicLinkAsync(email, cancellationToken);
             if (start.Result.Ok) _store.SavePending(start.Pending);
             return start.Result;
         }
@@ -182,8 +186,10 @@ namespace Emberfall.Net.Client.Auth
         public async Task<AuthResult> VerifyEmailCodeAsync(
             string email, string code, CancellationToken cancellationToken = default)
         {
-            AuthResult result = await _backend.VerifyEmailCodeAsync(email, code, cancellationToken)
-                .ConfigureAwait(false);
+            // No ConfigureAwait(false): see the note on Adopt() — its PlayerPrefs write needs this
+            // continuation to resume on the same thread that called in here (Unity's main thread for
+            // every real caller), not wherever the backend's HTTP task happened to complete.
+            AuthResult result = await _backend.VerifyEmailCodeAsync(email, code, cancellationToken);
             if (result.Ok) Adopt(result.Session);
             return result;
         }
@@ -211,7 +217,9 @@ namespace Emberfall.Net.Client.Auth
         public async Task<AuthResult> CompleteSignInAsync(string authCode, CancellationToken cancellationToken = default)
         {
             PendingSignIn pending = Pending;
-            AuthResult result = await _backend.CompleteAsync(pending, authCode, cancellationToken).ConfigureAwait(false);
+            // No ConfigureAwait(false): ClearPending and a successful Adopt below are both Unity
+            // PlayerPrefs writes — see the note on Adopt.
+            AuthResult result = await _backend.CompleteAsync(pending, authCode, cancellationToken);
 
             _store.ClearPending();
             if (result.Ok) Adopt(result.Session);
@@ -246,6 +254,16 @@ namespace Emberfall.Net.Client.Auth
             SessionChanged?.Invoke(AuthSession.None);
         }
 
+        /// <summary>
+        /// <see cref="IAuthSessionStore.Save"/> is Unity's <c>PlayerPrefs</c> on every real
+        /// implementation, and Unity throws if that runs off the thread that called in. This type is
+        /// otherwise platform-agnostic, so the guarantee has to come from the caller: every await that
+        /// leads here keeps the default synchronization-context capture (no <c>ConfigureAwait(false)</c>)
+        /// so the continuation resumes on whichever thread invoked the outer call, not wherever the
+        /// backend's HTTP task happened to complete. Cost a session on 2026-08-09 — stripping that
+        /// capture threw <c>PlayerPrefs.SetString "can only be called from the main thread"</c> deep
+        /// inside a successful sign-in, after Supabase had already accepted the code.
+        /// </summary>
         private void Adopt(AuthSession session)
         {
             _cached = session ?? AuthSession.None;
