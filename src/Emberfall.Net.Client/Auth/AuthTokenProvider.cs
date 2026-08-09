@@ -218,6 +218,24 @@ namespace Emberfall.Net.Client.Auth
             return result;
         }
 
+        /// <summary>
+        /// Set a password on the signed-in user (NOR-246), so a later sign-in on this or another
+        /// device can trade it for a session instead of going through email again.
+        ///
+        /// <para>Requires a live session — there is no local fallback, unlike
+        /// <see cref="TokenForConnectAsync"/>: setting a password is something the player asked for
+        /// right now, not a background refresh, so a failure has to reach them rather than be
+        /// swallowed into guest.</para>
+        /// </summary>
+        public async Task<AuthResult> SetPasswordAsync(string password, CancellationToken cancellationToken = default)
+        {
+            AuthSession session = Current;
+            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+
+            return await _backend.SetPasswordAsync(session.AccessToken, password, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         /// <summary>Forget the session on this device. Does not revoke it server-side — that is a
         /// separate call nothing needs yet, and the token expires on its own.</summary>
         public void SignOut()

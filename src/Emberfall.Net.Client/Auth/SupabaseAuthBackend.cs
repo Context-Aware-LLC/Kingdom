@@ -115,6 +115,11 @@ namespace Emberfall.Net.Client.Auth
 
         /// <summary>Trade a refresh token for a fresh session.</summary>
         Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default);
+
+        /// <summary>Set a password on the signed-in user (NOR-246), so a later sign-in can trade it
+        /// for a session without another email round-trip. Requires an existing access token — this
+        /// authenticates as the user, not the anon key alone.</summary>
+        Task<AuthResult> SetPasswordAsync(string accessToken, string password, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -290,6 +295,37 @@ namespace Emberfall.Net.Client.Auth
                 .ConfigureAwait(false);
 
             return ReadSession(response);
+        }
+
+        /// <summary>
+        /// Set a password on the signed-in user (NOR-246). Unlike every other call here this hits
+        /// <c>PUT /auth/v1/user</c> — GoTrue's update-attributes endpoint — authenticated as the user
+        /// via <paramref name="accessToken"/> rather than the anon key alone. The reply is the updated
+        /// user object, not a token pair, so this returns <see cref="AuthResult.Accepted"/> on success
+        /// rather than routing through <see cref="ReadSession"/>.
+        /// </summary>
+        public async Task<AuthResult> SetPasswordAsync(
+            string accessToken, string password, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrEmpty(accessToken))
+                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+            if (string.IsNullOrEmpty(password))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter a password.");
+
+            string body = AuthJson.Object(AuthJson.Field("password", password));
+
+            var headers = new[]
+            {
+                new KeyValuePair<string, string>("apikey", _config.AnonKey),
+                new KeyValuePair<string, string>("Authorization", "Bearer " + accessToken),
+                new KeyValuePair<string, string>("Content-Type", "application/json"),
+            };
+
+            var response = await _http.PutJsonAsync(Url("user"), body, headers, cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.IsSuccess ? AuthResult.Accepted() : Interpret(response);
         }
 
         /// <summary>

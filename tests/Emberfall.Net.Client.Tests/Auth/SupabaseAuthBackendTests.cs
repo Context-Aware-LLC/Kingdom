@@ -147,5 +147,30 @@ namespace Emberfall.Net.Client.Tests.Auth
             Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
             Assert.That(http.Requests, Is.Empty);
         }
+
+        [Test]
+        public async Task Setting_a_password_puts_to_the_user_endpoint_as_the_user_not_the_anon_key()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{\"id\":\"user-1\"}");
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SetPasswordAsync("user-access-token", "correct horse battery staple");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/user"));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"password\":\"correct horse battery staple\""));
+        }
+
+        [Test]
+        public async Task Setting_a_password_with_no_session_makes_no_request()
+        {
+            var http = new FakeAuthHttp();
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SetPasswordAsync("", "a-password");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(http.Requests, Is.Empty);
+        }
     }
 }

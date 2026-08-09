@@ -179,5 +179,32 @@ namespace Emberfall.Net.Client.Tests.Auth
             Assert.That(store.Load().IsPresent, Is.False);
             Assert.That(await provider.TokenForConnectAsync(), Is.EqualTo(""));
         }
+
+        [Test]
+        public async Task Setting_a_password_sends_this_devices_own_access_token()
+        {
+            var clock = new FakeClock(1_000_000);
+            var backend = new FakeAuthBackend();
+            var store = new InMemoryAuthSessionStore(Signed(clock.NowMs + 3_600_000, access: "access-1"));
+            var provider = new AuthTokenProvider(backend, store, clock);
+
+            AuthResult result = await provider.SetPasswordAsync("a new password");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(backend.LastPasswordAccessToken, Is.EqualTo("access-1"));
+            Assert.That(backend.LastPassword, Is.EqualTo("a new password"));
+        }
+
+        [Test]
+        public async Task Setting_a_password_with_no_session_never_reaches_the_backend()
+        {
+            var backend = new FakeAuthBackend();
+            var provider = new AuthTokenProvider(backend, new InMemoryAuthSessionStore(), new FakeClock());
+
+            AuthResult result = await provider.SetPasswordAsync("a new password");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(backend.LastPasswordAccessToken, Is.Null);
+        }
     }
 }

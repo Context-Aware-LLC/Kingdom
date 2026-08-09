@@ -46,6 +46,16 @@ namespace Emberfall.Net.Client.Tests.Auth
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
+            => Send(url, jsonBody);
+
+        public Task<AuthHttpResponse> PutJsonAsync(
+            string url,
+            string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => Send(url, jsonBody);
+
+        private Task<AuthHttpResponse> Send(string url, string jsonBody)
         {
             Requests.Add((url, jsonBody));
             if (_replies.Count == 0)
@@ -111,6 +121,17 @@ namespace Emberfall.Net.Client.Tests.Auth
             if (_refreshResults.Count == 0)
                 throw new InvalidOperationException("FakeAuthBackend ran out of scripted refresh results.");
             return Task.FromResult(_refreshResults.Dequeue());
+        }
+
+        public AuthResult SetPasswordResult { get; set; } = AuthResult.Accepted();
+        public string? LastPasswordAccessToken { get; private set; }
+        public string? LastPassword { get; private set; }
+
+        public Task<AuthResult> SetPasswordAsync(string accessToken, string password, CancellationToken cancellationToken = default)
+        {
+            LastPasswordAccessToken = accessToken;
+            LastPassword = password;
+            return Task.FromResult(SetPasswordResult);
         }
     }
 

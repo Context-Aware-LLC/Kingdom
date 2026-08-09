@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Emberfall.Core.Collection;
+using Emberfall.Net.Client.Auth;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -37,8 +38,13 @@ namespace Emberfall.Presentation
         private Label _nameTitle;
         private Label _nameError;
         private TextField _nameField;
+        private Label _namePasswordHelp;
+        private TextField _namePassword;
+        private TextField _namePasswordConfirm;
         private Button _nameCancel;
+        private Button _nameConfirm;
         private bool _nameRequired;
+        private bool _nameBusy;
 
         private VisualElement _accountModal;
         private VisualElement _accountList;
@@ -110,6 +116,16 @@ namespace Emberfall.Presentation
             RefreshIdentity();
             BeginFirstRun();
             FinishBootstrap();
+        }
+
+        /// <summary>Drop the sign-in gate's deep-link subscription. <see cref="SignInGateController"/>
+        /// listens on the static <see cref="Application.deepLinkActivated"/> event, and a fresh
+        /// instance is built on every OnEnable (including the scene reload
+        /// <see cref="DeviceAccounts.SwitchTo"/> triggers) — without this, a disabled screen's
+        /// controller keeps handling links for a modal that no longer exists.</summary>
+        private void OnDisable()
+        {
+            _signIn?.Close();
         }
 
         /// <summary>
@@ -233,7 +249,11 @@ namespace Emberfall.Presentation
             _nameTitle = _root.Q<Label>("name-title");
             _nameError = _root.Q<Label>("name-error");
             _nameField = _root.Q<TextField>("name-field");
+            _namePasswordHelp = _root.Q<Label>("name-password-help");
+            _namePassword = _root.Q<TextField>("name-password");
+            _namePasswordConfirm = _root.Q<TextField>("name-password-confirm");
             _nameCancel = _root.Q<Button>("btn-name-cancel");
+            _nameConfirm = _root.Q<Button>("btn-name-confirm");
 
             Wire("btn-name-confirm", ConfirmName);
             Wire("btn-name-cancel", () => Hide(_nameModal));
@@ -248,11 +268,18 @@ namespace Emberfall.Presentation
             // Clear a stale refusal as soon as the player changes anything, so the message always
             // describes what is currently in the field.
             _nameField.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
+            _namePassword?.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
+            _namePasswordConfirm?.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
         }
 
         /// <summary>
         /// Open the name prompt. <paramref name="required"/> is first run — there is no name to fall
         /// back to, so Cancel is hidden rather than disabled: a dead button invites clicking.
+        ///
+        /// <para><b>Password is offered here too, first run only (NOR-246).</b> This is the one moment
+        /// right after a magic-link sign-in where the player already has a live session to attach a
+        /// password to; renaming later from the identity plate never shows it — that would be a
+        /// "change password" flow, which is not this one and does not exist yet.</para>
         /// </summary>
         private void OpenNameModal(bool required)
         {
@@ -266,13 +293,24 @@ namespace Emberfall.Presentation
                 _nameField.SetValueWithoutNotify(_account?.Profile.DisplayName ?? "");
                 _nameField.Focus();
             }
+
+            bool offerPassword = required && AuthGateway.IsConfigured;
+            SetVisible(_namePasswordHelp, offerPassword);
+            SetVisible(_namePassword, offerPassword);
+            SetVisible(_namePasswordConfirm, offerPassword);
+            _namePassword?.SetValueWithoutNotify("");
+            _namePasswordConfirm?.SetValueWithoutNotify("");
+
             SetError(_nameError, "");
             Show(_nameModal);
         }
 
-        private void ConfirmName()
+        // async void is correct for a UI handler: SetPasswordAsync resumes on the main thread (it
+        // rides UnityWebRequestAuthHttp, same as everywhere else auth touches UI Toolkit), so
+        // everything after the await is free to touch elements. The try/catch keeps it honest.
+        private async void ConfirmName()
         {
-            if (_account == null) return;
+            if (_account == null || _nameBusy) return;
 
             NameCheck check = _account.SetDisplayName(_nameField?.value ?? "");
             if (!check.IsValid)
@@ -283,12 +321,69 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            string password = _namePassword?.value ?? "";
+            string passwordConfirm = _namePasswordConfirm?.value ?? "";
+
+            // Optional (Sam, NOR-246): an empty field skips it rather than refusing to continue — the
+            // name above is what the unskippable sign-in ruling actually requires, and a network hiccup
+            // here must not be able to trap a player who already has a valid account behind this modal.
+            if (password.Length > 0 || passwordConfirm.Length > 0)
+            {
+                if (password.Length < 6)
+                {
+                    SetError(_nameError, "Password must be at least 6 characters.");
+                    return;
+                }
+                if (password != passwordConfirm)
+                {
+                    SetError(_nameError, "Passwords do not match.");
+                    return;
+                }
+
+                SetNameBusy(true);
+                try
+                {
+                    AuthResult result = await AuthGateway.Provider.SetPasswordAsync(password);
+                    SetNameBusy(false);
+
+                    if (!result.Ok)
+                    {
+                        SetError(_nameError, string.IsNullOrEmpty(result.Detail)
+                            ? "Could not set a password. Try again, or clear both fields to skip it."
+                            : result.Detail);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SetNameBusy(false);
+                    Debug.LogError($"[MainMenu] setting a password threw: {ex}");
+                    SetError(_nameError, "Something went wrong setting a password. Try again, or clear both fields to skip it.");
+                    return;
+                }
+            }
+
             Hide(_nameModal);
             RefreshIdentity();
 
             // Keep the first-run continuation, but move it to the roster: character creation never
             // lives on the Main Menu.
             if (_nameRequired && _account.Roster().Count == 0) Go("CharacterRoster");
+        }
+
+        private void SetNameBusy(bool busy)
+        {
+            _nameBusy = busy;
+            _nameConfirm?.SetEnabled(!busy);
+            _nameCancel?.SetEnabled(!busy);
+            _nameField?.SetEnabled(!busy);
+            _namePassword?.SetEnabled(!busy);
+            _namePasswordConfirm?.SetEnabled(!busy);
+        }
+
+        private static void SetVisible(VisualElement element, bool shown)
+        {
+            if (element != null) element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // ── Account switcher (testing) ──────────────────────────────────────────────────

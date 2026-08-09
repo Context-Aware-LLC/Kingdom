@@ -32,6 +32,12 @@
                 <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
                 <ui:Label name="name-help" text="This is the name other players see. You can change it later." class="mm-modal__help"/>
                 <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
+                <!-- Password (NOR-246, faster return sign-in): optional, first-run only. A returning
+                     device that already has a name skips this whole modal, so there is nowhere else
+                     this needs to appear. -->
+                <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
+                <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
+                <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
                 <ui:Label name="name-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-name-cancel" text="Cancel" class="mm-modal__button"/>
@@ -58,15 +64,20 @@
         <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--hidden">
             <ui:VisualElement name="signin-panel" class="mm-modal__panel">
                 <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
-                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you an eight-digit code." class="mm-modal__help"/>
+                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a confirmation link." class="mm-modal__help"/>
                 <ui:TextField name="signin-email" class="mm-modal__field"/>
-                <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
+                <!-- Eight-digit code entry (NOR-231), superseded 2026-08-08 by the magic-link flow in
+                     SignInGateController but left in place rather than deleted. max-length must be 8
+                     (EmailCode.Length) if this is ever revived -- it shipped as 6, a live bug, before
+                     the field was retired.
+                <ui:TextField name="signin-code" max-length="8" class="mm-modal__field mm-signin__code" style="display: none;"/>
+                -->
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
-                    <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
+                    <ui:Button name="btn-signin-primary" text="Email me a link" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
-                <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
+                <ui:Button name="btn-signin-resend" text="Send another link" class="mm-signin__resend" style="display: none;"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden">

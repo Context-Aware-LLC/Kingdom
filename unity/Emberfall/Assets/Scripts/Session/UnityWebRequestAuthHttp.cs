@@ -38,13 +38,28 @@ namespace Emberfall.Session
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
+            => SendJsonAsync(UnityWebRequest.kHttpVerbPOST, url, jsonBody, headers, cancellationToken);
+
+        public Task<AuthHttpResponse> PutJsonAsync(
+            string url,
+            string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => SendJsonAsync(UnityWebRequest.kHttpVerbPUT, url, jsonBody, headers, cancellationToken);
+
+        private Task<AuthHttpResponse> SendJsonAsync(
+            string verb,
+            string url,
+            string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken)
         {
             var completion = new TaskCompletionSource<AuthHttpResponse>();
 
             UnityWebRequest request;
             try
             {
-                request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST)
+                request = new UnityWebRequest(url, verb)
                 {
                     uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody ?? "{}")),
                     downloadHandler = new DownloadHandlerBuffer(),
