@@ -15,7 +15,8 @@ Three further checks, each for something no existing gate reports:
 * **Wrong set folder.** `AddressablesSetup` builds one `CardArt_<setId>` group per folder on disk,
   so a file under the wrong `<setId>/` ships in the wrong bundle. It still RENDERS — the address is
   a flat `card_art/<fileName>` with no set in it — and CardCi still passes, which is exactly why
-  nothing catches it.
+  nothing catches it. Exception (Sam, 2026-08-08): the CORE art folder holds hero powers only —
+  every other CORE-set card's art is expected under EMBERFALL, not CORE.
 * **Orphan pngs.** A file no card row points at. CardCi only walks rows outward to art, so art with
   no row is invisible to it. This is how a rename leaves its own predecessor behind.
 * **Byte-identical duplicates.** Two names for one image, compared by SHA-256 rather than by size.
@@ -109,10 +110,14 @@ def main():
     misplaced, missing = [], []
     for file_name, card in all_rows:
         art, set_id = card["artId"], card.get("setId", "CORE")
+        # CORE (Sam, 2026-08-08): the CORE art folder holds hero powers only. Every other
+        # CORE-set card's art ships under the expansion that launched it (EMBERFALL) — CORE
+        # itself has no art bundle of its own beyond hero powers.
+        expected_folder = "EMBERFALL" if set_id == "CORE" and card.get("type") != "HERO_POWER" else set_id
         folders = on_disk.get(art)
         if not folders:
             missing.append((card["id"], set_id, art))
-        elif set_id not in folders:
+        elif expected_folder not in folders:
             misplaced.append((card["id"], set_id, art, ", ".join(sorted(folders))))
 
     orphans = sorted(stem for stem in on_disk if stem not in referenced)

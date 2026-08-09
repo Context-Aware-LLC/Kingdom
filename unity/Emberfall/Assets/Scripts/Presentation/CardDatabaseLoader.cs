@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Loads all card sets (M1, M2, M3) as one merged <see cref="ICardDatabase"/>.
+    /// Loads all card sets (Emberfall, Rekindling) as one merged <see cref="ICardDatabase"/>.
     /// Tries each Addressables address first; in the Editor falls back to direct AssetDatabase
     /// loads so tools work before the Addressables catalog has been built.
     /// </summary>
@@ -15,9 +15,8 @@ namespace Emberfall.Presentation
         // All registered card-set Addressables addresses and their Editor fallback paths.
         private static readonly (string address, string editorPath)[] CardSets =
         {
-            ("cards/M1.cards", "Assets/CardData/M1.cards.json"),
-            ("cards/M2.cards", "Assets/CardData/M2.cards.json"),
-            ("cards/M3.cards", "Assets/CardData/M3.cards.json"),
+            ("cards/Emberfall.cards", "Assets/CardData/Emberfall.cards.json"),
+            ("cards/Rekindling.cards", "Assets/CardData/Rekindling.cards.json"),
         };
 
         public static ICardDatabase Load()

@@ -120,6 +120,19 @@ def load_rows():
     return rows
 
 
+def art_folder_of(card: dict) -> str:
+    """The Art/Cards subfolder a card's art actually lives under — NOT always its data setId.
+
+    CORE (Sam, 2026-08-08): Assets/Art/Cards/CORE/ holds hero-power art only. Every other
+    CORE-set card's art ships under EMBERFALL instead, since CORE has no art bundle of its
+    own beyond hero powers.
+    """
+    set_id = card.get("setId", "EMBERFALL")
+    if set_id == "CORE" and role_of(card) != "hero_power":
+        return "EMBERFALL"
+    return set_id
+
+
 def build_plan(rows):
     plan, seen = [], collections.defaultdict(list)
     for fp, cards in rows:
@@ -128,7 +141,7 @@ def build_plan(rows):
             seen[new].append(c["id"])
             plan.append({
                 "src": fp.name, "id": c["id"], "name": c["name"],
-                "setId": c.get("setId", "EMBERFALL"),
+                "setId": art_folder_of(c),
                 "class": (c.get("class") or "NEUTRAL").upper(),
                 "old": old, "new": new, "changed": old != new,
             })

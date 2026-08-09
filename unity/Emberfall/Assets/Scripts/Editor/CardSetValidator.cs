@@ -9,15 +9,14 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Batch "validate entire card pool" (dev-docs/pipelines/card-authoring-and-import.md:21):
-    /// loads M1+M2+M3 and logs a grouped console report.
+    /// loads Emberfall+Rekindling and logs a grouped console report.
     /// </summary>
     public static class CardSetValidator
     {
         private static readonly string[] SetPaths =
         {
-            CardJsonRowIO.DefaultM1JsonPath,
-            "Assets/CardData/M2.cards.json",
-            "Assets/CardData/M3.cards.json",
+            CardJsonRowIO.DefaultEmberfallJsonPath,
+            "Assets/CardData/Rekindling.cards.json",
         };
 
         public static void RunAndLog()

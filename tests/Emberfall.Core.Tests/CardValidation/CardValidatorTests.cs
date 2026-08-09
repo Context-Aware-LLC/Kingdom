@@ -7,43 +7,43 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
-    /// Runs the real CardValidator (C1-C20) against the real M1 card set, not synthetic fixtures,
+    /// Runs the real CardValidator (C1-C20) against the real Emberfall card set, not synthetic fixtures,
     /// so a rule regression against actual content is caught (dev-docs/pipelines/card-authoring-and-import.md:11).
     /// </summary>
     [TestFixture]
     [Category("CardValidation")]
     public sealed class CardValidatorTests
     {
-        private static string LoadM1CardsJson()
+        private static string LoadEmberfallCardsJson()
         {
-            // tests/Emberfall.Core.Tests -> repo root -> unity/Emberfall/Assets/CardData/M1.cards.json
+            // tests/Emberfall.Core.Tests -> repo root -> unity/Emberfall/Assets/CardData/Emberfall.cards.json
             // (moved out of Resources/ by the M2 D1 Addressables migration)
             string dir = TestContext.CurrentContext.TestDirectory;
             string? path = dir;
             for (int i = 0; i < 8 && path != null; i++)
             {
-                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData", "M1.cards.json");
+                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData", "Emberfall.cards.json");
                 if (File.Exists(candidate)) return File.ReadAllText(candidate);
                 path = Path.GetDirectoryName(path);
             }
-            Assert.Fail("Could not locate unity/Emberfall/Assets/CardData/M1.cards.json from test directory.");
+            Assert.Fail("Could not locate unity/Emberfall/Assets/CardData/Emberfall.cards.json from test directory.");
             return null!;
         }
 
-        private static (System.Collections.Generic.IReadOnlyList<CardDefinition> cards, JsonCardDatabaseTestDouble db) LoadM1Set()
+        private static (System.Collections.Generic.IReadOnlyList<CardDefinition> cards, JsonCardDatabaseTestDouble db) LoadEmberfallSet()
         {
-            var json = LoadM1CardsJson();
+            var json = LoadEmberfallCardsJson();
             var cards = CardJson.DeserializeArray(json);
             return (cards, new JsonCardDatabaseTestDouble(cards));
         }
 
         [Test]
-        public void All_M1_Cards_Pass_Core_Validation()
+        public void All_Emberfall_Cards_Pass_Core_Validation()
         {
             // ANY_MINION / ANY_FRIENDLY_MINION were canonized into the Selector vocabulary by the
             // M2 Phase 0 grammar frost (dev-docs/specs/card-schema.md §5.3), so tide_undertow — previously the
             // one known-bad row — now validates clean along with everything else.
-            var (cards, db) = LoadM1Set();
+            var (cards, db) = LoadEmberfallSet();
             var validator = new CardValidator();
 
             var errorsByCard = cards
@@ -126,9 +126,9 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void CheckDuplicateIds_Flags_Real_Collisions_Only()
         {
-            var (cards, _) = LoadM1Set();
+            var (cards, _) = LoadEmberfallSet();
             var issues = CardValidator.CheckDuplicateIds(cards);
-            Assert.That(issues, Is.Empty, "M1.cards.json is not expected to contain duplicate ids today.");
+            Assert.That(issues, Is.Empty, "Emberfall.cards.json is not expected to contain duplicate ids today.");
 
             var withDuplicate = cards.Append(cards[0]).ToList();
             var dupIssues = CardValidator.CheckDuplicateIds(withDuplicate);

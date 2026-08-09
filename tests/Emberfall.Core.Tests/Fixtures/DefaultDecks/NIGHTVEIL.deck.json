@@ -10,39 +10,51 @@
       "count": 1
     },
     {
-      "id": "core_aegis_templar",
+      "id": "core_arclight_adept",
       "count": 1
     },
     {
       "id": "core_bonehound",
-      "count": 2
-    },
-    {
-      "id": "core_emberling",
       "count": 1
     },
     {
       "id": "core_grove_mender",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "core_hollow_acolyte",
+      "id": "core_lantern_bearer",
+      "count": 1
+    },
+    {
+      "id": "ember_ashfall_wyrm",
+      "count": 1
+    },
+    {
+      "id": "ember_blazewing",
+      "count": 1
+    },
+    {
+      "id": "ember_cinder_lance",
       "count": 1
     },
     {
       "id": "ember_kiln_warden",
-      "count": 2
+      "count": 1
+    },
+    {
+      "id": "ember_magmacore_warden",
+      "count": 1
     },
     {
       "id": "ember_pyras_wrath",
       "count": 1
     },
     {
-      "id": "ember_scorch",
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
-      "id": "ember_slagshell_bulwark",
+      "id": "ember_scorch_blade",
       "count": 1
     },
     {
@@ -50,32 +62,44 @@
       "count": 1
     },
     {
-      "id": "ember_zealot",
+      "id": "flame_bolt",
+      "count": 1
+    },
+    {
+      "id": "neutral_doublestrike_hawk",
       "count": 2
+    },
+    {
+      "id": "neutral_ironclad_bulwark",
+      "count": 1
+    },
+    {
+      "id": "neutral_lifeclaw_bat",
+      "count": 1
+    },
+    {
+      "id": "neutral_razorcoil_adder",
+      "count": 1
+    },
+    {
+      "id": "neutral_spellwarden",
+      "count": 1
+    },
+    {
+      "id": "neutral_venomscale_drake",
+      "count": 1
     },
     {
       "id": "night_death_mark",
       "count": 1
     },
     {
-      "id": "night_lurk_wisp",
+      "id": "night_shadow_stalker",
       "count": 1
-    },
-    {
-      "id": "night_shadow_dart",
-      "count": 2
     },
     {
       "id": "night_shadow_walk",
-      "count": 2
-    },
-    {
-      "id": "night_venom_asp",
       "count": 1
-    },
-    {
-      "id": "night_viper_fang",
-      "count": 2
     },
     {
       "id": "relic_bound_revenant",
@@ -86,7 +110,7 @@
       "count": 2
     },
     {
-      "id": "stone_sentry",
+      "id": "wandering_scout",
       "count": 1
     }
   ]

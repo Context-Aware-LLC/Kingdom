@@ -28,7 +28,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [Test]
         public void Mainspring_Halberd_Rules_Render_A_Derived_Toll_Marker()
         {
-            string path = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "M3.cards.json");
+            string path = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "Rekindling.cards.json");
             CardDefinition mainspring = CardJson.DeserializeArray(File.ReadAllText(path))
                 .Single(card => card.Id == "rekind_clock_mainspring_halberd");
 
@@ -279,7 +279,7 @@ namespace Emberfall.Core.Tests.CardValidation
         private static List<CardDefinition> LoadAllCards()
         {
             var cards = new List<CardDefinition>();
-            foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
+            foreach (string file in new[] { "Emberfall.cards.json", "Rekindling.cards.json" })
             {
                 string path = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file);
                 cards.AddRange(CardJson.DeserializeArray(File.ReadAllText(path)));

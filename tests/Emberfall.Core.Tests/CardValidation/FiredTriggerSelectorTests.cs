@@ -41,7 +41,7 @@ namespace Emberfall.Core.Tests.CardValidation
             Trigger.ON_PLAY, Trigger.ON_CAST,
         };
 
-        private static readonly string[] SetFiles = { "M1.cards.json", "M2.cards.json", "M3.cards.json" };
+        private static readonly string[] SetFiles = { "Emberfall.cards.json", "Rekindling.cards.json" };
 
         private static IReadOnlyList<CardDefinition> LiveCards()
         {

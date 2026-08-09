@@ -5,9 +5,8 @@ from pathlib import Path
 
 # Define the files to analyze
 files = [
-    "unity/Emberfall/Assets/CardData/M1.cards.json",
-    "unity/Emberfall/Assets/CardData/M2.cards.json",
-    "unity/Emberfall/Assets/CardData/M3.cards.json"
+    "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
+    "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
 ]
 
 # Track data across all files
@@ -96,7 +95,7 @@ if duplicates:
         sources = duplicates[card_id]
         print(f"  {card_id}: appears in {sources}")
 else:
-    print("No duplicate card IDs found across all three files.")
+    print("No duplicate card IDs found across both files.")
 
 print()
 

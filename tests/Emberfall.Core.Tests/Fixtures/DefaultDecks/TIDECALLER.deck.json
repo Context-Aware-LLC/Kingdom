@@ -6,43 +6,43 @@
   "seed": 64159285250,
   "entries": [
     {
-      "id": "core_choking_vines",
+      "id": "cinder_drake",
+      "count": 1
+    },
+    {
+      "id": "core_aegis_templar",
+      "count": 1
+    },
+    {
+      "id": "core_arclight_adept",
       "count": 1
     },
     {
       "id": "core_emberling",
-      "count": 2
-    },
-    {
-      "id": "core_grove_mender",
       "count": 1
     },
     {
       "id": "core_hollow_acolyte",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "core_stoneback",
+      "id": "core_lantern_bearer",
       "count": 1
     },
     {
       "id": "core_thistleguard_sprig",
-      "count": 1
-    },
-    {
-      "id": "core_veilstalker",
-      "count": 1
-    },
-    {
-      "id": "ember_ashfall_wyrm",
-      "count": 1
-    },
-    {
-      "id": "ember_cinder_lance",
       "count": 2
     },
     {
+      "id": "ember_blazewing",
+      "count": 1
+    },
+    {
       "id": "ember_overheat_golem",
+      "count": 1
+    },
+    {
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
@@ -50,39 +50,47 @@
       "count": 1
     },
     {
+      "id": "ember_scorch_blade",
+      "count": 2
+    },
+    {
       "id": "ember_slagshell_bulwark",
       "count": 1
     },
     {
-      "id": "ember_stoke_the_coals",
-      "count": 1
-    },
-    {
       "id": "ember_twin_flame",
-      "count": 2
-    },
-    {
-      "id": "relic_corpse_cart",
       "count": 1
     },
     {
-      "id": "stone_sentry",
+      "id": "flame_bolt",
+      "count": 2
+    },
+    {
+      "id": "neutral_bog_crawler",
       "count": 1
     },
     {
-      "id": "tide_deep_bargain",
-      "count": 2
+      "id": "neutral_phantom_duelist",
+      "count": 1
+    },
+    {
+      "id": "neutral_razorcoil_adder",
+      "count": 1
     },
     {
       "id": "tide_deepfrost_spear",
-      "count": 1
-    },
-    {
-      "id": "tide_fathom_crush",
-      "count": 1
+      "count": 2
     },
     {
       "id": "tide_frostbind",
+      "count": 1
+    },
+    {
+      "id": "tide_glacial_echo",
+      "count": 1
+    },
+    {
+      "id": "tide_hoarfrost_lash",
       "count": 1
     },
     {
@@ -90,15 +98,7 @@
       "count": 1
     },
     {
-      "id": "tide_oracle",
-      "count": 1
-    },
-    {
-      "id": "tide_reefguard",
-      "count": 2
-    },
-    {
-      "id": "tide_undertow",
+      "id": "tide_venomfin",
       "count": 1
     },
     {

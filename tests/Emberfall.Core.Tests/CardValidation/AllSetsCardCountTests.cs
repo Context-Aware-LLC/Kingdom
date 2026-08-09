@@ -12,7 +12,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
-    /// Loader test: asserts the client card database (M1+M2+M3) equals CardCi's count.
+    /// Loader test: asserts the client card database (Emberfall+Rekindling) equals CardCi's count.
     /// Satisfies EF-040 DONE-WHEN: client database count equals 260.
     /// Update counts here when cards are added to any set.
     /// </summary>
@@ -22,9 +22,8 @@ namespace Emberfall.Core.Tests.CardValidation
     {
         private static readonly string[] SetFiles =
         {
-            Path.Combine("unity", "Emberfall", "Assets", "CardData", "M1.cards.json"),
-            Path.Combine("unity", "Emberfall", "Assets", "CardData", "M2.cards.json"),
-            Path.Combine("unity", "Emberfall", "Assets", "CardData", "M3.cards.json"),
+            Path.Combine("unity", "Emberfall", "Assets", "CardData", "Emberfall.cards.json"),
+            Path.Combine("unity", "Emberfall", "Assets", "CardData", "Rekindling.cards.json"),
         };
 
         private static string CardDataPath(string repoRelative)
@@ -48,20 +47,19 @@ namespace Emberfall.Core.Tests.CardValidation
             };
 
         [Test]
-        public void Client_Database_Loads_All_Three_Sets()
+        public void Client_Database_Loads_Both_Sets()
         {
-            var m1 = LoadSet(SetFiles[0]);
-            var m2 = LoadSet(SetFiles[1]);
-            var m3 = LoadSet(SetFiles[2]);
+            var emberfall = LoadSet(SetFiles[0]);
+            var rekindling = LoadSet(SetFiles[1]);
 
-            Assert.That(m1.Count, Is.EqualTo(143), "M1 set count mismatch (card_inventory.py: 143)");
-            Assert.That(m2.Count, Is.EqualTo(42), "M2 set count mismatch (card_inventory.py: 42)");
+            // 185 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file.
+            Assert.That(emberfall.Count, Is.EqualTo(185), "Emberfall set count mismatch (card_inventory.py: 185)");
             // 75 since NOR-126/NOR-131 added the CLOCKWRIGHT and TEMPEST signature weapons.
-            Assert.That(m3.Count, Is.EqualTo(75), "M3 set count mismatch (card_inventory.py: 75)");
+            Assert.That(rekindling.Count, Is.EqualTo(75), "Rekindling set count mismatch (card_inventory.py: 75)");
 
-            var combined = m1.Concat(m2).Concat(m3).ToList();
+            var combined = emberfall.Concat(rekindling).ToList();
             Assert.That(combined.Count, Is.EqualTo(260),
-                "Total card count across M1+M2+M3 must match CardCi output (card_inventory.py: 260).");
+                "Total card count across Emberfall+Rekindling must match CardCi output (card_inventory.py: 260).");
         }
 
         [Test]
@@ -119,12 +117,9 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void All_M2_And_M3_Cards_Pass_Core_Validation()
+        public void All_Cards_Pass_Core_Validation()
         {
-            var m1 = LoadSet(SetFiles[0]);
-            var m2 = LoadSet(SetFiles[1]);
-            var m3 = LoadSet(SetFiles[2]);
-            var allCards = m1.Concat(m2).Concat(m3).ToList();
+            var allCards = SetFiles.SelectMany(LoadSet).ToList();
             var db = new JsonCardDatabaseTestDouble(allCards);
             var validator = new CardValidator();
 

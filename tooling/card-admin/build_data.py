@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Aggregate the Emberfall card corpus into a single data file for the admin panel.
 
-Reads the three set files under unity/Emberfall/Assets/CardData/ and emits
+Reads the two set files under unity/Emberfall/Assets/CardData/ and emits
 tooling/card-admin/data.json: a normalized per-card array plus precomputed
 corpus-wide and per-class rollups (keyword frequency, targeting-selector
 frequency, cost distribution, type split, and minion attack/health
@@ -19,9 +19,8 @@ from pathlib import Path
 # Repo root is two levels up from this file (tooling/card-admin/build_data.py).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CARD_FILES = [
-    REPO_ROOT / "unity/Emberfall/Assets/CardData/M1.cards.json",
-    REPO_ROOT / "unity/Emberfall/Assets/CardData/M2.cards.json",
-    REPO_ROOT / "unity/Emberfall/Assets/CardData/M3.cards.json",
+    REPO_ROOT / "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
+    REPO_ROOT / "unity/Emberfall/Assets/CardData/Rekindling.cards.json",
 ]
 OUT_PATH = Path(__file__).resolve().parent / "data.json"
 # Browsers block fetch('data.json') under file://, so the panel loads this thin

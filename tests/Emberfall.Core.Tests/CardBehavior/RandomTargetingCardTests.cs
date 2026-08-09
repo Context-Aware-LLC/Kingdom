@@ -20,7 +20,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             var cards = new List<CardDefinition>();
             string cardData = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData");
-            foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
+            foreach (string file in new[] { "Emberfall.cards.json", "Rekindling.cards.json" })
                 cards.AddRange(CardJson.DeserializeArray(File.ReadAllText(Path.Combine(cardData, file))));
             _db = new JsonCardDatabase(cards);
         }

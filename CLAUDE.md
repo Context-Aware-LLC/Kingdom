@@ -234,6 +234,13 @@ NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is 
 distinguished nothing. `ArtIds.ToFileName` stays a `Replace('/','_')` against a future namespaced
 id, but nothing today has a separator to flatten.
 
+**CORE is hero powers only (Sam, 2026-08-08, narrows the rule above for CORE specifically).**
+`Assets/Art/Cards/CORE/` holds only the 8 hero-power cards' art. Every other CORE-set card
+(minions, spells, the one CORE weapon, CORE tokens) is data-tagged `setId: CORE` but its art
+ships under `Assets/Art/Cards/EMBERFALL/` instead — CORE has no art bundle of its own beyond hero
+powers, since CORE content ships alongside the Emberfall launch. `tooling/scripts/audit_card_art_names.py`
+encodes this exception when it checks "wrong set folder."
+
 **The set folder decides which BUNDLE a file ships in, not its import settings.**
 `CardArtPostprocessor` keys on `Assets/Art/Cards/` — the root, one rule for every set — so import
 settings are identical wherever under it a file sits. What the `<setId>` folder does decide is

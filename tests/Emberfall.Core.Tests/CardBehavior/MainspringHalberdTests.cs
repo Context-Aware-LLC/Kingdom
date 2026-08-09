@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.CardBehavior
 {
     /// <summary>
     /// NOR-126 — CLOCKWRIGHT's signature weapon, <c>clock_mainspring_halberd</c>. Deliberately driven off the
-    /// <b>live</b> M1 rows rather than a hand-built fixture: the thing at risk here is not the engine (EF-020
+    /// <b>live</b> Emberfall rows rather than a hand-built fixture: the thing at risk here is not the engine (EF-020
     /// already proved <c>RulesEngine.BreakWeapon</c> raises <c>ON_DEATH</c>) but the shipped card row. A weapon
     /// authored onto a dead trigger parses, validates, loads and then does nothing forever, silently — so the
     /// only test worth writing is one that would go red if someone edited the row in the JSON.
@@ -28,26 +28,26 @@ namespace Emberfall.Core.Tests.CardBehavior
         private const string Halberd = "rekind_clock_mainspring_halberd";
         private const string Replacement = "ember_cinder_lance"; // 1/2, no effects — cannot muddy the read
 
-        private static IReadOnlyList<CardDefinition>? _m3Cards;
+        private static IReadOnlyList<CardDefinition>? _rekindlingCards;
         private static ICardDatabase? _liveDb;
 
-        private static IReadOnlyList<CardDefinition> M3Cards => _m3Cards ??= LoadM3();
+        private static IReadOnlyList<CardDefinition> RekindlingCards => _rekindlingCards ??= LoadRekindling();
 
         private static ICardDatabase LiveDb
-            => _liveDb ??= new JsonCardDatabase(LiveCardSet.Cards.Concat(M3Cards));
+            => _liveDb ??= new JsonCardDatabase(LiveCardSet.Cards.Concat(RekindlingCards));
 
-        private static IReadOnlyList<CardDefinition> LoadM3()
+        private static IReadOnlyList<CardDefinition> LoadRekindling()
         {
             string path = Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "CardData", "M3.cards.json");
-            Assert.That(File.Exists(path), Is.True, $"Live M3 card set not found at {path}");
+                "unity", "Emberfall", "Assets", "CardData", "Rekindling.cards.json");
+            Assert.That(File.Exists(path), Is.True, $"Live Rekindling card set not found at {path}");
             return CardJson.DeserializeArray(File.ReadAllText(path));
         }
 
         private static CardDefinition Def(string id)
         {
-            var card = LiveCardSet.Cards.Concat(M3Cards).FirstOrDefault(c => c.Id == id);
-            Assert.That(card, Is.Not.Null, $"'{id}' is missing from the live M1+M3 sets.");
+            var card = LiveCardSet.Cards.Concat(RekindlingCards).FirstOrDefault(c => c.Id == id);
+            Assert.That(card, Is.Not.Null, $"'{id}' is missing from the live Emberfall+Rekindling sets.");
             return card!;
         }
 

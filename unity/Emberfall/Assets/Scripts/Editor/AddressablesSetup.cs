@@ -53,8 +53,8 @@ namespace Emberfall.Editor
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (!path.EndsWith(".cards.json")) continue;
-                string setFile = Path.GetFileName(path);                       // "M1.cards.json"
-                string address = "cards/" + setFile.Substring(0, setFile.Length - ".json".Length); // "cards/M1.cards"
+                string setFile = Path.GetFileName(path);                       // "Emberfall.cards.json"
+                string address = "cards/" + setFile.Substring(0, setFile.Length - ".json".Length); // "cards/Emberfall.cards"
                 var entry = settings.CreateOrMoveEntry(guid, dataGroup);
                 entry.SetAddress(address);
             }

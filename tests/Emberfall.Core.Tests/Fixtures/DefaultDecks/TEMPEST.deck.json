@@ -7,6 +7,10 @@
   "entries": [
     {
       "id": "core_arclight_adept",
+      "count": 1
+    },
+    {
+      "id": "core_bonehound",
       "count": 2
     },
     {
@@ -22,39 +26,55 @@
       "count": 1
     },
     {
-      "id": "core_thistleguard_sprig",
+      "id": "core_lantern_bearer",
       "count": 1
     },
     {
-      "id": "core_veilstalker",
+      "id": "core_stoneback",
       "count": 1
     },
     {
-      "id": "ember_ashfall_wyrm",
+      "id": "ember_blazewing",
       "count": 1
     },
     {
-      "id": "ember_emberdrinker",
-      "count": 1
-    },
-    {
-      "id": "ember_overheat_golem",
-      "count": 1
+      "id": "ember_fusillade",
+      "count": 2
     },
     {
       "id": "ember_scorch",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch_blade",
+      "count": 1
+    },
+    {
+      "id": "ember_stoke_the_coals",
       "count": 2
     },
     {
-      "id": "ember_zealot",
+      "id": "neutral_doublestrike_hawk",
+      "count": 1
+    },
+    {
+      "id": "neutral_galewind_runner",
+      "count": 1
+    },
+    {
+      "id": "neutral_razorcoil_adder",
       "count": 2
     },
     {
-      "id": "flame_bolt",
-      "count": 2
+      "id": "neutral_searing_quill",
+      "count": 1
     },
     {
-      "id": "stone_sentry",
+      "id": "neutral_soulbound_revenant",
+      "count": 1
+    },
+    {
+      "id": "relic_corpse_cart",
       "count": 2
     },
     {
@@ -62,28 +82,20 @@
       "count": 1
     },
     {
-      "id": "storm_gust_sprite",
+      "id": "storm_crackle",
       "count": 2
     },
     {
-      "id": "storm_hurricane",
+      "id": "storm_lightning_storm",
       "count": 1
-    },
-    {
-      "id": "storm_lightning_bolt",
-      "count": 1
-    },
-    {
-      "id": "storm_spark_imp",
-      "count": 2
     },
     {
       "id": "storm_static_discharge",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "storm_wind_rider",
-      "count": 2
+      "id": "storm_thunder_hoof",
+      "count": 1
     },
     {
       "id": "wandering_scout",

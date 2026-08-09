@@ -101,7 +101,7 @@ namespace Emberfall.Core.Tests.CardValidation
         private static IReadOnlyList<CardDefinition> LoadAllSets()
         {
             var cards = new List<CardDefinition>();
-            foreach (string file in new[] { "M1.cards.json", "M2.cards.json", "M3.cards.json" })
+            foreach (string file in new[] { "Emberfall.cards.json", "Rekindling.cards.json" })
             {
                 string path = Path.Combine(RepoPaths.RepoRoot,
                     "unity", "Emberfall", "Assets", "CardData", file);

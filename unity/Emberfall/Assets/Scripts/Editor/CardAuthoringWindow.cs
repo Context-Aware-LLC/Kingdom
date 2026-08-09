@@ -12,7 +12,7 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Card Authoring EditorWindow (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B, dev-docs/pipelines/card-authoring-and-import.md:9). Edits the
-    /// canonical JSON row (M1.cards.json today — see CardJsonRowIO), never the baked SO directly.
+    /// canonical JSON row (Emberfall.cards.json today — see CardJsonRowIO), never the baked SO directly.
     /// Every enum control is a real C# enum popup (EnumPopup/Toggle), so a designer cannot type an
     /// unknown verb/keyword/selector — invalid effects are structurally unrepresentable in the UI.
     ///
@@ -76,7 +76,7 @@ namespace Emberfall.Editor
         private void LoadAll()
         {
             _cards.Clear();
-            foreach (var (def, _) in CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultM1JsonPath))
+            foreach (var (def, _) in CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultEmberfallJsonPath))
                 _cards.Add(EditableCard.FromDefinition(def));
             _dirtyIds.Clear();
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
@@ -402,7 +402,7 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var card = _cards[_selected];
-            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Id}'? This removes it from M1.cards.json on next Save.", "Delete", "Cancel"))
+            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Id}'? This removes it from Emberfall.cards.json on next Save.", "Delete", "Cancel"))
                 return;
 
             var referencedBy = _cards.Where(c => c.Rules.Any(rule => rule.ReferencedCardId == card.Id))
@@ -429,7 +429,7 @@ namespace Emberfall.Editor
         private void SaveAll()
         {
             var defs = _cards.Select(c => c.ToDefinition()).ToList();
-            CardJsonRowIO.SaveRows(CardJsonRowIO.DefaultM1JsonPath, defs);
+            CardJsonRowIO.SaveRows(CardJsonRowIO.DefaultEmberfallJsonPath, defs);
             AssetDatabase.Refresh();
             _dirtyIds.Clear();
         }
@@ -471,7 +471,7 @@ namespace Emberfall.Editor
 
             SaveAll();
             var importer = new CardImporter(_validator, LiveDb());
-            var result = importer.ImportAllFromFlatFile(CardJsonRowIO.DefaultM1JsonPath);
+            var result = importer.ImportAllFromFlatFile(CardJsonRowIO.DefaultEmberfallJsonPath);
             Debug.Log($"[Card Authoring] Baked {result.AssetPaths.Count} card(s). Success={result.Success}");
         }
     }

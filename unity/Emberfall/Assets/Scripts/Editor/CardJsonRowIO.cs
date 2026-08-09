@@ -7,11 +7,11 @@ using Emberfall.Core.Cards;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Editor-owned load/save over the flat M1 card-row array
-    /// (unity/Emberfall/Assets/Resources/cards/M1.cards.json). This is the pragmatic stand-in for
+    /// Editor-owned load/save over the flat Emberfall card-row array
+    /// (unity/Emberfall/Assets/Resources/cards/Emberfall.cards.json). This is the pragmatic stand-in for
     /// the spec's per-file `cards/&lt;setId&gt;/&lt;id&gt;.card.json` + ScriptedImporter convention
-    /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the M1 set
-    /// already lives as one file; see the plan's "explicitly deferred" list.
+    /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the
+    /// Emberfall set already lives as one file; see the plan's "explicitly deferred" list.
     ///
     /// Reuses the shared <see cref="CardJson"/> parser for reads (no second deserializer, R1) and
     /// adds the one thing core doesn't have: a canonical writer, since CardJson has no Serialize.
@@ -19,8 +19,8 @@ namespace Emberfall.Editor
     public static class CardJsonRowIO
     {
         // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
-        // Addressables group at address "cards/M1.cards".
-        public const string DefaultM1JsonPath = "Assets/CardData/M1.cards.json";
+        // Addressables group at address "cards/Emberfall.cards".
+        public const string DefaultEmberfallJsonPath = "Assets/CardData/Emberfall.cards.json";
 
         /// <summary>Loads every row as (parsed definition, verbatim source JSON for that row).</summary>
         public static IReadOnlyList<(CardDefinition def, string json)> LoadRows(string path)

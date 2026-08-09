@@ -44,7 +44,7 @@ namespace Emberfall.Editor
     /// (the R3 audit gate, dev-docs/specs/card-schema.md:40) — the window and CI both go
     /// through this single path so nothing can bake a broken card.
     ///
-    /// Deviation from the spec: bakes straight from the flat M1.cards.json array rather than
+    /// Deviation from the spec: bakes straight from the flat Emberfall.cards.json array rather than
     /// per-file `.card.json` sources (see CardJsonRowIO header) — no ScriptedImporter is used here;
     /// baking is an explicit action (window "Bake" button / Validate-All menu), not import-on-save.
     /// Addressable group/label assignment (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §6) is deferred — no Addressables group
@@ -71,13 +71,13 @@ namespace Emberfall.Editor
 
         public ImportResult ImportSet(SetId setId)
         {
-            var rows = CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultM1JsonPath)
+            var rows = CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultEmberfallJsonPath)
                 .Where(r => r.def.SetId == setId)
                 .ToList();
             return BakeMany(rows);
         }
 
-        /// <summary>Bakes every row in the flat M1 file, regardless of set. Used by the window's "Bake All".</summary>
+        /// <summary>Bakes every row in the flat Emberfall file, regardless of set. Used by the window's "Bake All".</summary>
         public ImportResult ImportAllFromFlatFile(string flatJsonPath)
         {
             var rows = CardJsonRowIO.LoadRows(flatJsonPath);

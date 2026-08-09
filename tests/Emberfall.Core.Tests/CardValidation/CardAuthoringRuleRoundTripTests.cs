@@ -18,9 +18,8 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             string[] files =
             {
-                Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "M1.cards.json"),
-                Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "M2.cards.json"),
-                Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "M3.cards.json"),
+                Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "Emberfall.cards.json"),
+                Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", "Rekindling.cards.json"),
             };
             var cards = files.SelectMany(path => CardJson.DeserializeArray(File.ReadAllText(path))).ToList();
 
