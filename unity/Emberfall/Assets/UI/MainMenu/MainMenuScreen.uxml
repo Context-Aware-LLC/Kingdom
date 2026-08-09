@@ -68,7 +68,7 @@
                 <ui:TextField name="signin-email" class="mm-modal__field"/>
                 <!-- Eight-digit code entry (NOR-231), superseded 2026-08-08 by the magic-link flow in
                      SignInGateController but left in place rather than deleted. max-length must be 8
-                     (EmailCode.Length) if this is ever revived -- it shipped as 6, a live bug, before
+                     (EmailCode.Length) if this is ever revived — it shipped as 6, a live bug, before
                      the field was retired.
                 <ui:TextField name="signin-code" max-length="8" class="mm-modal__field mm-signin__code" style="display: none;"/>
                 -->
