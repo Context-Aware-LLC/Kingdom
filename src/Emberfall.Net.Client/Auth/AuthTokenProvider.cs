@@ -164,14 +164,14 @@ namespace Emberfall.Net.Client.Auth
             return start.Result;
         }
 
-        /// <summary>Mail the player an eight-digit code. Nothing is stored — see
+        /// <summary>Mail the player a six-digit code. Nothing is stored — see
         /// <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> for why this flow keeps no local
         /// state, and what that buys.</summary>
         public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
             => _backend.BeginEmailCodeAsync(email, cancellationToken);
 
         /// <summary>
-        /// Finish a sign-in with the mailed eight-digit code. On success the session is stored and
+        /// Finish a sign-in with the mailed six-digit code. On success the session is stored and
         /// <see cref="SessionChanged"/> fires.
         ///
         /// <para><b>A refusal here does not burn the code.</b> Unlike the redirect flow — where the

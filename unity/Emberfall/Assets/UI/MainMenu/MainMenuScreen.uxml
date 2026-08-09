@@ -64,20 +64,17 @@
         <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--hidden">
             <ui:VisualElement name="signin-panel" class="mm-modal__panel">
                 <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
-                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a confirmation link." class="mm-modal__help"/>
+                <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
                 <ui:TextField name="signin-email" class="mm-modal__field"/>
-                <!-- Eight-digit code entry (NOR-231), superseded 2026-08-08 by the magic-link flow in
-                     SignInGateController but left in place rather than deleted. max-length must be 8
-                     (EmailCode.Length) if this is ever revived — it shipped as 6, a live bug, before
-                     the field was retired.
-                <ui:TextField name="signin-code" max-length="8" class="mm-modal__field mm-signin__code" style="display: none;"/>
-                -->
+                <!-- max-length must match EmailCode.Length (SupabaseAuthBackend.cs) — the project's
+                     Auth > Email OTP length setting, not a client-side constant. -->
+                <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
-                    <ui:Button name="btn-signin-primary" text="Email me a link" class="mm-modal__button mm-modal__button--cta"/>
+                    <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
-                <ui:Button name="btn-signin-resend" text="Send another link" class="mm-signin__resend" style="display: none;"/>
+                <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden">

@@ -11,7 +11,7 @@ namespace Emberfall.Session
     ///
     /// <para><b>This is a capability, not a policy.</b> Touching it signs nobody in and shows nothing.
     /// It answers "what token, if any, goes on this connect", and it exposes the calls a sign-in
-    /// surface needs. The policy — registration on first launch, unskippable, eight-digit code (Sam,
+    /// surface needs. The policy — registration on first launch, unskippable, six-digit code (Sam,
     /// 2026-08-08) — lives in <c>SignInGateController</c>, and it is the only thing that opens a
     /// sign-in. What happens to a device's existing collection at sign-in is still open: that is
     /// EF-074d and it is unbuilt.</para>

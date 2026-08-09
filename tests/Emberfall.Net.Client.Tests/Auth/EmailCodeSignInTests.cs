@@ -5,7 +5,8 @@ using NUnit.Framework;
 namespace Emberfall.Net.Client.Tests.Auth
 {
     /// <summary>
-    /// The eight-digit email code — the return path Sam chose on 2026-08-08 (EF-074e / NOR-231).
+    /// The six-digit email code — the return path Sam chose on 2026-08-08 (EF-074e / NOR-231),
+    /// reaffirmed the same day after a magic-link detour (see SignInGateController's type remarks).
     ///
     /// <para>What these pin is the difference from the redirect flow, because that difference is the
     /// whole reason the code was chosen: nothing is held on this device between asking for a code and
@@ -62,7 +63,7 @@ namespace Emberfall.Net.Client.Tests.Auth
             var backend = new SupabaseAuthBackend(SupabaseAuthConfig.Unconfigured, new FakeAuthHttp());
 
             AuthResult sent = await backend.BeginEmailCodeAsync("player@example.com");
-            AuthResult verified = await backend.VerifyEmailCodeAsync("player@example.com", "12345678");
+            AuthResult verified = await backend.VerifyEmailCodeAsync("player@example.com", "123456");
 
             Assert.That(sent.Failure, Is.EqualTo(AuthFailure.NotConfigured));
             Assert.That(verified.Failure, Is.EqualTo(AuthFailure.NotConfigured));
@@ -78,7 +79,7 @@ namespace Emberfall.Net.Client.Tests.Auth
                 TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", expiresInSeconds: 3600));
 
             AuthResult result = await Backend(http, clock)
-                .VerifyEmailCodeAsync("player@example.com", "12345678");
+                .VerifyEmailCodeAsync("player@example.com", "123456");
 
             Assert.That(result.Ok, Is.True);
             Assert.That(result.Session.AccessToken, Is.Not.Empty);
@@ -90,7 +91,7 @@ namespace Emberfall.Net.Client.Tests.Auth
 
             Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/verify"));
             Assert.That(http.Requests[0].Body, Does.Contain("\"type\":\"email\""));
-            Assert.That(http.Requests[0].Body, Does.Contain("\"token\":\"12345678\""));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"token\":\"123456\""));
         }
 
         [Test]
@@ -99,10 +100,10 @@ namespace Emberfall.Net.Client.Tests.Auth
             var http = new FakeAuthHttp().Reply(200,
                 TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
 
-            AuthResult result = await Backend(http).VerifyEmailCodeAsync("player@example.com", " 1234 5678 ");
+            AuthResult result = await Backend(http).VerifyEmailCodeAsync("player@example.com", " 123 456 ");
 
             Assert.That(result.Ok, Is.True);
-            Assert.That(http.Requests[0].Body, Does.Contain("\"token\":\"12345678\""));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"token\":\"123456\""));
         }
 
         [Test]
@@ -110,7 +111,7 @@ namespace Emberfall.Net.Client.Tests.Auth
         {
             var http = new FakeAuthHttp();
 
-            AuthResult result = await Backend(http).VerifyEmailCodeAsync("player@example.com", "1234");
+            AuthResult result = await Backend(http).VerifyEmailCodeAsync("player@example.com", "12");
 
             Assert.That(result.Ok, Is.False);
             Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
@@ -121,9 +122,9 @@ namespace Emberfall.Net.Client.Tests.Auth
         public async Task A_wrong_code_is_a_rejection_and_a_dead_network_is_not()
         {
             var rejected = await Backend(new FakeAuthHttp().Reply(403, "{\"msg\":\"Token has expired or is invalid\"}"))
-                .VerifyEmailCodeAsync("player@example.com", "00000000");
+                .VerifyEmailCodeAsync("player@example.com", "000000");
             var offline = await Backend(new FakeAuthHttp().ReplyTransportFailure())
-                .VerifyEmailCodeAsync("player@example.com", "00000000");
+                .VerifyEmailCodeAsync("player@example.com", "000000");
 
             Assert.That(rejected.Failure, Is.EqualTo(AuthFailure.Rejected));
             Assert.That(rejected.Detail, Is.EqualTo("Token has expired or is invalid"));
@@ -151,7 +152,7 @@ namespace Emberfall.Net.Client.Tests.Auth
             AuthSession? announced = null;
             provider.SessionChanged += s => announced = s;
 
-            AuthResult result = await provider.VerifyEmailCodeAsync("player@example.com", "12345678");
+            AuthResult result = await provider.VerifyEmailCodeAsync("player@example.com", "123456");
 
             Assert.That(result.Ok, Is.True);
             Assert.That(provider.IsSignedIn, Is.True);
@@ -166,8 +167,8 @@ namespace Emberfall.Net.Client.Tests.Auth
             var backend = new FakeAuthBackend { VerifyResult = AuthResult.Failed(AuthFailure.Rejected, "wrong code") };
             var provider = new AuthTokenProvider(backend, store, new FakeClock());
 
-            AuthResult first = await provider.VerifyEmailCodeAsync("player@example.com", "11111111");
-            AuthResult second = await provider.VerifyEmailCodeAsync("player@example.com", "22222222");
+            AuthResult first = await provider.VerifyEmailCodeAsync("player@example.com", "111111");
+            AuthResult second = await provider.VerifyEmailCodeAsync("player@example.com", "222222");
 
             Assert.That(first.Ok, Is.False);
             Assert.That(provider.IsSignedIn, Is.False);
@@ -176,24 +177,24 @@ namespace Emberfall.Net.Client.Tests.Auth
             Assert.That(second.Ok, Is.False);
             Assert.That(backend.VerifyCalls, Is.EqualTo(2));
             Assert.That(backend.LastVerifiedEmail, Is.EqualTo("player@example.com"));
-            Assert.That(backend.LastVerifiedCode, Is.EqualTo("22222222"));
+            Assert.That(backend.LastVerifiedCode, Is.EqualTo("222222"));
         }
 
         // ── The shape the overlay's field and button agree on ───────────────────────────
 
-        [TestCase("12345678", "12345678")]
-        [TestCase(" 1234 5678 ", "12345678")]
-        [TestCase("12-34-56-78", "12345678")]
-        [TestCase("123456789", "12345678")]
-        [TestCase("1a2b3c4d5e6f7g8h", "12345678")]
+        [TestCase("123456", "123456")]
+        [TestCase(" 123 456 ", "123456")]
+        [TestCase("12-34-56", "123456")]
+        [TestCase("1234567", "123456")]
+        [TestCase("1a2b3c4d5e6f", "123456")]
         [TestCase("", "")]
         [TestCase(null, "")]
-        public void Normalize_keeps_the_first_eight_digits_and_nothing_else(string? typed, string expected)
+        public void Normalize_keeps_the_first_six_digits_and_nothing_else(string? typed, string expected)
             => Assert.That(EmailCode.Normalize(typed), Is.EqualTo(expected));
 
-        [TestCase("12345678", true)]
-        [TestCase("1234567", false)]
-        [TestCase("abcdefgh", false)]
+        [TestCase("123456", true)]
+        [TestCase("12345", false)]
+        [TestCase("abcdef", false)]
         public void IsComplete_is_what_the_confirm_button_reads(string typed, bool complete)
             => Assert.That(EmailCode.IsComplete(typed), Is.EqualTo(complete));
     }

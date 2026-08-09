@@ -1,17 +1,6 @@
 """Generate the card illustrations for the 22 Gravekeep/Verdant draft cards.
 
-TWO PROVIDERS, and they are not interchangeable (Sam, 2026-07-26):
-
-  GEMINI — fast and cheap, so this is where the volume
-      goes: TWO candidates per card, whole batch at once. Buy breadth here.
-  OPENAI gpt-image-2 (default for card art and full screen images) — "an ace one-shot," but ~5 minutes per image
-      and ~20x the cost. ONE candidate, and only on hand-picked cards whose
-      Gemini candidates weren't good enough. The script REFUSES to run this
-      provider over the whole batch; see `require_explicit_selection`.
-
-Both are called as plain HTTPS from `requests`, matching gen_card_backs.py /
-gen_board_plates.py. Never the Unity wrapper — it silently drops width/height
-and caps at 1024 square.
+Single Provider. Gpt Images 2.0
 
 WHERE THE PROMPT COMES FROM. Nothing here is invented. Each prompt is composed,
 in this order, from three sources on disk:

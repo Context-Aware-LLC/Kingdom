@@ -118,11 +118,11 @@ namespace Emberfall.Presentation
             FinishBootstrap();
         }
 
-        /// <summary>Drop the sign-in gate's deep-link subscription. <see cref="SignInGateController"/>
-        /// listens on the static <see cref="Application.deepLinkActivated"/> event, and a fresh
-        /// instance is built on every OnEnable (including the scene reload
-        /// <see cref="DeviceAccounts.SwitchTo"/> triggers) — without this, a disabled screen's
-        /// controller keeps handling links for a modal that no longer exists.</summary>
+        /// <summary>Drop the sign-in gate's teardown hook. <see cref="SignInGateController.Close"/> is
+        /// currently a no-op — the live sign-in flow is the six-digit code, which holds no static
+        /// event subscription — but a fresh instance is built on every OnEnable (including the scene
+        /// reload <see cref="DeviceAccounts.SwitchTo"/> triggers), so this stays unconditional rather
+        /// than assuming today's flow is the only one that will ever be wired here.</summary>
         private void OnDisable()
         {
             _signIn?.Close();

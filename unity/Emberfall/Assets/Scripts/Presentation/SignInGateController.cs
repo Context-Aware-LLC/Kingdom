@@ -8,21 +8,25 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The first-launch registration overlay (EF-074e / NOR-231, magic link NOR-246 2026-08-08). An
-    /// email address, then a confirmation link that hands the player back to the game.
+    /// The first-launch registration overlay (EF-074e / NOR-231). An email address, then the
+    /// six-digit code that arrives in the reply — and no way past it.
     ///
     /// <para><b>Sam's ruling, 2026-08-08: registration happens on first load and cannot be skipped.</b>
     /// There are no guest accounts and there never will be. So this overlay has no Cancel, no Skip and
     /// no "continue as guest" — not a disabled one, none at all, because a dead button invites
     /// clicking. The only way out is a session.</para>
     ///
-    /// <para><b>Magic link over a typed code (Sam, NOR-246 2026-08-08).</b> The eight-digit code was
-    /// the original build's answer to "no deep link plumbing on any platform" — see the retired
-    /// <see cref="Step"/> path below, kept rather than deleted. Going Android-only removed that
-    /// objection: Android hands a tapped mail link straight back to the app via an intent, and eight
-    /// digits read from an inbox and retyped by hand is a worse ask than six ever was, per Sam. The
-    /// code path stays in <see cref="AuthTokenProvider"/> and <see cref="SupabaseAuthBackend"/>
-    /// untouched — only this overlay's wiring changed.</para>
+    /// <para><b>The code, not a link (Sam, 2026-08-08; reaffirmed 2026-08-08 after a magic-link
+    /// detour).</b> A deep link would have to be registered on every platform we ship and is flakiest
+    /// on desktop; a code the player reads and types behaves identically everywhere and never takes
+    /// them out of the game. A magic-link build (NOR-246) briefly replaced this — see commit
+    /// <c>acd12c53</c> for that implementation, kept in history rather than pasted back in here — but
+    /// it threw a client-side exception sending the link that was never root-caused, and Sam reverted
+    /// to the code while also fixing the actual cause of the original 6-vs-8 confusion: the project's
+    /// Auth &gt; Email OTP length is now explicitly set to 6, matching <see cref="EmailCode.Length"/>.
+    /// The practical consequence lives in <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/>: this
+    /// device holds nothing between sending and verifying, so force-quitting mid-sign-in costs the
+    /// player nothing.</para>
     ///
     /// <para><b>The gate only closes when there is a project to sign into.</b>
     /// <see cref="IsRequired"/> is false on a build with no <c>SupabaseAuthSettings</c> asset, because
@@ -34,7 +38,7 @@ namespace Emberfall.Presentation
     ///
     /// <para><b>Unskippable sign-in means the game needs a network to start, Single Player included.</b>
     /// That is the accepted price of the ruling, not an oversight. It is why an offline first launch
-    /// says so in plain words rather than showing a rejected link.</para>
+    /// says so in plain words rather than showing a rejected code.</para>
     /// </summary>
     public sealed class SignInGateController
     {
@@ -45,14 +49,15 @@ namespace Emberfall.Presentation
             /// <summary>Asking for an address.</summary>
             Email,
 
-            /// <summary>The mail is away; waiting for the player to tap the link in it.</summary>
-            Waiting,
+            /// <summary>The mail is away; asking for the code that is in it.</summary>
+            Code,
         }
 
         private readonly VisualElement _modal;
         private readonly Label _title;
         private readonly Label _help;
         private readonly TextField _emailField;
+        private readonly TextField _codeField;
         private readonly Label _error;
         private readonly Button _primary;
         private readonly Button _back;
@@ -64,8 +69,9 @@ namespace Emberfall.Presentation
         private bool _busy;
         private Action _onSignedIn;
 
-        /// <summary>The address the link was actually mailed to. Held rather than re-read from the
-        /// field, because the field is hidden once we are waiting on the redirect.</summary>
+        /// <summary>The address the code was actually mailed to. Held rather than re-read from the
+        /// field, because Supabase keys the code to the address — a player who edits the field after
+        /// asking for a code would otherwise get a refusal that reads like a wrong code.</summary>
         private string _sentTo = "";
 
         public SignInGateController(VisualElement root, AuthTokenProvider auth)
@@ -76,6 +82,7 @@ namespace Emberfall.Presentation
             _title = root.Q<Label>("signin-title");
             _help = root.Q<Label>("signin-help");
             _emailField = root.Q<TextField>("signin-email");
+            _codeField = root.Q<TextField>("signin-code");
             _error = root.Q<Label>("signin-error");
             _primary = root.Q<Button>("btn-signin-primary");
             _back = root.Q<Button>("btn-signin-back");
@@ -89,7 +96,7 @@ namespace Emberfall.Presentation
 
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));
-            _resend?.RegisterCallback<ClickEvent>(_ => SendMagicLink(_sentTo));
+            _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
 
             if (_emailField != null)
             {
@@ -100,20 +107,32 @@ namespace Emberfall.Presentation
                 _emailField.RegisterValueChangedCallback(_ => SetError(""));
             }
 
-            // Android hands a tapped mail link back to a running instance through this. A cold start
-            // (the OS launched us fresh off the link) is caught separately in Open(), because this
-            // event does not fire for the launch that is already in progress when it is subscribed.
-            Application.deepLinkActivated += OnDeepLinkActivated;
+            if (_codeField != null)
+            {
+                // Rewrite the field to just its digits as the player types. A code copied out of a
+                // mail client arrives as "123 456", with a trailing space, or wrapped in punctuation
+                // often enough that refusing those reads as the code being wrong — and the player's
+                // next move is to request a new one, which invalidates the one they have.
+                _codeField.RegisterValueChangedCallback(evt =>
+                {
+                    string digits = EmailCode.Normalize(evt.newValue);
+                    if (digits != evt.newValue) _codeField.SetValueWithoutNotify(digits);
+                    SetError("");
+                    RefreshPrimary();
+                });
+                _codeField.RegisterCallback<KeyDownEvent>(evt =>
+                {
+                    if (IsSubmit(evt)) OnPrimary();
+                });
+            }
         }
 
-        /// <summary>Drop the deep-link subscription. Must be called when the owning screen is
-        /// disabled/destroyed — <see cref="Application.deepLinkActivated"/> is a static event, so an
-        /// instance that never unsubscribes outlives its modal and keeps handling links for a UI that
-        /// is gone. Scene reloads (<see cref="DeviceAccounts.SwitchTo"/>) make a fresh instance on
-        /// every re-enable, so this is not optional.</summary>
+        /// <summary>No-op today — the code flow holds no static event subscription to drop. Kept so
+        /// <see cref="MainMenuController"/>'s <c>OnDisable</c> can call it unconditionally regardless
+        /// of which sign-in flow is wired; a magic-link revival (see the type remarks) is what would
+        /// give this a body again, to unsubscribe <c>Application.deepLinkActivated</c>.</summary>
         public void Close()
         {
-            Application.deepLinkActivated -= OnDeepLinkActivated;
         }
 
         /// <summary>
@@ -150,16 +169,6 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // A cold start: the OS may have launched this process directly off the confirmation link,
-            // which means deepLinkActivated already fired (or never will, for this launch) before
-            // anything here could have subscribed to it. Application.absoluteURL still carries it.
-            if (TryExtractCode(Application.absoluteURL, out string coldCode))
-            {
-                _modal.RemoveFromClassList("mm-modal--hidden");
-                CompleteFromDeepLink(coldCode);
-                return;
-            }
-
             ToEmailStep("");
             _modal.RemoveFromClassList("mm-modal--hidden");
             _emailField?.Focus();
@@ -175,40 +184,43 @@ namespace Emberfall.Presentation
             if (_title != null) _title.text = "Create your account";
             if (_help != null)
                 _help.text = "Emberfall needs an account before you can play. Enter your email and we " +
-                             "will send you a confirmation link.";
+                             "will send you a six-digit code.";
 
             Display(_emailField, true);
-            Display(_primary, true);
+            Display(_codeField, false);
             Display(_back, false);
             Display(_resend, false);
+            _codeField?.SetValueWithoutNotify("");
 
             SetError(message);
             RefreshPrimary();
             _emailField?.Focus();
         }
 
-        private void ToWaitingStep(string email)
+        private void ToCodeStep(string email)
         {
-            _step = Step.Waiting;
+            _step = Step.Code;
             _sentTo = email;
 
             if (_title != null) _title.text = "Check your email";
-            if (_help != null)
-                _help.text = $"We sent a confirmation link to {email}. Open it on this device to continue.";
+            if (_help != null) _help.text = $"We sent a six-digit code to {email}. Enter it below.";
 
             Display(_emailField, false);
-            Display(_primary, false);
+            Display(_codeField, true);
             Display(_back, true);
             Display(_resend, true);
+            _codeField?.SetValueWithoutNotify("");
 
             SetError("");
             RefreshPrimary();
+            _codeField?.Focus();
         }
 
         private void OnPrimary()
         {
             if (_busy) return;
-            if (_step == Step.Email) SendMagicLink(_emailField?.value ?? "");
+            if (_step == Step.Email) SendCode(_emailField?.value ?? "");
+            else Verify();
         }
 
         // ── Calls ───────────────────────────────────────────────────────────────────────
@@ -217,7 +229,7 @@ namespace Emberfall.Presentation
         // Task on the main thread, so everything after the await is free to touch elements. The
         // try/catch is what keeps async void honest — an escaped exception would otherwise be a
         // crash rather than a message on the panel.
-        private async void SendMagicLink(string typedEmail)
+        private async void SendCode(string typedEmail)
         {
             string email = (typedEmail ?? "").Trim();
             if (email.Length == 0) { SetError("Enter your email address."); return; }
@@ -226,41 +238,33 @@ namespace Emberfall.Presentation
             SetBusy(true, "Sending…");
             try
             {
-                AuthResult result = await _auth.BeginMagicLinkAsync(email);
+                AuthResult result = await _auth.BeginEmailCodeAsync(email);
                 SetBusy(false, null);
 
-                if (result.Ok) { ToWaitingStep(email); return; }
+                if (result.Ok) { ToCodeStep(email); return; }
 
-                SetError(Explain(result, "We could not send the confirmation link."));
+                // Staying on the code step for a failed RESEND matters: the player still holds a
+                // working code from the first mail, and dropping them back to the email field would
+                // read as having lost it.
+                SetError(Explain(result, "We could not send the code."));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
-                Debug.LogError($"[SignIn] sending a magic link threw: {ex}");
-                SetError("Something went wrong sending the link. Try again.");
+                Debug.LogError($"[SignIn] sending a code threw: {ex}");
+                SetError("Something went wrong sending the code. Try again.");
             }
         }
 
-        /// <summary>Handles a tapped link while this process was already running (backgrounded, then
-        /// resumed via a new intent). Silently ignored when nothing on this device is waiting on a
-        /// sign-in — a stale or foreign link must not disrupt whatever the player is doing.</summary>
-        private void OnDeepLinkActivated(string url)
+        private async void Verify()
         {
-            if (_modal == null) return;
-            if (!_auth.Pending.IsStarted) return;
-            if (!TryExtractCode(url, out string code)) return;
+            string code = EmailCode.Normalize(_codeField?.value ?? "");
+            if (code.Length != EmailCode.Length) { SetError("Enter the six-digit code from the email."); return; }
 
-            _modal.RemoveFromClassList("mm-modal--hidden");
-            CompleteFromDeepLink(code);
-        }
-
-        private async void CompleteFromDeepLink(string code)
-        {
-            ToWaitingStep(_sentTo.Length > 0 ? _sentTo : "your email");
-            SetBusy(true, "Confirming…");
+            SetBusy(true, "Signing in…");
             try
             {
-                AuthResult result = await _auth.CompleteSignInAsync(code);
+                AuthResult result = await _auth.VerifyEmailCodeAsync(_sentTo, code);
                 SetBusy(false, null);
 
                 if (result.Ok)
@@ -272,38 +276,20 @@ namespace Emberfall.Presentation
                     return;
                 }
 
-                ToEmailStep(Explain(result, "That confirmation link did not work. Try again."));
+                // The mailed code survives a wrong attempt (AuthTokenProvider.VerifyEmailCodeAsync),
+                // so clear the field and leave the player where they are rather than sending them
+                // back to their inbox.
+                _codeField?.SetValueWithoutNotify("");
+                RefreshPrimary();
+                _codeField?.Focus();
+                SetError(Explain(result, "That code was not accepted."));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
-                Debug.LogError($"[SignIn] completing from a deep link threw: {ex}");
-                ToEmailStep("Something went wrong confirming your email. Try again.");
+                Debug.LogError($"[SignIn] verifying a code threw: {ex}");
+                SetError("Something went wrong signing in. Try again.");
             }
-        }
-
-        /// <summary>Pull the <c>code</c> query parameter out of the game's deep link
-        /// (<c>emberfall://auth?code=...</c>). Hand-rolled rather than <c>HttpUtility</c>, which is not
-        /// guaranteed present under every IL2CPP linker profile.</summary>
-        private static bool TryExtractCode(string url, out string code)
-        {
-            code = "";
-            if (string.IsNullOrEmpty(url)) return false;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri)) return false;
-
-            string query = uri.Query.TrimStart('?');
-            if (query.Length == 0) return false;
-
-            foreach (string pair in query.Split('&'))
-            {
-                int eq = pair.IndexOf('=');
-                if (eq < 0) continue;
-                string key = Uri.UnescapeDataString(pair.Substring(0, eq));
-                if (key != "code") continue;
-                code = Uri.UnescapeDataString(pair.Substring(eq + 1));
-                return code.Length > 0;
-            }
-            return false;
         }
 
         /// <summary>
@@ -328,7 +314,13 @@ namespace Emberfall.Presentation
 
         // ── Chrome ──────────────────────────────────────────────────────────────────────
 
-        /// <summary>Disable every control for the length of a call.</summary>
+        /// <summary>
+        /// Disable every control for the length of a call.
+        ///
+        /// <para>The one that matters is Resend: a second tap mails a second code, and Supabase
+        /// invalidates the first — so an impatient double-tap would silently break the code the player
+        /// is already reading.</para>
+        /// </summary>
         private void SetBusy(bool busy, string label)
         {
             _busy = busy;
@@ -342,9 +334,11 @@ namespace Emberfall.Presentation
             _back?.SetEnabled(!busy);
             _resend?.SetEnabled(!busy);
             _emailField?.SetEnabled(!busy);
+            _codeField?.SetEnabled(!busy);
         }
 
-        private bool CanSubmit() => _step == Step.Email;
+        private bool CanSubmit()
+            => _step == Step.Email || EmailCode.IsComplete(_codeField?.value ?? "");
 
         private void RefreshPrimary()
         {
@@ -355,7 +349,7 @@ namespace Emberfall.Presentation
         private void RefreshPrimaryText()
         {
             if (_primary == null) return;
-            _primary.text = "Email me a link";
+            _primary.text = _step == Step.Email ? "Email me a code" : "Sign in";
         }
 
         private void SetError(string message)
@@ -385,14 +379,5 @@ namespace Emberfall.Presentation
             int dot = email.IndexOf('.', at + 2);
             return dot > 0 && dot < email.Length - 1 && !email.Contains(" ");
         }
-
-        // ── Retired: the eight-digit typed code (NOR-231), superseded 2026-08-08 by the magic link
-        // above but kept rather than deleted — Sam: "eight digits is a little unwieldy... let's not
-        // delete the code that's in existence." AuthTokenProvider.BeginEmailCodeAsync/
-        // VerifyEmailCodeAsync and SupabaseAuthBackend's matching methods are untouched; only this
-        // overlay's wiring to them was removed. Reviving this means: restore the "signin-code"
-        // TextField in MainMenuScreen.uxml (max-length="8" — EmailCode.Length, NOT 6, that was a live
-        // bug fixed 2026-08-08), add back a Step.Code case, and wire OnPrimary/Verify to
-        // BeginEmailCodeAsync/VerifyEmailCodeAsync the way this file did before this change.
     }
 }
