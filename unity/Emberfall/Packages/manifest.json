@@ -25,7 +25,6 @@
     "com.unity.purchasing": "5.4.2",
     "com.unity.render-pipelines.universal": "17.5.0",
     "com.unity.ugui": "2.5.0",
-    "com.unity.vectorgraphics": "3.0.0-preview.7",
     "com.unity.modules.particlesystem": "1.0.0"
   },
   "testables": [

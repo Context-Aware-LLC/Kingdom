@@ -278,6 +278,7 @@ namespace Emberfall.Presentation
                 // Staying on the code step for a failed RESEND matters: the player still holds a
                 // working code from the first mail, and dropping them back to the email field would
                 // read as having lost it.
+                Debug.LogWarning($"[SignIn] BeginEmailCodeAsync failed: {result.Failure} — {result.Detail}");
                 SetError(Explain(result, "We could not send the code."));
             }
             catch (Exception ex)
@@ -314,6 +315,7 @@ namespace Emberfall.Presentation
                 _codeField?.SetValueWithoutNotify("");
                 RefreshPrimary();
                 _codeField?.Focus();
+                Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync failed: {result.Failure} — {result.Detail}");
                 SetError(Explain(result, "That code was not accepted."));
             }
             catch (Exception ex)
@@ -366,6 +368,7 @@ namespace Emberfall.Presentation
                 // Leave the player on the code step with the mailed code still visible in their inbox
                 // — a stale or already-used link should not force a fresh Send.
                 RefreshPrimary();
+                Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync (deep link) failed: {result.Failure} — {result.Detail}");
                 SetError(Explain(result, "That link's code was not accepted."));
             }
             catch (Exception ex)
