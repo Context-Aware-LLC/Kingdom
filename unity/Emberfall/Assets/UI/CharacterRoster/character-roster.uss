@@ -600,27 +600,78 @@
 }
 
 /* ---- Character creation overlay (portrait grid, NOR-278) --------------------------------------
- * Reuses .delete-modal / .delete-dialog for the scrim and centred card, so it dims and centres
- * exactly like the delete and deck dialogs. The dialog is a touch wider to hold a 4-wide grid. */
-.character-create-dialog {
-    width: 760px;
-    max-width: 92%;
+ * Reuses .delete-modal for the scrim, but the card is FULL-BLEED (Sam, NOR-288): it fills the
+ * whole display rather than sitting in a 760px box. The portraits are the screen's entire subject
+ * while it is open, and a boxed dialog spent most of a phone's landscape width on a dimmed
+ * backdrop that had nothing left to show. No radius and no border, because neither reads as an
+ * edge when there is nothing outside it. */
+/* Out past the screen's padding. An absolutely-positioned child is laid out inside its parent's
+ * content box, so left/top/right/bottom of 0 stops 24px short of every edge — .character-roster's
+ * --space-6 padding — and the dialog's lighter surface would draw a frame around itself and read
+ * as "nearly full screen". These four must stay the negative of that padding. */
+.character-create {
+    left: -24px;
+    right: -24px;
+    top: -24px;
+    bottom: -24px;
 }
 
-/* 2 rows × 4 columns, one square portrait per class. Wrap after four via flex-basis, the same
- * grid-by-wrapping idiom the deck-back picker uses. */
+.character-create-dialog {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+    border-width: 0;
+    justify-content: center;
+}
+
+/* The grid view takes whatever height the dialog has left after its header; the other two views
+ * are text and controls, so they keep a readable column and centre in the space instead of
+ * stretching a sentence across the display. */
+#create-grid-view {
+    flex-grow: 1;
+    min-height: 0;
+}
+
+#create-detail-view,
+#create-confirm-view {
+    align-self: center;
+    width: 720px;
+    max-width: 100%;
+}
+
+/* Centred over a centred grid. */
+#create-pass-title,
+#create-pass-help {
+    -unity-text-align: middle-center;
+}
+
+#create-pass-help {
+    align-self: center;
+    max-width: 900px;
+}
+
+/* One square portrait per class, wrapped into rows. Fills the view: CharacterRosterController
+ * .LayoutHeroGrid writes every tile's width and its art's square side from the space this element
+ * actually has, the same solve .deck-strip runs — flex alone cannot grow a square. */
 .hero-grid {
+    flex-grow: 1;
     flex-direction: row;
     flex-wrap: wrap;
+    align-content: center;
     justify-content: center;
     margin-bottom: var(--space-4);
 }
 
 /* A portrait tile: art, a name under it, and a corner selection badge. The tile body is one tap
- * target (opens the detail overlay); the badge is a second, independent one (toggles selection). */
+ * target (opens the detail overlay); the badge is a second, independent one (toggles selection).
+ *
+ * width, and the art's square side, are written per pass by LayoutHeroGrid. The values here are
+ * only what a tile looks like for the frame before that pass runs. */
 .hero-tile {
     width: 152px;
     align-items: center;
+    justify-content: center;
     margin: var(--space-2);
     padding: var(--space-2);
     border-width: 2px;
@@ -638,6 +689,7 @@
     background-color: var(--surface-3);
 }
 
+/* Overwritten every layout pass by LayoutHeroGrid; this is the first frame's size. */
 .hero-tile-art {
     width: 128px;
     height: 128px;
@@ -650,7 +702,7 @@
 .hero-tile-name {
     width: 100%;
     margin-top: var(--space-2);
-    font-size: var(--type-label);
+    font-size: var(--type-body);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
