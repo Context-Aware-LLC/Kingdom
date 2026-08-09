@@ -156,6 +156,7 @@ namespace Emberfall.Presentation
         private Button _matchContinue;
 
         private VisualElement _deckModal;
+        private VisualElement _deckDialog;
         private Label _deckModalTitle;
         private Label _deckModalSub;
         private Label _deckModalError;
@@ -291,6 +292,7 @@ namespace Emberfall.Presentation
             _matchContinue = _root.Q<Button>("match-continue");
 
             _deckModal = _root.Q<VisualElement>("deck-modal");
+            _deckDialog = _root.Q<VisualElement>("deck-dialog");
             _deckModalTitle = _root.Q<Label>("deck-modal-title");
             _deckModalSub = _root.Q<Label>("deck-modal-sub");
             _deckModalError = _root.Q<Label>("deck-modal-error");
@@ -645,8 +647,8 @@ namespace Emberfall.Presentation
             CardClass secondary = _createPicks[1];
             if (_createConfirmSummary != null)
                 _createConfirmSummary.text =
-                    $"{Pretty(primary)} + {Pretty(secondary)} — Hero Power from {Pretty(primary)}, deck cards " +
-                    "from both classes. Name your character, then continue.";
+                    $"{Pretty(primary)} + {Pretty(secondary)} — {Pretty(primary)}'s Hero Power, cards " +
+                    "from both. Choose a name to continue.";
             SetCreateNameError("");
         }
 
@@ -806,6 +808,7 @@ namespace Emberfall.Presentation
             _root.Q<Button>("deck-new-generated")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Generated));
             _root.Q<Button>("deck-new-blank")?.RegisterCallback<ClickEvent>(_ => NewDeck(StarterDeck.Blank));
             _deckSelectButton?.RegisterCallback<ClickEvent>(_ => PickForMatch());
+            _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => OpenDeckForEdit(_menuCharacter.Id, _menuDeck.Id));
             _root.Q<Button>("deck-image")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Image));
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
@@ -908,6 +911,11 @@ namespace Emberfall.Presentation
             if (_menuDeck == null && pane != DeckPane.New) return;
             _deckPane = pane;
             SetDeckError("");
+
+            // A card grid reads better with room a button stack would only stretch to fill —
+            // see .delete-dialog--wide (Sam, 2026-08-09).
+            _deckDialog?.EnableInClassList("delete-dialog--wide",
+                pane == DeckPane.Image || pane == DeckPane.CardBack);
 
             Show(_deckNewPane, pane == DeckPane.New);
             Show(_deckMenuPane, pane == DeckPane.Menu);

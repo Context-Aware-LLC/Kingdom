@@ -52,11 +52,15 @@
           separate modals would be two separate places to leave a deck half-renamed.
         -->
         <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden">
-            <ui:VisualElement class="delete-dialog">
+            <ui:VisualElement name="deck-dialog" class="delete-dialog">
                 <ui:Label name="deck-modal-title" text="" class="delete-title" />
                 <ui:Label name="deck-modal-sub" text="" class="create-help" />
 
                 <ui:VisualElement name="deck-menu-pane" class="deck-pane">
+                    <!-- The primary action (Sam, 2026-08-09): opening a deck's menu is most often
+                         "I want to change what's in it," and that used to have no button at all —
+                         only the undiscoverable double-tap-the-plate gesture reached the deckbuilder. -->
+                    <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
                     <!-- Match pick only. Every other action below is offered from both doors. -->
                     <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
                     <ui:Button name="deck-image" text="Deck image" class="roster-button roster-button--ghost deck-action" />

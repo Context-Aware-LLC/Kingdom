@@ -224,7 +224,16 @@
 }
 
 .deck-image-scroll {
-    max-height: 320px;
+    max-height: 90%;
+}
+
+/* No visible scrollbars anywhere (Sam, 2026-08-01 ruling — see [[no-visible-scrollbars-ruling]] in
+ * memory). Wheel/drag scrolling still works; this only hides the track+thumb chrome. Same three
+ * selectors as #collection-scroll in deckbuilder.uss. */
+#deck-image-scroll .unity-scroller,
+#deck-image-scroll .unity-scroller--vertical,
+#deck-image-scroll .unity-scroll-view__vertical-scroller {
+    display: none;
 }
 
 /* The art of whichever card fronts the deck, rendered SQUARE (Sam, 2026-08-07) — a deck is not
@@ -564,14 +573,24 @@
     display: none;
 }
 
+/* Sized for the menu pane (a stack of buttons) — the common case for opening this dialog.
+ * .delete-dialog--wide (below) overrides this for the two panes that actually need the room:
+ * a grid of card art wants width the button list would only stretch to fill (Sam, 2026-08-09).
+ * Same override pattern as .character-create-dialog just below. */
 .delete-dialog {
-    width: 620px;
-    max-width: 88%;
+    width: 50%;
+    max-width: 60%;
+    height: 80%;
     padding: var(--space-6);
     background-color: var(--surface-2);
     border-radius: var(--space-2);
     border-width: 1px;
     border-color: var(--surface-3);
+}
+
+.delete-dialog--wide {
+    width: 80%;
+    max-width: 88%;
 }
 
 .delete-message {
@@ -584,6 +603,7 @@
 .delete-actions {
     flex-direction: row;
     justify-content: flex-end;
+    margin-top: auto;
 }
 
 .delete-actions .roster-button {
