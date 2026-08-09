@@ -37,6 +37,15 @@ namespace Emberfall.Net.Server.Accounts
 
         /// <summary>The account with this <see cref="Account.PlayerId"/>, or null if unknown.</summary>
         Task<Account?> FindByPlayerIdAsync(string playerId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Promotes or demotes an account's <see cref="AccountKind"/>. Deliberately separate from
+        /// <see cref="ResolveOrCreateAsync"/> — no client-supplied credential path can set this, so a
+        /// caller must already hold the account's <see cref="Account.PlayerId"/> through some
+        /// operator-side channel (a bot-provisioning script, an admin tool). Returns null if
+        /// <paramref name="playerId"/> names no account.
+        /// </summary>
+        Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default);
     }
 
     /// <summary>
@@ -103,6 +112,20 @@ namespace Emberfall.Net.Server.Accounts
             {
                 _byPlayerId.TryGetValue(playerId, out var a);
                 return Task.FromResult((Account?)a);
+            }
+        }
+
+        public Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                if (!_byPlayerId.TryGetValue(playerId, out var existing))
+                    return Task.FromResult((Account?)null);
+
+                var updated = existing with { Kind = kind };
+                _byPlayerId[playerId] = updated;
+                _byCredential[updated.CredentialKind + "\n" + updated.CredentialHash] = updated;
+                return Task.FromResult((Account?)updated);
             }
         }
 

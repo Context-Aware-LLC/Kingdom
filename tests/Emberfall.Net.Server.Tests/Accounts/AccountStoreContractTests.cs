@@ -48,6 +48,31 @@ namespace Emberfall.Net.Server.Tests.Accounts
         [Test]
         public async Task FindByPlayerId_Unknown_Is_Null()
             => Assert.That(await Store.FindByPlayerIdAsync("no-such-player"), Is.Null);
+
+        [Test]
+        public async Task New_Accounts_Default_To_Standard_Kind()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-kind-default");
+            Assert.That(a.Kind, Is.EqualTo(AccountKind.Standard));
+        }
+
+        [Test]
+        public async Task SetKind_Promotes_And_Persists()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-kind-promote");
+
+            Account? promoted = await Store.SetKindAsync(a.PlayerId, AccountKind.Superuser);
+            Assert.That(promoted, Is.Not.Null);
+            Assert.That(promoted!.Kind, Is.EqualTo(AccountKind.Superuser));
+
+            Account? reread = await Store.FindByPlayerIdAsync(a.PlayerId);
+            Assert.That(reread!.Kind, Is.EqualTo(AccountKind.Superuser),
+                "the promotion must persist, not just live on the returned instance");
+        }
+
+        [Test]
+        public async Task SetKind_On_Unknown_Player_Is_Null()
+            => Assert.That(await Store.SetKindAsync("no-such-player", AccountKind.Superuser), Is.Null);
     }
 
     /// <summary>The in-memory implementation against the shared contract. Always runs.</summary>

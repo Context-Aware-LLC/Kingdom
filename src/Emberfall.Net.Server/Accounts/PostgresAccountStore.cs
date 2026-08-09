@@ -60,7 +60,7 @@ namespace Emberfall.Net.Server.Accounts
 
             // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
             await using var sel = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, email, created_at from account " +
+                "select player_id, credential_kind, credential_hash, email, created_at, kind from account " +
                 "where credential_kind=$1 and credential_hash=$2", conn);
             sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
             sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
@@ -75,17 +75,45 @@ namespace Emberfall.Net.Server.Accounts
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, email, created_at from account where player_id=$1", conn);
+                "select player_id, credential_kind, credential_hash, email, created_at, kind from account where player_id=$1", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
             await using var r = await cmd.ExecuteReaderAsync(ct);
             if (!await r.ReadAsync(ct)) return null;
             return ReadAccount(r);
         }
 
+        public async Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default)
+        {
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using (var upd = new NpgsqlCommand(
+                "update account set kind=$1 where player_id=$2", conn))
+            {
+                upd.Parameters.Add(P(NpgsqlDbType.Text, KindToDb(kind)));
+                upd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                int affected = await upd.ExecuteNonQueryAsync(ct);
+                if (affected == 0) return null;
+            }
+            return await FindByPlayerIdAsync(playerId, ct);
+        }
+
         private static Account ReadAccount(NpgsqlDataReader r)
             => new Account(r.GetString(0), r.GetString(1), r.GetString(2),
                 new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(4), DateTimeKind.Utc)),
-                r.IsDBNull(3) ? null : r.GetString(3));
+                r.IsDBNull(3) ? null : r.GetString(3),
+                KindFromDb(r.IsDBNull(5) ? "standard" : r.GetString(5)));
+
+        private static string KindToDb(AccountKind kind) => kind switch
+        {
+            AccountKind.Superuser => "superuser",
+            _ => "standard",
+        };
+
+        private static AccountKind KindFromDb(string kind) => kind switch
+        {
+            "superuser" => AccountKind.Superuser,
+            _ => AccountKind.Standard,
+        };
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)
             => new NpgsqlParameter { NpgsqlDbType = type, Value = value ?? DBNull.Value };

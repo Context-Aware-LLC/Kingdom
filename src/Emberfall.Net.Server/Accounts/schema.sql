@@ -40,6 +40,12 @@ create table if not exists account (
 -- schema landed; idempotent on existing tables. Null on accounts created before this column.
 alter table account add column if not exists email text;
 
+-- Account standing — 'standard' | 'superuser'. Superuser bypasses L6 card-ownership legality (see
+-- AllCardsOwnedCounts) for bot/QA identities. Never set through ResolveOrCreateAsync's client-facing
+-- credential path — only through SetKindAsync, an operator-side call. Defaults every existing and
+-- new row to 'standard', same idempotent-alter posture as email above.
+alter table account add column if not exists kind text not null default 'standard';
+
 -- The append-only grant log. external_txn_id is the idempotency anchor (primary key ⇒ UNIQUE); qty is
 -- signed so a refund is simply a negative grant carrying its OWN transaction id (a refund's id differs
 -- from the purchase's, so it does not conflict with it and nets the balance correctly).

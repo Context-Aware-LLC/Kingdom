@@ -87,4 +87,22 @@ namespace Emberfall.Core.Collection
         /// <summary>Write the record. Writing an empty one asserts "owns nothing", not "unknown".</summary>
         void Save(OwnedCardCounts owned);
     }
+
+    /// <summary>
+    /// Every card, unlimited copies — L6 passes for any id without a ledger, a collection file, or a
+    /// pack ever opened. For an account whose identity IS "owns everything" (a superuser: a bot
+    /// opponent, an internal/QA identity) rather than one that merely hasn't been constrained yet.
+    ///
+    /// <para>Deliberately distinct from passing <c>owned: null</c>. Null means "unknown, do not
+    /// constrain" — the day a real ownership source exists for that account, L6 starts applying. This
+    /// type means the account is never meant to be constrained, no matter what else lands.</para>
+    /// </summary>
+    public sealed class AllCardsOwnedCounts : IOwnedCardCounts
+    {
+        public static readonly AllCardsOwnedCounts Instance = new AllCardsOwnedCounts();
+
+        private AllCardsOwnedCounts() { }
+
+        public int CopiesOwned(string cardId) => int.MaxValue;
+    }
 }

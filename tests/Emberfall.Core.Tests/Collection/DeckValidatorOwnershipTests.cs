@@ -278,5 +278,32 @@ namespace Emberfall.Core.Tests.Collection
                 "A deck that stops being ownable must survive intact and become eligible again when the " +
                 "copies come back.");
         }
+
+        // ---- AllCardsOwnedCounts: the superuser source, not the null contract -----------
+
+        [Test]
+        public void AllCardsOwnedCounts_Never_Reports_L6_For_Any_Live_Card()
+        {
+            // Distinct from "no record" — this IS a supplied source, just one that always answers
+            // "plenty". Every collectible card, at both copy caps, must never trip L6 under it.
+            foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible))
+            {
+                int max = DeckValidator.MaxCopies(def.Rarity);
+                Assert.That(DeckValidator.CopyLimit(def.Rarity, AllCardsOwnedCounts.Instance, def.Id),
+                    Is.EqualTo(max), $"{def.Id} should still be capped by the format, not by ownership.");
+            }
+        }
+
+        [Test]
+        public void AllCardsOwnedCounts_Passes_L6_On_A_Full_Legal_Deck()
+        {
+            var c = Gravedant();
+            var deck = LegalDeck(c);
+
+            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db, AllCardsOwnedCounts.Instance);
+
+            Assert.That(result.IsValid, Is.True,
+                "Unexpected violations: " + string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));
+        }
     }
 }
