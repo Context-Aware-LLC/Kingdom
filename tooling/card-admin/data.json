@@ -2700,6 +2700,24 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
+      "id": "clock_mainspring_halberd",
+      "name": "Mainspring Halberd",
+      "type": "WEAPON",
+      "cost": 3,
+      "attack": 2,
+      "health": null,
+      "durability": 3,
+      "class": "CLOCKWRIGHT",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "EMBERFALL",
+      "collectible": true,
+      "artId": "clock_mainspring_halberd",
+      "sourceFile": "Emberfall.cards.json"
+    },
+    {
       "id": "night_lurk_wisp",
       "name": "Lurk Wisp",
       "type": "MINION",
@@ -3493,6 +3511,24 @@
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "storm_zael_of_the_struck_sky",
+      "sourceFile": "Emberfall.cards.json"
+    },
+    {
+      "id": "storm_galecleaver",
+      "name": "Galecleaver",
+      "type": "WEAPON",
+      "cost": 1,
+      "attack": 3,
+      "health": null,
+      "durability": 2,
+      "class": "TEMPEST",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "EMBERFALL",
+      "collectible": true,
+      "artId": "storm_galecleaver",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -5285,24 +5321,6 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_mainspring_halberd",
-      "name": "Mainspring Halberd",
-      "type": "WEAPON",
-      "cost": 3,
-      "attack": 2,
-      "health": null,
-      "durability": 3,
-      "class": "CLOCKWRIGHT",
-      "rarity": "RARE",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "REKINDLING",
-      "collectible": true,
-      "artId": "clock_mainspring_halberd",
-      "sourceFile": "Rekindling.cards.json"
-    },
-    {
       "id": "rekind_clock_upgrade_protocol",
       "name": "Upgrade Protocol",
       "type": "SPELL",
@@ -5720,24 +5738,6 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_static_wisp",
-      "sourceFile": "Rekindling.cards.json"
-    },
-    {
-      "id": "rekind_tempest_galecleaver",
-      "name": "Galecleaver",
-      "type": "WEAPON",
-      "cost": 1,
-      "attack": 3,
-      "health": null,
-      "durability": 2,
-      "class": "TEMPEST",
-      "rarity": "RARE",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "REKINDLING",
-      "collectible": true,
-      "artId": "storm_galecleaver",
       "sourceFile": "Rekindling.cards.json"
     },
     {

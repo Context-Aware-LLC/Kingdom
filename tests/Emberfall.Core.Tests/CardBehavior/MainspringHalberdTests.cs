@@ -25,7 +25,7 @@ namespace Emberfall.Core.Tests.CardBehavior
     [Category("CardValidation")]
     public sealed class MainspringHalberdTests
     {
-        private const string Halberd = "rekind_clock_mainspring_halberd";
+        private const string Halberd = "clock_mainspring_halberd";
         private const string Replacement = "ember_cinder_lance"; // 1/2, no effects — cannot muddy the read
 
         private static IReadOnlyList<CardDefinition>? _rekindlingCards;
@@ -66,7 +66,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(def.Attack, Is.EqualTo(2));
             Assert.That(def.Durability, Is.EqualTo(3));
             Assert.That(def.Rarity, Is.EqualTo(Rarity.RARE));
-            Assert.That(def.SetId, Is.EqualTo(SetId.REKINDLING));
+            Assert.That(def.SetId, Is.EqualTo(SetId.EMBERFALL));
             Assert.That(def.Keywords, Is.Empty, "Toll is derived presentation, not a carrier keyword.");
             Assert.That(CardTextGenerator.Generate(def), Is.EqualTo("[Toll] Draw a card."));
 

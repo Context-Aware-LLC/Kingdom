@@ -6,31 +6,27 @@
   "seed": 64159285253,
   "entries": [
     {
-      "id": "cinder_drake",
-      "count": 1
-    },
-    {
       "id": "clock_assembly_drone",
       "count": 1
     },
     {
-      "id": "clock_modular_stalker",
+      "id": "clock_gear_overhaul",
+      "count": 1
+    },
+    {
+      "id": "clock_mass_recall",
+      "count": 1
+    },
+    {
+      "id": "clock_overclocker",
       "count": 1
     },
     {
       "id": "clock_snap_bolt",
-      "count": 2
-    },
-    {
-      "id": "clock_spring_coil",
       "count": 1
     },
     {
-      "id": "clock_the_great_mechanism",
-      "count": 1
-    },
-    {
-      "id": "core_arclight_adept",
+      "id": "core_choking_vines",
       "count": 1
     },
     {
@@ -42,35 +38,43 @@
       "count": 1
     },
     {
-      "id": "core_lantern_bearer",
+      "id": "core_stoneback",
       "count": 1
     },
     {
-      "id": "core_thistleguard_sprig",
+      "id": "core_veilstalker",
       "count": 1
     },
     {
-      "id": "ember_blazewing",
-      "count": 1
-    },
-    {
-      "id": "ember_cinder_lance",
+      "id": "ember_cinderplate_golem",
       "count": 2
     },
     {
-      "id": "ember_scalded_striker",
+      "id": "ember_fusillade",
+      "count": 1
+    },
+    {
+      "id": "ember_magmacore_warden",
+      "count": 1
+    },
+    {
+      "id": "ember_recruit",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch_blade",
       "count": 2
     },
     {
       "id": "ember_slagshell_bulwark",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "ember_stoke_the_coals",
-      "count": 2
-    },
-    {
-      "id": "ember_zealot",
+      "id": "neutral_bog_crawler",
       "count": 1
     },
     {
@@ -78,28 +82,28 @@
       "count": 1
     },
     {
-      "id": "neutral_galewind_runner",
+      "id": "neutral_ironclad_bulwark",
       "count": 1
-    },
-    {
-      "id": "neutral_lifeclaw_bat",
-      "count": 2
     },
     {
       "id": "neutral_soulbound_revenant",
-      "count": 1
+      "count": 2
     },
     {
       "id": "neutral_spellwarden",
       "count": 1
     },
     {
-      "id": "relic_bound_revenant",
+      "id": "relic_corpse_cart",
       "count": 1
     },
     {
+      "id": "stone_sentry",
+      "count": 2
+    },
+    {
       "id": "wandering_scout",
-      "count": 1
+      "count": 2
     }
   ]
 }

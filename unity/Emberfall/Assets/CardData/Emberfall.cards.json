@@ -3110,6 +3110,39 @@
     "artId": "clock_the_great_mechanism"
   },
   {
+    "id": "clock_mainspring_halberd",
+    "name": "Mainspring Halberd",
+    "type": "WEAPON",
+    "cost": 3,
+    "attack": 2,
+    "durability": 3,
+    "class": "CLOCKWRIGHT",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "clock_mainspring_halberd"
+  },
+  {
     "id": "night_lurk_wisp",
     "name": "Lurk Wisp",
     "type": "MINION",
@@ -4457,6 +4490,39 @@
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "storm_zael_of_the_struck_sky"
+  },
+  {
+    "id": "storm_galecleaver",
+    "name": "Galecleaver",
+    "type": "WEAPON",
+    "cost": 1,
+    "attack": 3,
+    "durability": 2,
+    "class": "TEMPEST",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_ATTACK"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
+    ],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "storm_galecleaver"
   },
   {
     "id": "neutral_galewind_runner",

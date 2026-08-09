@@ -52,10 +52,13 @@ namespace Emberfall.Core.Tests.CardValidation
             var emberfall = LoadSet(SetFiles[0]);
             var rekindling = LoadSet(SetFiles[1]);
 
-            // 185 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file.
-            Assert.That(emberfall.Count, Is.EqualTo(185), "Emberfall set count mismatch (card_inventory.py: 185)");
-            // 75 since NOR-126/NOR-131 added the CLOCKWRIGHT and TEMPEST signature weapons.
-            Assert.That(rekindling.Count, Is.EqualTo(75), "Rekindling set count mismatch (card_inventory.py: 75)");
+            // 187 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file, plus
+            // clock_mainspring_halberd and storm_galecleaver (NOR audit 2026-08-09: CLOCKWRIGHT's and
+            // TEMPEST's signature weapons were filed under REKINDLING by mistake — Sam confirmed every
+            // hero power and weapon belongs in Emberfall, moved them back).
+            Assert.That(emberfall.Count, Is.EqualTo(187), "Emberfall set count mismatch (card_inventory.py: 187)");
+            // 73 = the former 75 minus the two signature weapons moved into Emberfall above.
+            Assert.That(rekindling.Count, Is.EqualTo(73), "Rekindling set count mismatch (card_inventory.py: 73)");
 
             var combined = emberfall.Concat(rekindling).ToList();
             Assert.That(combined.Count, Is.EqualTo(260),
@@ -97,12 +100,13 @@ namespace Emberfall.Core.Tests.CardValidation
             })));
             string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(projection)));
 
-            // Re-pinned 2026-08-06 for the art rename, which dropped the `art/` namespace and the
-            // set prefix from every artId (`art/core_aegis_templar` -> `aegis_templar`). ArtId is one
-            // of the projected identity fields, so renaming all 260 moves this hash. Verified before
-            // re-pinning that artId is the ONLY field that changed, across every row and every baked
-            // CardDefinitionSO. Update this pin only for a reviewed whole-token identity change.
-            Assert.That(hash, Is.EqualTo("2C1475A9FD2FE19C105C985368F5F43122A3D0D4092B03B7EFEABD502539132B"),
+            // Re-pinned 2026-08-09: clock_mainspring_halberd and storm_galecleaver moved from
+            // REKINDLING to EMBERFALL (renamed off their rekind_ prefix in the same move — Sam
+            // confirmed every hero power and weapon ships in Emberfall, not gated behind the
+            // Rekindling pack). Id and setId are both projected identity fields for those two rows;
+            // every other row's identity is unchanged. Update this pin only for a reviewed
+            // whole-token identity change.
+            Assert.That(hash, Is.EqualTo("281037264854CF17012DF8EDC412CF21F1128ECE22F1FB74B6E0E5355091E061"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's
