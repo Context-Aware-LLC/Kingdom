@@ -1,0 +1,85 @@
+{
+  "primaryClass": "GRAVEKEEP",
+  "secondaryClass": "NIGHTVEIL",
+  "characterId": "balance-char-GRAVEKEEP-NIGHTVEIL",
+  "deckId": "balance-deck-GRAVEKEEP-NIGHTVEIL",
+  "seed": 0,
+  "entries": [
+    {
+      "id": "grave_bell_novice",
+      "count": 2
+    },
+    {
+      "id": "night_shadow_dart",
+      "count": 2
+    },
+    {
+      "id": "grave_deathweaver",
+      "count": 2
+    },
+    {
+      "id": "night_finish_the_job",
+      "count": 2
+    },
+    {
+      "id": "rekind_grave_tomb_warden",
+      "count": 2
+    },
+    {
+      "id": "rekind_night_ink_viper",
+      "count": 2
+    },
+    {
+      "id": "grave_spectral_wolf",
+      "count": 2
+    },
+    {
+      "id": "rekind_grave_pact_of_mourning",
+      "count": 1
+    },
+    {
+      "id": "rekind_night_veilborn_spy",
+      "count": 2
+    },
+    {
+      "id": "grave_ashen_archivist",
+      "count": 2
+    },
+    {
+      "id": "grave_boneshield_sentinel",
+      "count": 2
+    },
+    {
+      "id": "rekind_night_contract_kill",
+      "count": 1
+    },
+    {
+      "id": "rekind_night_double_agent",
+      "count": 2
+    },
+    {
+      "id": "grave_last_gate_warden",
+      "count": 1
+    },
+    {
+      "id": "grave_wailing_chorus",
+      "count": 1
+    },
+    {
+      "id": "rekind_neutral_bridge_warden",
+      "count": 1
+    },
+    {
+      "id": "grave_sealed_gate_keeper",
+      "count": 1
+    },
+    {
+      "id": "rekind_night_seraphine",
+      "count": 1
+    },
+    {
+      "id": "grave_warden_of_dusk",
+      "count": 1
+    }
+  ]
+}

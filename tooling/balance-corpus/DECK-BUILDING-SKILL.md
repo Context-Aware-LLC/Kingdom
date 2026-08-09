@@ -1,0 +1,166 @@
+# Deck-building skill — Emberfall balance corpus
+
+What was learned drafting the first hand-built decks for the balance matrix
+(`tests/Emberfall.Core.Tests/Fixtures/BalanceCorpus/`). This file exists so the next person
+drafting a corpus deck does not have to re-derive the card pool's shape from scratch.
+
+**Read the card data, not the card names.** Every claim below was checked against
+`unity/Emberfall/Assets/CardData/Emberfall.cards.json`, `Rekindling.cards.json`, and the engine
+source. Where a brief and the data disagreed, the data won — see *Corrections to briefs* at the
+bottom, which is the most load-bearing section in this file.
+
+**Write about keywords using Emberfall's own vocabulary.** `tools/ci/vocabulary-gate.ps1` is a
+blocking CI stage that scans `tooling/` prose, not just code, and rejects the genre's standard
+keyword words. Describe what a keyword *does*; do not reach for the word another game uses.
+
+---
+
+## Before you start: what the keywords actually do
+
+Deck-building is impossible without these, and the names do not give them away.
+
+| Keyword | Runtime behaviour | Verified in |
+|---|---|---|
+| `BULWARK` | Enemies must attack it before anything else on your side | `CommandProcessor.cs` |
+| `FERVOR` | May attack the turn it is played | `CommandProcessor.cs` |
+| `SKIRMISH` | May attack the turn it is played, but only a minion | `CommandProcessor.cs` |
+| `AEGIS` | Absorbs the first hit it takes | `DerivedStats.cs` |
+| `SHROUD` | Cannot be attacked **or targeted**; drops the moment it attacks | `CommandProcessor.cs`, `Targeting.cs` |
+| `VENOM` | Any damage it deals to a minion is lethal | `DamagePipeline.cs` |
+| `REKINDLE` | Its first death resummons a 1-health copy in the same slot | `EffectInterpreter.cs` |
+| `ARCANE_SURGE` | Your spells deal +1 while it is on the board | `ActionHandlers.cs` |
+| `LIFEDRAIN` | Damage dealt also restores that much to **your hero**, never the minion | `DamagePipeline.cs` |
+| `DOUBLESTRIKE` | Two attacks per turn | `CommandProcessor.cs` |
+| `OVERWHELM` | Excess damage from killing a minion carries to the enemy hero | `CommandProcessor.cs` |
+| `VANGUARD` | No retaliation if the defender dies to the hit | `CommandProcessor.cs` |
+| `BACKDRAFT` | **Locks mana crystals next turn.** Not damage to you. | `ActionHandlers.cs` |
+| `REINFORCE` | A typed action, not a carrier keyword: +1/+1 to its target | `ActionHandlers.cs` |
+
+Two of these will mislead you if you go by the name:
+
+- **`SHROUD` turns your own wall off.** The `BULWARK` check explicitly skips shrouded minions
+  (`if (fm.Keywords.Contains(BULWARK) && !fm.Keywords.Contains(SHROUD))`). Shrouding your wall
+  makes it unkillable *and* useless as a wall. Shroud value engines, not blockers.
+- **`BACKDRAFT` costs tempo, not life.** Healing does not pay for it. An aggro deck can afford
+  perhaps 4–6 locked crystals across the whole list; past that it stops being aggro.
+
+Also worth knowing before you evaluate a card: `OVERWHELM` overflow carries damage but **not**
+riders, so a `LIFEDRAIN`+`OVERWHELM` minion does not drain off the overflow.
+
+## Mana curve guidelines
+
+Measured from the three decks that shipped in this corpus. `validate_decks.py` prints the curve of
+any deck, so you can check yours against these without counting by hand.
+
+| Archetype | Shape that worked | Reasoning |
+|---|---|---|
+| **Control / attrition** | `1:4 2:8 3:5 4:7 5:3 6:2 7:1` | Fat 2 and 4 slots. The 2s are cheap removal and sticky one-health bodies; the 4s are the real card-advantage engines. Only three cards above 5 — you get there on value, not on top-end count. |
+| **Stall / value** | `1:4 2:6 3:6 4:7 5:2 6:2 7:1 8:2` | The only shape here that earns a real 8-slot, because the hero power keeps producing blockers for free while you sit on an expensive hand. Two 8-drops is the ceiling. |
+| **Aggro / resilience** | `1:7 2:8 3:7 4:5 5:2 7:1` | 22 of 30 cards cost 3 or less. One card above 5, as a finisher only. If you want a second 6+, you are building midrange. |
+
+Rules of thumb that fell out of this:
+
+- **The hero power is a card you play every turn from turn 2.** Budget 2 mana out of every turn
+  when curving. That is why the stall deck can carry two 8-drops and the aggro deck cannot carry one.
+- **Count your removal, not your spells.** Control wants 5–8 pieces of interaction. Past that you
+  draw answers with nothing to answer.
+- **Count your draw.** A deck with no draw engine plays its curve and stops. The control and stall
+  decks here carry 5–6 sources each; the aggro deck carries none, deliberately.
+
+## Class synergy observations
+
+Read from the whole pool, not from a handful of marquee cards.
+
+- **GRAVEKEEP** — dying is its economy. Nearly every Gravekeep body carries an `ON_DEATH` rule that
+  draws, heals, or summons, so its minions are *worth more dead*. That makes trading into them bad
+  for the opponent, and turns cheap sacrifice effects (`grave_last_rite`, `grave_charnel_priest`,
+  `grave_warden_of_dusk`) into value converters rather than drawbacks. Its hero power grants
+  `REKINDLE`, which fires an `ON_DEATH` rule a second time — the class's two halves are the same half.
+- **NIGHTVEIL** — evasion and hard removal. It holds the cheapest unconditional `DESTROY` in the
+  game (`night_finish_the_job`, 2 mana) plus a stack of `SHROUD` bodies. `SHROUD` is stronger than
+  it reads because it blocks spell targeting as well as attacks: a shrouded threat can only be
+  answered by board-wide effects.
+- **STONEWARDEN** — health, not attack. The class has almost no reach and several minions with 0 or
+  1 attack. Its cards buy turns; something else has to convert them. A Stonewarden deck with no win
+  condition simply draws out.
+- **CLOCKWRIGHT** — card advantage and board-wide pumps. Its `ON_DEATH: DRAW` bodies pair naturally
+  with Stonewarden's walls (both *want* to be attacked), and its `MODIFY_STATS -> FRIENDLY_MINIONS`
+  effects are the answer to Stonewarden's attack problem. `rekind_clock_cogsworth` turning a board
+  of 0/3 tokens into 2/5s is the clearest example of the pairing working.
+- **TEMPEST** — reach and `DOUBLESTRIKE`. Damage that may go to the enemy hero, plus minions that
+  attack twice, so a pump on a Tempest body is worth double. The tax is `BACKDRAFT` on its best
+  spells — the class trades next turn for this turn, by design.
+- **VERDANT** — sustain and stats. Large-health bodies plus the game's densest healing. Note that
+  most Verdant healing targets `FRIENDLY_HERO` specifically, so it does nothing to stabilise a
+  board; it only buys turns.
+
+## Rekindling integration notes
+
+Rekindling (`rekind_*`) is not a power-creep set; it is a *shape* set. The pattern across its 73
+cards is a second small effect stapled onto a familiar body.
+
+- **A Rekindling card is usually the better version of an Emberfall card at the same cost**, at the
+  price of being narrower. `rekind_grave_tomb_warden` (1/3, `BULWARK`, `ON_DEATH: draw 1`) does two
+  jobs where `grave_deathweaver` does one. Prefer Rekindling for a slot you already knew you wanted;
+  prefer Emberfall when you want flexibility.
+- **`REINFORCE` is Rekindling's signature rider.** It appears on a dozen cards
+  (`rekind_clock_assembly_line`, `rekind_stone_iron_foundation`, `rekind_verdant_wildbloom_surge`)
+  and is worth +1/+1. On a wide board it is quietly one of the strongest riders available, which is
+  why the go-wide decks here lean on it.
+- **The Rekindling legendaries are build-arounds, not just big bodies.** `rekind_stone_aldric` and
+  `rekind_clock_cogsworth` each convert a stalled board into a threat in one card. If a deck wants a
+  top end, check that class's Rekindling legendary first.
+- **How much Rekindling a deck ends up with is an outcome, not a target.** These three landed at
+  12, 13 and 4 cards of 30 respectively — the aggro deck is low because Emberfall's Tempest spells
+  are already the cheapest reach in the pool and Rekindling adds no cheaper one.
+
+## Anti-patterns to avoid
+
+- **Random sampling from the eligible pool.** This is the failure mode the corpus exists to fix. A
+  sampled deck has no curve, no removal count and no win condition, so a balance matrix built on it
+  measures the sampler rather than the classes.
+- **Building for the archetype label instead of the card pool.** "Aggro" does not mean "every cheap
+  card". The Tempest/Verdant deck is aggro because 22 cards cost ≤3 *and* it carries reach *and* it
+  carries one finisher — remove any of the three and it is a bad midrange deck.
+- **Stacking legendaries.** Three is comfortable; four is usually one too many; three of them at
+  cost 7–8 is unplayable. `L3` caps each at one copy, so every legendary is a card you may never see.
+- **Trusting a keyword's name.** See the table above. `BACKDRAFT` and `SHROUD` both do something
+  other than what they sound like, and both change deck construction.
+- **Shrouding your own walls.** A board-wide grant of `SHROUD` (`night_vanishing_act`,
+  `rekind_night_seraphine`) is anti-synergy with a `BULWARK` deck. It protects a deck whose threats
+  are not blockers.
+- **Reporting counts you did not read off a script.** Run `validate_decks.py` and paste what it
+  printed. See the top-level `CLAUDE.md` for why this is a hard rule.
+
+## Corrections to briefs — read this before you trust a hero-power description
+
+The NOR-319 brief described hero powers that do not match the shipped data. The card data and
+`src/Emberfall.Core.Cards/HeroPowers.cs` are the source of truth.
+
+| Class | Brief said | `HeroPowers.cs` + card data actually says |
+|---|---|---|
+| **GRAVEKEEP** | Toll the Bell — restore 2 HP to hero | **Grant `REKINDLE` to a friendly minion.** Not a heal at all. |
+| STONEWARDEN | Earthwall — summon a 0/3 `BULWARK` token | Correct (`token_stone_shard`, 0/3, `BULWARK`) |
+| TEMPEST | Chain Spark — 1 damage to 2 random enemies | Correct |
+| VERDANT | Quicken — restore 3 HP to hero | Correct |
+| NIGHTVEIL | Shadow Mark — give a friendly minion `SHROUD` | Correct |
+| CLOCKWRIGHT | Blueprint — draw a card | Correct |
+
+**A character gets exactly one hero power, from its primary class.** `MatchEngine.cs:49` stamps
+`HeroPowers.ForClass(setup.P0Class)` — a single class, not a pair. So in a `TEMPEST / VERDANT`
+character, Verdant's *Quicken* is unavailable; Verdant contributes cards only. Never plan a deck
+around the secondary class's hero power.
+
+---
+
+## Verification
+
+Every deck in the corpus must pass before it is committed:
+
+```
+python tooling/balance-corpus/validate_decks.py
+```
+
+It checks L1 (exactly 30), L2/L3 (copy caps by rarity), L4 (class membership), `collectible: true`,
+duplicate entries, unknown ids, and `(cost, id)` sort order. It mirrors
+`src/Emberfall.Core.Collection/DeckValidator.cs`; if the two ever disagree, the C# validator wins.

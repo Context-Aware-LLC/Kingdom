@@ -1,0 +1,89 @@
+{
+  "primaryClass": "STONEWARDEN",
+  "secondaryClass": "CLOCKWRIGHT",
+  "characterId": "balance-char-STONEWARDEN-CLOCKWRIGHT",
+  "deckId": "balance-deck-STONEWARDEN-CLOCKWRIGHT",
+  "seed": 0,
+  "entries": [
+    {
+      "id": "clock_gear_imp",
+      "count": 2
+    },
+    {
+      "id": "clock_snap_bolt",
+      "count": 2
+    },
+    {
+      "id": "clock_spring_coil",
+      "count": 2
+    },
+    {
+      "id": "rekind_clock_blueprint_archive",
+      "count": 2
+    },
+    {
+      "id": "rekind_stone_quarry_worker",
+      "count": 2
+    },
+    {
+      "id": "clock_gear_overhaul",
+      "count": 2
+    },
+    {
+      "id": "rekind_clock_reconstructed_automaton",
+      "count": 1
+    },
+    {
+      "id": "rekind_stone_boulder_sentinel",
+      "count": 2
+    },
+    {
+      "id": "ward_stomp",
+      "count": 1
+    },
+    {
+      "id": "clock_clockwork_sniper",
+      "count": 1
+    },
+    {
+      "id": "clock_modular_stalker",
+      "count": 2
+    },
+    {
+      "id": "rekind_neutral_truce_pact",
+      "count": 1
+    },
+    {
+      "id": "ward_granite_guardian",
+      "count": 2
+    },
+    {
+      "id": "ward_stone_rain",
+      "count": 1
+    },
+    {
+      "id": "rekind_stone_fortified_colossus",
+      "count": 2
+    },
+    {
+      "id": "rekind_stone_unbreakable_wall",
+      "count": 1
+    },
+    {
+      "id": "ward_siege_golem",
+      "count": 1
+    },
+    {
+      "id": "rekind_stone_aldric",
+      "count": 1
+    },
+    {
+      "id": "clock_the_great_mechanism",
+      "count": 1
+    },
+    {
+      "id": "rekind_clock_cogsworth",
+      "count": 1
+    }
+  ]
+}
