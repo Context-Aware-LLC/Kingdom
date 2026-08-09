@@ -285,6 +285,14 @@ namespace Emberfall.Presentation
         private void OpenNameModal(bool required)
         {
             _nameRequired = required;
+
+            // First-login sizing (NOR-284). The required state IS the first launch — the name and
+            // password the unskippable sign-in ruling leads into — so it wears the phone-scale
+            // .mm-modal--onboard treatment the sign-in gate carries. A later rename (required:false)
+            // is a dialog over a menu the player can already read, so it stays at the compact base
+            // size; the class comes off for it. See .mm-modal--onboard in mainmenu.uss.
+            _nameModal?.EnableInClassList("mm-modal--onboard", required);
+
             if (_nameTitle != null)
                 _nameTitle.text = required ? "What should we call you?" : "Change your name";
             if (_nameCancel != null)

@@ -61,7 +61,7 @@
              Skip in here on purpose: registration cannot be skipped, and a dead button invites
              clicking. Last of the modals so that if it and another are ever open at once, the gate is
              the one on top. The name prompt runs after this one, never beside it. -->
-        <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--hidden">
+        <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--onboard mm-modal--hidden">
             <ui:VisualElement name="signin-panel" class="mm-modal__panel">
                 <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
                 <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
