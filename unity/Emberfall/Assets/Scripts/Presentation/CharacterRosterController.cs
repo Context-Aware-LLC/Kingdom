@@ -103,12 +103,19 @@ namespace Emberfall.Presentation
         private VisualElement _root;
         private PlayerAccount _account;
         private ICardDatabase _db;
+
+        /// <summary>This account's ownership record (L6), read once per visit — mirrors
+        /// DeckbuilderController._owned. Every <see cref="QueueEligibility.Check"/> call on this
+        /// screen must pass it: without it L6 never evaluates, so a deck that stopped being
+        /// ownable (a card dusted, an account restored) would keep its gold "queue ready" border
+        /// here while match-join refuses it — the exact disagreement DeckQuery.ForCharacter's own
+        /// doc comment says this screen must not produce.</summary>
+        private IOwnedCardCounts _owned;
         private IUiSpriteProvider _uiSprites;
         private IArtProvider _art;
 
         private VisualElement _rosterList;
         private ScrollView _rosterScroll;
-        // private Label _rosterCount;
         private Label _rosterIntro;
         private Label _emptyState;
         private Label _status;
@@ -227,6 +234,7 @@ namespace Emberfall.Presentation
             {
                 _account = PlayerAccount.Local;
                 _db = CardDatabaseLoader.Load();
+                _owned = _account.OwnedCards();
             }
             catch (Exception ex)
             {
@@ -255,7 +263,6 @@ namespace Emberfall.Presentation
                     if (strip != null) QueueStripLayout(strip);
                 }
             });
-            // _rosterCount = _root.Q<Label>("roster-count");
             _rosterIntro = _root.Q<Label>("roster-intro");
             _emptyState = _root.Q<Label>("empty-state");
             _status = _root.Q<Label>("status");
@@ -1243,8 +1250,6 @@ namespace Emberfall.Presentation
             // element's scheduler may never run, so without this the set only grows.
             _stripLayoutQueued.Clear();
             _rosterList.Clear();
-            // if (_rosterCount != null)
-            //     _rosterCount.text = roster.Count == 1 ? "1 character" : $"{roster.Count} characters";
             if (_emptyState != null)
                 _emptyState.style.display = roster.Count == 0 ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -1370,7 +1375,7 @@ namespace Emberfall.Presentation
             // The roster form of the gate: the deck's CharacterId resolves to nobody, which IS the
             // L5 violation. Read from the same gate the queue reads, so the sentence on this plate
             // can never drift from the one that refused it.
-            QueueCheck queue = QueueEligibility.Check(deck, _account.Roster(), _db);
+            QueueCheck queue = QueueEligibility.Check(deck, _account.Roster(), _db, _owned);
 
             var plate = new VisualElement();
             plate.AddToClassList("deck-plate");
@@ -1399,7 +1404,7 @@ namespace Emberfall.Presentation
             strip.AddToClassList("deck-strip");
             strip.RegisterCallback<GeometryChangedEvent>(_ => QueueStripLayout(strip));
 
-            CharacterDecks owned = HealDefaultDeck(character, DeckQuery.ForCharacter(character, decks, _db));
+            CharacterDecks owned = HealDefaultDeck(character, DeckQuery.ForCharacter(character, decks, _db, _owned));
 
             foreach (DeckSummary summary in owned.Decks)
                 strip.Add(BuildDeckPlate(character, summary, owned.Count, !owned.DefaultResolved));
@@ -1448,7 +1453,7 @@ namespace Emberfall.Presentation
             }
 
             Debug.Log($"[CharacterRoster] {character.Name} had no default deck; rolled onto '{landing.Name}'.");
-            return DeckQuery.ForCharacter(character, _account.Decks(), _db);
+            return DeckQuery.ForCharacter(character, _account.Decks(), _db, _owned);
         }
 
         private VisualElement BuildDeckPlate(Character character, DeckSummary summary, int siblingCount,
@@ -1497,7 +1502,7 @@ namespace Emberfall.Presentation
         /// be repaired. Cheap enough per plate at roster scale, and it re-reads rather than caching
         /// so it cannot disagree with what the strip drew.</summary>
         private DeckList FirstDeckOf(Character character)
-            => DeckQuery.ForCharacter(character, _account.Decks(), _db).Opening?.Deck;
+            => DeckQuery.ForCharacter(character, _account.Decks(), _db, _owned).Opening?.Deck;
 
         /// <summary>How long a single tap waits to see whether it is really the first half of a
         /// double tap. Long enough for a deliberate double, short enough that opening the menu does
@@ -1776,7 +1781,7 @@ namespace Emberfall.Presentation
             // this is the write path, and a deck being created is exactly when a character with no
             // default should get one. Without it, deleting the default and making another left the
             // roster reporting a missing default for a character with a single, obvious deck.
-            if (!DeckQuery.ForCharacter(character, _account.Decks(), _db).DefaultResolved)
+            if (!DeckQuery.ForCharacter(character, _account.Decks(), _db, _owned).DefaultResolved)
             {
                 character.DefaultDeckId = created.Id;
                 _account.Save(character);
@@ -1873,7 +1878,7 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            QueueCheck queue = QueueEligibility.Check(deck, character, _db);
+            QueueCheck queue = QueueEligibility.Check(deck, character, _db, _owned);
             if (!queue.IsEligible)
             {
                 ClearPick();

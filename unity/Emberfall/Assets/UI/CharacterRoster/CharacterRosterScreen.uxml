@@ -11,10 +11,6 @@
         -->
         <ui:VisualElement class="roster-header">
             <ui:VisualElement class="roster-header-left">
-                <ui:VisualElement class="roster-heading">
-                    <ui:Label text="Characters" class="roster-title" />
-                    <ui:Label name="roster-count" text="0 characters" class="roster-count" />
-                </ui:VisualElement>
                 <!-- The one way INTO character creation, top-left (NOR-278). -->
                 <ui:Button name="new-character" text="+ New Character" class="roster-button roster-button--cta new-character-button" />
             </ui:VisualElement>

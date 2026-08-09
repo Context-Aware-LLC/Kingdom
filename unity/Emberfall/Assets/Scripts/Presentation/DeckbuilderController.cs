@@ -425,7 +425,7 @@ namespace Emberfall.Presentation
 
         // ---- token helpers (class names mirror deckbuilder.uss) ----
         private static readonly string[] AllRarity = { "rarity--common", "rarity--rare", "rarity--epic", "rarity--legendary" };
-        private static readonly string[] AllEdge = { "edge--neutral", "edge--emberward", "edge--tidecaller", "edge--gravekeep", "edge--verdant" };
+        private static readonly string[] AllEdge = { "edge--neutral", "edge--emberward", "edge--tidecaller", "edge--gravekeep", "edge--verdant", "edge--tempest", "edge--nightveil", "edge--clockwright", "edge--stonewarden" };
 
         private static string RarityClass(Rarity r) => r switch
         {
@@ -441,6 +441,10 @@ namespace Emberfall.Presentation
             CardClass.TIDECALLER => "edge--tidecaller",
             CardClass.GRAVEKEEP => "edge--gravekeep",
             CardClass.VERDANT => "edge--verdant",
+            CardClass.CLOCKWRIGHT => "edge--clockwright",
+            CardClass.STONEWARDEN => "edge--stonewarden",
+            CardClass.NIGHTVEIL => "edge--nightveil",
+            CardClass.TEMPEST => "edge--tempest",
             _ => "edge--neutral",
         };
 

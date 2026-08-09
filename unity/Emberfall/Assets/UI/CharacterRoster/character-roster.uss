@@ -26,30 +26,14 @@
     margin-left: var(--space-3);
 }
 
-.roster-heading {
-    flex-direction: row;
-    align-items: center;
-}
-
-/* The one door into creation, top-left beside the title (NOR-278). CTA-gold so it reads as the
- * primary thing to do on an empty roster, and small enough not to crowd the heading. */
+/* The one door into creation, top-left (NOR-278). CTA-gold so it reads as the primary thing to
+ * do on an empty roster. Flush against the header's left edge (Sam, 2026-08-09) — it used to sit
+ * right of a "Characters" / "N characters" heading that said nothing the roster below it didn't
+ * already show, so the heading is gone and this no longer needs a margin to clear it. */
 .new-character-button {
-    margin-left: var(--space-4);
     min-width: 0;
     height: 40px;
     font-size: var(--type-label);
-}
-
-.roster-title {
-    font-size: var(--type-display);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    margin-right: var(--space-4);
-}
-
-.roster-count {
-    font-size: var(--type-body);
-    color: var(--ink-2);
 }
 
 .roster-body {
