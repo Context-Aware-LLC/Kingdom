@@ -246,7 +246,7 @@
     color: var(--ink-1);
     /* The caret defaults to black when unset, invisible against this near-black background —
        a focused field looked unresponsive with nothing wrong functionally. */
-    -unity-cursor-color: var(--ink-1);
+    --unity-cursor-color: var(--ink-1);
 }
 .mm-modal__dropdown {
     margin-bottom: var(--space-2);
