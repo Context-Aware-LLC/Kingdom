@@ -4,7 +4,7 @@ An offline browser panel for exploring the Emberfall card corpus, plus the scrip
 
 ## Files
 
-- `build_data.py` — parses `unity/Emberfall/Assets/CardData/{M1,M2,M3}.cards.json` and writes:
+- `build_data.py` — parses `unity/Emberfall/Assets/CardData/{Emberfall,Rekindling}.cards.json` and writes:
   - `data.json` — canonical machine-readable aggregate (per-card records + corpus-wide and
     per-class rollups).
   - `data.js` — a thin `window.CARD_DATA = …` mirror the panel loads (browsers block

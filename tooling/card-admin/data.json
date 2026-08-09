@@ -45,11 +45,11 @@
       "LIFEDRAIN": 2
     },
     "selectorFrequency": {
+      "ANY_FRIENDLY_MINION": 32,
       "FRIENDLY_MINIONS": 32,
-      "ANY_FRIENDLY_MINION": 31,
       "ANY_MINION": 24,
       "ENEMY_MINIONS": 24,
-      "FRIENDLY_HERO": 21,
+      "FRIENDLY_HERO": 20,
       "ANY_ENEMY": 15,
       "ENEMY_HERO": 12,
       "ANY_FRIENDLY": 5,
@@ -84,8 +84,8 @@
     },
     "minionCount": 171,
     "attackDistribution": {
-      "0": 6,
-      "1": 36,
+      "0": 5,
+      "1": 37,
       "2": 42,
       "3": 38,
       "4": 16,
@@ -248,8 +248,8 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 10,
-        "FRIENDLY_HERO": 5,
+        "ANY_FRIENDLY_MINION": 11,
+        "FRIENDLY_HERO": 4,
         "FRIENDLY_MINIONS": 2,
         "ALL_MINIONS": 1,
         "ANY_MINION": 1
@@ -575,8 +575,8 @@
       },
       "minionCount": 20,
       "attackDistribution": {
-        "0": 2,
-        "1": 4,
+        "0": 1,
+        "1": 5,
         "2": 5,
         "3": 3,
         "4": 2,
@@ -1333,7 +1333,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "FRIENDLY_HERO"
+        "ANY_FRIENDLY_MINION"
       ],
       "tribe": null,
       "setId": "CORE",
@@ -1366,7 +1366,7 @@
       "name": "Tide Wisp",
       "type": "MINION",
       "cost": 0,
-      "attack": 0,
+      "attack": 1,
       "health": 2,
       "durability": null,
       "class": "TIDECALLER",
