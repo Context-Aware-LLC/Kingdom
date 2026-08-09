@@ -12,9 +12,32 @@
     margin-bottom: var(--space-4);
 }
 
+.roster-header-left {
+    flex-direction: row;
+    align-items: center;
+}
+
+.roster-header-actions {
+    flex-direction: row;
+    align-items: center;
+}
+
+.roster-header-actions .roster-button {
+    margin-left: var(--space-3);
+}
+
 .roster-heading {
     flex-direction: row;
     align-items: center;
+}
+
+/* The one door into creation, top-left beside the title (NOR-278). CTA-gold so it reads as the
+ * primary thing to do on an empty roster, and small enough not to crowd the heading. */
+.new-character-button {
+    margin-left: var(--space-4);
+    min-width: 0;
+    height: 40px;
+    font-size: var(--type-label);
 }
 
 .roster-title {
@@ -574,6 +597,150 @@
 #roster-scroll .unity-scroll-view__vertical-scroller,
 #roster-scroll .unity-scroll-view__horizontal-scroller {
     display: none;
+}
+
+/* ---- Character creation overlay (portrait grid, NOR-278) --------------------------------------
+ * Reuses .delete-modal / .delete-dialog for the scrim and centred card, so it dims and centres
+ * exactly like the delete and deck dialogs. The dialog is a touch wider to hold a 4-wide grid. */
+.character-create-dialog {
+    width: 760px;
+    max-width: 92%;
+}
+
+/* 2 rows × 4 columns, one square portrait per class. Wrap after four via flex-basis, the same
+ * grid-by-wrapping idiom the deck-back picker uses. */
+.hero-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+}
+
+/* A portrait tile: art, a name under it, and a corner selection badge. The tile body is one tap
+ * target (opens the detail overlay); the badge is a second, independent one (toggles selection). */
+.hero-tile {
+    width: 152px;
+    align-items: center;
+    margin: var(--space-2);
+    padding: var(--space-2);
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: var(--space-2);
+    background-color: var(--surface-1);
+}
+
+.hero-tile:hover {
+    border-color: var(--ink-1);
+}
+
+.hero-tile--selected {
+    border-color: var(--accent);
+    background-color: var(--surface-3);
+}
+
+.hero-tile-art {
+    width: 128px;
+    height: 128px;
+    border-radius: var(--space-1);
+    background-color: var(--surface-3);
+    -unity-background-scale-mode: scale-and-crop;
+    overflow: hidden;
+}
+
+.hero-tile-name {
+    width: 100%;
+    margin-top: var(--space-2);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    color: var(--ink-1);
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+/* The selection badge, bottom-left of the art, in the same circular treatment as the card's
+ * mana-cost frame (NOR-278). Empty and quiet when unselected — still tappable, that is how you
+ * select — and filled with the pick order (1 = primary/hero power, 2 = secondary) when on. */
+.hero-tile-badge {
+    position: absolute;
+    left: var(--space-2);
+    top: var(--space-2);
+    width: 34px;
+    height: 34px;
+    border-radius: 17px;
+    border-width: 2px;
+    border-color: var(--surface-3);
+    background-color: var(--surface-0);
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0;
+}
+
+.hero-tile-badge:hover {
+    border-color: var(--mana);
+}
+
+.hero-tile-badge--on {
+    border-color: var(--mana);
+    background-color: var(--mana);
+    color: var(--surface-0);
+}
+
+/* ---- Detail overlay ---- */
+.hero-detail-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+
+.hero-detail-portrait {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--space-1);
+    background-color: var(--surface-3);
+    -unity-background-scale-mode: scale-and-crop;
+    overflow: hidden;
+    margin-right: var(--space-4);
+}
+
+.hero-detail-headings {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.hero-detail-pass {
+    font-size: var(--type-body);
+    color: var(--accent);
+    white-space: normal;
+}
+
+/* Reserved-but-empty copy blocks (NOR-278). Kept in the layout with a minimum height so the
+ * overlay does not resize the day traits/playstyle bullets and the hero-power text are authored. */
+.hero-detail-bullets {
+    min-height: 72px;
+    margin-bottom: var(--space-3);
+}
+
+.hero-power-block {
+    min-height: 64px;
+    padding: var(--space-3);
+    border-radius: var(--space-2);
+    background-color: var(--surface-1);
+    margin-bottom: var(--space-4);
+}
+
+.hero-power-name {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+}
+
+.hero-power-desc {
+    font-size: var(--type-body);
+    color: var(--ink-2);
+    white-space: normal;
 }
 
 .unity-button {

@@ -226,6 +226,21 @@ namespace Emberfall.Session
         }
 
         /// <summary>
+        /// Create a character with <b>no deck</b> and persist just the roster row (NOR-278). The
+        /// portrait-grid creation flow picks only the pairing and a name; the first deck is chosen
+        /// later from the roster's "+" plate, so the character lands as the same lone-"+" row a
+        /// character whose decks were all deleted already shows.
+        ///
+        /// <para>Unlike <see cref="CreateCharacter"/> this consults no card pool and needs no
+        /// <see cref="ICardDatabase"/> or seed: a deckless character is always creatable for any valid
+        /// pairing, however thin that pairing's pool is. Whether the pool can supply a legal 30 is the
+        /// "+" plate's concern (<see cref="DefaultDeckGenerator.CanGenerate"/>), not creation's.</para>
+        /// </summary>
+        /// <exception cref="ArgumentException">The pairing is invalid.</exception>
+        public Character CreateCharacterWithoutDeck(string name, CardClass primary, CardClass secondary)
+            => CharacterCreation.CreateWithoutDeck(_characters, NewId(), name, primary, secondary);
+
+        /// <summary>
         /// Add a deck to an existing character and persist it, generated or blank.
         ///
         /// <para>The sibling of <see cref="CreateCharacter"/> for the roster's "+" plate, and here for

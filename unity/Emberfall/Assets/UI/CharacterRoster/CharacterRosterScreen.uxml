@@ -2,42 +2,38 @@
     <Style src="../Deckbuilder/theme.uss" />
     <Style src="character-roster.uss" />
     <ui:VisualElement name="root" class="emb-root character-roster">
+        <!--
+          The create FORM is gone (NOR-278). The name field, class dropdowns, swap-order and
+          starter-deck dropdown, and the Create button that used to fill a right-hand panel are
+          replaced by the "New Character" button below and the portrait-grid overlay at the bottom
+          of this file. This is the game-wide "eliminate forms" principle: no dropdowns, no
+          multi-field forms — the choice is made by tapping a picture.
+        -->
         <ui:VisualElement class="roster-header">
-            <ui:VisualElement class="roster-heading">
-                <ui:Label text="Characters" class="roster-title" />
-                <ui:Label name="roster-count" text="0 characters" class="roster-count" />
+            <ui:VisualElement class="roster-header-left">
+                <ui:VisualElement class="roster-heading">
+                    <ui:Label text="Characters" class="roster-title" />
+                    <ui:Label name="roster-count" text="0 characters" class="roster-count" />
+                </ui:VisualElement>
+                <!-- The one way INTO character creation, top-left (NOR-278). -->
+                <ui:Button name="new-character" text="+ New Character" class="roster-button roster-button--cta new-character-button" />
             </ui:VisualElement>
-            <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost" />
+            <ui:VisualElement class="roster-header-actions">
+                <!-- The way to the whole card pool, with no deck panel and no class filter (Sam,
+                     2026-08-07). Moved into the header when the create panel it used to sit under
+                     was removed (NOR-278); it is still a way further in, offered beside the way out. -->
+                <ui:Button name="view-collection" text="View Collection" class="roster-button roster-button--ghost" />
+                <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
                 <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll">
                     <ui:VisualElement name="roster-list" class="roster-list" />
-                    <ui:Label name="empty-state" text="No characters yet. Create your first one in the sidebar." class="roster-empty" />
+                    <ui:Label name="empty-state" text="No characters yet — tap New Character to make your first." class="roster-empty" />
                 </ui:ScrollView>
                 <ui:Label name="status" text="" class="roster-status" />
-            </ui:VisualElement>
-
-            <ui:VisualElement name="roster-create-panel" class="roster-panel roster-panel--create">
-                <ui:Label name="create-title" text="Create your first character" class="create-title" />
-                <ui:Label text="First choice is your hero power. Play both classes cards." class="create-help" />
-                <ui:TextField name="character-name" label="Name" max-length="16" class="roster-field" />
-                <ui:DropdownField name="primary-class" label="Primary" class="roster-field" />
-                <ui:DropdownField name="secondary-class" label="Secondary" class="roster-field" />
-                <ui:VisualElement class="create-order-row">
-                    <ui:Label name="power-hint" text="Hero power: Emberward" class="power-hint" />
-                    <ui:Button name="swap-classes" text="Swap order" class="roster-button roster-button--small roster-button--ghost" />
-                </ui:VisualElement>
-                <ui:DropdownField name="starter-deck" label="Starter deck" class="roster-field" />
-                <ui:Label name="starter-help" text="Your first character starts with a playable generated deck." class="create-help create-help--starter" />
-                <ui:Label name="create-error" text="" class="create-error" />
-                <ui:Button name="create-character" text="Create" class="roster-button roster-button--cta create-button" />
-
-                <!-- The way to the whole card pool, with no deck panel and no class filter (Sam,
-                     2026-08-07). It sits under Create rather than in the header because the header
-                     is the way OUT of this screen and this is a way further in. -->
-                <ui:Button name="view-collection" text="View Collection" class="roster-button roster-button--ghost view-collection-button" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -121,6 +117,65 @@
             <ui:VisualElement name="character-menu-card" class="character-menu-card">
                 <ui:Label name="character-menu-title" text="" class="character-menu-title" />
                 <ui:Button name="character-menu-delete" text="Delete character" class="roster-button roster-button--danger deck-action" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!--
+          Character creation (NOR-278): two sequential passes over ONE grid overlay, because a
+          character is a permanent ORDERED primary+secondary class pair. Pass 1 picks the primary
+          (its Hero Power); pass 2 picks the secondary (cards only). Three views share the dialog:
+          the grid, a per-hero detail overlay, and a confirm screen that also collects the name.
+        -->
+        <ui:VisualElement name="character-create" class="delete-modal delete-modal--hidden character-create">
+            <ui:VisualElement class="delete-dialog character-create-dialog">
+
+                <!-- GRID: 2×4 portraits, one per real class. Pass-specific title/help above it. -->
+                <ui:VisualElement name="create-grid-view">
+                    <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
+                    <ui:Label name="create-pass-help" text="" class="create-help" />
+                    <ui:VisualElement name="create-hero-grid" class="hero-grid" />
+                    <ui:VisualElement class="delete-actions">
+                        <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- DETAIL: a single hero's traits + hero power. The copy blocks are RESERVED BUT
+                     EMPTY (NOR-278): FlavorText and hero-power descriptions are unpopulated schema
+                     fields, and authoring that copy is out of scope. The layout space is held. -->
+                <ui:VisualElement name="create-detail-view">
+                    <ui:VisualElement class="hero-detail-head">
+                        <ui:VisualElement name="create-detail-portrait" class="hero-detail-portrait" />
+                        <ui:VisualElement class="hero-detail-headings">
+                            <ui:Label name="create-detail-name" text="" class="delete-title" />
+                            <ui:Label name="create-detail-pass" text="" class="hero-detail-pass" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="create-detail-bullets" class="hero-detail-bullets" />
+                    <ui:VisualElement class="hero-power-block">
+                        <ui:Label name="create-power-name" text="" class="hero-power-name" />
+                        <ui:Label name="create-power-desc" text="" class="hero-power-desc" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="delete-actions">
+                        <ui:Button name="create-detail-back" text="Back" class="roster-button roster-button--ghost" />
+                        <ui:Button name="create-detail-select" text="Select" class="roster-button roster-button--cta" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- CONFIRM: reached automatically once both classes are picked. Carries the ONE
+                     text field in the whole flow — the character's name — validated by
+                     PlayerName.Check, the same predicate the server's MatchGate enforces on the
+                     wire (VULN-002). "Change something" drops the secondary pick only. -->
+                <ui:VisualElement name="create-confirm-view">
+                    <ui:Label text="Ready to build" class="delete-title" />
+                    <ui:Label name="create-confirm-summary" text="" class="create-help" />
+                    <ui:TextField name="create-name-field" label="Name" max-length="16" class="roster-field" />
+                    <ui:Label name="create-name-error" text="" class="create-error" />
+                    <ui:VisualElement class="delete-actions">
+                        <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
+                        <ui:Button name="create-continue" text="Continue to Deck Builder" class="roster-button roster-button--cta" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
             </ui:VisualElement>
         </ui:VisualElement>
 

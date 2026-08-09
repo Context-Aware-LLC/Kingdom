@@ -100,12 +100,6 @@ namespace Emberfall.Presentation
             return real.ToArray();
         }
 
-        private static readonly List<string> StarterChoices = new List<string>
-        {
-            "Generated",
-            "Custom",
-        };
-
         private VisualElement _root;
         private PlayerAccount _account;
         private ICardDatabase _db;
@@ -119,15 +113,32 @@ namespace Emberfall.Presentation
         private Label _emptyState;
         private Label _status;
 
-        private Label _createTitle;
-        private TextField _nameField;
-        private DropdownField _primaryField;
-        private DropdownField _secondaryField;
-        private DropdownField _starterField;
-        private Label _starterHelp;
-        private Label _powerHint;
-        private Label _createError;
-        private Button _createButton;
+        // ---- Create flow (portrait grid, NOR-278) ----
+        private Button _newCharacterButton;
+        private VisualElement _createModal;
+        private VisualElement _createGridView;
+        private VisualElement _createDetailView;
+        private VisualElement _createConfirmView;
+        private Label _createPassTitle;
+        private Label _createPassHelp;
+        private VisualElement _createHeroGrid;
+        private VisualElement _createDetailPortrait;
+        private Label _createDetailName;
+        private Label _createDetailPass;
+        private VisualElement _createDetailBullets;
+        private Label _createPowerName;
+        private Label _createPowerDesc;
+        private Button _createDetailSelect;
+        private Label _createConfirmSummary;
+        private TextField _createNameField;
+        private Label _createNameError;
+
+        /// <summary>The picks, in selection order: [0] is the primary (its hero power), [1] the
+        /// secondary (cards only). At most two, always distinct — a hero cannot be picked twice.</summary>
+        private readonly List<CardClass> _createPicks = new List<CardClass>(2);
+
+        /// <summary>The hero whose detail overlay is open. Only meaningful while that view shows.</summary>
+        private CardClass _detailClass;
 
         private VisualElement _deleteModal;
         private Label _deleteMessage;
@@ -198,7 +209,7 @@ namespace Emberfall.Presentation
 
             CacheElements();
             WireChrome();
-            WireCreateForm();
+            WireCreateFlow();
             WireDeleteDialog();
             WireCharacterMenu();
             WireDeckDialog();
@@ -219,7 +230,7 @@ namespace Emberfall.Presentation
             {
                 Debug.LogError($"[CharacterRoster] could not open this device's collection: {ex.Message}");
                 SetStatus("Collection unavailable — see the console.", isError: true);
-                SetCreateEnabled(false);
+                _newCharacterButton?.SetEnabled(false);
                 return;
             }
 
@@ -247,15 +258,24 @@ namespace Emberfall.Presentation
             _emptyState = _root.Q<Label>("empty-state");
             _status = _root.Q<Label>("status");
 
-            _createTitle = _root.Q<Label>("create-title");
-            _nameField = _root.Q<TextField>("character-name");
-            _primaryField = _root.Q<DropdownField>("primary-class");
-            _secondaryField = _root.Q<DropdownField>("secondary-class");
-            _starterField = _root.Q<DropdownField>("starter-deck");
-            _starterHelp = _root.Q<Label>("starter-help");
-            _powerHint = _root.Q<Label>("power-hint");
-            _createError = _root.Q<Label>("create-error");
-            _createButton = _root.Q<Button>("create-character");
+            _newCharacterButton = _root.Q<Button>("new-character");
+            _createModal = _root.Q<VisualElement>("character-create");
+            _createGridView = _root.Q<VisualElement>("create-grid-view");
+            _createDetailView = _root.Q<VisualElement>("create-detail-view");
+            _createConfirmView = _root.Q<VisualElement>("create-confirm-view");
+            _createPassTitle = _root.Q<Label>("create-pass-title");
+            _createPassHelp = _root.Q<Label>("create-pass-help");
+            _createHeroGrid = _root.Q<VisualElement>("create-hero-grid");
+            _createDetailPortrait = _root.Q<VisualElement>("create-detail-portrait");
+            _createDetailName = _root.Q<Label>("create-detail-name");
+            _createDetailPass = _root.Q<Label>("create-detail-pass");
+            _createDetailBullets = _root.Q<VisualElement>("create-detail-bullets");
+            _createPowerName = _root.Q<Label>("create-power-name");
+            _createPowerDesc = _root.Q<Label>("create-power-desc");
+            _createDetailSelect = _root.Q<Button>("create-detail-select");
+            _createConfirmSummary = _root.Q<Label>("create-confirm-summary");
+            _createNameField = _root.Q<TextField>("create-name-field");
+            _createNameError = _root.Q<Label>("create-name-error");
 
             _deleteModal = _root.Q<VisualElement>("delete-modal");
             _deleteMessage = _root.Q<Label>("delete-message");
@@ -319,42 +339,264 @@ namespace Emberfall.Presentation
             Show(_matchBar, MatchDeckSelection.Choosing);
         }
 
-        private void WireCreateForm()
-        {
-            var classes = new List<string>(PairableClasses.Length);
-            foreach (CardClass c in PairableClasses) classes.Add(Pretty(c));
+        // ---- Create flow: two passes over one portrait grid (NOR-278) ---------------------------
+        //
+        // The old create form — name field, primary/secondary dropdowns, swap-order, starter-deck
+        // dropdown, Create button — is gone (game-wide "eliminate forms" principle). A character is
+        // an ordered class pair, chosen by tapping portraits: pass 1 picks the primary (its hero
+        // power), pass 2 picks the secondary (cards only). Once both are picked the confirm view
+        // collects the ONE remaining field, the name, and creates the character with NO deck — it
+        // lands in the roster as a lone "+" row, the same empty state a character whose decks were
+        // all deleted already shows, and the first deck is chosen there.
 
-            if (_primaryField != null)
+        /// <summary>Which of the create overlay's three views is showing.</summary>
+        private enum CreateView { Grid, Detail, Confirm }
+
+        private void WireCreateFlow()
+        {
+            _newCharacterButton?.RegisterCallback<ClickEvent>(_ => OpenCreateFlow());
+            _root.Q<Button>("create-cancel")?.RegisterCallback<ClickEvent>(_ => CloseCreateFlow());
+            _root.Q<Button>("create-detail-back")?.RegisterCallback<ClickEvent>(_ => ShowCreateView(CreateView.Grid));
+            _createDetailSelect?.RegisterCallback<ClickEvent>(_ => TogglePick(_detailClass));
+            _root.Q<Button>("create-change")?.RegisterCallback<ClickEvent>(_ => ChangeSecondary());
+            _root.Q<Button>("create-continue")?.RegisterCallback<ClickEvent>(_ => CommitCreate());
+            _createNameField?.RegisterValueChangedCallback(_ => SetCreateNameError(""));
+        }
+
+        /// <summary>True while pass 1 is live — nothing picked yet, so the next pick is the primary.</summary>
+        private bool ChoosingPrimary => _createPicks.Count == 0;
+
+        private void OpenCreateFlow()
+        {
+            if (_account == null) return;
+            _createPicks.Clear();
+            _createNameField?.SetValueWithoutNotify("");
+            SetCreateNameError("");
+            ShowCreateView(CreateView.Grid);
+            _createModal?.RemoveFromClassList("delete-modal--hidden");
+        }
+
+        private void CloseCreateFlow()
+        {
+            _createModal?.AddToClassList("delete-modal--hidden");
+            _createPicks.Clear();
+        }
+
+        private void ShowCreateView(CreateView view)
+        {
+            Show(_createGridView, view == CreateView.Grid);
+            Show(_createDetailView, view == CreateView.Detail);
+            Show(_createConfirmView, view == CreateView.Confirm);
+
+            if (view == CreateView.Grid) BuildHeroGrid();
+            else if (view == CreateView.Confirm) RefreshConfirm();
+        }
+
+        /// <summary>
+        /// The 2×4 portrait grid, rebuilt each time it shows so every badge reflects the current
+        /// picks. The title and help above it are pass-specific: pass 1 says this pick locks in the
+        /// hero power; pass 2 says it only adds cards.
+        /// </summary>
+        private void BuildHeroGrid()
+        {
+            if (_createHeroGrid == null) return;
+            _createHeroGrid.Clear();
+
+            if (ChoosingPrimary)
             {
-                _primaryField.choices = classes;
-                _primaryField.index = 0;
-                _primaryField.RegisterValueChangedCallback(_ =>
+                if (_createPassTitle != null) _createPassTitle.text = "Choose your hero";
+                if (_createPassHelp != null)
+                    _createPassHelp.text = "This first pick locks in your Hero Power — the ability you use " +
+                                           "every game. Your deck can hold cards from both classes you choose.";
+            }
+            else
+            {
+                if (_createPassTitle != null) _createPassTitle.text = "Choose a second class";
+                if (_createPassHelp != null)
+                    _createPassHelp.text = $"This pick adds a second class's cards to your pool. Your Hero " +
+                                           $"Power stays {Pretty(_createPicks[0])}'s — a secondary class never " +
+                                           "brings one of its own.";
+            }
+
+            foreach (CardClass c in PairableClasses)
+                _createHeroGrid.Add(BuildHeroTile(c));
+        }
+
+        /// <summary>
+        /// One portrait tile with two independent tap targets: the tile body opens the hero's detail
+        /// overlay, and the corner badge toggles selection. The badge stops the click from reaching
+        /// the tile so the two never fire together.
+        /// </summary>
+        private VisualElement BuildHeroTile(CardClass heroClass)
+        {
+            int order = _createPicks.IndexOf(heroClass);   // -1 = unpicked, 0 = primary, 1 = secondary
+            bool selected = order >= 0;
+
+            var tile = new VisualElement();
+            tile.AddToClassList("hero-tile");
+            tile.EnableInClassList("hero-tile--selected", selected);
+
+            var art = new VisualElement();
+            art.AddToClassList("hero-tile-art");
+            _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
+            {
+                if (sprite != null) art.style.backgroundImage = new StyleBackground(sprite);
+            });
+            tile.Add(art);
+
+            // The badge, bottom-left, in the mana-frame treatment (NOR-278). Empty when unselected
+            // but still the toggle target; filled with the pick order when on. A plain VisualElement
+            // with StopPropagation rather than a Button, so its click cannot also open the detail.
+            var badge = new VisualElement();
+            badge.AddToClassList("hero-tile-badge");
+            badge.EnableInClassList("hero-tile-badge--on", selected);
+            var badgeLabel = new Label(selected ? (order + 1).ToString() : "");
+            badge.Add(badgeLabel);
+            badge.tooltip = selected ? "Deselect" : "Select";
+            badge.RegisterCallback<ClickEvent>(evt =>
+            {
+                evt.StopPropagation();
+                TogglePick(heroClass);
+            });
+            tile.Add(badge);
+
+            var name = new Label(Pretty(heroClass));
+            name.AddToClassList("hero-tile-name");
+            tile.Add(name);
+
+            tile.RegisterCallback<ClickEvent>(_ => OpenHeroDetail(heroClass));
+            return tile;
+        }
+
+        /// <summary>
+        /// Add or remove a hero from the picks. Selecting appends (primary first, then secondary);
+        /// re-selecting a picked hero removes it. Removing the primary while a secondary exists
+        /// promotes the secondary to primary — the remaining pick keeps the badge and the hero power
+        /// moves to it. The moment both slots are full the flow auto-advances to the confirm view.
+        /// </summary>
+        private void TogglePick(CardClass heroClass)
+        {
+            int idx = _createPicks.IndexOf(heroClass);
+            if (idx >= 0)
+                _createPicks.RemoveAt(idx);
+            else if (_createPicks.Count < 2)
+                _createPicks.Add(heroClass);
+            else
+                return;   // both slots full and this one is not among them — ignore
+
+            ShowCreateView(_createPicks.Count == 2 ? CreateView.Confirm : CreateView.Grid);
+        }
+
+        /// <summary>
+        /// The per-hero detail overlay: portrait, name, a pass-specific line, and two RESERVED-BUT-
+        /// EMPTY copy blocks — traits/playstyle bullets and the hero power's name/description. That
+        /// copy does not exist yet (FlavorText and hero-power descriptions are unpopulated schema
+        /// fields) and authoring it is out of scope for NOR-278; the layout space is held and the
+        /// strings stay empty.
+        /// </summary>
+        private void OpenHeroDetail(CardClass heroClass)
+        {
+            _detailClass = heroClass;
+
+            if (_createDetailPortrait != null)
+            {
+                _createDetailPortrait.style.backgroundImage = StyleKeyword.None;
+                _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
                 {
-                    RebuildSecondaryChoices();
-                    RefreshPowerHint();
-                    SetCreateError("");
+                    if (sprite != null) _createDetailPortrait.style.backgroundImage = new StyleBackground(sprite);
                 });
             }
+            if (_createDetailName != null) _createDetailName.text = Pretty(heroClass);
+            if (_createDetailPass != null)
+                _createDetailPass.text = ChoosingPrimary
+                    ? "Selecting this hero locks in its Hero Power."
+                    : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_createPicks[0])}'s.";
 
-            if (_secondaryField != null)
+            // Reserved-but-empty copy blocks (NOR-278): left blank until the copy is authored.
+            _createDetailBullets?.Clear();
+            if (_createPowerName != null) _createPowerName.text = "";
+            if (_createPowerDesc != null) _createPowerDesc.text = "";
+
+            bool selected = _createPicks.Contains(heroClass);
+            if (_createDetailSelect != null) _createDetailSelect.text = selected ? "Deselect" : "Select";
+
+            ShowCreateView(CreateView.Detail);
+        }
+
+        /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the
+        /// hero-power source, then waits on the one field left — the character's name.</summary>
+        private void RefreshConfirm()
+        {
+            if (_createPicks.Count < 2) { ShowCreateView(CreateView.Grid); return; }
+
+            CardClass primary = _createPicks[0];
+            CardClass secondary = _createPicks[1];
+            if (_createConfirmSummary != null)
+                _createConfirmSummary.text =
+                    $"{Pretty(primary)} + {Pretty(secondary)} — Hero Power from {Pretty(primary)}, deck cards " +
+                    "from both classes. Name your character, then continue.";
+            SetCreateNameError("");
+        }
+
+        /// <summary>"Change something" on the confirm view drops the SECONDARY pick only and returns
+        /// to the grid on pass 2 (NOR-278). The primary badge stays selected and manually
+        /// toggleable; re-picking a secondary flows straight back here.</summary>
+        private void ChangeSecondary()
+        {
+            if (_createPicks.Count == 2) _createPicks.RemoveAt(1);
+            ShowCreateView(CreateView.Grid);
+        }
+
+        /// <summary>
+        /// Create the character from the two picks and the confirmed name, then return to the roster.
+        ///
+        /// <para><b>The name carries VULN-002's validation with it.</b> <see cref="PlayerName.Check"/>
+        /// is the same predicate the server's <c>MatchGate</c> enforces on the wire, so this reuses
+        /// that gate rather than re-implementing it — a bare text field with no check is exactly what
+        /// the vulnerability index forbids. The character is created NAMED (its name is immutable),
+        /// which is why the field lives here at the one moment the character is constructed rather
+        /// than as a deferred rename surface.</para>
+        ///
+        /// <para><b>No deck.</b> The character lands as a lone "+" row; the first deck is chosen from
+        /// there (Sam, NOR-278).</para>
+        /// </summary>
+        private void CommitCreate()
+        {
+            if (_account == null || _createPicks.Count < 2) return;
+
+            NameCheck name = PlayerName.Check(_createNameField?.value ?? "");
+            if (!name.IsValid)
             {
-                _secondaryField.choices = new List<string>(classes);
-                _secondaryField.RegisterValueChangedCallback(_ => SetCreateError(""));
+                SetCreateNameError(name.Reason);
+                return;
             }
 
-            if (_starterField != null)
+            CardClass primary = _createPicks[0];
+            CardClass secondary = _createPicks[1];
+
+            try
             {
-                _starterField.choices = StarterChoices;
-                _starterField.index = 0;
-                _starterField.RegisterValueChangedCallback(_ => SetCreateError(""));
+                Character created = _account.CreateCharacterWithoutDeck(name.Normalized, primary, secondary);
+                Debug.Log($"[CharacterRoster] created character id={created.Id} " +
+                          $"pairing={created.PrimaryClass}/{created.SecondaryClass} (no deck)");
+                CloseCreateFlow();
+                RebuildRoster();
             }
+            catch (ArgumentException ex)
+            {
+                Debug.LogError($"[CharacterRoster] character creation failed: {ex.Message}");
+                SetCreateNameError(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CharacterRoster] character creation could not be saved: {ex.Message}");
+                SetCreateNameError("Character could not be saved — see the console.");
+            }
+        }
 
-            _nameField?.RegisterValueChangedCallback(_ => SetCreateError(""));
-            _root.Q<Button>("swap-classes")?.RegisterCallback<ClickEvent>(_ => SwapClasses());
-            _createButton?.RegisterCallback<ClickEvent>(_ => CreateCharacter());
-
-            RebuildSecondaryChoices();
-            RefreshPowerHint();
+        private void SetCreateNameError(string message)
+        {
+            if (_createNameError != null) _createNameError.text = message ?? "";
         }
 
         private void WireDeleteDialog()
@@ -885,7 +1127,6 @@ namespace Emberfall.Presentation
             if (orphans.Count > 0)
                 _rosterList.Add(BuildOrphanRow(orphans));
 
-            RefreshCreatePolicy(roster.Count > 0);
             RefreshMatchBar();
             SetStatus("");
         }
@@ -1432,13 +1673,6 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void OpenCharacter(string characterId)
-        {
-            DeckbuilderController.PendingCharacterId = characterId;
-            DeckbuilderController.PendingDeckId = "";
-            Go("DeckbuilderSpike");
-        }
-
         private void OpenDeckForEdit(string characterId, string deckId)
         {
             DeckbuilderController.PendingCharacterId = characterId;
@@ -1544,124 +1778,6 @@ namespace Emberfall.Presentation
             if (choosing) _matchContinue?.SetEnabled(!string.IsNullOrEmpty(_pickedDeckId));
         }
 
-        private void RefreshCreatePolicy(bool hasCharacters)
-        {
-            if (_createTitle != null)
-                _createTitle.text = hasCharacters ? "Create another character" : "Create your first character";
-
-            bool offersChoice = _account != null && _account.OffersStarterChoice();
-            if (_starterField != null)
-            {
-                _starterField.style.display = offersChoice ? DisplayStyle.Flex : DisplayStyle.None;
-                _starterField.index = 0;
-            }
-            if (_starterHelp != null)
-            {
-                _starterHelp.text = offersChoice
-                    ? "Choose a playable generated deck or a blank draft."
-                    : "Your first character starts with a playable generated deck.";
-            }
-        }
-
-        private void RebuildSecondaryChoices()
-        {
-            if (_secondaryField == null) return;
-
-            CardClass primary = SelectedPrimary();
-            var choices = new List<string>(PairableClasses.Length - 1);
-            foreach (CardClass c in PairableClasses)
-                if (c != primary) choices.Add(Pretty(c));
-
-            string previous = _secondaryField.value;
-            _secondaryField.choices = choices;
-            int keep = previous == null ? -1 : choices.IndexOf(previous);
-            _secondaryField.index = keep >= 0 ? keep : 0;
-        }
-
-        private void RefreshPowerHint()
-        {
-            if (_powerHint is not null)
-                _powerHint.text = $"Hero power: {Pretty(SelectedPrimary())}";
-        }
-
-        private void SwapClasses()
-        {
-            CardClass oldPrimary = SelectedPrimary();
-            CardClass oldSecondary = SelectedSecondary();
-
-            if (_primaryField != null)
-                _primaryField.index = Array.IndexOf(PairableClasses, oldSecondary);
-            RebuildSecondaryChoices();
-            if (_secondaryField != null)
-                _secondaryField.index = _secondaryField.choices.IndexOf(Pretty(oldPrimary));
-            RefreshPowerHint();
-            SetCreateError("");
-        }
-
-        private CardClass SelectedPrimary()
-        {
-            int index = _primaryField?.index ?? 0;
-            return PairableClasses[Mathf.Clamp(index, 0, PairableClasses.Length - 1)];
-        }
-
-        private CardClass SelectedSecondary()
-        {
-            CardClass primary = SelectedPrimary();
-            string selected = _secondaryField?.value;
-            foreach (CardClass c in PairableClasses)
-                if (c != primary && Pretty(c) == selected) return c;
-
-            foreach (CardClass c in PairableClasses)
-                if (c != primary) return c;
-            return CardClass.NEUTRAL;
-        }
-
-        private void CreateCharacter()
-        {
-            if (_account == null || _db == null) return;
-
-            NameCheck name = PlayerName.Check(_nameField?.value ?? "");
-            if (!name.IsValid)
-            {
-                SetCreateError(name.Reason);
-                return;
-            }
-
-            CardClass primary = SelectedPrimary();
-            CardClass secondary = SelectedSecondary();
-            bool offersChoice = _account.OffersStarterChoice();
-            StarterDeck starter = offersChoice && _starterField?.index == 1
-                ? StarterDeck.Blank
-                : StarterDeck.Generated;
-
-            if (starter == StarterDeck.Generated && !PlayerAccount.CanCreate(primary, secondary, _db))
-            {
-                SetCreateError($"{Pretty(primary)} + {Pretty(secondary)} doesn't have enough cards for a deck yet.");
-                return;
-            }
-
-            try
-            {
-                Character created = _account.CreateCharacter(
-                    name.Normalized, primary, secondary, _db, starter);
-                Debug.Log($"[CharacterRoster] created character id={created.Id} " +
-                          $"pairing={created.PrimaryClass}/{created.SecondaryClass} " +
-                          $"starter={starter}");
-                if (_nameField != null) _nameField.SetValueWithoutNotify("");
-                OpenCharacter(created.Id);
-            }
-            catch (Exception ex) when (ex is DeckGenerationException || ex is ArgumentException)
-            {
-                Debug.LogError($"[CharacterRoster] character creation failed: {ex.Message}");
-                SetCreateError(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[CharacterRoster] character creation could not be saved: {ex.Message}");
-                SetCreateError("Character could not be saved — see the console.");
-            }
-        }
-
         private void OpenDeleteDialog(Character character)
         {
             if (_account == null || character == null) return;
@@ -1720,20 +1836,6 @@ namespace Emberfall.Presentation
             _deleteModal?.AddToClassList("delete-modal--hidden");
             _pendingDelete = null;
             _pendingDeleteDeckCount = 0;
-        }
-
-        private void SetCreateEnabled(bool enabled)
-        {
-            _createButton?.SetEnabled(enabled);
-            _nameField?.SetEnabled(enabled);
-            _primaryField?.SetEnabled(enabled);
-            _secondaryField?.SetEnabled(enabled);
-            _starterField?.SetEnabled(enabled);
-        }
-
-        private void SetCreateError(string message)
-        {
-            if (_createError != null) _createError.text = message ?? "";
         }
 
         private void SetStatus(string message, bool isError = false)
