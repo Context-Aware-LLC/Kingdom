@@ -150,6 +150,12 @@ namespace Emberfall.Core.Tests.Collection
             return deck;
         }
 
+        /// <summary>
+        /// The on-disk deck-file shape. A second copy lives in <c>BalanceCorpusLoader</c> (EF-030),
+        /// which READS the same format for the hand-authored BalanceCorpus decks; the soak tool
+        /// cannot reference this test project, and promoting the DTO into the Unity-consumed
+        /// <c>Emberfall.Core.Collection</c> is not worth it for a JSON shape. Change one, change both.
+        /// </summary>
         private sealed class DeckFixture
         {
             public string PrimaryClass { get; set; } = "";
