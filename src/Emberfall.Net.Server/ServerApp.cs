@@ -151,6 +151,11 @@ namespace Emberfall.Net.Server
             if (cfg.TelemetryDrain is not null)
                 builder.Services.AddSingleton<IHostedService>(cfg.TelemetryDrain);
 
+            // NOR-254: the account store's schema is never applied on its own — mirror the drain's
+            // startup-schema pattern so EMBERFALL_ACCOUNTS_DB is safe to set without a manual DDL step.
+            if (cfg.AccountStore is PostgresAccountStore postgresAccountStore)
+                builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(postgresAccountStore));
+
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
             var time = new SystemTimeSource();
             var matchmaking = cfg.MatchmakingQueue ??
