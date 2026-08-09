@@ -768,19 +768,28 @@
     white-space: normal;
 }
 
-/* Reserved-but-empty copy blocks (NOR-278). Kept in the layout with a minimum height so the
- * overlay does not resize the day traits/playstyle bullets and the hero-power text are authored. */
+/* Still reserved-but-empty (NOR-278): the traits/playstyle bullets. Kept in the layout with a
+ * minimum height so the overlay does not resize the day that copy is authored. */
 .hero-detail-bullets {
     min-height: 72px;
     margin-bottom: var(--space-3);
 }
 
+/* Filled from the class's hero power card since NOR-291. The minimum height is now a floor for a
+ * one-line power rather than a placeholder — it keeps the overlay the same height whether the
+ * generated description wraps to one line or two. */
 .hero-power-block {
     min-height: 64px;
     padding: var(--space-3);
     border-radius: var(--space-2);
     background-color: var(--surface-1);
     margin-bottom: var(--space-4);
+}
+
+.hero-power-caption {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-bottom: var(--space-1);
 }
 
 .hero-power-name {

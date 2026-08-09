@@ -46,8 +46,8 @@ namespace Emberfall.Core
             hero0.Id = state.NextInstanceId();
             hero1.Id = state.NextInstanceId();
 
-            hero0.HeroPowerId = ClassToHeroPowerId(setup.P0Class);
-            hero1.HeroPowerId = ClassToHeroPowerId(setup.P1Class);
+            hero0.HeroPowerId = HeroPowers.ForClass(setup.P0Class);
+            hero1.HeroPowerId = HeroPowers.ForClass(setup.P1Class);
 
             // Build decks in listed order, assigning ids p0-deck then p1-deck.
             BuildDeck(state, ps0, setup.P0Deck);
@@ -77,19 +77,6 @@ namespace Emberfall.Core
             state.TurnNumber = 0;
             return state;
         }
-
-        private static string ClassToHeroPowerId(CardClass cls) => cls switch
-        {
-            CardClass.EMBERWARD => "hero_power_searing_bolt",
-            CardClass.TIDECALLER => "hero_power_tidal_ward",
-            CardClass.GRAVEKEEP => "hero_power_toll_the_bell",
-            CardClass.VERDANT => "hero_power_quicken",
-            CardClass.CLOCKWRIGHT => "hero_power_blueprint",
-            CardClass.NIGHTVEIL => "hero_power_shadow_mark",
-            CardClass.STONEWARDEN => "hero_power_earthwall",
-            CardClass.TEMPEST => "hero_power_chain_spark",
-            _ => "",
-        };
 
         private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<string> deckList)
         {

@@ -126,6 +126,7 @@ namespace Emberfall.Presentation
         private Label _createDetailName;
         private Label _createDetailPass;
         private VisualElement _createDetailBullets;
+        private VisualElement _createPowerBlock;
         private Label _createPowerName;
         private Label _createPowerDesc;
         private Button _createDetailSelect;
@@ -274,6 +275,7 @@ namespace Emberfall.Presentation
             _createDetailName = _root.Q<Label>("create-detail-name");
             _createDetailPass = _root.Q<Label>("create-detail-pass");
             _createDetailBullets = _root.Q<VisualElement>("create-detail-bullets");
+            _createPowerBlock = _root.Q<VisualElement>("create-power-block");
             _createPowerName = _root.Q<Label>("create-power-name");
             _createPowerDesc = _root.Q<Label>("create-power-desc");
             _createDetailSelect = _root.Q<Button>("create-detail-select");
@@ -571,11 +573,20 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The per-hero detail overlay: portrait, name, a pass-specific line, and two RESERVED-BUT-
-        /// EMPTY copy blocks — traits/playstyle bullets and the hero power's name/description. That
-        /// copy does not exist yet (FlavorText and hero-power descriptions are unpopulated schema
-        /// fields) and authoring it is out of scope for NOR-278; the layout space is held and the
-        /// strings stay empty.
+        /// The per-hero detail overlay: portrait, name, a pass-specific line, the class's hero power,
+        /// and one still-RESERVED-BUT-EMPTY block — the traits/playstyle bullets, whose copy does not
+        /// exist yet (<c>FlavorText</c> is a wired but unpopulated schema field) and is tracked
+        /// separately.
+        ///
+        /// <para><b>The hero power block is DERIVED, never authored (NOR-291).</b> Its name is the
+        /// power card's own <c>Name</c> and its description is <see cref="CardTextGenerator"/> run
+        /// over that card's typed rules — the identical text the power shows on the board in a match.
+        /// No prose copy is stored anywhere, so a hero power that is later retuned changes its
+        /// description here in the same edit that changes its rules, and the two can never disagree.
+        /// A hand-written description would be a second copy of the rules with nothing comparing them.</para>
+        ///
+        /// <para>The power is shown on both passes. On pass 2 the class being inspected does NOT
+        /// supply the character's power; the pass line above already says so explicitly.</para>
         /// </summary>
         private void OpenHeroDetail(CardClass heroClass)
         {
@@ -595,15 +606,38 @@ namespace Emberfall.Presentation
                     ? "Selecting this hero locks in its Hero Power."
                     : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_createPicks[0])}'s.";
 
-            // Reserved-but-empty copy blocks (NOR-278): left blank until the copy is authored.
+            // Traits/playstyle bullets stay reserved-but-empty (NOR-278): that copy is not authored.
             _createDetailBullets?.Clear();
-            if (_createPowerName != null) _createPowerName.text = "";
-            if (_createPowerDesc != null) _createPowerDesc.text = "";
+
+            FillHeroPower(heroClass);
 
             bool selected = _createPicks.Contains(heroClass);
             if (_createDetailSelect != null) _createDetailSelect.text = selected ? "Deselect" : "Select";
 
             ShowCreateView(CreateView.Detail);
+        }
+
+        /// <summary>
+        /// Fill the detail overlay's hero power block for one class (NOR-291).
+        ///
+        /// <para>The class → power mapping comes from <see cref="HeroPowers.ForClass"/>, the same
+        /// method <c>MatchEngine</c> uses to stamp <c>Hero.HeroPowerId</c> at match start. Reading it
+        /// from there rather than repeating the eight ids means the overlay shows the power the
+        /// player will actually get, by construction.</para>
+        ///
+        /// <para>A class with no power card on disk hides the block rather than showing an empty
+        /// panel — the one shape that is honest when there is nothing to say.</para>
+        /// </summary>
+        private void FillHeroPower(CardClass heroClass)
+        {
+            string powerId = HeroPowers.ForClass(heroClass);
+            CardDefinition power = null;
+            bool found = _db != null && !string.IsNullOrEmpty(powerId) && _db.TryGet(powerId, out power);
+
+            if (_createPowerBlock != null)
+                _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_createPowerName != null) _createPowerName.text = found ? power.Name : "";
+            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextGenerator.Generate(power) : "";
         }
 
         /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the
