@@ -120,6 +120,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6655ee59b2a438248aff6468bbedcb03
+    m_Address: ui/frame_rare_spell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f1e6a3119a3bed44952a895206ce486
+    m_Address: ui/frame_epic_spell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
     m_Address: materials/M_Glow
     m_ReadOnly: 0
@@ -242,6 +252,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2dc61885707bed449e16b7d67d2ce19
     m_Address: ui/ui_panel_stone_shale
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8a5e05cc5fd825448ad3bccbc7fb7dd
+    m_Address: ui/frame_rare
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

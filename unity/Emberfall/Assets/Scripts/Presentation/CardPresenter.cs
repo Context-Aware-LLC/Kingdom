@@ -102,7 +102,7 @@ namespace Emberfall.Presentation
         private void ApplyArtFit()
         {
             if (artRenderer == null || _artTexture == null || _def == null || _artMpb == null) return;
-            Vector4 win = FrameRarityCatalog.Sockets(_def.Type, _def.Rarity).ArtWindow;
+            Vector4 win = FrameRarityCatalog.ArtWindow;
             float quadAspect = ((win.z - win.x) * BoardController.CardW)
                              / ((win.w - win.y) * BoardController.CardH);
             float texAspect = (float)_artTexture.width / _artTexture.height;
@@ -247,13 +247,12 @@ namespace Emberfall.Presentation
         }
 
         // Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md §3 ApplyFrame) — stat-plate
-        // visibility keyed by type, frame + digit sockets keyed by type AND rarity. No per-card
-        // branching.
+        // visibility keyed by type; the frame sprite is keyed by type+rarity but its sockets are
+        // one shared layout (FrameRarityCatalog). No per-card branching.
         private void ApplyFrame()
         {
-            // One painted frame per rarity, except spells which have their own pair (§3.1 +
-            // FrameRarityCatalog.SpellFrameRarity). Falls back to the empty-sprite placeholder
-            // look if the frame asset is missing.
+            // One painted frame per rarity per type (minion, spell — weapons draw the minion
+            // frame). Falls back to the empty-sprite placeholder look if the frame asset is missing.
             Sprite frameSprite = null;
             if (frameRenderer != null && _ui != null)
             {
@@ -294,38 +293,37 @@ namespace Emberfall.Presentation
                 attackLabel.text = (_def.Attack ?? 0).ToString();
         }
 
-        // §3.1 socket table (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md, Sam-calibrated 2026-07-25): move every card-front
-        // element onto this rarity's frame geometry. Fractions are top-left-origin on the frame;
-        // local space is center-origin with +y up, so x' = (fx-.5)·W, y' = (.5-fy)·H.
-        // TMP world text: fontSize = em height in units × 10.
+        // Unified socket geometry (FrameRarityCatalog, 2026-08-09): move every card-front element
+        // onto the one shared frame layout — same fractions for every rarity, so there is no
+        // per-card lookup here any more. Fractions are top-left-origin on the frame; local space
+        // is center-origin with +y up, so x' = (fx-.5)·W, y' = (.5-fy)·H. TMP world text:
+        // fontSize = em height in units × 10.
         private void ApplySockets()
         {
-            var s = FrameRarityCatalog.Sockets(_def.Type, _def.Rarity);
             const float W = BoardController.CardW, H = BoardController.CardH;
             const float z = -0.01f;
 
-            PlaceDigit(costLabel,       s.Cost,   s.DigitEm, z);
-            PlaceDigit(attackLabel,     s.Attack, s.DigitEm, z);
-            PlaceDigit(healthLabel,     s.Health, s.DigitEm, z);
-            PlaceDigit(durabilityLabel, s.Health, s.DigitEm, z); // weapons: durability owns the health boss
+            PlaceDigit(costLabel,       FrameRarityCatalog.CostSocket,      FrameRarityCatalog.CostDigitEm, z);
+            PlaceDigit(attackLabel,     FrameRarityCatalog.StatSocketLeft,  FrameRarityCatalog.StatDigitEm, z);
+            PlaceDigit(healthLabel,     FrameRarityCatalog.StatSocketRight, FrameRarityCatalog.StatDigitEm, z);
+            PlaceDigit(durabilityLabel, FrameRarityCatalog.StatSocketRight, FrameRarityCatalog.StatDigitEm, z); // weapons: durability owns the right boss
 
             if (nameLabel != null)
             {
-                // Fixed size, no auto-fit; hard left clamp keeps long names off the cost boss.
+                // Fixed size, no auto-fit. Sam moved the title into its own band below the art
+                // (2026-08-09) specifically to get it clear of the cost socket, so it no longer
+                // needs a left clamp.
                 nameLabel.enableAutoSizing = false;
                 nameLabel.fontSize = FrameRarityCatalog.NameEm * H * 10f;
                 nameLabel.color    = FrameRarityCatalog.NameParchment;
-                float cx     = FrameRarityCatalog.NameCenterX * W;
-                float clampX = FrameRarityCatalog.NameLeftClamp * W;
-                float textW  = nameLabel.GetPreferredValues(_def.Name).x;
-                if (cx - textW * 0.5f < clampX) cx = clampX + textW * 0.5f;
-                nameLabel.rectTransform.localPosition =
-                    new Vector3(cx - W * 0.5f, (0.5f - FrameRarityCatalog.NameCenterY) * H, z);
+                nameLabel.rectTransform.localPosition = new Vector3(
+                    (FrameRarityCatalog.NameCenterX - 0.5f) * W,
+                    (0.5f - FrameRarityCatalog.NameCenterY) * H, z);
             }
 
             if (artRenderer != null)
             {
-                Vector4 win = s.ArtWindow;
+                Vector4 win = FrameRarityCatalog.ArtWindow;
                 artRenderer.transform.localPosition = new Vector3(
                     ((win.x + win.z) * 0.5f - 0.5f) * W,
                     (0.5f - (win.y + win.w) * 0.5f) * H, -0.005f);
@@ -342,12 +340,11 @@ namespace Emberfall.Presentation
                 bodyLabel.fontStyle |= FontStyles.Bold;
                 bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
                 bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
-                // Wrap inside the parchment bed, not the card — the creation-time rect
-                // (0.90 CardW) let wrapped lines run onto the frame rails. Widened and
-                // shifted left a touch 2026-08-09 (Sam): text was running out of room.
-                bodyLabel.rectTransform.sizeDelta = new Vector2(0.80f * W, 0.21f * H);
+                // The new parchment is centered on the card, so unlike the old frame this needs
+                // no horizontal shift to stay off the rails.
+                bodyLabel.rectTransform.sizeDelta = new Vector2(FrameRarityCatalog.BodyWidth * W, FrameRarityCatalog.BodyHeight * H);
                 bodyLabel.rectTransform.localPosition =
-                    new Vector3(-0.03f * W, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
+                    new Vector3(0f, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
             }
         }
 
