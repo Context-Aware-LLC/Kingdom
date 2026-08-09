@@ -25,7 +25,7 @@
 
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
-                <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll">
+                <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                     <ui:VisualElement name="roster-list" class="roster-list" />
                     <ui:Label name="empty-state" text="No characters yet — tap New Character to make your first." class="roster-empty" />
                 </ui:ScrollView>
@@ -79,7 +79,7 @@
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-image-pane" class="deck-pane">
-                    <ui:ScrollView name="deck-image-scroll" mode="Vertical" class="deck-image-scroll">
+                    <ui:ScrollView name="deck-image-scroll" mode="Vertical" class="deck-image-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                         <ui:VisualElement name="deck-image-grid" class="deck-back-grid" />
                     </ui:ScrollView>
                     <ui:Label name="deck-image-note" text="" class="create-help create-help--starter" />
