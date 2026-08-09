@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Emberfall — Card Corpus Admin Panel</title>
+<style>
+  :root {
+    --bg: #14161c;
+    --panel: #1c1f28;
+    --panel-2: #232733;
+    --line: #2f3543;
+    --ink: #e7eaf0;
+    --muted: #99a1b3;
+    --accent: #e0803a;
+    --accent-2: #4a90d9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .2px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .layout { display: flex; align-items: flex-start; gap: 0; }
+  .sidebar {
+    width: 260px;
+    flex: 0 0 260px;
+    padding: 18px 16px;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    min-height: calc(100vh - 59px);
+  }
+  .content { flex: 1 1 auto; padding: 20px 24px; min-width: 0; }
+  .filter-group { margin-bottom: 18px; }
+  .filter-group h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 9px;
+    font: inherit;
+  }
+  .cost-row { display: flex; align-items: center; gap: 8px; }
+  .cost-row input { width: 100%; }
+  .cost-row span { color: var(--muted); }
+  .check-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+  .check-list.wrap { max-height: 320px; }
+  label.chk { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+  label.chk input { accent-color: var(--accent); }
+  button.reset {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    font: inherit;
+  }
+  button.reset:hover { border-color: var(--accent); }
+
+  .scope-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .scope-bar .count-pill {
+    background: var(--accent);
+    color: #1a1206;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 4px 14px;
+  }
+  .scope-bar .muted { color: var(--muted); }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .6px; margin: 0 0 12px; color: var(--muted); }
+  .card.span-2 { grid-column: 1 / -1; }
+
+  .stat-tiles { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tile {
+    flex: 1 1 90px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .tile .n { font-size: 22px; font-weight: 600; }
+  .tile .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+  .bars { display: flex; flex-direction: column; gap: 7px; }
+  .bar-row { display: grid; grid-template-columns: 120px 1fr 42px; align-items: center; gap: 10px; }
+  .bar-row .lbl { color: var(--ink); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-row .track { background: var(--panel-2); border-radius: 5px; height: 16px; overflow: hidden; }
+  .bar-row .fill { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: 5px; min-width: 2px; }
+  .bar-row .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); font-style: italic; padding: 6px 0; }
+
+  .hist { display: flex; align-items: flex-end; gap: 6px; height: 130px; padding-top: 8px; }
+  .hist .col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+  .hist .col .b { width: 100%; background: linear-gradient(180deg, var(--accent), var(--accent-2)); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .hist .col .cnt { font-size: 11px; color: var(--muted); margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+  .hist .col .ax { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .hist-wrap { display: flex; gap: 24px; flex-wrap: wrap; }
+  .hist-block { flex: 1 1 260px; }
+  .hist-block h3 { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+
+  .split-bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+  .split-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #12141a; min-width: 0; overflow: hidden; white-space: nowrap; }
+  .split-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+  .split-legend .item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .split-legend .dot { width: 10px; height: 10px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Emberfall — Card Corpus Admin Panel</h1>
+  <span class="sub" id="source-note"></span>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="filter-group">
+      <h3>Class</h3>
+      <select id="f-class"></select>
+    </div>
+    <div class="filter-group">
+      <h3>Cost range</h3>
+      <div class="cost-row">
+        <input type="number" id="f-cost-min" min="0" placeholder="min" />
+        <span>–</span>
+        <input type="number" id="f-cost-max" min="0" placeholder="max" />
+      </div>
+    </div>
+    <div class="filter-group">
+      <h3>Card type</h3>
+      <div class="check-list" id="f-type"></div>
+    </div>
+    <div class="filter-group">
+      <h3>Rarity</h3>
+      <div class="check-list" id="f-rarity"></div>
+    </div>
+    <div class="filter-group">
+      <h3>Keyword</h3>
+      <div class="check-list wrap" id="f-keyword"></div>
+    </div>
+    <button class="reset" id="f-reset">Reset filters</button>
+  </aside>
+
+  <main class="content">
+    <div class="scope-bar">
+      <span class="count-pill" id="scope-count">—</span>
+      <span class="muted" id="scope-desc"></span>
+    </div>
+
+    <div class="card span-2">
+      <h2>Type split</h2>
+      <div id="type-split"></div>
+    </div>
+
+    <div class="cards-grid" style="margin-top:16px">
+      <div class="card">
+        <h2>Keyword frequency</h2>
+        <div class="bars" id="keyword-bars"></div>
+      </div>
+      <div class="card">
+        <h2>Targeting selector frequency</h2>
+        <div class="bars" id="selector-bars"></div>
+      </div>
+    </div>
+
+    <div class="card span-2" style="margin-top:16px">
+      <h2>Cost distribution</h2>
+      <div class="hist" id="cost-hist"></div>
+    </div>
+
+    <div class="card span-2" style="margin-top:16px">
+      <h2>Minion attack / health distribution</h2>
+      <div class="hist-wrap">
+        <div class="hist-block">
+          <h3>Attack</h3>
+          <div class="hist" id="attack-hist"></div>
+        </div>
+        <div class="hist-block">
+          <h3>Health</h3>
+          <div class="hist" id="health-hist"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var DATA = window.CARD_DATA;
+  if (!DATA) {
+    document.body.innerHTML =
+      '<p style="padding:24px">Could not load <code>data.js</code>. ' +
+      'Run <code>python tooling/card-admin/build_data.py</code> and open this file beside the generated data.</p>';
+    return;
+  }
+
+  var TYPE_COLORS = { MINION: "#e0803a", SPELL: "#4a90d9", WEAPON: "#8e6fd0", HERO_POWER: "#4bbf8a" };
+
+  var el = {
+    source: document.getElementById("source-note"),
+    fClass: document.getElementById("f-class"),
+    fCostMin: document.getElementById("f-cost-min"),
+    fCostMax: document.getElementById("f-cost-max"),
+    fType: document.getElementById("f-type"),
+    fRarity: document.getElementById("f-rarity"),
+    fKeyword: document.getElementById("f-keyword"),
+    fReset: document.getElementById("f-reset"),
+    scopeCount: document.getElementById("scope-count"),
+    scopeDesc: document.getElementById("scope-desc"),
+    typeSplit: document.getElementById("type-split"),
+    keywordBars: document.getElementById("keyword-bars"),
+    selectorBars: document.getElementById("selector-bars"),
+    costHist: document.getElementById("cost-hist"),
+    attackHist: document.getElementById("attack-hist"),
+    healthHist: document.getElementById("health-hist"),
+  };
+
+  el.source.textContent =
+    DATA.totalCards + " cards · " + DATA.classes.length + " classes · from " +
+    (DATA.generatedFrom || []).map(function (p) { return p.split("/").pop(); }).join(", ");
+
+  // ----- Build filter controls from the corpus -----
+  // Class: overview + one option per class.
+  var opt = document.createElement("option");
+  opt.value = "__ALL__";
+  opt.textContent = "All classes (overview)";
+  el.fClass.appendChild(opt);
+  DATA.classes.forEach(function (c) {
+    var o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    el.fClass.appendChild(o);
+  });
+
+  DATA.cardTypes.forEach(function (t) {
+    el.fType.appendChild(makeCheck("type", t, t));
+  });
+
+  var rarities = uniqueSorted(DATA.cards.map(function (c) { return c.rarity; }));
+  rarities.forEach(function (r) {
+    el.fRarity.appendChild(makeCheck("rarity", r, r));
+  });
+
+  var keywords = uniqueSorted(flat(DATA.cards.map(function (c) { return c.keywords; })));
+  if (keywords.length === 0) {
+    el.fKeyword.innerHTML = '<span class="empty">none</span>';
+  } else {
+    keywords.forEach(function (k) {
+      el.fKeyword.appendChild(makeCheck("keyword", k, k));
+    });
+  }
+
+  // ----- Wire events -----
+  [el.fClass, el.fCostMin, el.fCostMax].forEach(function (n) {
+    n.addEventListener("input", render);
+    n.addEventListener("change", render);
+  });
+  [el.fType, el.fRarity, el.fKeyword].forEach(function (container) {
+    container.addEventListener("change", render);
+  });
+  el.fReset.addEventListener("click", function () {
+    el.fClass.value = "__ALL__";
+    el.fCostMin.value = "";
+    el.fCostMax.value = "";
+    checkedBoxes(el.fType).concat(checkedBoxes(el.fRarity)).concat(checkedBoxes(el.fKeyword))
+      .forEach(function (b) { b.checked = false; });
+    render();
+  });
+
+  render();
+
+  // ---------------------------------------------------------------
+  function currentFilter() {
+    var cls = el.fClass.value;
+    var min = parseNum(el.fCostMin.value);
+    var max = parseNum(el.fCostMax.value);
+    var types = checkedValues(el.fType);
+    var rar = checkedValues(el.fRarity);
+    var kws = checkedValues(el.fKeyword);
+    return { cls: cls, min: min, max: max, types: types, rarities: rar, keywords: kws };
+  }
+
+  function applyFilter(f) {
+    return DATA.cards.filter(function (c) {
+      if (f.cls !== "__ALL__" && c["class"] !== f.cls) return false;
+      if (f.min !== null && (c.cost === null || c.cost < f.min)) return false;
+      if (f.max !== null && (c.cost === null || c.cost > f.max)) return false;
+      if (f.types.length && f.types.indexOf(c.type) === -1) return false;
+      if (f.rarities.length && f.rarities.indexOf(c.rarity) === -1) return false;
+      if (f.keywords.length && !f.keywords.every(function (k) { return c.keywords.indexOf(k) !== -1; })) return false;
+      return true;
+    });
+  }
+
+  function aggregate(cards) {
+    var kw = {}, sel = {}, cost = {}, type = {}, atk = {}, hp = {};
+    cards.forEach(function (c) {
+      c.keywords.forEach(function (k) { kw[k] = (kw[k] || 0) + 1; });
+      c.selectors.forEach(function (s) { sel[s] = (sel[s] || 0) + 1; });
+      if (c.cost !== null && c.cost !== undefined) cost[c.cost] = (cost[c.cost] || 0) + 1;
+      if (c.type) type[c.type] = (type[c.type] || 0) + 1;
+      if (c.type === "MINION") {
+        if (c.attack !== null && c.attack !== undefined) atk[c.attack] = (atk[c.attack] || 0) + 1;
+        if (c.health !== null && c.health !== undefined) hp[c.health] = (hp[c.health] || 0) + 1;
+      }
+    });
+    return { keywords: kw, selectors: sel, cost: cost, type: type, attack: atk, health: hp };
+  }
+
+  function render() {
+    var f = currentFilter();
+    var cards = applyFilter(f);
+    var agg = aggregate(cards);
+
+    el.scopeCount.textContent = cards.length + (cards.length === 1 ? " card" : " cards");
+    el.scopeDesc.textContent = describeScope(f);
+
+    renderTypeSplit(agg.type, cards.length);
+    renderBars(el.keywordBars, agg.keywords, "No keywords in this filter.");
+    renderBars(el.selectorBars, agg.selectors, "No targeting selectors in this filter.");
+    renderHist(el.costHist, agg.cost, cards.length === 0);
+
+    var minionCount = agg.type.MINION || 0;
+    renderHist(el.attackHist, agg.attack, minionCount === 0);
+    renderHist(el.healthHist, agg.health, minionCount === 0);
+  }
+
+  function renderTypeSplit(typeCounts, total) {
+    if (total === 0) {
+      el.typeSplit.innerHTML = '<div class="empty">No cards match the current filter.</div>';
+      return;
+    }
+    var segs = "";
+    var legend = "";
+    DATA.cardTypes.forEach(function (t) {
+      var n = typeCounts[t] || 0;
+      if (n === 0) return;
+      var pct = (n / total) * 100;
+      var color = TYPE_COLORS[t] || "#888";
+      var label = pct >= 8 ? (Math.round(pct) + "%") : "";
+      segs += '<div class="split-seg" style="width:' + pct + '%;background:' + color + '" title="' +
+              t + ": " + n + ' (' + pct.toFixed(1) + '%)">' + label + "</div>";
+      legend += '<div class="item"><span class="dot" style="background:' + color + '"></span>' +
+                t + " — " + n + " (" + pct.toFixed(1) + "%)</div>";
+    });
+    el.typeSplit.innerHTML = '<div class="split-bar">' + segs + "</div>" +
+                             '<div class="split-legend">' + legend + "</div>";
+  }
+
+  function renderBars(container, counts, emptyMsg) {
+    var entries = Object.keys(counts).map(function (k) { return [k, counts[k]]; });
+    entries.sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); });
+    if (entries.length === 0) {
+      container.innerHTML = '<div class="empty">' + emptyMsg + "</div>";
+      return;
+    }
+    var maxV = entries[0][1];
+    container.innerHTML = entries.map(function (e) {
+      var w = (e[1] / maxV) * 100;
+      return '<div class="bar-row"><span class="lbl" title="' + e[0] + '">' + e[0] + "</span>" +
+             '<span class="track"><span class="fill" style="width:' + w + '%"></span></span>' +
+             '<span class="val">' + e[1] + "</span></div>";
+    }).join("");
+  }
+
+  function renderHist(container, counts, isEmpty) {
+    var keys = Object.keys(counts).map(Number);
+    if (isEmpty || keys.length === 0) {
+      container.innerHTML = '<div class="empty">No data for this filter.</div>';
+      return;
+    }
+    var min = Math.min.apply(null, keys);
+    var max = Math.max.apply(null, keys);
+    var maxV = Math.max.apply(null, keys.map(function (k) { return counts[k]; }));
+    var html = "";
+    for (var v = min; v <= max; v++) {
+      var n = counts[v] || 0;
+      var h = maxV > 0 ? (n / maxV) * 100 : 0;
+      html += '<div class="col" title="' + v + ": " + n + '">' +
+              '<span class="cnt">' + (n || "") + "</span>" +
+              '<span class="b" style="height:' + h + '%"></span>' +
+              '<span class="ax">' + v + "</span></div>";
+    }
+    container.innerHTML = html;
+  }
+
+  function describeScope(f) {
+    var parts = [];
+    parts.push(f.cls === "__ALL__" ? "All classes" : f.cls);
+    if (f.min !== null || f.max !== null) {
+      if (f.min !== null && f.max !== null) parts.push("cost " + f.min + "–" + f.max);
+      else if (f.min !== null) parts.push("cost ≥ " + f.min);
+      else parts.push("cost ≤ " + f.max);
+    }
+    if (f.types.length) parts.push(f.types.join("/"));
+    if (f.rarities.length) parts.push(f.rarities.join("/"));
+    if (f.keywords.length) parts.push("keyword: " + f.keywords.join("+"));
+    return parts.join(" · ");
+  }
+
+  // ----- small helpers -----
+  function makeCheck(group, value, label) {
+    var l = document.createElement("label");
+    l.className = "chk";
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = value;
+    input.setAttribute("data-group", group);
+    l.appendChild(input);
+    l.appendChild(document.createTextNode(label));
+    return l;
+  }
+  function checkedBoxes(container) {
+    return Array.prototype.slice.call(container.querySelectorAll('input[type="checkbox"]'))
+      .filter(function (b) { return b.checked; });
+  }
+  function checkedValues(container) { return checkedBoxes(container).map(function (b) { return b.value; }); }
+  function parseNum(v) { if (v === "" || v === null || v === undefined) return null; var n = Number(v); return isNaN(n) ? null : n; }
+  function uniqueSorted(arr) {
+    var seen = {}; var out = [];
+    arr.forEach(function (x) { if (x !== null && x !== undefined && !seen[x]) { seen[x] = 1; out.push(x); } });
+    return out.sort();
+  }
+  function flat(arrs) { return Array.prototype.concat.apply([], arrs); }
+})();
+</script>
+</body>
+</html>
