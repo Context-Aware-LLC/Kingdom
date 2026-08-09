@@ -865,14 +865,16 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "HEAL",
-          "amount": 2,
+          "type": "GRANT_KEYWORD",
+          "keyword": "REKINDLE",
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "ANY_FRIENDLY_MINION",
+            "chosenBy": "PLAYER"
           }
         }
       }
     ],
+  
     "setId": "CORE",
     "collectible": false,
     "artId": "grave_hero_power_toll_the_bell"
@@ -916,7 +918,7 @@
     "name": "Tide Wisp",
     "type": "MINION",
     "cost": 0,
-    "attack": 0,
+    "attack": 1,
     "health": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",

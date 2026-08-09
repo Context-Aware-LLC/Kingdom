@@ -93,7 +93,7 @@ namespace Emberfall.Presentation
             // same thing for its search index — that is the precedent this mirrors.
             string rulesText = CardTextGenerator.Generate(def);
             if (!string.IsNullOrEmpty(rulesText))
-                sb.Append(rulesText);
+                sb.Append(CardTextStyling.Style(rulesText));
 
             if (keywords != null)
             {

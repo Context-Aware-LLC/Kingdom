@@ -232,7 +232,7 @@ namespace Emberfall.Presentation
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
             string generatedText = CardTextGenerator.Generate(_def);
-            bodyLabel.text = generatedText;
+            bodyLabel.text = CardTextStyling.Style(generatedText);
             bodyLabel.gameObject.SetActive(generatedText.Length > 0);
         }
 

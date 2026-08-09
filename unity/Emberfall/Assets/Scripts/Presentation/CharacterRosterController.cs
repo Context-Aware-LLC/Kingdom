@@ -646,7 +646,7 @@ namespace Emberfall.Presentation
             if (_createPowerBlock != null)
                 _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
             if (_createPowerName != null) _createPowerName.text = found ? power.Name : "";
-            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextGenerator.Generate(power) : "";
+            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextStyling.Style(CardTextGenerator.Generate(power)) : "";
         }
 
         /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the
