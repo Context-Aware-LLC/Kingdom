@@ -9,24 +9,38 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// The first-launch registration overlay (EF-074e / NOR-231). An email address, then the
-    /// six-digit code that arrives in the reply — and no way past it.
+    /// six-digit code that arrives in the reply — typed by hand, or auto-filled by tapping the
+    /// email's button — and no way past it.
     ///
     /// <para><b>Sam's ruling, 2026-08-08: registration happens on first load and cannot be skipped.</b>
     /// There are no guest accounts and there never will be. So this overlay has no Cancel, no Skip and
     /// no "continue as guest" — not a disabled one, none at all, because a dead button invites
     /// clicking. The only way out is a session.</para>
     ///
-    /// <para><b>The code, not a link (Sam, 2026-08-08; reaffirmed 2026-08-08 after a magic-link
-    /// detour).</b> A deep link would have to be registered on every platform we ship and is flakiest
-    /// on desktop; a code the player reads and types behaves identically everywhere and never takes
-    /// them out of the game. A magic-link build (NOR-246) briefly replaced this — see commit
-    /// <c>acd12c53</c> for that implementation, kept in history rather than pasted back in here — but
-    /// it threw a client-side exception sending the link that was never root-caused, and Sam reverted
-    /// to the code while also fixing the actual cause of the original 6-vs-8 confusion: the project's
-    /// Auth &gt; Email OTP length is now explicitly set to 6, matching <see cref="EmailCode.Length"/>.
-    /// The practical consequence lives in <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/>: this
-    /// device holds nothing between sending and verifying, so force-quitting mid-sign-in costs the
-    /// player nothing.</para>
+    /// <para><b>The code stays primary; the button is a shortcut for the SAME code, not a second auth
+    /// flow (Sam, 2026-08-08).</b> A magic-link build (NOR-246) briefly replaced the code entirely —
+    /// see commit <c>acd12c53</c>, kept in history rather than pasted back in — but it threw a
+    /// client-side exception sending the link that was never root-caused, deep in Supabase's PKCE
+    /// exchange (<see cref="AuthTokenProvider.BeginMagicLinkAsync"/>, <c>Pkce</c>). This overlay does
+    /// not use that path and never has since the revert. Instead the deep link is a plain
+    /// <c>emberfall://auth?code=...&amp;email=...</c> URL the EMAIL TEMPLATE constructs directly from
+    /// Supabase's <c>{{ .Token }}</c> and <c>{{ .Email }}</c> template variables — no
+    /// <c>redirect_to</c>, no PKCE, no Supabase-side exchange at all. Tapping it just hands this
+    /// controller the same six digits a player could have typed, redeemed through the exact
+    /// <see cref="AuthTokenProvider.VerifyEmailCodeAsync"/> call the manual path already uses and that
+    /// NOR-264 proved end to end. The undiagnosed magic-link exception cannot recur here because none
+    /// of its code runs.</para>
+    ///
+    /// <para><b>This has two dependencies outside this file, neither built yet as of 2026-08-08.</b>
+    /// (1) The Supabase email template needs a button/link added pointing at
+    /// <c>emberfall://auth?code={{ .Token }}&amp;email={{ .Email | urlquery }}</c> — dashboard-side,
+    /// Sam's to add. (2) Android needs the <c>emberfall://</c> scheme actually registered as a deep
+    /// link — nothing in this project's Player Settings or an
+    /// <c>Assets/Plugins/Android/AndroidManifest.xml</c> does that today, so
+    /// <see cref="Application.deepLinkActivated"/> will never fire on a real device until that
+    /// registration exists. <b>Neither dependency can be exercised in the Editor</b> — Play mode is
+    /// never launched by the OS off a URL, so this is Android-build-only to test, however clean the
+    /// code below is.</para>
     ///
     /// <para><b>The gate only closes when there is a project to sign into.</b>
     /// <see cref="IsRequired"/> is false on a build with no <c>SupabaseAuthSettings</c> asset, because
@@ -125,14 +139,22 @@ namespace Emberfall.Presentation
                     if (IsSubmit(evt)) OnPrimary();
                 });
             }
+
+            // Android hands a tapped mail link back to a running instance through this (once the
+            // scheme is actually registered — see the type remarks, dependency 2). A cold start (the
+            // OS launched us fresh off the link) is caught separately in Open(), because this event
+            // does not fire for the launch that is already in progress when it is subscribed.
+            Application.deepLinkActivated += OnDeepLinkActivated;
         }
 
-        /// <summary>No-op today — the code flow holds no static event subscription to drop. Kept so
-        /// <see cref="MainMenuController"/>'s <c>OnDisable</c> can call it unconditionally regardless
-        /// of which sign-in flow is wired; a magic-link revival (see the type remarks) is what would
-        /// give this a body again, to unsubscribe <c>Application.deepLinkActivated</c>.</summary>
+        /// <summary>Drop the deep-link subscription. Must be called when the owning screen is
+        /// disabled/destroyed — <see cref="Application.deepLinkActivated"/> is a static event, so an
+        /// instance that never unsubscribes outlives its modal and keeps handling links for a UI that
+        /// is gone. Scene reloads (<see cref="DeviceAccounts.SwitchTo"/>) make a fresh instance on
+        /// every re-enable, so this is not optional.</summary>
         public void Close()
         {
+            Application.deepLinkActivated -= OnDeepLinkActivated;
         }
 
         /// <summary>
@@ -166,6 +188,16 @@ namespace Emberfall.Presentation
                                  "registration cannot run. Create Assets/Resources/SupabaseAuthSettings.asset " +
                                  "to arm it.");
                 onSignedIn?.Invoke();
+                return;
+            }
+
+            // A cold start: the OS may have launched this process directly off the mailed link, which
+            // means deepLinkActivated already fired (or never will, for this launch) before anything
+            // here could have subscribed to it. Application.absoluteURL still carries it.
+            if (TryExtractCodeAndEmail(Application.absoluteURL, out string coldEmail, out string coldCode))
+            {
+                _modal.RemoveFromClassList("mm-modal--hidden");
+                CompleteFromDeepLink(coldEmail, coldCode);
                 return;
             }
 
@@ -290,6 +322,84 @@ namespace Emberfall.Presentation
                 Debug.LogError($"[SignIn] verifying a code threw: {ex}");
                 SetError("Something went wrong signing in. Try again.");
             }
+        }
+
+        /// <summary>Handles a tapped link while this process was already running (backgrounded, then
+        /// resumed via a new intent). Silently ignored when already signed in, or when the URL is not
+        /// one of ours — a stale or foreign link must not disrupt whatever the player is doing.</summary>
+        private void OnDeepLinkActivated(string url)
+        {
+            if (_modal == null) return;
+            if (_auth.IsSignedIn) return;
+            if (!TryExtractCodeAndEmail(url, out string email, out string code)) return;
+
+            _modal.RemoveFromClassList("mm-modal--hidden");
+            CompleteFromDeepLink(email, code);
+        }
+
+        /// <summary>
+        /// Redeem the code a tapped email link carried, through the exact same
+        /// <see cref="AuthTokenProvider.VerifyEmailCodeAsync"/> call the manual code step uses — see
+        /// the type remarks for why that, and not a Supabase-side exchange, is deliberate.
+        /// </summary>
+        private async void CompleteFromDeepLink(string email, string code)
+        {
+            ToCodeStep(email);
+            _codeField?.SetValueWithoutNotify(code);
+            RefreshPrimary();
+
+            SetBusy(true, "Signing in…");
+            try
+            {
+                AuthResult result = await _auth.VerifyEmailCodeAsync(email, code);
+                SetBusy(false, null);
+
+                if (result.Ok)
+                {
+                    _modal?.AddToClassList("mm-modal--hidden");
+                    Action done = _onSignedIn;
+                    _onSignedIn = null;   // the continuation runs once, never on a later re-open
+                    done?.Invoke();
+                    return;
+                }
+
+                // Leave the player on the code step with the mailed code still visible in their inbox
+                // — a stale or already-used link should not force a fresh Send.
+                RefreshPrimary();
+                SetError(Explain(result, "That link's code was not accepted."));
+            }
+            catch (Exception ex)
+            {
+                SetBusy(false, null);
+                Debug.LogError($"[SignIn] completing from a link threw: {ex}");
+                SetError("Something went wrong signing in. Try again.");
+            }
+        }
+
+        /// <summary>Pull <c>code</c> and <c>email</c> out of the game's deep link
+        /// (<c>emberfall://auth?code=...&amp;email=...</c>). Hand-rolled rather than
+        /// <c>HttpUtility</c>, which is not guaranteed present under every IL2CPP linker profile.
+        /// Both fields are required — a link missing either is treated as not ours.</summary>
+        private static bool TryExtractCodeAndEmail(string url, out string email, out string code)
+        {
+            email = "";
+            code = "";
+            if (string.IsNullOrEmpty(url)) return false;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri)) return false;
+
+            string query = uri.Query.TrimStart('?');
+            if (query.Length == 0) return false;
+
+            foreach (string pair in query.Split('&'))
+            {
+                int eq = pair.IndexOf('=');
+                if (eq < 0) continue;
+                string key = Uri.UnescapeDataString(pair.Substring(0, eq));
+                string value = Uri.UnescapeDataString(pair.Substring(eq + 1));
+                if (key == "code") code = value;
+                else if (key == "email") email = value;
+            }
+            return code.Length > 0 && email.Length > 0;
         }
 
         /// <summary>
