@@ -86,6 +86,42 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
+        /// Create a character with <b>no deck at all</b>, and persist just the roster row (NOR-278).
+        ///
+        /// <para><b>Why this exists alongside <see cref="Create"/>.</b> The portrait-grid creation flow
+        /// (NOR-278) chooses only the class pairing and a name; the first deck is a later, separate
+        /// decision made from the roster's "+" plate. A character with an empty
+        /// <see cref="Character.DefaultDeckId"/> and no bound decks is already a legal, fully-rendered
+        /// state — it is exactly what a character whose decks were all deleted looks like (a lone "+"
+        /// row) — so landing there needs no deck, and manufacturing a throwaway one would be state the
+        /// player did not ask for.</para>
+        ///
+        /// <para><b>No crash-ordering concern.</b> <see cref="Create"/>'s deck-first ordering exists to
+        /// keep a half-written pair from leaving a character pointing at a missing deck. There is only
+        /// one write here and nothing points anywhere, so a death mid-write leaves either no character
+        /// or a whole one — never a dangling reference.</para>
+        /// </summary>
+        /// <param name="characterId">Caller-supplied; this assembly mints no identity.</param>
+        /// <exception cref="ArgumentException">The pairing is invalid (see <see cref="Character.IsValidPairing"/>).</exception>
+        public static Character CreateWithoutDeck(
+            ICharacterStore characterStore,
+            string characterId, string name, CardClass primary, CardClass secondary)
+        {
+            if (characterStore == null) throw new ArgumentNullException(nameof(characterStore));
+
+            // Same up-front pairing guard as Create — rejected before the single write, so a bad
+            // pairing leaves no roster row. JsonCharacterStore.Save re-checks it regardless.
+            if (!Character.IsValidPairing(primary, secondary))
+                throw new ArgumentException(
+                    $"'{primary}/{secondary}' is not a valid pairing (both classes must be real and distinct).",
+                    nameof(primary));
+
+            var character = new Character(characterId, name, primary, secondary);
+            characterStore.Save(character);
+            return character;
+        }
+
+        /// <summary>
         /// The blank starter. Named "New Deck" — the same name every empty deck gets on creation
         /// (§2.11), because the player is about to name it and a character-specific placeholder would
         /// only look like it meant something.
