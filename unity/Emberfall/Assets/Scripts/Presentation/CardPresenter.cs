@@ -343,10 +343,11 @@ namespace Emberfall.Presentation
                 bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
                 bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
                 // Wrap inside the parchment bed, not the card — the creation-time rect
-                // (0.90 CardW) let wrapped lines run onto the frame rails.
-                bodyLabel.rectTransform.sizeDelta = new Vector2(0.74f * W, 0.21f * H);
+                // (0.90 CardW) let wrapped lines run onto the frame rails. Widened and
+                // shifted left a touch 2026-08-09 (Sam): text was running out of room.
+                bodyLabel.rectTransform.sizeDelta = new Vector2(0.80f * W, 0.21f * H);
                 bodyLabel.rectTransform.localPosition =
-                    new Vector3(0f, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
+                    new Vector3(-0.03f * W, (0.5f - FrameRarityCatalog.BodyCenterY) * H, z);
             }
         }
 
