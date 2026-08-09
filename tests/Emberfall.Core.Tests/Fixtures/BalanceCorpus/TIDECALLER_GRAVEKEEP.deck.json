@@ -1,0 +1,26 @@
+{
+  "primaryClass": "TIDECALLER",
+  "secondaryClass": "GRAVEKEEP",
+  "characterId": "balance-char-TIDECALLER-GRAVEKEEP",
+  "deckId": "balance-deck-TIDECALLER-GRAVEKEEP",
+  "seed": 0,
+  "entries": [
+    { "id": "grave_bell_novice", "count": 2 },
+    { "id": "rekind_grave_memorial_wisp", "count": 2 },
+    { "id": "tide_hoarfrost_lash", "count": 2 },
+    { "id": "grave_sable_watcher", "count": 2 },
+    { "id": "rekind_tide_channel_mender", "count": 2 },
+    { "id": "tide_glacial_echo", "count": 2 },
+    { "id": "grave_charnel_priest", "count": 2 },
+    { "id": "rekind_grave_grave_builder", "count": 2 },
+    { "id": "rekind_tide_shoreline_pact", "count": 2 },
+    { "id": "tide_fathom_crush", "count": 2 },
+    { "id": "grave_echoing_knell", "count": 2 },
+    { "id": "rekind_tide_tidal_emissary", "count": 2 },
+    { "id": "grave_wailing_chorus", "count": 1 },
+    { "id": "rekind_grave_mass_rebirth", "count": 1 },
+    { "id": "rekind_tide_deepwater_alliance", "count": 2 },
+    { "id": "rekind_tide_marens_peacebroker", "count": 1 },
+    { "id": "grave_warden_of_dusk", "count": 1 }
+  ]
+}

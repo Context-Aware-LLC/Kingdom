@@ -1,0 +1,25 @@
+{
+  "primaryClass": "CLOCKWRIGHT",
+  "secondaryClass": "TEMPEST",
+  "characterId": "balance-char-CLOCKWRIGHT-TEMPEST",
+  "deckId": "balance-deck-CLOCKWRIGHT-TEMPEST",
+  "seed": 0,
+  "entries": [
+    { "id": "clock_gear_imp", "count": 2 },
+    { "id": "clock_snap_bolt", "count": 2 },
+    { "id": "storm_lightning_bolt", "count": 2 },
+    { "id": "rekind_clock_blueprint_archive", "count": 2 },
+    { "id": "rekind_clock_tinkers_gambit", "count": 2 },
+    { "id": "rekind_tempest_chain_caller", "count": 2 },
+    { "id": "rekind_tempest_lightning_lash", "count": 2 },
+    { "id": "storm_static_shock", "count": 2 },
+    { "id": "rekind_tempest_storm_channeler", "count": 2 },
+    { "id": "rekind_tempest_thunderstrike", "count": 2 },
+    { "id": "storm_chain_lightning", "count": 2 },
+    { "id": "clock_clockwork_sniper", "count": 2 },
+    { "id": "rekind_tempest_voltaic_sentinel", "count": 2 },
+    { "id": "rekind_tempest_stormcallers_pact", "count": 2 },
+    { "id": "rekind_tempest_vael", "count": 1 },
+    { "id": "storm_zael_of_the_struck_sky", "count": 1 }
+  ]
+}

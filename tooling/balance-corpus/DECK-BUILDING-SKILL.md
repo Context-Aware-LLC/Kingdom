@@ -55,7 +55,9 @@ any deck, so you can check yours against these without counting by hand.
 | Archetype | Shape that worked | Reasoning |
 |---|---|---|
 | **Control / attrition** | `1:4 2:8 3:5 4:7 5:3 6:2 7:1` | Fat 2 and 4 slots. The 2s are cheap removal and sticky one-health bodies; the 4s are the real card-advantage engines. Only three cards above 5 — you get there on value, not on top-end count. |
+| **Board control / token attrition** | `1:6 2:6 3:8 4:4 5:4 6:1 7:1` | Twenty cards at cost 3 or less establish sacrifice fodder and interaction before board-wide Reinforce effects. Two single-copy finishers are enough when the primary power supplies a body every turn. |
 | **Stall / value** | `1:4 2:6 3:6 4:7 5:2 6:2 7:1 8:2` | The only shape here that earns a real 8-slot, because the hero power keeps producing blockers for free while you sit on an expensive hand. Two 8-drops is the ceiling. |
+| **Spell / burn value** | `1:6 2:10 3:6 4:4 5:2 7:2` | Sixteen cards cost 1–2 so the deck can pair interaction with its 2-mana draw power. Fourteen minions keep pressure on the board; deterministic hero damage complements the random reach. |
 | **Aggro / resilience** | `1:7 2:8 3:7 4:5 5:2 7:1` | 22 of 30 cards cost 3 or less. One card above 5, as a finisher only. If you want a second 6+, you are building midrange. |
 
 Rules of thumb that fell out of this:
@@ -66,6 +68,9 @@ Rules of thumb that fell out of this:
   draw answers with nothing to answer.
 - **Count your draw.** A deck with no draw engine plays its curve and stops. The control and stall
   decks here carry 5–6 sources each; the aggro deck carries none, deliberately.
+- **A draw hero power supports a lower curve, not a slower one.** CLOCKWRIGHT can spend cards
+  quickly because its power continually supplies fuel. Prefer draw attached to a body, bounce, or
+  another useful action so refilling does not surrender the board.
 
 ## Class synergy observations
 
@@ -93,6 +98,13 @@ Read from the whole pool, not from a handful of marquee cards.
 - **VERDANT** — sustain and stats. Large-health bodies plus the game's densest healing. Note that
   most Verdant healing targets `FRIENDLY_HERO` specifically, so it does nothing to stabilise a
   board; it only buys turns.
+- **EMBERWARD** — proactive damage and attack pressure. `FERVOR`, `SKIRMISH`, direct damage, and
+  `BACKDRAFT` exchange future flexibility for immediate tempo; its best decks close before the
+  locked crystals become decisive.
+- **TIDECALLER** — board denial and durable defence. Frost, bounce, `BULWARK`, and `REINFORCE`
+  effects buy time and turn small defenders into relevant bodies without relying on raw damage.
+- **NEUTRAL** — curve glue rather than a standalone plan. Its cards supply `BULWARK`, healing,
+  draw, keyword specialists, and broadly useful bodies when a class pair lacks a cost or role.
 
 ## Rekindling integration notes
 
@@ -113,6 +125,14 @@ cards is a second small effect stapled onto a familiar body.
 - **How much Rekindling a deck ends up with is an outcome, not a target.** These three landed at
   12, 13 and 4 cards of 30 respectively — the aggro deck is low because Emberfall's Tempest spells
   are already the cheapest reach in the pool and Rekindling adds no cheaper one.
+- **TIDECALLER / GRAVEKEEP gets a complete attrition bridge.** Channel Mender heals and
+  `REINFORCE`s, Memorial Wisp and Grave Builder leave value behind, Shoreline Pact combines bounce
+  with `REINFORCE`, and Deepwater Alliance plus Maren's Peacebroker lock down the opposing board
+  while growing yours.
+- **CLOCKWRIGHT / TEMPEST gets tempo draw plus deterministic reach.** Blueprint Archive and
+  Tinker's Gambit replace themselves, Storm Channeler supports the dense spell package,
+  Thunderstrike layers targeted and enemy-wide damage, and Voltaic Sentinel plus Stormcaller's
+  Pact guarantee enemy-hero damage instead of leaving every burn result to random targets.
 
 ## Anti-patterns to avoid
 
@@ -131,6 +151,17 @@ cards is a second small effect stapled onto a familiar body.
   are not blockers.
 - **Reporting counts you did not read off a script.** Run `validate_decks.py` and paste what it
   printed. See the top-level `CLAUDE.md` for why this is a hard rule.
+- **Overfilling a token deck.** Tidal Ward already supplies one body per use. Too many additional
+  token generators board-lock the TIDECALLER player and turn later summon effects into dead cards.
+- **Clearing your own wide board without recovery.** Symmetric area damage belongs only where
+  death triggers, `REKINDLE`, or immediate token generation recovers the loss.
+- **Treating draw count as a win condition.** CLOCKWRIGHT's power and draw-heavy bodies provide
+  consistency, but the current pool has no explicit draw-trigger payoff. The deck still needs
+  tempo-efficient ways to spend those cards.
+- **Depending entirely on random reach.** Pair random enemy damage with effects that explicitly
+  hit the enemy hero or a chosen character so soak results are not dominated by target variance.
+- **Cutting too many bodies for spell synergy.** `ARCANE_SURGE` minions and other tempo bodies must
+  survive long enough for the spells to create an advantage; the spell/burn list keeps 14 minions.
 
 ## Corrections to briefs — read this before you trust a hero-power description
 
@@ -140,6 +171,7 @@ The NOR-319 brief described hero powers that do not match the shipped data. The 
 | Class | Brief said | `HeroPowers.cs` + card data actually says |
 |---|---|---|
 | **GRAVEKEEP** | Toll the Bell — restore 2 HP to hero | **Grant `REKINDLE` to a friendly minion.** Not a heal at all. |
+| **TIDECALLER** | Tidal Ward — summon a 0/2 `BULWARK` | **Summon `token_tide_wisp`, which is a 1/2 `BULWARK`.** |
 | STONEWARDEN | Earthwall — summon a 0/3 `BULWARK` token | Correct (`token_stone_shard`, 0/3, `BULWARK`) |
 | TEMPEST | Chain Spark — 1 damage to 2 random enemies | Correct |
 | VERDANT | Quicken — restore 3 HP to hero | Correct |
