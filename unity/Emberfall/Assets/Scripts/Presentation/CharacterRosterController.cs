@@ -340,10 +340,8 @@ namespace Emberfall.Presentation
         }
 
         // ---- Create flow: two passes over one portrait grid (NOR-278) ---------------------------
-        //
-        // The old create form — name field, primary/secondary dropdowns, swap-order, starter-deck
-        // dropdown, Create button — is gone (game-wide "eliminate forms" principle). A character is
-        // an ordered class pair, chosen by tapping portraits: pass 1 picks the primary (its hero
+        // 
+        // A character is an ordered class pair, chosen by tapping portraits: pass 1 picks the primary (its hero
         // power), pass 2 picks the secondary (cards only). Once both are picked the confirm view
         // collects the ONE remaining field, the name, and creates the character with NO deck — it
         // lands in the roster as a lone "+" row, the same empty state a character whose decks were
@@ -406,16 +404,13 @@ namespace Emberfall.Presentation
             {
                 if (_createPassTitle != null) _createPassTitle.text = "Choose your hero";
                 if (_createPassHelp != null)
-                    _createPassHelp.text = "This first pick locks in your Hero Power — the ability you use " +
-                                           "every game. Your deck can hold cards from both classes you choose.";
+                    _createPassHelp.text = "Hero Power from your first choice — Cards from both.";
             }
             else
             {
                 if (_createPassTitle != null) _createPassTitle.text = "Choose a second class";
                 if (_createPassHelp != null)
-                    _createPassHelp.text = $"This pick adds a second class's cards to your pool. Your Hero " +
-                                           $"Power stays {Pretty(_createPicks[0])}'s — a secondary class never " +
-                                           "brings one of its own.";
+                    _createPassHelp.text = $"This pick adds a second class's cards to your pool.";
             }
 
             foreach (CardClass c in PairableClasses)
