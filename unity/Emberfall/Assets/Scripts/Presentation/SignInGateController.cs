@@ -31,16 +31,16 @@ namespace Emberfall.Presentation
     /// NOR-264 proved end to end. The undiagnosed magic-link exception cannot recur here because none
     /// of its code runs.</para>
     ///
-    /// <para><b>This has two dependencies outside this file, neither built yet as of 2026-08-08.</b>
-    /// (1) The Supabase email template needs a button/link added pointing at
+    /// <para><b>One dependency outside this file remains, as of 2026-08-08.</b> The Supabase email
+    /// template needs a button/link added pointing at
     /// <c>emberfall://auth?code={{ .Token }}&amp;email={{ .Email | urlquery }}</c> — dashboard-side,
-    /// Sam's to add. (2) Android needs the <c>emberfall://</c> scheme actually registered as a deep
-    /// link — nothing in this project's Player Settings or an
-    /// <c>Assets/Plugins/Android/AndroidManifest.xml</c> does that today, so
-    /// <see cref="Application.deepLinkActivated"/> will never fire on a real device until that
-    /// registration exists. <b>Neither dependency can be exercised in the Editor</b> — Play mode is
-    /// never launched by the OS off a URL, so this is Android-build-only to test, however clean the
-    /// code below is.</para>
+    /// Sam's to add. The Android half is done: <c>PlayerSettings.Android.useCustomMainManifest</c> is
+    /// on and <c>Assets/Plugins/Android/AndroidManifest.xml</c> declares the <c>emberfall://auth</c>
+    /// intent-filter on the launcher activity, base-copied from Unity's own last generated
+    /// <c>unityLibrary</c> manifest so every Unity-owned attribute (activity class, IL2CPP lib name,
+    /// theme) matches what Unity would have produced itself. <b>Still cannot be exercised in the
+    /// Editor</b> — Play mode is never launched by the OS off a URL, so an actual Android build is the
+    /// only way to prove the Gradle manifest merge holds, however clean the config looks.</para>
     ///
     /// <para><b>The gate only closes when there is a project to sign into.</b>
     /// <see cref="IsRequired"/> is false on a build with no <c>SupabaseAuthSettings</c> asset, because
