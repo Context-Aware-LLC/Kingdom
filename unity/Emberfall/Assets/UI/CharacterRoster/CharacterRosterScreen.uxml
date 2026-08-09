@@ -151,7 +151,12 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement name="create-detail-bullets" class="hero-detail-bullets" />
-                    <ui:VisualElement class="hero-power-block">
+                    <!-- The hero power block is filled from the class's HERO_POWER card (NOR-291):
+                         the name is the card's own, the description is generated from its typed
+                         rules, so it is the same text the power shows in a match and cannot drift
+                         from what the power actually does. The caption is static. -->
+                    <ui:VisualElement name="create-power-block" class="hero-power-block">
+                        <ui:Label text="Hero Power" class="hero-power-caption" />
                         <ui:Label name="create-power-name" text="" class="hero-power-name" />
                         <ui:Label name="create-power-desc" text="" class="hero-power-desc" />
                     </ui:VisualElement>

@@ -126,6 +126,7 @@ namespace Emberfall.Presentation
         private Label _createDetailName;
         private Label _createDetailPass;
         private VisualElement _createDetailBullets;
+        private VisualElement _createPowerBlock;
         private Label _createPowerName;
         private Label _createPowerDesc;
         private Button _createDetailSelect;
@@ -266,10 +267,15 @@ namespace Emberfall.Presentation
             _createPassTitle = _root.Q<Label>("create-pass-title");
             _createPassHelp = _root.Q<Label>("create-pass-help");
             _createHeroGrid = _root.Q<VisualElement>("create-hero-grid");
+            // The grid has no size until the overlay is shown, and it changes again on rotation.
+            // Re-solving on its own geometry is what makes the first open land at the right size
+            // rather than at the stylesheet's first-frame values.
+            _createHeroGrid?.RegisterCallback<GeometryChangedEvent>(_ => QueueHeroGridLayout());
             _createDetailPortrait = _root.Q<VisualElement>("create-detail-portrait");
             _createDetailName = _root.Q<Label>("create-detail-name");
             _createDetailPass = _root.Q<Label>("create-detail-pass");
             _createDetailBullets = _root.Q<VisualElement>("create-detail-bullets");
+            _createPowerBlock = _root.Q<VisualElement>("create-power-block");
             _createPowerName = _root.Q<Label>("create-power-name");
             _createPowerDesc = _root.Q<Label>("create-power-desc");
             _createDetailSelect = _root.Q<Button>("create-detail-select");
@@ -415,6 +421,85 @@ namespace Emberfall.Presentation
 
             foreach (CardClass c in PairableClasses)
                 _createHeroGrid.Add(BuildHeroTile(c));
+
+            QueueHeroGridLayout();
+        }
+
+        /// <summary>Must match .hero-tile's margin (--space-2), both sides of a tile.</summary>
+        private const float HeroGutter = 16f;
+
+        /// <summary>.hero-tile padding (--space-2) plus its 2px border, both sides — the difference
+        /// between the tile's outer width and the square portrait inside it.</summary>
+        private const float HeroChrome = 20f;
+
+        /// <summary>The name band under the portrait: --type-body plus its --space-2 margin, with
+        /// room for a descender. Charged against the height budget so a tile never overflows its
+        /// row and pushes the last portrait off the bottom of the screen.</summary>
+        private const float HeroNameBand = 36f;
+
+        /// <summary>Below this a portrait stops being a picture you can judge a hero by. Clamped at
+        /// the bottom only — clamping UP is what would push a tile off the grid.</summary>
+        private const float MinHeroArt = 88f;
+
+        /// <summary>Four across is the shape the grid was drawn for, and the shape a landscape
+        /// display wants. Fewer classes than that make their own single row.</summary>
+        private const int HeroColumns = 4;
+
+        private bool _heroLayoutQueued;
+
+        /// <summary>
+        /// Deferred for the same reason as <see cref="QueueStripLayout"/>: the trigger is the grid's
+        /// own GeometryChangedEvent, which Yoga fires mid-layout-pass, and writing sizes from inside
+        /// it edits the tree while Yoga is still walking it.
+        /// </summary>
+        private void QueueHeroGridLayout()
+        {
+            if (_createHeroGrid == null || _heroLayoutQueued) return;
+            _heroLayoutQueued = true;
+            _createHeroGrid.schedule.Execute(() =>
+            {
+                _heroLayoutQueued = false;
+                LayoutHeroGrid();
+            });
+        }
+
+        /// <summary>
+        /// Grow the portraits into whatever space the full-screen overlay has (NOR-288). The tiles
+        /// used to be a fixed 152px inside a 760px dialog, which on a phone in landscape drew eight
+        /// small pictures in the middle of a mostly empty screen. Both axes are solved and the
+        /// smaller wins, so the grid always fits without scrolling: width has to seat
+        /// <see cref="HeroColumns"/> tiles across, and height has to seat every row down.
+        /// </summary>
+        private void LayoutHeroGrid()
+        {
+            if (_createHeroGrid == null) return;
+
+            float availableWidth = _createHeroGrid.resolvedStyle.width - RowSafetyMargin;
+            float availableHeight = _createHeroGrid.resolvedStyle.height - RowSafetyMargin;
+            if (availableWidth <= 0f || availableHeight <= 0f) return;
+
+            int tiles = 0;
+            foreach (VisualElement child in _createHeroGrid.Children())
+                if (child.ClassListContains("hero-tile")) tiles++;
+            if (tiles == 0) return;
+
+            int columns = Mathf.Min(HeroColumns, tiles);
+            int rows = Mathf.CeilToInt(tiles / (float)columns);
+
+            float fromWidth = availableWidth / columns - HeroGutter - HeroChrome;
+            float fromHeight = availableHeight / rows - HeroGutter - HeroChrome - HeroNameBand;
+            float side = Mathf.Max(MinHeroArt, Mathf.Min(fromWidth, fromHeight));
+
+            foreach (VisualElement child in _createHeroGrid.Children())
+            {
+                if (!child.ClassListContains("hero-tile")) continue;
+                child.style.width = side + HeroChrome;
+
+                VisualElement art = child.Q<VisualElement>(className: "hero-tile-art");
+                if (art == null) continue;
+                art.style.width = side;
+                art.style.height = side;   // square: the whole point of the pass
+            }
         }
 
         /// <summary>
@@ -483,11 +568,20 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The per-hero detail overlay: portrait, name, a pass-specific line, and two RESERVED-BUT-
-        /// EMPTY copy blocks — traits/playstyle bullets and the hero power's name/description. That
-        /// copy does not exist yet (FlavorText and hero-power descriptions are unpopulated schema
-        /// fields) and authoring it is out of scope for NOR-278; the layout space is held and the
-        /// strings stay empty.
+        /// The per-hero detail overlay: portrait, name, a pass-specific line, the class's hero power,
+        /// and one still-RESERVED-BUT-EMPTY block — the traits/playstyle bullets, whose copy does not
+        /// exist yet (<c>FlavorText</c> is a wired but unpopulated schema field) and is tracked
+        /// separately.
+        ///
+        /// <para><b>The hero power block is DERIVED, never authored (NOR-291).</b> Its name is the
+        /// power card's own <c>Name</c> and its description is <see cref="CardTextGenerator"/> run
+        /// over that card's typed rules — the identical text the power shows on the board in a match.
+        /// No prose copy is stored anywhere, so a hero power that is later retuned changes its
+        /// description here in the same edit that changes its rules, and the two can never disagree.
+        /// A hand-written description would be a second copy of the rules with nothing comparing them.</para>
+        ///
+        /// <para>The power is shown on both passes. On pass 2 the class being inspected does NOT
+        /// supply the character's power; the pass line above already says so explicitly.</para>
         /// </summary>
         private void OpenHeroDetail(CardClass heroClass)
         {
@@ -507,15 +601,38 @@ namespace Emberfall.Presentation
                     ? "Selecting this hero locks in its Hero Power."
                     : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_createPicks[0])}'s.";
 
-            // Reserved-but-empty copy blocks (NOR-278): left blank until the copy is authored.
+            // Traits/playstyle bullets stay reserved-but-empty (NOR-278): that copy is not authored.
             _createDetailBullets?.Clear();
-            if (_createPowerName != null) _createPowerName.text = "";
-            if (_createPowerDesc != null) _createPowerDesc.text = "";
+
+            FillHeroPower(heroClass);
 
             bool selected = _createPicks.Contains(heroClass);
             if (_createDetailSelect != null) _createDetailSelect.text = selected ? "Deselect" : "Select";
 
             ShowCreateView(CreateView.Detail);
+        }
+
+        /// <summary>
+        /// Fill the detail overlay's hero power block for one class (NOR-291).
+        ///
+        /// <para>The class → power mapping comes from <see cref="HeroPowers.ForClass"/>, the same
+        /// method <c>MatchEngine</c> uses to stamp <c>Hero.HeroPowerId</c> at match start. Reading it
+        /// from there rather than repeating the eight ids means the overlay shows the power the
+        /// player will actually get, by construction.</para>
+        ///
+        /// <para>A class with no power card on disk hides the block rather than showing an empty
+        /// panel — the one shape that is honest when there is nothing to say.</para>
+        /// </summary>
+        private void FillHeroPower(CardClass heroClass)
+        {
+            string powerId = HeroPowers.ForClass(heroClass);
+            CardDefinition power = null;
+            bool found = _db != null && !string.IsNullOrEmpty(powerId) && _db.TryGet(powerId, out power);
+
+            if (_createPowerBlock != null)
+                _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_createPowerName != null) _createPowerName.text = found ? power.Name : "";
+            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextGenerator.Generate(power) : "";
         }
 
         /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the

@@ -106,9 +106,9 @@
 }
 
 /* ---------- Identity plate ----------
- * Top-left, opposite the version footer: who you are on this device. A Button, not a
- * VisualElement, so it is keyboard-reachable and gets focus/hover for free — renaming is the
- * only affordance it has, and an unlabelled clickable div would hide it.
+ * Top-left, opposite the version footer: who you are on this device. It was a Button while
+ * renaming was its one affordance; names are permanent now (NOR-287), so it is a plain
+ * VisualElement with no hover state — nothing about it should read as pressable.
  */
 .mm-identity {
     position: absolute;
@@ -120,9 +120,6 @@
     border-color: rgba(11, 14, 19, 0.7);
     border-radius: var(--space-2);
     padding: var(--space-2) var(--space-4);
-}
-.mm-identity:hover {
-    background-color: rgba(42, 51, 64, 0.7);
 }
 .mm-identity__name {
     font-size: var(--type-label);
