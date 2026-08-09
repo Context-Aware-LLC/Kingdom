@@ -18,7 +18,9 @@ namespace Emberfall.Presentation
     /// destinations still log their intent.</para>
     ///
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
-    /// asked once here. Character creation lives on the roster screen, never on this menu. Everything
+    /// asked once here — <b>once</b> being the whole of it: a display name is permanent (NOR-287), so the
+    /// nameplate top-left only reports it and the client carries no rename flow at all.
+    /// Character creation lives on the roster screen, never on this menu. Everything
     /// is local: no display name travels the wire yet, so the opponent still sees a seat id.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
@@ -35,15 +37,12 @@ namespace Emberfall.Presentation
         private Label _identitySub;
 
         private VisualElement _nameModal;
-        private Label _nameTitle;
         private Label _nameError;
         private TextField _nameField;
         private Label _namePasswordHelp;
         private TextField _namePassword;
         private TextField _namePasswordConfirm;
-        private Button _nameCancel;
         private Button _nameConfirm;
-        private bool _nameRequired;
         private bool _nameBusy;
 
         private VisualElement _accountModal;
@@ -154,7 +153,7 @@ namespace Emberfall.Presentation
 
         private void PromptForNameIfNeeded()
         {
-            if (_account != null && _account.NeedsDisplayName) OpenNameModal(required: true);
+            if (_account != null && _account.NeedsDisplayName) OpenNameModal();
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
@@ -197,11 +196,11 @@ namespace Emberfall.Presentation
 
         // ── Identity plate ──────────────────────────────────────────────────────────────
 
+        /// <summary>The plate reports; it does not act (NOR-287). Nothing is wired to it.</summary>
         private void BindIdentity()
         {
             _identityName = _root.Q<Label>("identity-name");
             _identitySub = _root.Q<Label>("identity-sub");
-            Wire("identity", OnIdentityClicked);
         }
 
         private void SetIdentity(string name, string sub)
@@ -236,28 +235,19 @@ namespace Emberfall.Presentation
             SetIdentity(_account.DisplayNameOr("Unnamed player"), sub);
         }
 
-        private void OnIdentityClicked()
-        {
-            if (_account == null) return;
-            OpenNameModal(required: _account.NeedsDisplayName);
-        }
-
         // ── Name modal ──────────────────────────────────────────────────────────────────
 
         private void BindNameModal()
         {
             _nameModal = _root.Q<VisualElement>("name-modal");
-            _nameTitle = _root.Q<Label>("name-title");
             _nameError = _root.Q<Label>("name-error");
             _nameField = _root.Q<TextField>("name-field");
             _namePasswordHelp = _root.Q<Label>("name-password-help");
             _namePassword = _root.Q<TextField>("name-password");
             _namePasswordConfirm = _root.Q<TextField>("name-password-confirm");
-            _nameCancel = _root.Q<Button>("btn-name-cancel");
             _nameConfirm = _root.Q<Button>("btn-name-confirm");
 
             Wire("btn-name-confirm", ConfirmName);
-            Wire("btn-name-cancel", () => Hide(_nameModal));
 
             if (_nameField == null) return;
             // Enter submits. A single-field form where the only way forward is the mouse is a form
@@ -274,36 +264,29 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Open the name prompt. <paramref name="required"/> is first run — there is no name to fall
-        /// back to, so Cancel is hidden rather than disabled: a dead button invites clicking.
+        /// Open the name prompt. <b>First run is the only time this ever opens (NOR-287)</b> — a display
+        /// name is permanent, so there is no second caller and no Cancel: there is no earlier name to
+        /// fall back to, and a dead button invites clicking.
         ///
-        /// <para><b>Password is offered here too, first run only (NOR-246).</b> This is the one moment
-        /// right after a magic-link sign-in where the player already has a live session to attach a
-        /// password to; renaming later from the identity plate never shows it — that would be a
-        /// "change password" flow, which is not this one and does not exist yet.</para>
+        /// <para><b>Password is offered here too (NOR-246).</b> This is the one moment right after a
+        /// magic-link sign-in where the player already has a live session to attach a password to.
+        /// Changing a password later would be its own flow, which does not exist yet.</para>
         /// </summary>
-        private void OpenNameModal(bool required)
+        private void OpenNameModal()
         {
-            _nameRequired = required;
+            // First-login sizing (NOR-284). This modal only ever opens on first launch now
+            // (NOR-287) — the name/password step the unskippable sign-in ruling leads into — so it
+            // always wears the phone-scale .mm-modal--onboard treatment the sign-in gate carries.
+            // See .mm-modal--onboard in mainmenu.uss.
+            _nameModal?.AddToClassList("mm-modal--onboard");
 
-            // First-login sizing (NOR-284). The required state IS the first launch — the name and
-            // password the unskippable sign-in ruling leads into — so it wears the phone-scale
-            // .mm-modal--onboard treatment the sign-in gate carries. A later rename (required:false)
-            // is a dialog over a menu the player can already read, so it stays at the compact base
-            // size; the class comes off for it. See .mm-modal--onboard in mainmenu.uss.
-            _nameModal?.EnableInClassList("mm-modal--onboard", required);
-
-            if (_nameTitle != null)
-                _nameTitle.text = required ? "What should we call you?" : "Change your name";
-            if (_nameCancel != null)
-                _nameCancel.style.display = required ? DisplayStyle.None : DisplayStyle.Flex;
             if (_nameField != null)
             {
                 _nameField.SetValueWithoutNotify(_account?.Profile.DisplayName ?? "");
                 _nameField.Focus();
             }
 
-            bool offerPassword = required && AuthGateway.IsConfigured;
+            bool offerPassword = AuthGateway.IsConfigured;
             SetVisible(_namePasswordHelp, offerPassword);
             SetVisible(_namePassword, offerPassword);
             SetVisible(_namePasswordConfirm, offerPassword);
@@ -376,15 +359,14 @@ namespace Emberfall.Presentation
             RefreshIdentity();
 
             // Keep the first-run continuation, but move it to the roster: character creation never
-            // lives on the Main Menu.
-            if (_nameRequired && _account.Roster().Count == 0) Go("CharacterRoster");
+            // lives on the Main Menu. First run is the only run that reaches here (OpenNameModal).
+            if (_account.Roster().Count == 0) Go("CharacterRoster");
         }
 
         private void SetNameBusy(bool busy)
         {
             _nameBusy = busy;
             _nameConfirm?.SetEnabled(!busy);
-            _nameCancel?.SetEnabled(!busy);
             _nameField?.SetEnabled(!busy);
             _namePassword?.SetEnabled(!busy);
             _namePasswordConfirm?.SetEnabled(!busy);

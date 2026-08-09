@@ -4,10 +4,13 @@
     <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim" style="background-image: none;"/>
-        <ui:Button name="identity" class="mm-identity">
+        <!-- A read-only nameplate, NOT a button (NOR-287). A display name is set once, on first
+             run, and is permanent from then on — so there is nothing here to open. picking-mode
+             Ignore keeps it from swallowing a tap it has no answer for. -->
+        <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity">
             <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
             <ui:Label name="identity-sub" text="" class="mm-identity__sub"/>
-        </ui:Button>
+        </ui:VisualElement>
         <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly"/>
         <ui:VisualElement name="brand" class="mm-brand">
             <ui:Label text="EMBERFALL" class="mm-wordmark"/>
@@ -30,7 +33,7 @@
         <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden">
             <ui:VisualElement name="name-panel" class="mm-modal__panel">
                 <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
-                <ui:Label name="name-help" text="This is the name other players see. You can change it later." class="mm-modal__help"/>
+                <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
                 <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
                 <!-- Password (NOR-246, faster return sign-in): optional, first-run only. A returning
                      device that already has a name skips this whole modal, so there is nowhere else
@@ -39,8 +42,9 @@
                 <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
                 <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
                 <ui:Label name="name-error" text=" " class="mm-modal__error"/>
+                <!-- No Cancel: this prompt only ever runs on first launch, where there is no name to
+                     fall back to, and it is the only place a name is ever set (NOR-287). -->
                 <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-name-cancel" text="Cancel" class="mm-modal__button"/>
                     <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
