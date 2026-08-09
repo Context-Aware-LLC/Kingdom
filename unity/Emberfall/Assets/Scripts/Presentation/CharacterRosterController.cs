@@ -368,11 +368,6 @@ namespace Emberfall.Presentation
         // Clicking a character's name opens a small card under it. Today it holds one action, and
         // that is the point: Delete used to be a standing button on every row, one stray tap from
         // the decks beside it. Behind a deliberate click it costs no width and no accidents.
-        //
-        // Rename is NOT here, deliberately (Sam, 2026-08-07). Character.Name reaches the versus
-        // nameplate, and VULN-002's control binds a second renderer of that string to the pixel
-        // clip and the same PlayerName.Check the creation form runs — an editor for it is that
-        // whole obligation, not a text field.
 
         private void WireCharacterMenu()
         {
