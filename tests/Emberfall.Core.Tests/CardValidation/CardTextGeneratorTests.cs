@@ -22,7 +22,7 @@ namespace Emberfall.Core.Tests.CardValidation
 
             string text = CardTextGenerator.Generate(new[] { rule });
 
-            Assert.That(text, Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(text, Is.EqualTo("[Toll]: Draw a card."));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace Emberfall.Core.Tests.CardValidation
             CardDefinition mainspring = CardJson.DeserializeArray(File.ReadAllText(path))
                 .Single(card => card.Id == "clock_mainspring_halberd");
 
-            Assert.That(CardTextGenerator.Generate(mainspring), Is.EqualTo("[Toll] Draw a card."));
+            Assert.That(CardTextGenerator.Generate(mainspring), Is.EqualTo("[Toll]: Draw a card."));
             Assert.That(mainspring.Keywords, Is.Empty);
         }
 
@@ -55,7 +55,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new[] { Keyword.BULWARK }, new[] { DrawRule(new TriggeredActivation(Trigger.ON_PLAY)) },
                 "", "art/herald", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Herald] Draw a card."));
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Herald]: Draw a card."));
         }
 
         [Test]
@@ -64,9 +64,13 @@ namespace Emberfall.Core.Tests.CardValidation
             var rows = new (Keyword marker, RuleAction action, string expected)[]
             {
                 (Keyword.BACKDRAFT, new BackdraftAction(2), "[Backdraft] (2)."),
+                // REINFORCE renders no marker at all any more — it prints its stats like the
+                // MODIFY_STATS +1/+1 it is underneath. The legacy carrier keyword is still
+                // suppressed, which is what this row exists to prove: the expectation below holds
+                // no trace of the word, from either the keyword slot or the action.
                 (Keyword.REINFORCE,
                     new ReinforceAction(new TargetSpec("ANY_FRIENDLY_MINION")),
-                    "[Reinforce] a friendly minion."),
+                    "Give a friendly minion +1/+1."),
                 (Keyword.SILENCE,
                     new SilenceAction(new TargetSpec("ANY_MINION")),
                     "[Silence] a minion."),
@@ -110,8 +114,16 @@ namespace Emberfall.Core.Tests.CardValidation
             {
                 string text = CardTextGenerator.Generate(card);
                 AssertMarkerCount(card, text, "Backdraft", rule => rule.Action is BackdraftAction);
-                AssertMarkerCount(card, text, "Reinforce", rule => rule.Action is ReinforceAction);
                 AssertMarkerCount(card, text, "Silence", rule => rule.Action is SilenceAction);
+
+                // REINFORCE is the one legacy slot with NO marker: it prints "+1/+1" instead, so
+                // the word must not reach a card face from either direction — not from the keyword
+                // slot (asserted above) and not from the action. Asserted as an absence rather than
+                // via AssertMarkerCount, whose contract is "one marker per rule that produces one".
+                Assert.That(text, Does.Not.Contain("Reinforce"), card.Id + " must not print Reinforce");
+                if (card.Rules.Any(rule => rule.Action is ReinforceAction))
+                    Assert.That(text, Does.Contain("+1/+1"),
+                        card.Id + " has a REINFORCE rule and must print its stats");
             }
         }
 
@@ -124,15 +136,15 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(ex!.Message, Does.Contain("cardText"));
         }
 
-        [TestCase(Trigger.ON_PLAY, "[Herald] Draw a card.")]
-        [TestCase(Trigger.ON_DEATH, "[Toll] Draw a card.")]
-        [TestCase(Trigger.ON_ATTACK, "[Attack] Draw a card.")]
-        [TestCase(Trigger.ON_DAMAGED, "[Damaged] Draw a card.")]
-        [TestCase(Trigger.ON_HEAL, "[Healed] Draw a card.")]
-        [TestCase(Trigger.ON_TURN_START, "[Turn Start] Draw a card.")]
-        [TestCase(Trigger.ON_TURN_END, "[Turn End] Draw a card.")]
-        [TestCase(Trigger.ON_FRIENDLY_SUMMON, "[Friendly Summon] Draw a card.")]
-        [TestCase(Trigger.ON_SPELL_CAST, "[Spell Cast] Draw a card.")]
+        [TestCase(Trigger.ON_PLAY, "[Herald]: Draw a card.")]
+        [TestCase(Trigger.ON_DEATH, "[Toll]: Draw a card.")]
+        [TestCase(Trigger.ON_ATTACK, "[Attack]: Draw a card.")]
+        [TestCase(Trigger.ON_DAMAGED, "[Damaged]: Draw a card.")]
+        [TestCase(Trigger.ON_HEAL, "[Healed]: Draw a card.")]
+        [TestCase(Trigger.ON_TURN_START, "[Turn Start]: Draw a card.")]
+        [TestCase(Trigger.ON_TURN_END, "[Turn End]: Draw a card.")]
+        [TestCase(Trigger.ON_FRIENDLY_SUMMON, "[Friendly Summon]: Draw a card.")]
+        [TestCase(Trigger.ON_SPELL_CAST, "[Spell Cast]: Draw a card.")]
         [TestCase(Trigger.ON_CAST, "Draw a card.")]
         public void Renders_Every_Supported_Triggered_Activation(Trigger trigger, string expected)
         {
@@ -144,7 +156,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Renders_Aura_Activation()
         {
             Assert.That(CardTextGenerator.Generate(new[] { DrawRule(AuraActivation.Instance) }),
-                Is.EqualTo("[Aura] Draw a card."));
+                Is.EqualTo("[Aura]: Draw a card."));
         }
 
         [TestCase(TurnOwner.CONTROLLER, "While it is your turn, Draw a card.")]
@@ -156,7 +168,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new TriggeredActivation(Trigger.ON_TURN_START), new TurnOwnerCondition(owner),
                 SourceBoundLifetime.Instance, new DrawAction(1));
 
-            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Turn Start] " + expected));
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Turn Start]: " + expected));
         }
 
         [Test]
@@ -182,7 +194,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT))));
 
             Assert.That(CardTextGenerator.Generate(new[] { rule }),
-                Is.EqualTo("[Herald] Give all other Construct friendly minions +1/+1."));
+                Is.EqualTo("[Herald]: Give all other Construct friendly minions +1/+1."));
         }
 
         [TestCase("SELF", "Deal 1 damage to this.")]

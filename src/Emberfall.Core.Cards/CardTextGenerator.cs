@@ -78,9 +78,18 @@ namespace Emberfall.Core.Cards
         }
 
         /// <summary>Renders the bracketed marker a rule prints, derived from how it activates.</summary>
+        /// <remarks>
+        /// <b>The trailing colon is load-bearing.</b> Presentation strips the brackets and renders
+        /// every marker as bold + 120% (Unity's CardTextStyling), so a timing marker and a carrier
+        /// keyword arrive at the player's eye styled identically with only a space between them —
+        /// "Rekindle Herald Reinforce a friendly minion" reads as a list of three keywords rather
+        /// than one keyword and one timing label. The colon is the only thing separating "what this
+        /// minion IS" from "when this effect FIRES", and it lands outside the bracket so the regex
+        /// leaves it unbolded. ON_CAST stays empty: a spell resolving on cast needs no label.
+        /// </remarks>
         private static string TriggerMarker(RuleActivation activation)
         {
-            if (activation is AuraActivation) return "[Aura] ";
+            if (activation is AuraActivation) return "[Aura]: ";
             if (activation is TriggeredActivation triggered) return TriggerMarker(triggered.Trigger);
             throw UnsupportedNode("activation", activation);
         }
@@ -88,15 +97,15 @@ namespace Emberfall.Core.Cards
         /// <summary>Maps one trigger to its marker; a spell's own ON_CAST is deliberately unmarked.</summary>
         private static string TriggerMarker(Trigger trigger) => trigger switch
         {
-            Trigger.ON_PLAY => "[Herald] ",
-            Trigger.ON_DEATH => "[Toll] ",
-            Trigger.ON_ATTACK => "[Attack] ",
-            Trigger.ON_DAMAGED => "[Damaged] ",
-            Trigger.ON_HEAL => "[Healed] ",
-            Trigger.ON_TURN_START => "[Turn Start] ",
-            Trigger.ON_TURN_END => "[Turn End] ",
-            Trigger.ON_FRIENDLY_SUMMON => "[Friendly Summon] ",
-            Trigger.ON_SPELL_CAST => "[Spell Cast] ",
+            Trigger.ON_PLAY => "[Herald]: ",
+            Trigger.ON_DEATH => "[Toll]: ",
+            Trigger.ON_ATTACK => "[Attack]: ",
+            Trigger.ON_DAMAGED => "[Damaged]: ",
+            Trigger.ON_HEAL => "[Healed]: ",
+            Trigger.ON_TURN_START => "[Turn Start]: ",
+            Trigger.ON_TURN_END => "[Turn End]: ",
+            Trigger.ON_FRIENDLY_SUMMON => "[Friendly Summon]: ",
+            Trigger.ON_SPELL_CAST => "[Spell Cast]: ",
             Trigger.ON_CAST => "",
             _ => throw Unsupported("trigger", trigger),
         };
@@ -137,7 +146,18 @@ namespace Emberfall.Core.Cards
             DamageAction a => $"Deal {a.Amount} damage to {Target(a.Target)}.",
             HealAction a => $"Restore {a.Amount} Health to {Target(a.Target)}.",
             ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            ReinforceAction a => $"[Reinforce] {Target(a.Target)}.",
+            // Deliberately NOT a "[Reinforce]" marker, unlike its sibling action markers below.
+            // REINFORCE is a fixed +1/+1 with no timing of its own — BuffHandler hardcodes 1/1 and
+            // routes it through the same path as MODIFY_STATS — so the marker named a mechanic whose
+            // whole definition is shorter than the word, had no entry in the player-facing keyword
+            // glossary to look up, and sat next to the [Herald] it was routinely misread as a
+            // synonym for. Printing the stats says the same thing with no vocabulary to learn, and
+            // renders identically to an authored MODIFY_STATS +1/+1, which is what it already is.
+            //
+            // The target keeps saying "friendly" and must: nothing else on the line carries the
+            // allegiance restriction once the marker is gone. RequiresFriendlyTarget enforces it
+            // (RuleDefinition.cs), but enforcement is not what the player reads.
+            ReinforceAction a => $"Give {Target(a.Target)} +1/+1.",
             GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
             DestroyAction a => $"Destroy {Target(a.Target)}.",
             ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
