@@ -52,11 +52,14 @@ namespace Emberfall.Core.Contracts
     /// capability relation lives in <c>AuraCapabilities</c>; all other source/action/target shapes fail
     /// closed. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
     ///
-    /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> If you are
-    /// adding the first `RaiseSelf`/`Raise` site for a DEAD trigger below, that same change must:
-    /// (1) flip its marker here to LIVE, (2) remove it from the NO-GO list in `CLAUDE.md`, and
-    /// (3) add it to the live-trigger table in `CardValidator` (rule C21). Do all three in the
-    /// commit that adds the raise site — nobody will come back for them later.</para>
+    /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> Every member
+    /// below is currently LIVE for at least one source kind, so this fires for a trigger you ADD.
+    /// Adding one — or adding the first `RaiseSelf`/`Raise` site for a member you marked DEAD —
+    /// must, in that same change: (1) mark its liveness here, (2) table its exact source/trigger
+    /// pairs in `EffectSourceCapabilities`, since omitting it is the only thing that makes
+    /// `C21-TRIGGER-DEAD` reachable and that branch cannot fire today, and (3) update the trigger
+    /// section of `CLAUDE.md` ("Continuous AURA"), which states that unreachability as a fact.
+    /// Do all three in the commit that adds it — nobody will come back for them later.</para>
     ///
     /// <para>Order is load-bearing: these are serialized by name, but do not reorder casually.</para>
     /// </summary>

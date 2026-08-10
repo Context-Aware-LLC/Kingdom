@@ -133,6 +133,15 @@ rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER
 rejects source types without a wired lifecycle. The source of truth is the shared
 `EffectSourceCapabilities` relation — **assign the exact source/trigger pair in the same commit
 that lands its raise path**.
+
+**Liveness is per source type, never per trigger name — generalise the `ON_ATTACK` trap above.**
+Every member of the `Trigger` enum is tabled against at least one source kind, so
+`EffectSourceCapabilities.SupportsAny` is true for all of them and **`C21-TRIGGER-DEAD` is
+currently unreachable**: it can only fire for an enum member added without a table entry. The
+rejection an author actually meets is source-scoped — `C21-TRIGGER-WEAPON-ONLY`,
+`C21-TRIGGER-MINION-ONLY`, `C21-TRIGGER-SOURCE-UNSUPPORTED`. Reading "the trigger is live" as
+"live on my card type" is the mistake this rule exists to catch. The enum's own retirement
+trigger covers this paragraph: adding a trigger is what makes the dead branch reachable again.
 Do not promote a type-scoped trigger to Live until every accepted source type has a runtime path.
 This prose list is no longer the only guard, but keep it in sync with the table.
 
@@ -197,7 +206,14 @@ leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touc
 to update. Conversely — **if you are editing a line that carries one, discharging it is part of
 your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
 
-Placed so far: the `Trigger` enum (`Enums.cs`) and the per-effect loop in `CardValidator`.
+**Do not list the placed markers here — a list of them is itself a record that drifts.** One went
+stale within days of being written, naming `CardValidator`, which never carried a marker at all.
+Ask the repo instead, and note that they are spread across the engine, the Unity presentation layer
+and `tooling/`, not just `src/`:
+
+```
+git grep -n "RETIREMENT TRIGGER" -- src tooling tools unity
+```
 
 **A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
 that is simply true. Only pin the ones that a known, named change will invalidate.
