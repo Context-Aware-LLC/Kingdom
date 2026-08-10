@@ -1,5 +1,7 @@
 """Generate launcher-icon candidates for Emberfall.
 
+# NOR-345 smoke-test: gate-flow verification (safe to remove after PR merges).
+
 Sam's ask (2026-07-27): a launcher icon that reads as "a game" at a glance —
 not specifically "a trading card game" — pulling from the palette already
 established on the main menu backdrop and loading screen: near-black void,
