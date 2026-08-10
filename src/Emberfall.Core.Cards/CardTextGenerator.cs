@@ -162,12 +162,13 @@ namespace Emberfall.Core.Cards
             // even when the phrasing below turns out to suppress the word "random".
             bool random = IsRandomlyChosen(target);
 
-            string description = Quantity(PhrasingFor(target.Selector), target.Count);
+            string description = Quantity(PhrasingFor(target.Selector), target.Count, random);
             if (target.DistinctFrom.Length > 0) description = Another(description);
             if (target.Filter != null) description = Filter(description, target.Filter);
-            // "random" over a target that already resolves to everyone is a contradiction —
-            // nothing was actually chosen — and Randomize() has no case for "all ...", so it was
-            // falling through to a nonsense "random all X" prefix.
+            // Only an explicit count of -1 still reads as "all" once random is accounted for, and
+            // there the pick is every candidate in random ORDER — so the word "random" would claim
+            // a narrowing that did not happen. Randomize() has no "all ..." case either, and used
+            // to fall through to a nonsense "random all X".
             if (random && !description.StartsWith("all ", StringComparison.Ordinal))
                 description = Randomize(description);
             return description;
@@ -240,9 +241,20 @@ namespace Emberfall.Core.Cards
         };
 
         /// <summary>Renders how many of a selector's candidates an effect reaches.</summary>
-        private static string Quantity(SelectorPhrasing phrasing, int? count)
+        /// <remarks>
+        /// This MUST agree with <c>Targeting.RequiredAutomaticCount</c>, which is what actually
+        /// decides how many candidates an automatic spec takes. The non-obvious clause is
+        /// <paramref name="random"/>: an unspecified count on a RANDOM target means ONE there, so a
+        /// selector that would otherwise default to every candidate narrows to a single pick. Death
+        /// Mark and Stomp are exactly that shape, and while the runtime always gave them one random
+        /// minion, this printed "all friendly minions" on the card until 2026-08-10. A generator
+        /// that disagrees with the resolver is the bug the sibling comment on RequiredPlayerCount
+        /// records already having shipped once.
+        /// </remarks>
+        private static string Quantity(SelectorPhrasing phrasing, int? count, bool random)
         {
-            if (count == -1 || (!count.HasValue && phrasing.DefaultsToAll)) return "all " + phrasing.Plural;
+            if (count == -1 || (!count.HasValue && phrasing.DefaultsToAll && !random))
+                return "all " + phrasing.Plural;
             if (!count.HasValue || count.Value == 1) return phrasing.Singular;
             return count.Value + " " + phrasing.Plural;
         }

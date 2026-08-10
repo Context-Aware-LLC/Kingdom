@@ -209,6 +209,39 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
         }
 
+        // Targeting.RequiredAutomaticCount gives an unspecified count on a RANDOM target exactly
+        // ONE candidate, even on a selector that otherwise means every candidate. The generator has
+        // to say the same thing: Death Mark and Stomp are this shape and printed "all friendly
+        // minions" over a runtime that only ever buffed one of them.
+        [TestCase("FRIENDLY_MINIONS", "Give a random friendly minion +1/+1.")]
+        [TestCase("ENEMY_MINIONS", "Give a random enemy minion +1/+1.")]
+        [TestCase("ANY_FRIENDLY_MINION", "Give a random friendly minion +1/+1.")]
+        public void A_Random_Target_With_No_Count_Reads_As_One_Like_The_Resolver_Resolves_It(
+            string selector, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("random_no_count"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new ModifyStatsAction(1, 1, new TargetSpec(selector, TargetChosenBy.RANDOM)));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        // The one case that still reads as "all": an explicit -1 takes every candidate, in random
+        // order. Saying "random" there would claim a narrowing that never happened.
+        [Test]
+        public void An_Explicit_Every_Candidate_Count_Stays_All_Even_When_Randomly_Ordered()
+        {
+            var rule = new RuleDefinition(new RuleId("random_all"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new ModifyStatsAction(1, 1,
+                    new TargetSpec("FRIENDLY_MINIONS", TargetChosenBy.RANDOM, count: -1)));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }),
+                Is.EqualTo("Give all friendly minions +1/+1."));
+        }
+
         [Test]
         public void Renders_Target_Count_And_Distinctness()
         {
