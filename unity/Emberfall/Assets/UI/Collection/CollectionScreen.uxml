@@ -20,6 +20,7 @@
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../Deckbuilder/theme.uss" />
+    <Style src="../Deckbuilder/deckbuilder.uss" />
     <Style src="collection.uss" />
 
     <ui:VisualElement name="root" class="emb-root collection">
