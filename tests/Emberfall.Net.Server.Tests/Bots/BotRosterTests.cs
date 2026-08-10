@@ -1,0 +1,163 @@
+using System;
+using System.IO;
+using Emberfall.Core.Contracts;
+using Emberfall.Net.Server.Bots;
+using Emberfall.Net.Server.Tests.Support;
+using NUnit.Framework;
+
+namespace Emberfall.Net.Server.Tests.Bots
+{
+    [TestFixture]
+    [Category("Unit")]
+    public sealed class BotRosterTests
+    {
+        private static string WriteTemp(string json)
+        {
+            string path = Path.Combine(Path.GetTempPath(), "emberfall-bot-roster-" + Guid.NewGuid().ToString("N") + ".json");
+            File.WriteAllText(path, json);
+            return path;
+        }
+
+        /// <summary>A legal 30-card EMBERWARD/STONEWARDEN deck — 15 distinct ids at the COMMON/RARE
+        /// copy cap (2 each), matching the shape DeckValidator's L1-L3 require. Kept small and
+        /// hand-verified rather than reusing the real <c>tooling/data/bot-roster.json</c>, so this
+        /// test file has no dependency on that file's contents.</summary>
+        private const string LegalCardsJson = @"
+            ""ember_recruit"", ""ember_recruit"",
+            ""ember_zealot"", ""ember_zealot"",
+            ""flame_bolt"", ""flame_bolt"",
+            ""ember_scorch"", ""ember_scorch"",
+            ""cinder_drake"", ""cinder_drake"",
+            ""ember_overheat_golem"", ""ember_overheat_golem"",
+            ""ember_cinder_lance"", ""ember_cinder_lance"",
+            ""stone_sentry"", ""stone_sentry"",
+            ""core_emberling"", ""core_emberling"",
+            ""core_stoneback"", ""core_stoneback"",
+            ""core_hollow_acolyte"", ""core_hollow_acolyte"",
+            ""core_aegis_templar"", ""core_aegis_templar"",
+            ""ember_stoke_the_coals"", ""ember_stoke_the_coals"",
+            ""ward_pebble_sentinel"", ""ward_pebble_sentinel"",
+            ""ward_boulderhide"", ""ward_boulderhide""";
+
+        [Test]
+        public void Loads_A_Well_Formed_Roster()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""ember_knight"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var roster = BotRoster.LoadFromFile(path, db);
+                Assert.That(roster, Has.Count.EqualTo(1));
+                Assert.That(roster[0].AccountUsername, Is.EqualTo("ember_knight"));
+                Assert.That(roster[0].PrimaryClass, Is.EqualTo(CardClass.EMBERWARD));
+                Assert.That(roster[0].SecondaryClass, Is.EqualTo(CardClass.STONEWARDEN));
+                Assert.That(roster[0].Cards, Has.Count.EqualTo(30));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_An_Unknown_Card_Id()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""bad_bot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [""not_a_real_card_id""] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("not_a_real_card_id"));
+                Assert.That(ex.Message, Does.Contain("bad_bot"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_An_Invalid_Class_Pairing()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""bad_bot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""EMBERWARD"",
+                  ""cards"": [""ember_recruit""] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("bad_bot"));
+                Assert.That(ex.Message, Does.Contain("pairing"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_A_Duplicate_Account_Username()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""dupe"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"", ""cards"": [" + LegalCardsJson + @"] },
+                { ""accountUsername"": ""dupe"", ""primaryClass"": ""TIDECALLER"", ""secondaryClass"": ""GRAVEKEEP"", ""cards"": [""tide_initiate""] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("dupe"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_A_Deck_That_Is_Not_30_Cards()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""short_deck"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [""ember_recruit"", ""ember_recruit"", ""flame_bolt""] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("short_deck"));
+                Assert.That(ex.Message, Does.Contain("illegal deck"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_A_Null_Cards_List()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""null_cards"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": null }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("null_cards"));
+                Assert.That(ex.Message, Does.Contain("no cards"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_An_Account_Username_That_Fails_PlayerName_Check()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            // Below PlayerName.MinLength (3).
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""ab"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("ab"));
+            }
+            finally { File.Delete(path); }
+        }
+    }
+}

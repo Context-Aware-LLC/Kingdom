@@ -101,6 +101,10 @@ jobs:
       #
       # ADDING A NEW [Category("X")]? Add it to a stage here in the same commit, or it
       # runs nowhere and green stops meaning anything.
+      #
+      # EXCEPTION: Category=Nightly is deliberately excluded from every stage in this file.
+      # It exists for tests too slow for a blocking per-push gate (real bot-vs-bot matches,
+      # not fixture replays) and is gated instead by nightly.yml on its own schedule.
       - name: "Stage 3b · Collection + CardValidation"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Collection|Category=CardValidation" --logger "trx;LogFileName=collection-cardvalidation.trx" --results-directory artifacts
 

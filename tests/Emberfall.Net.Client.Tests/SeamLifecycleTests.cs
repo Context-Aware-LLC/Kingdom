@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Client;
+using Emberfall.Net.Client.Loopback;
 using Emberfall.Net.Client.Tests.Support;
 using NUnit.Framework;
 
@@ -96,6 +97,34 @@ namespace Emberfall.Net.Client.Tests
             // The pending task RESOLVES (never hangs, never faults into runner error-spam).
             CommandResult r = await pending;
             Assert.That(r.Accepted, Is.False);
+        }
+
+        /// <summary>Regression for the BotSeatRunner round-2 fix: a transport close that lands
+        /// while ConnectAsync is still awaiting the match_start frame — e.g. BotSeatRunner.Close()
+        /// racing Bind()/ConnectAsync before the server ever enqueues match_start — must fault
+        /// ConnectAsync's task instead of leaving it (and every caller awaiting it) blocked
+        /// forever. No peer drains this transport at all, so match_start can never arrive; only
+        /// the fix in NetworkedMatchSession.OnPeerClosed can unblock this.</summary>
+        [Test]
+        [CancelAfter(5000)]
+        public async Task Peer_Close_Before_Match_Start_Faults_ConnectAsync_Instead_Of_Hanging()
+        {
+            var transport = new LoopbackTransport();
+            using var c0 = new NetworkedMatchSession(transport, new ClientOptions { DeviceToken = "test-device-close-race" });
+
+            Task connect = c0.ConnectAsync(LoopbackUri);
+            transport.ServerClose();
+
+            // A bounded wait, not the bare 'await' — a regression here must fail fast with a clear
+            // "did not complete" message rather than riding the whole [CancelAfter] budget.
+            Task winner = await Task.WhenAny(connect, Task.Delay(TimeSpan.FromSeconds(2)));
+            Assert.That(winner, Is.SameAs(connect), "ConnectAsync hung instead of faulting on a pre-match_start peer close.");
+
+            Exception? caught = null;
+            try { await connect; } catch (Exception ex) { caught = ex; }
+            Assert.That(caught, Is.Not.Null, "ConnectAsync should fault, not complete silently, when the peer closes before match_start.");
+            Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
+            Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.Forfeited));
         }
     }
 }

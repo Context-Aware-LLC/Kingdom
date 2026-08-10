@@ -10,6 +10,7 @@ using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Accounts;
+using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
@@ -47,6 +48,7 @@ namespace Emberfall.Net.Server.Transport
         private readonly Func<AccountId, int> _ratingForAccount;
         private readonly IIdentityTokenVerifier? _tokenVerifier;
         private readonly IAccountStore? _accountStore;
+        private readonly IBotPool? _botPool;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
@@ -64,7 +66,8 @@ namespace Emberfall.Net.Server.Transport
         public MatchGate(
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
             IReplayStore replay, ITelemetrySink? telemetry = null,
-            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null)
+            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
+            IBotPool? botPool = null)
             : this(
                 opts,
                 time,
@@ -75,7 +78,8 @@ namespace Emberfall.Net.Server.Transport
                 _ => opts.Matchmaking.DefaultRating,
                 telemetry,
                 tokenVerifier,
-                accountStore)
+                accountStore,
+                botPool)
         {
         }
 
@@ -83,7 +87,8 @@ namespace Emberfall.Net.Server.Transport
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
             IReplayStore replay, IMatchmakingQueue matchmaking,
             Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null,
-            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null)
+            IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
+            IBotPool? botPool = null)
         {
             _opts = opts;
             _time = time;
@@ -95,6 +100,7 @@ namespace Emberfall.Net.Server.Transport
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
             _tokenVerifier = tokenVerifier;
             _accountStore = accountStore;
+            _botPool = botPool;
         }
 
         public int LiveSessions
@@ -107,7 +113,11 @@ namespace Emberfall.Net.Server.Transport
         private sealed record Seating(SessionPump Pump, int Seat);
         private sealed record WaitingPlayer(
             MatchmakingTicket Ticket,
-            WebSocketConnection Conn,
+            /// <summary>Widened from <see cref="WebSocketConnection"/> so a bot's
+            /// <see cref="BotSeatRunner"/> — the other <see cref="IServerConnection"/> implementation —
+            /// can occupy this same waiter shape when <see cref="TryBotFillTimedOutTickets"/> seats one
+            /// directly through <see cref="StartMatch"/>.</summary>
+            IServerConnection Conn,
             AccountId Account,
             /// <summary>Already through PlayerName.Check (VULN-002 §4.1). Empty means "use the
             /// server-assigned fallback" — either the player never set one or theirs was refused,
@@ -116,7 +126,11 @@ namespace Emberfall.Net.Server.Transport
             /// <summary>The seat's own revalidated deck (EF-071), or null when it submitted none and
             /// is to be dealt the prebuilt fallback for its seat.</summary>
             SeatDeck? Deck,
-            TaskCompletionSource<Seating?> Seated);
+            TaskCompletionSource<Seating?> Seated,
+            /// <summary>Server clock ms at enqueue (<see cref="ITimeSource.NowMs"/>). Read by
+            /// <see cref="TryBotFillTimedOutTickets"/> against <see cref="ServerOptions.BotFillDelayMs"/>
+            /// on the SAME band-widening wake the queue already uses — no new timer.</summary>
+            long EnqueuedAtMs);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -321,7 +335,7 @@ namespace Emberfall.Net.Server.Transport
                 Guid.NewGuid().ToString("N"),
                 _ratingForAccount(account));
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var waiter = new WaitingPlayer(ticket, conn, account, displayName, submitted, mySeating);
+            var waiter = new WaitingPlayer(ticket, conn, account, displayName, submitted, mySeating, _time.NowMs);
 
             lock (_lock)
             {
@@ -349,6 +363,7 @@ namespace Emberfall.Net.Server.Transport
                         {
                             await wake;
                             StartReadyMatches();
+                            TryBotFillTimedOutTickets();
                         }
                     }
                     return await mySeating.Task;
@@ -399,6 +414,70 @@ namespace Emberfall.Net.Server.Transport
         }
 
         /// <summary>
+        /// Fills the oldest ticket that has waited &gt;= <see cref="ServerOptions.BotFillDelayMs"/> with a
+        /// bot from the pool, by removing it from the real queue and calling the SAME <see cref="StartMatch"/>
+        /// two humans go through — no new pairing algorithm, no reliance on rating-band luck (design doc
+        /// §Timeout → direct pairing). A no-op unless <see cref="_botPool"/> is configured. If the pool has
+        /// no bot free, the ticket is left queued and re-evaluated on the next wake.
+        /// </summary>
+        private void TryBotFillTimedOutTickets()
+        {
+            if (_botPool is null) return;
+            while (true)
+            {
+                WaitingPlayer? oldest = null;
+                BotHandle? bot;
+                lock (_lock)
+                {
+                    if (_sessions.Count + _pendingSessions >= _opts.MaxSessions) return;
+                    long now = _time.NowMs;
+                    foreach (var w in _waiting.Values)
+                    {
+                        if (now - w.EnqueuedAtMs < _opts.BotFillDelayMs) continue;
+                        if (oldest is null || w.EnqueuedAtMs < oldest.EnqueuedAtMs) oldest = w;
+                    }
+                    if (oldest is null) return;
+
+                    bot = _botPool.TryAcquire();
+                    if (bot is null) return;   // no bot free; leave the ticket queued, retry next wake
+
+                    _waiting.Remove(oldest.Ticket.Id);
+                    _matchmaking.Remove(oldest.Ticket.Id);
+                    _pendingSessions++;
+                }
+
+                var botSeated = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var botTicket = new MatchmakingTicket("bot-" + Guid.NewGuid().ToString("N"), oldest.Ticket.Rating);
+                var botWaiter = new WaitingPlayer(
+                    botTicket, bot.Seat, bot.Account, bot.DisplayName, bot.Deck, botSeated, _time.NowMs);
+
+                try
+                {
+                    StartMatch(oldest, botWaiter);
+                }
+                finally
+                {
+                    // LOAD-BEARING INVARIANT: this synchronous .Result read is only safe because
+                    // StartMatch always completes botSeated (TrySetResult, success or catch) BEFORE
+                    // returning/rethrowing — see the two TrySetResult sites in StartMatch. If a future
+                    // refactor makes StartMatch's completion asynchronous relative to its own return,
+                    // this becomes a deadlock (or, since TrySetResult uses
+                    // RunContinuationsAsynchronously, at best a race) rather than the safe blocking
+                    // read it is today.
+                    if (botSeated.Task.Result is Seating seated)
+                    {
+                        bot.Seat.Bind(seated.Pump);
+                        seated.Pump.RunTask.ContinueWith(_ => bot.Release(), TaskScheduler.Default);
+                    }
+                    else
+                    {
+                        bot.Release();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// The nameplate string for a seat: the player's own name once it has passed
         /// <c>PlayerName.Check</c>, otherwise the server-minted <c>PlayerId</c> (VULN-002 §4.1's
         /// "server-assigned fallback").
@@ -428,9 +507,13 @@ namespace Emberfall.Net.Server.Transport
                 matchKey = id.Value;
                 ulong seed = MintSeed();
 
+                // A null _botPool (bot-fill disabled or not yet provisioned) leaves Classify's third
+                // argument null too, which is the original two-way Ladder/AiSoak split — unchanged
+                // behavior for every deployment that hasn't opted into bot-fill.
+                Func<AccountId, bool>? isBotAccount = _botPool is null ? null : _botPool.IsBotAccount;
                 var attribution = new MatchAttribution(
                     first.Account, second.Account,                                // FIFO seat order
-                    TelemetrySources.Classify(first.Account, second.Account));
+                    TelemetrySources.Classify(first.Account, second.Account, isBotAccount));
 
                 // EF-071: deal from each seat's SUBMITTED deck where present, else the prebuilt fallback
                 // for that seat. HP + spark stay whatever the prebuilt pair uses (PrebuiltDecks' interim
@@ -467,6 +550,10 @@ namespace Emberfall.Net.Server.Transport
                 }, TaskScheduler.Default);
 
                 session.Start(first.Conn, second.Conn);
+                // Success path: both waiters' Seated TCS complete before StartMatch returns. See the
+                // LOAD-BEARING INVARIANT note at TryBotFillTimedOutTickets' `.Result` read — that
+                // synchronous read depends on completion happening on THIS path or the catch below,
+                // never later.
                 first.Seated.TrySetResult(new Seating(pump, 0));
                 second.Seated.TrySetResult(new Seating(pump, 1));
             }
@@ -484,6 +571,9 @@ namespace Emberfall.Net.Server.Transport
                         _pendingSessions--;
                     }
                 }
+                // Failure path: same invariant as the success path above — both Seated TCS must
+                // complete (with null) before this rethrows, or TryBotFillTimedOutTickets' `.Result`
+                // read blocks forever.
                 first.Seated.TrySetResult(null);
                 second.Seated.TrySetResult(null);
                 throw;

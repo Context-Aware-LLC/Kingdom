@@ -23,7 +23,7 @@
 create table if not exists match (
   match_id    text        primary key,
   env         text        not null,   -- fly | local  (which machine ground the row)
-  source      text        not null,   -- ai_soak | ladder
+  source      text        not null,   -- ai_soak | ladder | bot_fill
   ended_at    timestamptz not null,
   status      text        not null,   -- complete | void
   end_reason  text,                   -- win|concede|timeout|disconnect|unknown ; null for void

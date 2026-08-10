@@ -13,8 +13,16 @@ namespace Emberfall.Net.Server.Telemetry
     ///
     /// <para>Derived server-side from the seats' synthetic tokens, never declared by the client — a
     /// client that could label its own matches could label them out of the ladder sample.</para>
+    ///
+    /// <para><b><see cref="BotFill"/></b> (AI opponent matchmaking fallback, 2026-08-09) is a real
+    /// human paired against a server-driven bot after <c>MatchGate.TryBotFillTimedOutTickets</c>
+    /// timed the human's ticket out. It is NOT <see cref="Ladder"/> — the bot's play is a fixed
+    /// deck under <c>Emberfall.Net.Server.Bots.GreedyAi</c>, so folding these rows into the ladder
+    /// sample would contaminate the balance data with matches that are not human-vs-human. It is
+    /// also NOT <see cref="AiSoak"/> — that source means BOTH seats are synthetic soak accounts;
+    /// here one seat is a real human. Filter it out of both when reading the balance dataset.</para>
     /// </summary>
-    public enum TelemetrySource { Ladder, AiSoak }
+    public enum TelemetrySource { Ladder, AiSoak, BotFill }
 
     /// <summary>One seat's result. Mirrors the `result` column in telemetry-spec §1's per-seat block.</summary>
     public enum SeatResult { Win, Loss, Draw }
@@ -38,15 +46,29 @@ namespace Emberfall.Net.Server.Telemetry
         private static readonly AccountId Soak1 = AccountId.FromDeviceToken(SoakTokenSeat1);
 
         /// <summary>
-        /// <see cref="TelemetrySource.AiSoak"/> only when BOTH seats are synthetic. A human paired
-        /// against a soak seat is not an AI-vs-AI match, and burying that row in the soak sample
-        /// would quietly delete a real ladder result.
+        /// <see cref="TelemetrySource.AiSoak"/> only when BOTH seats are synthetic soak accounts. A
+        /// human paired against a soak seat is not an AI-vs-AI match, and burying that row in the
+        /// soak sample would quietly delete a real ladder result.
+        ///
+        /// <para><paramref name="isBotAccount"/> is the seam <c>MatchGate</c> plumbs its live
+        /// <c>IBotPool</c> through (design doc; bot-fill telemetry finding) — null (every existing
+        /// caller/test) preserves the original two-way Ladder/AiSoak split exactly. When supplied
+        /// and either seat is a roster bot, the pairing is <see cref="TelemetrySource.BotFill"/>
+        /// UNLESS both seats are already synthetic soak accounts, which stays <see cref="TelemetrySource.AiSoak"/>
+        /// — soak's own fixed device tokens are never real bot accounts, so the two conditions do
+        /// not actually overlap in production, but the precedence is fixed here rather than left to
+        /// evaluation order at each call site.</para>
         /// </summary>
-        public static TelemetrySource Classify(AccountId p0, AccountId p1)
+        public static TelemetrySource Classify(AccountId p0, AccountId p1, Func<AccountId, bool>? isBotAccount = null)
         {
             bool synthetic0 = p0 == Soak0 || p0 == Soak1;
             bool synthetic1 = p1 == Soak0 || p1 == Soak1;
-            return synthetic0 && synthetic1 ? TelemetrySource.AiSoak : TelemetrySource.Ladder;
+            if (synthetic0 && synthetic1) return TelemetrySource.AiSoak;
+
+            if (isBotAccount is not null && (isBotAccount(p0) || isBotAccount(p1)))
+                return TelemetrySource.BotFill;
+
+            return TelemetrySource.Ladder;
         }
     }
 

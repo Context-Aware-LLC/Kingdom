@@ -1,0 +1,46 @@
+[
+  {
+    "accountUsername": "ember_knight",
+    "primaryClass": "EMBERWARD",
+    "secondaryClass": "STONEWARDEN",
+    "cards": [
+      "ember_recruit", "ember_recruit",
+      "ember_zealot", "ember_zealot",
+      "flame_bolt", "flame_bolt",
+      "ember_scorch", "ember_scorch",
+      "cinder_drake", "cinder_drake",
+      "ember_overheat_golem", "ember_overheat_golem",
+      "ember_cinder_lance", "ember_cinder_lance",
+      "stone_sentry", "stone_sentry",
+      "core_emberling", "core_emberling",
+      "core_stoneback", "core_stoneback",
+      "core_hollow_acolyte", "core_hollow_acolyte",
+      "core_aegis_templar", "core_aegis_templar",
+      "ember_stoke_the_coals", "ember_stoke_the_coals",
+      "ward_pebble_sentinel", "ward_pebble_sentinel",
+      "ward_boulderhide", "ward_boulderhide"
+    ]
+  },
+  {
+    "accountUsername": "tide_warden",
+    "primaryClass": "TIDECALLER",
+    "secondaryClass": "GRAVEKEEP",
+    "cards": [
+      "tide_initiate", "tide_initiate",
+      "tide_oracle", "tide_oracle",
+      "frost_ripple", "frost_ripple",
+      "tide_reefguard", "tide_reefguard",
+      "tide_deep_bargain", "tide_deep_bargain",
+      "wave_caller", "wave_caller",
+      "stone_sentry", "stone_sentry",
+      "wandering_scout", "wandering_scout",
+      "core_stoneback", "core_stoneback",
+      "core_bonehound", "core_bonehound",
+      "core_hollow_acolyte", "core_hollow_acolyte",
+      "grave_gatewatch_whelp", "grave_gatewatch_whelp",
+      "grave_ashen_archivist", "grave_ashen_archivist",
+      "grave_bell_novice", "grave_bell_novice",
+      "grave_tollkeeper_moth", "grave_tollkeeper_moth"
+    ]
+  }
+]

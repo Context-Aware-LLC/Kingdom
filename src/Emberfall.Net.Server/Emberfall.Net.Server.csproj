@@ -59,6 +59,10 @@
          (never trust the client). UnityEngine-free + float-free, so it does not touch the Firewall. -->
     <ProjectReference Include="..\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
+    <!-- Task 6 (AI opponent matchmaking): BotSeatRunner wraps the production LoopbackTransport and
+         drives a real NetworkedMatchSession — the same client class a human uses — so a bot seat
+         needs the client assembly. -->
+    <ProjectReference Include="..\Emberfall.Net.Client\Emberfall.Net.Client.csproj" />
   </ItemGroup>
 
 </Project>

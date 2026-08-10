@@ -410,6 +410,26 @@ namespace Emberfall.Net.Server.Tests
         }
 
         [Test]
+        public void A_Bot_Fill_Pairing_Classifies_As_BotFill_Not_Ladder()
+        {
+            var human = AccountId.FromDeviceToken("a-real-tester-device");
+            var bot = AccountId.FromAuthenticatedAccount("player-ember_knight");
+            bool IsBot(AccountId a) => a == bot;
+
+            // Either seat order.
+            Assert.That(TelemetrySources.Classify(human, bot, IsBot), Is.EqualTo(TelemetrySource.BotFill));
+            Assert.That(TelemetrySources.Classify(bot, human, IsBot), Is.EqualTo(TelemetrySource.BotFill));
+
+            // No predicate supplied (bot-fill disabled, or every existing pre-bot-fill caller) is
+            // the original two-way split — unchanged.
+            Assert.That(TelemetrySources.Classify(human, bot), Is.EqualTo(TelemetrySource.Ladder));
+
+            // Neither seat is a bot: still Ladder even with a predicate supplied.
+            var otherHuman = AccountId.FromDeviceToken("another-real-tester-device");
+            Assert.That(TelemetrySources.Classify(human, otherHuman, IsBot), Is.EqualTo(TelemetrySource.Ladder));
+        }
+
+        [Test]
         public void The_Soak_Tokens_Still_Match_What_NetSoak_Sends()
         {
             // Classification is derived from these exact strings. If NetSoak's SoakDevice() ever

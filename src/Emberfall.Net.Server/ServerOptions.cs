@@ -67,5 +67,19 @@ namespace Emberfall.Net.Server
         /// close that never came.</para>
         /// </summary>
         public long HelloTimeoutMs { get; init; } = 10_000;
+
+        /// <summary>
+        /// A queued ticket waited this long with no human match — fill the opponent seat with a
+        /// server-driven AI instead (design doc, 2026-08-09). Checked on the SAME band-widening wake the
+        /// queue already uses, so this adds no new timer. Bot-fill is otherwise inert unless
+        /// <see cref="ServerConfig.BotRosterPath"/> is also set.
+        ///
+        /// <para><b>Not an exact wait.</b> Because this is only evaluated on the band-widening wake
+        /// rather than its own timer, the real wait rounds UP to the next
+        /// <see cref="MatchmakingQueueOptions.BandWideningIntervalMs"/> tick — with both left at
+        /// their 10s defaults, a ticket can sit for anywhere from 10s to 20s before it is eligible
+        /// for bot-fill, not exactly 10s.</para>
+        /// </summary>
+        public long BotFillDelayMs { get; init; } = 10_000;
     }
 }

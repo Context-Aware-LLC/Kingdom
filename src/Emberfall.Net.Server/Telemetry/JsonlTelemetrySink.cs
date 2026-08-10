@@ -268,6 +268,7 @@ namespace Emberfall.Net.Server.Telemetry
         private static string Source(TelemetrySource s) => s switch
         {
             TelemetrySource.AiSoak => "ai_soak",
+            TelemetrySource.BotFill => "bot_fill",
             _ => "ladder",
         };
     }

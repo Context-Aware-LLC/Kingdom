@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Emberfall.Net.Server.Accounts;
+using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
@@ -70,6 +71,15 @@ namespace Emberfall.Net.Server
         /// </summary>
         public TelemetryDrain? TelemetryDrain { get; init; }
 
+        /// <summary>
+        /// Path to the bot roster JSON (design doc §Bot roster & provisioning). Null (default) disables
+        /// bot-fill entirely — matchmaking behaves exactly as it does today. Requires
+        /// <see cref="AccountStore"/> to also be set; if it is not, bot-fill is skipped with a logged
+        /// warning rather than a startup failure, since a dev box without an account store is a normal,
+        /// supported configuration.
+        /// </summary>
+        public string? BotRosterPath { get; init; }
+
         public static ServerConfig FromEnvironment()
         {
             string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
@@ -105,6 +115,10 @@ namespace Emberfall.Net.Server
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
+                // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
+                // deployment — null here (unset) is what keeps every existing deploy's matchmaking
+                // behavior unchanged, same as every other optional seam above.
+                BotRosterPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_ROSTER"),
             };
         }
 
@@ -140,8 +154,10 @@ namespace Emberfall.Net.Server
         public static WebApplication Build(ServerConfig cfg) => BuildWithGate(cfg).App;
 
         /// <summary>Same app, with the gate handed back so a test can read per-match attribution
-        /// (C-G1-8) without a global.</summary>
-        public static (WebApplication App, MatchGate Gate) BuildWithGate(ServerConfig cfg)
+        /// (C-G1-8) without a global. <paramref name="botPoolOverride"/> lets a test inject a
+        /// <see cref="BotPool"/> it has already seeded via <c>MarkReady</c>, bypassing the real
+        /// (async, file-reading) provisioning path for a fast, deterministic test.</summary>
+        public static (WebApplication App, MatchGate Gate) BuildWithGate(ServerConfig cfg, IBotPool? botPoolOverride = null)
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls(cfg.Urls);
@@ -157,22 +173,44 @@ namespace Emberfall.Net.Server
                 builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(postgresAccountStore));
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
+            var db = FileCardDatabase.LoadDirectory(cardsDir);
             var time = new SystemTimeSource();
             var matchmaking = cfg.MatchmakingQueue ??
                 new BandWideningMatchmakingQueue(time, cfg.Options.Matchmaking);
             var ratingForAccount = cfg.MatchmakingRatingForAccount ??
                 (_ => cfg.Options.Matchmaking.DefaultRating);
+
+            // Bot-fill (design doc §Bot roster & provisioning): a roster path with no account store
+            // is a normal dev-box configuration, not a startup failure — logged and skipped.
+            IBotPool? botPool = botPoolOverride;
+            if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotRosterPath))
+            {
+                if (cfg.AccountStore is null)
+                {
+                    Console.Error.WriteLine("[bots] BotRosterPath is set but no AccountStore is configured — bot-fill disabled.");
+                }
+                else
+                {
+                    var roster = BotRoster.LoadFromFile(cfg.BotRosterPath!, db);
+                    var pool = new BotPool(db);
+                    builder.Services.AddSingleton<IHostedService>(
+                        new BotAccountProvisioner(cfg.AccountStore, roster, pool));
+                    botPool = pool;
+                }
+            }
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
-                FileCardDatabase.LoadDirectory(cardsDir),
+                db,
                 new PrebuiltDeckProvider(),
                 new JsonlReplayStore(cfg.ReplaysDir),
                 matchmaking,
                 ratingForAccount,
                 cfg.Telemetry,
                 cfg.TokenVerifier,
-                cfg.AccountStore);
+                cfg.AccountStore,
+                botPool);
 
             var app = builder.Build();
             app.UseWebSockets();

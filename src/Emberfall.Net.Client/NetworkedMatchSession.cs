@@ -533,6 +533,14 @@ namespace Emberfall.Net.Client
                 _deadReason = DeadReason.Forfeited;
                 _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
                 ClearPendingUnlocked();
+                // A transport close that lands while ConnectAsync is still awaiting the match_start
+                // frame (e.g. the server vacates/supersedes the seat before it ever sends one) would
+                // otherwise leave ConnectAsync's `await _matchStarted.Task` blocked forever — nothing
+                // else resolves that TCS besides OnMatchStart and FailContractMismatch, and neither
+                // fires on a plain peer-close. Mirrors FailContractMismatch's own TrySetException; a
+                // no-op once OnMatchStart already resolved it (TrySet*, RC-F7-style idempotence).
+                _matchStarted?.TrySetException(
+                    new InvalidOperationException($"Connection closed before the match started ({_deadReason})."));
             }
         }
 
