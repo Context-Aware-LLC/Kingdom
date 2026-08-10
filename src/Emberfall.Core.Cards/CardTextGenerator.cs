@@ -277,6 +277,11 @@ namespace Emberfall.Core.Cards
             // is what dropping it produces. That the result ("your other weapon") then claims you
             // hold two weapons is a fact about the authored data, not about this phrasing: the
             // "your" selectors name unique things, so a distinctFrom on one excludes nothing.
+            //
+            // UNDECIDED — issue #143. If you are here because you authored the first distinctFrom
+            // on FRIENDLY_WEAPON/FRIENDLY_HERO, this wording was a renderer's guess and no card has
+            // ever exercised it. Read #143 and settle it before shipping the card, because the
+            // alternative on the table is that CardValidator refuses your target outright.
             if (TryStripPrefix(description, "your ", out rest)) return "your other " + rest;
             if (TryInsertAfterCount(description, "other ", out string counted)) return counted;
             return "another " + description;
