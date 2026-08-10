@@ -316,5 +316,14 @@ assuming otherwise has already caused one push to the wrong repo.
 Unity terminal before work starts. A domain reload takes ~45 s, and every other session calling in
 during that window is told *"Unity not detected"* — which reads like a broken relay rather than
 contention, and sends people debugging the wrong thing. Two further non-obvious ones: *"connection
-revoked"* means a second copy of `relay_win.exe` is running and must be killed, and compile errors
-arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on severity silently hides them.
+revoked"* means a second copy of `~/.unity/relay/relay_win.exe` is running and must be killed, and
+compile errors arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on severity silently
+hides them.
+
+**Match that relay on its full path, never on the process name.** Unity's own AI Assistant package
+ships a *different* product using the same binary name, at
+`unity/Emberfall/Library/PackageCache/com.unity.ai.assistant@<hash>/RelayApp~/relay_win.exe`, and it
+is routinely running at the same time — so `Get-Process relay_win` returning two hits is the normal
+state, not the fault above. Killing on a name match takes down the AI Assistant and leaves the
+actual duplicate running. Tell them apart by `.Path`, or by port: the AI Assistant relay listens on
+9001/9002 and the MCP relay owns no TCP port at all.
