@@ -143,6 +143,30 @@ namespace Emberfall.Core.Tests.CardValidation
                 Is.EqualTo(invalid));
         }
 
+        // C14I — allegiance, which C14F structurally cannot catch: every selector below produces
+        // Minion candidates, so the KIND relation passes all of them. Only the allegiance relation
+        // separates "a minion" from "a minion I control".
+        [TestCase("ANY_FRIENDLY_MINION", false)]
+        [TestCase("FRIENDLY_MINIONS", false)]
+        [TestCase("OTHER_FRIENDLY_MINIONS", false)]
+        [TestCase("ADJACENT", false)]
+        [TestCase("ENEMY_MINIONS", true)]
+        [TestCase("ALL_MINIONS", true)]
+        [TestCase("ANY_MINION", true)]
+        public void Reinforce_Only_Targets_The_Controllers_Own_Minions(string selector, bool hostile)
+        {
+            CardDefinition card = Card(CardType.MINION,
+                Rule("reinforce", Trigger.ON_PLAY, OneShotLifetime.Instance,
+                    new ReinforceAction(new TargetSpec(selector))));
+
+            ValidationReport report = Validate(card);
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14I-ACTION-TARGET-HOSTILE"),
+                Is.EqualTo(hostile),
+                $"'{selector}' allegiance verdict; got: " +
+                string.Join(", ", report.Issues.Select(i => i.Code)));
+        }
+
         private static ValidationReport Validate(CardDefinition card)
             => new CardValidator().Validate(card, new JsonCardDatabaseTestDouble(new[] { card }));
 

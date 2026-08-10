@@ -281,6 +281,46 @@ namespace Emberfall.Core.Cards
             return (AllowedKinds(action) & selected) != 0;
         }
 
+        /// <summary>
+        /// Actions that may only ever affect the controller's OWN side. This is the allegiance
+        /// axis, deliberately separate from the <see cref="AllowedKinds"/> KIND axis: "Minion" and
+        /// "a minion I control" are different questions, and the kind relation alone cannot answer
+        /// the second — which is how <c>REINFORCE</c> on <c>ENEMY_MINIONS</c> stayed authorable and
+        /// runnable (Sam, 2026-08-10: buffing the enemy board is never the intent).
+        /// </summary>
+        public static bool RequiresFriendlyTarget(RuleAction action) => action is ReinforceAction;
+
+        /// <summary>
+        /// Whether every candidate a selector can produce is on the controller's own side.
+        /// <c>ADJACENT</c> qualifies because it walks the SOURCE minion's own board row, and
+        /// <c>SELF</c> is the source itself. <c>TRIGGER_SOURCE</c> deliberately does NOT: on
+        /// <c>ON_DAMAGED</c> the trigger source is whoever hit you.
+        /// </summary>
+        public static bool IsFriendlyOnlySelector(string selector)
+        {
+            switch (selector)
+            {
+                case "SELF":
+                case "ADJACENT":
+                case "FRIENDLY_HERO":
+                case "FRIENDLY_MINIONS":
+                case "OTHER_FRIENDLY_MINIONS":
+                case "ANY_FRIENDLY":
+                case "ANY_FRIENDLY_MINION":
+                case "FRIENDLY_WEAPON":
+                case "FRIENDLY_HAND":
+                case "FRIENDLY_DECK":
+                case "FRIENDLY_GRAVEYARD":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>Whether <paramref name="selector"/> respects the action's allegiance rule.</summary>
+        public static bool HasCompatibleAllegiance(RuleAction action, string selector)
+            => !RequiresFriendlyTarget(action) || IsFriendlyOnlySelector(selector);
+
         public static TargetCandidateKinds AllowedKinds(RuleAction action)
         {
             switch (action)

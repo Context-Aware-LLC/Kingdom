@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using Emberfall.Core.Contracts;
 
@@ -14,292 +13,409 @@ namespace Emberfall.Core.Cards
     /// </summary>
     public static class CardTextGenerator
     {
-        /// <summary>Render a complete card face from its effective carrier behaviour and typed rules.</summary>
+        /// <summary>Renders a complete card face from its carrier keywords and its typed rules.</summary>
         public static string Generate(CardDefinition card)
         {
             if (card == null) throw new ArgumentNullException(nameof(card));
 
             var parts = new List<string>(card.Keywords.Count + card.Rules.Count);
             foreach (Keyword keyword in card.Keywords)
-                if (!KeywordSemantics.IsActionMarker(keyword))
-                    parts.Add("[" + Name(keyword) + "]");
-            foreach (RuleDefinition rule in card.Rules)
-                parts.Add(RenderRule(rule));
+            {
+                // An action marker is rendered from its typed action instead. Printing it here as
+                // well would print it twice on any row that still carries the legacy keyword.
+                if (KeywordSemantics.IsActionMarker(keyword)) continue;
+                parts.Add("[" + Name(keyword) + "]");
+            }
+            parts.AddRange(RenderRuleGroups(card.Rules));
             return string.Join(" ", parts);
         }
 
+        /// <summary>Renders the rule half of a card face on its own, without any carrier keywords.</summary>
         public static string Generate(IReadOnlyList<RuleDefinition> rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
-            return string.Join(" ", rules.Select(RenderRule));
+            return string.Join(" ", RenderRuleGroups(rules));
         }
 
-        private static string RenderRule(RuleDefinition rule)
+        /// <summary>Renders the rules as card-face lines, one per run of rules sharing a prefix.</summary>
+        /// <remarks>
+        /// One line per RUN of consecutive rules sharing a trigger/condition/lifetime prefix, not one
+        /// line per rule — a battlecry with three effects is one "[Herald]", not "[Herald]" printed
+        /// three times. Only adjacent rules merge, so an interleaved trigger (Herald, Toll, Herald)
+        /// still prints the marker each time it actually changes.
+        /// </remarks>
+        private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules)
         {
-            if (rule == null) throw new ArgumentNullException(nameof(rule));
-            return TriggerMarker(rule.Activation) + ConditionPrefix(rule.Condition) +
-                LifetimePrefix(rule.Lifetime) + RenderAction(rule.Action);
+            var lines = new List<string>();
+            var groupActions = new List<string>();
+            string groupPrefix = "";
+
+            foreach (RuleDefinition rule in rules)
+            {
+                if (rule == null) throw new ArgumentNullException(nameof(rules));
+
+                string prefix = TriggerMarker(rule.Activation) + ConditionPrefix(rule.Condition) +
+                    LifetimePrefix(rule.Lifetime);
+                if (groupActions.Count > 0 && prefix != groupPrefix)
+                {
+                    lines.Add(groupPrefix + string.Join(" ", groupActions));
+                    groupActions.Clear();
+                }
+
+                groupPrefix = prefix;
+                groupActions.Add(RenderAction(rule.Action));
+            }
+
+            if (groupActions.Count > 0)
+                lines.Add(groupPrefix + string.Join(" ", groupActions));
+            return lines;
         }
 
+        /// <summary>Renders the bracketed marker a rule prints, derived from how it activates.</summary>
         private static string TriggerMarker(RuleActivation activation)
         {
             if (activation is AuraActivation) return "[Aura] ";
-            if (!(activation is TriggeredActivation triggered))
-                throw Unsupported("activation", activation);
-
-            switch (triggered.Trigger)
-            {
-                case Trigger.ON_PLAY: return "[Herald] ";
-                case Trigger.ON_DEATH: return "[Toll] ";
-                case Trigger.ON_ATTACK: return "[Attack] ";
-                case Trigger.ON_DAMAGED: return "[Damaged] ";
-                case Trigger.ON_HEAL: return "[Healed] ";
-                case Trigger.ON_TURN_START: return "[Turn Start] ";
-                case Trigger.ON_TURN_END: return "[Turn End] ";
-                case Trigger.ON_FRIENDLY_SUMMON: return "[Friendly Summon] ";
-                case Trigger.ON_SPELL_CAST: return "[Spell Cast] ";
-                case Trigger.ON_CAST: return "";
-                default:
-                    throw new NotSupportedException(
-                    $"Card text generation does not support trigger '{triggered.Trigger}'.");
-            }
+            if (activation is TriggeredActivation triggered) return TriggerMarker(triggered.Trigger);
+            throw UnsupportedNode("activation", activation);
         }
 
+        /// <summary>Maps one trigger to its marker; a spell's own ON_CAST is deliberately unmarked.</summary>
+        private static string TriggerMarker(Trigger trigger) => trigger switch
+        {
+            Trigger.ON_PLAY => "[Herald] ",
+            Trigger.ON_DEATH => "[Toll] ",
+            Trigger.ON_ATTACK => "[Attack] ",
+            Trigger.ON_DAMAGED => "[Damaged] ",
+            Trigger.ON_HEAL => "[Healed] ",
+            Trigger.ON_TURN_START => "[Turn Start] ",
+            Trigger.ON_TURN_END => "[Turn End] ",
+            Trigger.ON_FRIENDLY_SUMMON => "[Friendly Summon] ",
+            Trigger.ON_SPELL_CAST => "[Spell Cast] ",
+            Trigger.ON_CAST => "",
+            _ => throw Unsupported("trigger", trigger),
+        };
+
+        /// <summary>Renders the clause qualifying when a rule applies, ahead of its effects.</summary>
         private static string ConditionPrefix(RuleCondition condition)
         {
             if (condition is AlwaysCondition) return "";
-            if (condition is TurnOwnerCondition turnOwner)
-            {
-                switch (turnOwner.Owner)
-                {
-                    case TurnOwner.CONTROLLER: return "While it is your turn, ";
-                    case TurnOwner.OPPONENT: return "While it is your opponent's turn, ";
-                    case TurnOwner.ANY: return "On either player's turn, ";
-                    default:
-                        throw new NotSupportedException(
-                        $"Card text generation does not support turn owner '{turnOwner.Owner}'.");
-                }
-            }
-            throw Unsupported("condition", condition);
+            if (condition is TurnOwnerCondition turnOwner) return TurnOwnerPrefix(turnOwner.Owner);
+            throw UnsupportedNode("condition", condition);
         }
 
+        /// <summary>Maps a turn-owner condition to the clause naming whose turn it must be.</summary>
+        private static string TurnOwnerPrefix(TurnOwner owner) => owner switch
+        {
+            TurnOwner.CONTROLLER => "While it is your turn, ",
+            TurnOwner.OPPONENT => "While it is your opponent's turn, ",
+            TurnOwner.ANY => "On either player's turn, ",
+            _ => throw Unsupported("turn owner", owner),
+        };
+
+        /// <summary>Renders the clause bounding how long a rule applies, ahead of its effects.</summary>
         private static string LifetimePrefix(RuleLifetime lifetime)
         {
             if (lifetime is SourceBoundLifetime || lifetime is OneShotLifetime) return "";
+            if (lifetime is PermanentLifetime) return "Permanently, ";
             if (lifetime is FiniteLifetime finite)
             {
-                if (finite.Uses <= 0)
-                    throw new NotSupportedException("Card text generation requires a positive finite lifetime.");
+                if (finite.Uses <= 0) throw Requires("a positive finite lifetime");
                 return finite.Uses == 1 ? "For its next use, " : $"For its next {finite.Uses} uses, ";
             }
-            if (lifetime is PermanentLifetime) return "Permanently, ";
-            throw Unsupported("lifetime", lifetime);
+            throw UnsupportedNode("lifetime", lifetime);
         }
 
-        private static string RenderAction(RuleAction action)
+        /// <summary>Renders one typed action as a complete effect sentence.</summary>
+        private static string RenderAction(RuleAction action) => action switch
         {
-            switch (action)
-            {
-                case DamageAction a: return $"Deal {a.Amount} damage to {Target(a.Target)}.";
-                case HealAction a: return $"Restore {a.Amount} Health to {Target(a.Target)}.";
-                case ModifyStatsAction a: return $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.";
-                case ReinforceAction a: return $"[Reinforce] {Target(a.Target)}.";
-                case GrantKeywordAction a: return $"Give {Target(a.Target)} {Name(a.Keyword)}.";
-                case DestroyAction a: return $"Destroy {Target(a.Target)}.";
-                case ReturnToHandAction a: return $"Return {Target(a.Target)} to hand.";
-                case SilenceAction a: return $"[Silence] {Target(a.Target)}.";
-                case TransformAction a: return $"Transform {Target(a.Target)} into {Name(a.CardId)}.";
-                case FrostAction a: return $"Frost {Target(a.Target)}.";
-                case TakeControlAction a: return $"Take control of {Target(a.Target)}.";
-                case DrawAction a: return $"Draw {Cards(a.Count)}.";
-                case SummonAction a: return $"Summon {Copies(a.Count, Name(a.CardId))}.";
-                case AddToHandAction a: return $"Add {Copies(a.Count, Name(a.CardId))} to your hand.";
-                case EquipAction a: return $"Equip {Name(a.CardId)}.";
-                case GainManaAction a: return Mana(a);
-                case BackdraftAction a: return $"[Backdraft] ({a.Amount}).";
-                case GainArmorAction a: return $"Gain {a.Amount} Armor.";
-                case UnearthAction a: return $"Unearth from {Cards(a.Count)}.";
-                default: throw Unsupported("action", action);
-            }
-        }
+            DamageAction a => $"Deal {a.Amount} damage to {Target(a.Target)}.",
+            HealAction a => $"Restore {a.Amount} Health to {Target(a.Target)}.",
+            ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
+            ReinforceAction a => $"[Reinforce] {Target(a.Target)}.",
+            GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
+            DestroyAction a => $"Destroy {Target(a.Target)}.",
+            ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
+            SilenceAction a => $"[Silence] {Target(a.Target)}.",
+            TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
+            FrostAction a => $"Freeze {Target(a.Target)}.",
+            TakeControlAction a => $"Take control of {Target(a.Target)}.",
+            DrawAction a => $"Draw {Cards(a.Count)}.",
+            SummonAction a => $"Summon {Copies(a.Count, Name(a.CardId))}.",
+            AddToHandAction a => $"Add {Copies(a.Count, Name(a.CardId))} to your hand.",
+            EquipAction a => $"Equip {Name(a.CardId)}.",
+            GainManaAction a => Mana(a),
+            BackdraftAction a => $"[Backdraft] ({a.Amount}).",
+            GainArmorAction a => $"Gain {a.Amount} Armor.",
+            UnearthAction a => $"[Unearth] ({a.Count}).",
+            _ => throw UnsupportedNode("action", action),
+        };
 
+        /// <summary>Renders a target spec as the noun phrase an effect sentence reads it as.</summary>
         private static string Target(TargetSpec target)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
+            // -1 is the authored "every candidate" sentinel; any other non-positive count is nonsense.
             if (target.Count.HasValue && target.Count.Value <= 0 && target.Count.Value != -1)
-                throw new NotSupportedException(
-                    $"Card text generation does not support target count '{target.Count}'.");
+                throw Unsupported("target count", target.Count);
 
-            bool random = false;
-            if (target.ChosenBy.HasValue)
-            {
-                if (target.ChosenBy == TargetChosenBy.RANDOM) random = true;
-                else if (target.ChosenBy != TargetChosenBy.PLAYER)
-                    throw new NotSupportedException(
-                        $"Card text generation does not support target choice '{target.ChosenBy}'.");
-            }
+            // Decided up front, not at the point of use, so an unrenderable choice policy is rejected
+            // even when the phrasing below turns out to suppress the word "random".
+            bool random = IsRandomlyChosen(target);
 
-            string singular;
-            string plural;
-            bool defaultsToAll;
-            switch (target.Selector)
-            {
-                case "SELF": singular = "this"; plural = "these"; defaultsToAll = false; break;
-                case "TRIGGER_SOURCE": singular = "the trigger source"; plural = "trigger sources"; defaultsToAll = false; break;
-                case "ADJACENT": singular = "an adjacent minion"; plural = "adjacent minions"; defaultsToAll = true; break;
-                case "ALL_MINIONS": singular = "a minion"; plural = "minions"; defaultsToAll = true; break;
-                case "ANY_CHARACTER": singular = "a character"; plural = "characters"; defaultsToAll = false; break;
-                case "ANY_ENEMY": singular = "an enemy character"; plural = "enemy characters"; defaultsToAll = false; break;
-                case "ANY_FRIENDLY": singular = "a friendly character"; plural = "friendly characters"; defaultsToAll = false; break;
-                case "ANY_FRIENDLY_MINION": singular = "a friendly minion"; plural = "friendly minions"; defaultsToAll = false; break;
-                case "ANY_MINION": singular = "a minion"; plural = "minions"; defaultsToAll = false; break;
-                case "ENEMY_HERO": singular = "the enemy hero"; plural = "enemy heroes"; defaultsToAll = false; break;
-                case "ENEMY_MINIONS": singular = "an enemy minion"; plural = "enemy minions"; defaultsToAll = true; break;
-                case "FRIENDLY_HERO": singular = "your hero"; plural = "friendly heroes"; defaultsToAll = false; break;
-                case "FRIENDLY_MINIONS": singular = "a friendly minion"; plural = "friendly minions"; defaultsToAll = true; break;
-                case "OTHER_FRIENDLY_MINIONS": singular = "another friendly minion"; plural = "other friendly minions"; defaultsToAll = true; break;
-                case "FRIENDLY_WEAPON": singular = "your weapon"; plural = "friendly weapons"; defaultsToAll = false; break;
-                case "ENEMY_WEAPON": singular = "the enemy weapon"; plural = "enemy weapons"; defaultsToAll = false; break;
-                case "FRIENDLY_HAND": singular = "a card in your hand"; plural = "cards in your hand"; defaultsToAll = true; break;
-                case "ENEMY_HAND": singular = "a card in the enemy hand"; plural = "cards in the enemy hand"; defaultsToAll = true; break;
-                case "ANY_HAND_CARD": singular = "a hand card"; plural = "hand cards"; defaultsToAll = false; break;
-                case "FRIENDLY_DECK": singular = "a card in your deck"; plural = "cards in your deck"; defaultsToAll = true; break;
-                case "ENEMY_DECK": singular = "a card in the enemy deck"; plural = "cards in the enemy deck"; defaultsToAll = true; break;
-                case "ANY_DECK_CARD": singular = "a deck card"; plural = "deck cards"; defaultsToAll = false; break;
-                case "FRIENDLY_GRAVEYARD": singular = "a card in your graveyard"; plural = "cards in your graveyard"; defaultsToAll = true; break;
-                case "ENEMY_GRAVEYARD": singular = "a card in the enemy graveyard"; plural = "cards in the enemy graveyard"; defaultsToAll = true; break;
-                case "ANY_GRAVEYARD_CARD": singular = "a graveyard card"; plural = "graveyard cards"; defaultsToAll = false; break;
-                default:
-                    throw new NotSupportedException(
-                    $"Card text generation does not support target selector '{target.Selector}'.");
-            }
-
-            string description = Quantity(singular, plural, target.Count, defaultsToAll);
+            string description = Quantity(PhrasingFor(target.Selector), target.Count);
             if (target.DistinctFrom.Length > 0) description = Another(description);
             if (target.Filter != null) description = Filter(description, target.Filter);
-            if (random) description = Randomize(description);
+            // "random" over a target that already resolves to everyone is a contradiction —
+            // nothing was actually chosen — and Randomize() has no case for "all ...", so it was
+            // falling through to a nonsense "random all X" prefix.
+            if (random && !description.StartsWith("all ", StringComparison.Ordinal))
+                description = Randomize(description);
             return description;
         }
 
-        private static string Quantity(string singular, string plural, int? count, bool defaultsToAll)
+        /// <summary>Whether a target is chosen at random, rejecting any choice policy with no phrasing.</summary>
+        private static bool IsRandomlyChosen(TargetSpec target) => target.ChosenBy switch
         {
-            if (count == -1 || (!count.HasValue && defaultsToAll)) return "all " + plural;
-            if (!count.HasValue || count.Value == 1) return singular;
-            return count.Value + " " + plural;
-        }
+            null => false,
+            TargetChosenBy.PLAYER => false,
+            TargetChosenBy.RANDOM => true,
+            _ => throw Unsupported("target choice", target.ChosenBy),
+        };
 
-        private static string Another(string description)
+        /// <summary>How one selector is spoken, and which form an unspecified count means.</summary>
+        private readonly struct SelectorPhrasing
         {
-            if (description.StartsWith("a ", StringComparison.Ordinal))
-                return "another " + description.Substring(2);
-            if (description.StartsWith("an ", StringComparison.Ordinal))
-                return "another " + description.Substring(3);
-            if (description.StartsWith("the ", StringComparison.Ordinal))
-                return "another " + description.Substring(4);
-            if (description.StartsWith("all ", StringComparison.Ordinal))
-                return "all other " + description.Substring(4);
-            int firstSpace = description.IndexOf(' ');
-            if (firstSpace > 0 && char.IsDigit(description[0]))
-                return description.Substring(0, firstSpace + 1) + "other " + description.Substring(firstSpace + 1);
-            return "another " + description;
-        }
+            public readonly string Singular;
+            public readonly string Plural;
 
-        private static string Filter(string description, TargetFilterDef filter)
-        {
-            string prefix = "";
-            if (filter.Damaged.HasValue) prefix += filter.Damaged.Value ? "damaged " : "undamaged ";
-            if (filter.Tribe.HasValue) prefix += Name(filter.Tribe.Value.ToString()) + " ";
-            if (prefix.Length == 0) return description;
+            /// <summary>Whether an unspecified count means every candidate rather than exactly one.</summary>
+            public readonly bool DefaultsToAll;
 
-            if (description.StartsWith("a ", StringComparison.Ordinal))
-                return "a " + prefix + description.Substring(2);
-            if (description.StartsWith("an ", StringComparison.Ordinal))
-                return "a " + prefix + description.Substring(3);
-            if (description.StartsWith("all other ", StringComparison.Ordinal))
-                return "all other " + prefix + description.Substring(10);
-            if (description.StartsWith("all ", StringComparison.Ordinal))
-                return "all " + prefix + description.Substring(4);
-            int firstSpace = description.IndexOf(' ');
-            if (firstSpace > 0 && char.IsDigit(description[0]))
-                return description.Substring(0, firstSpace + 1) + prefix + description.Substring(firstSpace + 1);
-            if (description.StartsWith("another ", StringComparison.Ordinal))
-                return "another " + prefix + description.Substring(8);
-            if (description.StartsWith("the ", StringComparison.Ordinal))
-                return "the " + prefix + description.Substring(4);
-            if (description.StartsWith("your ", StringComparison.Ordinal))
-                return "your " + prefix + description.Substring(5);
-            return prefix + description;
-        }
-
-        private static string Randomize(string description)
-        {
-            if (description.StartsWith("a ", StringComparison.Ordinal))
-                return "a random " + description.Substring(2);
-            if (description.StartsWith("an ", StringComparison.Ordinal))
-                return "a random " + description.Substring(3);
-            if (description.StartsWith("the ", StringComparison.Ordinal))
-                return "the random " + description.Substring(4);
-            if (description.StartsWith("your ", StringComparison.Ordinal))
-                return "your random " + description.Substring(5);
-            if (description.StartsWith("another ", StringComparison.Ordinal))
-                return "another random " + description.Substring(8);
-            int firstSpace = description.IndexOf(' ');
-            if (firstSpace > 0 && char.IsDigit(description[0]))
-                return description.Substring(0, firstSpace + 1) + "random " + description.Substring(firstSpace + 1);
-            return "random " + description;
-        }
-
-        private static string Mana(GainManaAction action)
-        {
-            string crystals = action.Amount == 1 ? "Mana Crystal" : "Mana Crystals";
-            switch (action.Kind)
+            /// <summary>Binds the two spoken forms of a selector to the one an absent count means.</summary>
+            public SelectorPhrasing(string singular, string plural, bool defaultsToAll)
             {
-                case ManaGainKind.TEMPORARY: return $"Gain {action.Amount} {crystals} this turn only.";
-                case ManaGainKind.PERMANENT_FILLED: return $"Gain {action.Amount} {crystals}.";
-                case ManaGainKind.PERMANENT_EMPTY: return $"Gain {action.Amount} empty {crystals}.";
-                default:
-                    throw new NotSupportedException(
-                    $"Card text generation does not support mana kind '{action.Kind}'.");
+                Singular = singular;
+                Plural = plural;
+                DefaultsToAll = defaultsToAll;
             }
         }
 
+        /// <summary>Phrases a selector that means ONE candidate unless an authored count widens it.</summary>
+        private static SelectorPhrasing One(string singular, string plural)
+            => new SelectorPhrasing(singular, plural, false);
+
+        /// <summary>Phrases a selector that means EVERY candidate unless an authored count narrows it.</summary>
+        private static SelectorPhrasing All(string singular, string plural)
+            => new SelectorPhrasing(singular, plural, true);
+
+        /// <summary>Maps a target selector to the words it is spoken with.</summary>
+        private static SelectorPhrasing PhrasingFor(string selector) => selector switch
+        {
+            "SELF" => One("this", "these"),
+            "TRIGGER_SOURCE" => One("the trigger source", "trigger sources"),
+            "ADJACENT" => All("an adjacent minion", "adjacent minions"),
+            "ALL_MINIONS" => All("a minion", "minions"),
+            "ANY_CHARACTER" => One("a character", "characters"),
+            "ANY_ENEMY" => One("an enemy character", "enemy characters"),
+            "ANY_FRIENDLY" => One("a friendly character", "friendly characters"),
+            "ANY_FRIENDLY_MINION" => One("a friendly minion", "friendly minions"),
+            "ANY_MINION" => One("a minion", "minions"),
+            "ENEMY_HERO" => One("the enemy hero", "enemy heroes"),
+            "ENEMY_MINIONS" => All("an enemy minion", "enemy minions"),
+            "FRIENDLY_HERO" => One("your hero", "friendly heroes"),
+            "FRIENDLY_MINIONS" => All("a friendly minion", "friendly minions"),
+            "OTHER_FRIENDLY_MINIONS" => All("another friendly minion", "other friendly minions"),
+            "FRIENDLY_WEAPON" => One("your weapon", "friendly weapons"),
+            "ENEMY_WEAPON" => One("the enemy weapon", "enemy weapons"),
+            "FRIENDLY_HAND" => All("a card in your hand", "cards in your hand"),
+            "ENEMY_HAND" => All("a card in the enemy hand", "cards in the enemy hand"),
+            "ANY_HAND_CARD" => One("a hand card", "hand cards"),
+            "FRIENDLY_DECK" => All("a card in your deck", "cards in your deck"),
+            "ENEMY_DECK" => All("a card in the enemy deck", "cards in the enemy deck"),
+            "ANY_DECK_CARD" => One("a deck card", "deck cards"),
+            "FRIENDLY_GRAVEYARD" => All("a card in your graveyard", "cards in your graveyard"),
+            "ENEMY_GRAVEYARD" => All("a card in the enemy graveyard", "cards in the enemy graveyard"),
+            "ANY_GRAVEYARD_CARD" => One("a graveyard card", "graveyard cards"),
+            _ => throw Unsupported("target selector", selector),
+        };
+
+        /// <summary>Renders how many of a selector's candidates an effect reaches.</summary>
+        private static string Quantity(SelectorPhrasing phrasing, int? count)
+        {
+            if (count == -1 || (!count.HasValue && phrasing.DefaultsToAll)) return "all " + phrasing.Plural;
+            if (!count.HasValue || count.Value == 1) return phrasing.Singular;
+            return count.Value + " " + phrasing.Plural;
+        }
+
+        /// <summary>Rewrites a description as its "not the one already chosen" form, for distinctFrom.</summary>
+        private static string Another(string description)
+        {
+            string rest;
+            if (TryStripPrefix(description, "a ", out rest)) return "another " + rest;
+            if (TryStripPrefix(description, "an ", out rest)) return "another " + rest;
+            if (TryStripPrefix(description, "the ", out rest)) return "another " + rest;
+            if (TryStripPrefix(description, "all ", out rest)) return "all other " + rest;
+            if (TryInsertAfterCount(description, "other ", out string counted)) return counted;
+            return "another " + description;
+        }
+
+        /// <summary>Splices a filter's adjectives into a description, between determiner and noun.</summary>
+        private static string Filter(string description, TargetFilterDef filter)
+        {
+            string modifier = "";
+            if (filter.Damaged.HasValue) modifier += filter.Damaged.Value ? "damaged " : "undamaged ";
+            if (filter.Tribe.HasValue) modifier += Name(filter.Tribe.Value.ToString()) + " ";
+            if (modifier.Length == 0) return description;
+
+            string rest;
+            // "an X" becomes "a <modifier> X": the article agrees with the modifier, not the noun.
+            if (TryStripPrefix(description, "a ", out rest)) return "a " + modifier + rest;
+            if (TryStripPrefix(description, "an ", out rest)) return "a " + modifier + rest;
+            // "all other " must be tested before "all ", which is a prefix of it.
+            if (TryStripPrefix(description, "all other ", out rest)) return "all other " + modifier + rest;
+            if (TryStripPrefix(description, "all ", out rest)) return "all " + modifier + rest;
+            if (TryInsertAfterCount(description, modifier, out string counted)) return counted;
+            if (TryStripPrefix(description, "another ", out rest)) return "another " + modifier + rest;
+            if (TryStripPrefix(description, "the ", out rest)) return "the " + modifier + rest;
+            if (TryStripPrefix(description, "your ", out rest)) return "your " + modifier + rest;
+            return modifier + description;
+        }
+
+        /// <summary>Marks a description as randomly chosen, between determiner and noun.</summary>
+        private static string Randomize(string description)
+        {
+            string rest;
+            if (TryStripPrefix(description, "a ", out rest)) return "a random " + rest;
+            if (TryStripPrefix(description, "an ", out rest)) return "a random " + rest;
+            if (TryStripPrefix(description, "the ", out rest)) return "the random " + rest;
+            if (TryStripPrefix(description, "your ", out rest)) return "your random " + rest;
+            if (TryStripPrefix(description, "another ", out rest)) return "another random " + rest;
+            if (TryInsertAfterCount(description, "random ", out string counted)) return counted;
+            return "random " + description;
+        }
+
+        /// <summary>Strips a leading determiner off a description, handing back what follows it.</summary>
+        private static bool TryStripPrefix(string description, string prefix, out string rest)
+        {
+            if (!description.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                rest = "";
+                return false;
+            }
+            rest = description.Substring(prefix.Length);
+            return true;
+        }
+
+        /// <summary>Splices a modifier in after a leading count, so "2 minions" becomes "2 other minions".</summary>
+        private static bool TryInsertAfterCount(string description, string modifier, out string result)
+        {
+            int firstSpace = description.IndexOf(' ');
+            if (firstSpace > 0 && char.IsDigit(description[0]))
+            {
+                result = description.Substring(0, firstSpace + 1) + modifier +
+                    description.Substring(firstSpace + 1);
+                return true;
+            }
+            result = "";
+            return false;
+        }
+
+        /// <summary>Renders a mana gain, whose wording turns on how long the crystals last.</summary>
+        private static string Mana(GainManaAction action)
+        {
+            string crystals = action.Amount == 1 ? "Mana Crystal" : "Mana Crystals";
+            return action.Kind switch
+            {
+                ManaGainKind.TEMPORARY => $"Gain {action.Amount} {crystals} this turn only.",
+                ManaGainKind.PERMANENT_FILLED => $"Gain {action.Amount} {crystals}.",
+                ManaGainKind.PERMANENT_EMPTY => $"Gain {action.Amount} empty {crystals}.",
+                _ => throw Unsupported("mana kind", action.Kind),
+            };
+        }
+
+        /// <summary>Renders a draw count as the cards a player receives.</summary>
         private static string Cards(int count)
         {
-            if (count <= 0) throw new NotSupportedException("Card text generation requires a positive card count.");
+            if (count <= 0) throw Requires("a positive card count");
             return count == 1 ? "a card" : $"{count} cards";
         }
 
+        /// <summary>Renders a repeat count as copies of one named card.</summary>
         private static string Copies(int count, string cardName)
         {
-            if (count <= 0) throw new NotSupportedException("Card text generation requires a positive copy count.");
-            return count == 1 ? "a " + cardName : $"{count} copies of {cardName}";
+            if (count <= 0) throw Requires("a positive copy count");
+            return count == 1 ? "a " + cardName : $"{count} {cardName}s";
         }
 
-        private static string Delta(int amount) => amount >= 0 ? "+" + amount : amount.ToString(CultureInfo.InvariantCulture);
+        /// <summary>Renders a stat change with an explicit sign, as a buff line reads it.</summary>
+        private static string Delta(int amount)
+            => (amount >= 0 ? "+" : "") + amount.ToString(CultureInfo.InvariantCulture);
 
+        /// <summary>Renders a keyword as the name printed on a card face.</summary>
         private static string Name(Keyword keyword) => Name(keyword.ToString());
 
+        /// <summary>Renders an identifier — card, token, tribe or keyword — as the words a player reads.</summary>
         private static string Name(string identifier)
         {
-            if (string.IsNullOrWhiteSpace(identifier))
-                throw new NotSupportedException("Card text generation requires a non-empty identifier.");
+            if (string.IsNullOrWhiteSpace(identifier)) throw Requires("a non-empty identifier");
 
             string[] parts = identifier.Split(new[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
-            int start = parts.Length > 0 && (parts[0] == "token" || parts[0] == "hero") ? 1 : 0;
+
+            int start = 0;
+            while (start < parts.Length && IsIdNamespaceWord(parts[start])) start++;
+
+            // An attack/health pair (token_wisp_1_1) is the token's stats, not name words —
+            // render it as the "1/1 " prefix a real card would carry instead of leaking it as
+            // trailing digits. Nothing meaningful follows stats in an id: a word after the pair
+            // (token_revenant_5_5_bulwark) is a disambiguator for the id only, never part of the
+            // printed name, so the pair also ends the name — not just skips two segments.
+            int end = parts.Length;
+            string statPrefix = "";
+            for (int i = start; i + 1 < parts.Length; i++)
+            {
+                if (!int.TryParse(parts[i], out int attack) || !int.TryParse(parts[i + 1], out int health))
+                    continue;
+                statPrefix = attack + "/" + health + " ";
+                end = i;
+                break;
+            }
+
+            string name = TitleCase(parts, start, end);
+            if (name.Length == 0) throw Requires("a readable identifier");
+            return statPrefix + name;
+        }
+
+        /// <summary>
+        /// Whether an id segment is a namespace word a token/hero id is built from
+        /// (rekind_token_x for a Rekindling token), never part of the printed name.
+        /// </summary>
+        private static bool IsIdNamespaceWord(string segment)
+            => segment == "token" || segment == "hero" || segment == "rekind";
+
+        /// <summary>Joins the id segments in [start, end) into capitalised, space-separated words.</summary>
+        private static string TitleCase(string[] parts, int start, int end)
+        {
             var builder = new StringBuilder();
-            for (int i = start; i < parts.Length; i++)
+            for (int i = start; i < end; i++)
             {
                 if (builder.Length > 0) builder.Append(' ');
                 builder.Append(char.ToUpperInvariant(parts[i][0]));
                 if (parts[i].Length > 1) builder.Append(parts[i].Substring(1).ToLowerInvariant());
             }
-            if (builder.Length == 0)
-                throw new NotSupportedException("Card text generation requires a readable identifier.");
             return builder.ToString();
         }
 
-        private static NotSupportedException Unsupported(string node, object value)
+        /// <summary>Builds the rejection for an authored value this renderer has no phrasing for.</summary>
+        private static NotSupportedException Unsupported(string what, object? value)
+            => new NotSupportedException($"Card text generation does not support {what} '{value}'.");
+
+        /// <summary>Builds the rejection for a rule node type this renderer has no phrasing for.</summary>
+        private static NotSupportedException UnsupportedNode(string kind, object node)
             => new NotSupportedException(
-                $"Card text generation does not support {node} node '{value.GetType().Name}'.");
+                $"Card text generation does not support {kind} node '{node.GetType().Name}'.");
+
+        /// <summary>Builds the rejection for input whose shape is renderable but whose value is not.</summary>
+        private static NotSupportedException Requires(string requirement)
+            => new NotSupportedException($"Card text generation requires {requirement}.");
     }
 }

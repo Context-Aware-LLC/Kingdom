@@ -261,6 +261,15 @@ namespace Emberfall.Core.Cards
                              rule.Action, target.Selector, def.Type, trigger))
                     Err("C14F-ACTION-TARGET-INCOMPATIBLE", $"{prefix}.action.target.selector",
                         $"{actionName} cannot affect any target kind produced by '{target.Selector}'.");
+                // C14I — allegiance, which C14F cannot see: it checks target KIND only, so a
+                // friendly-only action passes it against ENEMY_MINIONS (both are "Minion") and
+                // ships a card that buffs the opponent.
+                else if (target != null &&
+                         !RuleActionCapabilities.HasCompatibleAllegiance(rule.Action, target.Selector))
+                    Err("C14I-ACTION-TARGET-HOSTILE", $"{prefix}.action.target.selector",
+                        $"{actionName} may only affect the controller's own side, but " +
+                        $"'{target.Selector}' can produce an enemy candidate. Use a FRIENDLY_* / " +
+                        "SELF / ADJACENT selector.");
                 // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
                 // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
                 // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
