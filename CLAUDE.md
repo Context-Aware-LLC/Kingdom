@@ -233,14 +233,6 @@ deleted the one-offs he will not run again in the same pass. `art-pipeline/` is 
 here, which put a card's `draft.txt` and its candidates in different directories for 92 of 260
 cards — the adjacency the candidates folder exists to provide, silently absent. Retired 2026-08-06.
 
-**Direct-to-Unity generation is in play (Sam, 2026-08-06)** — for the current run, generation writes
-straight into `Assets/Art/Cards/<setId>/` and skips the candidates step. **The hazard this creates:
-there is no candidate to compare against, so a re-roll overwrites promoted art in place and the
-previous image is gone.** Overwrite-in-place is still the right mechanic for the `.meta` guid (below),
-but the candidates folder was the thing preventing a re-roll from destroying the image it replaced.
-Confirm with Sam before re-rolling a card that already has promoted art.
-RETIREMENT TRIGGER: `gen_card_art.py` carries the marker; discharge this paragraph when the run ends.
-
 **Expansion at the directory level, class at the filename level (Sam, 2026-08-06):**
 `Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png`, and `<setId>/[<role>_]<name>.png` for
 NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is `hero_power` or

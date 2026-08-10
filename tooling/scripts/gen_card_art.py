@@ -108,11 +108,6 @@ DESIGN = DOCS / "design"
 
 OUT = REPO / "art-pipeline" / "card-art"
 
-# RETIREMENT TRIGGER (2026-08-06): CLAUDE.md "Generated art lands in art-pipeline/" documents a
-# direct-to-Unity run in which generation writes to UNITY_CARDS and skips the candidates step
-# entirely. That mode has no candidate to compare against, so a re-roll overwrites promoted art
-# in place and the previous image is gone — the one thing the candidates folder prevented.
-# If you add, change, or remove a write path that targets UNITY_CARDS, update that paragraph.
 UNITY_CARDS = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 MANIFEST = OUT / "prompt-manifest.json"
 
