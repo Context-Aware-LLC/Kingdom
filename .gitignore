@@ -4,6 +4,12 @@
 # being committed. Never commit this; the credential belongs in KeePassXC.
 /config.json
 
+# Paperclip agent worktrees: each is its own git checkout (has its own .git),
+# so `git add -A` in the parent repo sweeps it in as a gitlink/submodule
+# reference instead of leaving it alone. Cost a stuck "modified" entry that
+# survived rm/checkout because git tracked it as a submodule pointer, not files.
+.paperclip/worktrees/
+
 # OS / editor
 .DS_Store
 Thumbs.db
