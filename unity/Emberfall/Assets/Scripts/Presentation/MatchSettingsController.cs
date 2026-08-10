@@ -14,6 +14,8 @@ namespace Emberfall.Presentation
     /// <see cref="Init"/> hides that row on a menu mount, where there is no match to concede.
     /// Sound / Video are deferred — they will land as rows in #view-menu without touching this
     /// wiring. Switch account (dev/testing only) lives here too now — see <see cref="BindAccountModal"/>.
+    /// It is hidden in-match (Sam, 2026-08-09): switching accounts mid-match reloads the scene and
+    /// ejects the player, so the bootstraps pass <c>allowAccountSwitch: false</c> into <see cref="Init"/>.
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MatchSettingsScreen.uxml and whose Panel Settings does NOT clear color (so whatever is
@@ -45,13 +47,19 @@ namespace Emberfall.Presentation
         /// it for us).</summary>
         public bool IsBlockingInput => _isOpen || _accountModalOpen || _pointerOverGear;
 
+        private bool _allowAccountSwitch;
+
         /// <param name="onConcede">Forfeit callback. Pass null on a menu mount — there is no match
         /// to concede, and <paramref name="showConcede"/> hides the row that would call it.</param>
         /// <param name="showConcede">False on a menu mount (Sam, 2026-08-09): a Concede button that
         /// does nothing when clicked is worse than no button at all.</param>
-        public void Init(Action onConcede, bool showConcede = true)
+        /// <param name="allowAccountSwitch">False in-match (Sam, 2026-08-09): switching accounts
+        /// mid-match reloads the scene and ejects the player, so the affordance is hidden entirely
+        /// rather than offered and then eating the match.</param>
+        public void Init(Action onConcede, bool showConcede = true, bool allowAccountSwitch = true)
         {
             _onConcede = onConcede;
+            _allowAccountSwitch = allowAccountSwitch;
 
             var root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null)
@@ -153,7 +161,8 @@ namespace Emberfall.Presentation
         /// Wire the accounts modal and reveal its entry point — but only in the editor and in
         /// development builds (Sam 2026-07-27: two accounts on one device, strictly for testing;
         /// moved here from MainMenuController 2026-08-09 so it works wherever this panel is
-        /// mounted, not just on the main menu).
+        /// mounted, not just on the main menu), and only when <see cref="_allowAccountSwitch"/>
+        /// (Sam, 2026-08-09: hidden in-match — see <see cref="Init"/>).
         ///
         /// <para><b>The gate is on the affordance, not the mechanism.</b> <see cref="DeviceAccounts"/>
         /// compiles and runs in every configuration; a release build simply resolves the one
@@ -169,10 +178,17 @@ namespace Emberfall.Presentation
             Wire(root, "btn-account-new", OnNewAccount);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Wire(root, "btn-switch-account", OpenAccountModal);
             var entry = root.Q<Button>("btn-switch-account");
-            // The USS default is display:none so a release build stays hidden even if this is reached.
-            if (entry != null) entry.style.display = DisplayStyle.Flex;
+            if (_allowAccountSwitch)
+            {
+                Wire(root, "btn-switch-account", OpenAccountModal);
+                // The USS default is display:none so a release build stays hidden even if this is reached.
+                if (entry != null) entry.style.display = DisplayStyle.Flex;
+            }
+            else if (entry != null)
+            {
+                entry.style.display = DisplayStyle.None;
+            }
 #endif
         }
 
@@ -284,8 +300,9 @@ namespace Emberfall.Presentation
         /// <summary>Reload the current scene so everything rebuilds against the new account — the
         /// same blunt approach MainMenuController used (see its ReloadThisScene): re-resolving each
         /// piece of state individually is a list that will be incomplete the first time somebody
-        /// adds to it. Mid-match this ejects the player from the match; that is accepted for now
-        /// (Sam, 2026-08-09) as the cost of the switcher working from wherever it is opened.</summary>
+        /// adds to it. This would eject the player mid-match, which is why <see cref="Init"/>'s
+        /// <c>allowAccountSwitch</c> hides the affordance entirely in-match (Sam, 2026-08-09) —
+        /// this path is unreachable there.</summary>
         private static void ReloadThisScene()
         {
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();

@@ -431,7 +431,7 @@ namespace Emberfall.Presentation
                 doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
                 doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
                 var settings = uiGo.AddComponent<MatchSettingsController>();
-                settings.Init(inputRouter.OnConcedeClicked);
+                settings.Init(inputRouter.OnConcedeClicked, allowAccountSwitch: false);
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
