@@ -24,6 +24,7 @@ namespace Emberfall.Editor
         public List<Keyword> Keywords = new List<Keyword>();
         public List<EditableRule> Rules = new List<EditableRule>();
         public string FlavorText = "";
+        public string Tooltip = "";
         public string ArtId = "";
         public SetId SetId = SetId.CORE;
         public bool Collectible = true;
@@ -47,6 +48,7 @@ namespace Emberfall.Editor
             Keywords = new List<Keyword>(def.Keywords),
             Rules = def.Rules.Select(EditableRule.FromDefinition).ToList(),
             FlavorText = def.FlavorText,
+            Tooltip = def.Tooltip,
             ArtId = def.ArtId,
             SetId = def.SetId,
             Collectible = def.Collectible,
@@ -64,7 +66,7 @@ namespace Emberfall.Editor
             keywords: Keywords, rules: Rules.Select(rule => rule.ToDefinition()).ToList(),
             flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
-            factionId: FactionId);
+            factionId: FactionId, tooltip: Tooltip);
 
         public EditableCard Clone() => FromDefinition(ToDefinition());
     }

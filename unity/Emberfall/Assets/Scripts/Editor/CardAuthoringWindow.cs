@@ -196,6 +196,7 @@ namespace Emberfall.Editor
             EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("generatedText", CardTextGenerator.Generate(card.ToDefinition()), EditorStyles.wordWrappedLabel);
             card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
+            card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
 
             // The requiresEngineeringPrimitive toggle stood here until NOR-224. It let an author

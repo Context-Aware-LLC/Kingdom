@@ -109,6 +109,8 @@ namespace Emberfall.Editor
                 Warn("E7-TEXT-LENGTH", "generatedText", "generated card text must be <=140 characters.");
             if (def.FlavorText.Length > 160)
                 Warn("E7-TEXT-LENGTH", "flavorText", "flavorText must be <=160 characters.");
+            if (def.Tooltip.Length > 40)
+                Warn("E7-TEXT-LENGTH", "tooltip", "tooltip must be <=40 characters — it renders as a single-line banner across the top of the card.");
 
             // E10: rarity/collectible sanity
             if (def.Rarity == Rarity.LEGENDARY && !def.Collectible)

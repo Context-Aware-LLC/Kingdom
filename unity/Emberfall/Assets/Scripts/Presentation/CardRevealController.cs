@@ -19,6 +19,7 @@ namespace Emberfall.Presentation
         private readonly Dictionary<InstanceId, CardRevealTrigger> _triggers = new();
 
         private CardRevealPanel _panel;
+        private CardFlavorTextPanel _flavorPanel;
         private InputRouter     _router;
 
         private bool       _pressActive;
@@ -31,15 +32,17 @@ namespace Emberfall.Presentation
             go.transform.SetParent(parent, false);
             var c = go.AddComponent<CardRevealController>();
             c._router = router;
-            c._panel  = CardRevealPanel.Create(go.transform);
+            c._panel       = CardRevealPanel.Create(go.transform);
+            c._flavorPanel = CardFlavorTextPanel.Create(go.transform);
             return c;
         }
 
-        // The panel re-parents itself to the camera to stay screen-anchored, so it does not die
-        // with this object's own hierarchy. Take it down explicitly.
+        // The panels re-parent themselves to the camera to stay screen-anchored, so they do not die
+        // with this object's own hierarchy. Take them down explicitly.
         private void OnDestroy()
         {
             if (_panel != null) Destroy(_panel.gameObject);
+            if (_flavorPanel != null) Destroy(_flavorPanel.gameObject);
         }
 
         internal void Register(CardRevealTrigger t) => _triggers[t.CardId] = t;
@@ -136,6 +139,7 @@ namespace Emberfall.Presentation
             {
                 SetLift(null);
                 _panel.Hide();
+                _flavorPanel?.Hide();
                 return;
             }
 
@@ -143,7 +147,9 @@ namespace Emberfall.Presentation
             // OnMouseEnter already raised it, and driving it from here as well would give one
             // behaviour two owners.
             SetLift(_model.Source == HoverRevealModel.RevealSource.Hold ? t : null);
-            _panel.Show(t.BuildContent());
+            CardRevealContent content = t.BuildContent();
+            _panel.Show(content);
+            _flavorPanel?.Show(content.FlavorText);
         }
 
         // Exactly one card is ever lifted from here, and the previous one is always put back —

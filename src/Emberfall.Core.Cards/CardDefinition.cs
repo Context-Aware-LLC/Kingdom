@@ -45,6 +45,7 @@ namespace Emberfall.Core.Cards
         public IReadOnlyList<Keyword> Keywords { get; }
         public IReadOnlyList<RuleDefinition> Rules { get; }
         public string FlavorText { get; }
+        public string Tooltip { get; }
         public string ArtId { get; }
         public SetId SetId { get; }
         public bool Collectible { get; }
@@ -75,7 +76,7 @@ namespace Emberfall.Core.Cards
             CardClass @class, Rarity rarity,
             IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
             string flavorText, string artId, SetId setId,
-            bool collectible, Tribe? tribe, string factionId)
+            bool collectible, Tribe? tribe, string factionId, string tooltip = "")
         {
             Id = id;
             Name = name;
@@ -89,6 +90,7 @@ namespace Emberfall.Core.Cards
             Keywords = keywords ?? System.Array.Empty<Keyword>();
             Rules = rules ?? System.Array.Empty<RuleDefinition>();
             FlavorText = flavorText ?? "";
+            Tooltip = tooltip ?? "";
             ArtId = artId ?? "";
             SetId = setId;
             Collectible = collectible;

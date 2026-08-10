@@ -4820,7 +4820,7 @@
     "id": "neutral_searing_quill",
     "name": "Searing Quill",
     "type": "WEAPON",
-    "flavortext": "More powerful than a sword?",
+    "flavorText": "More powerful than a sword?",
     "cost": 2,
     "attack": 2,
     "durability": 2,

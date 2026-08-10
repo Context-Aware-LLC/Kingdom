@@ -30,6 +30,15 @@ namespace Emberfall.Presentation
         [SerializeField] private SpriteRenderer[] keywordIcons;
         private IUiSpriteProvider _ui;
 
+        // Tooltip banner (top-of-card, on hover) — see BoardController.CreatePresenter for layout.
+        [SerializeField] private GameObject tooltipBanner;
+        [SerializeField] private TextMeshPro tooltipLabel;
+
+        // Bottom-right flavor-text surface — one shared instance per match, owned by
+        // BoardController. Completely separate presentation from the tooltip banner above: same
+        // trigger (raw hover), different field (FlavorText, not Tooltip), different surface.
+        private CardFlavorTextPanel _flavorPanel;
+
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
         private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
@@ -71,6 +80,17 @@ namespace Emberfall.Presentation
             gemRenderer   = gem;
             keywordIcons  = icons;
             _ui           = ui;
+        }
+
+        // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
+        // OnMouseEnter/OnMouseExit below, only when the bound card carries a non-empty Tooltip.
+        // flavorPanel is the match's one shared bottom-right surface (may be null in a detached/
+        // preview build that never wires one).
+        internal void SetupTooltip(GameObject banner, TextMeshPro label, CardFlavorTextPanel flavorPanel)
+        {
+            tooltipBanner = banner;
+            tooltipLabel  = label;
+            _flavorPanel  = flavorPanel;
         }
 
         // Called by BoardController once the IArtProvider resolves this card's illustration.
@@ -130,6 +150,7 @@ namespace Emberfall.Presentation
             if (keywordIcons != null)
                 foreach (var icon in keywordIcons)
                     if (icon != null) icon.gameObject.SetActive(false);
+            if (tooltipBanner != null)   tooltipBanner.SetActive(false);
 
             // Back sprite if authored ("card_back" atlas key); otherwise the frame stays empty
             // and the dark body quad reads as the back — acceptable until the asset lands.
@@ -158,11 +179,46 @@ namespace Emberfall.Presentation
 
         public void Unbind()
         {
+            HideTooltip();
+            HideFlavorText();
             if (_live == null) return;
             _live.Changed -= OnChanged;
             _live = null;
             _def  = null;
         }
+
+        // Immediate on-card hover cue — the card's original/full title (CardDefinition.Tooltip),
+        // for a card whose printed Name was shortened to fit the face. Deliberately NOT gated by
+        // HoverRevealModel's delay/hold gesture (EF-049, CardRevealTrigger — currently unwired
+        // anyway, see CardFlavorTextPanel doc): that machinery exists to make a deliberate "let me
+        // read this" read undo the click it also armed, which does not apply here — this is a
+        // passive label with no side effect on the pending press, so it can just track the raw
+        // pointer the same way HandCardHover's lift already does on this root.
+        private void OnMouseEnter()
+        {
+            if (_def == null) return;
+            if (!string.IsNullOrEmpty(_def.Tooltip) && tooltipBanner != null)
+            {
+                if (tooltipLabel != null) tooltipLabel.text = _def.Tooltip;
+                tooltipBanner.SetActive(true);
+            }
+            _flavorPanel?.Show(_def.FlavorText, this);
+        }
+
+        private void OnMouseExit()
+        {
+            HideTooltip();
+            HideFlavorText();
+        }
+
+        private void HideTooltip()
+        {
+            if (tooltipBanner != null) tooltipBanner.SetActive(false);
+        }
+
+        // `this` as the owner token: a stale exit from a card the pointer already left must not
+        // blank the panel for whichever card it entered next (see CardFlavorTextPanel.Hide).
+        private void HideFlavorText() => _flavorPanel?.Hide(this);
 
         // Called by InputRouter to highlight this card as the active selection.
         public void SetSelectionHighlight(bool selected)

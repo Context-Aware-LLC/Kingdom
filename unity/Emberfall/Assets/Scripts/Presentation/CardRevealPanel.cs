@@ -148,4 +148,125 @@ namespace Emberfall.Presentation
             if (this != null) gameObject.SetActive(false);
         }
     }
+
+    /// <summary>
+    /// EF-049 follow-on. Flavor/lore line (CardDefinition.FlavorText), bottom-right of the screen —
+    /// completely separate from both <see cref="CardRevealPanel"/>'s centered rules/glossary plate
+    /// and CardPresenter's on-card Tooltip banner. Owned and driven by CardRevealController
+    /// alongside CardRevealPanel, off the same <see cref="HoverRevealModel"/> so it appears and
+    /// disappears in lockstep with the deliberate hover/hold read — flavor text is the lowest-
+    /// priority of the three surfaces, so it rides the gesture that already means "I want to read
+    /// this card" rather than firing on every incidental hover the way the Tooltip banner does.
+    /// </summary>
+    internal sealed class CardFlavorTextPanel : MonoBehaviour
+    {
+        private const float PanelW = BoardController.CardW * 1.9f;
+        private const float PanelH = BoardController.CardH * 0.62f;
+        private const int SortBase = 90;
+        private const float PanelZ = -1.5f;
+
+        // Bottom-right: positive X, negative Y from screen centre. Clear of the hand (which sits
+        // bottom-CENTRE) and of RejectToastView's stack — that plate sits at world (5.6, -1.5),
+        // up to 2 toasts tall (0.6 apart), spanning roughly x[3.5, 7.7] y[-1.75, -0.65]. This panel
+        // sits BELOW that band (y centre -2.9, half-height ~0.51 -> bottom of -3.4, well inside the
+        // +-4.6 safe half-height) with no y overlap, so a toast firing during a hover-read never
+        // collides with it.
+        private const float PanelX = 4.6f;
+        private const float PanelY = -2.9f;
+
+        private static readonly Color PlateColor = new Color(0.09f, 0.11f, 0.16f, 1f);
+
+        private TextMeshPro _body;
+
+        internal static CardFlavorTextPanel Create(Transform parent)
+        {
+            var go = new GameObject("CardFlavorTextPanel");
+            go.transform.SetParent(parent, false);
+            var panel = go.AddComponent<CardFlavorTextPanel>();
+            panel.Build();
+            go.SetActive(false);
+            return panel;
+        }
+
+        private void Build()
+        {
+            Camera cam = Camera.main;
+            if (cam != null)
+            {
+                transform.SetParent(cam.transform, false);
+                transform.localPosition = new Vector3(PanelX, PanelY, -cam.transform.position.z + PanelZ);
+                transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                transform.position = new Vector3(PanelX, PanelY, PanelZ);
+            }
+
+            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            faceGo.name = "Face";
+            faceGo.transform.SetParent(transform, false);
+            faceGo.transform.localScale = new Vector3(PanelW, PanelH, 1f);
+            Destroy(faceGo.GetComponent<MeshCollider>());
+            var face = faceGo.GetComponent<Renderer>();
+            face.sortingOrder = SortBase;
+            MaterialCatalog.Assign(face, MaterialCatalog.Plate);
+            var mpb = new MaterialPropertyBlock();
+            face.GetPropertyBlock(mpb);
+            mpb.SetColor("_BaseColor", PlateColor);
+            face.SetPropertyBlock(mpb);
+
+            float pad = PanelW * 0.10f;
+            var bodyGo = new GameObject("Body");
+            bodyGo.transform.SetParent(transform, false);
+            bodyGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            _body = bodyGo.AddComponent<TextMeshPro>();
+            bodyGo.GetComponent<Renderer>().sortingOrder = SortBase + 1;
+            TMP_FontAsset body = BoardController.BodyFont();
+            if (body != null) _body.font = body;
+            _body.fontStyle       = FontStyles.Italic;
+            _body.alignment       = TextAlignmentOptions.MidlineRight;
+            _body.color           = new Color(0.80f, 0.82f, 0.88f);
+            _body.textWrappingMode = TextWrappingModes.Normal;
+            _body.rectTransform.sizeDelta = new Vector2(PanelW - pad * 2f, PanelH * 0.86f);
+            _body.enableAutoSizing = true;
+            _body.fontSizeMax      = 0.85f;
+            _body.fontSizeMin      = 0.5f;
+            _body.overflowMode     = TextOverflowModes.Ellipsis;
+        }
+
+        private object _owner;
+
+        /// <summary>
+        /// No-ops (stays hidden) for an empty flavor line — a blank plate in the corner would read
+        /// as a bug, not as "this card has none".
+        ///
+        /// <para><paramref name="owner"/> is an opaque token (the calling CardPresenter, or null)
+        /// recorded so a later <see cref="Hide"/> can tell a stale event from the live one — the
+        /// same hazard <see cref="HoverRevealModel.PointerExit"/> guards against: Unity delivers
+        /// enter/exit per collider with no ordering guarantee between two cards, so a stale exit
+        /// from the card the pointer just LEFT must not blank the panel for the card it just
+        /// ENTERED. Callers that own this panel outright (nobody does yet — see CardRevealController)
+        /// can leave it null and rely on <see cref="Hide"/>'s unconditional default.</para>
+        /// </summary>
+        internal void Show(string flavorText, object owner = null)
+        {
+            _owner = owner;
+            if (_body == null || string.IsNullOrEmpty(flavorText))
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+            _body.text = flavorText;
+            gameObject.SetActive(true);
+        }
+
+        /// <summary>Unconditional when <paramref name="owner"/> is null; otherwise only hides if
+        /// it still matches whoever's <see cref="Show"/> is currently up.</summary>
+        internal void Hide(object owner = null)
+        {
+            if (owner != null && !Equals(owner, _owner)) return;
+            _owner = null;
+            if (this != null) gameObject.SetActive(false);
+        }
+    }
 }

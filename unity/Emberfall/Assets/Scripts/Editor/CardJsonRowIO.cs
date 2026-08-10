@@ -74,6 +74,7 @@ namespace Emberfall.Editor
                 w.WriteBoolean("collectible", def.Collectible);
                 w.WriteString("artId", def.ArtId);
                 if (!string.IsNullOrEmpty(def.FlavorText)) w.WriteString("flavorText", def.FlavorText);
+                if (!string.IsNullOrEmpty(def.Tooltip)) w.WriteString("tooltip", def.Tooltip);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
 
                 w.WriteStartArray("rules");

@@ -28,11 +28,18 @@ namespace Emberfall.Presentation
         /// for a keyword's NAME and never for what it does.</summary>
         internal string Body { get; }
 
-        private CardRevealContent(string title, string subtitle, string body)
+        /// <summary>Flavor/lore line (CardDefinition.FlavorText). Kept OUT of <see cref="Body"/>
+        /// deliberately: it renders in its own screen-corner surface (CardRevealController /
+        /// CardFlavorTextPanel), completely separate from both the rules glossary above and the
+        /// on-card Tooltip banner (CardPresenter).</summary>
+        internal string FlavorText { get; }
+
+        private CardRevealContent(string title, string subtitle, string body, string flavorText)
         {
-            Title    = title;
-            Subtitle = subtitle;
-            Body     = body;
+            Title      = title;
+            Subtitle   = subtitle;
+            Body       = body;
+            FlavorText = flavorText;
         }
 
         /// <summary>
@@ -42,7 +49,7 @@ namespace Emberfall.Presentation
         /// </summary>
         internal static CardRevealContent Build(CardDefinition def, ICardLiveState live)
         {
-            if (def == null) return new CardRevealContent(null, null, null);
+            if (def == null) return new CardRevealContent(null, null, null, null);
 
             IReadOnlyCollection<Keyword> keywords =
                 live != null ? live.Keywords : def.Keywords;
@@ -50,7 +57,8 @@ namespace Emberfall.Presentation
             return new CardRevealContent(
                 def.Name,
                 BuildSubtitle(def, live),
-                BuildBody(def, keywords));
+                BuildBody(def, keywords),
+                def.FlavorText);
         }
 
         private static string BuildSubtitle(CardDefinition def, ICardLiveState live)
@@ -108,11 +116,8 @@ namespace Emberfall.Presentation
                 }
             }
 
-            if (!string.IsNullOrEmpty(def.FlavorText))
-            {
-                if (sb.Length > 0) sb.Append('\n');
-                sb.Append("<i>").Append(def.FlavorText).Append("</i>");
-            }
+            // FlavorText is deliberately not appended here — see CardRevealContent.FlavorText:
+            // it renders in its own bottom-right screen surface instead.
 
             return sb.ToString();
         }

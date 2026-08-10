@@ -20,7 +20,7 @@ namespace Emberfall.Core.Cards
             // loud failure a resurrected quarantine row deserves.
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "artId",
-            "flavorText", "factionId", "keywords", "rules", "_comment"
+            "flavorText", "tooltip", "factionId", "keywords", "rules", "_comment"
         };
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -72,6 +72,7 @@ namespace Emberfall.Core.Cards
             bool collectible = Bool(el, "collectible") ?? true;
             string artId = Str(el, "artId") ?? "";
             string flavor = Str(el, "flavorText") ?? "";
+            string tooltip = Str(el, "tooltip") ?? "";
             string faction = Str(el, "factionId") ?? "";
 
             var keywords = new List<Keyword>();
@@ -87,7 +88,7 @@ namespace Emberfall.Core.Cards
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
             }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, rules, flavor, artId, setId, collectible, tribe, faction);
+                keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)

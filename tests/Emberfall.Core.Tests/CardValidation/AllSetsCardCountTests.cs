@@ -104,7 +104,17 @@ namespace Emberfall.Core.Tests.CardValidation
             // Re-pinned 2026-08-09: ward_earthwardens_maul added (NOR-316 — STONEWARDEN's signature
             // weapon, the only class missing one). New row appended after ward_duras_the_ironmount;
             // all prior rows unchanged.
-            Assert.That(hash, Is.EqualTo("E38F55C93EF7B85D34CB4AB93E8AD4EE929BC4C43F8732732D3EF387B08057F1"),
+            //
+            // Re-pinned again 2026-08-09 (same day, "Card Title Length Audit", 34b58168): four card
+            // Names were intentionally shortened to fit the card face — clock_the_great_mechanism
+            // ("The Great Mechanism" -> "The Mechanism"), night_kira_blade_of_shadows ("Kira, Blade
+            // of Shadows" -> "Kira"), grave_sealed_gate_keeper ("Keeper of the Sealed Gate" ->
+            // "Sealed Gate Keeper"), and tide_glacierborn_leviathan, whose id ALSO changed to
+            // tide_glacial_leviathan ("Glacierborn Leviathan" -> "Glacial Leviathan"). The first two
+            // keep their original full title as the new `tooltip` field (CardJson didn't recognize
+            // that property until this change, so the audit commit had actually left the checked-in
+            // JSON unparseable — CardJson.CardProperties/CardDefinition now carry `tooltip`).
+            Assert.That(hash, Is.EqualTo("A2955E94E7D8178CCC174E5EDB336B4DD2B7F0B723A3A0A2C64020921DB77887"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's
