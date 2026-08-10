@@ -15,6 +15,11 @@ namespace Emberfall.Presentation
         // count (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8). Call before resolving a Zone.Hand anchor for this tick.
         void SetHandCount(PlayerId player, int count);
 
+        // Board slots center on the occupied count rather than sitting at a fixed span (Sam,
+        // 2026-08-09). Call before resolving a Zone.Board anchor for this tick, same as
+        // SetHandCount.
+        void SetBoardCount(PlayerId player, int count);
+
         Transform HeroAnchor(PlayerId player);
         Transform HeroPowerAnchor(PlayerId player);
         Transform ManaTrayAnchor(PlayerId player);

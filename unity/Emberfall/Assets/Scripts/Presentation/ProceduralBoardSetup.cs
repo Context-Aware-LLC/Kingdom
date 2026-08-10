@@ -24,7 +24,12 @@ namespace Emberfall.Presentation
     {
         private const int   BoardSlotCount = 7;
         private const int   HandSlotCount  = 10;
-        private const float SlotSpacing    = 1.35f;
+
+        // Internal, not private: BoardRowLayout re-solves these same anchors' x position when the
+        // occupied count changes (Sam, 2026-08-09), and a second copy of this number is exactly
+        // what let the hand's pitch and fan drift from each other before (see HandFanLayout's own
+        // note on deriving from one source).
+        internal const float SlotSpacing    = 1.35f;
 
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;

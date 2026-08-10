@@ -35,6 +35,16 @@ namespace Emberfall.Presentation
             HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored);
         }
 
+        // Re-solves this seat's board-row anchors so the occupied slots center in the row rather
+        // than pack against the leftmost ones (Sam, 2026-08-09). Same idempotent-every-tick shape
+        // as SetHandCount, for the same reason: cheap, and a stale layout is worse than a
+        // redundant write.
+        public void SetBoardCount(PlayerId player, int count)
+        {
+            SeatAnchors seat = ResolveSeat(player);
+            BoardRowLayout.Apply(seat.BoardSlots, count);
+        }
+
         public Transform AnchorFor(PlayerId player, Zone zone, int slotIndex)
         {
             SeatAnchors seat = ResolveSeat(player);

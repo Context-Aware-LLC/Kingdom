@@ -95,6 +95,17 @@ namespace Emberfall.Presentation
                 ApplyGlow();
         }
 
+        // The material's own baked default (M_Glow.mat) — restored whenever nothing here is
+        // overriding it, so every non-targeting signal keeps looking exactly as it always has.
+        private static readonly Color DefaultGlowColor = new Color(1.6f, 1.3f, 0.2f, 1f);
+
+        // A deliberately different color from the shared gold (Sam, 2026-08-09): Arcane Surge,
+        // selection, attack-readiness and Aegis all glow the identical gold today, so a player
+        // cannot tell "this is a legal spell/herald target" apart from any of the other ~11
+        // reasons a card might already be lit up. Cyan reads as a distinct, unclaimed signal
+        // against a gold-heavy board.
+        private static readonly Color TargetGlowColor = new Color(0.2f, 1.4f, 1.6f, 1f);
+
         // Glow overlay is shared by three signals: Arcane Surge aura, selection highlight,
         // and can-attack readiness. Any one keeps it on. While targeting is armed
         // (_targetOverride set by BoardController from InputRouter.TargetingChanged) the
@@ -105,12 +116,16 @@ namespace Emberfall.Presentation
             if (_glowRenderer == null) return;
             if (_targetOverride.HasValue)
             {
-                _glowRenderer.enabled = _targetOverride.Value || _selectionGlow;
+                bool isValidTarget = _targetOverride.Value;
+                _glowRenderer.enabled = isValidTarget || _selectionGlow;
+                PushColorTo(_glowRenderer, ShaderIds.GlowColor,
+                    isValidTarget ? TargetGlowColor : DefaultGlowColor);
                 return;
             }
             bool auraGlow  = _live != null && (_live.Auras & AuraSet.Glow) != 0;
             bool readyGlow = _live != null && _live.AttackReadiness == AttackReadiness.Ready;
             _glowRenderer.enabled = _selectionGlow || auraGlow || readyGlow;
+            PushColorTo(_glowRenderer, ShaderIds.GlowColor, DefaultGlowColor);
         }
 
         /// <summary>Targeting-mode glow override: true/false while armed (valid / not a
@@ -238,6 +253,14 @@ namespace Emberfall.Presentation
             if (target == null) return;
             target.GetPropertyBlock(_mpb);
             _mpb.SetFloat(propId, value);
+            target.SetPropertyBlock(_mpb);
+        }
+
+        private void PushColorTo(Renderer target, int propId, Color value)
+        {
+            if (target == null) return;
+            target.GetPropertyBlock(_mpb);
+            _mpb.SetColor(propId, value);
             target.SetPropertyBlock(_mpb);
         }
     }

@@ -11,6 +11,11 @@ namespace Emberfall.Presentation
         public static readonly int FrostAmount    = Shader.PropertyToID("_FrostAmount");
         public static readonly int ShroudAmount  = Shader.PropertyToID("_ShroudAmount");
 
+        // SG_Glow's one exposed color (M_Glow.mat default: HDR gold, r1.6 g1.3 b0.2). Driven
+        // per-instance so the valid-target cue can use a different color from every other glow
+        // signal — see CardMaterialBinder.ApplyGlow.
+        public static readonly int GlowColor      = Shader.PropertyToID("_GlowColor");
+
         // Not one of the four MPB floats: CardDeathDissolve pushes the flattened card snapshot
         // into SG_Dissolve's albedo slot on a per-death material instance.
         public static readonly int BaseMap        = Shader.PropertyToID("_BaseMap");

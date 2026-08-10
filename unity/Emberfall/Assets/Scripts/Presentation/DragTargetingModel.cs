@@ -96,6 +96,14 @@ namespace Emberfall.Presentation
         public const string AimBanner = "Drag to a target";
         public const string AttackBanner = "Drag to a target to attack";
 
+        // The card is already placed by the time a herald owes a target (Sam, 2026-08-09) — a
+        // second full drag reads as the game demanding you repeat the gesture that just placed it,
+        // when the intent machine has already accepted a plain tap on the highlighted target since
+        // ArmedByTap has always resolved on release (InputRouter.OnPointerReleased). Wording this
+        // step "tap" instead of "drag" is what actually changed; the underlying gesture support did
+        // not need to.
+        public const string EffectTargetBanner = "Tap a target";
+
         private readonly PlayerId _p0Id;
         private readonly ICardDatabase _db;
         private readonly List<TargetChoiceRequirement> _choicePlan =
@@ -354,6 +362,22 @@ namespace Emberfall.Presentation
 
         private PlayerIntent ResolveHandCard(DragSource source, PointerSubject released)
         {
+            // A card with no chosen target and no board slot to occupy — the Coin, most spells,
+            // every weapon — has nowhere it is REQUIRED to land (Sam, 2026-08-09: the single
+            // most-reported targeting complaint was that these still had to be dropped inch-precise
+            // on a slot or a plausible-looking target). The only release that still means "I changed
+            // my mind" is dropping it back into our own hand; anywhere else on the board casts it —
+            // an empty slot, a card, a hero, or open space with nothing under the pointer at all.
+            if (!source.NeedsTarget && !HandCardOccupiesBoardSlot(source.Id))
+            {
+                bool droppedBackInHand = released.Kind == PointerSubjectKind.Card
+                                         && released.Zone == Zone.Hand
+                                         && released.Owner == _p0Id;
+                return droppedBackInHand
+                    ? null
+                    : new PlayCardIntent(_p0Id, source.Id, 0, System.Array.Empty<TargetRef>());
+            }
+
             switch (released.Kind)
             {
                 case PointerSubjectKind.BoardSlot:
@@ -371,7 +395,9 @@ namespace Emberfall.Presentation
 
                     if (source.NeedsTarget)
                     {
-                        // Targeted spells do not place on the board, so a slot release is a miss.
+                        // A targeted spell/weapon has no board slot to occupy — the untargeted,
+                        // no-slot case already returned above, so this is a targeted spell dropped
+                        // on a slot placeholder, which is a miss, not a placement.
                         if (!HandCardOccupiesBoardSlot(source.Id)) return null;
 
                         // A targeted minion needs placement before its herald choice plan.
@@ -384,9 +410,31 @@ namespace Emberfall.Presentation
                                               System.Array.Empty<TargetRef>());
 
                 case PointerSubjectKind.Card:
-                    // Enemy board minions are always aimable; our own only when the card actually wants
-                    // a chosen target, so a drop on our own board with a vanilla minion is a miss, not
-                    // a spell fired at slot 0.
+                    // A minion dropped directly on one of our own board minions inserts THERE —
+                    // pushing that minion and everything after it one slot over — rather than being
+                    // a miss (Sam, 2026-08-09: minions were de facto restricted to appending past the
+                    // right end of the row, because this was the only drop this branch ever accepted
+                    // for a board-occupying card. "Any slot, most aligned front to back" means the
+                    // slot you visually dropped it on, including in front of or between existing
+                    // minions, not just past them).
+                    if (released.Owner == _p0Id && released.Zone == Zone.Board
+                        && HandCardOccupiesBoardSlot(source.Id))
+                    {
+                        int insertAt = PositionOf(released.Owner, released.Id);
+                        if (insertAt < 0) return null;
+                        if (source.NeedsTarget)
+                        {
+                            if (!BeginHandChoicePlan(source.Id, insertAt)) return null;
+                            _phase = TargetingPhase.AwaitingEffectTarget;
+                            return null;   // No intent yet; the player still needs to pick a target.
+                        }
+                        return new PlayCardIntent(_p0Id, source.Id, insertAt, System.Array.Empty<TargetRef>());
+                    }
+
+                    // The untargeted, no-slot case already returned above, and the board-insert case
+                    // just above handles a minion dropped on our own board, so a vanilla (untargeted)
+                    // card reaching here is a miss, not a spell fired at slot 0. Enemy board minions
+                    // are always aimable for a card that DOES want a chosen target.
                     if (released.Owner == _p0Id && !source.NeedsTarget) return null;
 
                     // Cards that occupy a board slot must be placed before choosing an effect target.
@@ -490,6 +538,22 @@ namespace Emberfall.Presentation
                 }
             }
             return false;
+        }
+
+        /// <summary>The board slot a minion currently sits in, or -1 if it isn't on that seat's board
+        /// (e.g. it died to a same-frame reaction between the raycast and the resolve). What lets a
+        /// minion dropped ON another minion insert at that exact position instead of only ever
+        /// appending past the end of the row.</summary>
+        private int PositionOf(PlayerId owner, InstanceId minionId)
+        {
+            if (State == null) return -1;
+            foreach (PlayerState ps in State.Players)
+            {
+                if (ps.Id != owner) continue;
+                foreach (CardInstance m in ps.Board)
+                    if (m.Id.Equals(minionId)) return m.Position;
+            }
+            return -1;
         }
 
         /// <summary>Mirrors the engine's ValidateHeroPower rule. With no db wired the gesture falls

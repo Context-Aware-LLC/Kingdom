@@ -1,0 +1,55 @@
+using UnityEngine;
+
+namespace Emberfall.Presentation
+{
+    // Centers a seat's occupied board slots in the row instead of packing them against the
+    // leftmost anchors (Sam, 2026-08-09: "everything's jammed up against the left... we could
+    // center the playing field and spread things out").
+    //
+    // ProceduralBoardSetup.BuildSeat lays out all 7 board anchors at fixed
+    // x = (i - 3) * SlotSpacing, spanning the whole row regardless of how many minions are on the
+    // board — that span is right for a full board, but BoardAnchors.AnchorFor indexes it with the
+    // PACKED position (0, 1, 2, ...), so 2 minions always land on the two leftmost anchors. This
+    // re-solves the SAME anchors' x position for the current count, the same idea as
+    // HandFanLayout re-solving the hand fan for the current hand size — except the board row has
+    // no tilt, sag or footprint compression to reproduce: SlotSpacing never changes, only which
+    // span of it is used, so centering is the whole layout.
+    //
+    // OCCUPIED slots (index < count) center as a group. UNOCCUPIED slots (index >= count) are put
+    // back at their ORIGINAL full-board position — not left wherever a previous, larger count put
+    // them, and not collapsed onto the last occupied slot. Both alternatives were tried and
+    // rejected: parking every unused slot on the last occupied one leaves no reachable empty space
+    // to drop a new minion INTO (it would only ever hit the existing card sitting there and insert
+    // before it — see DragTargetingModel's board-insert case — never past it), and letting the
+    // centered sequence run on unclamped pushes empty-slot anchors for a near-empty board out past
+    // the mana rail (a 1-minion board would put slot 6 at x=8.10, well past ManaRailX=4.515).
+    // Recomputing the ORIGINAL position fresh from `i` every call, rather than only touching
+    // `i < count`, is what keeps a slot that drops OUT of the occupied range (a minion died) from
+    // being stranded at a stale centered position from before it went empty.
+    //
+    // Only x is touched. Each anchor's y (seat side) and z were already correct at construction
+    // (ProceduralBoardSetup.BuildSeat) and never depend on count, so there is nothing to re-derive
+    // for them — touching them here would risk drifting from that construction over time.
+    public static class BoardRowLayout
+    {
+        public static void Apply(Transform[] slots, int count)
+        {
+            if (slots == null || slots.Length == 0) return;
+
+            count = Mathf.Clamp(count, 0, slots.Length);
+            float occupiedHalf = count > 1 ? (count - 1) * 0.5f : 0f;
+            float fullHalf = (slots.Length - 1) * 0.5f;
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] == null) continue;
+
+                float half = i < count ? occupiedHalf : fullHalf;
+                float x = (i - half) * ProceduralBoardSetup.SlotSpacing;
+
+                Vector3 p = slots[i].position;
+                slots[i].position = new Vector3(x, p.y, p.z);
+            }
+        }
+    }
+}

@@ -66,6 +66,143 @@ namespace Emberfall.Core.Tests.Interpreter
             }));
         }
 
+        // ---- untargeted, no-slot cards play from anywhere but the hand (Sam, 2026-08-09) --------
+
+        [Test]
+        public void An_Untargeted_Spell_Casts_When_Dropped_On_Nothing()
+        {
+            var (model, source, _) = ArmCoin();
+
+            var intent = model.Resolve(source, PointerSubject.None) as PlayCardIntent;
+
+            Assert.That(intent, Is.Not.Null, "no slot and no target means nowhere it is REQUIRED to land");
+        }
+
+        [Test]
+        public void An_Untargeted_Spell_Casts_When_Dropped_On_An_Enemy_Card()
+        {
+            var (model, source, state) = ArmCoin();
+            CardInstance enemyBody = Board(state, 1, Minion("body"));
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(enemyBody.Id, P1, Zone.Board)) as PlayCardIntent;
+
+            Assert.That(intent, Is.Not.Null);
+        }
+
+        [Test]
+        public void An_Untargeted_Spell_Casts_When_Dropped_On_Our_Own_Board()
+        {
+            // Only "back to the hand it came from" reads as changing your mind — dropping on our
+            // own board is not that, so it still casts.
+            var (model, source, state) = ArmCoin();
+            CardInstance ourBody = Board(state, 0, Minion("body"));
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(ourBody.Id, P0, Zone.Board)) as PlayCardIntent;
+
+            Assert.That(intent, Is.Not.Null);
+        }
+
+        [Test]
+        public void An_Untargeted_Spell_Cancels_When_Dropped_Back_In_Our_Hand()
+        {
+            var (model, source, _) = ArmCoin();
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(source.Id, P0, Zone.Hand));
+
+            Assert.That(intent, Is.Null, "dropping it back where it came from is the one way to change your mind");
+        }
+
+        [Test]
+        public void A_Vanilla_Minion_Still_Needs_A_Board_Slot_When_Dropped_On_Nothing()
+        {
+            // The relaxed no-target-no-slot rule must not swallow ordinary minion placement, which
+            // genuinely does need a chosen slot.
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            var intent = model.Resolve(source, PointerSubject.None);
+
+            Assert.That(intent, Is.Null, "a minion has a real placement decision — dropping on nothing is still a miss");
+        }
+
+        // ---- minions can be placed anywhere in the row, not just past the end (Sam, 2026-08-09) ---
+
+        [Test]
+        public void A_Minion_Dropped_On_Our_Front_Minion_Inserts_Before_It()
+        {
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            CardInstance front = Board(state, 0, body);   // position 0
+            CardInstance back = Board(state, 0, body);    // position 1
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(front.Id, P0, Zone.Board)) as PlayCardIntent;
+
+            Assert.That(intent, Is.Not.Null, "dropping on an existing minion is a placement, not a miss");
+            Assert.That(intent!.BoardSlot, Is.EqualTo(0), "lands at the slot it was dropped nearest to, not past the end");
+        }
+
+        [Test]
+        public void A_Minion_Dropped_On_Our_Back_Minion_Inserts_There_Too()
+        {
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            Board(state, 0, body);                        // position 0
+            CardInstance back = Board(state, 0, body);     // position 1
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(back.Id, P0, Zone.Board)) as PlayCardIntent;
+
+            Assert.That(intent, Is.Not.Null);
+            Assert.That(intent!.BoardSlot, Is.EqualTo(1), "not forced to the very left slot");
+        }
+
+        [Test]
+        public void A_Minion_Dropped_On_An_Enemy_Minion_Is_Still_A_Miss()
+        {
+            var body = Minion("body");
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            CardInstance enemy = Board(state, 1, body);
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            var intent = model.Resolve(source, PointerSubject.OfCard(enemy.Id, P1, Zone.Board));
+
+            Assert.That(intent, Is.Null, "a minion cannot be placed onto the opponent's board");
+        }
+
+        private static (DragTargetingModel model, DragSource source, GameState state) ArmCoin()
+        {
+            var coin = Spell("coin", new[]
+            {
+                TestRules.Rule("gain_mana", Trigger.ON_CAST, new GainManaAction(1, ManaGainKind.TEMPORARY)),
+            });
+            var db = new FakeCardDatabase().Register(coin);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), coin.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+            Assert.That(source.NeedsTarget, Is.False, "the coin owes no chosen target");
+            return (model, source, state);
+        }
+
         private static GameState State()
         {
             var state = new GameState(new MatchId("drag-target-plan"), new DeterministicRandom(1),

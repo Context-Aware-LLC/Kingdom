@@ -212,6 +212,13 @@ namespace Emberfall.Presentation
                 SyncHiddenHand(owner, hidden ? cards.Count : 0);
                 if (hidden) return;
             }
+            else if (zone == Zone.Board)
+            {
+                // Re-solve the row BEFORE any board anchor is resolved this tick, same reasoning
+                // as the hand fan above: center the occupied slots instead of packing them against
+                // the leftmost ones (Sam, 2026-08-09).
+                boardAnchors?.SetBoardCount(owner, cards.Count);
+            }
 
             for (int i = 0; i < cards.Count; i++)
             {
@@ -545,11 +552,18 @@ namespace Emberfall.Presentation
             // Renderer.enabled, which is inert on an inactive GameObject.
             glowRenderer.enabled = false;
 
-            // Aegis underlay — slightly larger, just behind. SG_Aegis material assigned later.
+            // Aegis underlay — a shield/force-field bubble, just behind. SG_Aegis material
+            // assigned later. Sam, 2026-08-09: the old +0.21 margin (barely bigger than the glow
+            // overlay's +0.15) left the rim/fresnel bubble hugging the card's own edges instead of
+            // encompassing it — a shield effect reads as a shield only with real room around the
+            // card it's protecting. SG_Aegis has no exposed size/inset property (only color,
+            // intensity, rim power, pulse and noise — hist-docs SG_Aegis.shadergraph), and it's a
+            // plain Quad, so its UV space IS this transform's scale: enlarging this directly grows
+            // the rendered bubble.
             var aegisGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             aegisGo.name = "AegisUnderlay";
             aegisGo.transform.SetParent(root.transform, false);
-            aegisGo.transform.localScale    = new Vector3(CardW + 0.21f, CardH + 0.21f, 1f);
+            aegisGo.transform.localScale    = new Vector3(CardW + 0.55f, CardH + 0.55f, 1f);
             aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
             DestroyObj(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
