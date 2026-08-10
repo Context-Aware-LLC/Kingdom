@@ -916,7 +916,7 @@
       "id": "core_lantern_bearer",
       "name": "Lantern-Bearer",
       "type": "MINION",
-      "tooltip": "Gravelight Lantern-Bearer",
+      "tooltip": "Grave Lantern Bearer",
       "cost": 2,
       "attack": 2,
       "health": 2,
@@ -928,7 +928,7 @@
       "tribe": null,
       "setId": "CORE",
       "collectible": true,
-      "artId": "gravelight_lantern_bearer",
+      "artId": "grave_lantern_bearer",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -2189,8 +2189,8 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_glacierborn_leviathan",
-      "name": "Glacierborn Leviathan",
+      "id": "tide_glacial_leviathan",
+      "name": "Glacial Leviathan",
       "type": "MINION",
       "cost": 7,
       "attack": 6,
@@ -2205,7 +2205,7 @@
       "tribe": "BEAST",
       "setId": "EMBERFALL",
       "collectible": true,
-      "artId": "tide_glacierborn_leviathan",
+      "artId": "tide_glacial_leviathan",
       "sourceFile": "Emberfall.cards.json"
     },
     {

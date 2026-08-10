@@ -104,7 +104,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(s.Players[0].Board, Has.Count.EqualTo(1), "Acolyte is on board.");
         }
 
-        // ── Gravelight Lantern-Bearer: toll summons Wisp ─────────────────────
+        // ── Grave Lantern Bearer: toll summons Wisp ─────────────────────
 
         [Test]
         public void LanternBearer_Toll_Summons_Wisp()

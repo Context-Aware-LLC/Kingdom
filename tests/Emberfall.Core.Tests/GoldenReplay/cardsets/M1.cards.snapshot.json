@@ -264,7 +264,7 @@
   },
   {
     "id": "core_lantern_bearer",
-    "name": "Gravelight Lantern-Bearer",
+    "name": "Grave Lantern Bearer",
     "type": "MINION",
     "cost": 2,
     "attack": 2,
@@ -274,7 +274,7 @@
     "keywords": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "gravelight_lantern_bearer",
+    "artId": "grave_lantern_bearer",
     "rules": [
       {
         "id": "rule_1",

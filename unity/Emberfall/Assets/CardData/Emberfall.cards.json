@@ -268,7 +268,7 @@
   },
   {
     "id": "core_lantern_bearer",
-    "name": "Gravelight Lantern-Bearer",
+    "name": "Grave Lantern-Bearer",
     "type": "MINION",
     "cost": 2,
     "attack": 2,
@@ -298,7 +298,7 @@
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "gravelight_lantern_bearer"
+    "artId": "grave_lantern_bearer"
   },
   {
     "id": "core_aegis_templar",
@@ -1482,7 +1482,7 @@
   },
   {
     "id": "grave_sealed_gate_keeper",
-    "name": "Keeper of the Sealed Gate",
+    "name": "Sealed Gate Keeper",
     "type": "MINION",
     "cost": 6,
     "attack": 4,
@@ -2268,8 +2268,8 @@
     "artId": "tide_deepfrost_spear"
   },
   {
-    "id": "tide_glacierborn_leviathan",
-    "name": "Glacierborn Leviathan",
+    "id": "tide_glacial_leviathan",
+    "name": "Glacial Leviathan",
     "type": "MINION",
     "cost": 7,
     "attack": 6,
@@ -2302,7 +2302,7 @@
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "tide_glacierborn_leviathan"
+    "artId": "tide_glacial_leviathan"
   },
   {
     "id": "ember_ashfall_wyrm",
@@ -3073,7 +3073,8 @@
   },
   {
     "id": "clock_the_great_mechanism",
-    "name": "The Great Mechanism",
+    "name": "The Mechanism",
+    "tooltip": "The Great Mechanism",
     "type": "MINION",
     "cost": 8,
     "attack": 4,
@@ -3559,8 +3560,9 @@
   },
   {
     "id": "night_kira_blade_of_shadows",
-    "name": "Kira, Blade of Shadows",
+    "name": "Kira",
     "type": "MINION",
+    "tooltip": "Kira, Blade of Shadows",
     "cost": 6,
     "attack": 5,
     "health": 4,
@@ -4818,6 +4820,7 @@
     "id": "neutral_searing_quill",
     "name": "Searing Quill",
     "type": "WEAPON",
+    "flavortext": "More powerful than a sword?",
     "cost": 2,
     "attack": 2,
     "durability": 2,

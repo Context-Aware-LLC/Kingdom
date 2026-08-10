@@ -336,7 +336,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56ad92607bff7ca478df793c378fec37
-    m_Address: card_art/gravelight_lantern_bearer
+    m_Address: card_art/grave_lantern_bearer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -361,7 +361,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e0bb383c903ae94ca262f375812fcc0
-    m_Address: card_art/tide_glacierborn_leviathan
+    m_Address: card_art/tide_glacial_leviathan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

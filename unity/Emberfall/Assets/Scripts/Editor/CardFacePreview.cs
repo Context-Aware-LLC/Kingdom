@@ -153,7 +153,7 @@ namespace Emberfall.Editor
             "ember_stoke_the_coals",  "ember_emberdrinker",     "ember_slagshell_bulwark",
             "ember_kiln_warden",      "ember_forgeheart_colossus", "ember_ashfall_wyrm",
             "tide_hoarfrost_lash",    "tide_fathom_crush",      "tide_deepfrost_spear",
-            "tide_hollowshell_warden","tide_drowned_titan",     "tide_glacierborn_leviathan",
+            "tide_hollowshell_warden","tide_drowned_titan",     "tide_glacial_leviathan",
         }, "card_faces_emberward_tidecaller");
 
         // ── Spread ──────────────────────────────────────────────────────────────────
