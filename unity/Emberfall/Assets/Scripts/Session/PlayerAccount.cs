@@ -148,6 +148,27 @@ namespace Emberfall.Session
             return check;
         }
 
+        /// <summary>The character half of the last deck actually submitted into a match, or empty if none yet.</summary>
+        public string LastPlayedCharacterId => Profile.LastPlayedCharacterId;
+
+        /// <summary>The deck half of the last deck actually submitted into a match, or empty if none yet.</summary>
+        public string LastPlayedDeckId => Profile.LastPlayedDeckId;
+
+        /// <summary>
+        /// Remember the character/deck a match was just started with, so Find Game can pre-arm the
+        /// same pick next time instead of forcing a fresh Select (Sam, 2026-08-09). Call this once the
+        /// pair is known good — this stores it as-is, with no eligibility check of its own.
+        /// </summary>
+        public void RecordLastPlayed(string characterId, string deckId)
+        {
+            if (string.IsNullOrEmpty(characterId) || string.IsNullOrEmpty(deckId)) return;
+
+            var profile = Profile;
+            profile.LastPlayedCharacterId = characterId;
+            profile.LastPlayedDeckId = deckId;
+            _profiles.Save(profile);
+        }
+
         // ── Roster and decks ────────────────────────────────────────────────────────────
 
         /// <summary>

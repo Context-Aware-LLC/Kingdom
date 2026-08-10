@@ -42,9 +42,25 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public string DisplayName { get; set; }
 
-        public PlayerProfile(string displayName = "")
+        /// <summary>
+        /// The character and deck actually submitted into the most recent match (Sam, 2026-08-09) —
+        /// what Find Game pre-arms so a player is not forced to re-pick a queue-ready deck every
+        /// time. Empty until the first match ships a deck. Deliberately not re-validated here: a
+        /// character or deck deleted since, or a deck that has fallen out of queue eligibility, is
+        /// the reader's problem to check against a fresh roster, the same way <see cref="Character.DefaultDeckId"/>'s
+        /// dangling-id contract works — this field just remembers what was picked, not whether it is
+        /// still pickable.
+        /// </summary>
+        public string LastPlayedCharacterId { get; set; }
+
+        /// <summary>The deck half of <see cref="LastPlayedCharacterId"/>.</summary>
+        public string LastPlayedDeckId { get; set; }
+
+        public PlayerProfile(string displayName = "", string lastPlayedCharacterId = "", string lastPlayedDeckId = "")
         {
             DisplayName = displayName ?? "";
+            LastPlayedCharacterId = lastPlayedCharacterId ?? "";
+            LastPlayedDeckId = lastPlayedDeckId ?? "";
         }
 
         /// <summary>False on first run and after a name is cleared — the signal to ask for one.</summary>

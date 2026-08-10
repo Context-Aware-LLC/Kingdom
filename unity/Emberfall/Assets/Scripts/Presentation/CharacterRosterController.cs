@@ -244,6 +244,7 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            TryPreselectLastPlayed();
             RebuildRoster();
         }
 
@@ -1895,6 +1896,37 @@ namespace Emberfall.Presentation
         {
             _pickedCharacterId = "";
             _pickedDeckId = "";
+        }
+
+        /// <summary>
+        /// Pre-arm the match pick with whatever deck was last actually submitted into a match (Sam,
+        /// 2026-08-09), so Find Game can go straight to Continue instead of forcing a fresh Select
+        /// every time. Re-validated against disk exactly like a manual pick, because the last-played
+        /// character or deck may have been deleted since, or the deck may have fallen out of queue
+        /// eligibility (a card dusted, a rule tightened) — <see cref="PlayerProfile.LastPlayedDeckId"/>
+        /// carries no eligibility guarantee of its own. Finding nothing pickable leaves the screen
+        /// exactly as it was before this existed: empty, waiting on a manual Select.
+        /// </summary>
+        private void TryPreselectLastPlayed()
+        {
+            if (!MatchDeckSelection.Choosing) return;
+
+            string characterId = _account.LastPlayedCharacterId;
+            string deckId = _account.LastPlayedDeckId;
+            if (string.IsNullOrEmpty(characterId) || string.IsNullOrEmpty(deckId)) return;
+
+            Character character = CharacterQuery.ById(_account.Roster(), characterId);
+            if (character == null) return;
+
+            DeckList deck = null;
+            foreach (DeckList d in _account.Decks())
+                if (d.Id == deckId && d.CharacterId == character.Id) { deck = d; break; }
+            if (deck == null) return;
+
+            if (!QueueEligibility.Check(deck, character, _db, _owned).IsEligible) return;
+
+            _pickedCharacterId = character.Id;
+            _pickedDeckId = deck.Id;
         }
 
         /// <summary>

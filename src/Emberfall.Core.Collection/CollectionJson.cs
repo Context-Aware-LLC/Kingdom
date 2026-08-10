@@ -191,6 +191,8 @@ namespace Emberfall.Core.Collection
                 w.WriteNumber("schemaVersion", SchemaVersion);
                 w.WriteStartObject(ProfileProperty);
                 w.WriteString("displayName", profile.DisplayName);
+                w.WriteString("lastPlayedCharacterId", profile.LastPlayedCharacterId);
+                w.WriteString("lastPlayedDeckId", profile.LastPlayedDeckId);
                 w.WriteEndObject();
                 w.WriteEndObject();
             }
@@ -210,8 +212,12 @@ namespace Emberfall.Core.Collection
                 throw new CollectionFormatException($"Collection file has no '{ProfileProperty}' object.");
 
             // Absent is the same as never-named, which is a legitimate state (IProfileStore) — so a
-            // missing displayName is empty rather than fatal, unlike a character's required id.
-            return new PlayerProfile(Str(el, "displayName") ?? "");
+            // missing displayName is empty rather than fatal, unlike a character's required id. Same
+            // treatment for the last-played pointer: absent means "never shipped a deck yet", not corrupt.
+            return new PlayerProfile(
+                Str(el, "displayName") ?? "",
+                Str(el, "lastPlayedCharacterId") ?? "",
+                Str(el, "lastPlayedDeckId") ?? "");
         }
 
         // ---- accounts ------------------------------------------------------------------

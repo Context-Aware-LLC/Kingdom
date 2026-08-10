@@ -263,6 +263,11 @@ namespace Emberfall.Presentation
             if (!queue.IsEligible)
                 throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
 
+            // Remembered here, not at the roster's Select/Continue click: this is the one point that
+            // is guaranteed to be an actual match start with a re-validated, queue-ready deck (Sam,
+            // 2026-08-09) — what Find Game pre-arms its pick from next time.
+            account.RecordLastPlayed(selected.Id, deck.Id);
+
             var lines = new List<DeckCardLine>(deck.Entries.Count);
             for (int i = 0; i < deck.Entries.Count; i++)
             {

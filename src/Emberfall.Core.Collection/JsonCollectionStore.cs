@@ -233,7 +233,10 @@ namespace Emberfall.Core.Collection
 
             // Store the normalized form, not what was handed in — otherwise two players who typed the
             // same name hold different bytes, and a later uniqueness check would call them different.
-            var stored = new PlayerProfile(profile.HasDisplayName ? check.Normalized : "");
+            var stored = new PlayerProfile(
+                profile.HasDisplayName ? check.Normalized : "",
+                profile.LastPlayedCharacterId,
+                profile.LastPlayedDeckId);
             JsonStoreFile.Write(_filePath, CollectionJson.WriteProfile(stored));
 
             // The caller's object is the one the UI is still holding; leaving it un-normalized would

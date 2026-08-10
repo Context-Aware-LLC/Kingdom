@@ -253,5 +253,47 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(JsonProfileStore.InDirectory(_root, "device-a").Load().DisplayName, Is.EqualTo("Alice"));
             Assert.That(JsonProfileStore.InDirectory(_root, "device-b").Load().DisplayName, Is.EqualTo("Bob"));
         }
+
+        // ---- last-played pointer (Sam, 2026-08-09: Find Game pre-arms its pick from this) ----
+
+        [Test]
+        public void Load_on_first_run_has_no_last_played_pointer()
+        {
+            var profile = Store().Load();
+            Assert.That(profile.LastPlayedCharacterId, Is.Empty);
+            Assert.That(profile.LastPlayedDeckId, Is.Empty);
+        }
+
+        [Test]
+        public void Save_then_load_round_trips_the_last_played_pointer()
+        {
+            Store().Save(new PlayerProfile("Sam", "char-1", "deck-1"));
+
+            var loaded = Store().Load();
+            Assert.That(loaded.LastPlayedCharacterId, Is.EqualTo("char-1"));
+            Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
+        }
+
+        [Test]
+        public void Saving_a_display_name_does_not_wipe_the_last_played_pointer()
+        {
+            var store = Store();
+            store.Save(new PlayerProfile("Sam", "char-1", "deck-1"));
+            store.Save(new PlayerProfile("Sam Renamed", "char-1", "deck-1"));
+
+            var loaded = store.Load();
+            Assert.That(loaded.DisplayName, Is.EqualTo("Sam Renamed"));
+            Assert.That(loaded.LastPlayedCharacterId, Is.EqualTo("char-1"));
+            Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
+        }
+
+        [Test]
+        public void ReadProfile_treats_a_missing_last_played_pointer_as_never_played()
+        {
+            var profile = CollectionJson.ReadProfile(
+                $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": {{ \"displayName\": \"Sam\" }} }}");
+            Assert.That(profile.LastPlayedCharacterId, Is.Empty);
+            Assert.That(profile.LastPlayedDeckId, Is.Empty);
+        }
     }
 }
