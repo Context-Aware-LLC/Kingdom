@@ -31,7 +31,13 @@ namespace Emberfall.Core.Cards
         }
 
         /// <summary>Renders the rule half of a card face on its own, without any carrier keywords.</summary>
-        public static string Generate(IReadOnlyList<RuleDefinition> rules)
+        /// <remarks>
+        /// A test seam, not card-face API: every shipping caller renders a whole card. Kept internal
+        /// so a rule list rendered without its carrier keywords cannot become a second, half-right
+        /// way to print a card face. The friend declaration is in AssemblyInfo.cs — in code, because
+        /// Unity never reads the .csproj.
+        /// </remarks>
+        internal static string Generate(IReadOnlyList<RuleDefinition> rules)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
             return string.Join(" ", RenderRuleGroups(rules));
@@ -267,6 +273,11 @@ namespace Emberfall.Core.Cards
             if (TryStripPrefix(description, "an ", out rest)) return "another " + rest;
             if (TryStripPrefix(description, "the ", out rest)) return "another " + rest;
             if (TryStripPrefix(description, "all ", out rest)) return "all other " + rest;
+            // The possessive has to survive the rewrite the way "all" does — "another your weapon"
+            // is what dropping it produces. That the result ("your other weapon") then claims you
+            // hold two weapons is a fact about the authored data, not about this phrasing: the
+            // "your" selectors name unique things, so a distinctFrom on one excludes nothing.
+            if (TryStripPrefix(description, "your ", out rest)) return "your other " + rest;
             if (TryInsertAfterCount(description, "other ", out string counted)) return counted;
             return "another " + description;
         }
@@ -278,32 +289,44 @@ namespace Emberfall.Core.Cards
             if (filter.Damaged.HasValue) modifier += filter.Damaged.Value ? "damaged " : "undamaged ";
             if (filter.Tribe.HasValue) modifier += Name(filter.Tribe.Value.ToString()) + " ";
             if (modifier.Length == 0) return description;
-
-            string rest;
-            // "an X" becomes "a <modifier> X": the article agrees with the modifier, not the noun.
-            if (TryStripPrefix(description, "a ", out rest)) return "a " + modifier + rest;
-            if (TryStripPrefix(description, "an ", out rest)) return "a " + modifier + rest;
-            // "all other " must be tested before "all ", which is a prefix of it.
-            if (TryStripPrefix(description, "all other ", out rest)) return "all other " + modifier + rest;
-            if (TryStripPrefix(description, "all ", out rest)) return "all " + modifier + rest;
-            if (TryInsertAfterCount(description, modifier, out string counted)) return counted;
-            if (TryStripPrefix(description, "another ", out rest)) return "another " + modifier + rest;
-            if (TryStripPrefix(description, "the ", out rest)) return "the " + modifier + rest;
-            if (TryStripPrefix(description, "your ", out rest)) return "your " + modifier + rest;
-            return modifier + description;
+            return SpliceAfterDeterminer(description, modifier);
         }
 
         /// <summary>Marks a description as randomly chosen, between determiner and noun.</summary>
         private static string Randomize(string description)
+            => SpliceAfterDeterminer(description, "random ");
+
+        /// <summary>
+        /// Every determiner a description can open with, longest first so a shorter one cannot
+        /// shadow a longer one it prefixes ("all " over "all other ").
+        /// </summary>
+        /// <remarks>
+        /// This table is the full set of forms <see cref="Quantity"/> and <see cref="Another"/>
+        /// can produce, minus the indefinite articles, which are handled separately because they
+        /// have to be re-picked rather than carried over. Anything Another learns to emit belongs
+        /// here in the same edit — a missing entry does not fail, it silently word-orders the
+        /// adjective wrong ("your damaged other weapon").
+        /// </remarks>
+        private static readonly string[] Determiners =
+            { "all other ", "your other ", "another ", "all ", "your ", "the " };
+
+        /// <summary>Inserts an adjective where one belongs: after the determiner, before the noun.</summary>
+        private static string SpliceAfterDeterminer(string description, string word)
         {
+            // An indefinite article agrees with whatever now comes first, so it is re-picked
+            // against the spliced word instead of carried over: "an enemy minion" takes "random "
+            // as "a random enemy minion" and "undamaged " as "an undamaged enemy minion".
             string rest;
-            if (TryStripPrefix(description, "a ", out rest)) return "a random " + rest;
-            if (TryStripPrefix(description, "an ", out rest)) return "a random " + rest;
-            if (TryStripPrefix(description, "the ", out rest)) return "the random " + rest;
-            if (TryStripPrefix(description, "your ", out rest)) return "your random " + rest;
-            if (TryStripPrefix(description, "another ", out rest)) return "another random " + rest;
-            if (TryInsertAfterCount(description, "random ", out string counted)) return counted;
-            return "random " + description;
+            if (TryStripPrefix(description, "a ", out rest) ||
+                TryStripPrefix(description, "an ", out rest))
+                return Article(word) + " " + word + rest;
+
+            foreach (string determiner in Determiners)
+                if (TryStripPrefix(description, determiner, out rest))
+                    return determiner + word + rest;
+
+            if (TryInsertAfterCount(description, word, out string counted)) return counted;
+            return word + description;
         }
 
         /// <summary>Strips a leading determiner off a description, handing back what follows it.</summary>
@@ -356,8 +379,87 @@ namespace Emberfall.Core.Cards
         private static string Copies(int count, string cardName)
         {
             if (count <= 0) throw Requires("a positive copy count");
-            return count == 1 ? "a " + cardName : $"{count} {cardName}s";
+            return count == 1
+                ? Article(cardName) + " " + cardName
+                : count + " " + Plural(cardName);
         }
+
+        /// <summary>Pluralises the last word of a card name, by English spelling rules.</summary>
+        /// <remarks>
+        /// Orthographic, not lexical, and that is forced rather than chosen: this renderer holds
+        /// only a card ID (<c>SummonAction.CardId</c>), never the summoned card's definition, so
+        /// there is no authored plural to read and no database here to read one from. The classes
+        /// below cover every name the card data ships; a genuinely irregular one (Mouse, Child)
+        /// would still come out wrong, and fixing THAT means giving this renderer the database.
+        /// </remarks>
+        private static string Plural(string cardName)
+        {
+            int start = cardName.LastIndexOf(' ') + 1;   // 0 when the name is a single word
+            string head = cardName.Substring(0, start);
+            string noun = cardName.Substring(start);
+
+            // A sibilant ending takes "es", because the extra syllable is actually spoken: Ash,
+            // Torch, Fox. Tested first — "sh" and "ch" would otherwise fall through to plain "s".
+            if (EndsWithAny(noun, "s", "x", "z", "ch", "sh")) return head + noun + "es";
+            // Consonant + y takes "ies" (Harpy); vowel + y keeps the y (Ley).
+            if (noun.Length > 1 && EndsWithAny(noun, "y") && !IsVowel(noun[noun.Length - 2]))
+                return head + noun.Substring(0, noun.Length - 1) + "ies";
+            // -f/-fe takes "ves", which is right for this game's vocabulary (Wolf, Elf, Dwarf,
+            // Wraithknife) and wrong for the words it does not use (Chief, Roof).
+            if (EndsWithAny(noun, "fe")) return head + noun.Substring(0, noun.Length - 2) + "ves";
+            if (EndsWithAny(noun, "f")) return head + noun.Substring(0, noun.Length - 1) + "ves";
+            return head + noun + "s";
+        }
+
+        /// <summary>Picks the indefinite article a phrase reads with, "a" or "an".</summary>
+        /// <remarks>
+        /// Decided from spelling, since there is no pronunciation data to consult — so the two
+        /// lists below are exactly the cases where the first LETTER disagrees with the first SOUND:
+        /// an unspoken h ("an Hour") and a vowel spoken as "yoo" or "wuh" ("a Unicorn", "a One-Eyed
+        /// Crow"). A leading digit is handled separately because a stat prefix puts one there.
+        /// </remarks>
+        private static string Article(string phrase)
+        {
+            if (string.IsNullOrEmpty(phrase)) throw Requires("a non-empty phrase to article");
+            if (char.IsDigit(phrase[0])) return LeadingNumberTakesAn(phrase) ? "an" : "a";
+            if (StartsWithAny(phrase, "hour", "honest", "honor", "honour", "heir")) return "an";
+            if (StartsWithAny(phrase, "uni", "use", "usu", "uti", "eu", "ewe", "one")) return "a";
+            return IsVowel(phrase[0]) ? "an" : "a";
+        }
+
+        /// <summary>Whether a phrase's leading number is spoken starting with a vowel sound.</summary>
+        /// <remarks>
+        /// A summoned token carries its stats as a prefix ("Summon a 1/1 Wisp"), so the article has
+        /// to agree with a number read aloud. Every number leading with 8 is spoken "eight-" —
+        /// 8, 8/8, 80, 800 — and 11 and 18 are the only others whose name opens on a vowel; 110 and
+        /// 180 are spoken "one hundred…" and take "a".
+        /// </remarks>
+        private static bool LeadingNumberTakesAn(string phrase)
+        {
+            int end = 0;
+            while (end < phrase.Length && char.IsDigit(phrase[end])) end++;
+            string digits = phrase.Substring(0, end);
+            return digits[0] == '8' || digits == "11" || digits == "18";
+        }
+
+        /// <summary>Whether a word ends with any of the given suffixes, ignoring case.</summary>
+        private static bool EndsWithAny(string word, params string[] suffixes)
+        {
+            foreach (string suffix in suffixes)
+                if (word.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        /// <summary>Whether a phrase starts with any of the given prefixes, ignoring case.</summary>
+        private static bool StartsWithAny(string phrase, params string[] prefixes)
+        {
+            foreach (string prefix in prefixes)
+                if (phrase.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        /// <summary>Whether a letter is a written vowel, which is not the same as a vowel sound.</summary>
+        private static bool IsVowel(char c) => "aeiouAEIOU".IndexOf(c) >= 0;
 
         /// <summary>Renders a stat change with an explicit sign, as a buff line reads it.</summary>
         private static string Delta(int amount)

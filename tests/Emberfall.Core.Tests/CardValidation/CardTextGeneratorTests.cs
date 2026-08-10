@@ -242,6 +242,103 @@ namespace Emberfall.Core.Tests.CardValidation
                 Is.EqualTo("Give all friendly minions +1/+1."));
         }
 
+        // The article agrees with the SOUND the phrase opens on, not its first letter — and a
+        // summoned token opens on its stat prefix, so the number has to be read aloud too. No
+        // shipping card trips any of these: every live summon is a consonant-initial name after
+        // a 1/1 or 5/5. They are the cases the next token name walks into.
+        [TestCase("token_wisp_1_1", "Summon a 1/1 Wisp.")]
+        [TestCase("token_golem_8_8", "Summon an 8/8 Golem.")]
+        [TestCase("token_ancient_11_11", "Summon an 11/11 Ancient.")]
+        [TestCase("token_ember_wisp", "Summon an Ember Wisp.")]
+        [TestCase("token_unicorn", "Summon a Unicorn.")]
+        [TestCase("token_hourglass", "Summon an Hourglass.")]
+        public void An_Indefinite_Article_Agrees_With_The_Sound_The_Name_Opens_On(
+            string cardId, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("summon_one"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new SummonAction(cardId, 1));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        // Pluralisation used to be a trailing "s", which is right for every name the card data
+        // ships and wrong for the first one that ends in a sibilant, a consonant + y, or an f.
+        [TestCase("token_wisp_1_1", "Summon 2 1/1 Wisps.")]
+        [TestCase("token_gear_wisp", "Summon 2 Gear Wisps.")]
+        [TestCase("token_ash", "Summon 2 Ashes.")]
+        [TestCase("token_torch", "Summon 2 Torches.")]
+        [TestCase("token_fox", "Summon 2 Foxes.")]
+        [TestCase("token_harpy", "Summon 2 Harpies.")]
+        [TestCase("token_ley", "Summon 2 Leys.")]
+        [TestCase("token_wolf", "Summon 2 Wolves.")]
+        [TestCase("token_wraithknife", "Summon 2 Wraithknives.")]
+        public void A_Plural_Card_Name_Follows_English_Spelling_Not_A_Trailing_S(
+            string cardId, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("summon_two"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new SummonAction(cardId, 2));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        // A filter puts its own word first, so the article is re-picked against the modifier —
+        // "an enemy minion" that is undamaged stays "an", one that is damaged becomes "a".
+        [TestCase("ANY_MINION", true, null, "Deal 1 damage to a damaged minion.")]
+        [TestCase("ANY_MINION", false, null, "Deal 1 damage to an undamaged minion.")]
+        [TestCase("ANY_ENEMY", false, null, "Deal 1 damage to an undamaged enemy character.")]
+        [TestCase("ANY_ENEMY", true, null, "Deal 1 damage to a damaged enemy character.")]
+        [TestCase("ANY_MINION", null, Tribe.ELEMENTAL, "Deal 1 damage to an Elemental minion.")]
+        [TestCase("ANY_MINION", null, Tribe.BEAST, "Deal 1 damage to a Beast minion.")]
+        public void A_Filter_Re_Articles_The_Phrase_It_Modifies(
+            string selector, bool? damaged, Tribe? tribe, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("filtered"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec(selector,
+                    filter: new TargetFilterDef(damaged: damaged, tribe: tribe))));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        // distinctFrom on a possessive kept the determiner AND added one: "another your weapon".
+        // "your other weapon" is the parallel of the "all " -> "all other " case beside it. That
+        // it then claims two weapons is a fact about the authored data, not the phrasing.
+        [TestCase("FRIENDLY_WEAPON", "Deal 1 damage to your other weapon.")]
+        [TestCase("FRIENDLY_HERO", "Deal 1 damage to your other hero.")]
+        [TestCase("ANY_MINION", "Deal 1 damage to another minion.")]
+        [TestCase("ENEMY_HERO", "Deal 1 damage to another enemy hero.")]
+        public void Another_Keeps_A_Possessive_Instead_Of_Doubling_The_Determiner(
+            string selector, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("distinct"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec(selector, distinctFrom: "first")));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
+        // The determiner table is shared by the filter and the random splice for exactly this
+        // reason: "all other" and "your other" are two words, and an adjective goes after both of
+        // them, not inside. When each splice site listed determiners for itself, one of them knew
+        // about "all other " and the other did not.
+        [TestCase("FRIENDLY_WEAPON", null, "Deal 1 damage to your other random damaged weapon.")]
+        [TestCase("FRIENDLY_MINIONS", -1, "Deal 1 damage to all other damaged friendly minions.")]
+        public void An_Adjective_Splices_After_A_Two_Word_Determiner_Not_Into_It(
+            string selector, int? count, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("distinct_filtered_random"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec(selector, TargetChosenBy.RANDOM, count: count,
+                    filter: new TargetFilterDef(damaged: true), distinctFrom: "first")));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
         [Test]
         public void Renders_Target_Count_And_Distinctness()
         {
