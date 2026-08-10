@@ -11,7 +11,6 @@
             <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
             <ui:Label name="identity-sub" text="" class="mm-identity__sub"/>
         </ui:VisualElement>
-        <ui:Button name="btn-switch-account" text="Switch account" class="mm-devonly"/>
         <ui:VisualElement name="brand" class="mm-brand">
             <ui:Label text="EMBERFALL" class="mm-wordmark"/>
             <ui:Label text="A duel of embers" class="mm-tagline"/>
@@ -46,18 +45,6 @@
                      fall back to, and it is the only place a name is ever set (NOR-287). -->
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="account-modal" class="mm-modal mm-modal--hidden">
-            <ui:VisualElement name="account-panel" class="mm-modal__panel">
-                <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title"/>
-                <ui:Label name="account-help" text="Local testing only — each account has its own name, characters and decks, and joins matches as its own player. Switching reloads the menu." class="mm-modal__help"/>
-                <ui:VisualElement name="account-list" class="mm-accounts"/>
-                <ui:Label name="account-error" text=" " class="mm-modal__error"/>
-                <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button"/>
-                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

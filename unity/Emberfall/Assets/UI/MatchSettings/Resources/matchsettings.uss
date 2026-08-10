@@ -99,3 +99,19 @@
 /* Concede is destructive — it reads in the negative color and warms on hover. */
 .ms-item--danger        { color: var(--negative); }
 .ms-item--danger:hover  { background-color: rgba(229, 72, 77, 0.22); }
+
+/* Quit (Sam, 2026-08-09): accessible, never a call to action. No background, no bold, smaller and
+ * quieter than the .ms-item rows above it — it should read as the last, least-important line in
+ * the menu, not compete with Concede/Close for attention. */
+.ms-item-quiet {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    height: auto;
+    margin-top: var(--space-4);
+    padding: var(--space-1) 0 0 0;
+    -unity-text-align: middle-center;
+}
+.ms-item-quiet:hover  { color: var(--ink-1); }
+.ms-item-quiet:active { color: var(--ink-2); }

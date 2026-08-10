@@ -106,9 +106,9 @@
 }
 
 /* ---------- Identity plate ----------
- * Top-left, opposite the version footer: who you are on this device. It was a Button while
- * renaming was its one affordance; names are permanent now (NOR-287), so it is a plain
- * VisualElement with no hover state — nothing about it should read as pressable.
+ * Top-left: who you are on this device. It was a Button while renaming was its one affordance;
+ * names are permanent now (NOR-287), so it is a plain VisualElement with no hover state —
+ * nothing about it should read as pressable.
  */
 .mm-identity {
     position: absolute;
@@ -129,31 +129,7 @@
 .mm-identity__sub {
     font-size: var(--type-caption);
     color: var(--ink-2);
-}
-
-/* ---------- Dev-only affordances ----------
- * Hidden by default and shown from C# under UNITY_EDITOR || DEVELOPMENT_BUILD. Hiding here rather
- * than only in code means a release build leaves it invisible even if the show call is ever
- * reached — the default is the safe one.
- * Sits directly under the identity plate, deliberately reading as a debug control and not as
- * chrome: quieter than the menu, and never in the visual language of a shipped button.
- */
-.mm-devonly {
-    position: absolute;
-    top: 72px;
-    left: var(--space-6);
-    display: none;
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    background-color: rgba(20, 25, 34, 0.4);
-    border-width: 1px;
-    border-color: rgba(11, 14, 19, 0.6);
-    border-radius: var(--space-1);
-    padding: 2px var(--space-2);
-}
-.mm-devonly:hover {
-    color: var(--ink-1);
-    background-color: rgba(42, 51, 64, 0.6);
+    margin-top: var(--space-1);
 }
 
 /* ---------- Account switcher rows ---------- */
@@ -398,11 +374,16 @@
     color: var(--surface-3);
 }
 
-/* ---------- Footer ---------- */
+/* ---------- Footer ----------
+ * Bottom-left (Sam, 2026-08-09): the in-match settings gear (.ms-gear, matchsettings.uss) lives
+ * bottom-right, and MainMenuController now mounts that same overlay over this screen so Settings
+ * is reachable from the menu too. The version label moved out of that corner to make room for it,
+ * rather than the two ever sharing a slot.
+ */
 .mm-footer {
     position: absolute;
     bottom: var(--space-6);
-    right: var(--space-6);
+    left: var(--space-6);
 }
 .mm-version {
     font-size: var(--type-caption);

@@ -914,8 +914,9 @@
     },
     {
       "id": "core_lantern_bearer",
-      "name": "Gravelight Lantern-Bearer",
+      "name": "Lantern-Bearer",
       "type": "MINION",
+      "tooltip": "Gravelight Lantern-Bearer",
       "cost": 2,
       "attack": 2,
       "health": 2,
@@ -2680,8 +2681,9 @@
     },
     {
       "id": "clock_the_great_mechanism",
-      "name": "The Great Mechanism",
+      "name": "The Mechanism",
       "type": "MINION",
+      "tooltip": "The Great Mechanism",
       "cost": 8,
       "attack": 4,
       "health": 6,
@@ -3228,8 +3230,9 @@
     },
     {
       "id": "ward_duras_the_ironmount",
-      "name": "Duras, the Ironmount",
+      "name": "Duras",
       "type": "MINION",
+      "tooltip": "Duras, the Ironmount",
       "cost": 8,
       "attack": 5,
       "health": 10,
@@ -4489,8 +4492,9 @@
     },
     {
       "id": "rekind_neutral_bannerman",
-      "name": "New Dawn Bannerman",
+      "name": "Bannerman",
       "type": "MINION",
+      "tooltip": "New Dawn Bannerman",
       "cost": 4,
       "attack": 3,
       "health": 3,
@@ -4551,8 +4555,9 @@
     },
     {
       "id": "rekind_neutral_aric",
-      "name": "Aric, First Among Equals",
+      "name": "Aric",
       "type": "MINION",
+      "tooltip": "Aric, First Among Equals",
       "cost": 7,
       "attack": 5,
       "health": 7,
@@ -5301,8 +5306,8 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_reconstructed_automaton",
-      "name": "Reconstructed Automaton",
+      "id": "rekind_clock_rebuilt_automaton",
+      "name": "Rebuilt Automaton",
       "type": "MINION",
       "cost": 3,
       "attack": 2,
@@ -5317,7 +5322,7 @@
       "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "clock_reconstructed_automaton",
+      "artId": "clock_rebuilt_automaton",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -5361,8 +5366,8 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_masterwork_constructor",
-      "name": "Masterwork Constructor",
+      "id": "rekind_clock_masterwork_construct",
+      "name": "Masterwork Construct",
       "type": "MINION",
       "cost": 5,
       "attack": 4,
@@ -5382,8 +5387,9 @@
     },
     {
       "id": "rekind_clock_cogsworth",
-      "name": "Cogsworth, The Grand Rebuilder",
+      "name": "Cogsworth",
       "type": "MINION",
+      "tooltip": "Cogsworth, The Grand Rebuilder",
       "cost": 8,
       "attack": 5,
       "health": 8,
@@ -5719,8 +5725,9 @@
     },
     {
       "id": "rekind_stone_aldric",
-      "name": "Aldric, The Fortifier",
+      "name": "Aldric",
       "type": "MINION",
+      "tooltip": "Aldric, The Fortifier",
       "cost": 7,
       "attack": 5,
       "health": 8,

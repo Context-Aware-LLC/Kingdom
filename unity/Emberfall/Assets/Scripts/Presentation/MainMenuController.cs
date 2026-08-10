@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Session;
@@ -45,9 +44,6 @@ namespace Emberfall.Presentation
         private Button _nameConfirm;
         private bool _nameBusy;
 
-        private VisualElement _accountModal;
-        private VisualElement _accountList;
-        private Label _accountError;
         private ShopPanelController _shop;
         private SignInGateController _signIn;
 
@@ -92,7 +88,7 @@ namespace Emberfall.Presentation
 
             BindIdentity();
             BindNameModal();
-            BindAccountModal();
+            MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
 
             // A corrupt collection file must not brick the front door. The stores throw rather than
@@ -377,33 +373,22 @@ namespace Emberfall.Presentation
             if (element != null) element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        // ── Account switcher (testing) ──────────────────────────────────────────────────
+        // ── Settings overlay (C-G1-3 / decision 23 §5, mounted here too since Sam 2026-08-09) ──
 
         /// <summary>
-        /// Wire the accounts modal and reveal its entry point — but only in the editor and in
-        /// development builds (Sam 2026-07-27: two accounts on one device, strictly for testing).
-        ///
-        /// <para><b>The gate is on the affordance, not the mechanism.</b> <see cref="DeviceAccounts"/>
-        /// compiles and runs in every configuration; a release build simply resolves the one
-        /// grandfathered account and never shows this button. Gating the registry itself would leave the
-        /// shipped path as the one nobody exercises, which is how an unregistered background survived
-        /// four shipped assets.</para>
+        /// Mount the same settings overlay a match uses — same UXML, same gear button, same
+        /// bottom-right corner (mainmenu.uss moved the version footer to the left to make room).
+        /// Switch account (dev/testing only) lives inside it now; Concede does not apply here, so
+        /// <see cref="MatchSettingsController.Init"/> is told to hide that row.
         /// </summary>
-        private void BindAccountModal()
+        private void MountSettingsOverlay()
         {
-            _accountModal = _root.Q<VisualElement>("account-modal");
-            _accountList = _root.Q<VisualElement>("account-list");
-            _accountError = _root.Q<Label>("account-error");
-
-            Wire("btn-account-close", () => Hide(_accountModal));
-            Wire("btn-account-new", OnNewAccount);
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Wire("btn-switch-account", OpenAccountModal);
-            var entry = _root.Q<Button>("btn-switch-account");
-            // The USS default is display:none so a release build stays hidden even if this is reached.
-            if (entry != null) entry.style.display = DisplayStyle.Flex;
-#endif
+            var uiGo = new GameObject("MatchSettingsUI");
+            var doc  = uiGo.AddComponent<UIDocument>();
+            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
+            var settings = uiGo.AddComponent<MatchSettingsController>();
+            settings.Init(onConcede: null, showConcede: false);
         }
 
         /// <summary>This account's 1-based position, or 0 when it is the only one on the device.</summary>
@@ -419,121 +404,10 @@ namespace Emberfall.Presentation
             }
             catch (Exception ex)
             {
-                // A nameplate must not die of an unreadable registry — the modal reports it instead.
+                // A nameplate must not die of an unreadable registry — the switcher reports it instead.
                 Debug.LogWarning($"[MainMenu] account registry unreadable ({ex.GetType().Name}).");
             }
             return 0;
-        }
-
-        private void OpenAccountModal()
-        {
-            SetError(_accountError, "");
-            RebuildAccountList();
-            Show(_accountModal);
-        }
-
-        /// <summary>
-        /// Rebuild the rows from disk. Rows are built here rather than in UXML because the count is
-        /// whatever the registry holds — two today, and there is no reason for the screen to be the
-        /// thing that caps it.
-        /// </summary>
-        private void RebuildAccountList()
-        {
-            if (_accountList == null) return;
-            _accountList.Clear();
-
-            IReadOnlyList<LocalAccount> all;
-            string activeId;
-            try
-            {
-                all = DeviceAccounts.All();
-                activeId = DeviceAccounts.Active.Id;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MainMenu] could not read the account registry: {ex.Message}");
-                SetError(_accountError, "The account list could not be read — see the console.");
-                return;
-            }
-
-            for (int i = 0; i < all.Count; i++)
-            {
-                LocalAccount account = all[i];
-                bool isActive = account.Id == activeId;
-
-                var row = new VisualElement();
-                row.AddToClassList("mm-account-row");
-                if (isActive) row.AddToClassList("mm-account-row--active");
-
-                var label = new Label(DeviceAccounts.LabelOf(account, i));
-                label.AddToClassList("mm-account-row__label");
-                row.Add(label);
-
-                if (isActive)
-                {
-                    var here = new Label("signed in");
-                    here.AddToClassList("mm-account-row__sub");
-                    row.Add(here);
-                }
-                else
-                {
-                    string id = account.Id;   // captured per row, not the loop variable
-                    var switchTo = new Button(() => SwitchToAccount(id)) { text = "Switch" };
-                    switchTo.AddToClassList("mm-modal__button");
-                    switchTo.AddToClassList("mm-account-row__button");
-                    row.Add(switchTo);
-                }
-
-                _accountList.Add(row);
-            }
-        }
-
-        private void OnNewAccount()
-        {
-            try
-            {
-                LocalAccount created = DeviceAccounts.Create();
-                Debug.Log($"[MainMenu] created local account {created.Id}. This seat did NOT move — " +
-                          "press Switch on it to sign in here, or pin another process to it with " +
-                          "-emberfallAccount.");
-                // Rebuild rather than reload: creating an account for the other seat must leave this
-                // one exactly where it was (DeviceAccounts.Create).
-                RebuildAccountList();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MainMenu] could not create a local account: {ex.Message}");
-                SetError(_accountError, ex.Message);
-            }
-        }
-
-        private void SwitchToAccount(string accountId)
-        {
-            try
-            {
-                DeviceAccounts.SwitchTo(accountId);
-                ReloadThisScene();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MainMenu] could not switch account: {ex.Message}");
-                SetError(_accountError, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Reload the menu so every screen rebuilds against the new account.
-        ///
-        /// <para><b>Deliberately blunt.</b> This screen is holding an account, a card database, a bound
-        /// name field and a roster count, and other screens hold more. Re-resolving each one is a list
-        /// that will be incomplete the first time somebody adds to it, and the symptom of an incomplete
-        /// switch — one player's character written into another's file — is the worst outcome this
-        /// feature has. A scene reload cannot be partial.</para>
-        /// </summary>
-        private static void ReloadThisScene()
-        {
-            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-            UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);
         }
 
         // ── Shared modal plumbing ───────────────────────────────────────────────────────

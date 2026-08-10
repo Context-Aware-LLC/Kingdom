@@ -1728,7 +1728,7 @@
     "artId": "clock_tinkers_gambit"
   },
   {
-    "id": "rekind_clock_reconstructed_automaton",
+    "id": "rekind_clock_rebuilt_automaton",
     "name": "Reconstructed Automaton",
     "type": "MINION",
     "cost": 3,
@@ -1743,7 +1743,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "clock_reconstructed_automaton"
+    "artId": "clock_rebuilt_automaton"
   },
   {
     "id": "rekind_clock_assembly_line",
@@ -1832,7 +1832,7 @@
     "artId": "clock_upgrade_protocol"
   },
   {
-    "id": "rekind_clock_masterwork_constructor",
+    "id": "rekind_clock_masterwork_construct",
     "name": "Masterwork Constructor",
     "type": "MINION",
     "cost": 5,
