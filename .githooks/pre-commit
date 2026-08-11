@@ -6,12 +6,25 @@
 # NOTHING in Unity notices: there is no ScriptedImporter, the CardDefinitionSO bake only happens
 # on the Card Authoring window's Bake / Bake All buttons, and `Emberfall/Validate All Cards`
 # reads the rows without ever opening Assets/Cards. Both were found red on 2026-08-11, a day
-# after the balance edit that caused them.
+# after the balance edit that opened them.
 #
-#   1. The baked SO YAML  -> rebaked here automatically, and staged. It is derived, not authored,
-#                            so regenerating it is not a decision anyone needs to make.
-#   2. The starter decks  -> WARNED about only. Regenerating them needs a dotnet build, which is
-#                            far too slow for a commit hook, and the result deserves eyes anyway.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# THIS HOOK MUTATES NOTHING. It does not run `git add`, and it does not write to the working
+# tree. That is a hard rule here, learned the expensive way on 2026-08-11.
+#
+# The first version of this hook rebaked the stale asset and staged it with `git add`. That is
+# unsafe in a working copy where more than one session is live, because a hook's `git add`
+# lands in WHOEVER'S commit is currently running — not the commit of whoever caused the drift.
+# It put a card asset into an unrelated deckbuilder merge, which was then pushed.
+#
+# `git commit -- <paths>` does NOT protect against this, which is the counter-intuitive part and
+# the reason this comment is long. During a partial commit git points GIT_INDEX_FILE at a
+# temporary index, so a hook's `git add` writes into that temp index and is committed anyway.
+# Verified directly: a hook adding derived.txt put derived.txt into `git commit -- theirs.txt`.
+#
+# So: report and block. The person who edited the rows runs one command and stages the result
+# themselves, in their own commit, where it belongs.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
 #
 # Install:  git config core.hooksPath .githooks
 # Bypass:   git commit --no-verify   (the Unit lane still catches both)
@@ -21,7 +34,6 @@ set -e
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
-# Only staged, still-present card rows. -z + read -d handles paths with spaces.
 STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \
     'unity/Emberfall/Assets/CardData/*.cards.json')
 
@@ -43,30 +55,30 @@ echo "$STAGED_CARDS" | sed 's/^/  /'
 # --check lists every mismatch across all 36 assets rather than stopping at the first, which is
 # exactly where the parity test is weak: its Assert.Multiple sits inside a foreach, so the test
 # only ever names the alphabetically-first stale asset.
-if ! MISMATCHED=$(python tooling/scripts/rebake_card_definition_so_assets.py --check); then
-    STALE=$(echo "$MISMATCHED" | sed -n 's#^unity/#unity/#p')
+if ! REPORT=$(python tooling/scripts/rebake_card_definition_so_assets.py --check); then
+    echo "$REPORT"
+    cat >&2 <<'BLOCKED'
 
-    if ! python tooling/scripts/rebake_card_definition_so_assets.py --write >/dev/null; then
-        echo "pre-commit: BLOCKED — the SO rebake failed. Fix the card rows and retry." >&2
-        python tooling/scripts/rebake_card_definition_so_assets.py --check >&2 || true
-        exit 1
-    fi
+pre-commit: BLOCKED — baked CardDefinitionSO assets disagree with the card rows.
 
-    # Stage exactly the files the rebake touched, by name. Never `git add -A` here: more than one
-    # session can be live in this working copy, and a broad add sweeps in their in-progress work.
-    echo "$STALE" | while IFS= read -r asset; do
-        [ -n "$asset" ] && git add -- "$asset"
-    done
+Nothing in Unity will fix this for you: there is no ScriptedImporter, and
+`Emberfall/Validate All Cards` reads the rows without ever opening Assets/Cards.
 
-    echo "pre-commit: rebaked and staged the CardDefinitionSO assets below —"
-    echo "$STALE" | sed 's/^/  /'
-    echo "            they are derived from the rows in this commit, so they belong in it."
+  python tooling/scripts/rebake_card_definition_so_assets.py --write
+
+then stage the assets it rewrites and commit again. Staging is left to you on purpose —
+a hook that stages files puts them in whichever commit happens to be running, which is
+not always yours.
+BLOCKED
+    exit 1
 fi
+echo "$REPORT"
 
 # ── 2. The generated starter decks ───────────────────────────────────────────────────────────
 #
-# Advisory: always exits 0. DefaultDeckFixtureTests is the real gate; this just says so at the
-# moment the edit is made rather than after a CI round trip.
+# Advisory, never blocking: regenerating needs a dotnet build, far too slow for a commit hook,
+# and the new decks deserve eyes rather than a rubber stamp. DefaultDeckFixtureTests is the
+# real gate; this only says so at the moment of the edit instead of after a CI round trip.
 python tooling/scripts/check_deck_pool_drift.py
 
 exit 0
