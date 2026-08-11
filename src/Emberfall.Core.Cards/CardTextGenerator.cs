@@ -61,7 +61,7 @@ namespace Emberfall.Core.Cards
         private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules)
         {
             var lines = new List<string>();
-            var groupActions = new List<string>();
+            var groupActions = new List<(string Text, TargetSpec? Target)>();
             string groupPrefix = "";
 
             foreach (RuleDefinition rule in rules)
@@ -77,7 +77,8 @@ namespace Emberfall.Core.Cards
                 }
 
                 groupPrefix = prefix;
-                groupActions.Add(RenderAction(rule.Action));
+                groupActions.Add((RenderAction(rule.Action),
+                    rule.Action is TargetedRuleAction targeted ? targeted.Target : null));
             }
 
             if (groupActions.Count > 0)
@@ -99,26 +100,99 @@ namespace Emberfall.Core.Cards
         /// and Freeze it." That is also what keeps CardTextStyling's case-sensitive match working on
         /// a keyword that is no longer at the front of a sentence.</para>
         /// </remarks>
-        private static string JoinActions(IReadOnlyList<string> actions)
+        private static string JoinActions(IReadOnlyList<(string Text, TargetSpec? Target)> actions)
         {
             if (actions.Count == 0) throw Requires("at least one action to join");
-            if (actions.Count == 1) return actions[0];
+            if (actions.Count == 1) return actions[0].Text;
 
-            var sentence = new StringBuilder();
+            var clauses = new List<string>(actions.Count);
+            int runStart = 0;
             for (int i = 0; i < actions.Count; i++)
             {
-                string clause = actions[i];
-                if (clause.EndsWith(".", StringComparison.Ordinal))
-                    clause = clause.Substring(0, clause.Length - 1);
+                string clause = Undot(actions[i].Text);
 
-                if (i > 0)
+                if (i > runStart && IsProvablyTheSameTarget(actions[runStart].Target, actions[i].Target))
                 {
-                    sentence.Append(i == actions.Count - 1 ? " and " : ", ");
-                    clause = Decapitalize(clause);
+                    string elided = DropSharedOpening(Undot(actions[runStart].Text), clause);
+                    if (elided.Length > 0) clause = elided;
                 }
-                sentence.Append(clause);
+                else if (i > 0)
+                {
+                    runStart = i;
+                }
+
+                clauses.Add(clause);
+            }
+
+            var sentence = new StringBuilder();
+            for (int i = 0; i < clauses.Count; i++)
+            {
+                if (i > 0) sentence.Append(i == clauses.Count - 1 ? " and " : ", ");
+                sentence.Append(i == 0 ? clauses[i] : Decapitalize(clauses[i]));
             }
             return sentence.Append('.').ToString();
+        }
+
+        private static string Undot(string sentence) =>
+            sentence.EndsWith(".", StringComparison.Ordinal)
+                ? sentence.Substring(0, sentence.Length - 1)
+                : sentence;
+
+        /// <summary>
+        /// Whether two effects are known to land on the SAME target, rather than merely on targets
+        /// described the same way. Only two things prove it, and both are read off the data:
+        ///
+        /// <para>A shared <c>Binding</c> — the authored way of saying "this one, again". It is the
+        /// ONLY proof available for a player-chosen target: two unbound ANY_FRIENDLY_MINION specs
+        /// are two separate prompts, so "a friendly minion ... a friendly minion" is honest there
+        /// and eliding it would invent a constraint the resolver does not enforce.</para>
+        ///
+        /// <para>Or an automatic selector resolved identically twice — "all friendly minions" is the
+        /// same board both times by construction. Randomly chosen targets are excluded exactly
+        /// because they are NOT: each roll picks independently, which is what makes a card like
+        /// Chain Lightning three separate hits and not one target struck three times.</para>
+        /// </summary>
+        private static bool IsProvablyTheSameTarget(TargetSpec? first, TargetSpec? second)
+        {
+            if (first == null || second == null) return false;
+            if (first.Binding.Length > 0) return string.Equals(first.Binding, second.Binding, StringComparison.Ordinal);
+
+            if (TargetSpec.IsPlayerChosen(first) || TargetSpec.IsPlayerChosen(second)) return false;
+            if (IsRandomlyChosen(first) || IsRandomlyChosen(second)) return false;
+            if (second.Binding.Length > 0) return false;
+            if (first.DistinctFrom.Length > 0 || second.DistinctFrom.Length > 0) return false;
+
+            return string.Equals(first.Selector, second.Selector, StringComparison.Ordinal) &&
+                first.Count == second.Count && SameFilter(first.Filter, second.Filter);
+        }
+
+        /// <summary>Compares filters by value — TargetFilterDef is a plain class, so the default
+        /// reference comparison would call two identical authored filters different.</summary>
+        private static bool SameFilter(TargetFilterDef? first, TargetFilterDef? second)
+        {
+            if (first == null || second == null) return first == null && second == null;
+            return first.Damaged == second.Damaged && first.Tribe == second.Tribe;
+        }
+
+        /// <summary>
+        /// Strips the opening words a clause shares with the one it is joining, so a target proven
+        /// identical is named once: "Give a friendly minion +2/+2" + "Give a friendly minion Bulwark"
+        /// becomes "... +2/+2 and Bulwark". Returns "" when there is nothing to save or nothing would
+        /// be left — two clauses that reduce to the same words are not a phrasing problem to solve
+        /// here, and swallowing one whole would delete an effect from the card.
+        /// </summary>
+        private static string DropSharedOpening(string first, string second)
+        {
+            string[] a = first.Split(' ');
+            string[] b = second.Split(' ');
+
+            int shared = 0;
+            while (shared < a.Length && shared < b.Length &&
+                   string.Equals(a[shared], b[shared], StringComparison.Ordinal))
+                shared++;
+
+            if (shared == 0 || shared >= b.Length) return "";
+            return string.Join(" ", b, shared, b.Length - shared);
         }
 
         /// <summary>Lowercases a clause's opening word unless it is a word the game capitalises.</summary>
