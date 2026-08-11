@@ -530,7 +530,7 @@
         },
         "action": {
           "type": "DAMAGE",
-          "amount": 2,
+          "amount": 3,
           "target": {
             "selector": "ENEMY_MINIONS"
           }
@@ -650,7 +650,7 @@
     "id": "tide_siren",
     "name": "Hollow Tide Siren",
     "type": "MINION",
-    "cost": 5,
+    "cost": 7,
     "attack": 4,
     "health": 5,
     "class": "TIDECALLER",
@@ -3503,7 +3503,7 @@
     "id": "night_void_shriek",
     "name": "Void Shriek",
     "type": "MINION",
-    "cost": 5,
+    "cost": 6,
     "attack": 4,
     "health": 4,
     "class": "NIGHTVEIL",
@@ -3524,7 +3524,7 @@
         },
         "action": {
           "type": "DAMAGE",
-          "amount": 2,
+          "amount": 1,
           "target": {
             "selector": "ENEMY_MINIONS",
             "count": -1
@@ -4335,7 +4335,7 @@
     "id": "storm_static_discharge",
     "name": "Static Discharge",
     "type": "SPELL",
-    "cost": 3,
+    "cost": 2,
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],

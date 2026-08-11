@@ -1819,8 +1819,8 @@
         },
         "action": {
           "type": "MODIFY_STATS",
-          "attack": 3,
-          "health": 3,
+          "attack": 5,
+          "health": 5,
           "target": {
             "selector": "ANY_FRIENDLY_MINION"
           }
@@ -1835,7 +1835,7 @@
     "id": "rekind_clock_masterwork_construct",
     "name": "Masterwork Constructor",
     "type": "MINION",
-    "cost": 5,
+    "cost": 6,
     "attack": 4,
     "health": 4,
     "class": "CLOCKWRIGHT",
