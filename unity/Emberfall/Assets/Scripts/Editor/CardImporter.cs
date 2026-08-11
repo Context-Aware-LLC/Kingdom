@@ -11,8 +11,8 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Bake canonical JSON rows into Addressable CardDefinitionSO assets (dev-docs/pipelines/card-authoring-and-import.md:10,
-    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §6.3). Editor-only; consumed by the authoring window and by
-    /// Tools/Emberfall/Validate All Cards.
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/card-authoring-tool.md §6.3). Editor-only; the Card Authoring
+    /// window's Bake / Bake All buttons are its ONLY callers.
     /// </summary>
     public interface ICardImporter
     {
@@ -46,7 +46,14 @@ namespace Emberfall.Editor
     ///
     /// Deviation from the spec: bakes straight from the flat Emberfall.cards.json array rather than
     /// per-file `.card.json` sources (see CardJsonRowIO header) — no ScriptedImporter is used here;
-    /// baking is an explicit action (window "Bake" button / Validate-All menu), not import-on-save.
+    /// baking is an explicit action (the window's "Bake" / "Bake All" buttons), not import-on-save.
+    ///
+    /// <b>Nothing rebakes a row you edit outside this window.</b> Opening Unity, reimporting and a
+    /// domain reload all leave a stale `_json` in place, and `Emberfall/Validate All Cards` does not
+    /// catch it either — CardSetValidator reads CardJsonRowIO.LoadRows only and never opens
+    /// Assets/Cards, so it passes clean over a bake that disagrees with its row. A hand-edit to
+    /// Emberfall.cards.json is caught by tooling/scripts/rebake_card_definition_so_assets.py (run by
+    /// the pre-commit hook in .githooks/) and by CardDefinitionSoAssetParityTests — nowhere in Unity.
     /// Addressable group/label assignment (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §6) is deferred — no Addressables group
     /// exists for cards yet, so this writes a plain asset under Assets/Cards/&lt;setId&gt;/&lt;id&gt;.asset.
     /// </summary>

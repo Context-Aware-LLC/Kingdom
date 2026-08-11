@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+# Keep the artifacts derived from the canonical card rows from separating from them.
+#
+# A hand-edit to unity/Emberfall/Assets/CardData/*.cards.json silently staleness two things, and
+# NOTHING in Unity notices: there is no ScriptedImporter, the CardDefinitionSO bake only happens
+# on the Card Authoring window's Bake / Bake All buttons, and `Emberfall/Validate All Cards`
+# reads the rows without ever opening Assets/Cards. Both were found red on 2026-08-11, a day
+# after the balance edit that caused them.
+#
+#   1. The baked SO YAML  -> rebaked here automatically, and staged. It is derived, not authored,
+#                            so regenerating it is not a decision anyone needs to make.
+#   2. The starter decks  -> WARNED about only. Regenerating them needs a dotnet build, which is
+#                            far too slow for a commit hook, and the result deserves eyes anyway.
+#
+# Install:  git config core.hooksPath .githooks
+# Bypass:   git commit --no-verify   (the Unit lane still catches both)
+
+set -e
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+# Only staged, still-present card rows. -z + read -d handles paths with spaces.
+STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \
+    'unity/Emberfall/Assets/CardData/*.cards.json')
+
+if [ -z "$STAGED_CARDS" ]; then
+    exit 0
+fi
+
+if ! command -v python >/dev/null 2>&1; then
+    echo "pre-commit: python not on PATH — skipping the card-derivation checks." >&2
+    echo "            Run tooling/scripts/rebake_card_definition_so_assets.py --check by hand." >&2
+    exit 0
+fi
+
+echo "pre-commit: card rows staged — checking what is derived from them."
+echo "$STAGED_CARDS" | sed 's/^/  /'
+
+# ── 1. The baked CardDefinitionSO assets ─────────────────────────────────────────────────────
+#
+# --check lists every mismatch across all 36 assets rather than stopping at the first, which is
+# exactly where the parity test is weak: its Assert.Multiple sits inside a foreach, so the test
+# only ever names the alphabetically-first stale asset.
+if ! MISMATCHED=$(python tooling/scripts/rebake_card_definition_so_assets.py --check); then
+    STALE=$(echo "$MISMATCHED" | sed -n 's#^unity/#unity/#p')
+
+    if ! python tooling/scripts/rebake_card_definition_so_assets.py --write >/dev/null; then
+        echo "pre-commit: BLOCKED — the SO rebake failed. Fix the card rows and retry." >&2
+        python tooling/scripts/rebake_card_definition_so_assets.py --check >&2 || true
+        exit 1
+    fi
+
+    # Stage exactly the files the rebake touched, by name. Never `git add -A` here: more than one
+    # session can be live in this working copy, and a broad add sweeps in their in-progress work.
+    echo "$STALE" | while IFS= read -r asset; do
+        [ -n "$asset" ] && git add -- "$asset"
+    done
+
+    echo "pre-commit: rebaked and staged the CardDefinitionSO assets below —"
+    echo "$STALE" | sed 's/^/  /'
+    echo "            they are derived from the rows in this commit, so they belong in it."
+fi
+
+# ── 2. The generated starter decks ───────────────────────────────────────────────────────────
+#
+# Advisory: always exits 0. DefaultDeckFixtureTests is the real gate; this just says so at the
+# moment the edit is made rather than after a CI round trip.
+python tooling/scripts/check_deck_pool_drift.py
+
+exit 0
