@@ -91,6 +91,19 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void Frost_Verb_Renders_Emberfalls_Own_Keyword_Not_The_Genre_Verb()
+        {
+            var rule = new RuleDefinition(new RuleId("frost_a_minion"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance, new FrostAction(new TargetSpec("ANY_MINION")));
+
+            // The card face has to name the same mechanic the glossary and IsFrosted do; the genre's
+            // verb for it is what tools/ci/vocabulary-gate.ps1 blocks. Eight shipping cards render
+            // through this arm, so a regression here is player-visible on all of them.
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Frost] a minion."));
+        }
+
+        [Test]
         public void All_261_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
         {
             var cards = LoadAllCards();

@@ -46,7 +46,7 @@ namespace Emberfall.Core.Cards
         /// <summary>Renders the rules as card-face lines, one per run of rules sharing a prefix.</summary>
         /// <remarks>
         /// One line per RUN of consecutive rules sharing a trigger/condition/lifetime prefix, not one
-        /// line per rule — a battlecry with three effects is one "[Herald]", not "[Herald]" printed
+        /// line per rule — an ON_PLAY with three effects is one "[Herald]", not "[Herald]" printed
         /// three times. Only adjacent rules merge, so an interleaved trigger (Herald, Toll, Herald)
         /// still prints the marker each time it actually changes.
         /// </remarks>
@@ -163,7 +163,12 @@ namespace Emberfall.Core.Cards
             ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
             SilenceAction a => $"[Silence] {Target(a.Target)}.",
             TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
-            FrostAction a => $"Freeze {Target(a.Target)}.",
+            // Bracketed like its sibling keyword-named actions, and named FROST rather than the
+            // genre's verb for the same idea: the word on the card has to be the word the glossary
+            // (Presentation/KeywordCopy) and the state flag (IsFrosted) already use, or the player
+            // reads a keyword with no entry to look up. tools/ci/vocabulary-gate.ps1 blocks the
+            // other spelling on the way in.
+            FrostAction a => $"[Frost] {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, Name(a.CardId))}.",
