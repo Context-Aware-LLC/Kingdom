@@ -105,7 +105,7 @@ namespace Emberfall.Presentation
         private ICardDatabase _db;
 
         /// <summary>This account's ownership record (L6), read once per visit — mirrors
-        /// DeckbuilderController._owned. Every <see cref="QueueEligibility.Check"/> call on this
+        /// CollectionController._owned. Every <see cref="QueueEligibility.Check"/> call on this
         /// screen must pass it: without it L6 never evaluates, so a deck that stopped being
         /// ownable (a card dusted, an account restored) would keep its gold "queue ready" border
         /// here while match-join refuses it — the exact disagreement DeckQuery.ForCharacter's own
@@ -1585,7 +1585,7 @@ namespace Emberfall.Presentation
         private const float PlateChrome = 20f;
 
         /// <summary>A row solved to land exactly on the available width is a floating-point tie;
-        /// see LayoutCollectionGrid in DeckbuilderController for the wrap-one-early failure this
+        /// see CardWall.Layout for the wrap-one-early failure this
         /// avoids.</summary>
         private const float RowSafetyMargin = 2f;
 
@@ -1596,7 +1596,7 @@ namespace Emberfall.Presentation
         /// own GeometryChangedEvent, which Yoga fires mid-layout-pass — writing widths from inside
         /// it edits the tree while Yoga is still walking it, so only the children it has not
         /// visited pick up the new values, and the mutation re-fires the event. Same hazard, same
-        /// fix, as DeckbuilderController.QueueCollectionLayout.
+        /// fix, as CardWall's own deferred layout.
         /// </summary>
         private void QueueStripLayout(VisualElement strip)
         {
@@ -1811,10 +1811,14 @@ namespace Emberfall.Presentation
             }
         }
 
+        // Both doors lead to CollectionController now (#152): handing it a character is what puts it
+        // in deckbuild mode, and View Collection above hands it none. The scenes are still two until
+        // #154 retires DeckbuilderSpike.
         private void OpenDeckForEdit(string characterId, string deckId)
         {
-            DeckbuilderController.PendingCharacterId = characterId;
-            DeckbuilderController.PendingDeckId = deckId;
+            CollectionController.ReturnScene = "CharacterRoster";
+            CollectionController.PendingCharacterId = characterId;
+            CollectionController.PendingDeckId = deckId;
             Go("DeckbuilderSpike");
         }
 

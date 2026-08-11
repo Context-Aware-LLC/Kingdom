@@ -92,7 +92,7 @@
     width: 276px;
     height: 387px;
     /* margin-left/margin-right are runtime-computed per row by
-     * DeckbuilderController.LayoutCollectionGrid (fixed tile size, variable gutter, no dead
+     * CardWall.Layout (fixed tile size, variable gutter, no dead
      * space on the right edge); only the top/bottom 8px here actually applies. */
     margin: var(--space-2);
     background-color: var(--surface-3);   /* shows through until the bake resolves */
@@ -102,7 +102,7 @@
 /* The ONE opacity allowed on the wall (Sam, 2026-08-07): a card the deck already holds the
  * maximum copies of. This is a per-CARD fact, not the wall's state — the no-dimming ruling that
  * removed .card-tile--disabled was about a full deck greying out all ~90 tiles at once, which
- * this cannot do. See DeckbuilderController.RefreshCollectionTiles. */
+ * this cannot do. See CardWall.RefreshTiles. */
 .card-tile--maxed {
     opacity: 0.1;
 }

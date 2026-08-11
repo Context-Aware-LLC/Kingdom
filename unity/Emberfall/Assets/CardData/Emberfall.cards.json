@@ -650,7 +650,7 @@
     "id": "tide_siren",
     "name": "Hollow Tide Siren",
     "type": "MINION",
-    "cost": 7,
+    "cost": 9,
     "attack": 4,
     "health": 5,
     "class": "TIDECALLER",

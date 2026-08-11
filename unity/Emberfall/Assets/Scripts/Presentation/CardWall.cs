@@ -9,10 +9,12 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// The card wall: one persistent baked tile per pool card, laid out edge-to-edge in a grid whose
-    /// gutter is solved per row. Extracted from <see cref="DeckbuilderController"/> (Sam, 2026-08-07)
-    /// so the Collection screen and the deckbuilder render the same wall rather than two copies that
-    /// drift — the failure the four card frames already demonstrate, where four independently
-    /// maintained versions of one thing ended up 11% different in size.
+    /// gutter is solved per row. Extracted from the old <c>DeckbuilderController</c> (Sam, 2026-08-07)
+    /// so browsing and deckbuilding render the same wall rather than two copies that drift — the
+    /// failure the four card frames already demonstrate, where four independently maintained versions
+    /// of one thing ended up 11% different in size. Those two screens are now one
+    /// <see cref="CollectionController"/> in two modes (#152), which is the same argument carried to
+    /// its conclusion.
     ///
     /// <para><b>Not a MonoBehaviour, deliberately.</b> It owns no scene state and needs no lifecycle;
     /// a host component constructs it with a grid element and a baker. Same shape as

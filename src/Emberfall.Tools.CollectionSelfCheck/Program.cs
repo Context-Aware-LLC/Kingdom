@@ -28,7 +28,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
         private const string CharacterName = "Selfcheck Ashwarden";
 
         // The name `build` writes and `verify` must read back — proves rename persistence, which the
-        // deckbuilder's name field relies on (DeckbuilderController.WireChrome -> SaveDeck).
+        // deckbuilder's name field relies on (CollectionController.WireChrome -> SaveDeck).
         private const string RenamedTo = "Reloaded From Disk";
 
         private const ulong Seed = 0xEF046UL;
@@ -145,7 +145,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
             Console.WriteLine($"edited deck       : LEGAL at {generated.TotalCount} cards");
 
             // Then the deckbuilder's save path: rename, then persist as-is. This is literally what
-            // DeckbuilderController.SaveDeck does (_account.Save(_deck) -> _decks.Save).
+            // CollectionController.SaveDeck does (_account.Save(_deck) -> _decks.Save).
             generated.Name = RenamedTo;
             deckStore.Save(generated);
             Console.WriteLine($"renamed + saved   : '{generated.Name}'");
