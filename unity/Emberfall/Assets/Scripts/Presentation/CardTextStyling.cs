@@ -1,19 +1,38 @@
+using System.Linq;
 using System.Text.RegularExpressions;
+using Emberfall.Core.Cards;
 
 namespace Emberfall.Presentation
 {
-    // CardTextGenerator (Emberfall.Core.Cards) marks triggers and keywords with literal
-    // "[Name]" brackets — that plain-text form is what CardQuery's search index and
-    // ContentLinter's E7-TEXT-LENGTH check read, so the core stays presentation-agnostic.
-    // Anything a player actually reads runs the generated text through this first: the
-    // bracket becomes bold + a size bump instead of literal punctuation on the card face.
+    // CardTextGenerator (Emberfall.Core.Cards) emits plain prose — no markup, no delimiters — which
+    // is what CardQuery's search index and ContentLinter's E7-TEXT-LENGTH check read, so the core
+    // stays presentation-agnostic. Anything a player actually reads runs through this first, which
+    // emphasises the game's own vocabulary: keyword names and timing labels become bold + a size
+    // bump. Nothing is removed from the string; only weight is added.
+    //
+    // This used to bold whatever sat inside square brackets, with the generator emitting brackets
+    // purely so this could strip them again. That is why "[Frost] a minion." looked like a card
+    // face and was not one. The vocabulary is matched by name now, so the brackets are gone from
+    // both ends (Sam, 2026-08-11).
+    //
+    // KNOWN LIMIT of matching by name: a card NAME quoted inside an effect — "Summon Vanguard
+    // Sentinel." — is emphasised on its keyword word if it happens to contain one. The delimiter
+    // form could not do that, and this is the trade accepted for not carrying punctuation the
+    // player is never meant to see. Whole word and case-sensitive keeps it to that narrow case:
+    // lowercase prose ("misses its next attack") never matches the "Attack" timing label.
     internal static class CardTextStyling
     {
-        private static readonly Regex Marker = new Regex(@"\[([^\]]+)\]", RegexOptions.Compiled);
+        // Built from CardTextGenerator.EmphasisVocabulary so the styled words cannot drift from the
+        // printed ones — a keyword added to the enum is emphasised here with no edit to this file.
+        // The vocabulary arrives longest-first, so the alternation prefers "Turn Start" over a
+        // shorter word sharing its opening.
+        private static readonly Regex Vocabulary = new Regex(
+            @"\b(?:" + string.Join("|", CardTextGenerator.EmphasisVocabulary().Select(Regex.Escape)) + @")\b",
+            RegexOptions.Compiled);
 
         internal static string Style(string generatedText) =>
             string.IsNullOrEmpty(generatedText)
                 ? generatedText
-                : Marker.Replace(generatedText, "<b><size=120%>$1</size></b>");
+                : Vocabulary.Replace(generatedText, "<b><size=120%>$0</size></b>");
     }
 }

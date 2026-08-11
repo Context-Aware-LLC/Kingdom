@@ -29,7 +29,7 @@ namespace Emberfall.Core.Cards
         public static string? AuthoredName(Keyword keyword)
             // Sam, 2026-08-11. FROST keeps the enum id (ordinal 12 is wire/hash state, and the
             // engine's IsFrosted/FrostApplied/isFrosted spellings go with it), but the card says
-            // "Freeze": frost is not a verb in English, so "[Frost] a minion." did not parse as a
+            // "Freeze": frost is not a verb in English, so "Frost a minion." did not parse as a
             // sentence. Freeze collides with the genre's word for the same mechanic and that is
             // accepted here — one collision on a plain English verb, ruled cheaper than a keyword
             // the player cannot read. tools/ci/vocabulary-gate.ps1 permits it for that reason.

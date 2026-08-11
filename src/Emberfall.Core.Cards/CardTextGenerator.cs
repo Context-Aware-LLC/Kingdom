@@ -18,14 +18,20 @@ namespace Emberfall.Core.Cards
         {
             if (card == null) throw new ArgumentNullException(nameof(card));
 
-            var parts = new List<string>(card.Keywords.Count + card.Rules.Count);
+            var carriers = new List<string>(card.Keywords.Count);
             foreach (Keyword keyword in card.Keywords)
             {
                 // An action marker is rendered from its typed action instead. Printing it here as
                 // well would print it twice on any row that still carries the legacy keyword.
                 if (KeywordSemantics.IsActionMarker(keyword)) continue;
-                parts.Add("[" + Name(keyword) + "]");
+                carriers.Add(Name(keyword));
             }
+
+            var parts = new List<string>(1 + card.Rules.Count);
+            // Comma-separated, because the keyword band no longer has punctuation of its own to end
+            // each entry: "Bulwark Lifedrain" reads as one two-word keyword, "Bulwark, Lifedrain"
+            // cannot. Presentation emphasises each name individually on top of this.
+            if (carriers.Count > 0) parts.Add(string.Join(", ", carriers));
             parts.AddRange(RenderRuleGroups(card.Rules));
             return string.Join(" ", parts);
         }
@@ -46,7 +52,7 @@ namespace Emberfall.Core.Cards
         /// <summary>Renders the rules as card-face lines, one per run of rules sharing a prefix.</summary>
         /// <remarks>
         /// One line per RUN of consecutive rules sharing a trigger/condition/lifetime prefix, not one
-        /// line per rule — an ON_PLAY with three effects is one "[Herald]", not "[Herald]" printed
+        /// line per rule — an ON_PLAY with three effects is one "Herald:", not "Herald:" printed
         /// three times. Only adjacent rules merge, so an interleaved trigger (Herald, Toll, Herald)
         /// still prints the marker each time it actually changes.
         /// </remarks>
@@ -77,38 +83,89 @@ namespace Emberfall.Core.Cards
             return lines;
         }
 
-        /// <summary>Renders the bracketed marker a rule prints, derived from how it activates.</summary>
+        /// <summary>The label an aura's rules are printed under.</summary>
+        public const string AuraLabel = "Aura";
+
+        /// <summary>The label the UNEARTH action prints. Not a <see cref="Keyword"/> — no card carries
+        /// it — so it would be missing from any vocabulary derived from the enum alone.</summary>
+        public const string UnearthLabel = "Unearth";
+
+        /// <summary>
+        /// Every word this generator prints as game vocabulary rather than as ordinary English:
+        /// carrier keyword names, timing labels, and the two labels that belong to neither list.
+        /// Presentation emphasises exactly these (Unity's CardTextStyling).
+        ///
+        /// <para>Derived, never hand-listed. A keyword added to the enum or a trigger given a label
+        /// appears here without anyone remembering to, which is the whole reason this lives beside
+        /// the code that prints the words instead of in the file that styles them. Ordered longest
+        /// first so an alternation built from it prefers "Turn Start" over any shorter prefix.</para>
+        /// </summary>
+        public static IReadOnlyList<string> EmphasisVocabulary()
+        {
+            var words = new List<string> { AuraLabel, UnearthLabel };
+
+            foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
+                words.Add(Name(keyword));
+
+            foreach (Trigger trigger in (Trigger[])Enum.GetValues(typeof(Trigger)))
+            {
+                // Trigger.AURA is not a triggered marker — an aura is an activation shape, and its
+                // label is seeded above. TriggerLabel deliberately throws on it rather than growing
+                // a branch that would let a TriggeredActivation(AURA) render as if it were valid.
+                if (trigger == Trigger.AURA) continue;
+
+                string label = TriggerLabel(trigger);
+                if (label.Length > 0) words.Add(label);
+            }
+
+            words.Sort((a, b) => b.Length.CompareTo(a.Length));
+            return words;
+        }
+
+        /// <summary>
+        /// The bare timing label for a trigger — no colon, no punctuation — or "" for a trigger that
+        /// prints unmarked. Public because Presentation emphasises the game's vocabulary by matching
+        /// these words in the generated text (Unity's CardTextStyling): the labels are decided here,
+        /// beside the code that prints them, so the styling list cannot drift from what is printed.
+        /// </summary>
+        public static string TriggerLabel(Trigger trigger) => trigger switch
+        {
+            Trigger.ON_PLAY => "Herald",
+            Trigger.ON_DEATH => "Toll",
+            Trigger.ON_ATTACK => "Attack",
+            Trigger.ON_DAMAGED => "Damaged",
+            Trigger.ON_HEAL => "Healed",
+            Trigger.ON_TURN_START => "Turn Start",
+            Trigger.ON_TURN_END => "Turn End",
+            Trigger.ON_FRIENDLY_SUMMON => "Friendly Summon",
+            Trigger.ON_SPELL_CAST => "Spell Cast",
+            Trigger.ON_CAST => "",
+            _ => throw Unsupported("trigger", trigger),
+        };
+
+        /// <summary>Renders the marker a rule prints, derived from how it activates.</summary>
         /// <remarks>
-        /// <b>The trailing colon is load-bearing.</b> Presentation strips the brackets and renders
-        /// every marker as bold + 120% (Unity's CardTextStyling), so a timing marker and a carrier
-        /// keyword arrive at the player's eye styled identically with only a space between them —
-        /// "Rekindle Herald Reinforce a friendly minion" reads as a list of three keywords rather
-        /// than one keyword and one timing label. The colon is the only thing separating "what this
-        /// minion IS" from "when this effect FIRES", and it lands outside the bracket so the regex
-        /// leaves it unbolded. ON_CAST stays empty: a spell resolving on cast needs no label.
+        /// <b>The trailing colon is load-bearing.</b> Presentation renders both a timing marker and a
+        /// carrier keyword as bold + 120% (Unity's CardTextStyling), so the two arrive at the player's
+        /// eye styled identically with only a space between them — "Rekindle Herald Freeze a minion"
+        /// reads as a list of three keywords rather than one keyword and one timing label. The colon
+        /// is the only thing separating "what this minion IS" from "when this effect FIRES", and it
+        /// stays outside the emphasised span. ON_CAST is deliberately unmarked: a spell resolving on
+        /// cast needs no label.
         /// </remarks>
         private static string TriggerMarker(RuleActivation activation)
         {
-            if (activation is AuraActivation) return "[Aura]: ";
+            if (activation is AuraActivation) return AuraLabel + ": ";
             if (activation is TriggeredActivation triggered) return TriggerMarker(triggered.Trigger);
             throw UnsupportedNode("activation", activation);
         }
 
         /// <summary>Maps one trigger to its marker; a spell's own ON_CAST is deliberately unmarked.</summary>
-        private static string TriggerMarker(Trigger trigger) => trigger switch
+        private static string TriggerMarker(Trigger trigger)
         {
-            Trigger.ON_PLAY => "[Herald]: ",
-            Trigger.ON_DEATH => "[Toll]: ",
-            Trigger.ON_ATTACK => "[Attack]: ",
-            Trigger.ON_DAMAGED => "[Damaged]: ",
-            Trigger.ON_HEAL => "[Healed]: ",
-            Trigger.ON_TURN_START => "[Turn Start]: ",
-            Trigger.ON_TURN_END => "[Turn End]: ",
-            Trigger.ON_FRIENDLY_SUMMON => "[Friendly Summon]: ",
-            Trigger.ON_SPELL_CAST => "[Spell Cast]: ",
-            Trigger.ON_CAST => "",
-            _ => throw Unsupported("trigger", trigger),
-        };
+            string label = TriggerLabel(trigger);
+            return label.Length == 0 ? "" : label + ": ";
+        }
 
         /// <summary>Renders the clause qualifying when a rule applies, ahead of its effects.</summary>
         private static string ConditionPrefix(RuleCondition condition)
@@ -146,11 +203,11 @@ namespace Emberfall.Core.Cards
             DamageAction a => $"Deal {a.Amount} damage to {Target(a.Target)}.",
             HealAction a => $"Restore {a.Amount} Health to {Target(a.Target)}.",
             ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            // Deliberately NOT a "[Reinforce]" marker, unlike its sibling action markers below.
+            // Deliberately NOT a "Reinforce" marker, unlike its sibling action markers below.
             // REINFORCE is a fixed +1/+1 with no timing of its own — BuffHandler hardcodes 1/1 and
             // routes it through the same path as MODIFY_STATS — so the marker named a mechanic whose
             // whole definition is shorter than the word, had no entry in the player-facing keyword
-            // glossary to look up, and sat next to the [Herald] it was routinely misread as a
+            // glossary to look up, and sat next to the "Herald:" it was routinely misread as a
             // synonym for. Printing the stats says the same thing with no vocabulary to learn, and
             // renders identically to an authored MODIFY_STATS +1/+1, which is what it already is.
             //
@@ -161,22 +218,22 @@ namespace Emberfall.Core.Cards
             GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
             DestroyAction a => $"Destroy {Target(a.Target)}.",
             ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
-            SilenceAction a => $"[Silence] {Target(a.Target)}.",
+            SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target)}.",
             TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
-            // Bracketed like its sibling keyword-named actions, and named through the keyword rather
-            // than spelled here, so the verb on the card and the marker on a carrier of the same
-            // keyword cannot drift apart — KeywordSemantics.AuthoredName is the one place the word
-            // is decided, and the tooltip reads the same entry.
-            FrostAction a => $"[{Name(Keyword.FROST)}] {Target(a.Target)}.",
+            // Named through the keyword rather than spelled here, so the verb on the card and the
+            // marker on a carrier of the same keyword cannot drift apart — KeywordSemantics
+            // .AuthoredName is the one place the word is decided, and the tooltip reads the same
+            // entry. Presentation emphasises the word by matching it, so it needs no delimiter.
+            FrostAction a => $"{Name(Keyword.FROST)} {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, Name(a.CardId))}.",
             AddToHandAction a => $"Add {Copies(a.Count, Name(a.CardId))} to your hand.",
             EquipAction a => $"Equip {Name(a.CardId)}.",
             GainManaAction a => Mana(a),
-            BackdraftAction a => $"[Backdraft] ({a.Amount}).",
+            BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} ({a.Amount}).",
             GainArmorAction a => $"Gain {a.Amount} Armor.",
-            UnearthAction a => $"[Unearth] ({a.Count}).",
+            UnearthAction a => $"{UnearthLabel} ({a.Count}).",
             _ => throw UnsupportedNode("action", action),
         };
 

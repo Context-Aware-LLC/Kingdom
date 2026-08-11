@@ -22,7 +22,7 @@ namespace Emberfall.Core.Tests.CardValidation
 
             string text = CardTextGenerator.Generate(new[] { rule });
 
-            Assert.That(text, Is.EqualTo("[Toll]: Draw a card."));
+            Assert.That(text, Is.EqualTo("Toll: Draw a card."));
         }
 
         [Test]
@@ -32,7 +32,7 @@ namespace Emberfall.Core.Tests.CardValidation
             CardDefinition mainspring = CardJson.DeserializeArray(File.ReadAllText(path))
                 .Single(card => card.Id == "clock_mainspring_halberd");
 
-            Assert.That(CardTextGenerator.Generate(mainspring), Is.EqualTo("[Toll]: Draw a card."));
+            Assert.That(CardTextGenerator.Generate(mainspring), Is.EqualTo("Toll: Draw a card."));
             Assert.That(mainspring.Keywords, Is.Empty);
         }
 
@@ -44,7 +44,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new[] { Keyword.BULWARK, Keyword.LIFEDRAIN }, Array.Empty<RuleDefinition>(),
                 "", "art/keyword_only", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Lifedrain]"));
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark, Lifedrain"));
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new[] { Keyword.BULWARK }, new[] { DrawRule(new TriggeredActivation(Trigger.ON_PLAY)) },
                 "", "art/herald", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("[Bulwark] [Herald]: Draw a card."));
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark Herald: Draw a card."));
         }
 
         [Test]
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             var rows = new (Keyword marker, RuleAction action, string expected)[]
             {
-                (Keyword.BACKDRAFT, new BackdraftAction(2), "[Backdraft] (2)."),
+                (Keyword.BACKDRAFT, new BackdraftAction(2), "Backdraft (2)."),
                 // REINFORCE renders no marker at all any more — it prints its stats like the
                 // MODIFY_STATS +1/+1 it is underneath. The legacy carrier keyword is still
                 // suppressed, which is what this row exists to prove: the expectation below holds
@@ -73,7 +73,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     "Give a friendly minion +1/+1."),
                 (Keyword.SILENCE,
                     new SilenceAction(new TargetSpec("ANY_MINION")),
-                    "[Silence] a minion."),
+                    "Silence a minion."),
             };
 
             foreach (var row in rows)
@@ -101,14 +101,47 @@ namespace Emberfall.Core.Tests.CardValidation
             // so the face says "Freeze". Eight shipping cards render through this arm. Both surfaces
             // are asserted together because the failure worth catching is them drifting apart —
             // KeywordSemantics.AuthoredName is what keeps the verb and the carrier in agreement.
-            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Freeze] a minion."));
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("Freeze a minion."));
 
             var carrier = new CardDefinition("frost_carrier", "Frost Carrier", CardType.MINION, 1,
                 1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.FROST }, Array.Empty<RuleDefinition>(),
                 "", "art/frost_carrier", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(carrier), Is.EqualTo("[Freeze]"));
+            Assert.That(CardTextGenerator.Generate(carrier), Is.EqualTo("Freeze"));
+        }
+
+        [Test]
+        public void Emphasis_Vocabulary_Covers_Every_Word_The_Generator_Prints()
+        {
+            var vocabulary = CardTextGenerator.EmphasisVocabulary();
+
+            // Presentation emphasises by matching these words, so a keyword or timing label missing
+            // from the list is a word that silently renders as ordinary prose on every card face.
+            // Enumerating both enums here is the point: this fails when one grows, not when someone
+            // remembers to update a hand-written list.
+            foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
+                Assert.That(vocabulary, Has.Member(KeywordSemantics.AuthoredName(keyword) ?? Humanise(keyword)),
+                    keyword.ToString());
+
+            foreach (Trigger trigger in (Trigger[])Enum.GetValues(typeof(Trigger)))
+            {
+                if (trigger == Trigger.AURA) continue; // an activation shape, labelled separately
+                string label = CardTextGenerator.TriggerLabel(trigger);
+                if (label.Length > 0) Assert.That(vocabulary, Has.Member(label), trigger.ToString());
+            }
+
+            Assert.That(vocabulary, Has.Member(CardTextGenerator.AuraLabel));
+            Assert.That(vocabulary, Has.Member(CardTextGenerator.UnearthLabel));
+
+            // Longest first, so an alternation built from it cannot match "Turn" out of "Turn Start".
+            Assert.That(vocabulary.Select(word => word.Length), Is.Ordered.Descending);
+        }
+
+        private static string Humanise(Keyword keyword)
+        {
+            string[] parts = keyword.ToString().Split('_');
+            return string.Join(" ", parts.Select(p => p.Substring(0, 1) + p.Substring(1).ToLowerInvariant()));
         }
 
         [Test]
@@ -157,15 +190,15 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(ex!.Message, Does.Contain("cardText"));
         }
 
-        [TestCase(Trigger.ON_PLAY, "[Herald]: Draw a card.")]
-        [TestCase(Trigger.ON_DEATH, "[Toll]: Draw a card.")]
-        [TestCase(Trigger.ON_ATTACK, "[Attack]: Draw a card.")]
-        [TestCase(Trigger.ON_DAMAGED, "[Damaged]: Draw a card.")]
-        [TestCase(Trigger.ON_HEAL, "[Healed]: Draw a card.")]
-        [TestCase(Trigger.ON_TURN_START, "[Turn Start]: Draw a card.")]
-        [TestCase(Trigger.ON_TURN_END, "[Turn End]: Draw a card.")]
-        [TestCase(Trigger.ON_FRIENDLY_SUMMON, "[Friendly Summon]: Draw a card.")]
-        [TestCase(Trigger.ON_SPELL_CAST, "[Spell Cast]: Draw a card.")]
+        [TestCase(Trigger.ON_PLAY, "Herald: Draw a card.")]
+        [TestCase(Trigger.ON_DEATH, "Toll: Draw a card.")]
+        [TestCase(Trigger.ON_ATTACK, "Attack: Draw a card.")]
+        [TestCase(Trigger.ON_DAMAGED, "Damaged: Draw a card.")]
+        [TestCase(Trigger.ON_HEAL, "Healed: Draw a card.")]
+        [TestCase(Trigger.ON_TURN_START, "Turn Start: Draw a card.")]
+        [TestCase(Trigger.ON_TURN_END, "Turn End: Draw a card.")]
+        [TestCase(Trigger.ON_FRIENDLY_SUMMON, "Friendly Summon: Draw a card.")]
+        [TestCase(Trigger.ON_SPELL_CAST, "Spell Cast: Draw a card.")]
         [TestCase(Trigger.ON_CAST, "Draw a card.")]
         public void Renders_Every_Supported_Triggered_Activation(Trigger trigger, string expected)
         {
@@ -177,7 +210,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Renders_Aura_Activation()
         {
             Assert.That(CardTextGenerator.Generate(new[] { DrawRule(AuraActivation.Instance) }),
-                Is.EqualTo("[Aura]: Draw a card."));
+                Is.EqualTo("Aura: Draw a card."));
         }
 
         [TestCase(TurnOwner.CONTROLLER, "While it is your turn, Draw a card.")]
@@ -189,7 +222,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new TriggeredActivation(Trigger.ON_TURN_START), new TurnOwnerCondition(owner),
                 SourceBoundLifetime.Instance, new DrawAction(1));
 
-            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Turn Start]: " + expected));
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("Turn Start: " + expected));
         }
 
         [Test]
@@ -215,7 +248,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT))));
 
             Assert.That(CardTextGenerator.Generate(new[] { rule }),
-                Is.EqualTo("[Herald]: Give all other Construct friendly minions +1/+1."));
+                Is.EqualTo("Herald: Give all other Construct friendly minions +1/+1."));
         }
 
         [TestCase("SELF", "Deal 1 damage to this.")]
@@ -455,7 +488,9 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             int expected = card.Rules.Count(isMarkerAction);
             int actual = 0;
-            string token = "[" + marker + "]";
+            // The bare word: generated text carries no delimiters any more, and Presentation finds
+            // these same words the same way (CardTextStyling) rather than by punctuation.
+            string token = marker;
             for (int offset = 0; (offset = text.IndexOf(token, offset, StringComparison.Ordinal)) >= 0;
                 offset += token.Length)
                 actual++;
