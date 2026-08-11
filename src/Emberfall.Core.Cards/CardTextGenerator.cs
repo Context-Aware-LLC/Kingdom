@@ -61,7 +61,7 @@ namespace Emberfall.Core.Cards
         private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules)
         {
             var lines = new List<string>();
-            var groupActions = new List<(string Text, TargetSpec? Target)>();
+            var groupActions = new List<RuleAction>();
             string groupPrefix = "";
 
             foreach (RuleDefinition rule in rules)
@@ -77,8 +77,7 @@ namespace Emberfall.Core.Cards
                 }
 
                 groupPrefix = prefix;
-                groupActions.Add((RenderAction(rule.Action),
-                    rule.Action is TargetedRuleAction targeted ? targeted.Target : null));
+                groupActions.Add(rule.Action);
             }
 
             if (groupActions.Count > 0)
@@ -100,9 +99,11 @@ namespace Emberfall.Core.Cards
         /// and Freeze it." That is also what keeps CardTextStyling's case-sensitive match working on
         /// a keyword that is no longer at the front of a sentence.</para>
         /// </remarks>
-        private static string JoinActions(IReadOnlyList<(string Text, TargetSpec? Target)> actions)
+        private static string JoinActions(IReadOnlyList<RuleAction> group)
         {
-            if (actions.Count == 0) throw Requires("at least one action to join");
+            if (group.Count == 0) throw Requires("at least one action to join");
+
+            IReadOnlyList<(string Text, TargetSpec? Target)> actions = RenderClauses(group);
             if (actions.Count == 1) return actions[0].Text;
 
             var clauses = new List<string>(actions.Count);
@@ -131,6 +132,75 @@ namespace Emberfall.Core.Cards
                 sentence.Append(i == 0 ? clauses[i] : Decapitalize(clauses[i]));
             }
             return sentence.Append('.').ToString();
+        }
+
+        /// <summary>
+        /// Renders a marker's effects to clauses, first folding any run of repeated damage at one
+        /// target description into a single clause: three rolls of Chain Lightning are
+        /// "Deal 2, 1 and 1 damage each to a random enemy character", not the same sentence typed
+        /// three times (Sam, 2026-08-11).
+        ///
+        /// <para><b>"each" is the load-bearing word</b> and the reason this is a separate mechanism
+        /// from the elision below. These targets are NOT the same target — every roll picks
+        /// independently and two of them can land on the same character. Naming the target once
+        /// without "each" would claim a single character was struck three times, which is the
+        /// rules change this phrasing exists to avoid making.</para>
+        /// </summary>
+        private static IReadOnlyList<(string Text, TargetSpec? Target)> RenderClauses(IReadOnlyList<RuleAction> group)
+        {
+            var clauses = new List<(string, TargetSpec?)>(group.Count);
+
+            for (int i = 0; i < group.Count; i++)
+            {
+                int run = i;
+                while (run + 1 < group.Count && IsRepeatedRollOfTheSameDamage(group[run], group[run + 1])) run++;
+
+                if (run > i)
+                {
+                    var amounts = new List<string>(run - i + 1);
+                    for (int j = i; j <= run; j++)
+                        amounts.Add(((DamageAction)group[j]).Amount.ToString(CultureInfo.InvariantCulture));
+
+                    var spread = new StringBuilder("Deal ");
+                    for (int j = 0; j < amounts.Count; j++)
+                    {
+                        if (j > 0) spread.Append(j == amounts.Count - 1 ? " and " : ", ");
+                        spread.Append(amounts[j]);
+                    }
+                    spread.Append(" damage each to ").Append(Target(((DamageAction)group[i]).Target)).Append('.');
+
+                    // No target attached: this clause has already named its own, and it must never
+                    // be folded again by the same-target elision, which would drop the "each".
+                    clauses.Add((spread.ToString(), null));
+                    i = run;
+                    continue;
+                }
+
+                clauses.Add((RenderAction(group[i]),
+                    group[i] is TargetedRuleAction targeted ? targeted.Target : null));
+            }
+
+            return clauses;
+        }
+
+        /// <summary>Whether two effects are the same damage rolled again at an independently chosen
+        /// target — the shape "each" describes, and the exact opposite of
+        /// <see cref="IsProvablyTheSameTarget"/>.</summary>
+        private static bool IsRepeatedRollOfTheSameDamage(RuleAction first, RuleAction second)
+        {
+            if (first is not DamageAction a || second is not DamageAction b) return false;
+
+            TargetSpec x = a.Target, y = b.Target;
+            // Randomly chosen only. A player-chosen or automatic pair either resolves to the same
+            // target (the elision handles it) or is two distinct prompts worth spelling out.
+            if (!IsRandomlyChosen(x) || !IsRandomlyChosen(y)) return false;
+            // distinctFrom means the card already said "another", and a binding names one target to
+            // reuse. Either way the roll is not independent and "each" would misdescribe it.
+            if (x.DistinctFrom.Length > 0 || y.DistinctFrom.Length > 0) return false;
+            if (x.Binding.Length > 0 || y.Binding.Length > 0) return false;
+
+            return string.Equals(x.Selector, y.Selector, StringComparison.Ordinal) &&
+                x.Count == y.Count && SameFilter(x.Filter, y.Filter);
         }
 
         private static string Undot(string sentence) =>

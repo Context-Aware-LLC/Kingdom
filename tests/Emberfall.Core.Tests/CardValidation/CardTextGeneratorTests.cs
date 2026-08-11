@@ -114,6 +114,75 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
+        public void A_Shared_Binding_Names_Its_Target_Once()
+        {
+            // Both rules land on ONE minion — that is what the binding says — so the card has to
+            // say so too. Printing the phrase twice described two independent choices.
+            var target = new TargetSpec("ANY_FRIENDLY_MINION", binding: "target");
+            string text = CardTextGenerator.Generate(new[]
+            {
+                CastRule(new ModifyStatsAction(2, 2, target)),
+                CastRule(new GrantKeywordAction(Keyword.BULWARK, target)),
+            });
+
+            Assert.That(text, Is.EqualTo("Give a friendly minion +2/+2 and Bulwark."));
+        }
+
+        [Test]
+        public void Two_Unbound_Player_Choices_Stay_Spelled_Out()
+        {
+            // The guard on the test above: without a binding these really are two separate prompts,
+            // so eliding the second phrase would invent a constraint the resolver does not enforce.
+            string text = CardTextGenerator.Generate(new[]
+            {
+                CastRule(new ModifyStatsAction(2, 2, new TargetSpec("ANY_FRIENDLY_MINION"))),
+                CastRule(new GrantKeywordAction(Keyword.BULWARK, new TargetSpec("ANY_FRIENDLY_MINION"))),
+            });
+
+            Assert.That(text,
+                Is.EqualTo("Give a friendly minion +2/+2 and give a friendly minion Bulwark."));
+        }
+
+        [Test]
+        public void Repeated_Rolls_At_One_Description_Read_As_Damage_Dealt_Each()
+        {
+            // Chain Lightning's shape. "each" is the load-bearing word: the rolls are independent
+            // and two can land on the same character, so naming the target once WITHOUT it would
+            // claim a single character was struck three times.
+            TargetSpec Roll() => new TargetSpec("ANY_ENEMY", TargetChosenBy.RANDOM);
+            string text = CardTextGenerator.Generate(new[]
+            {
+                CastRule(new DamageAction(2, Roll())),
+                CastRule(new DamageAction(1, Roll())),
+                CastRule(new DamageAction(1, Roll())),
+            });
+
+            Assert.That(text, Is.EqualTo("Deal 2, 1 and 1 damage each to a random enemy character."));
+        }
+
+        [Test]
+        public void A_Distinct_Second_Roll_Keeps_Saying_Another()
+        {
+            // Chain Spark authors distinctFrom and means it, so the roll is not independent and the
+            // fold above must not swallow it.
+            string text = CardTextGenerator.Generate(new[]
+            {
+                CastRule(new DamageAction(1,
+                    new TargetSpec("ANY_ENEMY", TargetChosenBy.RANDOM, binding: "first_hit"))),
+                CastRule(new DamageAction(1,
+                    new TargetSpec("ANY_ENEMY", TargetChosenBy.RANDOM, binding: "second_hit",
+                        distinctFrom: "first_hit"))),
+            });
+
+            Assert.That(text, Is.EqualTo(
+                "Deal 1 damage to a random enemy character and deal 1 damage to another random enemy character."));
+        }
+
+        private static RuleDefinition CastRule(RuleAction action) =>
+            new RuleDefinition(new RuleId("cast_rule"), new TriggeredActivation(Trigger.ON_CAST),
+                AlwaysCondition.Instance, OneShotLifetime.Instance, action);
+
+        [Test]
         public void Emphasis_Vocabulary_Covers_Every_Word_The_Generator_Prints()
         {
             var vocabulary = CardTextGenerator.EmphasisVocabulary();
