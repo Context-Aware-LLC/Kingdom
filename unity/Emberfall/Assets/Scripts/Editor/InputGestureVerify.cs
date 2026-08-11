@@ -541,8 +541,16 @@ namespace Emberfall.Editor
 
             Check("drop on an ENEMY slot plays nothing",
                 m.Resolve(vanilla, PointerSubject.OfBoardSlot(P1, 0)) == null);
-            Check("drop on an occupied slot plays nothing (friendly minion)",
-                m.Resolve(vanilla, PointerSubject.OfCard(mine, P0, Zone.Board)) == null);
+            // Dropping a vanilla card ON one of our own minions is a PLACEMENT, not a miss —
+            // 03e0e529 "Loosen drag-to-play targeting" ruled it so and pinned it in
+            // DragTargetingModelTests ("dropping on an existing minion is a placement, not a miss").
+            // This mirror was left asserting the old refusal and had been failing since 2026-08-09.
+            // It lands at the slot it was dropped nearest to rather than past the end, so dropping on
+            // Board[0] resolves to slot 0.
+            var onOurMinion = m.Resolve(vanilla, PointerSubject.OfCard(mine, P0, Zone.Board)) as PlayCardIntent;
+            Check("drop on our own minion places there", onOurMinion != null
+                                                         && onOurMinion.BoardSlot == 0
+                                                         && onOurMinion.Targets.Count == 0);
             Check("drop on an occupied slot plays nothing (enemy minion)",
                 m.Resolve(vanilla, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
 
