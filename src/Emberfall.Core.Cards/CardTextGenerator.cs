@@ -28,10 +28,12 @@ namespace Emberfall.Core.Cards
             }
 
             var parts = new List<string>(1 + card.Rules.Count);
-            // Comma-separated, because the keyword band no longer has punctuation of its own to end
-            // each entry: "Bulwark Lifedrain" reads as one two-word keyword, "Bulwark, Lifedrain"
-            // cannot. Presentation emphasises each name individually on top of this.
-            if (carriers.Count > 0) parts.Add(string.Join(", ", carriers));
+            // Comma-separated and closed with a stop. Two separate jobs: the commas stop "Bulwark
+            // Lifedrain" reading as one two-word keyword, and the stop separates the band from the
+            // rules text that follows it. The trigger marker's colon used to do that second job —
+            // "Bulwark Herald: Draw a card." — and ON_PLAY prints no marker any more, which would
+            // have left "Bulwark Draw a card." Presentation emphasises each name on top of this.
+            if (carriers.Count > 0) parts.Add(string.Join(", ", carriers) + ".");
             parts.AddRange(RenderRuleGroups(card.Rules));
             return string.Join(" ", parts);
         }
@@ -52,8 +54,8 @@ namespace Emberfall.Core.Cards
         /// <summary>Renders the rules as card-face lines, one per run of rules sharing a prefix.</summary>
         /// <remarks>
         /// One line per RUN of consecutive rules sharing a trigger/condition/lifetime prefix, not one
-        /// line per rule — an ON_PLAY with three effects is one "Herald:", not "Herald:" printed
-        /// three times. Only adjacent rules merge, so an interleaved trigger (Herald, Toll, Herald)
+        /// line per rule — a Toll with three effects is one "Toll:", not "Toll:" printed three
+        /// times. Only adjacent rules merge, so an interleaved trigger (on-play, Toll, on-play)
         /// still prints the marker each time it actually changes.
         /// </remarks>
         private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules)
@@ -127,10 +129,19 @@ namespace Emberfall.Core.Cards
         /// prints unmarked. Public because Presentation emphasises the game's vocabulary by matching
         /// these words in the generated text (Unity's CardTextStyling): the labels are decided here,
         /// beside the code that prints them, so the styling list cannot drift from what is printed.
+        ///
+        /// <para><b>Playing the card is the unmarked default</b> (Sam, 2026-08-11). ON_CAST was always
+        /// unmarked — a spell resolves when you cast it and needs no label saying so — and ON_PLAY is
+        /// the same statement about a minion or a weapon, so it prints unmarked for the same reason.
+        /// Every timing that is NOT "when you played it" still carries its label, which is what makes
+        /// the absence of one meaningful. The retired label was "Herald": an invented word for the
+        /// default case, on 84 of 261 rows, telling the player nothing they had not already assumed.
+        /// Checked before removing it — all four ON_PLAY weapons carry that rule and no other, so no
+        /// card anywhere gained a second possible reading.</para>
         /// </summary>
         public static string TriggerLabel(Trigger trigger) => trigger switch
         {
-            Trigger.ON_PLAY => "Herald",
+            Trigger.ON_PLAY => "",
             Trigger.ON_DEATH => "Toll",
             Trigger.ON_ATTACK => "Attack",
             Trigger.ON_DAMAGED => "Damaged",
@@ -147,11 +158,11 @@ namespace Emberfall.Core.Cards
         /// <remarks>
         /// <b>The trailing colon is load-bearing.</b> Presentation renders both a timing marker and a
         /// carrier keyword as bold + 120% (Unity's CardTextStyling), so the two arrive at the player's
-        /// eye styled identically with only a space between them — "Rekindle Herald Freeze a minion"
+        /// eye styled identically with only a space between them — "Rekindle Toll Freeze a minion"
         /// reads as a list of three keywords rather than one keyword and one timing label. The colon
         /// is the only thing separating "what this minion IS" from "when this effect FIRES", and it
-        /// stays outside the emphasised span. ON_CAST is deliberately unmarked: a spell resolving on
-        /// cast needs no label.
+        /// stays outside the emphasised span. ON_PLAY and ON_CAST are deliberately unmarked — see
+        /// <see cref="TriggerLabel"/> for why playing the card is the default that needs no label.
         /// </remarks>
         private static string TriggerMarker(RuleActivation activation)
         {
@@ -160,7 +171,7 @@ namespace Emberfall.Core.Cards
             throw UnsupportedNode("activation", activation);
         }
 
-        /// <summary>Maps one trigger to its marker; a spell's own ON_CAST is deliberately unmarked.</summary>
+        /// <summary>Maps one trigger to its marker; playing the card is deliberately unmarked.</summary>
         private static string TriggerMarker(Trigger trigger)
         {
             string label = TriggerLabel(trigger);
@@ -207,7 +218,7 @@ namespace Emberfall.Core.Cards
             // REINFORCE is a fixed +1/+1 with no timing of its own — BuffHandler hardcodes 1/1 and
             // routes it through the same path as MODIFY_STATS — so the marker named a mechanic whose
             // whole definition is shorter than the word, had no entry in the player-facing keyword
-            // glossary to look up, and sat next to the "Herald:" it was routinely misread as a
+            // glossary to look up, and sat next to the on-play marker it was routinely misread as a
             // synonym for. Printing the stats says the same thing with no vocabulary to learn, and
             // renders identically to an authored MODIFY_STATS +1/+1, which is what it already is.
             //

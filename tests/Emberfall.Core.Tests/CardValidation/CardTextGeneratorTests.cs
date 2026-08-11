@@ -44,18 +44,20 @@ namespace Emberfall.Core.Tests.CardValidation
                 new[] { Keyword.BULWARK, Keyword.LIFEDRAIN }, Array.Empty<RuleDefinition>(),
                 "", "art/keyword_only", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark, Lifedrain"));
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark, Lifedrain."));
         }
 
         [Test]
         public void Card_Rendering_Derives_Trigger_Markers_Without_Duplicating_Them()
         {
-            var card = new CardDefinition("herald", "Herald", CardType.MINION, 1,
+            var card = new CardDefinition("on_play", "On Play", CardType.MINION, 1,
                 1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK }, new[] { DrawRule(new TriggeredActivation(Trigger.ON_PLAY)) },
-                "", "art/herald", SetId.CORE, true, null, "");
+                "", "art/on_play", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark Herald: Draw a card."));
+            // ON_PLAY prints no marker, so the stop after the keyword band is the only thing keeping
+            // the carrier and the effect apart — without it this reads "Bulwark Draw a card."
+            Assert.That(CardTextGenerator.Generate(card), Is.EqualTo("Bulwark. Draw a card."));
         }
 
         [Test]
@@ -108,7 +110,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 new[] { Keyword.FROST }, Array.Empty<RuleDefinition>(),
                 "", "art/frost_carrier", SetId.CORE, true, null, "");
 
-            Assert.That(CardTextGenerator.Generate(carrier), Is.EqualTo("Freeze"));
+            Assert.That(CardTextGenerator.Generate(carrier), Is.EqualTo("Freeze."));
         }
 
         [Test]
@@ -190,7 +192,7 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(ex!.Message, Does.Contain("cardText"));
         }
 
-        [TestCase(Trigger.ON_PLAY, "Herald: Draw a card.")]
+        [TestCase(Trigger.ON_PLAY, "Draw a card.")]
         [TestCase(Trigger.ON_DEATH, "Toll: Draw a card.")]
         [TestCase(Trigger.ON_ATTACK, "Attack: Draw a card.")]
         [TestCase(Trigger.ON_DAMAGED, "Damaged: Draw a card.")]
@@ -248,7 +250,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT))));
 
             Assert.That(CardTextGenerator.Generate(new[] { rule }),
-                Is.EqualTo("Herald: Give all other Construct friendly minions +1/+1."));
+                Is.EqualTo("Give all other Construct friendly minions +1/+1."));
         }
 
         [TestCase("SELF", "Deal 1 damage to this.")]
