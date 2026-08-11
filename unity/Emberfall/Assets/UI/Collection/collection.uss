@@ -104,3 +104,50 @@
 .col-empty--on {
     display: flex;
 }
+
+/* ---------- Modes (#153) ----------
+ *
+ * One plate, two shapes. CollectionController puts exactly one of these two modifiers on the root
+ * element every visit, so nothing here relies on `:not()` — UI Toolkit's selector support is
+ * narrower than CSS's and a negation that silently fails to match would show BOTH halves at once.
+ *
+ * Everything below restores what each of the two former plates looked like. If you are changing a
+ * value here, you are changing how one of those screens looks, not tidying a merge.
+ */
+
+/* Browsing: no deck sidebar, no per-pairing chips, and the wall sits directly on the vault plate
+ * rather than inside a raised panel — the panel chrome is deckbuild's split-view furniture. */
+.collection--browse .db-filter-row {
+    display: none;
+}
+.collection--browse .db-deck {
+    display: none;
+}
+.collection--browse .db-collection {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
+    margin-right: 0;
+}
+
+/* Deckbuilding: the header and the query bar belong to browse (see the UXML for why each is gone),
+ * and the surface goes back to the flat panel ground the deckbuilder had. The vault painting is
+ * the collection's identity; it is not this screen's. */
+.collection--deckbuild {
+    background-image: none;
+    background-color: var(--surface-1);
+    padding: var(--space-4);
+}
+.collection--deckbuild .col-header {
+    display: none;
+}
+.collection--deckbuild .col-query {
+    display: none;
+}
+/* The wall's own ground inside the panel — what the db-list class gave the ScrollView on the old
+ * deckbuilder plate. Applied by mode rather than by class, because in browse the same ScrollView
+ * must stay transparent so the plate painting shows through it. */
+.collection--deckbuild #collection-scroll {
+    background-color: var(--surface-1);
+    border-radius: var(--space-2);
+}

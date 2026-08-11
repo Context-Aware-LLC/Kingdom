@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  CollectionScreen.uxml — the whole card pool, with no deck panel.
+  CollectionScreen.uxml — one plate, two modes (#153).
 
-  The deckbuilder's wall is character-scoped: BuildPool admits only the character's pairing plus
-  neutral, so it can never show you the game. This screen is the other half of that split, reached
-  from the roster's View Collection button.
+  This used to be two plates. DeckbuilderScreen.uxml is gone; everything it declared is here, and
+  which half you see is decided by a modifier class CollectionController puts on the root element
+  (see the Modes block in collection.uss). Browse shows the header, the query bar and the wall.
+  Deckbuild shows the filter chips, the wall and the deck panel.
 
-  Bound at runtime by CollectionController. The wall itself is CardWall and the controls are
-  CardQueryBar, both shared with the deckbuilder, so nothing here re-implements either.
+  Bound at runtime by CollectionController. The wall itself is CardWall and the query controls are
+  CardQueryBar, so nothing here re-implements either.
 
-  The chip rows are EMPTY on purpose. CardQueryBar generates their contents from the enums in
+  The query chip rows are EMPTY on purpose. CardQueryBar generates their contents from the enums in
   Enums.cs, so a ninth class or a fifth rarity appears without anyone editing this file. Authoring
   them by hand is how a list silently stops matching the set it claims to describe.
+
+  The three filter chips below ARE authored by hand, and that is not the same mistake: they are
+  All, this character's pairing, and neutral, which is a fixed set of three regardless of how many
+  classes exist.
 
   NEVER write a BEM modifier's double dash inside a comment in this file. XML forbids that sequence
   in a comment, so the importer fails the WHOLE file, CloneTree() returns zero children, every Q<>()
@@ -25,6 +30,12 @@
 
     <ui:VisualElement name="root" class="emb-root collection">
 
+        <!--
+          Browse only. Deckbuild deliberately has no header (Sam, 2026-08-07): it carried the
+          character's name and the deck's, both of which are on the roster one screen back, and
+          repeating them cost the wall a band of vertical space. In that mode Back and the card
+          count live in the deck panel instead, where the count labels the list it counts.
+        -->
         <ui:VisualElement name="collection-header" class="col-header">
             <ui:VisualElement class="col-heading">
                 <ui:Label text="Collection" class="col-title" />
@@ -33,8 +44,15 @@
             <ui:Button name="back-button" text="Back" class="col-button col-button--ghost" />
         </ui:VisualElement>
 
-        <!-- Query controls. Every one of these is optional to CardQueryBar: delete any and that
-             facet is simply not offered here, with no code change. -->
+        <!--
+          Query controls, browse only. Every one of these is optional to CardQueryBar: delete any
+          and that facet is simply not offered, with no code change.
+
+          Hidden while deckbuilding on purpose, and the reason is worth knowing: the class chips are
+          generated from all nine classes, but a deckbuilding pool holds two of them plus neutral,
+          so seven of those chips would match nothing. Offering the full bar in both modes is a real
+          improvement and a real decision, not a side effect of merging two files.
+        -->
         <ui:VisualElement name="query-bar" class="col-query">
             <ui:VisualElement class="col-query-row">
                 <ui:TextField name="query-search" class="col-search" />
@@ -48,11 +66,50 @@
             <ui:VisualElement name="query-costs" class="col-chip-row" />
         </ui:VisualElement>
 
-        <ui:ScrollView name="collection-scroll" class="col-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
-            <ui:VisualElement name="collection-grid" class="db-grid" />
-        </ui:ScrollView>
+        <!-- Body. A row of two panels while deckbuilding; the left panel alone while browsing. -->
+        <ui:VisualElement name="body" class="db-body">
 
-        <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty" />
+            <ui:VisualElement name="collection-panel" class="db-panel db-collection">
+
+                <!-- Deckbuild only: All, this character's pairing, neutral. -->
+                <ui:VisualElement name="filter-row" class="db-filter-row">
+                    <ui:Button name="filter-all" text="All" class="db-chip db-chip--on" />
+                    <ui:Button name="filter-class" text="Class" class="db-chip" />
+                    <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
+                </ui:VisualElement>
+
+                <ui:ScrollView name="collection-scroll" class="col-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
+                    <ui:VisualElement name="collection-grid" class="db-grid" />
+                </ui:ScrollView>
+
+                <!--
+                  Inside the panel rather than at root, so it sits under the wall it describes in
+                  both modes. Shown by CollectionController only when a query matches nothing: a
+                  wall that goes blank with no text reads as a broken screen, not an empty result.
+                -->
+                <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty" />
+
+            </ui:VisualElement>
+
+            <!--
+              Deckbuild only. Set Default and Delete Deck went to the roster's deck dialog with the
+              rest of deck management (Sam, 2026-08-07); what is left here edits the 30.
+
+              Back lives in this panel rather than a footer row of its own (Sam, 2026-08-09): the
+              legality box below it never had anything to say, since this screen cannot produce an
+              illegal deck (SaveDeck is never legality gated), so it is gone and Back moved up next
+              to the count. It still saves and leaves; see WireChrome.
+            -->
+            <ui:VisualElement name="deck-panel" class="db-panel db-deck">
+                <ui:VisualElement name="deck-header" class="db-deck-header">
+                    <ui:Button name="done-button" text="Back" class="db-button db-button--ghost db-button--back" />
+                    <ui:Label name="count-label" text="0 / 30" class="db-count" />
+                </ui:VisualElement>
+                <ui:VisualElement name="curve-strip" class="db-curve" />
+                <ui:ListView name="deck-list" class="db-list" />
+            </ui:VisualElement>
+
+        </ui:VisualElement>
 
     </ui:VisualElement>
 </ui:UXML>

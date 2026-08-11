@@ -45,16 +45,16 @@ namespace Emberfall.Presentation
     /// unowned card stays on the wall and is refused at the copy cap instead (see
     /// <see cref="BuildPool"/>), because #150 wants it visible-but-spent rather than absent.</para>
     ///
-    /// <para><b>Binds what is present.</b> The deck panel, the query bar and the three filter chips
-    /// are each looked up by name and each absent one is a region this plate does not offer. That is
-    /// what lets one controller drive both CollectionScreen.uxml and DeckbuilderScreen.uxml while
-    /// they are still two files — #153 merges them into one plate, and this tolerance is what makes
-    /// that a separate, safe change. RETIREMENT TRIGGER: when #153 lands one plate, the deck panel is
-    /// always present and its absence becomes a real misconfiguration worth an error rather than a
-    /// mode.</para>
+    /// <para><b>One plate declares every region; the mode hides what it does not use</b> (#153).
+    /// The deck panel, the browse header, the query bar and the three filter chips all exist on
+    /// CollectionScreen.uxml in both modes. <see cref="StampMode"/> writes a modifier onto the plate
+    /// root and the stylesheet does the hiding, so <b>an absent element is now a broken plate rather
+    /// than a mode</b>. The null guards below are diagnostics, not a second way to configure this
+    /// screen: a missing deck list while deckbuilding means the UXML is wrong, not that this visit
+    /// declined the deck panel.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
-    /// CollectionScreen.uxml or DeckbuilderScreen.uxml.
+    /// CollectionScreen.uxml.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class CollectionController : MonoBehaviour
@@ -84,7 +84,8 @@ namespace Emberfall.Presentation
         /// </summary>
         private IOwnedCardCounts _owned;
 
-        // Cached elements. Every one of these may be absent; see the "binds what is present" remark.
+        // Cached elements. All of these exist on the plate in both modes; a null here is a broken
+        // UXML, not a mode that declined the region. See the "one plate declares every region" remark.
         private VisualElement _root;
         private VisualElement _grid;
         private CardWall _wall;
@@ -131,6 +132,7 @@ namespace Emberfall.Presentation
 
             if (!ResolveMode()) return;
 
+            StampMode();
             BuildPool();
             CacheElements();
             InitFaceBaker();
@@ -178,6 +180,32 @@ namespace Emberfall.Presentation
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Put the mode on the plate root, which is what decides the whole screen's shape (#153).
+        ///
+        /// <para><b>Both modifiers are written every visit, one on and one off</b>, rather than one
+        /// modifier and a bare-class default. The stylesheet then never needs <c>:not()</c>, whose
+        /// support in UI Toolkit is narrower than in CSS — a negation that silently failed to match
+        /// would show the browse chrome and the deck panel at the same time.</para>
+        ///
+        /// <para>The class goes on the element NAMED "root", not on <c>rootVisualElement</c>: the
+        /// latter is the document's own container and carries none of this plate's classes, so
+        /// <c>.collection</c> and its modifiers would never meet on the same element.</para>
+        /// </summary>
+        private void StampMode()
+        {
+            VisualElement plate = _root.Q<VisualElement>("root");
+            if (plate == null)
+            {
+                Debug.LogError("[Collection] no element named 'root' in the UXML, so the mode class " +
+                               "has nowhere to go — the deck panel and the browse header will both " +
+                               "be visible. Check CollectionScreen.uxml.");
+                return;
+            }
+            plate.EnableInClassList("collection--deckbuild", Deckbuilding);
+            plate.EnableInClassList("collection--browse", !Deckbuilding);
         }
 
         private static DeckList FindPendingDeck(IReadOnlyList<DeckSummary> decks)
@@ -323,10 +351,15 @@ namespace Emberfall.Presentation
 
         // ---- Collection filter chips (All / Class / Neutral) ----------------------------------
         // Class = either half of the character's pairing, excluding neutral; Neutral = NEUTRAL only;
-        // All = no constraint. These three predate CardQueryBar and stay as they are for now —
-        // replacing them with the shared bar is a separate change (#153), and the wall does not care
-        // which of the two feeds it a filter. They are meaningless without a pairing, so they are
-        // deckbuild-only even on a plate that declares them.
+        // All = no constraint. Meaningless without a pairing, so the plate hides them while browsing
+        // and this returns early in that mode — two guards for one fact, deliberately: the class is
+        // what the player sees and the early return is what stops us wiring a callback onto a chip
+        // that can never be pressed.
+        //
+        // These three predate CardQueryBar and the wall does not care which of the two feeds it a
+        // filter. Giving deckbuild the full query bar instead is a real improvement and a real
+        // decision — the bar's class chips are generated from all nine classes and a deckbuilding
+        // pool holds three of them — so it is its own change, not a tidy-up to fold in here.
         private void WireCollectionFilters()
         {
             if (!Deckbuilding || _filterAllButton == null) return;
@@ -447,8 +480,10 @@ namespace Emberfall.Presentation
 
         // ---- Chrome (buttons) ----
         //
-        // Both plates call their exit "Back" and only the names differ — back-button on the browse
-        // plate, done-button on the deckbuild one. Wire whichever is present; #153 leaves one.
+        // Both exits are called "Back" and both live on the plate; only their names differ, because
+        // each sits in a region the other mode hides — back-button in the browse header, done-button
+        // in the deck panel. Wire both: the hidden one is display:none, so it is unpickable and the
+        // player only ever meets the one belonging to the mode they are in.
         //
         // The exit saves in deckbuild mode, and it is the only way out. The alternative is a confirm
         // dialog on a screen whose whole model is "an illegal deck is a savable draft" — there is
@@ -502,9 +537,12 @@ namespace Emberfall.Presentation
         /// <summary>
         /// The wall's own count and empty-state text. Every path that changes what the wall shows
         /// ends here — the query bar and the three filter chips both — so the count can never
-        /// describe a wall the player is no longer looking at. That is invisible today only because
-        /// the two label elements live on the browse plate and the chips on the deckbuild one; #153
-        /// puts them on the same plate and makes it a real bug.
+        /// describe a wall the player is no longer looking at.
+        ///
+        /// <para>Both labels now live on the same plate as both filter surfaces, so routing every
+        /// path through here is what keeps that true. It writes to the count label in deckbuild mode
+        /// too, where the browse header hiding it makes the write invisible rather than wrong — the
+        /// alternative is a mode check here, which is one more place to get the mode wrong.</para>
         /// </summary>
         private void UpdateWallLabels()
         {

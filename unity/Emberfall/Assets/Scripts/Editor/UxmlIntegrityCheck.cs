@@ -33,7 +33,11 @@ namespace Emberfall.Editor
         {
             "Assets/UI/MainMenu/MainMenuScreen.uxml",
             "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml",
-            "Assets/UI/Deckbuilder/DeckbuilderScreen.uxml",
+            // The collection wall and the deckbuilder are one plate now (#153); DeckbuilderScreen.uxml
+            // is gone. This entry replaces it and closes a gap rather than just tracking a rename:
+            // CollectionScreen.uxml was never listed here, so the screen carrying the loudest warning
+            // about the failure this tool exists to catch was the one screen it did not check.
+            "Assets/UI/Collection/CollectionScreen.uxml",
         };
 
         [MenuItem("Emberfall/UI/Check UXML Integrity")]
