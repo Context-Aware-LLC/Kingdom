@@ -2,6 +2,11 @@
 # (`#!/usr/bin/env bash\r` is not a valid interpreter path).
 *.sh    text eol=lf
 
+# Git hooks are shell scripts with no extension, so the rule above does not reach them. The
+# stakes are the same and the failure is worse: a CRLF shebang is "bad interpreter", and a hook
+# that cannot start does not announce itself — it just silently stops guarding.
+.githooks/*  text eol=lf
+
 # C# is pinned to LF on checkout (not just normalized in the index). `dotnet format` is a
 # blocking CI stage that runs on the Linux runner where the working tree is LF; without an
 # explicit eol here, `core.autocrlf=true` checks C# out as CRLF on Windows and `dotnet format`
