@@ -141,7 +141,10 @@ namespace Emberfall.Presentation
             RejectReason.WeaponMissing        => "No weapon equipped.",
             RejectReason.HasSummoningSickness => "Can't attack yet this turn.",
             RejectReason.NoAttacksLeft        => "Already attacked this turn.",
-            RejectReason.AttackerFrosted       => "Frosted — can't attack.",
+            // "Frozen", not the enum's spelling: FROST prints as "Freeze" on the card face
+            // (KeywordSemantics.AuthoredName), and a toast is the same player reading the same
+            // mechanic seconds later. The enum id stays AttackerFrosted — it is wire state.
+            RejectReason.AttackerFrosted       => "Frozen — can't attack.",
             RejectReason.AlreadyMulliganed    => "You've already swapped.",
             RejectReason.GameOver             => "The match is over.",
             RejectReason.RateLimited          => "Slow down a moment.",

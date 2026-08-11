@@ -91,16 +91,24 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Frost_Verb_Renders_Emberfalls_Own_Keyword_Not_The_Genre_Verb()
+        public void Frost_Verb_And_Frost_Carrier_Print_The_Same_Authored_Word()
         {
             var rule = new RuleDefinition(new RuleId("frost_a_minion"),
                 new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
                 OneShotLifetime.Instance, new FrostAction(new TargetSpec("ANY_MINION")));
 
-            // The card face has to name the same mechanic the glossary and IsFrosted do; the genre's
-            // verb for it is what tools/ci/vocabulary-gate.ps1 blocks. Eight shipping cards render
-            // through this arm, so a regression here is player-visible on all of them.
-            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Frost] a minion."));
+            // FROST's enum id is not the word on the card (Sam, 2026-08-11): "frost" is not a verb,
+            // so the face says "Freeze". Eight shipping cards render through this arm. Both surfaces
+            // are asserted together because the failure worth catching is them drifting apart —
+            // KeywordSemantics.AuthoredName is what keeps the verb and the carrier in agreement.
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo("[Freeze] a minion."));
+
+            var carrier = new CardDefinition("frost_carrier", "Frost Carrier", CardType.MINION, 1,
+                1, 1, null, CardClass.NEUTRAL, Rarity.COMMON,
+                new[] { Keyword.FROST }, Array.Empty<RuleDefinition>(),
+                "", "art/frost_carrier", SetId.CORE, true, null, "");
+
+            Assert.That(CardTextGenerator.Generate(carrier), Is.EqualTo("[Freeze]"));
         }
 
         [Test]

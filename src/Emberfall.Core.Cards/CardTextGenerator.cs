@@ -163,12 +163,11 @@ namespace Emberfall.Core.Cards
             ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
             SilenceAction a => $"[Silence] {Target(a.Target)}.",
             TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
-            // Bracketed like its sibling keyword-named actions, and named FROST rather than the
-            // genre's verb for the same idea: the word on the card has to be the word the glossary
-            // (Presentation/KeywordCopy) and the state flag (IsFrosted) already use, or the player
-            // reads a keyword with no entry to look up. tools/ci/vocabulary-gate.ps1 blocks the
-            // other spelling on the way in.
-            FrostAction a => $"[Frost] {Target(a.Target)}.",
+            // Bracketed like its sibling keyword-named actions, and named through the keyword rather
+            // than spelled here, so the verb on the card and the marker on a carrier of the same
+            // keyword cannot drift apart — KeywordSemantics.AuthoredName is the one place the word
+            // is decided, and the tooltip reads the same entry.
+            FrostAction a => $"[{Name(Keyword.FROST)}] {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, Name(a.CardId))}.",
@@ -496,7 +495,8 @@ namespace Emberfall.Core.Cards
             => (amount >= 0 ? "+" : "") + amount.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>Renders a keyword as the name printed on a card face.</summary>
-        private static string Name(Keyword keyword) => Name(keyword.ToString());
+        private static string Name(Keyword keyword)
+            => KeywordSemantics.AuthoredName(keyword) ?? Name(keyword.ToString());
 
         /// <summary>Renders an identifier — card, token, tribe or keyword — as the words a player reads.</summary>
         private static string Name(string identifier)

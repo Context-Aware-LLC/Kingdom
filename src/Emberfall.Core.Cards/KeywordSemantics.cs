@@ -15,5 +15,24 @@ namespace Emberfall.Core.Cards
 
         public static bool IsCarrierBehavior(Keyword keyword)
             => System.Enum.IsDefined(typeof(Keyword), keyword) && !IsActionMarker(keyword);
+
+        /// <summary>
+        /// The player-facing word for a keyword whose enum id is not the word on the card, or null
+        /// when title-casing the id is already right. The ONE place an authored keyword name lives:
+        /// the card face humanises through <c>CardTextGenerator</c> and the tooltip through
+        /// <c>KeywordCopy.DisplayName</c>, two humanisers in two assemblies, and an override written
+        /// into only one of them is a card that disagrees with its own tooltip.
+        ///
+        /// <para>Null rather than the humanised default on purpose — a caller that forgets to fall
+        /// back gets an obvious null, not a silently plausible name.</para>
+        /// </summary>
+        public static string? AuthoredName(Keyword keyword)
+            // Sam, 2026-08-11. FROST keeps the enum id (ordinal 12 is wire/hash state, and the
+            // engine's IsFrosted/FrostApplied/isFrosted spellings go with it), but the card says
+            // "Freeze": frost is not a verb in English, so "[Frost] a minion." did not parse as a
+            // sentence. Freeze collides with the genre's word for the same mechanic and that is
+            // accepted here — one collision on a plain English verb, ruled cheaper than a keyword
+            // the player cannot read. tools/ci/vocabulary-gate.ps1 permits it for that reason.
+            => keyword == Keyword.FROST ? "Freeze" : null;
     }
 }

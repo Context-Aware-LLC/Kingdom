@@ -1,4 +1,5 @@
 using System.Text;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Presentation
@@ -14,12 +15,15 @@ namespace Emberfall.Presentation
     /// close, and the tooltip is the second consumer that would have created it.</para>
     ///
     /// <para><b>This file deliberately does NOT decide keyword NAMES.</b> Enum ids are canonical;
-    /// <see cref="DisplayName"/> only formats them for player-facing copy. The GLOSSARY BODY owns
-    /// the short description of each carrier mechanic.</para>
+    /// <see cref="DisplayName"/> only formats them for player-facing copy, deferring to
+    /// <see cref="KeywordSemantics.AuthoredName"/> for the ones whose printed word is not their id.
+    /// The GLOSSARY BODY owns the short description of each carrier mechanic.</para>
     ///
-    /// <para><b>RETIREMENT TRIGGER.</b> When the keyword display layer lands and keywords gain
-    /// authored display names, replace <see cref="DisplayName"/>'s humaniser with that lookup HERE
-    /// and both consumers follow for free. Do not re-introduce a per-consumer copy.</para>
+    /// <para><b>RETIREMENT TRIGGER.</b> When the keyword display layer lands and every keyword gains
+    /// an authored display name, delete <see cref="DisplayName"/>'s humanising fallback and let
+    /// <see cref="KeywordSemantics.AuthoredName"/> answer outright — the authored-name lookup this
+    /// trigger anticipated now exists, and it lives in Core.Cards rather than here so the card face
+    /// can reach it too. Do not re-introduce a per-consumer copy.</para>
     /// </summary>
     internal static class KeywordCopy
     {
@@ -27,6 +31,11 @@ namespace Emberfall.Presentation
         /// design; humanise for player-facing surfaces until the full display layer lands.</summary>
         internal static string DisplayName(Keyword kw)
         {
+            // An authored name outranks the humaniser: FROST prints as "Freeze", and the card face
+            // resolves the same call, so a card and its own tooltip cannot disagree.
+            string authored = KeywordSemantics.AuthoredName(kw);
+            if (authored != null) return authored;
+
             string[] parts = kw.ToString().Split('_');
             var sb = new StringBuilder();
             foreach (string p in parts)

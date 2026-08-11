@@ -11,7 +11,8 @@ bottom, which is the most load-bearing section in this file.
 
 **Write about keywords using Emberfall's own vocabulary.** `tools/ci/vocabulary-gate.ps1` is a
 blocking CI stage that scans `tooling/` prose, not just code, and rejects the genre's standard
-keyword words. Describe what a keyword *does*; do not reach for the word another game uses.
+keyword words. Describe what a keyword *does*; do not reach for the word another game uses. The one
+deliberate exception is **Freeze**, permitted by ruling — see the `FROST` row below.
 
 ---
 
@@ -35,6 +36,12 @@ Deck-building is impossible without these, and the names do not give them away.
 | `VANGUARD` | No retaliation if the defender dies to the hit | `CommandProcessor.cs` |
 | `BACKDRAFT` | **Locks mana crystals next turn.** Not damage to you. | `ActionHandlers.cs` |
 | `REINFORCE` | A typed action, not a carrier keyword: +1/+1 to its target | `ActionHandlers.cs` |
+| `FROST` | Whatever it damages misses its next attack — **heroes included**, unlike `VENOM` | `DamagePipeline.cs` |
+
+**`FROST` is the one keyword whose id is not its printed word:** the card face and every tooltip say
+**Freeze** (`KeywordSemantics.AuthoredName`, Sam 2026-08-11), because *frost* is not a verb. Write
+"Freeze" in prose and `FROST` when you mean the enum id. This is the sole exception to the rule
+below, and the gate permits it by name.
 
 Two of these will mislead you if you go by the name:
 

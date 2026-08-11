@@ -32,6 +32,13 @@ function Convert-PascalCase {
 }
 
 function New-Patterns {
+    # PERMITTED BY RULING, do not re-add: FREEZE and FROZEN (Sam, 2026-08-11). They were entries
+    # 'n' and 'o' below — the gap in the letters is theirs. Emberfall's keyword id is still FROST,
+    # but its printed word is "Freeze" (KeywordSemantics.AuthoredName), because "frost" is not a
+    # verb in English and "[Frost] a minion." did not parse as a sentence. One collision with the
+    # genre on a plain English verb was ruled cheaper than a keyword the player cannot read. This
+    # is a per-word ruling and not a precedent: every other entry stays blocked.
+    #
     # Keep the gate in its own active scan scope without creating an exemption for the checker.
     $word = @{
         a = Join-CodePoints 84,65,85,78,84
@@ -47,8 +54,6 @@ function New-Patterns {
         k = Join-CodePoints 80,79,73,83,79,78,79,85,83
         l = Join-CodePoints 83,80,69,76,76
         m = Join-CodePoints 68,65,77,65,71,69
-        n = Join-CodePoints 70,82,69,69,90,69
-        o = Join-CodePoints 70,82,79,90,69,78
         p = Join-CodePoints 79,86,69,82,76,79,65,68
         q = Join-CodePoints 82,69,66,79,82,78
         r = Join-CodePoints 68,73,83,67,79,86,69,82
@@ -63,7 +68,7 @@ function New-Patterns {
         $word.a, $word.b, $word.c,
         ($word.d + $underscore + $word.e), $word.f, $word.g,
         $word.h, $word.i, $word.j, $word.k,
-        ($word.l + $underscore + $word.m), $word.n, $word.o,
+        ($word.l + $underscore + $word.m),
         $word.p, $word.q, $word.r, $word.s,
         $word.t, $word.u, $word.v
     )
@@ -72,7 +77,7 @@ function New-Patterns {
         $word.a, $word.b, $word.c,
         ($word.d + '[ _-]' + $word.e), $word.f, $word.g,
         $word.h, $word.i, $word.j, $word.k,
-        ($word.l + '[ _-]' + $word.m), $word.n, $word.o,
+        ($word.l + '[ _-]' + $word.m),
         $word.p, $word.q, $word.r, $word.s,
         $word.t, $word.u, $word.v
     )
@@ -84,7 +89,6 @@ function New-Patterns {
     $verb = [regex]::Escape('Verb.')
     $keyword = [regex]::Escape('Keyword.')
     $pendingChoice = [regex]::Escape('PendingChoiceKind.')
-    $is = 'Is'
     $hasUsed = 'HasUsed'
     $nextTurn = 'NextTurn'
     $lock = 'Lock'
@@ -92,21 +96,18 @@ function New-Patterns {
     $on = 'on'
 
     $compound = @(
-        ($is + $pascal.o),
         ($hasUsed + $pascal.q),
         ($nextTurn + $pascal.p + $lock),
         ($pascal.p + $lock),
-        ($pascal.n + $handler),
         ($pascal.p + $handler),
-        ($on + $pascal.n),
         ($on + $pascal.r),
         ($pendingChoice + $pascal.r),
-        ($action + $word.r), ($action + $word.n), ($action + $word.p),
-        ($verb + $word.r), ($verb + $word.n), ($verb + $word.p)
+        ($action + $word.r), ($action + $word.p),
+        ($verb + $word.r), ($verb + $word.p)
     )
     foreach ($term in @($word.a, $word.b, $word.c, ($word.d + $underscore + $word.e),
         $word.f, $word.g, $word.h, $word.i, $word.j, $word.k,
-        ($word.l + $underscore + $word.m), $word.n, $word.p, $word.q)) {
+        ($word.l + $underscore + $word.m), $word.p, $word.q)) {
         $compound += $keyword + $term
     }
 
