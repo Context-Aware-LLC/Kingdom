@@ -6,23 +6,23 @@
   "seed": 64159285249,
   "entries": [
     {
+      "id": "cinder_drake",
+      "count": 1
+    },
+    {
       "id": "core_emberling",
       "count": 1
     },
     {
-      "id": "core_grove_mender",
+      "id": "core_lantern_bearer",
       "count": 1
     },
     {
       "id": "core_thistleguard_sprig",
-      "count": 2
-    },
-    {
-      "id": "core_throneless_king",
       "count": 1
     },
     {
-      "id": "core_veilstalker",
+      "id": "ember_blazewing",
       "count": 1
     },
     {
@@ -30,8 +30,16 @@
       "count": 1
     },
     {
+      "id": "ember_fusillade",
+      "count": 1
+    },
+    {
+      "id": "ember_kiln_warden",
+      "count": 1
+    },
+    {
       "id": "ember_magmacore_warden",
-      "count": 2
+      "count": 1
     },
     {
       "id": "ember_overheat_golem",
@@ -46,20 +54,28 @@
       "count": 1
     },
     {
-      "id": "ember_zealot",
+      "id": "ember_twin_flame",
+      "count": 2
+    },
+    {
+      "id": "ember_vanguard_drake",
       "count": 1
+    },
+    {
+      "id": "neutral_bog_crawler",
+      "count": 2
     },
     {
       "id": "neutral_doublestrike_hawk",
       "count": 1
     },
     {
-      "id": "neutral_ironclad_bulwark",
+      "id": "neutral_razorcoil_adder",
       "count": 1
     },
     {
       "id": "neutral_searing_quill",
-      "count": 1
+      "count": 2
     },
     {
       "id": "neutral_spellwarden",
@@ -67,22 +83,10 @@
     },
     {
       "id": "neutral_venomscale_drake",
-      "count": 2
-    },
-    {
-      "id": "relic_bound_revenant",
       "count": 1
     },
     {
-      "id": "tide_abyssal_devourer",
-      "count": 1
-    },
-    {
-      "id": "tide_deep_channel",
-      "count": 1
-    },
-    {
-      "id": "tide_drowned_titan",
+      "id": "stone_sentry",
       "count": 1
     },
     {
@@ -90,15 +94,11 @@
       "count": 1
     },
     {
-      "id": "tide_glacial_echo",
+      "id": "tide_icecrown_herald",
       "count": 1
     },
     {
-      "id": "tide_hoarfrost_lash",
-      "count": 1
-    },
-    {
-      "id": "tide_maren_avatar",
+      "id": "tide_icescale_whelp",
       "count": 1
     },
     {
