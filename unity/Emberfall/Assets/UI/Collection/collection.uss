@@ -41,6 +41,23 @@
     margin-bottom: var(--space-1);
 }
 
+/* Owned vs All (#146). Hidden by default and turned on from code, the same shape as the empty label
+ * below: it is present only for an account that HAS an ownership record, which is runtime state and
+ * not a mode, so the mode modifiers at the bottom of this file are the wrong tool for it. Nothing
+ * here can turn it on — CollectionController.WireScopeToggle is the only writer.
+ *
+ * align-items on .col-heading is flex-end, so the bottom margin is what sits these chips on the
+ * title's baseline rather than under its descenders. */
+.col-scope {
+    display: none;
+    flex-direction: row;
+    margin-left: var(--space-4);
+    margin-bottom: var(--space-1);
+}
+.col-scope--on {
+    display: flex;
+}
+
 .col-button {
     font-size: var(--type-label);
     color: var(--ink-1);

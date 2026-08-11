@@ -31,15 +31,24 @@ namespace Emberfall.Presentation
     ///
     /// <list type="bullet">
     /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — nobody has told
-    /// this account what it owns. The wall shows the full collectible pool and the label says "the
+    /// this account what it owns. The wall shows the full collectible pool and the label says "in the
     /// game". This is every machine today.</item>
-    /// <item>A record — the wall shows only cards with at least one copy, and the label says "yours".</item>
+    /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and the label
+    /// says "in your collection". This is the default the moment a grant path writes that record.</item>
+    /// <item>A record, showing everything anyway — the Owned/All toggle (#146). Same wall as the first
+    /// state and the same label, from a completely different reason.</item>
     /// </list>
     ///
-    /// <para><b>So the player-facing copy rule holds in the first state:</b> do not describe this
+    /// <para><b>So the player-facing copy rule holds in two of the three:</b> do not describe this
     /// screen as a collection of owned cards while it is showing the pool. The label is the only thing
     /// that says which of the two you are looking at, so it is not decoration — read
-    /// <see cref="ApplyQuery"/> before changing its wording.</para>
+    /// <see cref="OwnedOnly"/> and <see cref="UpdateWallLabels"/> before changing its wording.</para>
+    ///
+    /// <para><b>The toggle is a scope, not a facet</b>, which is why it is not a chip on
+    /// <see cref="CardQueryBar"/>: the bar's chips are generated from the card enums and filter a pool,
+    /// while this decides which pool there is. It therefore rebuilds the pool rather than re-querying,
+    /// and <see cref="CardQueryBar.Reset"/> deliberately leaves it alone — resetting the filters should
+    /// not silently move you between your collection and the game.</para>
     ///
     /// <para><b>That ownership scoping is browse-only</b>, and deliberately: in deckbuild mode an
     /// unowned card stays on the wall and is refused at the copy cap instead (see
@@ -84,6 +93,18 @@ namespace Emberfall.Presentation
         /// </summary>
         private IOwnedCardCounts _owned;
 
+        /// <summary>
+        /// Which pool the browse wall is showing: true = only what this account owns, false = every
+        /// collectible card. Meaningless without <see cref="_owned"/> — see <see cref="OwnedOnly"/>,
+        /// which is the predicate everything reads.
+        ///
+        /// <para><b>Per visit, and deliberately not static.</b> A remembered scope is exactly the shape
+        /// of the <see cref="PendingCharacterId"/> failure this screen already guards: a browse visit
+        /// that silently shows the game because of a choice made on a previous one. You arrive at your
+        /// collection; All is a thing you ask for.</para>
+        /// </summary>
+        private bool _ownedScope = true;
+
         // Cached elements. All of these exist on the plate in both modes; a null here is a broken
         // UXML, not a mode that declined the region. See the "one plate declares every region" remark.
         private VisualElement _root;
@@ -98,10 +119,26 @@ namespace Emberfall.Presentation
         private Button _filterAllButton;
         private Button _filterClassButton;
         private Button _filterNeutralButton;
+        private VisualElement _scopeRow;
+        private Button _scopeOwnedButton;
+        private Button _scopeAllButton;
 
         /// <summary>True when this visit is editing a deck. The one predicate every mode-dependent
         /// branch below reads, so the mode is never re-derived from something correlated with it.</summary>
         private bool Deckbuilding => _character != null;
+
+        /// <summary>
+        /// True when the wall is scoped to what this account owns — the one predicate for it, read by
+        /// both the pool and the count label so the two can never disagree about which of them the
+        /// player is looking at.
+        ///
+        /// <para>False while deckbuilding, and that is the mode's own rule rather than a side effect:
+        /// that pool is scoped by the character's pairing and never by ownership, because #150 wants an
+        /// unowned card visible-but-spent (see <see cref="BuildPool"/>). Folding the mode in here rather
+        /// than testing it again at each site is why <see cref="UpdateWallLabels"/> still needs no mode
+        /// check.</para>
+        /// </summary>
+        private bool OwnedOnly => !Deckbuilding && _owned != null && _ownedScope;
 
         private void OnEnable()
         {
@@ -139,6 +176,7 @@ namespace Emberfall.Presentation
             BuildWall();
             WireQueryBar();
             WireCollectionFilters();
+            WireScopeToggle();
             WireDeckList();
             WireChrome();
 
@@ -249,12 +287,18 @@ namespace Emberfall.Presentation
         /// pool instead would make a card you nearly own invisible, and #150 wants it dimmed.</para>
         ///
         /// <para><b>Browse</b> — every card this account owns a copy of, or, when it has no ownership
-        /// record, every collectible card in the game. These two pools look identical on screen and
-        /// mean completely different things, which is why the count label is load-bearing.</para>
+        /// record or the player has asked for All (#146), every collectible card in the game. These two
+        /// pools look identical on screen and mean completely different things, which is why the count
+        /// label is load-bearing.</para>
         ///
         /// <para>A card recorded at 0 copies is NOT owned. Zero is a real recorded value — every copy
         /// dusted, or a refund — and it is exactly the case a truthiness check on "is it in the
         /// record" would get wrong, so this asks for the count.</para>
+        ///
+        /// <para><b>Safe to call again</b>, and <see cref="SetScope"/> does: the pool is what changes
+        /// when the scope does, so the wall is re-poolled rather than re-queried. That costs no bakes
+        /// after the first widening — <see cref="CardFaceBaker"/> caches faces by card id for the life
+        /// of the screen and <see cref="CardWall.SetPool"/> only rebuilds the (cheap) tiles.</para>
         /// </summary>
         private void BuildPool()
         {
@@ -265,7 +309,7 @@ namespace Emberfall.Presentation
                 {
                     if (!_character.AllowsClass(def.Class)) continue;
                 }
-                else if (_owned != null && _owned.CopiesOwned(def.Id) <= 0) continue;
+                else if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
 
                 _pool.Add(def);
             }
@@ -283,6 +327,9 @@ namespace Emberfall.Presentation
             _filterAllButton     = _root.Q<Button>("filter-all");
             _filterClassButton   = _root.Q<Button>("filter-class");
             _filterNeutralButton = _root.Q<Button>("filter-neutral");
+            _scopeRow            = _root.Q<VisualElement>("scope-row");
+            _scopeOwnedButton    = _root.Q<Button>("scope-owned");
+            _scopeAllButton      = _root.Q<Button>("scope-all");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -380,6 +427,68 @@ namespace Emberfall.Presentation
             _filterNeutralButton.EnableInClassList("db-chip--on", active == _filterNeutralButton);
             _wall.SetQuery(filter, CardSort.Default);
             UpdateWallLabels();
+        }
+
+        // ---- Owned / All scope toggle (#146) --------------------------------------------------
+        //
+        // Not a fourth filter chip. The chips above and the query bar both narrow a pool; this one
+        // decides which pool exists, so it rebuilds it — see BuildPool for why that is cheap after the
+        // first widening.
+
+        /// <summary>
+        /// Offer the toggle, but only to an account that has an ownership record.
+        ///
+        /// <para><b>With no record there is no second pool to switch to</b>: the wall is already every
+        /// collectible card in the game, so the control would offer a choice between a pool and itself,
+        /// and "All" would read as a claim that some other view is being withheld. That is every machine
+        /// today, which is exactly why this must be hidden rather than shown-and-inert — an alpha player
+        /// meeting a toggle that does nothing learns the wrong thing about their collection.</para>
+        ///
+        /// <para>Hidden in deckbuild mode by the plate, not by this: the whole browse header is
+        /// display:none there (#153), so the row is unpickable and this needs no mode check.</para>
+        /// </summary>
+        private void WireScopeToggle()
+        {
+            if (_scopeRow == null || _scopeOwnedButton == null || _scopeAllButton == null)
+            {
+                Debug.LogError("[Collection] the Owned/All scope row is missing from the UXML, so a " +
+                               "player with an ownership record can only ever see what they own. " +
+                               "Check CollectionScreen.uxml for 'scope-row', 'scope-owned', 'scope-all'.");
+                return;
+            }
+
+            _scopeRow.EnableInClassList("col-scope--on", _owned != null);
+            StampScope();
+            if (_owned == null) return;
+
+            _scopeOwnedButton.RegisterCallback<ClickEvent>(_ => SetScope(true));
+            _scopeAllButton.RegisterCallback<ClickEvent>(_ => SetScope(false));
+        }
+
+        /// <summary>
+        /// Switch pools. Rebuilds rather than re-queries, because ownership is a fact about the account
+        /// and not a facet of a card — <c>CardFilter</c> has nowhere to put it and putting it there
+        /// would push an account concern into the shared query layer every screen reads.
+        ///
+        /// <para>The wall scrolls back to the top as a side effect of being re-poolled, which is the
+        /// behaviour you want here: the set under the cursor is not the set that was there.</para>
+        /// </summary>
+        private void SetScope(bool ownedOnly)
+        {
+            if (_ownedScope == ownedOnly) return;
+            _ownedScope = ownedOnly;
+
+            StampScope();
+            BuildPool();
+            _wall.SetPool(_pool);     // keeps the wall's current filter and sort
+            UpdateWallLabels();
+        }
+
+        // Both chips are written on every change, one on and one off — same reason as StampMode.
+        private void StampScope()
+        {
+            _scopeOwnedButton.EnableInClassList("db-chip--on", OwnedOnly);
+            _scopeAllButton.EnableInClassList("db-chip--on", !OwnedOnly);
         }
 
         // ---- Deck ListView ----
@@ -549,12 +658,17 @@ namespace Emberfall.Presentation
             int shown = _wall.Visible.Count;
 
             // The label is the ONLY thing that distinguishes "your collection" from "every card in
-            // the game" — the wall is identical either way (see the class remarks). "in your
-            // collection" rather than a bare count whenever the account has a record, so nobody has
-            // to be told which screen they are on.
+            // the game" — the wall is identical either way (see the class remarks). So it names the
+            // pool in both directions rather than only the interesting one: a bare count would leave
+            // the two states differing by nothing a player could see.
+            //
+            // It reads OwnedOnly, never `_owned != null`. Those were the same predicate until the
+            // toggle landed, and the difference is the whole of #146: an account WITH a record that
+            // has asked for All is looking at the game, and telling it "in your collection" is the
+            // one lie this screen is built to avoid.
             if (_countLabel != null)
             {
-                string noun = _owned != null ? "in your collection" : "cards";
+                string noun = OwnedOnly ? "in your collection" : "in the game";
                 _countLabel.text = shown == _pool.Count
                     ? $"{_pool.Count} {noun}"
                     : $"{shown} of {_pool.Count} {noun}";
@@ -567,10 +681,14 @@ namespace Emberfall.Presentation
             // Two ways to be empty now, and blaming the filters for the other one is a lie the player
             // cannot get past: an account that owns nothing has an empty pool with no filter set, and
             // "Nothing matches those filters" would send them tapping Reset forever.
+            //
+            // That message points at the toggle, and can: OwnedOnly is true only when a record exists,
+            // which is the same condition that puts the scope row on screen. The empty All pool is a
+            // broken card database rather than a state a player can reach, so it keeps the filter text.
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _pool.Count == 0 && _owned != null
-                    ? "You don't own any cards yet."
+                _emptyLabel.text = _pool.Count == 0 && OwnedOnly
+                    ? "You don't own any cards yet — switch to All to see the game."
                     : "Nothing matches those filters.";
                 _emptyLabel.EnableInClassList("col-empty--on", shown == 0);
             }

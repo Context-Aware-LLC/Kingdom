@@ -40,6 +40,17 @@
             <ui:VisualElement class="col-heading">
                 <ui:Label text="Collection" class="col-title" />
                 <ui:Label name="collection-count" text="" class="col-count" />
+                <!--
+                  Owned vs All (#146). Shown only when this account HAS an ownership record: with
+                  none, the wall is already every card in the game and this would offer a choice
+                  between a pool and itself. CollectionController adds the shown modifier, so an
+                  account that has never been granted anything never meets this control. Which of
+                  the two you are looking at is what the count label to the left says.
+                -->
+                <ui:VisualElement name="scope-row" class="col-scope">
+                    <ui:Button name="scope-owned" text="Owned" class="db-chip db-chip--on" />
+                    <ui:Button name="scope-all" text="All" class="db-chip" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:Button name="back-button" text="Back" class="col-button col-button--ghost" />
         </ui:VisualElement>
