@@ -157,17 +157,33 @@ namespace Emberfall.Core.Cards
 
                 if (run > i)
                 {
-                    var amounts = new List<string>(run - i + 1);
-                    for (int j = i; j <= run; j++)
-                        amounts.Add(((DamageAction)group[j]).Amount.ToString(CultureInfo.InvariantCulture));
+                    var amounts = new List<int>(run - i + 1);
+                    for (int j = i; j <= run; j++) amounts.Add(((DamageAction)group[j]).Amount);
 
+                    TargetSpec spec = ((DamageAction)group[i]).Target;
                     var spread = new StringBuilder("Deal ");
-                    for (int j = 0; j < amounts.Count; j++)
+
+                    bool uniform = true;
+                    for (int j = 1; j < amounts.Count; j++) if (amounts[j] != amounts[0]) uniform = false;
+
+                    if (uniform)
                     {
-                        if (j > 0) spread.Append(j == amounts.Count - 1 ? " and " : ", ");
-                        spread.Append(amounts[j]);
+                        // "Deal 1 damage twice to random enemy characters." The same hit repeated is
+                        // a count, not a list — spelling it out as "1 and 1" made a hero power read
+                        // twice as long as the thing it does (Sam, 2026-08-11).
+                        spread.Append(amounts[0].ToString(CultureInfo.InvariantCulture))
+                            .Append(" damage ").Append(Times(amounts.Count))
+                            .Append(" to ").Append(RandomPluralTarget(spec)).Append('.');
                     }
-                    spread.Append(" damage each to ").Append(Target(((DamageAction)group[i]).Target)).Append('.');
+                    else
+                    {
+                        for (int j = 0; j < amounts.Count; j++)
+                        {
+                            if (j > 0) spread.Append(j == amounts.Count - 1 ? " and " : ", ");
+                            spread.Append(amounts[j].ToString(CultureInfo.InvariantCulture));
+                        }
+                        spread.Append(" damage each to ").Append(Target(spec)).Append('.');
+                    }
 
                     // No target attached: this clause has already named its own, and it must never
                     // be folded again by the same-target elision, which would drop the "each".
@@ -194,13 +210,33 @@ namespace Emberfall.Core.Cards
             // Randomly chosen only. A player-chosen or automatic pair either resolves to the same
             // target (the elision handles it) or is two distinct prompts worth spelling out.
             if (!IsRandomlyChosen(x) || !IsRandomlyChosen(y)) return false;
-            // distinctFrom means the card already said "another", and a binding names one target to
-            // reuse. Either way the roll is not independent and "each" would misdescribe it.
-            if (x.DistinctFrom.Length > 0 || y.DistinctFrom.Length > 0) return false;
-            if (x.Binding.Length > 0 || y.Binding.Length > 0) return false;
+
+            // A distinctFrom chained to the previous roll's binding still folds. It marks a hit that
+            // cannot repeat the one before it — a real guarantee, and one this phrasing does NOT
+            // carry, which is a live wording question rather than a reason to print the sentence
+            // twice. Anything else bound or excluded is a shape this has not been asked to render.
+            bool chained = y.DistinctFrom.Length > 0 &&
+                string.Equals(y.DistinctFrom, x.Binding, StringComparison.Ordinal);
+            if (y.DistinctFrom.Length > 0 && !chained) return false;
+            if (x.DistinctFrom.Length > 0 && x.Binding.Length == 0) return false;
 
             return string.Equals(x.Selector, y.Selector, StringComparison.Ordinal) &&
                 x.Count == y.Count && SameFilter(x.Filter, y.Filter);
+        }
+
+        /// <summary>How many times one repeated hit lands.</summary>
+        private static string Times(int count) => count switch
+        {
+            2 => "twice",
+            _ => NumberWord(count) + " times",
+        };
+
+        /// <summary>The plural of a randomly chosen target — "random enemy characters".</summary>
+        private static string RandomPluralTarget(TargetSpec spec)
+        {
+            string plural = PhrasingFor(spec.Selector).Plural;
+            if (spec.Filter != null) plural = Filter(plural, spec.Filter);
+            return IsRandomlyChosen(spec) ? "random " + plural : plural;
         }
 
         private static string Undot(string sentence) =>

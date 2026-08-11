@@ -161,10 +161,14 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void A_Distinct_Second_Roll_Keeps_Saying_Another()
+        public void The_Same_Hit_Repeated_Is_A_Count_Not_A_List()
         {
-            // Chain Spark authors distinctFrom and means it, so the roll is not independent and the
-            // fold above must not swallow it.
+            // Chain Spark's shape. The same hit twice is "twice", not the sentence typed again —
+            // "1 and 1" made a hero power read at twice the length of the thing it does.
+            //
+            // KNOWN GAP, deliberately accepted (Sam, 2026-08-11): the second roll authors
+            // distinctFrom, so it cannot repeat the first, and this phrasing does not say so. Add
+            // "different" here and in RenderClauses if that guarantee should be visible.
             string text = CardTextGenerator.Generate(new[]
             {
                 CastRule(new DamageAction(1,
@@ -174,8 +178,7 @@ namespace Emberfall.Core.Tests.CardValidation
                         distinctFrom: "first_hit"))),
             });
 
-            Assert.That(text, Is.EqualTo(
-                "Deal 1 damage to a random enemy character and deal 1 damage to another random enemy character."));
+            Assert.That(text, Is.EqualTo("Deal 1 damage twice to random enemy characters."));
         }
 
         private static RuleDefinition CastRule(RuleAction action) =>
