@@ -65,7 +65,7 @@ namespace Emberfall.Core.Tests.CardValidation
         {
             var rows = new (Keyword marker, RuleAction action, string expected)[]
             {
-                (Keyword.BACKDRAFT, new BackdraftAction(2), "Backdraft (2)."),
+                (Keyword.BACKDRAFT, new BackdraftAction(2), "Backdraft 2."),
                 // REINFORCE renders no marker at all any more — it prints its stats like the
                 // MODIFY_STATS +1/+1 it is underneath. The legacy carrier keyword is still
                 // suppressed, which is what this row exists to prove: the expectation below holds
@@ -250,7 +250,7 @@ namespace Emberfall.Core.Tests.CardValidation
                     filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT))));
 
             Assert.That(CardTextGenerator.Generate(new[] { rule }),
-                Is.EqualTo("Give all other Construct friendly minions +1/+1."));
+                Is.EqualTo("Give all other friendly Constructs +1/+1."));
         }
 
         [TestCase("SELF", "Deal 1 damage to this.")]
@@ -332,7 +332,9 @@ namespace Emberfall.Core.Tests.CardValidation
 
         // Pluralisation used to be a trailing "s", which is right for every name the card data
         // ships and wrong for the first one that ends in a sibilant, a consonant + y, or an f.
-        [TestCase("token_wisp_1_1", "Summon 2 1/1 Wisps.")]
+        // Spelled out here and nowhere else in this table: this is the only name that opens with a
+        // digit, and "Summon 2 1/1 Wisps." ran the count straight into the token's stats.
+        [TestCase("token_wisp_1_1", "Summon two 1/1 Wisps.")]
         [TestCase("token_gear_wisp", "Summon 2 Gear Wisps.")]
         [TestCase("token_ash", "Summon 2 Ashes.")]
         [TestCase("token_torch", "Summon 2 Torches.")]
@@ -357,8 +359,10 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase("ANY_MINION", false, null, "Deal 1 damage to an undamaged minion.")]
         [TestCase("ANY_ENEMY", false, null, "Deal 1 damage to an undamaged enemy character.")]
         [TestCase("ANY_ENEMY", true, null, "Deal 1 damage to a damaged enemy character.")]
-        [TestCase("ANY_MINION", null, Tribe.ELEMENTAL, "Deal 1 damage to an Elemental minion.")]
-        [TestCase("ANY_MINION", null, Tribe.BEAST, "Deal 1 damage to a Beast minion.")]
+        // A tribe REPLACES "minion" rather than qualifying it, so the article is re-picked against
+        // the tribe itself — "a minion" filtered to ELEMENTAL is "an Elemental", never "a Elemental".
+        [TestCase("ANY_MINION", null, Tribe.ELEMENTAL, "Deal 1 damage to an Elemental.")]
+        [TestCase("ANY_MINION", null, Tribe.BEAST, "Deal 1 damage to a Beast.")]
         public void A_Filter_Re_Articles_The_Phrase_It_Modifies(
             string selector, bool? damaged, Tribe? tribe, string expected)
         {

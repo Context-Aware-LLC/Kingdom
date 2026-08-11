@@ -72,7 +72,7 @@ namespace Emberfall.Core.Cards
                     LifetimePrefix(rule.Lifetime);
                 if (groupActions.Count > 0 && prefix != groupPrefix)
                 {
-                    lines.Add(groupPrefix + string.Join(" ", groupActions));
+                    lines.Add(groupPrefix + JoinActions(groupActions));
                     groupActions.Clear();
                 }
 
@@ -81,8 +81,54 @@ namespace Emberfall.Core.Cards
             }
 
             if (groupActions.Count > 0)
-                lines.Add(groupPrefix + string.Join(" ", groupActions));
+                lines.Add(groupPrefix + JoinActions(groupActions));
             return lines;
+        }
+
+        /// <summary>Joins the effects sharing one marker into a single sentence.</summary>
+        /// <remarks>
+        /// One marker, one sentence (Sam, 2026-08-11). These printed as separate sentences —
+        /// "Toll: Deal 3 damage to all enemy minions. Deal 3 damage to the enemy hero." — so the
+        /// marker's scope silently ended at the first full stop. That was merely vague until
+        /// playing the card became the unmarked default; now an unmarked sentence positively
+        /// asserts "on play", so a second Toll clause standing alone reads as a false statement
+        /// rather than as ambiguity. The conjunction carries the marker across the whole run.
+        ///
+        /// <para>Clause-initial words are lowercased EXCEPT the game's own vocabulary, which stays
+        /// capitalised mid-sentence the way card games print a keyword — "Deal 2 damage to a minion
+        /// and Freeze it." That is also what keeps CardTextStyling's case-sensitive match working on
+        /// a keyword that is no longer at the front of a sentence.</para>
+        /// </remarks>
+        private static string JoinActions(IReadOnlyList<string> actions)
+        {
+            if (actions.Count == 0) throw Requires("at least one action to join");
+            if (actions.Count == 1) return actions[0];
+
+            var sentence = new StringBuilder();
+            for (int i = 0; i < actions.Count; i++)
+            {
+                string clause = actions[i];
+                if (clause.EndsWith(".", StringComparison.Ordinal))
+                    clause = clause.Substring(0, clause.Length - 1);
+
+                if (i > 0)
+                {
+                    sentence.Append(i == actions.Count - 1 ? " and " : ", ");
+                    clause = Decapitalize(clause);
+                }
+                sentence.Append(clause);
+            }
+            return sentence.Append('.').ToString();
+        }
+
+        /// <summary>Lowercases a clause's opening word unless it is a word the game capitalises.</summary>
+        private static string Decapitalize(string clause)
+        {
+            int end = clause.IndexOf(' ');
+            string first = end < 0 ? clause : clause.Substring(0, end);
+            foreach (string word in EmphasisVocabulary())
+                if (string.Equals(word, first, StringComparison.Ordinal)) return clause;
+            return char.ToLowerInvariant(clause[0]) + clause.Substring(1);
         }
 
         /// <summary>The label an aura's rules are printed under.</summary>
@@ -228,7 +274,9 @@ namespace Emberfall.Core.Cards
             ReinforceAction a => $"Give {Target(a.Target)} +1/+1.",
             GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
             DestroyAction a => $"Destroy {Target(a.Target)}.",
-            ReturnToHandAction a => $"Return {Target(a.Target)} to hand.",
+            // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
+            // whose hand. Naming the owner works for one minion and for a board of them alike.
+            ReturnToHandAction a => $"Return {Target(a.Target)} to their owner's hand.",
             SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target)}.",
             TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
             // Named through the keyword rather than spelled here, so the verb on the card and the
@@ -242,9 +290,10 @@ namespace Emberfall.Core.Cards
             AddToHandAction a => $"Add {Copies(a.Count, Name(a.CardId))} to your hand.",
             EquipAction a => $"Equip {Name(a.CardId)}.",
             GainManaAction a => Mana(a),
-            BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} ({a.Amount}).",
+            // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
+            BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
             GainArmorAction a => $"Gain {a.Amount} Armor.",
-            UnearthAction a => $"{UnearthLabel} ({a.Count}).",
+            UnearthAction a => $"{UnearthLabel} {a.Count}.",
             _ => throw UnsupportedNode("action", action),
         };
 
@@ -382,11 +431,50 @@ namespace Emberfall.Core.Cards
         /// <summary>Splices a filter's adjectives into a description, between determiner and noun.</summary>
         private static string Filter(string description, TargetFilterDef filter)
         {
-            string modifier = "";
-            if (filter.Damaged.HasValue) modifier += filter.Damaged.Value ? "damaged " : "undamaged ";
-            if (filter.Tribe.HasValue) modifier += Name(filter.Tribe.Value.ToString()) + " ";
-            if (modifier.Length == 0) return description;
-            return SpliceAfterDeterminer(description, modifier);
+            // The tribe REPLACES the noun rather than qualifying it (Sam, 2026-08-11): "all friendly
+            // Constructs", not "all friendly Construct minions". Splicing it after the determiner
+            // produced "all Construct friendly minions", which is not English — a classifying noun
+            // has to sit against the head noun, and once it does it has already said "minion".
+            if (filter.Tribe.HasValue)
+                description = ReplaceHeadNoun(description, Name(filter.Tribe.Value.ToString()));
+
+            // "damaged" is an ordinary adjective and keeps its place after the determiner.
+            if (filter.Damaged.HasValue)
+                description = SpliceAfterDeterminer(description, filter.Damaged.Value ? "damaged " : "undamaged ");
+
+            return description;
+        }
+
+        /// <summary>Swaps a minion phrase's head noun for a tribe, keeping its number.</summary>
+        /// <remarks>
+        /// Falls back to qualifying the phrase when it does not end in the word this replaces — a
+        /// tribe filter is only meaningful on minions, so anything else is a shape this has never
+        /// been asked to render and must not silently mangle.
+        /// </remarks>
+        private static string ReplaceHeadNoun(string description, string tribe)
+        {
+            if (description.EndsWith(" minions", StringComparison.Ordinal))
+                return description.Substring(0, description.Length - " minions".Length) + " " + Plural(tribe);
+            if (description.EndsWith(" minion", StringComparison.Ordinal))
+                return ReArticle(description.Substring(0, description.Length - " minion".Length) + " " + tribe);
+            if (string.Equals(description, "minions", StringComparison.Ordinal)) return Plural(tribe);
+            if (string.Equals(description, "minion", StringComparison.Ordinal)) return tribe;
+            return SpliceAfterDeterminer(description, tribe + " ");
+        }
+
+        /// <summary>Re-picks an indefinite article against whatever the phrase now starts with.</summary>
+        /// <remarks>
+        /// Dropping the head noun can leave the article agreeing with a word that is gone: "a minion"
+        /// filtered to ELEMENTAL became "a Elemental", because nothing re-read the vowel. Only the
+        /// indefinite article moves — "all" and "the" agree with nothing.
+        /// </remarks>
+        private static string ReArticle(string description)
+        {
+            string rest;
+            if (TryStripPrefix(description, "a ", out rest) ||
+                TryStripPrefix(description, "an ", out rest))
+                return Article(rest) + " " + rest;
+            return description;
         }
 
         /// <summary>Marks a description as randomly chosen, between determiner and noun.</summary>
@@ -476,10 +564,29 @@ namespace Emberfall.Core.Cards
         private static string Copies(int count, string cardName)
         {
             if (count <= 0) throw Requires("a positive copy count");
-            return count == 1
-                ? Article(cardName) + " " + cardName
-                : count + " " + Plural(cardName);
+            if (count == 1) return Article(cardName) + " " + cardName;
+
+            // A token's name carries its stats ("1/1 Wisp"), so a numeral count runs straight into
+            // them: "Summon 2 1/1 Wisps." Spelled out only when the collision is real, which keeps
+            // "Draw 2 cards." reading the way the genre writes it. Sam, 2026-08-11.
+            string quantity = char.IsDigit(cardName[0]) ? NumberWord(count) : count.ToString(CultureInfo.InvariantCulture);
+            return quantity + " " + Plural(cardName);
         }
+
+        /// <summary>Spells a small count out; anything larger stays a numeral, where it reads better.</summary>
+        private static string NumberWord(int count) => count switch
+        {
+            2 => "two",
+            3 => "three",
+            4 => "four",
+            5 => "five",
+            6 => "six",
+            7 => "seven",
+            8 => "eight",
+            9 => "nine",
+            10 => "ten",
+            _ => count.ToString(CultureInfo.InvariantCulture),
+        };
 
         /// <summary>Pluralises the last word of a card name, by English spelling rules.</summary>
         /// <remarks>
