@@ -12,7 +12,13 @@ namespace Emberfall.Editor
     public static class CreateCharacterRosterScene
     {
         private const string ScenePath = "Assets/Scenes/CharacterRoster.unity";
-        private const string TemplateScenePath = "Assets/Scenes/DeckbuilderSpike.unity";
+
+        /// <summary>
+        /// The UIDocument donor for the workaround below. Was <c>DeckbuilderSpike.unity</c> until
+        /// #154 retired it; the two authoring tools now donate to each other rather than sharing a
+        /// third scene. See <see cref="CreateCollectionScene"/> for why neither points at itself.
+        /// </summary>
+        private const string TemplateScenePath = "Assets/Scenes/Collection.unity";
         private const string UxmlPath = "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml";
         private const string PanelPath = "Assets/UI/Deckbuilder/DeckbuilderPanelSettings.asset";
 
@@ -37,8 +43,9 @@ namespace Emberfall.Editor
             cameraObject.AddComponent<AudioListener>();
 
             // Unity 6 can silently serialize a newly-added UIDocument's PanelSettings as null in
-            // batch mode. Clone the project-proven Deckbuilder document, whose reference is already
-            // persistent, then replace only the screen asset and controller.
+            // batch mode. Clone a document whose reference is already persistent on disk — see
+            // TemplateScenePath for which one and why — then replace only the screen asset and
+            // controller.
             Scene templateScene = EditorSceneManager.OpenScene(TemplateScenePath, OpenSceneMode.Additive);
             UIDocument templateDocument = null;
             foreach (GameObject root in templateScene.GetRootGameObjects())

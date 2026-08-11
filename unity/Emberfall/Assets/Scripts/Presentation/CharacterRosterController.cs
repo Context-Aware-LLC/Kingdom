@@ -1811,15 +1811,15 @@ namespace Emberfall.Presentation
             }
         }
 
-        // Both doors lead to CollectionController now (#152): handing it a character is what puts it
-        // in deckbuild mode, and View Collection above hands it none. The scenes are still two until
-        // #154 retires DeckbuilderSpike.
+        // Both doors lead to one controller (#152) in one scene (#154): handing it a character is
+        // what puts it in deckbuild mode, and View Collection above hands it none. Both call
+        // Go("Collection"); the only difference between the two doors is the pending character.
         private void OpenDeckForEdit(string characterId, string deckId)
         {
             CollectionController.ReturnScene = "CharacterRoster";
             CollectionController.PendingCharacterId = characterId;
             CollectionController.PendingDeckId = deckId;
-            Go("DeckbuilderSpike");
+            Go("Collection");
         }
 
         // ---- Match pick: select a deck, then continue (Sam, 2026-08-07) --------------------

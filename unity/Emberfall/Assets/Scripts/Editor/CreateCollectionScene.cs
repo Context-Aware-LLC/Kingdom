@@ -12,7 +12,19 @@ namespace Emberfall.Editor
     public static class CreateCollectionScene
     {
         private const string ScenePath = "Assets/Scenes/Collection.unity";
-        private const string TemplateScenePath = "Assets/Scenes/DeckbuilderSpike.unity";
+
+        /// <summary>
+        /// The UIDocument donor for the workaround below — the OTHER authored scene, never this
+        /// tool's own output.
+        ///
+        /// <para><b>Why not <c>ScenePath</c>.</b> Both authoring tools used to clone
+        /// <c>DeckbuilderSpike.unity</c>, which #154 retired. Pointing this at its own output would
+        /// still run — the donor is read off disk before the save overwrites it — but the tool could
+        /// then only <i>recycle</i> Collection.unity, never rebuild it from a broken one, which is
+        /// the single thing it exists for. <see cref="CreateCharacterRosterScene"/> donates in the
+        /// opposite direction, so neither tool depends on itself.</para>
+        /// </summary>
+        private const string TemplateScenePath = "Assets/Scenes/CharacterRoster.unity";
         private const string UxmlPath = "Assets/UI/Collection/CollectionScreen.uxml";
         private const string PanelPath = "Assets/UI/Deckbuilder/DeckbuilderPanelSettings.asset";
 
@@ -37,8 +49,9 @@ namespace Emberfall.Editor
             cameraObject.AddComponent<AudioListener>();
 
             // Unity 6 can silently serialize a newly-added UIDocument's PanelSettings as null in
-            // batch mode. Clone the project-proven Deckbuilder document, whose reference is already
-            // persistent, then replace only the screen asset and controller.
+            // batch mode. Clone a document whose reference is already persistent on disk — see
+            // TemplateScenePath for which one and why — then replace only the screen asset and
+            // controller.
             Scene templateScene = EditorSceneManager.OpenScene(TemplateScenePath, OpenSceneMode.Additive);
             UIDocument templateDocument = null;
             foreach (GameObject root in templateScene.GetRootGameObjects())

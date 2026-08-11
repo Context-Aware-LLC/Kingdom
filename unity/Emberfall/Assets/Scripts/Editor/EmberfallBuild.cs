@@ -20,7 +20,7 @@ namespace Emberfall.Editor
         private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
         private const string LocalScenePath = "Assets/Scenes/Board.unity";
         private const string RosterScenePath = "Assets/Scenes/CharacterRoster.unity";
-        private const string DeckbuilderScenePath = "Assets/Scenes/DeckbuilderSpike.unity";
+        // Collection IS the deckbuilder (#154). There is no separate deckbuilder scene to list.
         private const string CollectionScenePath = "Assets/Scenes/Collection.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
         private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
@@ -54,8 +54,9 @@ namespace Emberfall.Editor
             {
                 // Menu first — it is the boot scene and the only screen that can switch accounts.
                 // Both board scenes ride along so Find Game and Single Player actually go somewhere,
-                // and the deckbuilder so its own menu button isn't a dead end in this build too.
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath, CollectionScenePath },
+                // and roster + collection so Deck Builder isn't a dead end in this build too. Deck
+                // Builder lands on the roster, and the roster is the only door to Collection (#154).
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath },
                 locationPathName = DevOutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.Development,
@@ -130,7 +131,7 @@ namespace Emberfall.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
                 var options = new BuildPlayerOptions
                 {
-                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath, CollectionScenePath },
+                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath },
                     locationPathName   = AndroidOutputPath,
                     target             = BuildTarget.Android,
                     targetGroup        = BuildTargetGroup.Android,
@@ -159,8 +160,9 @@ namespace Emberfall.Editor
             {
                 // Menu first — testers enter through MainMenu and navigate from there.
                 // Find Game, Single Player and Deck Builder each need their target scene
-                // present or the button is a dead end in the shipping build.
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath, CollectionScenePath },
+                // present or the button is a dead end in the shipping build. Deck Builder's
+                // target is the roster, which reaches Collection in either mode (#154).
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
@@ -226,17 +228,25 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
         public static void SyncSceneList()
         {
-            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, DeckbuilderScenePath, CollectionScenePath };
+            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath };
             var entries = new EditorBuildSettingsScene[paths.Length];
             for (int i = 0; i < paths.Length; i++)
                 entries[i] = new EditorBuildSettingsScene(paths[i], enabled: true);
 
             EditorBuildSettings.scenes = entries;
 
-            // Assigning the property only sets it in memory. Without this, EditorBuildSettings.asset
-            // still reads `m_Scenes: []` on disk — so the change is invisible to git, does not survive
-            // an Editor restart, and cannot be committed. Verified on 2026-07-27 by reading the asset
-            // straight after the assignment.
+            // Assigning the property only sets it in memory, so ask for a save.
+            //
+            // WARNING: on 6000.5.1f1 this does NOT reach ProjectSettings/EditorBuildSettings.asset.
+            // Measured 2026-08-11 during #154: after removing a scene, the in-memory list read back
+            // correctly through EditorBuildSettings.scenes while the file on disk kept the removed
+            // entry, and its mtime did not move across two SyncSceneList runs or a File/Save Project.
+            // (The 2026-07-27 note that used to sit here claimed the opposite; it no longer holds.)
+            //
+            // What that means for you: this menu item fixes Editor scene nav for THIS session, but it
+            // is not a way to change what git sees. After running it, diff EditorBuildSettings.asset
+            // and hand-edit the file to match if you need the change committed — the in-memory list is
+            // authoritative, so a file edited to agree with it will not be clobbered by a later flush.
             AssetDatabase.SaveAssets();
 
             Debug.Log($"[EmberfallBuild] Build scene list set: {string.Join(", ", paths)}");
