@@ -75,7 +75,7 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 DOCS = pathlib.Path(
     os.environ.get(
         "EMBERFALL_DOCS",
-        pathlib.Path.home() / "Documents" / "Project Docs" / "Emberfall" / "docs",
+        pathlib.Path.home() / "docs",
     )
 )
 CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"

@@ -182,7 +182,7 @@ digest, and affected golden fixtures under the rebaseline guard in one reviewed 
 
 **Before implementing anything that accepts client-authored input, scan the `Review triggers` and
 `Latent vulnerabilities` sections of the security index**
-(`Project Docs\Emberfall\docs\dev-docs\quality\security.md`). Both are a few lines, so the scan takes
+(`docs\dev-docs\quality\security.md`). Both are a few lines, so the scan takes
 seconds and a match is obvious. Match one, read that `VULN-nnn` in full, and follow its binding rules.
 This index is a specification, not a tracker. (It was a numbered `§4` table before the 2026-07-31 docs
 reorganisation; the sections are named now.)
