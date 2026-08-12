@@ -31,6 +31,11 @@ namespace Emberfall.Presentation
         // note on deriving from one source).
         internal const float SlotSpacing    = 1.35f;
 
+        // |y| of a board row. Internal for the same reason as SlotSpacing: ClickableBoardSlot sizes
+        // its collider to fill the row's whole half of the board (0 .. ±2*RowY), and a second copy
+        // of this number is how the box and the anchor it sits on would drift apart.
+        internal const float RowY          = 1.3f;
+
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;
         private const float P1Sign =  1f;
@@ -110,7 +115,7 @@ namespace Emberfall.Presentation
             for (int i = 0; i < BoardSlotCount; i++)
             {
                 float x = (i - (BoardSlotCount - 1) * 0.5f) * SlotSpacing;
-                seat.BoardSlots[i] = MakeAnchor($"{prefix}_Board{i}", new Vector3(x, ySign * 1.3f, 0f));
+                seat.BoardSlots[i] = MakeAnchor($"{prefix}_Board{i}", new Vector3(x, ySign * RowY, 0f));
             }
 
             // Hand slots are placed by HandFanLayout, not by this method's flat pitch: the fan

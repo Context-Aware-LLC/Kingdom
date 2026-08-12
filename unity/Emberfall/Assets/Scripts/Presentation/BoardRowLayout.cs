@@ -30,6 +30,11 @@ namespace Emberfall.Presentation
     // Only x is touched. Each anchor's y (seat side) and z were already correct at construction
     // (ProceduralBoardSetup.BuildSeat) and never depend on count, so there is nothing to re-derive
     // for them — touching them here would risk drifting from that construction over time.
+    //
+    // It does also switch each slot's collider off while the slot is occupied. That is not layout,
+    // but this is the only place that holds both the slot array and the count, and the alternative
+    // — a second component re-deriving occupancy from the snapshot — is a second copy of the
+    // `index < count` invariant. See ClickableBoardSlot.SetOccupied for why it has to happen at all.
     public static class BoardRowLayout
     {
         public static void Apply(Transform[] slots, int count)
@@ -49,6 +54,10 @@ namespace Emberfall.Presentation
 
                 Vector3 p = slots[i].position;
                 slots[i].position = new Vector3(x, p.y, p.z);
+
+                // Null in AI-vs-AI, where SetupClickables never ran — there is nothing to point at.
+                var clickable = slots[i].GetComponent<ClickableBoardSlot>();
+                if (clickable != null) clickable.SetOccupied(i < count);
             }
         }
     }

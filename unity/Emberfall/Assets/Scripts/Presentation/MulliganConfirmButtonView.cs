@@ -34,14 +34,23 @@ namespace Emberfall.Presentation
         /// P0's board row starts at -2.125 (slot anchors at |y| 1.3, ± half of
         /// <c>BoardController.CardH</c> 1.65), leaving a 0.185 gap for a 0.55-tall button.</para>
         ///
-        /// <para><b>So: the centre strip between the two board rows</b>, y -0.475..+0.475, which is
-        /// clear of both seats' cards and of both hands. Zero is not a hand-picked number — it is the
-        /// board's own centre, so it stays correct for either seat and needs no derivation.</para>
+        /// <para><b>So: the board's centre</b>, clear of both hands and of both seats' cards. Zero is
+        /// not a hand-picked number — it is the board's own midline, so it stays correct for either
+        /// seat and needs no derivation.</para>
         ///
-        /// <para>RETIREMENT TRIGGER: this clearance is a claim about three other layouts. If you move
-        /// <see cref="HandFanLayout.CentreY"/>, <c>HandFanLayout.HandCardH</c>, or the board slot row
-        /// (<c>ProceduralBoardSetup.BuildSeat</c>, <c>ySign * 1.3f</c>), re-check the spans above —
-        /// a button that ends up under a collider fails silently and looks like a dead button.</para>
+        /// <para><b>It is no longer clear of the SLOT boxes, and does not need to be (2026-08-12,
+        /// #139).</b> <see cref="ClickableBoardSlot"/>'s collider now runs the full half-board, out to
+        /// the midline, so both rows' boxes reach y 0 and this button sits inside them. What keeps it
+        /// pressable is depth, not distance: the slot boxes sit at z 0.15..0.25 and this one at
+        /// z ±0.05, and both <c>OnMouseDown</c> and <c>InputRouter</c>'s <c>Physics.Raycast</c> take
+        /// the nearest collider. The y span above is history now — kept because it is the reasoning
+        /// that put the button here, not a live constraint.</para>
+        ///
+        /// <para>RETIREMENT TRIGGER: what this position now depends on is being IN FRONT of the slot
+        /// boxes. Moving this button back past <c>ClickableBoardSlot</c>'s z 0.15, or pulling that box
+        /// toward the camera, buries it again — and a buried button fails silently and reads as a dead
+        /// one, which is exactly how #138 presented. The hand still matters if you move the button
+        /// off-centre: <see cref="HandFanLayout.CentreY"/> and <c>HandCardH</c> set the fan's reach.</para>
         /// </summary>
         public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
 
