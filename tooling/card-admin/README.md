@@ -16,10 +16,15 @@ An offline browser panel for exploring the Emberfall card corpus, plus the scrip
 Any time the card data changes, re-run from the repo root:
 
 ```
-python tooling/card-admin/build_data.py
+python tooling/card-admin/build_data.py            # regenerate
+python tooling/card-admin/build_data.py --check    # report staleness, write nothing, exit 1 if stale
 ```
 
 The printed summary (totals, type split, per-class counts) is the run's deliverable — read it.
+`CARD_ADMIN_REGENERATED=n` / `CARD_ADMIN_STALE_OUTPUTS=n` is the count to quote.
+
+This aggregate is one of three artifacts a card-row edit staleness. To do all three at once, use
+`python tooling/scripts/rebake_card_data.py --write` — it calls this script for you.
 
 ## Use
 

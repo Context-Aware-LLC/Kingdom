@@ -30,10 +30,8 @@ NUnit gates they replace report only the FIRST stale item in their loop.
 import argparse
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
-import tempfile
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -81,34 +79,13 @@ def step_so_assets(write):
 
 def step_admin_aggregate(write):
     banner("2/3  CARD-ADMIN AGGREGATE  (data.json + data.js)")
-    existing = [p for p in ADMIN_OUTPUTS if p.exists()]
+    argv = [sys.executable, str(ADMIN_BUILD)] + ([] if write else ["--check"])
+    code, _ = run(argv)
     if write:
-        code, _ = run([sys.executable, str(ADMIN_BUILD)])
         return "OK" if code == 0 else "ERROR"
-
-    # build_data.py has no --check mode and always writes, so snapshot, build, compare, restore.
-    with tempfile.TemporaryDirectory() as tmp:
-        saved = {}
-        for path in existing:
-            saved[path] = pathlib.Path(tmp) / path.name
-            shutil.copy2(path, saved[path])
-        try:
-            code, _ = run([sys.executable, str(ADMIN_BUILD)])
-            if code != 0:
-                return "ERROR"
-            missing = [p for p in ADMIN_OUTPUTS if p not in saved]
-            differing = [p for p, b in saved.items() if p.read_bytes() != b.read_bytes()]
-            stale = missing + differing
-            for path in stale:
-                print(f"STALE {path.relative_to(ROOT).as_posix()}")
-            print(f"CARD_ADMIN_STALE_OUTPUTS={len(stale)}")
-            return "OK" if not stale else "STALE"
-        finally:
-            for path, backup in saved.items():
-                shutil.copy2(backup, path)
-            for path in ADMIN_OUTPUTS:
-                if path not in saved and path.exists():
-                    path.unlink()
+    if code == 0:
+        return "OK"
+    return "STALE" if code == 1 else "ERROR"
 
 
 def fixtures_need_work():
