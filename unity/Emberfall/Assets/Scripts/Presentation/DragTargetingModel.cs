@@ -66,7 +66,7 @@ namespace Emberfall.Presentation
     public readonly struct DropPoint
     {
         public readonly float X;
-        public readonly bool  OverOwnHand;
+        public readonly bool OverOwnHand;
 
         private DropPoint(float x, bool overOwnHand)
         {
