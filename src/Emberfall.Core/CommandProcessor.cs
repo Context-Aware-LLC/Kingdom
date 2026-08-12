@@ -280,13 +280,24 @@ namespace Emberfall.Core
             interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
 
             // The end-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE the seat
-            // flip and the incoming StartTurnSequence, whose thaw loop resets SummonedThisTurn /
+            // flip and the incoming StartTurnSequence, which resets SummonedThisTurn /
             // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade. CheckWin
             // is called explicitly because Drain only win-checks while its queue is non-empty (the same
             // reason ApplyAttack pairs Drain with an explicit CheckWin).
             interp.Drain();
             RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;
+
+            // Thaw: frost costs exactly one of the frozen unit's turns — the turn it is frozen ON.
+            // Applying frost on your turn leaves the unit unable to attack on their next turn, and
+            // they thaw here (end of that frozen turn) rather than at the start of it. This is what
+            // makes FROST non-inert: frost applied on Player A's turn holds through all of Player B's
+            // turn and then clears when B ends. Frost applied mid-turn (e.g. ON_DEATH trap) similarly
+            // holds until B ends that same turn. (NOR-355)
+            var activePs = state.Players[activeSeat];
+            activePs.Hero.IsFrosted = false;
+            foreach (var m in activePs.Board)
+                m.IsFrosted = false;
 
             var nextSeat = activeSeat == 0 ? 1 : 0;
             state.ActivePlayer = state.Players[nextSeat].Id;
@@ -615,11 +626,10 @@ namespace Emberfall.Core
             ps.Mana.Temporary = 0;
             ps.Mana.Available = System.Math.Max(0, ps.Mana.Max - locked);
 
-            // Thaw + reset summoning sickness / attack budget / hero power.
-            ps.Hero.IsFrosted = false;
+            // Reset summoning sickness / attack budget / hero power. (Thaw runs at END of the frozen
+            // player's turn in ApplyEndTurn — see the comment there for the FROST timing rationale.)
             foreach (var m in ps.Board)
             {
-                m.IsFrosted = false;
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
             }
@@ -629,9 +639,9 @@ namespace Emberfall.Core
             var interp = new EffectInterpreter(state, _db, buf);
             buf.Emit(GameEventKind.TurnStarted, source: ps.Hero.Id);
 
-            // EF-011: ON_TURN_START fires here — AFTER the thaw/mana reset above, so a start-of-turn
-            // effect sees the board the turn actually starts on (unfrosted, sickness cleared, mana
-            // refilled), and BEFORE the draw, so the cascade settles while the drawing player is still
+            // EF-011: ON_TURN_START fires here — AFTER the mana reset above, so a start-of-turn
+            // effect sees the board the turn actually starts on (sickness cleared, mana refilled),
+            // and BEFORE the draw, so the cascade settles while the drawing player is still
             // alive. Draining after DrawOne would let a corpse draw fatigue.
             //
             // The incoming player is explicit event context, separate from each source controller.

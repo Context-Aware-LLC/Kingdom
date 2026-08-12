@@ -12,8 +12,10 @@ namespace Emberfall.Core.Tests.TurnLoop
     /// L1 — EF-011. <c>ON_TURN_START</c> was declared in the <see cref="Trigger"/> enum and raised
     /// nowhere, so a card carrying it validated, loaded and then did nothing forever. These lock the
     /// raise site's observable properties: explicit controller/opponent/any-turn qualification, deterministic
-    /// minion observation, AFTER the thaw/mana reset, and BEFORE the draw. The last one is the sharp one:
+    /// minion observation, AFTER the mana reset, and BEFORE the draw. The last one is the sharp one:
     /// a lethal start-of-turn toll must end the match rather than let a corpse draw fatigue.
+    /// NOTE: frost is NOT cleared at turn start (NOR-355) — it clears at end of the frozen player's turn
+    /// in <c>ApplyEndTurn</c>. Summoning sickness and attack budget still reset here.
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -462,11 +464,17 @@ namespace Emberfall.Core.Tests.TurnLoop
         }
 
         [Test]
-        public void Turn_Start_Resets_Frost_And_Attack_State_Before_Observer_Drain_And_Main()
+        public void Turn_Start_Resets_Attack_State_But_Frost_Holds_Until_Turn_End()
         {
-            // This is deliberately one end-to-end turn boundary, rather than isolated flag tests. The
-            // incoming source starts frosted and exhausted, yet its turn-start toll resolves; once that
-            // drain and draw finish, the same minion can attack in Main.
+            // NOR-355: frost clears at END of the frozen player's turn, not at the start. This test
+            // covers all three observable properties across one full turn boundary:
+            //
+            //  (1) ON_TURN_START still fires on a frozen source — trigger delivery is independent of
+            //      attack rights, and the toll resolves before the draw as before.
+            //  (2) Frost holds through the incoming player's entire Main phase: attack is rejected.
+            //  (3) Thaw runs in ApplyEndTurn, so after the frozen player ends their turn both the
+            //      minion and hero are unfrosted. Summoning sickness and attack budget still clear at
+            //      turn START (unchanged from before this fix).
             var db = Db(TurnOwner.CONTROLLER);
             var (host, s) = Match(db, Vanilla, seed: 241UL);
             int outgoing = s.SeatOf(s.ActivePlayer);
@@ -479,26 +487,37 @@ namespace Emberfall.Core.Tests.TurnLoop
             s.Players[incoming].HeroAttacksUsedThisTurn = 1;
             int heroBefore = s.Players[outgoing].Hero.CurrentHealth;
 
+            // (1) Ending the outgoing player's turn starts the incoming player's turn.
+            //     The frosted toller's CONTROLLER-qualified toll resolves (trigger ignores frost).
             CommandResult start = Accept(host, new EndTurnIntent(s.Players[outgoing].Id));
 
             Assert.Multiple(() =>
             {
                 Assert.That(start.Events.Any(e => e.Kind == GameEventKind.DamageApplied && e.Source == toller.Id),
-                    Is.True, "the source snapshot drains after its incoming turn reset");
+                    Is.True, "toll fires even on a frozen source — triggers are not blocked by frost");
                 Assert.That(s.Players[outgoing].Hero.CurrentHealth, Is.EqualTo(heroBefore - 1));
-                Assert.That(s.Players[incoming].Hero.IsFrosted, Is.False);
-                Assert.That(s.Players[incoming].HeroAttacksUsedThisTurn, Is.EqualTo(0));
-                Assert.That((toller.IsFrosted, toller.SummonedThisTurn, toller.AttacksUsedThisTurn),
-                    Is.EqualTo((false, false, 0)));
+                Assert.That(s.Players[incoming].HeroAttacksUsedThisTurn, Is.EqualTo(0),
+                    "attack budget cleared at turn start");
+                Assert.That((toller.SummonedThisTurn, toller.AttacksUsedThisTurn), Is.EqualTo((false, 0)),
+                    "summoning sickness and attack budget cleared at turn start");
+                // (2) Frost is NOT cleared at turn start — it holds through the frozen player's turn.
+                Assert.That(s.Players[incoming].Hero.IsFrosted, Is.True,
+                    "hero frost persists into the incoming player's Main phase");
+                Assert.That(toller.IsFrosted, Is.True,
+                    "minion frost persists — this is the fix: FROST now costs them their next turn");
                 Assert.That(s.Phase, Is.EqualTo(TurnPhase.Main), "the full drain completes before Main.");
             });
 
-            CommandResult attack = Accept(host, new AttackIntent(s.Players[incoming].Id, toller.Id,
+            // Frosted minion cannot attack even though summoning sickness and budget were cleared.
+            var blocked = host.Submit(new AttackIntent(s.Players[incoming].Id, toller.Id,
                 new TargetRef(s.Players[outgoing].Hero.Id)));
+            Assert.That(blocked.Accepted, Is.False, "frost blocks the attack during the frozen player's turn");
+            Assert.That(blocked.Reason, Is.EqualTo(RejectReason.AttackerFrosted));
 
-            Assert.That(attack.Events.Any(e => e.Kind == GameEventKind.AttackDeclared && e.Source == toller.Id),
-                Is.True, "cleared frost, summoning sickness, and attack budget permit the next Main action.");
-            Assert.That(toller.AttacksUsedThisTurn, Is.EqualTo(1));
+            // (3) Frost clears at end of the frozen player's turn.
+            Accept(host, new EndTurnIntent(s.Players[incoming].Id));
+            Assert.That(toller.IsFrosted, Is.False, "thaw runs when the frozen player ends their turn");
+            Assert.That(s.Players[incoming].Hero.IsFrosted, Is.False, "hero frost also clears at turn end");
         }
 
         [Test]

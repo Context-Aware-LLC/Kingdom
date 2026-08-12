@@ -132,8 +132,8 @@ namespace Emberfall.Core.Tests.TurnLoop
         public void Turn_End_Cascade_Settles_Before_The_Seat_Flip()
         {
             // The EF-010 ordering contract: deaths caused by ON_TURN_END must resolve BEFORE the incoming
-            // StartTurnSequence, whose thaw loop resets SummonedThisTurn / AttacksUsedThisTurn. A corpse
-            // that survives the flip would be thawed and playable on a board it should have left.
+            // StartTurnSequence, which resets SummonedThisTurn / AttacksUsedThisTurn. A corpse
+            // that survives the flip would be cleared and playable on a board it should have left.
             var db = new FakeCardDatabase()
                 .Register(Minion(Vanilla, health: 1, rules: Array.Empty<RuleDefinition>()))
                 .Register(Minion(Toller, health: 3, rules: new[]

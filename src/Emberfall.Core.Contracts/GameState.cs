@@ -185,7 +185,7 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int Armor;
         public string HeroPowerId = "";
-        public bool IsFrosted; // set by FROST verb; cleared at start of controller's next turn
+        public bool IsFrosted; // set by FROST verb; cleared at END of the controller's next turn (NOR-355)
 
         public HeroInstance(InstanceId id, PlayerId controller, CardClass @class, int maxHealth)
         {

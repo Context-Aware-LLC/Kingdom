@@ -103,9 +103,10 @@ neither has health to restore.
 with an explicit turn-owner condition** (EF-011 / NOR-31).
 Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
 missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
-**after** the thaw/mana reset and **before** the draw, so a start-of-turn effect sees an unfrosted
-board with mana already refilled, and a lethal start-of-turn cascade ends the match instead of
-drawing into a finished game. A resolved spell creates a carrierless ongoing observer for an
+**after** the mana reset and **before** the draw, so a start-of-turn effect sees a board with mana
+already refilled, and a lethal start-of-turn cascade ends the match instead of drawing into a
+finished game. **The board it sees may still be frosted** — since NOR-355 the thaw runs at the
+END of the frozen player's turn in `ApplyEndTurn`, not at the start of the next one. A resolved spell creates a carrierless ongoing observer for an
 explicit `ONE_SHOT`, `FINITE`, or `PERMANENT` future rule; ordinary hand, deck, and graveyard cards
 never observe.
 
