@@ -123,6 +123,9 @@ namespace Emberfall.Presentation
         private Button _scopeOwnedButton;
         private Button _scopeAllButton;
 
+        /// <summary>The crafting modal. Declared on the same plate in both modes; see <see cref="BuildCraftModal"/>.</summary>
+        private CraftModal _craftModal;
+
         /// <summary>True when this visit is editing a deck. The one predicate every mode-dependent
         /// branch below reads, so the mode is never re-derived from something correlated with it.</summary>
         private bool Deckbuilding => _character != null;
@@ -173,6 +176,7 @@ namespace Emberfall.Presentation
             BuildPool();
             CacheElements();
             InitFaceBaker();
+            BuildCraftModal();   // before the wall: a tile click can open it, so it must exist first
             BuildWall();
             WireQueryBar();
             WireCollectionFilters();
@@ -350,15 +354,49 @@ namespace Emberfall.Presentation
         {
             _wall = new CardWall(_grid, _faceBaker);
 
-            if (Deckbuilding)
-                _wall.TileClicked += AddCopy;
-
-            // No TileClicked handler in browse mode on purpose: there is no deck to add to, and
-            // in-match inspect was cut (board layout rulings, 2026-07-23). A tap does nothing until
-            // there is something for it to do.
+            // Both modes now, where browse used to have no handler at all: "a tap does nothing until
+            // there is something for it to do" was true right up until crafting gave it something.
+            _wall.TileClicked += OnTileClicked;
 
             _wall.TileDecorator = DecorateTile;
             _wall.SetPool(_pool);
+        }
+
+        /// <summary>
+        /// What a tap on a wall tile means, which differs by mode because the modes have different
+        /// primary verbs.
+        ///
+        /// <para><b>Browse</b> — crafting. Nothing competes for the gesture: there is no deck to add
+        /// to, and in-match inspect was cut (board layout rulings, 2026-07-23).</para>
+        ///
+        /// <para><b>Deckbuild</b> — adding a copy, which stays the primary verb and must not be taken
+        /// away from the tap. It falls through to crafting in exactly one case: the account owns NO
+        /// copy of the card. That is the case where <see cref="AddCopy"/> is a guaranteed silent
+        /// no-op (L6 puts the copy limit at 0), so the tap is otherwise dead, and it is the case where
+        /// what the player wants is for a copy to exist at all. Every other refusal — deck full,
+        /// off-class, already holding every copy — leaves the tap doing nothing, as before.</para>
+        ///
+        /// <para>A card you own SOME but not all of is therefore reachable only from browse today.
+        /// Crafting a second copy from inside the deckbuilder wants a gesture of its own — a hold, or
+        /// a right-click — and that is deliberately not invented here: this modal is groundwork and a
+        /// new input gesture is a real decision with a verify check of its own
+        /// (<c>InputGestureVerify</c>).</para>
+        /// </summary>
+        private void OnTileClicked(CardDefinition def)
+        {
+            if (!Deckbuilding)
+            {
+                OpenCraft(def);
+                return;
+            }
+
+            if (_owned != null && _owned.CopiesOwned(def.Id) <= 0)
+            {
+                OpenCraft(def);
+                return;
+            }
+
+            AddCopy(def);
         }
 
         /// <summary>
@@ -568,6 +606,84 @@ namespace Emberfall.Presentation
             row.Q<Label>("name").text = def.Name;
 
             SwapPrefixedClass(row, "edge--", ClassEdgeClass(def.Class));
+        }
+
+        // ---- Crafting (GH#157 Render / GH#158 Reduce) ----
+
+        /// <summary>
+        /// The shard balance the modal displays.
+        ///
+        /// <para><b>STUB (Sam, 2026-08-12) — this is a made-up number and nothing reads a real one.</b>
+        /// Shards are held by <c>IEntitlementLedger</c> server-side; Unity has no client path to a
+        /// balance, because <c>Emberfall.Net.Server</c> is net10.0 and there is no protocol message or
+        /// gateway between the two. The shape to copy when that lands is
+        /// <c>ShopFlow.IShopGateway.GetShopAsync</c>, which is how the wallet already reaches
+        /// <see cref="ShopPanelController"/>.</para>
+        ///
+        /// <para>It is deliberately generous rather than realistic: the point of the number today is to
+        /// let both halves of the modal be seen in their live state. RETIREMENT TRIGGER: delete this
+        /// constant the moment a real balance is reachable, and update the stub paragraph on
+        /// <see cref="CraftModal"/> with it.</para>
+        /// </summary>
+        private const long StubShardBalance = 2500;
+
+        /// <summary>
+        /// Open the crafting modal on one card.
+        ///
+        /// <para>Both offers come from <see cref="Crafting"/> — the same pure predicates
+        /// <c>CraftingService</c> binds to the ledger — so what this draws is what the server would
+        /// decide. Nothing here computes a cost, a payout or a refusal.</para>
+        ///
+        /// <para><b>A null ownership record is reported as owning zero, which is a fiction</b> and the
+        /// one place this stub knowingly lies. Null means "ownership unknown" everywhere else in this
+        /// screen (see <see cref="_owned"/>), and today it is null on every machine — so the modal
+        /// currently shows a live Render half and a dead Reduce half for every card in the game. That
+        /// is the right shape to look at and the wrong data to trust. It resolves itself: the day an
+        /// ownership record exists, this reads it and the fiction is gone with no change here.</para>
+        /// </summary>
+        private void OpenCraft(CardDefinition def)
+        {
+            if (_craftModal == null || def == null) return;
+
+            int copies = _owned != null ? _owned.CopiesOwned(def.Id) : 0;
+
+            _craftModal.Open(def,
+                Crafting.OfferRender(def, copies, StubShardBalance),
+                Crafting.OfferReduce(def, copies),
+                StubShardBalance);
+        }
+
+        /// <summary>
+        /// Binds the modal and hooks its two commits.
+        ///
+        /// <para><b>Both handlers are stubs and move nothing.</b> The real ones spend or pay out
+        /// through <c>CraftingService</c>, which Unity cannot reach — see
+        /// <see cref="StubShardBalance"/>. They log at Warning rather than Log so that a build where
+        /// someone believes crafting works says so in the console on the first click, instead of
+        /// looking like a button that did its job quietly.</para>
+        /// </summary>
+        private void BuildCraftModal()
+        {
+            _craftModal = new CraftModal(_root, _faceBaker);
+
+            if (!_craftModal.IsBound)
+            {
+                Debug.LogError("[Collection] the crafting modal is missing elements on the plate, so " +
+                               "tapping a card will do nothing. Check CollectionScreen.uxml for the " +
+                               "craft block — and for a double dash inside a comment, which fails the " +
+                               "whole import silently.");
+                return;
+            }
+
+            _craftModal.RenderRequested += def =>
+                Debug.LogWarning($"[Craft] STUB: Render '{def.Id}' for " +
+                                 $"{ShardCosts.ForRarity(def.Rarity)} shards. Nothing was spent and no " +
+                                 "card was minted — there is no client path to CraftingService yet.");
+
+            _craftModal.ReduceRequested += def =>
+                Debug.LogWarning($"[Craft] STUB: Reduce '{def.Id}' for " +
+                                 $"{ShardValues.ForRarity(def.Rarity)} shards. Nothing was destroyed " +
+                                 "and nothing was paid out — there is no client path to CraftingService yet.");
         }
 
         // ---- Mutations ----

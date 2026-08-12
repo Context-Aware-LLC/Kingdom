@@ -122,5 +122,79 @@
 
         </ui:VisualElement>
 
+        <!--
+          Crafting (GH#157 Render / GH#158 Reduce). One modal, declared once, used by BOTH modes —
+          the same argument that made this one plate in the first place. CraftModal binds it and
+          CollectionController opens it; both are hidden here at rest and shown from code, so a
+          missing element is a broken plate rather than a mode that declined the modal.
+
+          Two absolutely-positioned siblings, deliberately: the scrim is what a click outside the
+          panel lands on, so it has to be a separate element the panel sits ON TOP of rather than a
+          background on an ancestor. The panel stops click propagation itself.
+
+          It is last inside root because UI Toolkit paints in document order and has no z-index; an
+          overlay declared earlier would render UNDER the wall it is supposed to cover. Moving this
+          block up is not a reordering, it is a disappearance.
+
+          The buttons currently go nowhere. See CraftModal's class comment for what has to land
+          before they do.
+        -->
+        <ui:VisualElement name="craft-scrim" class="craft-scrim" />
+
+        <ui:VisualElement name="craft-modal" class="craft-modal">
+
+            <ui:VisualElement class="craft-head">
+                <ui:VisualElement class="craft-heading">
+                    <ui:Label name="craft-card-name" text="" class="craft-name" />
+                    <ui:Label name="craft-card-rarity" text="" class="craft-rarity" />
+                </ui:VisualElement>
+                <ui:VisualElement class="craft-wallet">
+                    <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value" />
+                    <ui:Label text="shards" class="craft-wallet-word" />
+                </ui:VisualElement>
+                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="craft-body">
+
+                <!-- The real card front, baked by CardFaceBaker — the same cached texture the wall
+                     uses, so opening this on a card already on screen costs no bake. -->
+                <ui:VisualElement class="craft-cardpane">
+                    <ui:VisualElement name="craft-card-face" class="craft-card-face" />
+                    <ui:Label name="craft-copies-owned" text="" class="craft-owned" />
+                </ui:VisualElement>
+
+                <!-- The two directions. Neither is ever removed; the one you cannot take right now
+                     is marked dead by CraftModal and still states its price and its reason. -->
+                <ui:VisualElement class="craft-halves">
+
+                    <ui:VisualElement name="craft-render-half" class="craft-half">
+                        <ui:Label text="Render" class="craft-half-title" />
+                        <ui:Label text="Spend shards to make this card." class="craft-half-blurb" />
+                        <ui:VisualElement class="craft-price">
+                            <ui:Label name="craft-render-cost" text="0" class="craft-price-value" />
+                            <ui:Label text="shards" class="craft-price-word" />
+                        </ui:VisualElement>
+                        <ui:Label name="craft-render-note" text="" class="craft-half-note" />
+                        <ui:Button name="craft-render-button" text="Render" class="craft-action" />
+                    </ui:VisualElement>
+
+                    <ui:VisualElement name="craft-reduce-half" class="craft-half">
+                        <ui:Label text="Reduce" class="craft-half-title" />
+                        <ui:Label text="Break a copy down for shards." class="craft-half-blurb" />
+                        <ui:VisualElement class="craft-price">
+                            <ui:Label name="craft-reduce-payout" text="0" class="craft-price-value" />
+                            <ui:Label text="shards" class="craft-price-word" />
+                        </ui:VisualElement>
+                        <ui:Label name="craft-reduce-note" text="" class="craft-half-note" />
+                        <ui:Button name="craft-reduce-button" text="Reduce" class="craft-action craft-action--ghost" />
+                    </ui:VisualElement>
+
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
     </ui:VisualElement>
 </ui:UXML>
