@@ -17,7 +17,20 @@ namespace Emberfall.Core.Collection
 
         /// <summary>
         /// The player already holds <see cref="DeckValidator.MaxCopies"/> of it — a 3rd common or a 2nd
-        /// legendary. The copy could never be played, so it is never offered (GH#157).
+        /// legendary (GH#157).
+        ///
+        /// <para><b>This caps CRAFTING, not OWNERSHIP, and the two rulings are both live.</b> Owning
+        /// copies past the deck cap is deliberately allowed — packs may stack them without limit, and
+        /// <see cref="DeckValidator.CopyLimit"/> is <c>min(MaxCopies, owned)</c> so 47 copies still play
+        /// 2. A reader who finds this cap after reading "ownership is uncapped" has not found a
+        /// contradiction.</para>
+        ///
+        /// <para><b>Sam, 2026-08-12, and the reason is not the one GH#157 gives.</b> The issue said the
+        /// copy could never be played; that is the same reasoning he overturned for pack dupes. His
+        /// actual reason is that a spare copy has no use yet: <i>"I think people should be able to buy
+        /// as many cards as they want if they want to craft more … If at some point we open up a channel
+        /// for people to trade cards between themselves, then we would, but for now, we're going to
+        /// limit crafting to two."</i> So the cap is provisional and its expiry is named.</para>
         /// </summary>
         AtCopyCap,
 
@@ -153,6 +166,12 @@ namespace Emberfall.Core.Collection
             if (copiesOwned < 0) copiesOwned = 0;
 
             if (!def.Collectible) return new RenderOffer(RenderRefusal.NotCollectible, cost, copiesOwned, cap);
+
+            // RETIREMENT TRIGGER: card-to-card TRADING between players. Sam capped crafting at the deck
+            // limit on 2026-08-12 only because a spare copy has nowhere to go — he wants it uncapped once
+            // players can trade. The commit that opens a trading channel is the commit that deletes this
+            // line, the AtCopyCap enum member and its two tests, and strikes the paragraph on that member.
+            // Nothing else here is affected: ownership past the cap is already legal and already renders.
             if (copiesOwned >= cap) return new RenderOffer(RenderRefusal.AtCopyCap, cost, copiesOwned, cap);
             if (shardBalance < cost) return new RenderOffer(RenderRefusal.InsufficientShards, cost, copiesOwned, cap);
             return new RenderOffer(RenderRefusal.None, cost, copiesOwned, cap);

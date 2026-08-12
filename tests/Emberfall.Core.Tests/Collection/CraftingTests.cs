@@ -90,6 +90,37 @@ namespace Emberfall.Core.Tests.Collection
             });
         }
 
+        /// <summary>
+        /// Owning past the deck cap is a legal state — packs may stack copies without limit (Sam,
+        /// 2026-08-11) — and crafting past it is refused (Sam, 2026-08-12). Both rulings are live at
+        /// once, which is the pair a reader is most likely to mistake for a contradiction.
+        /// </summary>
+        [Test]
+        public void Owning_Past_The_Cap_Is_Legal_And_Only_Crafting_Is_Refused()
+        {
+            CardDefinition common = Card(Rarity.COMMON);
+
+            RenderOffer render = Crafting.OfferRender(common, copiesOwned: 5, shardBalance: 10_000);
+            ReduceOffer reduce = Crafting.OfferReduce(common, copiesOwned: 5);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(render.Refusal, Is.EqualTo(RenderRefusal.AtCopyCap));
+                Assert.That(reduce.Offerable, Is.True);
+                Assert.That(reduce.CopiesAfter, Is.EqualTo(4));
+                // The deck still plays 2 of them, which is why holding 5 costs nothing to allow.
+                Assert.That(DeckValidator.CopyLimit(Rarity.COMMON, OwnedAt(common.Id, 5), common.Id),
+                            Is.EqualTo(2));
+            });
+        }
+
+        private static OwnedCardCounts OwnedAt(string cardId, int copies)
+        {
+            var owned = new OwnedCardCounts();
+            owned.Set(cardId, copies);
+            return owned;
+        }
+
         [Test]
         public void Render_Reports_The_Cap_Ahead_Of_A_Price_It_Also_Cannot_Pay()
         {

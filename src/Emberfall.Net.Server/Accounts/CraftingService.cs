@@ -20,7 +20,11 @@ namespace Emberfall.Net.Server.Accounts
         /// <summary>The player cannot afford <see cref="ShardCosts"/> for this rarity. Nothing was written.</summary>
         InsufficientShards,
 
-        /// <summary>Already at <see cref="DeckValidator.MaxCopies"/>. Nothing was written.</summary>
+        /// <summary>
+        /// Already at <see cref="DeckValidator.MaxCopies"/>. Nothing was written. The cap is on
+        /// crafting only and is provisional — see <see cref="RenderRefusal.AtCopyCap"/>, which carries
+        /// the ruling and the retirement trigger.
+        /// </summary>
         AtCopyCap,
 
         /// <summary>No such collectible card. Nothing was written.</summary>
