@@ -59,12 +59,12 @@
     "costDistribution": {
       "0": 8,
       "1": 32,
-      "2": 62,
-      "3": 58,
+      "2": 63,
+      "3": 57,
       "4": 45,
-      "5": 23,
-      "6": 15,
-      "7": 13,
+      "5": 20,
+      "6": 17,
+      "7": 14,
       "8": 4,
       "9": 1
     },
@@ -134,7 +134,8 @@
         "2": 5,
         "3": 6,
         "4": 4,
-        "5": 2,
+        "5": 1,
+        "6": 1,
         "7": 1,
         "8": 2
       },
@@ -386,8 +387,8 @@
         "2": 5,
         "3": 6,
         "4": 4,
-        "5": 2,
-        "6": 2
+        "5": 1,
+        "6": 3
       },
       "rarityBreakdown": {
         "COMMON": 10,
@@ -498,8 +499,8 @@
       },
       "costDistribution": {
         "1": 4,
-        "2": 7,
-        "3": 5,
+        "2": 8,
+        "3": 4,
         "4": 3,
         "5": 2,
         "7": 2
@@ -558,9 +559,9 @@
         "2": 10,
         "3": 7,
         "4": 4,
-        "5": 3,
+        "5": 2,
         "6": 3,
-        "7": 2
+        "7": 3
       },
       "rarityBreakdown": {
         "COMMON": 16,
@@ -914,9 +915,8 @@
     },
     {
       "id": "core_lantern_bearer",
-      "name": "Lantern-Bearer",
+      "name": "Grave Lantern-Bearer",
       "type": "MINION",
-      "tooltip": "Grave Lantern Bearer",
       "cost": 2,
       "attack": 2,
       "health": 2,
@@ -1194,7 +1194,7 @@
       "id": "tide_siren",
       "name": "Hollow Tide Siren",
       "type": "MINION",
-      "cost": 5,
+      "cost": 7,
       "attack": 4,
       "health": 5,
       "durability": null,
@@ -1659,7 +1659,7 @@
     },
     {
       "id": "grave_sealed_gate_keeper",
-      "name": "Keeper of the Sealed Gate",
+      "name": "Sealed Gate Keeper",
       "type": "MINION",
       "cost": 6,
       "attack": 4,
@@ -2683,7 +2683,6 @@
       "id": "clock_the_great_mechanism",
       "name": "The Mechanism",
       "type": "MINION",
-      "tooltip": "The Great Mechanism",
       "cost": 8,
       "attack": 4,
       "health": 6,
@@ -2944,7 +2943,7 @@
       "id": "night_void_shriek",
       "name": "Void Shriek",
       "type": "MINION",
-      "cost": 5,
+      "cost": 6,
       "attack": 4,
       "health": 4,
       "durability": null,
@@ -2963,7 +2962,7 @@
     },
     {
       "id": "night_kira_blade_of_shadows",
-      "name": "Kira, Blade of Shadows",
+      "name": "Kira",
       "type": "MINION",
       "cost": 6,
       "attack": 5,
@@ -3230,9 +3229,8 @@
     },
     {
       "id": "ward_duras_the_ironmount",
-      "name": "Duras",
+      "name": "Duras, the Ironmount",
       "type": "MINION",
-      "tooltip": "Duras, the Ironmount",
       "cost": 8,
       "attack": 5,
       "health": 10,
@@ -3457,7 +3455,7 @@
       "id": "storm_static_discharge",
       "name": "Static Discharge",
       "type": "SPELL",
-      "cost": 3,
+      "cost": 2,
       "attack": null,
       "health": null,
       "durability": null,
@@ -4492,9 +4490,8 @@
     },
     {
       "id": "rekind_neutral_bannerman",
-      "name": "Bannerman",
+      "name": "New Dawn Bannerman",
       "type": "MINION",
-      "tooltip": "New Dawn Bannerman",
       "cost": 4,
       "attack": 3,
       "health": 3,
@@ -4555,9 +4552,8 @@
     },
     {
       "id": "rekind_neutral_aric",
-      "name": "Aric",
+      "name": "Aric, First Among Equals",
       "type": "MINION",
-      "tooltip": "Aric, First Among Equals",
       "cost": 7,
       "attack": 5,
       "health": 7,
@@ -5307,7 +5303,7 @@
     },
     {
       "id": "rekind_clock_rebuilt_automaton",
-      "name": "Rebuilt Automaton",
+      "name": "Reconstructed Automaton",
       "type": "MINION",
       "cost": 3,
       "attack": 2,
@@ -5367,9 +5363,9 @@
     },
     {
       "id": "rekind_clock_masterwork_construct",
-      "name": "Masterwork Construct",
+      "name": "Masterwork Constructor",
       "type": "MINION",
-      "cost": 5,
+      "cost": 6,
       "attack": 4,
       "health": 4,
       "durability": null,
@@ -5387,9 +5383,8 @@
     },
     {
       "id": "rekind_clock_cogsworth",
-      "name": "Cogsworth",
+      "name": "Cogsworth, The Grand Rebuilder",
       "type": "MINION",
-      "tooltip": "Cogsworth, The Grand Rebuilder",
       "cost": 8,
       "attack": 5,
       "health": 8,
@@ -5725,9 +5720,8 @@
     },
     {
       "id": "rekind_stone_aldric",
-      "name": "Aldric",
+      "name": "Aldric, The Fortifier",
       "type": "MINION",
-      "tooltip": "Aldric, The Fortifier",
       "cost": 7,
       "attack": 5,
       "health": 8,
