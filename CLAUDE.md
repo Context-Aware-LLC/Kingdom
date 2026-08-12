@@ -313,6 +313,19 @@ commit. Run `git branch --show-current` first, `git add <explicit paths>` second
 repos, always `git -C <absolute path>` — a shell's working directory persists between commands, and
 assuming otherwise has already caused one push to the wrong repo.
 
+**Staging by explicit path is NOT sufficient — commit by explicit path too: `git commit --only
+<paths>`.** A bare `git commit` commits *the whole index*, and in this working copy the index is
+not yours alone: another session stages its own work there, and anything it left staged rides into
+your commit no matter how carefully you added. Cost 2026-08-12 — a bot-roster commit that touched
+eight server files shipped with another session's staged deletion of
+`unity/.../Presentation/ClickableBoardSlot.cs` inside it, mid-rework, with nothing in the `git add`
+output hinting at it. `git status` before committing shows the difference: `D ` in the **left**
+column is someone else's staged change, ` D` in the right column is an unstaged one. **This is a
+different trap from the hook one** documented in `.githooks/pre-commit` (a hook's `git add` defeats
+even `--only`, via the temp index) — that one is about writes *during* the commit, this one is
+about what was already sitting in the index before it. Both end with your name on someone else's
+file.
+
 **The Unity Editor is a single-writer resource.** One Editor, and one terminal designated as the
 Unity terminal before work starts. A domain reload takes ~45 s, and every other session calling in
 during that window is told *"Unity not detected"* — which reads like a broken relay rather than
