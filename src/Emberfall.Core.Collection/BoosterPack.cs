@@ -117,6 +117,33 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
+    /// What it costs in shards to craft one card of this rarity (NOR-379, GH#156).
+    ///
+    /// <para><b>PROVISIONAL — Sam's to retune (2026-08-11).</b> These are a first setting to play
+    /// with; they do <em>not</em> carry the LOCKED status that <see cref="ShardValues"/> carries.
+    /// Changing them is an economy decision — Sam's call and nobody else's — but they are not
+    /// frozen by ruling the way the payout table is. They are all in one place so a retune is a
+    /// four-line change with no algorithm edit.</para>
+    /// </summary>
+    public static class ShardCosts
+    {
+        public const int Common = 50;
+        public const int Rare = 150;
+        public const int Epic = 450;
+        public const int Legendary = 1000;
+
+        /// <summary>Shards required to craft one card of this rarity.</summary>
+        public static int ForRarity(Rarity rarity) => rarity switch
+        {
+            Rarity.COMMON => Common,
+            Rarity.RARE => Rare,
+            Rarity.EPIC => Epic,
+            Rarity.LEGENDARY => Legendary,
+            _ => 0,
+        };
+    }
+
+    /// <summary>
     /// A booster pack: a <b>set pairing</b> (the Core set plus exactly one expansion) and how many
     /// cards it yields (NOR-109 §1).
     ///
