@@ -48,6 +48,7 @@ namespace Emberfall.Editor
             FullStackDragResolve();
             FullStackTapReselect();
             FullStackCancellation();
+            FullStackOpenBoardPlays();
             FullStackTargetedSpellDirectSelection();
             FullStackTwoStepHerald();
             OsCanceledDuringDrag();
@@ -84,17 +85,30 @@ namespace Emberfall.Editor
                 Db = db;
                 P0Id = p0Id;
                 SubmittedIntents = new List<PlayerIntent>();
-                _model = new DragTargetingModel(p0Id, db) { State = state };
 
                 Router = new GameObject("InputRouter").AddComponent<InputRouter>();
                 _input = new HotSeatInput(p0Id);
 
                 Router.Init(p0Id, _input, db);
                 Router.OnStateUpdated(state);
+
+                // THE ROUTER'S OWN MODEL, not a second one. This used to be
+                // `new DragTargetingModel(...)` — a parallel instance the router never touched, so
+                // Phase and AwaitingSlot below reported a model that no gesture ever ran through.
+                // Every assertion on them was vacuously true, which is why they all "passed" while
+                // asserting the opposite of what the router did. Found 2026-08-12 when #139 added
+                // the first POSITIVE assertion on Phase and it failed against a live router.
+                var modelField = typeof(InputRouter).GetField("_model",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                _model = (DragTargetingModel)modelField.GetValue(Router);
                 Router.UiBlocksInput = () => false;  // no UI blocking in tests
 
                 // Inject synthetic probe that maps screen position to board subject.
                 Router.InjectableProbe = (screenPos) => ProbeScreenPosition(screenPos);
+
+                // ...and the drop point, which since #139 decides as much as the probe does. There
+                // is no Camera.main here, so without this every release would report world x 0.
+                Router.InjectableDrop = (screenPos) => DropForScreenPosition(screenPos);
 
                 // Hook the queue to capture submitted intents (reflection for testing only).
                 StartCapturingIntents();
@@ -138,7 +152,7 @@ namespace Emberfall.Editor
             ///   x in [ 50, 100) → hand card 1 (TargetedSpell)
             ///   x in [100, 150) → hand card 2 (TargetedMinion)
             ///   x in [150, 400), y  &lt;  200 → our hero (x &lt; 250) / our hero power (x ≥ 250)
-            ///   x in [150, 400), y in [200, 400) → our board slot 1
+            ///   x in [150, 400), y in [200, 400) → empty board space (PointerSubject.None)
             ///   x in [150, 400), y ≥ 400 → our board minion 0
             ///   x in [400, 700), y  &lt;  200 → enemy hero
             ///   x in [400, 700), y ≥ 200 → enemy board minion 0
@@ -165,8 +179,10 @@ namespace Emberfall.Editor
                         return x < 250
                             ? (PointerSubject.OfHero(_model.HeroIdOf(P0Id), P0Id), null, null)
                             : (PointerSubject.OfHeroPower(P0Id), null, null);
+                    // Empty board space. It used to answer OfBoardSlot(P0Id, 1); since #139 nothing
+                    // is raycast there at all, and where a minion lands comes from the drop's x.
                     if (y < 400)
-                        return (PointerSubject.OfBoardSlot(P0Id, 1), null, null);
+                        return (PointerSubject.None, null, null);
                     // Friendly board minion
                     var board = State.Players[0].Board;
                     if (board.Count > 0)
@@ -188,6 +204,25 @@ namespace Emberfall.Editor
                 return (PointerSubject.None, null, null);
             }
 
+            /// <summary>
+            /// Screen-to-drop-point mapping for headless tests — the other half of a release since
+            /// #139. Deliberately independent of the probe map above, because that is the real
+            /// relationship: what the pointer is OVER and WHERE it is are separate facts now.
+            ///
+            ///   x &lt; 150          → still in the hand — the probe's hand zone, kept in step with it
+            ///   y &lt; 100          → still in the hand, but NOT over a card. The real rule is a
+            ///                        line (HandFanLayout.TopEdgeY), not the hand's colliders, and
+            ///                        this is the only way to press on that distinction here.
+            ///   otherwise        → board, world x = (screenX - 400) / 100
+            ///
+            /// So x=200 → world -2.0, x=500 → world +1.0, x=750 → world +3.5. Against this suite's
+            /// one-minion board (that minion at world x 0) those resolve to insert 0, 1 and 1.
+            /// </summary>
+            private static DropPoint DropForScreenPosition(Vector2 screenPos)
+                => screenPos.x < 150 || screenPos.y < 100
+                    ? DropPoint.OwnHand
+                    : DropPoint.Board((screenPos.x - 400f) / 100f);
+
             public void Cleanup()
             {
                 Object.DestroyImmediate(Router.gameObject);
@@ -199,7 +234,8 @@ namespace Emberfall.Editor
         // Probe coordinate landmarks (see InputRouterHarness.ProbeScreenPosition for the full map):
         //   (25, 200)  → hand card 0 (Vanilla)          (75, 200)  → hand card 1 (TargetedSpell)
         //   (125, 200) → hand card 2 (TargetedMinion)
-        //   (200, 300) → our board slot 1                (200, 500) → our board minion 0
+        //   (200, 300) → open board, world x -2.0        (200, 500) → our board minion 0
+        //   (750,  50) → still in hand (cancel)         (750, 300) → open board, world x +3.5
         //   (150, 100) → our hero                        (300, 100) → our hero power
         //   (500, 300) → enemy board minion 0            (500, 100) → enemy hero
         //   (750, 300) → empty space (PointerSubject.None)
@@ -219,9 +255,9 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Held, new Vector2(25, 210)));
             Check("drag threshold crossed: no auto-submit", harness.SubmittedIntents.Count == 0);
 
-            // Release on our board slot 1 — Dragging resolves to PlayCardIntent.
+            // Release on open board — Dragging resolves to PlayCardIntent.
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("release on board slot after drag submits PlayCardIntent",
+            Check("release on the board after drag submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -237,10 +273,10 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
             Check("tap arms without submitting", harness.SubmittedIntents.Count == 0);
 
-            // While armed, press is ignored; release on board slot resolves to PlayCardIntent.
+            // While armed, press is ignored; release on the board resolves to PlayCardIntent.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("tap-armed card: release on board slot submits PlayCardIntent",
+            Check("tap-armed card: release on the board submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -251,12 +287,12 @@ namespace Emberfall.Editor
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
 
-            // Press hand card 0, drag past threshold, release on board slot.
+            // Press hand card 0, drag past threshold, release on the board.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 215)));  // 15 px > threshold
             harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 220)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("drag-and-drop on board slot submits PlayCardIntent",
+            Check("drag-and-drop on the board submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
@@ -296,11 +332,37 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
             Check("tap arms", harness.SubmittedIntents.Count == 0);
 
-            // Release on empty space while armed → TryResolve(None) → cancel, no intent.
+            // Release back over the HAND while armed → cancel, no intent. Empty space no longer
+            // cancels anything (#139) — putting the card back is the whole cancel vocabulary now,
+            // so that is what this has to press on to still be testing a cancel.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 50)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 50)));
+            Check("release back over the hand cancels armed gesture without submitting",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Cleanup();
+        }
+
+        /// <summary>#139: the same gesture one row higher now PLAYS, where it used to be swallowed.
+        /// The pair with FullStackCancellation above is the whole ruling in two tests.</summary>
+        private static void FullStackOpenBoardPlays()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
+
+            // (750, 300) is open space to the probe — nothing under the pointer at all — and world
+            // x +3.5 to the drop map, which clamps to the end of our one-minion row.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 300)));
-            Check("release on empty space cancels armed gesture without submitting",
-                harness.SubmittedIntents.Count == 0);
+
+            var intent = harness.SubmittedIntents.Count == 1
+                ? harness.SubmittedIntents[0] as PlayCardIntent
+                : null;
+            Check("release on open board space submits a play at the x it was released",
+                intent != null && intent.BoardSlot == 1);
 
             harness.Cleanup();
         }
@@ -312,20 +374,20 @@ namespace Emberfall.Editor
             InstanceId enemy = s.Players[1].Board[0].Id;
 
             // A targeted spell is armed once, then released directly on its character target.
-            // Releasing it on a slot is a miss: it must not retain that slot or arm a second phase.
+            // Releasing it on open board is a miss: it must not bank a position or arm a second phase.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("targeted spell released on a board slot submits nothing",
+            Check("targeted spell released on open board space submits nothing",
                 harness.SubmittedIntents.Count == 0);
-            Check("targeted spell slot miss stores no placement and stays in direct targeting",
+            Check("targeted spell open-board miss stores no placement and stays in direct targeting",
                 harness.Phase == DragTargetingModel.TargetingPhase.Direct && harness.AwaitingSlot == 0
                 && harness.AwaitingCardId.Equals(default));
 
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("targeted spell slot miss does not leave a second targeting phase armed",
+            Check("targeted spell open-board miss does not leave a second targeting phase armed",
                 harness.SubmittedIntents.Count == 0);
 
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
@@ -355,19 +417,15 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
             Check("tap targeted card arms without submitting", harness.SubmittedIntents.Count == 0);
 
-            // A herald minion cannot skip placement by releasing directly on its effect target.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("targeted minion released directly on a character submits nothing",
-                harness.SubmittedIntents.Count == 0);
-
-            // Re-arm, then tap empty board slot 1 to enter the effect-target phase.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
+            // Step 1: release on open board space at (200, 300) — world x -2.0, which is left of our
+            // only minion, so position 0. Placement, not a submit.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("drop on board slot enters two-step targeting without submit",
+            Check("drop on open board enters two-step targeting without submit",
                 harness.SubmittedIntents.Count == 0);
+            Check("...banking the position solved from the drop's x",
+                harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
+                && harness.AwaitingSlot == 0);
 
             // Tap on enemy minion: press + release → resolves to PlayCardIntent with slot + target.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
@@ -376,8 +434,8 @@ namespace Emberfall.Editor
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             var intent = harness.SubmittedIntents[0] as PlayCardIntent;
-            Check("PlayCardIntent carries the slot from step 1",
-                intent != null && intent.BoardSlot == 1);
+            Check("PlayCardIntent carries the placement from step 1",
+                intent != null && intent.BoardSlot == 0);
             Check("PlayCardIntent carries the target from step 2",
                 intent != null && intent.Targets.Count == 1
                 && intent.Targets[0].Instance.Equals(enemy));
@@ -450,7 +508,7 @@ namespace Emberfall.Editor
             TwoStepHerald();
             AttackDrops();
             HeroPowerDrops();
-            NoAutoPlace();
+            DropOnOpenBoardPlays();
             TargetSets();
             OptionalHeraldNeedsNoAimStep();
         }
@@ -535,32 +593,55 @@ namespace Emberfall.Editor
             DragSource vanilla  = m.BeginSource(PointerSubject.OfCard(hand,    P0, Zone.Hand));
             DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
 
-            var onSlot = m.Resolve(vanilla, PointerSubject.OfBoardSlot(P0, 2)) as PlayCardIntent;
-            Check("drop on our slot 2 plays there", onSlot != null && onSlot.BoardSlot == 2
-                                                    && onSlot.Targets.Count == 0);
+            // #139 (Sam, 2026-08-12). Our board holds exactly one minion, and BoardRowGeometry centres
+            // it at world x 0, so it is the only boundary on the row: drop left of it and you are
+            // position 0, right of it and you are position 1. Nothing else in the drop is read.
+            var toLeft = m.Resolve(vanilla, PointerSubject.None, DropPoint.Board(-1.35f)) as PlayCardIntent;
+            Check("a minion dropped LEFT of our only minion takes position 0",
+                toLeft != null && toLeft.BoardSlot == 0 && toLeft.Targets.Count == 0);
 
-            Check("drop on an ENEMY slot plays nothing",
-                m.Resolve(vanilla, PointerSubject.OfBoardSlot(P1, 0)) == null);
-            // Dropping a vanilla card ON one of our own minions is a PLACEMENT, not a miss —
-            // 03e0e529 "Loosen drag-to-play targeting" ruled it so and pinned it in
-            // DragTargetingModelTests ("dropping on an existing minion is a placement, not a miss").
-            // This mirror was left asserting the old refusal and had been failing since 2026-08-09.
-            // It lands at the slot it was dropped nearest to rather than past the end, so dropping on
-            // Board[0] resolves to slot 0.
-            var onOurMinion = m.Resolve(vanilla, PointerSubject.OfCard(mine, P0, Zone.Board)) as PlayCardIntent;
-            Check("drop on our own minion places there", onOurMinion != null
+            var toRight = m.Resolve(vanilla, PointerSubject.None, DropPoint.Board(1.35f)) as PlayCardIntent;
+            Check("a minion dropped RIGHT of it takes position 1",
+                toRight != null && toRight.BoardSlot == 1 && toRight.Targets.Count == 0);
+
+            var offRow = m.Resolve(vanilla, PointerSubject.None, DropPoint.Board(40f)) as PlayCardIntent;
+            Check("an x far past the end of the row clamps to the last position, it does not miss",
+                offRow != null && offRow.BoardSlot == 1);
+
+            // THE HEADLINE REVERSAL: the enemy's half of the board used to cancel silently, on two
+            // separate paths (an enemy slot, and an enemy minion). Y is irrelevant now, so releasing
+            // over the enemy's board plays the minion on OUR row at that x.
+            var enemySide = m.Resolve(vanilla, PointerSubject.OfCard(theirs, P1, Zone.Board),
+                                      DropPoint.Board(1.35f)) as PlayCardIntent;
+            Check("a minion released over the ENEMY board still plays, at the x it was dropped",
+                enemySide != null && enemySide.BoardSlot == 1);
+
+            // Dropping ON one of our own minions is no longer a special case at all — it is just a
+            // drop whose x happens to be that minion's, and the x rule answers it.
+            var onOurMinion = m.Resolve(vanilla, PointerSubject.OfCard(mine, P0, Zone.Board),
+                                        DropPoint.Board(0f)) as PlayCardIntent;
+            Check("drop on our own minion places at that minion's position", onOurMinion != null
                                                          && onOurMinion.BoardSlot == 0
                                                          && onOurMinion.Targets.Count == 0);
-            Check("drop on an occupied slot plays nothing (enemy minion)",
-                m.Resolve(vanilla, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
 
-            var atFriend = m.Resolve(targeted, PointerSubject.OfCard(mine, P0, Zone.Board)) as PlayCardIntent;
+            // The one and only cancel.
+            Check("a minion released back over our own hand plays nothing",
+                m.Resolve(vanilla, PointerSubject.None, DropPoint.OwnHand) == null);
+
+            var atFriend = m.Resolve(targeted, PointerSubject.OfCard(mine, P0, Zone.Board),
+                                     DropPoint.Board(0f)) as PlayCardIntent;
             Check("an ANY_* card CAN aim at our own minion", atFriend != null
                                                              && atFriend.Targets[0].Instance.Equals(mine));
 
-            var atHero = m.Resolve(targeted, PointerSubject.OfHero(m.HeroIdOf(P1), P1)) as PlayCardIntent;
+            var atHero = m.Resolve(targeted, PointerSubject.OfHero(m.HeroIdOf(P1), P1),
+                                   DropPoint.Board(0f)) as PlayCardIntent;
             Check("a hand card can aim at a hero", atHero != null
                                                    && atHero.Targets[0].Instance.Equals(m.HeroIdOf(P1)));
+
+            // Exception 2: a targeted spell has no position to fall back on, so open space is still
+            // nothing. This is the ONLY drop on the board that a card can still fail to resolve on.
+            Check("a TARGETED spell released on open board space plays nothing",
+                m.Resolve(targeted, PointerSubject.None, DropPoint.Board(1.35f)) == null);
         }
 
         // Issue #30: a targeted-herald minion needs two steps: (1) pick the slot, (2) pick the target.
@@ -573,29 +654,39 @@ namespace Emberfall.Editor
             InstanceId theirs  = s.Players[1].Board[0].Id;
             DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
 
-            Check("targeted minion cannot bypass placement by releasing directly on a character",
-                m.Resolve(targeted, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
+            // Step 1 is a PLACEMENT wherever it lands, including on a character. Releasing a herald
+            // minion on the enemy minion it wants to hit used to be a flat miss; since #139 it
+            // places at that x and then asks for the target, because a minion always has a position
+            // to take and "let go anywhere and it resolves" has to mean something here too.
+            var onCharacter = m.Resolve(targeted, PointerSubject.OfCard(theirs, P1, Zone.Board),
+                                        DropPoint.Board(1.35f));
+            Check("targeted minion released on a character places rather than submitting",
+                onCharacter == null && m.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
+                && m.AwaitingSlot == 1);
+            m.Phase = DragTargetingModel.TargetingPhase.Direct;
 
-            // Drop on a legal empty slot → enters AwaitingEffectTarget, no intent yet.
-            var result = m.Resolve(targeted, PointerSubject.OfBoardSlot(P0, 2));
-            Check("targeted card dropped on empty slot enters AwaitingEffectTarget",
+            // Drop on open board space → same thing, position solved from x.
+            var result = m.Resolve(targeted, PointerSubject.None, DropPoint.Board(-1.35f));
+            Check("targeted card dropped on open board enters AwaitingEffectTarget",
                 result == null && m.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
-            Check("AwaitingEffectTarget stores the slot and card",
-                m.AwaitingSlot == 2 && m.AwaitingCardId.Equals(aimCard));
+            Check("AwaitingEffectTarget stores the placement and card",
+                m.AwaitingSlot == 0 && m.AwaitingCardId.Equals(aimCard));
 
             // Second release: drop on a valid target → emits PlayCardIntent with both slot and target.
-            var intent = m.Resolve(DragSource.None, PointerSubject.OfCard(theirs, P1, Zone.Board)) as PlayCardIntent;
+            var intent = m.Resolve(DragSource.None, PointerSubject.OfCard(theirs, P1, Zone.Board),
+                                   DropPoint.Board(0f)) as PlayCardIntent;
             Check("targeted card: second release on valid target submits intent",
-                intent != null && intent.BoardSlot == 2 && intent.Targets.Count == 1
+                intent != null && intent.BoardSlot == 0 && intent.Targets.Count == 1
                 && intent.Targets[0].Instance.Equals(theirs));
             Check("after resolving, AwaitingEffectTarget clears",
                 m.Phase == DragTargetingModel.TargetingPhase.Direct);
 
-            // Test cancellation: drop on an invalid target → cancels, no intent.
+            // Test cancellation: the AIM step still needs a real target — open space is not one, and
+            // the drop point is not consulted at all once a placement is banked.
             m.Phase = DragTargetingModel.TargetingPhase.AwaitingEffectTarget;
-            m.AwaitingSlot = 2;
+            m.AwaitingSlot = 1;
             m.AwaitingCardId = aimCard;
-            var invalidResult = m.Resolve(DragSource.None, PointerSubject.OfBoardSlot(P0, 1));
+            var invalidResult = m.Resolve(DragSource.None, PointerSubject.None, DropPoint.Board(1.35f));
             Check("targeted card: second release on invalid target plays nothing",
                 invalidResult == null);
         }
@@ -609,20 +700,25 @@ namespace Emberfall.Editor
             InstanceId theirs = s.Players[1].Board[0].Id;
             DragSource atk    = m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board));
 
-            var hit = m.Resolve(atk, PointerSubject.OfCard(theirs, P1, Zone.Board)) as AttackIntent;
+            // ATTACKS ARE UNCHANGED BY #139 and still need a named defender: an attack has no
+            // position to fall back on, so there is nothing for "anywhere" to resolve to. The drop
+            // point is accepted and ignored on every one of these.
+            var hit = m.Resolve(atk, PointerSubject.OfCard(theirs, P1, Zone.Board),
+                                DropPoint.Board(1.35f)) as AttackIntent;
             Check("attacker dropped on an enemy minion attacks it",
                 hit != null && hit.Attacker.Equals(mine) && hit.Defender.Instance.Equals(theirs));
 
-            var face = m.Resolve(atk, PointerSubject.OfHero(m.HeroIdOf(P1), P1)) as AttackIntent;
+            var face = m.Resolve(atk, PointerSubject.OfHero(m.HeroIdOf(P1), P1),
+                                 DropPoint.Board(0f)) as AttackIntent;
             Check("attacker dropped on the enemy hero goes face",
                 face != null && face.Defender.Instance.Equals(m.HeroIdOf(P1)));
 
             Check("attacker dropped on our own minion does nothing",
-                m.Resolve(atk, PointerSubject.OfCard(mine, P0, Zone.Board)) == null);
+                m.Resolve(atk, PointerSubject.OfCard(mine, P0, Zone.Board), DropPoint.Board(0f)) == null);
             Check("attacker dropped on our own hero does nothing",
-                m.Resolve(atk, PointerSubject.OfHero(m.HeroIdOf(P0), P0)) == null);
-            Check("attacker dropped on a board slot does nothing",
-                m.Resolve(atk, PointerSubject.OfBoardSlot(P1, 0)) == null);
+                m.Resolve(atk, PointerSubject.OfHero(m.HeroIdOf(P0), P0), DropPoint.Board(0f)) == null);
+            Check("attacker dropped on empty board space does nothing",
+                m.Resolve(atk, PointerSubject.None, DropPoint.Board(1.35f)) == null);
         }
 
         private static void HeroPowerDrops()
@@ -635,33 +731,39 @@ namespace Emberfall.Editor
             DragSource free = m.BeginSource(PointerSubject.OfHeroPower(P0));
             Check("untargeted hero power needs no target", !free.NeedsTarget);
             Check("untargeted hero power fires on a tap",
-                m.Resolve(free, PointerSubject.OfHeroPower(P0)) is HeroPowerIntent);
+                m.Resolve(free, PointerSubject.OfHeroPower(P0), DropPoint.Board(0f)) is HeroPowerIntent);
             Check("untargeted hero power dragged away cancels",
-                m.Resolve(free, PointerSubject.OfCard(theirs, P1, Zone.Board)) == null);
+                m.Resolve(free, PointerSubject.OfCard(theirs, P1, Zone.Board), DropPoint.Board(0f)) == null);
 
             // Targeted: the drop supplies the target and a tap on itself is a cancel.
             s.Players[0].Hero.HeroPowerId = PowerAim;
             DragSource aim = m.BeginSource(PointerSubject.OfHeroPower(P0));
             Check("ANY_* hero power needs a target", aim.NeedsTarget);
 
-            var fired = m.Resolve(aim, PointerSubject.OfCard(theirs, P1, Zone.Board)) as HeroPowerIntent;
+            var fired = m.Resolve(aim, PointerSubject.OfCard(theirs, P1, Zone.Board),
+                                  DropPoint.Board(0f)) as HeroPowerIntent;
             Check("targeted hero power fires at the drop target",
                 fired != null && fired.Targets.Count == 1 && fired.Targets[0].Instance.Equals(theirs));
             Check("targeted hero power dropped on itself cancels",
-                m.Resolve(aim, PointerSubject.OfHeroPower(P0)) == null);
+                m.Resolve(aim, PointerSubject.OfHeroPower(P0), DropPoint.Board(0f)) == null);
         }
 
-        // Plan decision 13: the auto-place shortcut (old InputRouter.cs:561-576) turned a click on
-        // empty space into a play at the end of our board. On touch that turned stray taps into
-        // misplays. A drop on nothing is now a cancel, full stop.
-        private static void NoAutoPlace()
+        // WAS NoAutoPlace, asserting plan decision 13: a drop on nothing is a cancel, full stop.
+        // Sam reversed that on 2026-08-12 (#139) — "once that card is dragged out of the hand, if
+        // you let go of it anywhere, it should resolve". The concern decision 13 was protecting
+        // against (a stray TAP on empty space becoming a play at the end of the board) is answered
+        // a different way now: the gesture machine arms on a tap and only the SECOND deliberate
+        // release resolves, and where it lands is the x you released at rather than "the end".
+        private static void DropOnOpenBoardPlays()
         {
             GameState s = NewState();
             var m = Model(s);
             DragSource vanilla = m.BeginSource(PointerSubject.OfCard(s.Players[0].Hand[0].Id, P0, Zone.Hand));
 
-            Check("a hand card dropped on empty space plays NOTHING (decision 13)",
-                m.Resolve(vanilla, PointerSubject.None) == null);
+            Check("a hand card released on open board space PLAYS (#139 reverses decision 13)",
+                m.Resolve(vanilla, PointerSubject.None, DropPoint.Board(1.35f)) is PlayCardIntent);
+            Check("...and the same release back over the hand still does not",
+                m.Resolve(vanilla, PointerSubject.None, DropPoint.OwnHand) == null);
         }
 
         private static void TargetSets()
@@ -716,7 +818,7 @@ namespace Emberfall.Editor
             Check("a herald with no legal target needs no aim step", !fizzle.NeedsTarget);
             Check("...and glows nothing", m.TargetsFor(fizzle) == null);
 
-            var played = m.Resolve(fizzle, PointerSubject.OfBoardSlot(P0, 0)) as PlayCardIntent;
+            var played = m.Resolve(fizzle, PointerSubject.None, DropPoint.Board(-1.35f)) as PlayCardIntent;
             Check("...and drops straight onto the board with no targets",
                 played != null && played.Targets.Count == 0 && played.BoardSlot == 0);
             Check("...leaving the machine in Direct, not stranded mid-aim",

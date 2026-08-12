@@ -114,10 +114,23 @@ namespace Emberfall.Presentation
         // box on the most-overlapped card in the fan; closing it needs CentreY 3.41, at which point
         // the centre card stops overhanging the edge at all and the hand stops reading as held.
         // RETIREMENT TRIGGER: MulliganConfirmButtonView.BoardPosition reasons about the span this
-        // constant produces (the fan reaching y -2.312) to justify sitting clear of it. Moving
-        // CentreY or the card height means re-checking that clearance — #138 was a confirm button
-        // buried inside the fan, which fails silently and reads as a dead button, not a hidden one.
+        // constant produces (the fan reaching y -2.312) to justify sitting clear of it, and TopEdgeY
+        // below turns that same span into the line a drop must clear to count as a play. Moving
+        // CentreY or the card height means re-checking both — #138 was a confirm button buried
+        // inside the fan, which fails silently and reads as a dead button, not a hidden one.
         internal const float CentreY    = 3.50f;
+
+        // THE LINE BETWEEN "STILL IN MY HAND" AND "ON THE BOARD" (Sam, 2026-08-12, #139).
+        //
+        // The highest point any resting hand card reaches: the centre card's top edge, since Sag
+        // only ever pushes the outer cards DOWN. A release above this is a play — wherever it is,
+        // whosever half of the board it is over. A release below it is the one and only cancel:
+        // you put the card back. That is the whole rule, and it is a LINE rather than a set of
+        // colliders on purpose (see DragTargetingModel.DropPoint).
+        //
+        // Local seat only, which is all this is ever asked about: the local player is always the
+        // un-mirrored bottom seat (ProceduralBoardSetup.BuildSeat, P0Sign -1).
+        internal const float TopEdgeY   = -CentreY + HandCardH * 0.5f;   // -2.312
 
         // Hand cards step TOWARD the camera as the index rises, so a later card wins the raycast
         // against anything parked at z 0. That is what ate the mulligan confirm button (#138).

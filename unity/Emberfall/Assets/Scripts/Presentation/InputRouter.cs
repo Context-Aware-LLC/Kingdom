@@ -72,6 +72,11 @@ namespace Emberfall.Presentation
         // EDITOR/TEST ONLY: injectable probe for headless verification. Overrides raycast behavior.
         public System.Func<Vector2, (PointerSubject subject, Transform hitTransform, CardPresenter presenter)> InjectableProbe;
 
+        // EDITOR/TEST ONLY: the same escape hatch for the DROP POINT, which since #139 decides as
+        // much as the probe does. Without it a headless test has no Camera.main and every release
+        // would report world x 0, quietly collapsing every placement assertion onto one answer.
+        public System.Func<Vector2, DropPoint> InjectableDrop;
+
         // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
         // While a targeting gesture is armed: a persistent banner says so, and the set of
         // legal targets is broadcast so BoardController can glow ONLY those (readiness
@@ -233,7 +238,7 @@ namespace Emberfall.Presentation
             }
 
             bool wasArmedByTap = _gesture == Gesture.ArmedByTap;
-            if (TryResolve(subject)) return;
+            if (TryResolve(subject, DropAt(screenPos))) return;
 
             // A drag that ended on nothing is simply abandoned. A tap-armed gesture gets one more
             // reading first: tapping another of our own cards switches the selection rather than
@@ -253,9 +258,9 @@ namespace Emberfall.Presentation
 
         /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
         /// we entered AwaitingEffectTarget (two-step herald), in which case we stay armed.</summary>
-        private bool TryResolve(PointerSubject released)
+        private bool TryResolve(PointerSubject released, DropPoint drop)
         {
-            PlayerIntent intent = _model.Resolve(_source, released);
+            PlayerIntent intent = _model.Resolve(_source, released, drop);
 
             // Check if we entered AwaitingEffectTarget phase (two-step targeting).
             if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
@@ -352,6 +357,35 @@ namespace Emberfall.Presentation
         // else the ray hits (the end-turn button, the mulligan confirm, the toast) reads as None here
         // and cancels an in-flight gesture, while that object's own OnMouseDown still fires — which is
         // the correct reading of "the player pressed something that is not the board".
+        /// <summary>
+        /// WHERE the release happened, in board coordinates — the half of a drop that no collider
+        /// reports (Sam, 2026-08-12, #139). Placement is proximity on x, so this is what decides
+        /// where a minion lands; <see cref="Probe"/> only still matters for cards and heroes.
+        ///
+        /// <para>The hand test is a LINE, <see cref="HandFanLayout.TopEdgeY"/>, not a hit on a hand
+        /// card. Releasing into a gap between two fanned cards, or below the fan entirely, is still
+        /// putting the card back — and a rule made of colliders would have said "play it".</para>
+        ///
+        /// <para>The camera is orthographic, so x and y at the board plane do not depend on the
+        /// depth passed in; the plane distance is used anyway so this keeps working if the camera
+        /// is ever swapped to perspective.</para>
+        /// </summary>
+        private DropPoint DropAt(Vector2 screenPos)
+        {
+            if (InjectableDrop != null) return InjectableDrop(screenPos);
+
+            Camera cam = Camera.main;
+            if (cam == null) return DropPoint.Board(0f);
+
+            float planeDistance = -cam.transform.position.z;   // board plane is z = 0
+            Vector3 world = cam.ScreenToWorldPoint(
+                new Vector3(screenPos.x, screenPos.y, planeDistance));
+
+            return world.y <= HandFanLayout.TopEdgeY
+                ? DropPoint.OwnHand
+                : DropPoint.Board(world.x);
+        }
+
         private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform, out CardPresenter presenter)
         {
             // EDITOR/TEST: use injectable probe if provided (headless verification).
@@ -379,13 +413,9 @@ namespace Emberfall.Presentation
                 return PointerSubject.OfCard(card.CardId, card.OwnerId, card.Zone);
             }
 
-            var slot = hit.collider.GetComponentInParent<ClickableBoardSlot>();
-            if (slot != null)
-            {
-                hitTransform = slot.transform;
-                return PointerSubject.OfBoardSlot(slot.OwnerId, slot.SlotIndex);
-            }
-
+            // NO BOARD-SLOT BRANCH (Sam, 2026-08-12, #139). Empty board space is not raycast at
+            // all any more — the 14 invisible slot boxes and their ClickableBoardSlot descriptor
+            // are gone, and where a minion lands is solved from the drop's x in DropAt below.
             var hero = hit.collider.GetComponentInParent<ClickableHero>();
             if (hero != null)
             {

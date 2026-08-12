@@ -8,7 +8,14 @@ namespace Emberfall.Presentation
 {
     /// <summary>What the pointer is over. Produced by <see cref="InputRouter"/>'s raycast; consumed
     /// by <see cref="DragTargetingModel"/>, which never touches a collider or a Transform.</summary>
-    public enum PointerSubjectKind { None, Card, BoardSlot, Hero, HeroPower }
+    /// <summary>
+    /// BOARD SLOTS ARE NOT A SUBJECT KIND (Sam, 2026-08-12, #139). There used to be a
+    /// <c>BoardSlot</c> member here, produced by 14 invisible box colliders that a minion had to be
+    /// dropped inside of. Placement is solved from the drop's x now
+    /// (<see cref="BoardRowLayout.InsertIndexForX"/>), so the colliders, the component and this
+    /// enum member all went with it. Nothing about the board's empty space is raycast any more.
+    /// </summary>
+    public enum PointerSubjectKind { None, Card, Hero, HeroPower }
 
     public readonly struct PointerSubject
     {
@@ -16,30 +23,62 @@ namespace Emberfall.Presentation
         public readonly InstanceId Id;         // Card: the card instance. Hero: the hero instance.
         public readonly PlayerId Owner;
         public readonly Zone Zone;       // Card only
-        public readonly int SlotIndex;  // BoardSlot only
 
-        private PointerSubject(PointerSubjectKind kind, InstanceId id, PlayerId owner, Zone zone, int slotIndex)
+        private PointerSubject(PointerSubjectKind kind, InstanceId id, PlayerId owner, Zone zone)
         {
             Kind = kind;
             Id = id;
             Owner = owner;
             Zone = zone;
-            SlotIndex = slotIndex;
         }
 
         public static PointerSubject None => default;
 
         public static PointerSubject OfCard(InstanceId id, PlayerId owner, Zone zone)
-            => new PointerSubject(PointerSubjectKind.Card, id, owner, zone, -1);
-
-        public static PointerSubject OfBoardSlot(PlayerId owner, int slotIndex)
-            => new PointerSubject(PointerSubjectKind.BoardSlot, default, owner, Zone.Board, slotIndex);
+            => new PointerSubject(PointerSubjectKind.Card, id, owner, zone);
 
         public static PointerSubject OfHero(InstanceId heroId, PlayerId owner)
-            => new PointerSubject(PointerSubjectKind.Hero, heroId, owner, Zone.Board, -1);
+            => new PointerSubject(PointerSubjectKind.Hero, heroId, owner, Zone.Board);
 
         public static PointerSubject OfHeroPower(PlayerId owner)
-            => new PointerSubject(PointerSubjectKind.HeroPower, default, owner, Zone.Board, -1);
+            => new PointerSubject(PointerSubjectKind.HeroPower, default, owner, Zone.Board);
+    }
+
+    /// <summary>
+    /// WHERE a release happened, as opposed to <see cref="PointerSubject"/>'s what-it-was-over.
+    /// Two facts, because two facts are all the release rule needs (Sam, 2026-08-12, #139):
+    ///
+    /// <list type="bullet">
+    /// <item><b>Is it back in our hand?</b> The one and only cancel. Everything else on screen
+    /// resolves — the enemy's half of the board included, which used to cancel silently.</item>
+    /// <item><b>What x?</b> A minion's position on the row, and nothing else, reads this. The
+    /// drop's y is deliberately not carried past this struct: "the Y-position of the drop is
+    /// irrelevant as long as it's above the threshold of the hand".</item>
+    /// </list>
+    ///
+    /// <para>The hand threshold is decided by <c>InputRouter</c> against
+    /// <c>HandFanLayout.TopEdgeY</c> rather than in here. That is not tidiness: this file is
+    /// compiled into <c>tests/Emberfall.Core.Tests</c> with no Unity assemblies present, so a
+    /// reference to either of those types would break the headless build. The x, which this model
+    /// DOES read, is resolved through <see cref="BoardRowGeometry"/>, which is Unity-free for the
+    /// same reason and linked into that csproj alongside this file.</para>
+    /// </summary>
+    public readonly struct DropPoint
+    {
+        public readonly float X;
+        public readonly bool  OverOwnHand;
+
+        private DropPoint(float x, bool overOwnHand)
+        {
+            X = x;
+            OverOwnHand = overOwnHand;
+        }
+
+        /// <summary>Anywhere above the hand — the whole board, both halves, and off the edges.</summary>
+        public static DropPoint Board(float x) => new DropPoint(x, false);
+
+        /// <summary>Put back where it came from. The only gesture that means "I changed my mind".</summary>
+        public static DropPoint OwnHand => new DropPoint(0f, true);
     }
 
     public enum DragSourceKind
@@ -248,17 +287,19 @@ namespace Emberfall.Presentation
         /// The release half. Null means "this drop meant nothing" — cancel silently rather than
         /// spending a reject toast on a gesture the player clearly abandoned.
         /// </summary>
-        public PlayerIntent Resolve(DragSource source, PointerSubject released)
+        public PlayerIntent Resolve(DragSource source, PointerSubject released, DropPoint drop)
         {
             if (State == null || !CanAct()) return null;
 
-            // If we're awaiting an effect target (two-step herald), handle that instead.
+            // If we're awaiting an effect target (two-step herald), handle that instead. The drop
+            // point is not consulted: the card's position was already fixed by the release that
+            // placed it, and this step only picks a target.
             if (Phase == TargetingPhase.AwaitingEffectTarget)
                 return ResolveEffectTarget(released);
 
             switch (source.Kind)
             {
-                case DragSourceKind.HandCard: return ResolveHandCard(source, released);
+                case DragSourceKind.HandCard: return ResolveHandCard(source, released, drop);
                 case DragSourceKind.Attacker: return ResolveAttack(source, released);
                 case DragSourceKind.HeroPower: return ResolveHeroPower(source, released);
                 default: return null;
@@ -360,99 +401,74 @@ namespace Emberfall.Presentation
             _awaitingSourceKind = DragSourceKind.None;
         }
 
-        private PlayerIntent ResolveHandCard(DragSource source, PointerSubject released)
+        /// <summary>
+        /// ONCE IT IS OUT OF THE HAND, LETTING GO RESOLVES IT (Sam, 2026-08-12, #139).
+        ///
+        /// <para>What this method used to be was a switch on what the pointer was OVER, and it is
+        /// now a switch on what the CARD is. That inversion is the whole change. A drop no longer
+        /// has to find a friendly empty slot collider, or our own board, or our own half of the
+        /// screen: those were all ways for a deliberate gesture to end in silence, and there were
+        /// three separate <c>return null</c>s that a player experienced as the game ignoring
+        /// them.</para>
+        ///
+        /// <para>The exceptions, and there are only two:</para>
+        /// <list type="number">
+        /// <item>Releasing back over our own hand cancels — that is what "I changed my mind" is.</item>
+        /// <item>A card that needs a chosen target and takes no board slot (a targeted spell, a
+        /// targeted weapon) must land ON something aimable. It has no position to fall back on, so
+        /// there is nothing for open space to mean.</item>
+        /// </list>
+        /// </summary>
+        private PlayerIntent ResolveHandCard(DragSource source, PointerSubject released, DropPoint drop)
         {
-            // A card with no chosen target and no board slot to occupy — the Coin, most spells,
-            // every weapon — has nowhere it is REQUIRED to land (Sam, 2026-08-09: the single
-            // most-reported targeting complaint was that these still had to be dropped inch-precise
-            // on a slot or a plausible-looking target). The only release that still means "I changed
-            // my mind" is dropping it back into our own hand; anywhere else on the board casts it —
-            // an empty slot, a card, a hero, or open space with nothing under the pointer at all.
-            if (!source.NeedsTarget && !HandCardOccupiesBoardSlot(source.Id))
+            // Exception 1. Note this is a LINE, not the hand cards' colliders: releasing into a gap
+            // between two fanned cards is still putting it back, and it would be perverse for that
+            // to play the card.
+            if (drop.OverOwnHand) return null;
+
+            bool occupiesSlot = HandCardOccupiesBoardSlot(source.Id);
+
+            // Exception 2. A targeted spell released on open space, on a slot's worth of empty
+            // board, or on a character the engine will not accept, produces nothing — there is no
+            // sensible target to guess and guessing one is a misplay, not a convenience.
+            if (source.NeedsTarget && !occupiesSlot)
             {
-                bool droppedBackInHand = released.Kind == PointerSubjectKind.Card
-                                         && released.Zone == Zone.Hand
-                                         && released.Owner == _p0Id;
-                return droppedBackInHand
-                    ? null
-                    : new PlayCardIntent(_p0Id, source.Id, 0, System.Array.Empty<TargetRef>());
-            }
-
-            switch (released.Kind)
-            {
-                case PointerSubjectKind.BoardSlot:
-                    // The player picks the slot. Plan decision 13 deleted the auto-place shortcut that
-                    // used to turn a click on empty space into a play at the end of the board: on touch
-                    // it turned stray taps into misplays, and the slot path already carries the intent.
-                    if (released.Owner != _p0Id) return null;
-
-                    // An occupied slot is never a legal placement target, on either side of the board.
-                    // Check if this slot already has a minion in it.
-                    PlayerState ps = null;
-                    foreach (PlayerState p in State.Players)
-                        if (p.Id == released.Owner) { ps = p; break; }
-                    if (ps != null && released.SlotIndex < ps.Board.Count) return null;
-
-                    if (source.NeedsTarget)
-                    {
-                        // A targeted spell/weapon has no board slot to occupy — the untargeted,
-                        // no-slot case already returned above, so this is a targeted spell dropped
-                        // on a slot placeholder, which is a miss, not a placement.
-                        if (!HandCardOccupiesBoardSlot(source.Id)) return null;
-
-                        // A targeted minion needs placement before its herald choice plan.
-                        if (!BeginHandChoicePlan(source.Id, released.SlotIndex)) return null;
-                        _phase = TargetingPhase.AwaitingEffectTarget;
-                        return null;   // No intent yet; the player still needs to pick a target.
-                    }
-
-                    return new PlayCardIntent(_p0Id, source.Id, released.SlotIndex,
-                                              System.Array.Empty<TargetRef>());
-
-                case PointerSubjectKind.Card:
-                    // A minion dropped directly on one of our own board minions inserts THERE —
-                    // pushing that minion and everything after it one slot over — rather than being
-                    // a miss (Sam, 2026-08-09: minions were de facto restricted to appending past the
-                    // right end of the row, because this was the only drop this branch ever accepted
-                    // for a board-occupying card. "Any slot, most aligned front to back" means the
-                    // slot you visually dropped it on, including in front of or between existing
-                    // minions, not just past them).
-                    if (released.Owner == _p0Id && released.Zone == Zone.Board
-                        && HandCardOccupiesBoardSlot(source.Id))
-                    {
-                        int insertAt = PositionOf(released.Owner, released.Id);
-                        if (insertAt < 0) return null;
-                        if (source.NeedsTarget)
-                        {
-                            if (!BeginHandChoicePlan(source.Id, insertAt)) return null;
-                            _phase = TargetingPhase.AwaitingEffectTarget;
-                            return null;   // No intent yet; the player still needs to pick a target.
-                        }
-                        return new PlayCardIntent(_p0Id, source.Id, insertAt, System.Array.Empty<TargetRef>());
-                    }
-
-                    // The untargeted, no-slot case already returned above, and the board-insert case
-                    // just above handles a minion dropped on our own board, so a vanilla (untargeted)
-                    // card reaching here is a miss, not a spell fired at slot 0. Enemy board minions
-                    // are always aimable for a card that DOES want a chosen target.
-                    if (released.Owner == _p0Id && !source.NeedsTarget) return null;
-
-                    // Cards that occupy a board slot must be placed before choosing an effect target.
-                    if (HandCardOccupiesBoardSlot(source.Id)) return null;
-
-                    if (!BeginHandChoicePlan(source.Id, 0)) return null;
-                    return ChooseTarget(released);
-
-                case PointerSubjectKind.Hero:
-                    // Cards that occupy a board slot must be placed before choosing an effect target.
-                    if (HandCardOccupiesBoardSlot(source.Id)) return null;
-
-                    if (!BeginHandChoicePlan(source.Id, 0)) return null;
-                    return ChooseTarget(released);
-
-                default:
+                if (released.Kind != PointerSubjectKind.Card && released.Kind != PointerSubjectKind.Hero)
                     return null;
+                if (!BeginHandChoicePlan(source.Id, 0)) return null;
+                return ChooseTarget(released);
             }
+
+            // Everything else: the Coin, an untargeted spell, any weapon. No position of its own,
+            // so the drop point is read only for the cancel above.
+            if (!occupiesSlot)
+                return new PlayCardIntent(_p0Id, source.Id, 0, System.Array.Empty<TargetRef>());
+
+            // A minion. Its position comes from the drop's x against the row as it currently
+            // stands, and from nothing else — not from what was under the pointer, and not from
+            // the drop's y, which is ignored the moment it clears the hand.
+            int slot = BoardRowGeometry.InsertIndexForX(drop.X, FriendlyBoardCount());
+
+            if (source.NeedsTarget)
+            {
+                // A targeted minion is placed first and aims second: the card is on the board by
+                // the time the herald owes a target, so the second step is a tap, not a re-drag.
+                if (!BeginHandChoicePlan(source.Id, slot)) return null;
+                _phase = TargetingPhase.AwaitingEffectTarget;
+                return null;   // No intent yet; the player still needs to pick a target.
+            }
+
+            return new PlayCardIntent(_p0Id, source.Id, slot, System.Array.Empty<TargetRef>());
+        }
+
+        /// <summary>How many minions our row is currently holding — the count the drop's x is
+        /// resolved against.</summary>
+        private int FriendlyBoardCount()
+        {
+            if (State == null) return 0;
+            foreach (PlayerState ps in State.Players)
+                if (ps.Id == _p0Id) return ps.Board.Count;
+            return 0;
         }
 
         private PlayerIntent ResolveAttack(DragSource source, PointerSubject released)
@@ -540,21 +556,10 @@ namespace Emberfall.Presentation
             return false;
         }
 
-        /// <summary>The board slot a minion currently sits in, or -1 if it isn't on that seat's board
-        /// (e.g. it died to a same-frame reaction between the raycast and the resolve). What lets a
-        /// minion dropped ON another minion insert at that exact position instead of only ever
-        /// appending past the end of the row.</summary>
-        private int PositionOf(PlayerId owner, InstanceId minionId)
-        {
-            if (State == null) return -1;
-            foreach (PlayerState ps in State.Players)
-            {
-                if (ps.Id != owner) continue;
-                foreach (CardInstance m in ps.Board)
-                    if (m.Id.Equals(minionId)) return m.Position;
-            }
-            return -1;
-        }
+        // PositionOf() lived here: it read the Position off the minion you dropped ON, which was how
+        // a minion reached anywhere other than the end of the row. BoardRowLayout.InsertIndexForX
+        // subsumes it — dropping on a minion is just a drop whose x happens to be that minion's, and
+        // solving from x also answers for the space between two of them and for open board.
 
         /// <summary>Mirrors the engine's ValidateHeroPower rule. With no db wired the gesture falls
         /// through to the immediate fire and the engine's rejection is the backstop.</summary>

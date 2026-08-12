@@ -25,16 +25,13 @@ namespace Emberfall.Presentation
         private const int   BoardSlotCount = 7;
         private const int   HandSlotCount  = 10;
 
-        // Internal, not private: BoardRowLayout re-solves these same anchors' x position when the
-        // occupied count changes (Sam, 2026-08-09), and a second copy of this number is exactly
-        // what let the hand's pitch and fan drift from each other before (see HandFanLayout's own
-        // note on deriving from one source).
-        internal const float SlotSpacing    = 1.35f;
+        // The row's pitch used to be a constant here. It lives in BoardRowGeometry now: BoardRowLayout
+        // re-solves these same anchors when the occupied count changes (Sam, 2026-08-09), and since
+        // #139 DragTargetingModel runs the same arithmetic backwards to place a dropped minion — from
+        // a build with no Unity assemblies in it, which is why that file cannot be this one.
 
-        // |y| of a board row. Internal for the same reason as SlotSpacing: ClickableBoardSlot sizes
-        // its collider to fill the row's whole half of the board (0 .. ±2*RowY), and a second copy
-        // of this number is how the box and the anchor it sits on would drift apart.
-        internal const float RowY          = 1.3f;
+        // |y| of a board row.
+        private const float RowY           = 1.3f;
 
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;
@@ -114,7 +111,7 @@ namespace Emberfall.Presentation
             seat.BoardSlots = new Transform[BoardSlotCount];
             for (int i = 0; i < BoardSlotCount; i++)
             {
-                float x = (i - (BoardSlotCount - 1) * 0.5f) * SlotSpacing;
+                float x = BoardRowGeometry.XForSlot(i, (BoardSlotCount - 1) * 0.5f);
                 seat.BoardSlots[i] = MakeAnchor($"{prefix}_Board{i}", new Vector3(x, ySign * RowY, 0f));
             }
 
@@ -134,11 +131,18 @@ namespace Emberfall.Presentation
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
         }
 
-        // Called from GameBootstrap.Start() after SetPlayers() — attaches the ClickableBoardSlot /
-        // ClickableHeroPower / ClickableHero raycast descriptors so InputRouter's press/drag/release
-        // machine can identify what the pointer is over (EF-048). Both seats get them: ownership is
-        // read off the descriptor, not implied by which ones exist, and the enemy side has to be
-        // identifiable to be a drag TARGET.
+        // Called from GameBootstrap.Start() after SetPlayers() — attaches the ClickableHeroPower /
+        // ClickableHero raycast descriptors so InputRouter's press/drag/release machine can identify
+        // what the pointer is over (EF-048). Both seats get them: ownership is read off the
+        // descriptor, not implied by which ones exist, and the enemy side has to be identifiable to
+        // be a drag TARGET.
+        //
+        // BOARD SLOTS GET NOTHING (Sam, 2026-08-12, #139). Every anchor used to receive a
+        // ClickableBoardSlot with an invisible box collider, and dropping a minion inside one was
+        // the only way to play it. Placement is solved from the drop's x now
+        // (BoardRowLayout.InsertIndexForX), so the boxes, the component and the PointerSubjectKind
+        // are all gone. The anchors themselves stay — they are where cards are PARKED, which was
+        // always a separate job from being hit.
         //
         // `router` is only a mode flag now (null = AI-vs-AI, nothing to point at). The descriptors
         // no longer hold a reference to it — InputRouter raycasts and reads them.
@@ -146,22 +150,12 @@ namespace Emberfall.Presentation
         {
             if (router == null) return;
             var anchors = GetComponent<BoardAnchors>();
-            AttachSlotClickables(anchors.p0, p0Id);
-            AttachSlotClickables(anchors.p1, p1Id);
+            AttachSeatClickables(anchors.p0, p0Id);
+            AttachSeatClickables(anchors.p1, p1Id);
         }
 
-        private static void AttachSlotClickables(SeatAnchors seat, PlayerId ownerId)
+        private static void AttachSeatClickables(SeatAnchors seat, PlayerId ownerId)
         {
-            if (seat.BoardSlots != null)
-            {
-                for (int i = 0; i < seat.BoardSlots.Length; i++)
-                {
-                    if (seat.BoardSlots[i] == null) continue;
-                    var slot = seat.BoardSlots[i].gameObject.AddComponent<ClickableBoardSlot>();
-                    slot.Init(ownerId, i);
-                }
-            }
-
             if (seat.HeroPowerAnchor != null)
             {
                 var hp = seat.HeroPowerAnchor.gameObject.AddComponent<ClickableHeroPower>();

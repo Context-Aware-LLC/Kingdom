@@ -38,19 +38,18 @@ namespace Emberfall.Presentation
         /// not a hand-picked number — it is the board's own midline, so it stays correct for either
         /// seat and needs no derivation.</para>
         ///
-        /// <para><b>It is no longer clear of the SLOT boxes, and does not need to be (2026-08-12,
-        /// #139).</b> <see cref="ClickableBoardSlot"/>'s collider now runs the full half-board, out to
-        /// the midline, so both rows' boxes reach y 0 and this button sits inside them. What keeps it
-        /// pressable is depth, not distance: the slot boxes sit at z 0.15..0.25 and this one at
-        /// z ±0.05, and both <c>OnMouseDown</c> and <c>InputRouter</c>'s <c>Physics.Raycast</c> take
-        /// the nearest collider. The y span above is history now — kept because it is the reasoning
-        /// that put the button here, not a live constraint.</para>
+        /// <para><b>The board rows no longer have colliders at all (2026-08-12, #139),</b> so the
+        /// "clear of both seats' cards" half of the reasoning above is now free. The 14 invisible
+        /// slot boxes this used to have to dodge are deleted; the only colliders left on the board
+        /// are the cards themselves, the two heroes and the two hero-power sockets, none of which
+        /// come near the midline.</para>
         ///
-        /// <para>RETIREMENT TRIGGER: what this position now depends on is being IN FRONT of the slot
-        /// boxes. Moving this button back past <c>ClickableBoardSlot</c>'s z 0.15, or pulling that box
-        /// toward the camera, buries it again — and a buried button fails silently and reads as a dead
-        /// one, which is exactly how #138 presented. The hand still matters if you move the button
-        /// off-centre: <see cref="HandFanLayout.CentreY"/> and <c>HandCardH</c> set the fan's reach.</para>
+        /// <para>RETIREMENT TRIGGER: what is left to protect is the HAND, which still reaches up to
+        /// <see cref="HandFanLayout.TopEdgeY"/> (-2.312) with its cards in front of z 0. If you move
+        /// this button off the midline and down, or move the fan up
+        /// (<see cref="HandFanLayout.CentreY"/>, <c>HandCardH</c>), re-check the overlap — a button
+        /// behind a hand card fails silently and reads as a dead button, which is how #138
+        /// presented.</para>
         /// </summary>
         public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
 

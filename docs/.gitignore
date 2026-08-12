@@ -1,0 +1,11 @@
+# The pre-reorganization archive is deliberately NOT in this repository.
+#
+# 139 files / 2.7M of superseded docs were consolidated into dev-docs/ (developer facts)
+# and pub-docs/ (player-facing facts) on 2026-07-31, and untracked here on 2026-08-01.
+# The originals are kept by Sam outside the repo. They are not deleted, and they are not
+# a fallback: the consolidation is the product, and routing a reader back into the
+# archive is the failure mode it exists to prevent.
+#
+# If you find yourself wanting to re-add this directory, that is the signal to fix the
+# live doc instead. Sam will point you at the archive on the rare occasion it matters.
+hist-docs/

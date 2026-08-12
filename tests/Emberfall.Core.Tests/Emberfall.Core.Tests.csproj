@@ -37,6 +37,10 @@
          changes do not require launching the Unity editor to verify. -->
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\DragTargetingModel.cs"
              Link="Presentation\DragTargetingModel.cs" />
+    <!-- #139: placement is solved from the drop's x, so the gesture model needs the row's
+         arithmetic. BoardRowGeometry is UnityEngine-free for exactly this reason. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\BoardRowGeometry.cs"
+             Link="Presentation\BoardRowGeometry.cs" />
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\OngoingEffectStatusModel.cs"
              Link="Presentation\OngoingEffectStatusModel.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->

@@ -12,17 +12,20 @@ namespace Emberfall.Presentation
     // PACKED position (0, 1, 2, ...), so 2 minions always land on the two leftmost anchors. This
     // re-solves the SAME anchors' x position for the current count, the same idea as
     // HandFanLayout re-solving the hand fan for the current hand size — except the board row has
-    // no tilt, sag or footprint compression to reproduce: SlotSpacing never changes, only which
-    // span of it is used, so centering is the whole layout.
+    // no tilt, sag or footprint compression to reproduce: the pitch never changes, only which span
+    // of it is used, so centering is the whole layout.
+    //
+    // The arithmetic itself lives in BoardRowGeometry, not here, because since #139 the gesture
+    // model has to run it BACKWARDS — a drop's x picks the position — and that model compiles
+    // without Unity. See that file; this one is just the half that moves Transforms.
     //
     // OCCUPIED slots (index < count) center as a group. UNOCCUPIED slots (index >= count) are put
     // back at their ORIGINAL full-board position — not left wherever a previous, larger count put
     // them, and not collapsed onto the last occupied slot. Both alternatives were tried and
     // rejected: parking every unused slot on the last occupied one leaves no reachable empty space
-    // to drop a new minion INTO (it would only ever hit the existing card sitting there and insert
-    // before it — see DragTargetingModel's board-insert case — never past it), and letting the
-    // centered sequence run on unclamped pushes empty-slot anchors for a near-empty board out past
-    // the mana rail (a 1-minion board would put slot 6 at x=8.10, well past ManaRailX=4.515).
+    // to drop a new minion INTO, and letting the centered sequence run on unclamped pushes
+    // empty-slot anchors for a near-empty board out past the mana rail (a 1-minion board would put
+    // slot 6 at x=8.10, well past ManaRailX=4.515).
     // Recomputing the ORIGINAL position fresh from `i` every call, rather than only touching
     // `i < count`, is what keeps a slot that drops OUT of the occupied range (a minion died) from
     // being stranded at a stale centered position from before it went empty.
@@ -30,11 +33,6 @@ namespace Emberfall.Presentation
     // Only x is touched. Each anchor's y (seat side) and z were already correct at construction
     // (ProceduralBoardSetup.BuildSeat) and never depend on count, so there is nothing to re-derive
     // for them — touching them here would risk drifting from that construction over time.
-    //
-    // It does also switch each slot's collider off while the slot is occupied. That is not layout,
-    // but this is the only place that holds both the slot array and the count, and the alternative
-    // — a second component re-deriving occupancy from the snapshot — is a second copy of the
-    // `index < count` invariant. See ClickableBoardSlot.SetOccupied for why it has to happen at all.
     public static class BoardRowLayout
     {
         public static void Apply(Transform[] slots, int count)
@@ -50,14 +48,9 @@ namespace Emberfall.Presentation
                 if (slots[i] == null) continue;
 
                 float half = i < count ? occupiedHalf : fullHalf;
-                float x = (i - half) * ProceduralBoardSetup.SlotSpacing;
 
                 Vector3 p = slots[i].position;
-                slots[i].position = new Vector3(x, p.y, p.z);
-
-                // Null in AI-vs-AI, where SetupClickables never ran — there is nothing to point at.
-                var clickable = slots[i].GetComponent<ClickableBoardSlot>();
-                if (clickable != null) clickable.SetOccupied(i < count);
+                slots[i].position = new Vector3(BoardRowGeometry.XForSlot(i, half), p.y, p.z);
             }
         }
     }
