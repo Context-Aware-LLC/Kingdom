@@ -447,14 +447,12 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
         }
 
-        // distinctFrom on a possessive kept the determiner AND added one: "another your weapon".
-        // "your other weapon" is the parallel of the "all " -> "all other " case beside it. That
-        // it then claims two weapons is a fact about the authored data, not the phrasing.
-        [TestCase("FRIENDLY_WEAPON", "Deal 1 damage to your other weapon.")]
-        [TestCase("FRIENDLY_HERO", "Deal 1 damage to your other hero.")]
+        // A distinctFrom only renders against a selector that can actually produce more than one
+        // candidate. The unique selectors used to render here too -- "your other weapon",
+        // "another enemy hero" -- and both assert a second one exists; see the throw test below.
         [TestCase("ANY_MINION", "Deal 1 damage to another minion.")]
-        [TestCase("ENEMY_HERO", "Deal 1 damage to another enemy hero.")]
-        public void Another_Keeps_A_Possessive_Instead_Of_Doubling_The_Determiner(
+        [TestCase("ENEMY_MINIONS", "Deal 1 damage to all other enemy minions.")]
+        public void Another_Rewrites_A_Description_That_Can_Have_A_Second_Candidate(
             string selector, string expected)
         {
             var rule = new RuleDefinition(new RuleId("distinct"),
@@ -465,11 +463,50 @@ namespace Emberfall.Core.Tests.CardValidation
             Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
         }
 
+        // #143, Sam 2026-08-12: "there is no other weapon. There isn't another one." The renderer
+        // refuses rather than phrasing it, the same way it refuses a nonsense target count --
+        // CardValidator's C14J is the gate an author actually meets, and this is the backstop for
+        // anything reaching the renderer without passing validation. SELF and TRIGGER_SOURCE are
+        // here for the same reason as the hero/weapon pairs: each names exactly one entity.
+        [TestCase("FRIENDLY_WEAPON")]
+        [TestCase("ENEMY_WEAPON")]
+        [TestCase("FRIENDLY_HERO")]
+        [TestCase("ENEMY_HERO")]
+        [TestCase("SELF")]
+        [TestCase("TRIGGER_SOURCE")]
+        public void A_DistinctFrom_On_A_Unique_Selector_Is_Refused_Not_Phrased(string selector)
+        {
+            var rule = new RuleDefinition(new RuleId("distinct_unique"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec(selector, distinctFrom: "first")));
+
+            Assert.That(() => CardTextGenerator.Generate(new[] { rule }),
+                Throws.TypeOf<NotSupportedException>().With.Message.Contains(selector));
+        }
+
+        // The same selectors render perfectly well WITHOUT a distinctFrom -- it is the exclusion
+        // that is meaningless, not the target.
+        [TestCase("FRIENDLY_WEAPON", "Deal 1 damage to your weapon.")]
+        [TestCase("ENEMY_HERO", "Deal 1 damage to the enemy hero.")]
+        public void A_Unique_Selector_Still_Renders_Without_A_DistinctFrom(
+            string selector, string expected)
+        {
+            var rule = new RuleDefinition(new RuleId("unique_plain"),
+                new TriggeredActivation(Trigger.ON_CAST), AlwaysCondition.Instance,
+                OneShotLifetime.Instance,
+                new DamageAction(1, new TargetSpec(selector)));
+
+            Assert.That(CardTextGenerator.Generate(new[] { rule }), Is.EqualTo(expected));
+        }
+
         // The determiner table is shared by the filter and the random splice for exactly this
         // reason: "all other" and "your other" are two words, and an adjective goes after both of
         // them, not inside. When each splice site listed determiners for itself, one of them knew
         // about "all other " and the other did not.
-        [TestCase("FRIENDLY_WEAPON", null, "Deal 1 damage to your other random damaged weapon.")]
+        // The FRIENDLY_WEAPON case here covered "your other " and went with it in #143. "all other "
+        // is the surviving two-word determiner and is what this test now rests on -- if a second one
+        // is ever added (dual-wield brings "your other " back), give it a case here too.
         [TestCase("FRIENDLY_MINIONS", -1, "Deal 1 damage to all other damaged friendly minions.")]
         public void An_Adjective_Splices_After_A_Two_Word_Determiner_Not_Into_It(
             string selector, int? count, string expected)

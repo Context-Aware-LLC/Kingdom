@@ -167,6 +167,50 @@ namespace Emberfall.Core.Tests.CardValidation
                 string.Join(", ", report.Issues.Select(i => i.Code)));
         }
 
+        // C14J, #143 (Sam, 2026-08-12): "there is no other weapon. There isn't another one."
+        // A distinctFrom against a selector naming exactly one thing can never exclude anything,
+        // so the shape is rejected at authoring rather than left for CardTextGenerator to phrase.
+        // The `false` rows are the guard that matters: this must not fire on selectors that CAN
+        // produce a second candidate, which is the whole legitimate use of distinctFrom.
+        [TestCase("FRIENDLY_WEAPON", true)]
+        [TestCase("ENEMY_WEAPON", true)]
+        [TestCase("FRIENDLY_HERO", true)]
+        [TestCase("ENEMY_HERO", true)]
+        [TestCase("SELF", true)]
+        [TestCase("TRIGGER_SOURCE", true)]
+        [TestCase("ANY_MINION", false)]
+        [TestCase("ANY_CHARACTER", false)]
+        [TestCase("ENEMY_MINIONS", false)]
+        [TestCase("FRIENDLY_MINIONS", false)]
+        public void DistinctFrom_Is_Refused_On_A_Selector_That_Names_Exactly_One_Thing(
+            string selector, bool rejected)
+        {
+            CardDefinition card = Card(CardType.SPELL,
+                Rule("distinct", Trigger.ON_CAST, OneShotLifetime.Instance,
+                    new DamageAction(1, new TargetSpec(selector, distinctFrom: "first"))));
+
+            ValidationReport report = Validate(card);
+
+            Assert.That(report.Issues.Any(i => i.Code == "C14J-DISTINCT-ON-UNIQUE"),
+                Is.EqualTo(rejected),
+                $"'{selector}' cardinality verdict; got: " +
+                string.Join(", ", report.Issues.Select(i => i.Code)));
+        }
+
+        // The same selectors are perfectly legal targets — it is the exclusion that is meaningless.
+        [TestCase("FRIENDLY_WEAPON")]
+        [TestCase("ENEMY_HERO")]
+        [TestCase("SELF")]
+        public void A_Unique_Selector_Without_DistinctFrom_Is_Not_Refused(string selector)
+        {
+            CardDefinition card = Card(CardType.SPELL,
+                Rule("plain", Trigger.ON_CAST, OneShotLifetime.Instance,
+                    new DamageAction(1, new TargetSpec(selector))));
+
+            Assert.That(Validate(card).Issues.Any(i => i.Code == "C14J-DISTINCT-ON-UNIQUE"),
+                Is.False);
+        }
+
         private static ValidationReport Validate(CardDefinition card)
             => new CardValidator().Validate(card, new JsonCardDatabaseTestDouble(new[] { card }));
 

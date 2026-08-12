@@ -321,6 +321,48 @@ namespace Emberfall.Core.Cards
         public static bool HasCompatibleAllegiance(RuleAction action, string selector)
             => !RequiresFriendlyTarget(action) || IsFriendlyOnlySelector(selector);
 
+        /// <summary>
+        /// Whether a selector names exactly ONE thing, so there is never a second one to tell it
+        /// apart from. The CARDINALITY axis, and a third one distinct from both KIND
+        /// (<see cref="AllowedKinds"/>) and allegiance (<see cref="IsFriendlyOnlySelector"/>) —
+        /// which is why neither of those can answer it.
+        ///
+        /// <para>WHAT IT IS FOR. A <c>distinctFrom</c> asks the resolver to exclude a target already
+        /// chosen. Against a unique selector it can never exclude anything, so a card authored that
+        /// way is asking for something the game cannot express. Sam ruled it out on 2026-08-12
+        /// (issue #143): "there is no other weapon. There isn't another one." The renderer used to
+        /// paper over it with "your other weapon" / "another enemy hero", both of which state a
+        /// thing the rules do not support — the wording question only existed because the data shape
+        /// was meaningless, so the shape is what got rejected.</para>
+        ///
+        /// <para><c>TRIGGER_SOURCE</c> is here for the same reason and not because #143 listed it:
+        /// whatever fired the trigger is one entity, so "another the trigger source" is the identical
+        /// nonsense with a different noun. Leaving it out would have shipped the rule with a hole in
+        /// exactly the shape it exists to close.</para>
+        ///
+        /// <para>RETIREMENT TRIGGER: every entry here is a claim that the game has at most one of
+        /// that thing. A DUAL-WIELD system retires <c>FRIENDLY_WEAPON</c> and <c>ENEMY_WEAPON</c>
+        /// from this list, and the card text generator's matching throw with them — at which point
+        /// "your other weapon" stops being nonsense and becomes the correct phrasing, so
+        /// <c>CardTextGenerator.Another</c> needs its <c>"your "</c> branch and the
+        /// <c>"your other "</c> determiner back. A second hero does the same for the hero pair.</para>
+        /// </summary>
+        public static bool IsUniqueSelector(string selector)
+        {
+            switch (selector)
+            {
+                case "SELF":
+                case "TRIGGER_SOURCE":
+                case "FRIENDLY_HERO":
+                case "ENEMY_HERO":
+                case "FRIENDLY_WEAPON":
+                case "ENEMY_WEAPON":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public static TargetCandidateKinds AllowedKinds(RuleAction action)
         {
             switch (action)

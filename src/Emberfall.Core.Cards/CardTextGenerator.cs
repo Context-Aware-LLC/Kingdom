@@ -490,7 +490,16 @@ namespace Emberfall.Core.Cards
             bool random = IsRandomlyChosen(target);
 
             string description = Quantity(PhrasingFor(target.Selector), target.Count, random);
-            if (target.DistinctFrom.Length > 0) description = Another(description);
+            if (target.DistinctFrom.Length > 0)
+            {
+                // Checked HERE and not inside Another(), because only the selector answers it — the
+                // description alone cannot. "your weapon" and "enemy hero" are the same mistake and
+                // do not look alike as strings, so a prefix test would have caught the possessive
+                // and waved the other one through as "another enemy hero" (#143).
+                if (RuleActionCapabilities.IsUniqueSelector(target.Selector))
+                    throw Unsupported("distinctFrom on the unique selector", target.Selector);
+                description = Another(description);
+            }
             if (target.Filter != null) description = Filter(description, target.Filter);
             // Only an explicit count of -1 still reads as "all" once random is accounted for, and
             // there the pick is every candidate in random ORDER — so the word "random" would claim
@@ -594,16 +603,14 @@ namespace Emberfall.Core.Cards
             if (TryStripPrefix(description, "an ", out rest)) return "another " + rest;
             if (TryStripPrefix(description, "the ", out rest)) return "another " + rest;
             if (TryStripPrefix(description, "all ", out rest)) return "all other " + rest;
-            // The possessive has to survive the rewrite the way "all" does — "another your weapon"
-            // is what dropping it produces. That the result ("your other weapon") then claims you
-            // hold two weapons is a fact about the authored data, not about this phrasing: the
-            // "your" selectors name unique things, so a distinctFrom on one excludes nothing.
-            //
-            // UNDECIDED — issue #143. If you are here because you authored the first distinctFrom
-            // on FRIENDLY_WEAPON/FRIENDLY_HERO, this wording was a renderer's guess and no card has
-            // ever exercised it. Read #143 and settle it before shipping the card, because the
-            // alternative on the table is that CardValidator refuses your target outright.
-            if (TryStripPrefix(description, "your ", out rest)) return "your other " + rest;
+            // SETTLED — issue #143, Sam 2026-08-12. There was a "your " branch here emitting
+            // "your other weapon", and it is gone along with its determiner. Both readings of a
+            // distinctFrom on a unique selector are wrong, not just the ugly one: "your other
+            // weapon" and "another enemy hero" each assert a second one exists. The data shape is
+            // what was meaningless, so RuleActionCapabilities.IsUniqueSelector rejects it — in
+            // CardValidator at authoring, and at the Target() call site above for anything that
+            // reaches this renderer without passing validation. Nothing arrives here needing a
+            // possessive rewrite any more. See that relation for the dual-wield retirement trigger.
             if (TryInsertAfterCount(description, "other ", out string counted)) return counted;
             return "another " + description;
         }
@@ -672,8 +679,10 @@ namespace Emberfall.Core.Cards
         /// here in the same edit — a missing entry does not fail, it silently word-orders the
         /// adjective wrong ("your damaged other weapon").
         /// </remarks>
+        // "your other " was here until #143 deleted the branch that produced it. "all other " is now
+        // the only two-word entry, and it is what keeps the longest-first ordering load-bearing.
         private static readonly string[] Determiners =
-            { "all other ", "your other ", "another ", "all ", "your ", "the " };
+            { "all other ", "another ", "all ", "your ", "the " };
 
         /// <summary>Inserts an adjective where one belongs: after the determiner, before the noun.</summary>
         private static string SpliceAfterDeterminer(string description, string word)

@@ -287,6 +287,20 @@ namespace Emberfall.Core.Cards
                         "(SELF / FRIENDLY_MINIONS / OTHER_FRIENDLY_MINIONS / ENEMY_MINIONS / ALL_MINIONS / FRIENDLY_HERO / ENEMY_HERO), " +
                         "or a RANDOM target choice.");
 
+                // C14J — cardinality, which neither C14F (kind) nor C14I (allegiance) can see: a
+                // distinctFrom asks the resolver to exclude a target already chosen, and against a
+                // selector naming exactly one thing it can never exclude anything. Sam, 2026-08-12
+                // (#143): "there is no other weapon. There isn't another one." Rejected here, at
+                // authoring, because that is where the mistake is — the alternative on the table was
+                // leaving CardTextGenerator to phrase it, and every phrasing it can produce
+                // ("your other weapon", "another enemy hero") asserts a second one exists.
+                if (target != null && target.DistinctFrom.Length > 0 &&
+                    RuleActionCapabilities.IsUniqueSelector(target.Selector))
+                    Err("C14J-DISTINCT-ON-UNIQUE", $"{prefix}.action.target.distinctFrom",
+                        $"'{target.Selector}' names exactly one thing, so distinctFrom " +
+                        $"'{target.DistinctFrom}' can never exclude anything. Drop the distinctFrom, " +
+                        "or target a selector that can produce more than one candidate.");
+
                 if (target?.Count is int targetCount && targetCount < -1)
                     Err("C14C-TARGET-COUNT", $"{prefix}.action.target.count",
                         "target.count must be positive or -1 for every candidate.");
