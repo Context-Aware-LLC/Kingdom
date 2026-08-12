@@ -104,6 +104,42 @@
     margin-bottom: var(--space-1);
 }
 
+/* ---------- Deckbuild pairing + cost chip sizing (#160) ----------
+ *
+ * All of this is scoped under .collection--deckbuild so browse is pixel-identical (the pairing chips
+ * do not exist in browse, and the cost chips there keep their content-driven size). It is NOT put on
+ * the shared .db-chip in deckbuilder.uss on purpose: that class is also worn by the scope toggle and
+ * MatchSettings, and a width there would reach screens outside this issue (see GH#161).
+ *
+ * Sam ruling 4 (2026-08-11): a chip's width must not be driven by its label length — a row of chips
+ * should read as a set of equal things. Exact pixels were left to the implementer; this is the
+ * min-width-plus-centred-text shape Sam sketched. Pixels rather than percentages match every other
+ * control dimension in this file (.col-sort 180px, .col-sort-dir 72px, .db-chip height 32px) — the
+ * percentage-over-pixels house ruling is about responsive layout, not fixed control chrome. */
+
+/* The three pairing chips: one floor width so they read as a set, text centred within it. */
+.collection--deckbuild .db-filter-row .db-chip {
+    min-width: 100px;
+    -unity-text-align: middle-center;
+}
+
+/* Sit the pairing chips on the same line as search/sort, with a small gap after Reset and no second
+ * row of their own (ruling 3). .db-filter-row carries a margin-bottom for its old stacked home. */
+.collection--deckbuild .col-query-row .db-filter-row {
+    margin-bottom: 0;
+    margin-left: var(--space-3);
+}
+
+/* Cost chips are single glyphs (0..6, 7+): a narrow centred square, not a label-width pill. The
+ * side padding on .db-chip would otherwise stretch a one-character chip absurdly wide. */
+.collection--deckbuild #query-costs .db-chip {
+    min-width: 32px;
+    width: 32px;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+}
+
 /* ---------- Wall ---------- */
 .col-scroll {
     flex-grow: 1;
@@ -158,7 +194,11 @@
 .collection--deckbuild .col-header {
     display: none;
 }
-.collection--deckbuild .col-query {
+/* The query bar stays in deckbuild now (#160) — that display:none is what this issue removed. What
+ * goes instead is the generated class-chip row: the three pairing chips in the control row serve the
+ * class axis here, so the nine-class facet would only offer seven chips that match nothing. Targeted
+ * by name because query-rarities/query-types/query-costs share its .col-chip-row class and stay. */
+.collection--deckbuild #query-classes {
     display: none;
 }
 /* The wall's own ground inside the panel — what the db-list class gave the ScrollView on the old

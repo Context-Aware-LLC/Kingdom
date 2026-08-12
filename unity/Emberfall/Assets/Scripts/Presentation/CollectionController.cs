@@ -116,12 +116,17 @@ namespace Emberfall.Presentation
         private ListView _deckList;
         private VisualElement _curve;
         private Label _deckCountLabel;
-        private Button _filterAllButton;
-        private Button _filterClassButton;
+        private Button _filterPrimaryButton;
+        private Button _filterSecondaryButton;
         private Button _filterNeutralButton;
         private VisualElement _scopeRow;
         private Button _scopeOwnedButton;
         private Button _scopeAllButton;
+
+        /// <summary>The pairing chips' selected classes (deckbuild only). Multi-select, and empty
+        /// means unconstrained — the same all-off convention <see cref="CardQueryBar"/> uses for its
+        /// own class facet. Composed into the one wall query by <see cref="ApplyQuery"/>.</summary>
+        private readonly HashSet<CardClass> _chipClasses = new HashSet<CardClass>();
 
         /// <summary>True when this visit is editing a deck. The one predicate every mode-dependent
         /// branch below reads, so the mode is never re-derived from something correlated with it.</summary>
@@ -324,9 +329,9 @@ namespace Emberfall.Presentation
             _deckList        = _root.Q<ListView>("deck-list");
             _curve           = _root.Q<VisualElement>("curve-strip");
             _deckCountLabel  = _root.Q<Label>("count-label");
-            _filterAllButton     = _root.Q<Button>("filter-all");
-            _filterClassButton   = _root.Q<Button>("filter-class");
-            _filterNeutralButton = _root.Q<Button>("filter-neutral");
+            _filterPrimaryButton   = _root.Q<Button>("filter-primary");
+            _filterSecondaryButton = _root.Q<Button>("filter-secondary");
+            _filterNeutralButton   = _root.Q<Button>("filter-neutral");
             _scopeRow            = _root.Q<VisualElement>("scope-row");
             _scopeOwnedButton    = _root.Q<Button>("scope-owned");
             _scopeAllButton      = _root.Q<Button>("scope-all");
@@ -396,37 +401,50 @@ namespace Emberfall.Presentation
             if (reset != null) reset.clicked += () => _query.Reset();
         }
 
-        // ---- Collection filter chips (All / Class / Neutral) ----------------------------------
-        // Class = either half of the character's pairing, excluding neutral; Neutral = NEUTRAL only;
-        // All = no constraint. Meaningless without a pairing, so the plate hides them while browsing
-        // and this returns early in that mode — two guards for one fact, deliberately: the class is
-        // what the player sees and the early return is what stops us wiring a callback onto a chip
-        // that can never be pressed.
+        // ---- Pairing chips: primary / secondary / neutral (#160) ------------------------------
+        // The class axis for deckbuild. Three chips — the character's primary class, its secondary
+        // class, and NEUTRAL — each a multi-select toggle where all-off means unconstrained, matching
+        // CardQueryBar's own class-facet convention. That is what replaced the old radio All/Class/
+        // Neutral set: "all" is now nothing selected, not a fourth chip. Labels are the real class
+        // names, written here at runtime rather than authored in UXML, so a rename can never drift.
         //
-        // These three predate CardQueryBar and the wall does not care which of the two feeds it a
-        // filter. Giving deckbuild the full query bar instead is a real improvement and a real
-        // decision — the bar's class chips are generated from all nine classes and a deckbuilding
-        // pool holds three of them — so it is its own change, not a tidy-up to fold in here.
+        // Meaningless without a pairing, so the plate hides them while browsing and this returns early
+        // in that mode — two guards for one fact, deliberately: the class is what the player sees and
+        // the early return is what stops us wiring a callback onto a chip that can never be pressed.
+        //
+        // These do NOT write the wall themselves. Both filter surfaces — these chips and the query
+        // bar — compose into one CardFilter at the single ApplyQuery site, so neither clobbers the
+        // other (and, critically, a chip press no longer resets the player's chosen sort).
         private void WireCollectionFilters()
         {
-            if (!Deckbuilding || _filterAllButton == null) return;
+            if (!Deckbuilding || _filterPrimaryButton == null) return;
 
-            _filterAllButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(null, _filterAllButton));
-            _filterClassButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(
-                new CardFilter { Classes = new[] { _character.PrimaryClass, _character.SecondaryClass } },
-                _filterClassButton));
-            _filterNeutralButton.RegisterCallback<ClickEvent>(_ => ApplyCollectionFilter(
-                new CardFilter { Classes = new[] { CardClass.NEUTRAL } },
-                _filterNeutralButton));
+            _filterPrimaryButton.text   = ClassLabel(_character.PrimaryClass);
+            _filterSecondaryButton.text = ClassLabel(_character.SecondaryClass);
+            _filterNeutralButton.text   = ClassLabel(CardClass.NEUTRAL);
+
+            WireChipToggle(_filterPrimaryButton,   _character.PrimaryClass);
+            WireChipToggle(_filterSecondaryButton, _character.SecondaryClass);
+            WireChipToggle(_filterNeutralButton,   CardClass.NEUTRAL);
         }
 
-        private void ApplyCollectionFilter(CardFilter filter, Button active)
+        private void WireChipToggle(Button chip, CardClass klass)
         {
-            _filterAllButton.EnableInClassList("db-chip--on", active == _filterAllButton);
-            _filterClassButton.EnableInClassList("db-chip--on", active == _filterClassButton);
-            _filterNeutralButton.EnableInClassList("db-chip--on", active == _filterNeutralButton);
-            _wall.SetQuery(filter, CardSort.Default);
-            UpdateWallLabels();
+            chip.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (!_chipClasses.Remove(klass)) _chipClasses.Add(klass);
+                StampChips();
+                ApplyQuery();
+            });
+        }
+
+        // Every chip is repainted from the set, not just the one clicked — a character whose primary
+        // and secondary happen to coincide would otherwise leave the other chip's highlight stale.
+        private void StampChips()
+        {
+            _filterPrimaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.PrimaryClass));
+            _filterSecondaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.SecondaryClass));
+            _filterNeutralButton.EnableInClassList("db-chip--on", _chipClasses.Contains(CardClass.NEUTRAL));
         }
 
         // ---- Owned / All scope toggle (#146) --------------------------------------------------
@@ -635,12 +653,37 @@ namespace Emberfall.Presentation
             UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
 
-        /// <summary>Push the query bar's facets at the wall. Runs in both modes; on a plate that
-        /// declares no query controls the filter is empty, which matches everything.</summary>
+        /// <summary>
+        /// The one site that writes the wall query. Composes the two filter surfaces — the query bar
+        /// and (in deckbuild) the pairing chips — into a single <see cref="CardFilter"/>, so neither
+        /// clobbers the other the way two separate <c>SetQuery</c> writers did before #160.
+        ///
+        /// <para>The bar's own class facet is hidden in deckbuild (the plate hides <c>query-classes</c>
+        /// there), so its <see cref="CardFilter.Classes"/> is empty in that mode and the pairing chips
+        /// own the class axis with no contention. In browse the chips are never wired, <see
+        /// cref="_chipClasses"/> stays empty, and this passes the bar's filter through untouched.</para>
+        ///
+        /// <para>Runs in both modes; on a plate that declares no query controls the filter is empty,
+        /// which matches everything. The sort is always the bar's own — a chip press no longer reverts
+        /// it to default.</para>
+        /// </summary>
         private void ApplyQuery()
         {
-            _wall.SetQuery(_query.Filter, _query.Sort);
+            CardFilter filter = _query.Filter;
+            if (_chipClasses.Count > 0)
+                filter.Classes = new List<CardClass>(_chipClasses);
+
+            _wall.SetQuery(filter, _query.Sort);
             UpdateWallLabels();
+        }
+
+        // Class enum to its player-facing name, matching how CardQueryBar labels its own class chips
+        // (Title case, underscores to spaces) so the pairing chips read like the rest of the bar.
+        private static string ClassLabel(CardClass c)
+        {
+            string s = c.ToString();
+            if (s.Length <= 1) return s;
+            return char.ToUpperInvariant(s[0]) + s.Substring(1).ToLowerInvariant().Replace('_', ' ');
         }
 
         /// <summary>

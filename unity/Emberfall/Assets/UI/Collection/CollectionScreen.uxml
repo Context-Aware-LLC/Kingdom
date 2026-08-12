@@ -4,8 +4,9 @@
 
   This used to be two plates. DeckbuilderScreen.uxml is gone; everything it declared is here, and
   which half you see is decided by a modifier class CollectionController puts on the root element
-  (see the Modes block in collection.uss). Browse shows the header, the query bar and the wall.
-  Deckbuild shows the filter chips, the wall and the deck panel.
+  (see the Modes block in collection.uss). Browse shows the header, the query bar (class chips and
+  all) and the wall. Deckbuild shows the query bar too (#160) — its generated class chips hidden,
+  three hand-authored pairing chips sharing the control row instead — plus the wall and deck panel.
 
   Bound at runtime by CollectionController. The wall itself is CardWall and the query controls are
   CardQueryBar, so nothing here re-implements either.
@@ -14,9 +15,12 @@
   Enums.cs, so a ninth class or a fifth rarity appears without anyone editing this file. Authoring
   them by hand is how a list silently stops matching the set it claims to describe.
 
-  The three filter chips below ARE authored by hand, and that is not the same mistake: they are
-  All, this character's pairing, and neutral, which is a fixed set of three regardless of how many
-  classes exist.
+  The three pairing chips in the query row ARE authored by hand, and that is not the same mistake:
+  they are the character's primary class, its secondary class, and neutral — a fixed set of three
+  regardless of how many classes exist. Their labels are the real class names, written at runtime by
+  CollectionController from PrimaryClass and SecondaryClass; the text here is only a placeholder.
+  They are multi-select toggles and nothing selected means unconstrained (the job the retired All
+  chip used to do).
 
   NEVER write a BEM modifier's double dash inside a comment in this file. XML forbids that sequence
   in a comment, so the importer fails the WHOLE file, CloneTree() returns zero children, every Q<>()
@@ -59,10 +63,11 @@
           Query controls, browse only. Every one of these is optional to CardQueryBar: delete any
           and that facet is simply not offered, with no code change.
 
-          Hidden while deckbuilding on purpose, and the reason is worth knowing: the class chips are
-          generated from all nine classes, but a deckbuilding pool holds two of them plus neutral,
-          so seven of those chips would match nothing. Offering the full bar in both modes is a real
-          improvement and a real decision, not a side effect of merging two files.
+          Shown in both modes now (#160). The generated class chips (query-classes) are hidden while
+          deckbuilding, because there the three pairing chips below serve that axis: the class chips
+          are generated from all nine classes, but a deckbuilding pool holds two of them plus neutral,
+          so seven of those chips would match nothing. Offering the rest of the bar — search, rarity,
+          type, cost, sort — in both modes is the whole point of this change.
         -->
         <ui:VisualElement name="query-bar" class="col-query">
             <ui:VisualElement class="col-query-row">
@@ -70,6 +75,19 @@
                 <ui:DropdownField name="query-sort" class="col-sort" />
                 <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir" />
                 <ui:Button name="query-reset" text="Reset" class="db-chip" />
+                <!--
+                  Deckbuild only (hidden in browse by the mode class): the character's primary class,
+                  its secondary class, and neutral. Multi-select toggles; nothing selected means
+                  unconstrained. Labels are set at runtime — the text here is placeholder. This row
+                  shares the control line with search/sort rather than taking a second row of its own
+                  (Sam ruling 3, 2026-08-11): deckbuild has no header precisely to give the wall its
+                  vertical space back.
+                -->
+                <ui:VisualElement name="filter-row" class="db-filter-row">
+                    <ui:Button name="filter-primary" text="Primary" class="db-chip" />
+                    <ui:Button name="filter-secondary" text="Secondary" class="db-chip" />
+                    <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="query-classes" class="col-chip-row" />
             <ui:VisualElement name="query-rarities" class="col-chip-row" />
@@ -82,12 +100,7 @@
 
             <ui:VisualElement name="collection-panel" class="db-panel db-collection">
 
-                <!-- Deckbuild only: All, this character's pairing, neutral. -->
-                <ui:VisualElement name="filter-row" class="db-filter-row">
-                    <ui:Button name="filter-all" text="All" class="db-chip db-chip--on" />
-                    <ui:Button name="filter-class" text="Class" class="db-chip" />
-                    <ui:Button name="filter-neutral" text="Neutral" class="db-chip" />
-                </ui:VisualElement>
+                <!-- The pairing chips moved up into the query row (#160); nothing stands here now. -->
 
                 <ui:ScrollView name="collection-scroll" class="col-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                     <ui:VisualElement name="collection-grid" class="db-grid" />
