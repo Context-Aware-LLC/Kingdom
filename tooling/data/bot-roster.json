@@ -1,6 +1,7 @@
 [
   {
     "accountUsername": "ember_knight",
+    "displayName": "Emberkin",
     "primaryClass": "EMBERWARD",
     "secondaryClass": "STONEWARDEN",
     "cards": [
@@ -23,6 +24,7 @@
   },
   {
     "accountUsername": "tide_warden",
+    "displayName": "Saltmourn",
     "primaryClass": "TIDECALLER",
     "secondaryClass": "GRAVEKEEP",
     "cards": [

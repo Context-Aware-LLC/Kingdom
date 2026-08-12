@@ -41,11 +41,16 @@ namespace Emberfall.Net.Server.Bots
         // isn't IDisposable either.
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public BotSeatRunner(string botDisplayName, ICommandValidator validator, ICardDatabase db)
+        /// <param name="botUsername">The roster's account username — the bot's stable identity, and
+        /// what the synthetic device token is keyed on. Never rendered.</param>
+        /// <param name="botDisplayName">What a human opponent sees on the nameplate. Free to change
+        /// without disturbing the token above, which is the whole reason these are two parameters
+        /// and not one (see <see cref="BotRosterEntry"/>).</param>
+        public BotSeatRunner(string botUsername, string botDisplayName, ICommandValidator validator, ICardDatabase db)
         {
             _clientOptions = new ClientOptions
             {
-                DeviceToken = "bot-internal-" + botDisplayName,
+                DeviceToken = "bot-internal-" + botUsername,
                 DisplayName = botDisplayName,
             };
             _validator = validator;

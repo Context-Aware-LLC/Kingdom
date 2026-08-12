@@ -99,11 +99,22 @@ namespace Emberfall.Net.Server.Bots
                 _sink.MarkReady(new ResolvedBotAccount(
                     entry.AccountUsername,
                     AccountId.FromAuthenticatedAccount(account.PlayerId),
-                    entry.AccountUsername,
+                    entry.DisplayName,
                     deck));
             }
         }
 
+        /// <summary>
+        /// The bot's account IDENTITY, derived from the roster username alone.
+        ///
+        /// <para><b>Editing an accountUsername in bot-roster.json re-mints that bot's account.</b>
+        /// <see cref="IAccountStore.ResolveOrCreateAsync"/> is a pure function of this hash, which is
+        /// what makes re-provisioning on every boot idempotent — and equally what makes a renamed
+        /// entry resolve to a brand-new account while the old one is left behind with whatever is
+        /// keyed to it. It is deliberately NOT derived from the display name: renaming a bot on the
+        /// versus screen must not touch its identity, which is why the roster carries the two
+        /// separately (see <see cref="BotRosterEntry"/>).</para>
+        /// </summary>
         private static string DeriveCredentialHash(string accountUsername)
         {
             Span<byte> digest = stackalloc byte[32];

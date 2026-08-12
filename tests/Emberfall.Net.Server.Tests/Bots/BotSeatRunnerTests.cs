@@ -45,8 +45,8 @@ namespace Emberfall.Net.Server.Tests.Bots
                 new PlayerId("p0"), new PlayerId("p1"));
             var pump = new SessionPump(session);
 
-            var seat0 = new BotSeatRunner("bot0", new CommandProcessor(db), db);
-            var seat1 = new BotSeatRunner("bot1", new CommandProcessor(db), db);
+            var seat0 = new BotSeatRunner("bot0", "Bot Zero", new CommandProcessor(db), db);
+            var seat1 = new BotSeatRunner("bot1", "Bot One", new CommandProcessor(db), db);
 
             session.Start(seat0, seat1);
             seat0.Bind(pump);

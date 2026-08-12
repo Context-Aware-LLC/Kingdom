@@ -25,9 +25,9 @@ namespace Emberfall.Net.Server.Tests.Bots
             var store = new InMemoryAccountStore(new FakeTime());
             var roster = new[]
             {
-                new BotRosterEntry("ember_knight", CardClass.EMBERWARD, CardClass.STONEWARDEN,
+                new BotRosterEntry("ember_knight", "Emberkin", CardClass.EMBERWARD, CardClass.STONEWARDEN,
                     new[] { "ember_recruit" }),
-                new BotRosterEntry("tide_warden", CardClass.TIDECALLER, CardClass.GRAVEKEEP,
+                new BotRosterEntry("tide_warden", "Saltmourn", CardClass.TIDECALLER, CardClass.GRAVEKEEP,
                     new[] { "tide_initiate" }),
             };
             var sink = new RecordingSink();
@@ -44,13 +44,45 @@ namespace Emberfall.Net.Server.Tests.Bots
             }
         }
 
+        /// <summary>The two halves must not be crossed: the nameplate carries the roster's
+        /// displayName, and the identity stays keyed to the username. Asserted because the
+        /// provisioner used to pass the username for both, which is the defect this pair exists to
+        /// prevent recurring — a display-name edit that silently re-mints an account would look
+        /// exactly like nothing happening until the bot's entitlements were gone.</summary>
+        [Test]
+        public async Task Seats_The_Display_Name_But_Keys_Identity_On_The_Username()
+        {
+            var store = new InMemoryAccountStore(new FakeTime());
+            var sink = new RecordingSink();
+            await new BotAccountProvisioner(store, new[]
+            {
+                new BotRosterEntry("ember_knight", "Emberkin", CardClass.EMBERWARD, CardClass.STONEWARDEN,
+                    new[] { "ember_recruit" }),
+            }, sink).RunOnceAsync(CancellationToken.None);
+
+            Assert.That(sink.Ready[0].DisplayName, Is.EqualTo("Emberkin"));
+            Assert.That(sink.Ready[0].Username, Is.EqualTo("ember_knight"));
+
+            // Same username, different display name — must land on the SAME account.
+            var renamedSink = new RecordingSink();
+            await new BotAccountProvisioner(store, new[]
+            {
+                new BotRosterEntry("ember_knight", "Ashfell", CardClass.EMBERWARD, CardClass.STONEWARDEN,
+                    new[] { "ember_recruit" }),
+            }, renamedSink).RunOnceAsync(CancellationToken.None);
+
+            Assert.That(renamedSink.Ready[0].DisplayName, Is.EqualTo("Ashfell"));
+            Assert.That(renamedSink.Ready[0].Account, Is.EqualTo(sink.Ready[0].Account),
+                "renaming a bot's nameplate must not re-mint its account");
+        }
+
         [Test]
         public async Task Is_Idempotent_Across_Repeated_Runs()
         {
             var store = new InMemoryAccountStore(new FakeTime());
             var roster = new[]
             {
-                new BotRosterEntry("ember_knight", CardClass.EMBERWARD, CardClass.STONEWARDEN,
+                new BotRosterEntry("ember_knight", "Emberkin", CardClass.EMBERWARD, CardClass.STONEWARDEN,
                     new[] { "ember_recruit" }),
             };
             var sink = new RecordingSink();

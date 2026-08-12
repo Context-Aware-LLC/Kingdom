@@ -44,7 +44,7 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""ember_knight"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                { ""accountUsername"": ""ember_knight"", ""displayName"": ""Emberkin"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
                   ""cards"": [" + LegalCardsJson + @"] }
             ]");
             try
@@ -52,6 +52,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 var roster = BotRoster.LoadFromFile(path, db);
                 Assert.That(roster, Has.Count.EqualTo(1));
                 Assert.That(roster[0].AccountUsername, Is.EqualTo("ember_knight"));
+                Assert.That(roster[0].DisplayName, Is.EqualTo("Emberkin"));
                 Assert.That(roster[0].PrimaryClass, Is.EqualTo(CardClass.EMBERWARD));
                 Assert.That(roster[0].SecondaryClass, Is.EqualTo(CardClass.STONEWARDEN));
                 Assert.That(roster[0].Cards, Has.Count.EqualTo(30));
@@ -64,7 +65,7 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""bad_bot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                { ""accountUsername"": ""bad_bot"", ""displayName"": ""Badbot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
                   ""cards"": [""not_a_real_card_id""] }
             ]");
             try
@@ -81,7 +82,7 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""bad_bot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""EMBERWARD"",
+                { ""accountUsername"": ""bad_bot"", ""displayName"": ""Badbot"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""EMBERWARD"",
                   ""cards"": [""ember_recruit""] }
             ]");
             try
@@ -98,8 +99,8 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""dupe"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"", ""cards"": [" + LegalCardsJson + @"] },
-                { ""accountUsername"": ""dupe"", ""primaryClass"": ""TIDECALLER"", ""secondaryClass"": ""GRAVEKEEP"", ""cards"": [""tide_initiate""] }
+                { ""accountUsername"": ""dupe"", ""displayName"": ""Emberkin"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"", ""cards"": [" + LegalCardsJson + @"] },
+                { ""accountUsername"": ""dupe"", ""displayName"": ""Saltmourn"", ""primaryClass"": ""TIDECALLER"", ""secondaryClass"": ""GRAVEKEEP"", ""cards"": [""tide_initiate""] }
             ]");
             try
             {
@@ -114,7 +115,7 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""short_deck"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                { ""accountUsername"": ""short_deck"", ""displayName"": ""Shortdeck"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
                   ""cards"": [""ember_recruit"", ""ember_recruit"", ""flame_bolt""] }
             ]");
             try
@@ -131,7 +132,7 @@ namespace Emberfall.Net.Server.Tests.Bots
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""null_cards"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                { ""accountUsername"": ""null_cards"", ""displayName"": ""Nullcards"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
                   ""cards"": null }
             ]");
             try
@@ -144,18 +145,90 @@ namespace Emberfall.Net.Server.Tests.Bots
         }
 
         [Test]
-        public void Rejects_An_Account_Username_That_Fails_PlayerName_Check()
+        public void Rejects_A_Display_Name_That_Fails_PlayerName_Check()
         {
             var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             // Below PlayerName.MinLength (3).
             string path = WriteTemp(@"[
-                { ""accountUsername"": ""ab"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                { ""accountUsername"": ""ember_knight"", ""displayName"": ""ab"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
                   ""cards"": [" + LegalCardsJson + @"] }
             ]");
             try
             {
                 var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
                 Assert.That(ex!.Message, Does.Contain("ab"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        /// <summary>VULN-002 §4.3 reaches the roster too. A bot is the one seat that can wear a name
+        /// nobody typed, so the reserved list has to be enforced on the way in — nothing downstream
+        /// re-checks it, because MatchGate only inspects names that arrived from a peer.</summary>
+        [Test]
+        public void Rejects_A_Reserved_Display_Name()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""ember_knight"", ""displayName"": ""Opponent"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("Opponent"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        [Test]
+        public void Rejects_An_Entry_With_No_Display_Name()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""ember_knight"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("no displayName"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        /// <summary>Two bots differing only in case are indistinguishable on a nameplate, which is
+        /// the one surface this field exists for.</summary>
+        [Test]
+        public void Rejects_A_Duplicate_Display_Name_Case_Insensitively()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""a_bot"", ""displayName"": ""Emberkin"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"", ""cards"": [" + LegalCardsJson + @"] },
+                { ""accountUsername"": ""b_bot"", ""displayName"": ""emberkin"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"", ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var ex = Assert.Throws<InvalidOperationException>(() => BotRoster.LoadFromFile(path, db));
+                Assert.That(ex!.Message, Does.Contain("duplicate displayName"));
+            }
+            finally { File.Delete(path); }
+        }
+
+        /// <summary>The whole point of the split: the username stays a key, so it is free to look
+        /// like one. Only the display name has to read as a name.</summary>
+        [Test]
+        public void Accepts_A_Key_Shaped_Username_When_The_Display_Name_Is_A_Name()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = WriteTemp(@"[
+                { ""accountUsername"": ""ember_knight_00"", ""displayName"": ""Emberkin"", ""primaryClass"": ""EMBERWARD"", ""secondaryClass"": ""STONEWARDEN"",
+                  ""cards"": [" + LegalCardsJson + @"] }
+            ]");
+            try
+            {
+                var roster = BotRoster.LoadFromFile(path, db);
+                Assert.That(roster[0].AccountUsername, Is.EqualTo("ember_knight_00"));
+                Assert.That(roster[0].DisplayName, Is.EqualTo("Emberkin"));
             }
             finally { File.Delete(path); }
         }

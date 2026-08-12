@@ -89,7 +89,7 @@ namespace Emberfall.Net.Server.Bots
                     if (_busy.Contains(username)) continue;
                     _busy.Add(username);
                     ResolvedBotAccount resolved = kvp.Value;
-                    var seat = new BotSeatRunner(resolved.DisplayName, new CommandProcessor(_db), _db);
+                    var seat = new BotSeatRunner(resolved.Username, resolved.DisplayName, new CommandProcessor(_db), _db);
                     return new BotHandle(resolved.Account, resolved.DisplayName, resolved.Deck, seat, () =>
                     {
                         lock (_lock) _busy.Remove(username);

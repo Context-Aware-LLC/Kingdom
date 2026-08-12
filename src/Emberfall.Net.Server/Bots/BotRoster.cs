@@ -10,9 +10,17 @@ namespace Emberfall.Net.Server.Bots
 {
     /// <summary>One bot identity's fixed class pairing + decklist, as drafted offline and reformatted
     /// into this repo's canonical shape (design doc §Bot roster & provisioning). Deck content only —
-    /// account identity is resolved separately by <see cref="BotAccountProvisioner"/>.</summary>
+    /// account identity is resolved separately by <see cref="BotAccountProvisioner"/>.
+    ///
+    /// <para><b><see cref="AccountUsername"/> and <see cref="DisplayName"/> are not interchangeable,
+    /// and the split is load-bearing.</b> The username is the account IDENTITY:
+    /// <c>BotAccountProvisioner.DeriveCredentialHash</c> hashes it, so editing one in the roster
+    /// re-mints that bot's account and strands the old one. The display name is the only half a
+    /// human ever sees, so it is the half that clears <see cref="PlayerName"/> and the half to
+    /// change when a bot should read differently on a nameplate.</para></summary>
     public sealed record BotRosterEntry(
         string AccountUsername,
+        string DisplayName,
         CardClass PrimaryClass,
         CardClass SecondaryClass,
         IReadOnlyList<string> Cards);
@@ -25,6 +33,7 @@ namespace Emberfall.Net.Server.Bots
         private sealed class Dto
         {
             public string AccountUsername { get; set; } = "";
+            public string DisplayName { get; set; } = "";
             public CardClass PrimaryClass { get; set; }
             public CardClass SecondaryClass { get; set; }
             public List<string> Cards { get; set; } = new List<string>();
@@ -53,6 +62,7 @@ namespace Emberfall.Net.Server.Bots
                 throw new InvalidOperationException($"Bot roster '{path}' is empty.");
 
             var seenUsernames = new HashSet<string>(StringComparer.Ordinal);
+            var seenDisplayNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var entries = new List<BotRosterEntry>(dtos.Count);
             foreach (var dto in dtos)
             {
@@ -62,16 +72,38 @@ namespace Emberfall.Net.Server.Bots
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': duplicate accountUsername '{dto.AccountUsername}'.");
 
-                // The account username doubles as the seat's DisplayName (BotAccountProvisioner), so
-                // it must clear the SAME check every peer-chosen name clears (VULN-002 §4.1) — a
-                // future entry over PlayerName.MaxLength or matching ReservedNames would otherwise
-                // reach a human's versus screen unchecked. Loudly-fail-at-startup, consistent with
-                // every other rule in this loader.
-                var nameCheck = PlayerName.Check(dto.AccountUsername);
+                // displayName is REQUIRED, and deliberately has no fallback to accountUsername. It
+                // used to BE the username (BotAccountProvisioner passed it for both), which is how
+                // two bots shipped to human opponents wearing nameplates that read `ember_knight`
+                // and `tide_warden` — the username is a key, and keys make unconvincing names. A
+                // silent fallback would just reintroduce that one entry at a time.
+                if (string.IsNullOrWhiteSpace(dto.DisplayName))
+                    throw new InvalidOperationException(
+                        $"Bot roster '{path}': entry '{dto.AccountUsername}' has no displayName.");
+
+                // The display name is what reaches a human's versus screen, so it clears the SAME
+                // check every peer-chosen name clears (VULN-002 §4.1) — an entry over
+                // PlayerName.MaxLength or matching ReservedNames would otherwise arrive unchecked
+                // through a door that only inspects peers. Loudly-fail-at-startup, consistent with
+                // every other rule in this loader. The username is NOT checked: it never reaches a
+                // screen, and its charset is an identity concern rather than a display one.
+                //
+                // Store the NORMALIZED value, per PlayerName's own contract — otherwise a roster
+                // authored with a stray double space stores different bytes than the same name typed
+                // by a player.
+                var nameCheck = PlayerName.Check(dto.DisplayName);
                 if (!nameCheck.IsValid)
                     throw new InvalidOperationException(
-                        $"Bot roster '{path}': entry '{dto.AccountUsername}' is not a valid display name: " +
-                        nameCheck.Reason);
+                        $"Bot roster '{path}': entry '{dto.AccountUsername}' has displayName " +
+                        $"'{dto.DisplayName}', which is not a valid display name: " + nameCheck.Reason);
+                string displayName = nameCheck.Normalized;
+
+                // Case-insensitive, matching PlayerName.IsReserved's comparison: two bots that
+                // differ only in case are indistinguishable on a nameplate, which is the surface
+                // this name exists for.
+                if (!seenDisplayNames.Add(displayName))
+                    throw new InvalidOperationException(
+                        $"Bot roster '{path}': duplicate displayName '{displayName}'.");
 
                 if (!Character.IsValidPairing(dto.PrimaryClass, dto.SecondaryClass))
                     throw new InvalidOperationException(
@@ -115,7 +147,8 @@ namespace Emberfall.Net.Server.Bots
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': entry '{dto.AccountUsername}' has an illegal deck: {check.Reason}");
 
-                entries.Add(new BotRosterEntry(dto.AccountUsername, dto.PrimaryClass, dto.SecondaryClass, dto.Cards));
+                entries.Add(new BotRosterEntry(
+                    dto.AccountUsername, displayName, dto.PrimaryClass, dto.SecondaryClass, dto.Cards));
             }
 
             return entries;
