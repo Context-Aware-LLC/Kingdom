@@ -194,7 +194,7 @@ namespace Emberfall.Presentation
             if (inputRouter != null)
             {
                 var mulliganGo = new GameObject("MulliganConfirmButton");
-                mulliganGo.transform.position = new Vector3(0f, -3.0f, 0f);
+                mulliganGo.transform.position = MulliganConfirmButtonView.BoardPosition;
                 var mulligan = mulliganGo.AddComponent<MulliganConfirmButtonView>();
                 mulligan.Init(p0Id, inputRouter);
                 p0Session.OnSnapshot += mulligan.OnStateUpdated;

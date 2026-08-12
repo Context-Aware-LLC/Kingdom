@@ -113,7 +113,14 @@ namespace Emberfall.Presentation
         // band's outer CORNER a further 0.157, to 0.04 below the edge. That is a corner of the text
         // box on the most-overlapped card in the fan; closing it needs CentreY 3.41, at which point
         // the centre card stops overhanging the edge at all and the hand stops reading as held.
+        // RETIREMENT TRIGGER: MulliganConfirmButtonView.BoardPosition reasons about the span this
+        // constant produces (the fan reaching y -2.312) to justify sitting clear of it. Moving
+        // CentreY or the card height means re-checking that clearance — #138 was a confirm button
+        // buried inside the fan, which fails silently and reads as a dead button, not a hidden one.
         internal const float CentreY    = 3.50f;
+
+        // Hand cards step TOWARD the camera as the index rises, so a later card wins the raycast
+        // against anything parked at z 0. That is what ate the mulligan confirm button (#138).
         internal const float ZStep      = 0.03f;  // per-index step toward the camera
 
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on

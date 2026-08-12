@@ -21,6 +21,10 @@ namespace Emberfall.Presentation
             if (GetComponent<Collider>() == null)
             {
                 var col = gameObject.AddComponent<BoxCollider>();
+                // RETIREMENT TRIGGER: these 14 boxes (7 per seat, anchored at |y| 1.3) are the only
+                // colliders on the board — BoardBackdrop is purely visual. At this size they span
+                // |y| 0.775..1.825, and MulliganConfirmButtonView.BoardPosition parks in the empty
+                // strip between them. Growing this collider eats that strip; re-check #138 if you do.
                 col.size = new Vector3(0.85f, 1.05f, 0.1f);
                 // Strictly behind the card root colliders (z ±0.05 at the same anchor): an exact
                 // depth tie is broken arbitrarily per collider, letting the slot steal the ray

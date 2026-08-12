@@ -18,6 +18,33 @@ namespace Emberfall.Presentation
         private const float ButtonW = 1.7f;
         private const float ButtonH = 0.55f;
 
+        /// <summary>
+        /// Where both bootstraps place this button. Owned here rather than typed at each call site,
+        /// because it is a geometry constraint and not a preference — see below.
+        ///
+        /// <para><b>It must clear the hand fan, and the obvious spot does not.</b> This sat at
+        /// <c>y = -3.0</c> and was unpressable for it (#138): the button spans y -3.275..-2.725, and
+        /// the local player's hand spans y -4.69..-2.31 (<see cref="HandFanLayout.CentreY"/> 3.50
+        /// negated for seat 0, ± half of <see cref="HandFanLayout.HandCardH"/> 2.376). The button was
+        /// wholly inside the fan, and hand cards sit at z = 0, -0.03, -0.06… — <i>toward</i> the
+        /// camera — so every press in that region hit a card instead. Nothing was wrong with
+        /// <c>OnMouseDown</c>; it was never the frontmost collider.</para>
+        ///
+        /// <para><b>Directly above the hand does not fit either.</b> The fan tops out at -2.31 and
+        /// P0's board row starts at -2.125 (slot anchors at |y| 1.3, ± half of
+        /// <c>BoardController.CardH</c> 1.65), leaving a 0.185 gap for a 0.55-tall button.</para>
+        ///
+        /// <para><b>So: the centre strip between the two board rows</b>, y -0.475..+0.475, which is
+        /// clear of both seats' cards and of both hands. Zero is not a hand-picked number — it is the
+        /// board's own centre, so it stays correct for either seat and needs no derivation.</para>
+        ///
+        /// <para>RETIREMENT TRIGGER: this clearance is a claim about three other layouts. If you move
+        /// <see cref="HandFanLayout.CentreY"/>, <c>HandFanLayout.HandCardH</c>, or the board slot row
+        /// (<c>ProceduralBoardSetup.BuildSeat</c>, <c>ySign * 1.3f</c>), re-check the spans above —
+        /// a button that ends up under a collider fails silently and looks like a dead button.</para>
+        /// </summary>
+        public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
+
         private PlayerId    _p0Id;
         private InputRouter _router;
         private Renderer    _face;
