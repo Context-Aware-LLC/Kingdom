@@ -26,40 +26,41 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// One card slot of an opened pack: which card, at what rarity, and — when the player was already at
-    /// their copy limit for every card of that rarity in the pool — the shards it became instead.
+    /// One card slot of an opened pack: which card, at what rarity. <b>Every slot is a card.</b>
     /// </summary>
     /// <remarks>
-    /// <see cref="CardId"/> is populated even when <see cref="ConvertedToShards"/> is true. The dupe is
-    /// still a real card and the reveal (NOR-107c) shows it before it dissolves into shards; suppressing
-    /// the id here would leave the UI with a shard count and nothing to animate.
+    /// <para><b>A pack never converts a slot to shards</b> (Sam, 2026-08-12). This type used to carry
+    /// <c>ConvertedToShards</c> and <c>Shards</c> for the case where the player was already at their copy
+    /// limit on every card of the rolled rarity; that slot now hands over the card, and the player decides
+    /// what becomes of it. Reducing a card to dust is a thing a player chooses, never a thing an open does
+    /// to them — the same ruling that caps <see cref="Crafting"/> at the deck limit while leaving ownership
+    /// uncapped, and for the same reason: card-to-card TRADING is a live possibility, and a system that
+    /// destroys a spare copy on the player's behalf has already spent the card that trade needed.</para>
+    ///
+    /// <para>Consequences worth knowing. The "new cards before dupes" preference in
+    /// <see cref="BoosterPackOpener"/> is untouched — a pack still tries to hand you something you are
+    /// under the limit on; it just no longer punishes the case where it cannot. A collection can hold
+    /// unbounded copies (<see cref="IOwnedCardCounts"/> was always an unbounded count), and
+    /// <see cref="DeckValidator.CopyLimit"/> is <c>min(MaxCopies, owned)</c>, so a 47th copy plays 2 and
+    /// is otherwise inert but real.</para>
     /// </remarks>
     public readonly struct PackSlotAward
     {
         public readonly string CardId;
         public readonly Rarity Rarity;
 
-        /// <summary>True when this slot was a duplicate past the copy limit and paid out in shards.</summary>
-        public readonly bool ConvertedToShards;
-
-        /// <summary>Shards paid for this slot. 0 unless <see cref="ConvertedToShards"/>.</summary>
-        public readonly int Shards;
-
         /// <summary>Which guarantee, if any, set this slot's rarity rather than the dice.</summary>
         public readonly PackUpgrade Upgrade;
 
-        public PackSlotAward(string cardId, Rarity rarity, bool convertedToShards, int shards, PackUpgrade upgrade)
+        public PackSlotAward(string cardId, Rarity rarity, PackUpgrade upgrade)
         {
             CardId = cardId;
             Rarity = rarity;
-            ConvertedToShards = convertedToShards;
-            Shards = shards;
             Upgrade = upgrade;
         }
 
         public override string ToString() =>
-            $"{Rarity} {CardId}" + (ConvertedToShards ? $" -> {Shards} shards" : "")
-            + (Upgrade == PackUpgrade.None ? "" : $" [{Upgrade}]");
+            $"{Rarity} {CardId}" + (Upgrade == PackUpgrade.None ? "" : $" [{Upgrade}]");
     }
 
     /// <summary>
@@ -93,17 +94,6 @@ namespace Emberfall.Core.Collection
             Awards = awards ?? Array.Empty<PackSlotAward>();
             PityBefore = pityBefore;
             PityAfter = pityAfter;
-        }
-
-        /// <summary>Total shards from every duplicate in this pack.</summary>
-        public int TotalShards
-        {
-            get
-            {
-                int sum = 0;
-                for (int i = 0; i < Awards.Count; i++) sum += Awards[i].Shards;
-                return sum;
-            }
         }
 
         /// <summary>The slot rarities, in slot order — the input to <see cref="PackPityState.AfterPack"/>.</summary>
@@ -196,9 +186,16 @@ namespace Emberfall.Core.Collection
                 Rarity rarity = rarities[i];
                 var candidates = byRarity[rarity];
 
-                // §6 new-cards-before-dupes: only cards still under their copy limit are eligible,
-                // and the limit is the deck/collection limit itself (DeckValidator L2/L3) — one source
-                // of truth, so a format change to the copy cap cannot leave pack odds behind.
+                // §6 new-cards-before-dupes: cards still under their copy limit are PREFERRED, and the
+                // limit is the deck/collection limit itself (DeckValidator L2/L3) — one source of truth,
+                // so a format change to the copy cap cannot leave pack odds behind.
+                //
+                // The preference is all it is. When every card of this rarity is already maxed the slot
+                // draws from the full pool and hands the card over anyway: it used to pay out in shards,
+                // which destroyed a card the player never agreed to lose (Sam, 2026-08-12 — see
+                // PackSlotAward). Note the draw is one rng.NextInt either way, on a list whose length
+                // does not depend on that decision, so the RNG stream is identical to before the ruling
+                // and every pinned open still reproduces.
                 int limit = DeckValidator.MaxCopies(rarity);
                 var eligible = new List<CardDefinition>(candidates.Count);
                 for (int c = 0; c < candidates.Count; c++)
@@ -207,21 +204,11 @@ namespace Emberfall.Core.Collection
                     if (EffectiveOwned(owned, awardedThisPack, def.Id) < limit) eligible.Add(def);
                 }
 
-                bool dupe = eligible.Count == 0;
-                var draw = dupe ? candidates : eligible;
+                var draw = eligible.Count == 0 ? candidates : eligible;
                 var picked = draw[rng.NextInt(draw.Count)];
 
-                if (dupe)
-                {
-                    // Every card of this rarity in the pool is already maxed: the player cannot hold
-                    // another copy, so the slot pays out in shards instead (§6).
-                    awards.Add(new PackSlotAward(picked.Id, rarity, true, ShardValues.ForRarity(rarity), upgrades[i]));
-                }
-                else
-                {
-                    awardedThisPack[picked.Id] = EffectiveOwnedDelta(awardedThisPack, picked.Id) + 1;
-                    awards.Add(new PackSlotAward(picked.Id, rarity, false, 0, upgrades[i]));
-                }
+                awardedThisPack[picked.Id] = EffectiveOwnedDelta(awardedThisPack, picked.Id) + 1;
+                awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
             }
 
             var after = pity.AfterPack(ToRarityList(rarities));

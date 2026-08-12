@@ -261,10 +261,10 @@ namespace Emberfall.Core.Tests.Collection
             var result = BoosterPackOpener.Open(Pack, pool, owned, due, Seed, 0);
 
             Assert.That(HasRarity(result, Rarity.EPIC), Is.True, Describe(result));
-            foreach (var a in result.Awards)
-                Assert.That(a.ConvertedToShards, Is.True, $"Nothing was left to win, yet a card was granted: {a}");
+            // Every slot is a card even with nothing left to win (Sam, 2026-08-12 — no auto-sharding);
+            // what this test is really about is that the pity CLOCK reset regardless.
             Assert.That(result.PityAfter.PacksSinceEpic, Is.EqualTo(0),
-                "A shards-only pack still showed the player an Epic; the clock must reset.");
+                "The pack showed the player an Epic; the clock must reset.");
         }
 
         [Test]
@@ -295,7 +295,7 @@ namespace Emberfall.Core.Tests.Collection
         private static void Apply(OwnedCardCounts owned, PackOpenResult r)
         {
             foreach (var a in r.Awards)
-                if (!a.ConvertedToShards) owned.Set(a.CardId, owned.CopiesOwned(a.CardId) + 1);
+                owned.Set(a.CardId, owned.CopiesOwned(a.CardId) + 1);
         }
 
         private static string Describe(PackOpenResult r) => string.Join(", ", r.Awards);

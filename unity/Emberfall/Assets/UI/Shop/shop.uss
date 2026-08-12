@@ -335,18 +335,6 @@
     -unity-text-align: middle-center;
 }
 
-.reveal-card__award {
-    color: var(--positive);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    white-space: normal;
-    -unity-text-align: middle-center;
-}
-
-.reveal-card__award--dupe {
-    color: var(--warning);
-}
-
 .reveal-card__upgrade {
     color: var(--accent);
     font-size: var(--type-caption);

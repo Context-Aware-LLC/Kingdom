@@ -88,7 +88,7 @@ namespace Emberfall.Core.Tests.Collection
                         Assert.That(def.Rarity, Is.EqualTo(a.Rarity), $"{a.CardId} awarded at the wrong rarity.");
                         Assert.That(pack.Contains(def.SetId), Is.True, $"{a.CardId} is outside {pack.Id}'s pairing.");
                         if (a.Rarity >= Rarity.RARE) rareOrBetter = true;
-                        if (!a.ConvertedToShards) owned.Set(a.CardId, owned.CopiesOwned(a.CardId) + 1);
+                        owned.Set(a.CardId, owned.CopiesOwned(a.CardId) + 1);
                     }
                     Assert.That(rareOrBetter, Is.True, $"{pack.Id} pack {i} was all Commons.");
                     pity = result.PityAfter;

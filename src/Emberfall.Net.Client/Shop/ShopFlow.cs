@@ -24,32 +24,24 @@ namespace Emberfall.Net.Client.Shop
     /// <summary>
     /// One slot from the authoritative open receipt. This is deliberately a data-only client DTO:
     /// it mirrors the server fields without importing the deterministic pack-opening implementation.
+    ///
+    /// <para>Every slot is a card. The <c>ConvertedToShards</c>/<c>Shards</c> pair was removed with the
+    /// no-auto-sharding ruling (Sam, 2026-08-12) rather than left permanently false — a receipt field
+    /// that cannot happen is a receipt that lies about what the shop can do to you.</para>
     /// </summary>
     public readonly struct PackCardAward
     {
         public string CardId { get; }
         public Rarity Rarity { get; }
-        public bool ConvertedToShards { get; }
-        public int Shards { get; }
         public PackUpgradeReason Upgrade { get; }
 
-        public PackCardAward(
-            string cardId,
-            Rarity rarity,
-            bool convertedToShards,
-            int shards,
-            PackUpgradeReason upgrade)
+        public PackCardAward(string cardId, Rarity rarity, PackUpgradeReason upgrade)
         {
             if (string.IsNullOrWhiteSpace(cardId))
                 throw new ArgumentException("Card id is required.", nameof(cardId));
-            if (shards < 0) throw new ArgumentOutOfRangeException(nameof(shards));
-            if (!convertedToShards && shards != 0)
-                throw new ArgumentException("A non-duplicate award cannot grant shards.", nameof(shards));
 
             CardId = cardId;
             Rarity = rarity;
-            ConvertedToShards = convertedToShards;
-            Shards = shards;
             Upgrade = upgrade;
         }
     }

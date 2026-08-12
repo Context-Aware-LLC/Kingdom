@@ -162,13 +162,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             foreach (var award in outcome.Awards)
             {
-                if (award.ConvertedToShards) continue;
                 long held = await ledger.BalanceAsync(Player, BoosterPackGrantService.CardItemPrefix + award.CardId);
                 Assert.That(held, Is.GreaterThanOrEqualTo(1), $"{award.CardId} was not granted.");
             }
 
+            // An open writes card rows and nothing else since the no-auto-sharding ruling (Sam,
+            // 2026-08-12). Shards enter the ledger only where a player chose it: Reduce.
             long shards = await ledger.BalanceAsync(Player, ShardValues.LedgerItem);
-            Assert.That(shards, Is.EqualTo(outcome.TotalShards));
+            Assert.That(shards, Is.Zero, "A pack open moved the shard balance.");
         }
 
         [Test]
@@ -216,8 +217,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 Assert.That(second.Awards[i].CardId, Is.EqualTo(first.Awards[i].CardId), $"slot {i}");
                 Assert.That(second.Awards[i].Rarity, Is.EqualTo(first.Awards[i].Rarity), $"slot {i}");
-                Assert.That(second.Awards[i].ConvertedToShards, Is.EqualTo(first.Awards[i].ConvertedToShards), $"slot {i}");
-                Assert.That(second.Awards[i].Shards, Is.EqualTo(first.Awards[i].Shards), $"slot {i}");
+                Assert.That(second.Awards[i].Upgrade, Is.EqualTo(first.Awards[i].Upgrade), $"slot {i}");
             }
         }
 
@@ -463,8 +463,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var sb = new System.Text.StringBuilder();
             foreach (var a in awards)
-                sb.Append(a.CardId).Append(':').Append(a.Rarity).Append(':')
-                  .Append(a.ConvertedToShards ? "S" + a.Shards : "C").Append('|');
+                sb.Append(a.CardId).Append(':').Append(a.Rarity).Append('|');
             return sb.ToString();
         }
     }

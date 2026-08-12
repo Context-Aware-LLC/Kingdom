@@ -30,8 +30,6 @@ namespace Emberfall.Net.Client.Tests
                     new PackCardAward(
                         "emberward_ember_acolyte",
                         Rarity.RARE,
-                        false,
-                        0,
                         PackUpgradeReason.RareFloor),
                 });
             var authoritative = new PackPurchaseResult(after, open);
