@@ -172,7 +172,25 @@ namespace Emberfall.Presentation
 
                 SyncZone(ps.Id, ps.Board, Zone.Board, ownerMayAct);
                 SyncZone(ps.Id, ps.Hand,  Zone.Hand,  ownerMayAct);
-                SyncWeapon(ps.Id, ps.Weapon);
+                // ps.Weapon is deliberately NOT synced and deliberately NOT added to _thisLive.
+                // HeroSocketsView draws the equipped weapon as the forged ring beside the hero power,
+                // so a CardPresenter for it is a second copy of the same weapon sitting directly
+                // behind the first — which is what it looked like (Sam, watching it live, 2026-07-25).
+                //
+                // Marking it live would mark the HAND card live: an equipped weapon is the same
+                // runtime CardInstance, with the same InstanceId, that was in hand a moment ago
+                // (CLAUDE.md, "What a weapon can and cannot do"). The departed-card sweep below
+                // would then never park it, nothing would destroy its presenter, and the weapon
+                // would sit in the hand fan for the rest of the match — GH #166, "Searing Quill
+                // remains in hand after use". The `_thisLive.Add(weapon.Id)` that did exactly that
+                // was correct when written (weapons were a separate WeaponInstance with its own id,
+                // so keeping a never-registered id alive was free) and became a bug at 1157c997,
+                // which unified weapons onto CardInstance and collapsed the two ids into one.
+                //
+                // RETIREMENT TRIGGER: registering a presenter for the equipped weapon means adding
+                // a sync call back HERE, and it cannot be the old one — "keep the weapon view alive"
+                // and "destroy the hand view" are the same id and cannot both be one _thisLive
+                // entry. Whoever does it updates this comment and CLAUDE.md's weapon section.
             }
 
             // Park presenters for cards that left hand and board — resolved at end of frame, once
@@ -349,23 +367,6 @@ namespace Emberfall.Presentation
                 presenter.transform.localPosition =
                     hasBulwark ? new Vector3(0f, toward * BulwarkRowOffset, 0f) : Vector3.zero;
             }
-        }
-
-        /// <summary>
-        /// The equipped weapon is NOT drawn as a card. HeroSocketsView renders it as the forged
-        /// ring docked beside the hero power, with attack and durability on the ring's two stat
-        /// bosses, so a CardPresenter at WeaponAnchor is a second copy of the same weapon sitting
-        /// directly behind the first — which is exactly what it looked like: a whole card showing
-        /// behind the ring (Sam, watching it live, 2026-07-25).
-        ///
-        /// The id still joins _thisLive so that if anything ever does register a presenter for a
-        /// weapon, breaking it still falls out of the normal departed-card sweep rather than
-        /// leaking a view.
-        /// </summary>
-        private void SyncWeapon(PlayerId owner, CardInstance weapon)
-        {
-            if (weapon == null) return;
-            _thisLive.Add(weapon.Id);
         }
 
         // Hand cards overlap, so their draw order has to be explicit. Board cards never overlap
