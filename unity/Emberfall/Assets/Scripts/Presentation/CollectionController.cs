@@ -351,40 +351,57 @@ namespace Emberfall.Presentation
             _wall = new CardWall(_grid, _faceBaker);
 
             if (Deckbuilding)
-            {
                 _wall.TileClicked += AddCopy;
-
-                // The copy-cap fade — the ONLY per-tile deck-state treatment on the wall, and the
-                // reason CardWall exposes a decorator rather than owning this itself: "you already
-                // hold every copy" is a fact about a deck, and browse mode has none.
-                //
-                // This deliberately does NOT ask DeckValidator.CanAdd. CanAdd is false for L1 (deck
-                // at 30) and L4 (off-class) too, and keying the fade on it is exactly the bug removed
-                // in c31da55: a deck at 30 refuses every card, so every tile faded and the wall the
-                // screen exists to show went dark at the moment the player stopped building and
-                // started browsing. The fade means one thing only — "you already hold every copy of
-                // THIS card you are allowed" — so it reads the copy cap directly. It can never take
-                // more than a handful of tiles, and clears the moment a copy comes back out.
-                //
-                // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a
-                // Legendary fades at one copy, not two.
-                //
-                // NOR-238 replaced MaxCopies with CopyLimit — min(MaxCopies, copies you own), or
-                // MaxCopies alone when this account has no ownership record. The fade's ONE meaning is
-                // unchanged and that is why it could absorb L6 rather than needing a treatment of its
-                // own: "you already hold every copy of THIS card you are allowed" is the same sentence
-                // whether the limit came from the format or from your collection. A card you own none
-                // of therefore fades at zero copies in the deck, which is exactly what AddCopy refuses.
-                _wall.TileDecorator = (def, tile) =>
-                    tile.EnableInClassList("card-tile--maxed",
-                        _deck.CountOf(def.Id) >= DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
-            }
 
             // No TileClicked handler in browse mode on purpose: there is no deck to add to, and
             // in-match inspect was cut (board layout rulings, 2026-07-23). A tap does nothing until
             // there is something for it to do.
 
+            _wall.TileDecorator = DecorateTile;
             _wall.SetPool(_pool);
+        }
+
+        /// <summary>
+        /// The per-tile treatments. Two of them, and keeping them apart is the whole point — see
+        /// <see cref="BuildWall"/> for why there is a decorator at all.
+        ///
+        /// <para><b>Neither one asks <see cref="DeckValidator.CanAdd"/>.</b> CanAdd is false for L1
+        /// (deck at 30) and L4 (off-class) too, and keying a fade on it is exactly the bug removed in
+        /// c31da55: a deck at 30 refuses every card, so every tile faded and the wall the screen exists
+        /// to show went dark at the moment the player stopped building and started browsing. Every
+        /// treatment here reads a per-CARD fact, never the wall's state — which is the line the
+        /// no-dimming ruling actually draws (Sam, 2026-08-07).</para>
+        /// </summary>
+        private void DecorateTile(CardDefinition def, VisualElement tile)
+        {
+            // "You own none of this." A per-card fact, true in BOTH modes, and the one thing that makes
+            // a card you might want to craft findable at all.
+            //
+            // Until 2026-08-12 this had no treatment of its own and was absorbed by the copy-cap fade
+            // below, on the reasoning that "you hold every copy you are allowed" is the same sentence
+            // whether the limit came from the format or from your collection. It is the same sentence
+            // and it was still wrong, because the two want opposite pixels: a spent card is finished
+            // with and fades to nearly nothing, while an unowned card is the one you are shopping for.
+            // Owning none put CopyLimit at 0, `0 >= 0` was true on arrival, and every unowned card in
+            // the deckbuilder sat at the spent fade's 0.1 from the moment the screen opened — present
+            // in the pool, invisible on the glass, and the reason crafting had nothing to click.
+            bool unowned = _owned != null && _owned.CopiesOwned(def.Id) <= 0;
+            tile.EnableInClassList("card-tile--unowned", unowned);
+
+            // The copy-cap fade — "you already hold every copy of THIS card you are allowed", so it
+            // reads the copy limit directly. Deckbuild only: it is a fact about a DECK, and browse mode
+            // has none (_deck is null there, which the mode check below is what guards).
+            //
+            // CopyLimit is min(MaxCopies, copies owned) (NOR-238), and MaxCopies is rarity-dependent
+            // (L3 Legendary = 1, L2 everything else = 2), so a Legendary fades at one copy, not two.
+            //
+            // The `!unowned` term is what keeps the two treatments from stacking. Without it an unowned
+            // card is trivially "at its limit" and takes both classes, and the 0.1 wins — which is the
+            // exact bug described above. An unowned card is never ALSO spent: there was nothing to
+            // spend.
+            tile.EnableInClassList("card-tile--maxed",
+                Deckbuilding && !unowned &&
+                _deck.CountOf(def.Id) >= DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
         }
 
         private void WireQueryBar()
