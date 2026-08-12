@@ -381,6 +381,14 @@ namespace Emberfall.Presentation
         /// a right-click — and that is deliberately not invented here: this modal is groundwork and a
         /// new input gesture is a real decision with a verify check of its own
         /// (<c>InputGestureVerify</c>).</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER — drag-to-add/remove in the deckbuilder (Sam, 2026-08-12,
+        /// "pretty soon").</b> Drag takes over add and remove, which frees the tap completely. When
+        /// that lands, DELETE the owns-zero fall-through below and make the tap mean crafting in both
+        /// modes unconditionally: the special case exists only because add currently owns the gesture,
+        /// and once it does not, the case is not a simplification to notice later — it is dead weight
+        /// that makes the deckbuilder's tap mean two different things for no reason. The paragraph
+        /// above about "a gesture of its own" retires with it.</para>
         /// </summary>
         private void OnTileClicked(CardDefinition def)
         {
