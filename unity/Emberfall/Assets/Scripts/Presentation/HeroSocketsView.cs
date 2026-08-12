@@ -36,6 +36,10 @@ namespace Emberfall.Presentation
         /// batch measures 0.7464 for both). Change CANVAS_PAD and change this with it.</summary>
         public const float RingFraction = 0.7464f;
 
+        // RETIREMENT TRIGGER (GH #162): The bakeoff resolved to CarvedStone on 2026-07-25; keep
+        // Init's material parameter deliberately, deferring a second material until its point of
+        // use. Generators still emit IronEmber, but this issue deleted the shipped assets; regenerate
+        // them before passing "IronEmber" as the material.
         private const string DefaultMaterial = "CarvedStone";
 
         // Rings are transparent sprites, so they draw after the opaque socket discs and composite

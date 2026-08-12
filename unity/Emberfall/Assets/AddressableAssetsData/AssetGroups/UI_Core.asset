@@ -75,11 +75,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4186583d40708844685cdb519ddd911e
-    m_Address: ui/HeroFrames_IronEmber
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4995c8a52bd79f04796b75112514cdb5
     m_Address: ui/frame_common_spell
     m_ReadOnly: 0
@@ -145,11 +140,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d7e43b31985a11458b1fc9cfa16b57e
-    m_Address: ui/Weapon_IronEmber
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9cf1852ff4ee9b4448357b4818cdde81
     m_Address: ui/icon_kw_aegis
     m_ReadOnly: 0
@@ -207,11 +197,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5630a76852906f4c85f5e02f8814b9b
     m_Address: ui/card_back
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c8d8d1270b1cfcc49b25d99db19edfd8
-    m_Address: ui/HeroPower_IronEmber
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
