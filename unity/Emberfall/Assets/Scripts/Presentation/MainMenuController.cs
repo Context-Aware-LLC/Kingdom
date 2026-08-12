@@ -1,6 +1,7 @@
 using System;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
+using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -34,6 +35,12 @@ namespace Emberfall.Presentation
 
         private Label _identityName;
         private Label _identitySub;
+        private Label _shardBalance;
+        private Rect _lastSafeArea;
+        private int _lastSafeAreaScreenWidth = -1;
+        private int _lastSafeAreaScreenHeight = -1;
+
+        private const float ShardSafeAreaMarginPercent = 2f;
 
         private VisualElement _nameModal;
         private Label _nameError;
@@ -77,6 +84,8 @@ namespace Emberfall.Presentation
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
 
+            BindShardBalance();
+
             // ShopRuntime.PackagingArt stays an override seam (a test or a future streamed loader
             // can set it); with nobody overriding it the packaging slots resolve through the same
             // sprite pipeline as the rest of the meta screens. The gateway has no such default on
@@ -84,7 +93,9 @@ namespace Emberfall.Presentation
             _shop = new ShopPanelController(
                 _root,
                 ShopRuntime.Gateway,
-                ShopRuntime.PackagingArt ?? new UiSpriteBoosterArtProvider());
+                ShopRuntime.PackagingArt ?? new UiSpriteBoosterArtProvider(),
+                RenderShardBalance);
+            _shop.RefreshWallet();
 
             BindIdentity();
             BindNameModal();
@@ -111,6 +122,16 @@ namespace Emberfall.Presentation
             RefreshIdentity();
             BeginFirstRun();
             FinishBootstrap();
+        }
+
+        /// <summary>
+        /// Safe-area changes have no callback: rotation and Android system-bar changes can move the
+        /// usable top/right edge while the scene stays enabled. Poll only the three values that can
+        /// affect this read-only plate and write layout when one actually changes.
+        /// </summary>
+        private void Update()
+        {
+            RefreshShardSafeArea();
         }
 
         /// <summary>Drop the sign-in gate's deep-link subscription. <see cref="SignInGateController"/>
@@ -203,6 +224,62 @@ namespace Emberfall.Presentation
         {
             if (_identityName != null) _identityName.text = name;
             if (_identitySub != null) _identitySub.text = sub;
+        }
+
+        // ── Shard balance ──────────────────────────────────────────────────────────────
+
+        private void BindShardBalance()
+        {
+            _shardBalance = _root.Q<Label>("shard-balance");
+            if (_shardBalance != null) _shardBalance.text = WalletDisplay.ShardsUnavailable;
+            _lastSafeAreaScreenWidth = -1;
+            RefreshShardSafeArea();
+        }
+
+        /// <summary>
+        /// Adopt the gateway's ledger projection directly. A null snapshot state stays an em dash;
+        /// an authoritative missing ledger row arrives from the server as 0 and therefore renders 0.
+        /// No shard count is stored by this controller.
+        /// </summary>
+        private void RenderShardBalance(long? shards)
+        {
+            if (_shardBalance == null) return;
+            _shardBalance.text = shards.HasValue
+                ? WalletDisplay.Shards(shards.Value)
+                : WalletDisplay.ShardsUnavailable;
+        }
+
+        private void RefreshShardSafeArea()
+        {
+            if (_shardBalance == null) return;
+
+            int screenWidth = Screen.width;
+            int screenHeight = Screen.height;
+            Rect safeArea = Screen.safeArea;
+            if (screenWidth == _lastSafeAreaScreenWidth
+                && screenHeight == _lastSafeAreaScreenHeight
+                && safeArea == _lastSafeArea)
+                return;
+
+            _lastSafeAreaScreenWidth = screenWidth;
+            _lastSafeAreaScreenHeight = screenHeight;
+            _lastSafeArea = safeArea;
+
+            if (screenWidth <= 0 || screenHeight <= 0) return;
+            if (safeArea.width <= 1f || safeArea.height <= 1f)
+                safeArea = new Rect(0f, 0f, screenWidth, screenHeight);
+
+            float rightInsetPercent =
+                Mathf.Clamp(screenWidth - safeArea.xMax, 0f, screenWidth) / screenWidth * 100f;
+            float topInsetPercent =
+                Mathf.Clamp(screenHeight - safeArea.yMax, 0f, screenHeight) / screenHeight * 100f;
+
+            // Percentages keep the breathing room proportional across phone and desktop canvases;
+            // the normalized device inset moves the anchor from the display edge to the safe edge.
+            _shardBalance.style.right = Length.Percent(
+                Mathf.Min(100f, rightInsetPercent + ShardSafeAreaMarginPercent));
+            _shardBalance.style.top = Length.Percent(
+                Mathf.Min(100f, topInsetPercent + ShardSafeAreaMarginPercent));
         }
 
         /// <summary>

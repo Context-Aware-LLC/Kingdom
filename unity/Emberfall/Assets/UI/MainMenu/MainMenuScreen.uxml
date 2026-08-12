@@ -4,6 +4,9 @@
     <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim" style="background-image: none;"/>
+        <!-- An unbound wallet is unavailable, not an authoritative zero. MainMenuController only
+             replaces this em dash after the account gateway returns its ledger projection. -->
+        <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance"/>
         <!-- A read-only nameplate, NOT a button (NOR-287). A display name is set once, on first
              run, and is permanent from then on — so there is nothing here to open. picking-mode
              Ignore keeps it from swallowing a tap it has no answer for. -->

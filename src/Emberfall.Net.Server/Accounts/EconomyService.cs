@@ -6,11 +6,12 @@ using Emberfall.Core.Collection;
 
 namespace Emberfall.Net.Server.Accounts
 {
-    /// <summary>Canonical ledger item ids for the two founder-locked wallet currencies.</summary>
+    /// <summary>Canonical ledger item ids for the player wallet currencies.</summary>
     public static class EconomyItems
     {
         public const string Gold = "gold";
         public const string Gems = "gems";
+        public const string Shards = ShardValues.LedgerItem;
     }
 
     /// <summary>The server-authored wallet projection returned to callers.</summary>
@@ -18,11 +19,13 @@ namespace Emberfall.Net.Server.Accounts
     {
         public long Gold { get; }
         public long Gems { get; }
+        public long Shards { get; }
 
-        public WalletBalances(long gold, long gems) : this()
+        public WalletBalances(long gold, long gems, long shards) : this()
         {
             Gold = gold;
             Gems = gems;
+            Shards = shards;
         }
     }
 
@@ -103,7 +106,10 @@ namespace Emberfall.Net.Server.Accounts
                 await _ledger.BalancesAsync(account.PlayerId, ct).ConfigureAwait(false);
             long gold = balances.TryGetValue(EconomyItems.Gold, out long heldGold) ? heldGold : 0;
             long gems = balances.TryGetValue(EconomyItems.Gems, out long heldGems) ? heldGems : 0;
-            return new WalletBalances(gold, gems);
+            // No shard row is the normal pre-first-duplicate state. The ledger projection owns the
+            // zero so the client can distinguish it from an unavailable wallet gateway.
+            long shards = balances.TryGetValue(EconomyItems.Shards, out long heldShards) ? heldShards : 0;
+            return new WalletBalances(gold, gems, shards);
         }
 
         /// <summary>

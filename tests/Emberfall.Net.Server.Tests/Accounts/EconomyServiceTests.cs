@@ -30,6 +30,8 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 "player-1", EconomyItems.Gold, 375, "quest", "quest-1", At));
             await ledger.GrantAsync(new EntitlementGrant(
                 "player-1", EconomyItems.Gems, 550, "play_billing", "store-1", At));
+            await ledger.GrantAsync(new EntitlementGrant(
+                "player-1", EconomyItems.Shards, 125, "duplicate", "dupe-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
 
             WalletBalances wallet = await economy.GetWalletAsync(AuthenticatedAccount());
@@ -38,7 +40,18 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 Assert.That(wallet.Gold, Is.EqualTo(375));
                 Assert.That(wallet.Gems, Is.EqualTo(550));
+                Assert.That(wallet.Shards, Is.EqualTo(125));
             });
+        }
+
+        [Test]
+        public async Task Wallet_Projects_A_Missing_Shard_Row_As_An_Authoritative_Zero()
+        {
+            var economy = new EconomyService(new InMemoryEntitlementLedger(), new FixedTime());
+
+            WalletBalances wallet = await economy.GetWalletAsync(AuthenticatedAccount());
+
+            Assert.That(wallet.Shards, Is.EqualTo(0));
         }
 
         [Test]

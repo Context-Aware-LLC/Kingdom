@@ -65,11 +65,19 @@ namespace Emberfall.Net.Client.Shop
         /// </summary>
         public long Gems { get; }
 
-        public WalletBalances(long gold, long gems)
+        /// <summary>
+        /// The authoritative shard balance projected by the account server. Shards cannot carry
+        /// debt: crafting is balance-gated, unlike the store-refund path that can make Gems negative.
+        /// </summary>
+        public long Shards { get; }
+
+        public WalletBalances(long gold, long gems, long shards)
         {
             if (gold < 0) throw new ArgumentOutOfRangeException(nameof(gold));
+            if (shards < 0) throw new ArgumentOutOfRangeException(nameof(shards));
             Gold = gold;
             Gems = gems;
+            Shards = shards;
         }
     }
 

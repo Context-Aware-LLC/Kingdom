@@ -15,11 +15,11 @@ namespace Emberfall.Net.Client.Tests
         public async Task Purchase_Forwards_The_Choice_And_Adopts_The_Server_Result_Wholesale()
         {
             var before = new ShopSnapshot(
-                new WalletBalances(300, 200),
+                new WalletBalances(300, 200, 75),
                 new List<PackOffer>(),
                 new List<GemBundleOffer>());
             var after = new ShopSnapshot(
-                new WalletBalances(200, 200),
+                new WalletBalances(200, 200, 85),
                 new List<PackOffer>(),
                 new List<GemBundleOffer>());
             var open = new PackOpenReceipt(
@@ -48,6 +48,7 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(result, Is.SameAs(authoritative));
                 Assert.That(flow.Snapshot, Is.SameAs(after));
                 Assert.That(flow.LatestOpen, Is.SameAs(open));
+                Assert.That(result.Shop.Wallet.Shards, Is.EqualTo(85));
             });
         }
 

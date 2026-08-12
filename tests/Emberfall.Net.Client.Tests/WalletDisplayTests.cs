@@ -32,9 +32,20 @@ namespace Emberfall.Net.Client.Tests
         [Test]
         public void A_Negative_Gem_Balance_Is_Representable_On_The_Client()
         {
-            var wallet = new WalletBalances(300, -200);
+            var wallet = new WalletBalances(300, -200, 0);
 
             Assert.That(wallet.Gems, Is.EqualTo(-200));
+        }
+
+        [Test]
+        public void Shards_Distinguish_Unavailable_From_An_Authoritative_Zero()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(WalletDisplay.ShardsUnavailable, Is.EqualTo("Shards  —"));
+                Assert.That(WalletDisplay.Shards(0), Is.EqualTo("Shards  0"));
+                Assert.That(WalletDisplay.Shards(12500), Is.EqualTo("Shards  12,500"));
+            });
         }
     }
 }

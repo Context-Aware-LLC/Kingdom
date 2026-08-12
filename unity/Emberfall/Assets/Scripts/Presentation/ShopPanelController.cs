@@ -46,6 +46,7 @@ namespace Emberfall.Presentation
         private readonly Label _revealSummary;
         private readonly ShopFlow _flow;
         private readonly IBoosterPackagingArtProvider _packagingArt;
+        private readonly System.Action<long?> _shardBalanceChanged;
 
         private ICardDatabase _cards;
         private bool _busy;
@@ -53,7 +54,8 @@ namespace Emberfall.Presentation
         public ShopPanelController(
             VisualElement root,
             IShopGateway gateway,
-            IBoosterPackagingArtProvider packagingArt)
+            IBoosterPackagingArtProvider packagingArt,
+            System.Action<long?> shardBalanceChanged)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
 
@@ -69,6 +71,7 @@ namespace Emberfall.Presentation
             _revealSummary = root.Q<Label>("reveal-summary");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packagingArt = packagingArt;
+            _shardBalanceChanged = shardBalanceChanged;
 
             Wire(root, "btn-shop-close", Close);
             Wire(root, "btn-reveal-done", CloseReveal);
@@ -83,6 +86,21 @@ namespace Emberfall.Presentation
             if (_flow == null)
             {
                 SetStatus("Purchases are waiting for the server wallet connection.");
+                return;
+            }
+
+            RefreshWallet();
+        }
+
+        /// <summary>
+        /// Refresh the shared wallet projection for both the shop and the persistent main-menu
+        /// shard readout. With no gateway, the readout remains explicitly unavailable.
+        /// </summary>
+        public void RefreshWallet()
+        {
+            if (_flow == null)
+            {
+                SetWalletUnavailable();
                 return;
             }
 
@@ -146,6 +164,7 @@ namespace Emberfall.Presentation
             if (snapshot == null) return;
             if (_gold != null) _gold.text = $"Gold  {snapshot.Wallet.Gold:N0}";
             if (_gems != null) _gems.text = WalletDisplay.Gems(snapshot.Wallet.Gems);
+            _shardBalanceChanged?.Invoke(snapshot.Wallet.Shards);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
         }
@@ -154,6 +173,7 @@ namespace Emberfall.Presentation
         {
             if (_gold != null) _gold.text = "Gold  —";
             if (_gems != null) _gems.text = "Gems  —";
+            _shardBalanceChanged?.Invoke(null);
         }
 
         private void RenderPacks(IReadOnlyList<PackOffer> offers, WalletBalances? wallet)
