@@ -11,17 +11,22 @@
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
-    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe',
+    # Hub's default install location, which differs per platform (and the Linux binary has no
+    # .exe). Override with -UnityPath for any non-Hub install. Note an Android build also needs
+    # the Android module installed for that Editor, which a bare headless install will not have.
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" }),
     [switch]$PerfCapture
 )
 
 $ErrorActionPreference = 'Stop'
 
-$REPO_ROOT  = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..' ))
-$PROJECT    = Join-Path $REPO_ROOT 'unity\Emberfall'
+# Path.Combine, never a literal '\' - a backslash is a legal filename character on Linux.
+$REPO_ROOT  = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
+$PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity', 'Emberfall')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
-$APK        = Join-Path $PROJECT 'Builds\Android\Emberfall.apk'
+$APK        = [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Emberfall.apk')
 $BUILD_INFO = "$APK.build.json"
 
 $BUILD_COMMIT = (& git -C $REPO_ROOT rev-parse HEAD).Trim()
@@ -48,7 +53,7 @@ if (-not (Test-Path $PROJECT)) {
     exit 1
 }
 
-$lockFile = Join-Path $PROJECT 'Temp\UnityLockfile'
+$lockFile = [System.IO.Path]::Combine($PROJECT, 'Temp', 'UnityLockfile')
 if (Test-Path $lockFile) {
     Write-Error "Unity project is locked ('$lockFile'). Close the Editor or remove a confirmed-stale lock manually; this harness never clears project locks."
     exit 1

@@ -34,8 +34,13 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$REPO_ROOT = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-$PROJECT   = Join-Path $REPO_ROOT 'unity\Emberfall'
+# Path segments are joined via Path.Combine, never with literal '\'. A backslash is a legal
+# FILENAME character on Linux, so 'unity\Emberfall' there is not a path - it is a single odd
+# filename that simply does not exist, and this script would fail below with "Unity project not
+# found" as though the checkout were broken. Same trap that created literal 'C:\pw\...'
+# directories in the agents box.
+$REPO_ROOT = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
+$PROJECT   = [System.IO.Path]::Combine($REPO_ROOT, 'unity', 'Emberfall')
 
 if (-not (Test-Path $PROJECT)) {
     Write-Error "Unity project not found at '$PROJECT'."

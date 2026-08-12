@@ -18,12 +18,16 @@
 [CmdletBinding()]
 param(
     [string]$Configuration = 'Debug',
-    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
+    # Hub's default install location, which differs per platform (and the Linux binary has no
+    # .exe). Override with -UnityPath for any non-Hub install.
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" })
 )
 
 $ErrorActionPreference = 'Stop'
 
-$REPO_ROOT = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
+# Path.Combine, never a literal '\' - a backslash is a legal filename character on Linux.
+$REPO_ROOT = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
 $AGENT_DIR = Join-Path $REPO_ROOT '.agent'
 $OUT_PATH  = Join-Path $AGENT_DIR 'unity-gate.json'
 

@@ -10,13 +10,21 @@
 #        pwsh tools/ci/unity-verify.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
-    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe'
+    # Hub's default install location, which differs per platform (and the Linux binary has no
+    # .exe). Override with -UnityPath for any non-Hub install. The version is pinned to match
+    # unity/Emberfall/ProjectSettings/ProjectVersion.txt; a mismatched Editor compiles against
+    # different assemblies and makes this gate report on something you do not ship.
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" })
 )
 
 $ErrorActionPreference = 'Stop'
 
-$REPO_ROOT  = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..' ))
-$PROJECT    = Join-Path $REPO_ROOT 'unity\Emberfall'
+# Path.Combine, never a literal '\': a backslash is a legal FILENAME character on Linux, so
+# 'unity\Emberfall' there is one odd filename rather than a path, and this fails below as
+# "Unity project not found" as though the checkout were broken.
+$REPO_ROOT  = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
+$PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity', 'Emberfall')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-verify-$TIMESTAMP.log"
 
@@ -30,7 +38,7 @@ if (-not (Test-Path $PROJECT)) {
     exit 1
 }
 
-$lockFile = Join-Path $PROJECT 'Temp\UnityLockfile'
+$lockFile = [System.IO.Path]::Combine($PROJECT, 'Temp', 'UnityLockfile')
 if (Test-Path $lockFile) {
     Write-Error "Unity project is locked ('$lockFile'). Close the Editor or remove a confirmed-stale lock manually; this harness never clears project locks."
     exit 1
@@ -61,8 +69,8 @@ if ($compileInputs.Count -eq 0) {
 }
 
 $compileBarrierUtc = [DateTime]::UtcNow
-foreach ($input in $compileInputs) {
-    [System.IO.File]::SetLastWriteTimeUtc($input.FullName, $compileBarrierUtc)
+foreach ($compileInput in $compileInputs) {
+    [System.IO.File]::SetLastWriteTimeUtc($compileInput.FullName, $compileBarrierUtc)
 }
 
 Write-Host "unity-verify: Unity  $UnityPath"
