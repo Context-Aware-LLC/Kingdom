@@ -60,8 +60,16 @@ namespace Emberfall.Presentation
                 return null;
             }
 
-            var rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
-            rt.Create();
+            // depth=0: flat orthographic capture has no depth test; 24-bit depth buffer was
+            // ~40% of the per-tile cost (~320 KB on a 276×387 face) and served no purpose.
+            var rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
+            if (!rt.Create())
+            {
+                Debug.LogWarning($"[CardSnapshot] RenderTexture.Create failed for {width}×{height} — " +
+                                 "device is likely under graphics memory pressure.");
+                Object.DestroyImmediate(rt);
+                return null;
+            }
 
             // Includes inactive children so the restore is total — the art quad is inactive
             // whenever a card's illustration has not resolved.

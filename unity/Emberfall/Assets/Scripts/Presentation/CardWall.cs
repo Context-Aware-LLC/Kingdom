@@ -144,7 +144,15 @@ namespace Emberfall.Presentation
 
                 _baker.Bake(def, tex =>
                 {
-                    if (tex == null) return;
+                    if (tex == null)
+                    {
+                        // A blank tile that is still clickable is worse than no tile: the player
+                        // can add a card they cannot read. Disable picking so the slot is inert
+                        // until the bake succeeds (or is never retried — same outcome either way).
+                        Debug.LogWarning($"[CardWall] bake failed for '{captured.Id}' — tile will be blank and non-interactive.");
+                        tile.pickingMode = PickingMode.Ignore;
+                        return;
+                    }
                     tile.style.backgroundImage =
                         new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
                 });

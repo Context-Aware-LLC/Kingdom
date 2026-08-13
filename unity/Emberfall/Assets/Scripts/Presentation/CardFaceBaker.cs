@@ -214,8 +214,22 @@ namespace Emberfall.Presentation
             _rig.SetArt(sprite);
 
             RenderTexture rt = CardSnapshot.Capture(_rigVisual, faceWidth, faceHeight);
-            if (rt == null) _captureFailed = true;   // the layer is missing; it will be missing next time too
-            else            _cache[def.Id] = rt;
+            if (rt != null)
+            {
+                _cache[def.Id] = rt;
+            }
+            else
+            {
+                // Distinguish permanent (missing layer) from transient (RT alloc / memory pressure).
+                // Latch only on the permanent case — an alloc failure should not poison every card
+                // that follows; the next attempt might succeed once memory is available again.
+                // Capture already logged the specific reason.
+                if (LayerMask.NameToLayer(CardSnapshot.CaptureLayerName) < 0)
+                    _captureFailed = true;
+                else
+                    Debug.LogWarning($"[CardFaceBaker] capture returned null for '{def.Id}' " +
+                                     "(RT alloc failure — see above); tile will be blank.");
+            }
 
             Deliver(def.Id, rt);
 
