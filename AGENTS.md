@@ -53,13 +53,20 @@ execution-workspace policy, this table is wrong and the excluded paths become a 
   push directly to `master`, or force-push a shared branch. The merge is Sam's checkpoint.
 - If role-specific instructions forbid pushing or opening a pull request, hand the local commit to
   the named lead. That lead owns the rebase, branch publication, and mandatory pull request before
-  integration; a local-only handoff never bypasses CI.
-- `agent/**` is deliberately absent from the workflow's `push` branches. For an `agent/**`
-  branch, opening a pull request is mandatory: the `pull_request` workflow is its only cloud CI
-  gate and reruns on every subsequent push. `feat/**` and `fix/**` also run CI on push before a
-  pull request exists. See `.github/workflows/ci.yml`.
-- A failing pull request remains the branch owner's responsibility. Fix the gate or record the
-  unresolved failure on the issue; do not silently hand off a red branch.
+  integration.
+- **There is no cloud CI on your pull request. Do not wait for one.** Since 2026-08-13 `ci.yml`
+  has no `push` and no `pull_request` trigger — it is `workflow_dispatch` plus a daily 09:00 UTC
+  cron on `master`. Actions burned 1756 of the 2000 free minutes in 13 days and run count was the
+  only lever; the full reasoning is in the header of `.github/workflows/ci.yml`. A pull request
+  that sits waiting to go green waits forever.
+- **`pwsh tools/ci/gates.ps1` is the gate now, and it is yours to run.** Same stages as the cloud
+  pipeline, same filters, ~2.5 min, free. Run it on the rebased tree before you push and report
+  the result on the issue. Nothing else will catch you — the daily run reports against `master`
+  hours later, long after your branch merged.
+- If a change genuinely warrants a cloud run, ask Sam to dispatch `ci.yml` at your branch rather
+  than spending the budget yourself.
+- A failure you introduced remains yours whether a cloud run found it or `gates.ps1` did. Fix the
+  gate or record the unresolved failure on the issue; do not silently hand off a red branch.
 
 ## Verification
 
