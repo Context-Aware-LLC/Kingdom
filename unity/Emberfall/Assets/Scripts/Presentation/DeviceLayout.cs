@@ -12,6 +12,14 @@ namespace Emberfall.Presentation
     /// every 1080p phone renders a byte-identical card no matter its aspect or its ppi — and
     /// a wider aspect buys horizontal room rather than shrinking anything.</para>
     ///
+    /// <para>RETIREMENT TRIGGER (NOR-358): if you unlock portrait autorotation
+    /// (ProjectSettings.asset <c>allowedAutorotateToPortrait</c>), revisit all three
+    /// UI PanelSettings assets — Deckbuilder, MainMenu, MatchSettings. They currently use
+    /// <c>ScaleWithScreenSize</c> (<c>m_ScaleMode: 1</c>) with <c>m_Match: 1</c> (pure height
+    /// axis). That choice follows from the board being landscape-only: height is the stable axis
+    /// across all supported aspects. Portrait support makes height unstable; the match axis must
+    /// be re-evaluated before any portrait build ships.</para>
+    ///
     /// <para>Measured 2026-08-02 by <c>tooling/scripts/device_layout.py</c>, which parses these
     /// same constants out of the shipping source and prints the full table. Run it rather than
     /// re-deriving anything here by hand.</para>
