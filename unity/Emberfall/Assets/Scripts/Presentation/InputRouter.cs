@@ -52,7 +52,6 @@ namespace Emberfall.Presentation
         private bool          _sourceIsOwnHero;
 
         private readonly PointerSampler _pointer = new PointerSampler();
-        private readonly AimLineView    _aim     = new AimLineView();
 
         private GameState          _currentState;
         private HotSeatInput       _p0Input;
@@ -213,8 +212,6 @@ namespace Emberfall.Presentation
                 ArmVisuals();
             }
 
-            if (_gesture == Gesture.Dragging || _gesture == Gesture.ArmedByTap)
-                UpdateAim(screenPos);
         }
 
         private void OnPointerReleased(Vector2 screenPos)
@@ -323,7 +320,6 @@ namespace Emberfall.Presentation
             _sourceIsOwnHero = false;
             _source          = DragSource.None;
             _gesture         = Gesture.None;
-            _aim.Hide();
             ClearTargeting();
 
             // Clear any awaiting-effect-target state (two-step herald).
@@ -348,8 +344,6 @@ namespace Emberfall.Presentation
                 _pointer.Reset();
             }
         }
-
-        private void OnDestroy() => _aim.Dispose();
 
         // ── Raycast: screen point → what the pointer is over ────────────────────────
 
@@ -431,17 +425,6 @@ namespace Emberfall.Presentation
             }
 
             return PointerSubject.None;
-        }
-
-        private void UpdateAim(Vector2 screenPos)
-        {
-            if (_sourceTransform == null) { _aim.Hide(); return; }
-            Camera cam = Camera.main;
-            if (cam == null) { _aim.Hide(); return; }
-
-            float depth = Mathf.Abs(AimLineView.AimZ - cam.transform.position.z);
-            Vector3 world = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, depth));
-            _aim.Show(_sourceTransform.position, world);
         }
 
         // ── Targeting-state visibility ─────────────────────────────────────────────
