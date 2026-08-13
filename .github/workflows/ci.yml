@@ -36,9 +36,30 @@ on:
     # `feat/**` and `fix/**` stay: those are hand-pushes that may not have a PR yet.
     # RETIREMENT TRIGGER: if agents ever stop opening PRs, put `agent/**` back in the same
     # commit that changes their AGENTS.md briefs.
-    branches: [ master, "feat/**", "fix/**" ]
+    #
+    # `feat/**` and `fix/**` LEFT for the same reason `agent/**` did, on 2026-08-13. The note
+    # above stopped at `agent/**` and called the double-run fixed; it was not. `pull_request`
+    # below re-fires on every push to ANY branch with an open PR, so a hand-pushed `feat/**`
+    # that then got a PR ran the identical SHA twice — measured over the Aug billing cycle,
+    # 19 commits double-fired, ~76 billed minutes for zero extra signal. The trade is the one
+    # already accepted for `agent/**`: a branch pushed and never PR'd gets no CI, and "no CI
+    # ran" surfaces that better than silently spending the budget on it.
+    branches: [ master ]
   pull_request:
     branches: [ master ]
+
+# Supersede in-flight runs of the SAME pull request. Without this, three commits pushed to a PR
+# in ten minutes bought three full pipelines, two of them gating code already replaced —
+# measured, 57 superseded runs and ~228 billed minutes in the Aug 1-13 cycle alone.
+#
+# `cancel-in-progress` is DELIBERATELY FALSE ON master. Master is not merely the merge of PRs
+# already gated: 230 pushes landed there in that cycle against 104 merged PRs, so a large share
+# of master commits never saw a PR and this workflow is their ONLY gate. Cancelling a superseded
+# master run would leave those commits ungated and green-by-omission. Every master commit gets
+# its own run; only PR/branch runs are cancellable.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 permissions:
   contents: read
