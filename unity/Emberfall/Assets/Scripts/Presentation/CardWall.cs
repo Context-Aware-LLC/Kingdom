@@ -34,6 +34,10 @@ namespace Emberfall.Presentation
         /// <summary>Floor == --space-4; never squeeze tighter than that token.</summary>
         private const float MinGutter = 16f;
 
+        // Pointer movement beyond this distance (in panel pixels) is treated as a scroll gesture,
+        // not a tap. Keeps PointerUp from firing TileClicked after the player drags to scroll.
+        private const float TileDragThreshold = 10f;
+
         // A row solved to land EXACTLY on the available width is a floating-point tie: the tile's
         // real resolved width (measured live: 275.9598px, not the authored 276px) never matches
         // TileWidth to the decimal, so the row Yoga actually lays out overshoots by a hair and it
@@ -51,6 +55,14 @@ namespace Emberfall.Presentation
         private CardFilter _filter;                       // null = no constraint
         private CardSort _sort = CardSort.Default;
         private bool _layoutQueued;
+
+        // Cache used by Layout() to break the GeometryChangedEvent feedback loop.
+        // See Layout() for the full explanation.
+        private float _lastLayoutAvailable = -1f;
+        private int _lastLayoutVisibleCount = -1;
+
+        /// <summary>Total <see cref="Layout"/> calls since construction. Read by NOR-360 instrumentation.</summary>
+        public int LayoutCount { get; private set; }
 
         /// <summary>Raised when a tile is clicked. The wall itself never mutates anything.</summary>
         public event Action<CardDefinition> TileClicked;
@@ -90,7 +102,45 @@ namespace Emberfall.Presentation
                 tile.userData = def;
 
                 var captured = def;
-                tile.RegisterCallback<ClickEvent>(_ => TileClicked?.Invoke(captured));
+
+                // Distinguish a tap from a scroll gesture. ClickEvent fires even after a drag, so
+                // replacing it with pointer tracking: a gesture that moves more than TileDragThreshold
+                // or leaves the tile before releasing is a scroll, not a tap.
+                bool tilePointerDown = false;
+                bool tileDragged     = false;
+                Vector2 tileDownPos  = default;
+
+                tile.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    tilePointerDown = true;
+                    tileDragged     = false;
+                    tileDownPos     = new Vector2(e.position.x, e.position.y);
+                });
+                tile.RegisterCallback<PointerMoveEvent>(e =>
+                {
+                    if (!tilePointerDown) return;
+                    float dx = e.position.x - tileDownPos.x;
+                    float dy = e.position.y - tileDownPos.y;
+                    if (dx * dx + dy * dy > TileDragThreshold * TileDragThreshold)
+                        tileDragged = true;
+                });
+                tile.RegisterCallback<PointerLeaveEvent>(_ =>
+                {
+                    // Pointer left the tile — this is a scroll gesture, not a tap.
+                    tilePointerDown = false;
+                    tileDragged     = false;
+                });
+                tile.RegisterCallback<PointerUpEvent>(e =>
+                {
+                    if (tilePointerDown && !tileDragged) TileClicked?.Invoke(captured);
+                    tilePointerDown = false;
+                    tileDragged     = false;
+                });
+                tile.RegisterCallback<PointerCancelEvent>(_ =>
+                {
+                    tilePointerDown = false;
+                    tileDragged     = false;
+                });
 
                 _baker.Bake(def, tex =>
                 {
@@ -153,6 +203,8 @@ namespace Emberfall.Presentation
             }
 
             RefreshTiles();
+            _lastLayoutAvailable    = -1f;  // force a fresh Layout() pass for the new visible set
+            _lastLayoutVisibleCount = -1;
             QueueLayout();
         }
 
@@ -186,8 +238,28 @@ namespace Emberfall.Presentation
 
         private void Layout()
         {
+            LayoutCount++;
+
             float available = _grid.resolvedStyle.width - RowSafetyMargin;
             if (available <= 0f) return;
+
+            // Break the GeometryChangedEvent feedback loop.
+            //
+            // The problem: Layout() writes marginRight onto tiles → Yoga fires GeometryChangedEvent
+            // → the registered handler calls QueueLayout() → Layout() runs again → loop.
+            // _layoutQueued only coalesces bursts within the SAME tick; it does not stop the
+            // cross-tick chain, because _layoutQueued is set to false before Layout() is called.
+            //
+            // The gutter solve depends only on (available_width, visible_count): same inputs → same
+            // margins → no new GeometryChangedEvent. So early-returning when both are unchanged
+            // writes nothing, fires no event, and terminates the chain.
+            //
+            // ApplyQuery() resets both fields to -1 before calling QueueLayout(), so a filter or
+            // sort change always runs at least one fresh pass even if the width is unchanged.
+            if (Mathf.Approximately(available, _lastLayoutAvailable) && _visible.Count == _lastLayoutVisibleCount)
+                return;
+            _lastLayoutAvailable    = available;
+            _lastLayoutVisibleCount = _visible.Count;
 
             int columns = Mathf.Max(1, Mathf.FloorToInt((available + MinGutter) / (TileWidth + MinGutter)));
             float gutter = columns > 1 ? (available - columns * TileWidth) / (columns - 1) : 0f;

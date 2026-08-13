@@ -187,6 +187,8 @@ namespace Emberfall.Presentation
 
             ApplyQuery();
             if (Deckbuilding) Refresh();
+
+            WireCollectionScroll();
         }
 
         /// <summary>
@@ -603,6 +605,34 @@ namespace Emberfall.Presentation
                 return ca != cb ? ca.CompareTo(cb)
                                 : string.CompareOrdinal(da?.Name, db?.Name);
             });
+        }
+
+        // ---- Collection scroll (NOR-360) ----
+        //
+        // The Android system back gesture (and keyboard Escape on PC) routes through
+        // NavigationCancelEvent. This is the belt-and-suspenders exit: back-button and done-button
+        // are already wired below, but both require the player to scroll back to them. The gesture
+        // escapes the screen regardless of scroll position.
+        //
+        // The DEVELOPMENT_BUILD block logs the data the issue asks for: scroll offset, grid content
+        // height, and layout call count sampled every 500ms. On a loop-free build the layout count
+        // should only tick up on resize or filter changes, not while idle or during a scroll gesture.
+        private void WireCollectionScroll()
+        {
+            _root.RegisterCallback<NavigationCancelEvent>(_ => Exit());
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var scroll = _root.Q<ScrollView>("collection-scroll");
+            if (scroll != null && _wall != null && _grid != null)
+            {
+                scroll.schedule.Execute(() =>
+                {
+                    Debug.Log($"[NOR-360] offset={scroll.scrollOffset.y:F1} " +
+                              $"content.h={_grid.resolvedStyle.height:F1} " +
+                              $"layouts={_wall.LayoutCount}");
+                }).Every(500);
+            }
+#endif
         }
 
         // ---- Chrome (buttons) ----

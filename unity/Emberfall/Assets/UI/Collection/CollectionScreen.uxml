@@ -102,7 +102,7 @@
 
                 <!-- The pairing chips moved up into the query row (#160); nothing stands here now. -->
 
-                <ui:ScrollView name="collection-scroll" class="col-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
+                <ui:ScrollView name="collection-scroll" class="col-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic">
                     <ui:VisualElement name="collection-grid" class="db-grid" />
                 </ui:ScrollView>
 
