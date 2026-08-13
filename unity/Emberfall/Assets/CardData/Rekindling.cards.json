@@ -1743,7 +1743,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "clock_rebuilt_automaton"
+    "artId": "clock_reconstructed_automaton"
   },
   {
     "id": "rekind_clock_assembly_line",

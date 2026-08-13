@@ -274,7 +274,7 @@
     "keywords": [],
     "setId": "CORE",
     "collectible": true,
-    "artId": "grave_lantern_bearer",
+    "artId": "gravelight_lantern_bearer",
     "rules": [
       {
         "id": "rule_1",

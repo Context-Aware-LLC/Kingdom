@@ -114,7 +114,12 @@ namespace Emberfall.Core.Tests.CardValidation
             // keep their original full title as the new `tooltip` field (CardJson didn't recognize
             // that property until this change, so the audit commit had actually left the checked-in
             // JSON unparseable — CardJson.CardProperties/CardDefinition now carry `tooltip`).
-            Assert.That(hash, Is.EqualTo("A2955E94E7D8178CCC174E5EDB336B4DD2B7F0B723A3A0A2C64020921DB77887"),
+            //
+            // Re-pinned 2026-08-13 (NOR-363 / GH#184): three artId near-miss corrections —
+            // core_lantern_bearer: grave_lantern_bearer -> gravelight_lantern_bearer,
+            // tide_glacial_leviathan: tide_glacial_leviathan -> tide_glacierborn_leviathan,
+            // rekind_clock_rebuilt_automaton: clock_rebuilt_automaton -> clock_reconstructed_automaton.
+            Assert.That(hash, Is.EqualTo("A5B12C98B0A1822F08ADCDB563F3D5E9FA17CCE408BFDB30C07592E28EC403CA"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's

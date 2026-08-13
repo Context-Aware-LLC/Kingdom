@@ -222,6 +222,15 @@ jobs:
       - name: "Stage 6b · Trigger/selector drift guard (tooling/scripts)"
         run: python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
 
+      # CardCi (Stage 6 above) warns on missing art — placeholder-art policy, M2 decision 18.
+      # This step closes the gap for artIds that point at filenames that never existed: it fails
+      # (exit 1) when any artId in card data resolves to no .png on disk, which is breakage rather
+      # than a placeholder. --fail-missing-only scopes the gate to artId resolution only; class-token
+      # and set-folder findings are reported but do not block the build (they need Unity-Editor
+      # intervention to rename PNGs without breaking Addressables guids).
+      - name: "Stage 6b · Art-id resolution check (tooling/scripts)"
+        run: python3 tooling/scripts/audit_card_art_names.py --fail-missing-only
+
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.
       # TWO local substitutes, and they are not interchangeable:

@@ -298,7 +298,7 @@
     ],
     "setId": "CORE",
     "collectible": true,
-    "artId": "grave_lantern_bearer"
+    "artId": "gravelight_lantern_bearer"
   },
   {
     "id": "core_aegis_templar",
@@ -2302,7 +2302,7 @@
     "tribe": "BEAST",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "tide_glacial_leviathan"
+    "artId": "tide_glacierborn_leviathan"
   },
   {
     "id": "ember_ashfall_wyrm",

@@ -27,6 +27,11 @@ Three further checks, each for something no existing gate reports:
 
 Exit 1 if any mismatch is found. Orphans and duplicates are reported but do NOT fail the run: they
 are bookkeeping, not breakage.
+
+Pass --fail-missing-only to restrict the exit-1 condition to artIds with no matching file on disk
+(useful in CI when class-token mismatches are pre-existing and need Unity-Editor intervention to
+fix properly — renaming a PNG without the Editor mints a new guid and orphans the Addressables
+entry).
 """
 import collections
 import hashlib
@@ -59,6 +64,12 @@ def first_segment(art_id):
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--fail-missing-only", action="store_true",
+                        help="exit 1 only when artIds have no matching file; do not fail on class-token or set-folder issues")
+    args = parser.parse_args()
+
     all_rows = [(f, c) for f, c in rows() if c.get("artId")]
 
     # Derive classToken from the data: the dominant leading segment per non-NEUTRAL class.
@@ -151,6 +162,14 @@ def main():
         for row in sorted(misplaced):
             print(f"{row[0]:<36} {row[1]:<11} {row[2]:<34} {row[3]}")
 
+    if missing:
+        print()
+        print("ARTID WITH NO PNG — these artIds resolve to no file on disk (BLOCKING)")
+        print(f"{'card id':<36} {'set':<11} artId")
+        print("-" * 90)
+        for row in sorted(missing):
+            print(f"{row[0]:<36} {row[1]:<11} {row[2]}")
+
     if orphans:
         print()
         print("ORPHAN PNGs — no card row points at these. NOT deleted; reported only.")
@@ -168,7 +187,9 @@ def main():
                 status = "unique image — the only copy"
             print(f"{stem + '.png':<38} {on_disk[stem][0]:<12} {status}")
 
-    return 1 if (findings or misplaced) else 0
+    if args.fail_missing_only:
+        return 1 if missing else 0
+    return 1 if (findings or misplaced or missing) else 0
 
 
 if __name__ == "__main__":
