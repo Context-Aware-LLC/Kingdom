@@ -79,6 +79,16 @@
     border-radius: var(--space-2);
     padding: var(--space-3);
     margin-bottom: var(--space-4);
+    /* Never let the wall shrink the bar away (#160 non-render, deckbuild). The body below is
+     * flex-grow:1 and its flex-basis is the wall's content height — the full pairing pool in
+     * deckbuild is ~90 tall tiles, so that basis overflows the column and the root distributes
+     * negative space by shrinking every child. Yoga (UI Toolkit's layout engine) does NOT floor a
+     * flex item at its content size the way CSS `min-height:auto` does, so with the default
+     * flex-shrink:1 the bar collapses to zero height and vanishes — only in deckbuild, because
+     * browse's owned-scope wall is short enough to leave non-negative free space. Pinning
+     * flex-shrink:0 reserves the bar's height; the body absorbs the shrink and its ScrollView
+     * scrolls, which is the intended behaviour. Browse is unchanged: its bar was never shrunk. */
+    flex-shrink: 0;
 }
 .col-query-row {
     flex-direction: row;
