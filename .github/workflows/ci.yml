@@ -23,8 +23,57 @@ name: Emberfall CI — determinism gates
 #    Windows dev box and asserting them on a Linux runner proves the little-endian, platform-independent
 #    canonical hash (golden-replay.md §4.4).
 
+# ─────────────────────────────────────────────────────────────────────────────────────────────
+# NO PER-PUSH CI. Sam's ruling, 2026-08-13. Read this before re-adding a `push:` or
+# `pull_request:` trigger, because the reasoning is a budget, not a preference.
+#
+# THE MEASUREMENT. Aug 1-13 — 13 days of a 30-day cycle — burned 1756 of the 2000 free minutes
+# on this repo alone: 436 runs at ~3.5 billed minutes each. GitHub rounds every JOB up to a whole
+# minute, so 1531 wall-clock minutes billed as 1756; that rounding is also why splitting these
+# stages into parallel jobs would cost MORE, not less. Per-run cost is essentially fixed (build
+# alone is 28s, and the two fat stages are `dotnet format` at ~55s and the contract tests at
+# ~72s), so the only lever that exists is run count. Surviving to the Sept 1 reset on the
+# remaining ~244 minutes allows about 3 runs per day. Per-push CI cannot fit in that at any
+# trigger granularity, so it is gone rather than crippled.
+#
+# WHERE THE MINUTES WENT, so a future reader does not re-litigate the cheap fixes first:
+#   master pushes  230 runs, ~920 min (52%)   <- this trigger, the whole reason for this block
+#   PR runs        170 runs, ~681 min (39%)
+#   feat/fix push   27 runs, ~108 min          <- duplicates, removed earlier the same day
+#   nightly/agents   ~47 min
+# Dependency caching was measured and REJECTED: `dotnet restore` takes 5-8 seconds, so caching it
+# saves ~2%. Do not re-propose it as the fix; it is generic advice that does not apply here.
+#
+# WHAT REPLACES IT. `tools/ci/gates.ps1` runs this exact stage list locally, free, in ~90s — it
+# is the pre-push gate now, alongside `unity-compile.ps1` for the Unity half. The daily schedule
+# below is the regression net; `workflow_dispatch` is how you gate something that matters (it
+# accepts a branch, so you can point it at a PR head).
+#
+# ACCEPTED RISK. Solo developer, no stakeholders, pre-release. Master can go red between daily
+# runs and that is a deliberate trade against a metered bill, NOT an oversight.
+#
+# RETIREMENT TRIGGER: a paid plan, a second developer, or anything with a stakeholder. Restore
+# `pull_request: [master]` FIRST (it gates agent work, which never runs the local script) and
+# leave push alone — the concurrency block below already exists to make that affordable.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
 on:
-  push:
+  workflow_dispatch:
+    inputs:
+      nightly:
+        description: "Also run the slow Category=Nightly corpus"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 9 * * *"   # 09:00 UTC daily — the one scheduled full pass
+
+# The pre-2026-08-13 triggers, kept verbatim so restoring them is a copy rather than a rewrite:
+#
+#   push:
+#     branches: [ master ]
+#   pull_request:
+#     branches: [ master ]
+#
+# Historical note on why `push` had narrowed to master by then:
     # `agent/**` IS DELIBERATELY ABSENT — do not re-add it. EF-002 put it here and was right
     # to: while agents were told "leave commits local, do not push", a pushed agent branch was
     # the only artifact CI could ever see. That stopped being true on 2026-08-01, when the
@@ -33,22 +82,15 @@ on:
     # so listing `agent/**` here bought nothing and ran the whole pipeline twice on the same
     # commit — measured, 2 runs vs 1. A branch pushed and never PR'd is now a rule violation,
     # and "no CI ran" surfaces that better than silently spending the minute budget on it.
-    # `feat/**` and `fix/**` stay: those are hand-pushes that may not have a PR yet.
-    # RETIREMENT TRIGGER: if agents ever stop opening PRs, put `agent/**` back in the same
-    # commit that changes their AGENTS.md briefs.
-    #
-    # `feat/**` and `fix/**` LEFT for the same reason `agent/**` did, on 2026-08-13. The note
-    # above stopped at `agent/**` and called the double-run fixed; it was not. `pull_request`
-    # below re-fires on every push to ANY branch with an open PR, so a hand-pushed `feat/**`
-    # that then got a PR ran the identical SHA twice — measured over the Aug billing cycle,
-    # 19 commits double-fired, ~76 billed minutes for zero extra signal. The trade is the one
-    # already accepted for `agent/**`: a branch pushed and never PR'd gets no CI, and "no CI
-    # ran" surfaces that better than silently spending the budget on it.
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    # `feat/**` and `fix/**` then LEFT for the same reason on 2026-08-13: the note above had
+    # stopped at `agent/**` and called the double-run fixed, and it was not. `pull_request`
+    # re-fired on every push to ANY branch with an open PR, so a hand-pushed `feat/**` that
+    # then got a PR ran the identical SHA twice — 19 commits, ~76 billed minutes, zero extra
+    # signal. Hours later the budget math above retired the remaining triggers outright.
 
-# Supersede in-flight runs of the SAME pull request. Without this, three commits pushed to a PR
+# Supersede in-flight runs of the SAME pull request. Dormant while the triggers above are
+# schedule/dispatch only — kept because it is the thing that makes `pull_request` affordable
+# to restore, and rediscovering it would cost another billing cycle. Without this, three commits pushed to a PR
 # in ten minutes bought three full pipelines, two of them gating code already replaced —
 # measured, 57 superseded runs and ~228 billed minutes in the Aug 1-13 cycle alone.
 #
@@ -201,6 +243,22 @@ jobs:
       - name: "Stage 9 · On-device perf gate D8 (manual device job)"
         continue-on-error: true
         run: echo "perf-gate.json is filled by the Performance Benchmarker on the baseline device at the milestone boundary (ci-gates.md §5.2) — not a cloud CI job."
+
+      # ── Nightly corpus — folded in from the retired nightly.yml (2026-08-13) ────
+      # Was its own workflow on its own 09:00 schedule. That paid a second checkout, a second
+      # setup-dotnet and a second Release build (~1.2 min) to reach the same green tree this job
+      # already has, then paid GitHub's per-job round-up on top. Same schedule, same runner,
+      # nothing shared — so it is a step here instead, and nightly.yml is gone.
+      #
+      # [Category("Nightly")] is still excluded from every stage above: it is the slow corpus
+      # (BotSeatRunnerTests plays a real bot-vs-bot match through 500-2000ms human-pacing delays,
+      # ~2m30s) in a suite that is millisecond-scale everywhere else — Sam's ruling 2026-08-09,
+      # ai-opponent-matchmaking-fallback. It runs on the daily tick, or on demand via the
+      # `nightly` dispatch input when chasing a Nightly-only regression.
+      - name: "Nightly · Category=Nightly (slow corpus)"
+        if: github.event_name == 'schedule' || inputs.nightly
+        timeout-minutes: 15
+        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Nightly" --logger "trx;LogFileName=nightly.trx" --results-directory artifacts
 
       - name: Upload gate artifacts
         if: always()
