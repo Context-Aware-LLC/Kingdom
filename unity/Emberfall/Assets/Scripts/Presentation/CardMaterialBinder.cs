@@ -17,7 +17,7 @@ namespace Emberfall.Presentation
     ///                     DamageApplied/HealthRestored
     ///   _ShroudAmount  → bodyRenderer   SG_Shroud alpha body — tween to 0.6 (not 1; keeps card readable)
     ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frosted change (0.3s)
-    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) | selection | AttackReadiness.Ready
+    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) | AttackReadiness.Ready
     ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Bulwark is spatial (row offset)
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
@@ -84,7 +84,6 @@ namespace Emberfall.Presentation
 
         // ── ICardLiveState.Changed ──────────────────────────────────────────────────
 
-        private bool _selectionGlow;
         private bool? _targetOverride; // non-null while targeting is armed: glow = valid-target only
 
         private void OnChanged(CardChange what)
@@ -100,36 +99,36 @@ namespace Emberfall.Presentation
         private static readonly Color DefaultGlowColor = new Color(1.6f, 1.3f, 0.2f, 1f);
 
         // A deliberately different color from the shared gold (Sam, 2026-08-09): Arcane Surge,
-        // selection, attack-readiness and Aegis all glow the identical gold today, so a player
-        // cannot tell "this is a legal spell/herald target" apart from any of the other ~11
-        // reasons a card might already be lit up. Cyan reads as a distinct, unclaimed signal
-        // against a gold-heavy board.
+        // attack-readiness and Aegis all glow the identical gold, so a player cannot tell
+        // "this is a legal spell/herald target" apart from any of the other reasons a card
+        // might already be lit up. Cyan reads as a distinct, unclaimed signal against a
+        // gold-heavy board.
         private static readonly Color TargetGlowColor = new Color(0.2f, 1.4f, 1.6f, 1f);
 
-        // Glow overlay is shared by three signals: Arcane Surge aura, selection highlight,
-        // and can-attack readiness. Any one keeps it on. While targeting is armed
-        // (_targetOverride set by BoardController from InputRouter.TargetingChanged) the
-        // normal signals are suppressed so ONLY valid targets glow — targeting-state
-        // visibility beats readiness noise for the duration of the aim.
+        // Glow overlay is shared by two signals: Arcane Surge aura and can-attack readiness.
+        // Either keeps it on. While targeting is armed (_targetOverride set by BoardController
+        // from InputRouter.TargetingChanged) the normal signals are suppressed so ONLY valid
+        // targets glow — targeting-state visibility beats readiness noise for the duration of
+        // the aim.
         private void ApplyGlow()
         {
             if (_glowRenderer == null) return;
             if (_targetOverride.HasValue)
             {
                 bool isValidTarget = _targetOverride.Value;
-                _glowRenderer.enabled = isValidTarget || _selectionGlow;
+                _glowRenderer.enabled = isValidTarget;
                 PushColorTo(_glowRenderer, ShaderIds.GlowColor,
                     isValidTarget ? TargetGlowColor : DefaultGlowColor);
                 return;
             }
             bool auraGlow  = _live != null && (_live.Auras & AuraSet.Glow) != 0;
             bool readyGlow = _live != null && _live.AttackReadiness == AttackReadiness.Ready;
-            _glowRenderer.enabled = _selectionGlow || auraGlow || readyGlow;
+            _glowRenderer.enabled = auraGlow || readyGlow;
             PushColorTo(_glowRenderer, ShaderIds.GlowColor, DefaultGlowColor);
         }
 
         /// <summary>Targeting-mode glow override: true/false while armed (valid / not a
-        /// target), null to restore the normal aura|selection|readiness combine.</summary>
+        /// target), null to restore the normal aura|readiness combine.</summary>
         public void SetTargetOverride(bool? isValidTarget)
         {
             _targetOverride = isValidTarget;
@@ -167,7 +166,7 @@ namespace Emberfall.Presentation
                     v => { _shroudCurrent = v; PushFloat(ShaderIds.ShroudAmount, v); },
                     _shroudCurrent, shroudTarget, ShroudDur));
 
-            // Glow: combined signal (aura / selection / can-attack) — see ApplyGlow().
+            // Glow: combined signal (aura / can-attack) — see ApplyGlow().
             ApplyGlow();
 
             // Aegis underlay: Aegis only. Bulwark reads spatially (front row,
@@ -195,18 +194,6 @@ namespace Emberfall.Presentation
                         break;
                 }
             }
-        }
-
-        // ── Affordance glow (called by InputRouter or ClickableCard) ────────────────
-
-        /// <summary>
-        /// Drive the Glow overlay for the selection highlight. Additive with AuraSet.Glow
-        /// and can-attack readiness — glow stays on while any signal holds.
-        /// </summary>
-        public void SetAffordanceGlow(bool active)
-        {
-            _selectionGlow = active;
-            ApplyGlow();
         }
 
         // ── Coroutines ───────────────────────────────────────────────────────────────

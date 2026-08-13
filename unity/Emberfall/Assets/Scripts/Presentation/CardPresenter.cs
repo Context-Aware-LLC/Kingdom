@@ -221,13 +221,11 @@ namespace Emberfall.Presentation
         private void HideFlavorText() => _flavorPanel?.Hide(this);
 
         // Called by InputRouter to highlight this card as the active selection.
+        // Sets _isSelected for the BG tint and exhausted-dim override; no rim glow (GH#173).
         public void SetSelectionHighlight(bool selected)
         {
             _isSelected = selected;
             ApplyAuras();
-            // The BG tint alone is invisible under the art/frame layers — the rim glow
-            // (slightly larger than the card face) is the readable selection cue.
-            GetComponent<CardMaterialBinder>()?.SetAffordanceGlow(selected);
         }
 
         // Toss marker for the mulligan picker (C-G1-2b): a distinct red "X" laid over the card
