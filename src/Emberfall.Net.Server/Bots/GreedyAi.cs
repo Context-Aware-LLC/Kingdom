@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 
@@ -53,7 +54,7 @@ namespace Emberfall.Net.Server.Bots
                 CardDefinition def = db.Get(card.DefinitionId);
                 if (ps.Mana.Available < def.Cost) continue;
 
-                PlayCardIntent? play = TryPlay(state, me, card, def, validator, ps, foe);
+                PlayCardIntent? play = TryPlay(state, me, card, def, validator, db, ps, foe);
                 if (play is not null) return play;
             }
 
@@ -90,7 +91,7 @@ namespace Emberfall.Net.Server.Bots
 
         private static PlayCardIntent? TryPlay(
             GameState state, PlayerId me, CardInstance card, CardDefinition def,
-            ICommandValidator validator, PlayerState ps, PlayerState foe)
+            ICommandValidator validator, ICardDatabase db, PlayerState ps, PlayerState foe)
         {
             int slot = ps.Board.Count;
 
@@ -100,12 +101,61 @@ namespace Emberfall.Net.Server.Bots
             var bare = new PlayCardIntent(me, card.Id, slot, Array.Empty<TargetRef>());
             if (validator.CanExecute(state, bare, out _)) return bare;
 
-            foreach (TargetRef t in PlayCandidates(def, ps, foe))
+            // Build the binding-aware choice plan. Spells activate on ON_CAST; all other types on ON_PLAY.
+            // This mirrors the trigger CommandProcessor uses in ValidatePlayCard (line 173 there).
+            Trigger playTrigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            IReadOnlyList<TargetChoiceRequirement> plan =
+                Targeting.PlayerChoicePlan(state, db, me, def, playTrigger);
+
+            if (plan.Count == 0) return null;
+
+            // Single unnamed binding: the existing heuristic-ordered candidate loop preserves the
+            // hostile/friendly priority (killable-first) for single-target cards. This is the common
+            // shape (149 of 171 authored targets as of EF-030).
+            if (plan.Count == 1 && plan[0].Binding.Length == 0)
             {
-                var aimed = new PlayCardIntent(me, card.Id, slot, new[] { t });
-                if (validator.CanExecute(state, aimed, out _)) return aimed;
+                foreach (TargetRef t in PlayCandidates(def, ps, foe))
+                {
+                    var aimed = new PlayCardIntent(me, card.Id, slot, new[] { t });
+                    if (validator.CanExecute(state, aimed, out _)) return aimed;
+                }
+                return null;
             }
 
+            // Named or multi-binding: build one candidate list per group, tag each TargetRef with
+            // the group's binding so the validator can match it to the correct rule, then try
+            // combinations depth-first. Each group uses the plan's canonical candidate order;
+            // the validator is the truth about legality so a first-valid combination is enough.
+            var perGroup = new List<List<TargetRef>>(plan.Count);
+            foreach (TargetChoiceRequirement req in plan)
+            {
+                if (req.Candidates.Count == 0) return null; // unsatisfiable group — card is unplayable now
+                var refs = new List<TargetRef>(req.Candidates.Count);
+                foreach (TargetCandidate c in req.Candidates)
+                    refs.Add(new TargetRef(c.Instance, req.Binding));
+                perGroup.Add(refs);
+            }
+
+            var chosen = new TargetRef[plan.Count];
+            return TryCombinations(state, me, card, slot, validator, perGroup, chosen, 0);
+        }
+
+        private static PlayCardIntent? TryCombinations(
+            GameState state, PlayerId me, CardInstance card, int slot,
+            ICommandValidator validator,
+            List<List<TargetRef>> perGroup, TargetRef[] chosen, int depth)
+        {
+            if (depth == perGroup.Count)
+            {
+                var intent = new PlayCardIntent(me, card.Id, slot, (TargetRef[])chosen.Clone());
+                return validator.CanExecute(state, intent, out _) ? intent : null;
+            }
+            foreach (TargetRef t in perGroup[depth])
+            {
+                chosen[depth] = t;
+                PlayCardIntent? result = TryCombinations(state, me, card, slot, validator, perGroup, chosen, depth + 1);
+                if (result is not null) return result;
+            }
             return null;
         }
 

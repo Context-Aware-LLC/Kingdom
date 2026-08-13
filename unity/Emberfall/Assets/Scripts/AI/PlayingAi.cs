@@ -138,12 +138,55 @@ namespace Emberfall.AI
             var bare = new PlayCardIntent(_playerId, card.Id, slot, Array.Empty<TargetRef>());
             if (_validator.CanExecute(state, bare, out _)) return bare;
 
-            foreach (var t in PlayCandidates(def, ps, foe))
+            // Build the binding-aware choice plan. Spells activate on ON_CAST; all other types on ON_PLAY.
+            Trigger playTrigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            IReadOnlyList<TargetChoiceRequirement> plan =
+                Targeting.PlayerChoicePlan(state, _db, _playerId, def, playTrigger);
+
+            if (plan.Count == 0) return null;
+
+            // Single unnamed binding: the existing heuristic-ordered candidate loop preserves the
+            // hostile/friendly priority (killable-first) for single-target cards.
+            if (plan.Count == 1 && plan[0].Binding.Length == 0)
             {
-                var aimed = new PlayCardIntent(_playerId, card.Id, slot, new[] { t });
-                if (_validator.CanExecute(state, aimed, out _)) return aimed;
+                foreach (var t in PlayCandidates(def, ps, foe))
+                {
+                    var aimed = new PlayCardIntent(_playerId, card.Id, slot, new[] { t });
+                    if (_validator.CanExecute(state, aimed, out _)) return aimed;
+                }
+                return null;
             }
 
+            // Named or multi-binding: build one candidate list per group tagged with the binding name,
+            // then try combinations depth-first. The validator is the truth about legality.
+            var perGroup = new List<List<TargetRef>>(plan.Count);
+            foreach (TargetChoiceRequirement req in plan)
+            {
+                if (req.Candidates.Count == 0) return null;
+                var refs = new List<TargetRef>(req.Candidates.Count);
+                foreach (TargetCandidate c in req.Candidates)
+                    refs.Add(new TargetRef(c.Instance, req.Binding));
+                perGroup.Add(refs);
+            }
+
+            var chosen = new TargetRef[plan.Count];
+            return TryCombinations(state, card, slot, perGroup, chosen, 0);
+        }
+
+        private PlayCardIntent TryCombinations(GameState state, CardInstance card, int slot,
+            List<List<TargetRef>> perGroup, TargetRef[] chosen, int depth)
+        {
+            if (depth == perGroup.Count)
+            {
+                var intent = new PlayCardIntent(_playerId, card.Id, slot, (TargetRef[])chosen.Clone());
+                return _validator.CanExecute(state, intent, out _) ? intent : null;
+            }
+            foreach (TargetRef t in perGroup[depth])
+            {
+                chosen[depth] = t;
+                PlayCardIntent result = TryCombinations(state, card, slot, perGroup, chosen, depth + 1);
+                if (result != null) return result;
+            }
             return null;
         }
 
