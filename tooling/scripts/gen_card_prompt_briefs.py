@@ -239,13 +239,36 @@ SPELL_INTENT = (
     "generic magical effect at any mana cost; match the intensity the NAME implies, not the mana."
 )
 
+# THE CAMERA AND WHOLENESS CLAUSES ARE LOAD-BEARING (Sam, 2026-08-13). The first weapon batch
+# generated from this script came back reading "extremely diminutive" — Cinder Lance worst, then
+# Earthwarden's Maul, whose haft stopped dead about an inch below the head. Two causes, and the
+# briefs asked for both: steep foreshortening toward the camera (which shrinks an object rather
+# than compacting it), and a truncated handle (which reads as a broken weapon, not a cropped one).
+# Both came from weapon-brief-boiler.md's old advice, "Foreshorten it, angle it short, or lead with
+# the head" — good intent, wrong remedy. The problem it was solving is real: a full-length polearm
+# laid corner-to-corner loses both ends to the circular mask. The right remedy is to CROP the haft
+# at the frame edge or pull the camera BACK until the whole thing fits, never to tip it at the lens.
+# Keep this clause and the boiler doc saying the same thing.
 ICON_INTENT = (
     "READS AS AN ICON ({kind}) — do not stage this like a card illustration. It is rendered into\n"
     "a CIRCULAR SOCKET on the hero frame (HeroSocketsView builds it as socket art), not into a\n"
     "card frame. Compose ONE object, centred, whole, and legible as a silhouette at icon size.\n"
     "No scene, no environment, no narrative staging, and nothing that matters near the corners —\n"
     "the circle crops them. Size tiers do not apply: the subject is the object itself, and what\n"
-    "\"{name}\" suggests it looks like is the only brief that matters."
+    "\"{name}\" suggests it looks like is the only brief that matters.\n"
+    "CAMERA: set the object WELL BACK from the viewer and shoot it with a long lens — near\n"
+    "orthographic, minimal perspective falloff, presented close to its true profile. Do NOT tip it\n"
+    "toward the camera and do NOT foreshorten it: strong foreshortening on a small object makes it\n"
+    "read as a toy, which is the single most common failure here. A shallow three-quarter is fine;\n"
+    "a steep one is not.\n"
+    "THE OBJECT MUST BE WHOLE OR HONESTLY CROPPED, NEVER STUBBED. Exactly two presentations are\n"
+    "acceptable: (a) the ENTIRE object visible head to butt, set back far enough to fit, filling\n"
+    "most of the circle; or (b) led by its business end with the handle, haft or shaft running\n"
+    "OFF THE FRAME EDGE, so the eye reads it as continuing beyond the picture. A handle that simply\n"
+    "stops in mid-air a short distance from the head is the failure to avoid — it reads as a broken\n"
+    "or miniature weapon. Prefer (a).\n"
+    "FILL THE CIRCLE. The object should occupy most of the inscribed circle's width or height. A\n"
+    "small object floating in open background is the other half of why these read diminutive."
 )
 
 
