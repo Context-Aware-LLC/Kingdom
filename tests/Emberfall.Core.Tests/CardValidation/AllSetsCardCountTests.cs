@@ -130,7 +130,16 @@ namespace Emberfall.Core.Tests.CardValidation
             // fixture-clean (a name moves no fixture — DefaultDeckGenerator reads cost/rarity/class/
             // collectible/type/id), so it prints CARD_DATA_REBAKE=CLEAN while this test goes red.
             // Run the Unit lane, not just the rebake, after touching any field projected here.
-            Assert.That(hash, Is.EqualTo("3D33B9A62D3D46B5EDBE69C3BA155C6355BB4F98864B8D90EEC816DD90557647"),
+            //
+            // Re-pinned 2026-08-13, two independent movers in one change:
+            //   1. Two more titles moved to flavorText the way Aric's did — "Zael of the Struck
+            //      Sky" -> "Zael", "Vael, the Stormbringer" -> "Vael".
+            //   2. Six split enemy-side sweeps collapsed onto the new ENEMY_CHARACTERS selector,
+            //      which drops one rule from each. Rule COUNT is projected (the joined
+            //      ReferencedCardId list below), so a pure rules refactor moves this pin even
+            //      though no identity FIELD changed. That is intended — it is the projection
+            //      noticing the card's shape changed.
+            Assert.That(hash, Is.EqualTo("C77183D05078F218B8A1D3DD7434655D545B31F9D109F42C650837FEEF9F2109"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's

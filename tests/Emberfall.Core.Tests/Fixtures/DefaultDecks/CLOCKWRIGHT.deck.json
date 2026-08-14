@@ -6,11 +6,7 @@
   "seed": 64159285253,
   "entries": [
     {
-      "id": "clock_assembly_drone",
-      "count": 1
-    },
-    {
-      "id": "clock_gear_overhaul",
+      "id": "clock_clockwork_sniper",
       "count": 1
     },
     {
@@ -26,7 +22,23 @@
       "count": 1
     },
     {
-      "id": "core_choking_vines",
+      "id": "clock_spring_coil",
+      "count": 1
+    },
+    {
+      "id": "clock_temporal_rewinder",
+      "count": 1
+    },
+    {
+      "id": "core_arclight_adept",
+      "count": 1
+    },
+    {
+      "id": "core_bonehound",
+      "count": 2
+    },
+    {
+      "id": "core_emberling",
       "count": 1
     },
     {
@@ -38,7 +50,15 @@
       "count": 1
     },
     {
+      "id": "core_lantern_bearer",
+      "count": 2
+    },
+    {
       "id": "core_stoneback",
+      "count": 2
+    },
+    {
+      "id": "core_thistleguard_sprig",
       "count": 1
     },
     {
@@ -46,19 +66,15 @@
       "count": 1
     },
     {
-      "id": "ember_cinderplate_golem",
+      "id": "ember_emberdrinker",
+      "count": 1
+    },
+    {
+      "id": "ember_heat_surge",
       "count": 2
     },
     {
-      "id": "ember_fusillade",
-      "count": 1
-    },
-    {
-      "id": "ember_magmacore_warden",
-      "count": 1
-    },
-    {
-      "id": "ember_recruit",
+      "id": "ember_kiln_warden",
       "count": 1
     },
     {
@@ -66,11 +82,11 @@
       "count": 1
     },
     {
-      "id": "ember_scorch_blade",
-      "count": 2
+      "id": "ember_slagshell_bulwark",
+      "count": 1
     },
     {
-      "id": "ember_slagshell_bulwark",
+      "id": "ember_stoke_the_coals",
       "count": 1
     },
     {
@@ -82,24 +98,8 @@
       "count": 1
     },
     {
-      "id": "neutral_ironclad_bulwark",
-      "count": 1
-    },
-    {
-      "id": "neutral_soulbound_revenant",
-      "count": 2
-    },
-    {
       "id": "neutral_spellwarden",
       "count": 1
-    },
-    {
-      "id": "relic_corpse_cart",
-      "count": 1
-    },
-    {
-      "id": "stone_sentry",
-      "count": 2
     },
     {
       "id": "wandering_scout",

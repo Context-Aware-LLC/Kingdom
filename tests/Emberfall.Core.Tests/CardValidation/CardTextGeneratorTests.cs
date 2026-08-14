@@ -186,125 +186,25 @@ namespace Emberfall.Core.Tests.CardValidation
                 AlwaysCondition.Instance, OneShotLifetime.Instance, action);
 
         [Test]
-        public void A_Side_Swept_As_Two_Rules_Is_Named_Once()
+        public void The_Enemy_Side_Selector_Prints_As_All_Enemies()
         {
-            // Vael's shape (Sam, 2026-08-13). The minions and the hero are disjoint and together
-            // exhaust the enemy side, so the union has an exact name — printing both halves named
-            // one population twice at twice the length.
+            // The one-rule spelling of the sweep. "enemies", not "enemy characters" — ANY_ENEMY
+            // keeps the longer noun because a single pick needs saying what KIND was picked.
             string text = CardTextGenerator.Generate(new[]
             {
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_MINIONS"))),
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_HERO"))),
+                CastRule(new DamageAction(2, new TargetSpec("ENEMY_CHARACTERS"))),
             });
 
             Assert.That(text, Is.EqualTo("Deal 2 damage to all enemies."));
         }
 
         [Test]
-        public void The_Sweep_Folds_Whichever_Half_Was_Authored_First()
-        {
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(3, new TargetSpec("ENEMY_HERO"))),
-                CastRule(new DamageAction(3, new TargetSpec("ENEMY_MINIONS"))),
-            });
-
-            Assert.That(text, Is.EqualTo("Deal 3 damage to all enemies."));
-        }
-
-        [Test]
-        public void A_Folded_Sweep_Still_Joins_The_Effects_Around_It()
-        {
-            // Stormcaller's Pact's shape: the fold must produce a clause, not a whole sentence that
-            // ends the marker's scope early.
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(3, new TargetSpec("ENEMY_MINIONS"))),
-                CastRule(new DamageAction(3, new TargetSpec("ENEMY_HERO"))),
-                CastRule(new ModifyStatsAction(1, 1, new TargetSpec("FRIENDLY_MINIONS"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 3 damage to all enemies and give all friendly minions +1/+1."));
-        }
-
-        [Test]
-        public void Unequal_Halves_Are_Two_Effects_That_Merely_Share_A_Side()
-        {
-            // Nothing about "all enemies" can carry two numbers, so this must stay spelled out.
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(4, new TargetSpec("ENEMY_MINIONS"))),
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_HERO"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 4 damage to all enemy minions and deal 2 damage to the enemy hero."));
-        }
-
-        [Test]
-        public void A_Filtered_Half_Is_Not_A_Whole_Side()
-        {
-            // A tribe filter narrows the minions to some of them, and a hero has no tribe — so the
-            // union stops being the enemy side and "all enemies" would claim targets not hit.
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_MINIONS",
-                    filter: new TargetFilterDef(tribe: Tribe.BEAST)))),
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_HERO"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 2 damage to all enemy Beasts and deal 2 damage to the enemy hero."));
-        }
-
-        [Test]
-        public void A_Randomly_Picked_Half_Is_Not_A_Whole_Side()
-        {
-            // One random enemy minion plus the hero is two characters, not the board.
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_MINIONS", TargetChosenBy.RANDOM))),
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_HERO"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 2 damage to a random enemy minion and deal 2 damage to the enemy hero."));
-        }
-
-        [Test]
-        public void A_Counted_Half_Is_Not_A_Whole_Side()
-        {
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_MINIONS", count: 2))),
-                CastRule(new DamageAction(2, new TargetSpec("ENEMY_HERO"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 2 damage to 2 enemy minions and deal 2 damage to the enemy hero."));
-        }
-
-        [Test]
-        public void The_Friendly_Side_Has_No_Fold_Until_A_Card_Asks_For_One()
-        {
-            // Guards the deliberate single entry in SideNamedByTheUnion: a phrasing with no card to
-            // print it on would be an untested branch that reads as supported.
-            string text = CardTextGenerator.Generate(new[]
-            {
-                CastRule(new DamageAction(1, new TargetSpec("FRIENDLY_MINIONS"))),
-                CastRule(new DamageAction(1, new TargetSpec("FRIENDLY_HERO"))),
-            });
-
-            Assert.That(text, Is.EqualTo(
-                "Deal 1 damage to all friendly minions and deal 1 damage to your hero."));
-        }
-
-        [Test]
         public void Every_Split_Sweep_In_The_Corpus_Names_Its_Side_Once()
         {
-            // The generator is the fix, so this asserts the OUTCOME on the shipping rows rather than
-            // pinning six strings that a future wording change would have to chase.
+            // These six were authored as an ENEMY_MINIONS rule plus an ENEMY_HERO rule, because
+            // until 2026-08-13 there was no selector for a side and no way to say "automatic" on
+            // ANY_ENEMY. They now carry one ENEMY_CHARACTERS rule each. Asserts the OUTCOME rather
+            // than pinning six strings a future wording change would have to chase.
             var swept = new[]
             {
                 "storm_lightning_storm",

@@ -152,18 +152,6 @@ namespace Emberfall.Core.Cards
 
             for (int i = 0; i < group.Count; i++)
             {
-                // Checked before the repeated-roll scan below, which cannot also match: that one
-                // needs the SAME selector rolled randomly, this one needs two DIFFERENT selectors
-                // resolved automatically.
-                if (TryFoldWholeSide(group, i, out string side))
-                {
-                    // Target left null for the same reason the spread below does: this clause has
-                    // named its own target, and the same-target elision must not reopen it.
-                    clauses.Add((side, null));
-                    i++;
-                    continue;
-                }
-
                 int run = i;
                 while (run + 1 < group.Count && IsRepeatedRollOfTheSameDamage(group[run], group[run + 1])) run++;
 
@@ -209,76 +197,6 @@ namespace Emberfall.Core.Cards
             }
 
             return clauses;
-        }
-
-        /// <summary>
-        /// Folds "deal N to that side's minions, deal N to that side's hero" into the one thing it
-        /// actually says — <c>Deal N damage to all enemies.</c> (Sam, 2026-08-13).
-        ///
-        /// <para><b>This is a set identity, not a paraphrase.</b> A side's minions and its hero are
-        /// disjoint and together exhaust that side's characters, so the union has an exact name and
-        /// naming it drops no target and adds none. The old text named the same population twice at
-        /// twice the length, on a card face where every line competes with the art.</para>
-        ///
-        /// <para><b>Why it is honest about ordering.</b> The two rules are two queued effects and
-        /// <see cref="Emberfall.Core"/>'s drain does settle deaths between them — but both hits are
-        /// enqueued at play time and land before ANY response to either one resolves, because
-        /// on-damage triggers and tolls enqueue behind them. That is the same "an AoE volley strikes
-        /// simultaneously" semantics DamagePipeline's decision note spells out, so a reader who takes
-        /// "all enemies" to mean one volley is reading the resolver correctly.</para>
-        ///
-        /// <para>Both authored orders fold, because the union does not care which was written first.
-        /// A card data model that could express this side as ONE rule would retire the whole
-        /// mechanism — <c>TargetChosenBy</c> has no AUTOMATIC member today, so an <c>ANY_ENEMY</c>
-        /// spec is a player prompt and two rules are the only way to author the sweep.
-        /// RETIREMENT TRIGGER: adding an automatic-choice policy, or an ALL_ENEMIES set selector,
-        /// makes this fold dead weight — migrate these rows to the single rule and delete it.</para>
-        /// </summary>
-        private static bool TryFoldWholeSide(IReadOnlyList<RuleAction> group, int index, out string clause)
-        {
-            clause = "";
-            if (index + 1 >= group.Count) return false;
-            if (group[index] is not DamageAction first || group[index + 1] is not DamageAction second)
-                return false;
-            // Unequal amounts are two different effects that happen to share a side. Nothing about
-            // "all enemies" can carry two numbers, and inventing a phrasing that could would be
-            // making up a card rather than rendering one.
-            if (first.Amount != second.Amount) return false;
-            if (!ReachesEveryCandidate(first.Target) || !ReachesEveryCandidate(second.Target)) return false;
-
-            string side = SideNamedByTheUnion(first.Target.Selector, second.Target.Selector);
-            if (side.Length == 0) return false;
-
-            clause = $"Deal {first.Amount} damage to {side}.";
-            return true;
-        }
-
-        /// <summary>The name of the whole side two selectors exhaust between them, in either authored
-        /// order, or "" when the pair is not a side.</summary>
-        /// <remarks>
-        /// Deliberately one entry. The friendly union has no card asking for it, and a phrasing with
-        /// no card to print it on is an untested branch that reads as supported — the same fail-closed
-        /// posture the rest of this generator takes. Adding the row is the whole cost when one lands.
-        /// </remarks>
-        private static string SideNamedByTheUnion(string first, string second)
-            => IsUnorderedPair(first, second, "ENEMY_MINIONS", "ENEMY_HERO") ? "all enemies" : "";
-
-        private static bool IsUnorderedPair(string first, string second, string one, string other)
-            => (string.Equals(first, one, StringComparison.Ordinal) && string.Equals(second, other, StringComparison.Ordinal)) ||
-               (string.Equals(first, other, StringComparison.Ordinal) && string.Equals(second, one, StringComparison.Ordinal));
-
-        /// <summary>
-        /// Whether a spec takes every candidate its selector enumerates, with nothing narrowing the
-        /// set or renaming it. A filter, a count, a binding or a choice policy each mean the effect
-        /// reaches less than its selector's population — so the union stops being the whole side and
-        /// the fold would be claiming targets the card does not hit.
-        /// </summary>
-        private static bool ReachesEveryCandidate(TargetSpec spec)
-        {
-            if (spec.Filter != null) return false;
-            if (spec.Binding.Length > 0 || spec.DistinctFrom.Length > 0) return false;
-            if (TargetSpec.IsPlayerChosen(spec) || IsRandomlyChosen(spec)) return false;
-            return !spec.Count.HasValue || spec.Count.Value == -1;
         }
 
         /// <summary>Whether two effects are the same damage rolled again at an independently chosen
@@ -640,6 +558,10 @@ namespace Emberfall.Core.Cards
             "ANY_FRIENDLY_MINION" => One("a friendly minion", "friendly minions"),
             "ANY_MINION" => One("a minion", "minions"),
             "ENEMY_HERO" => One("the enemy hero", "enemy heroes"),
+            // "enemies", not "enemy characters" (Sam, 2026-08-13). ANY_ENEMY above keeps the longer
+            // noun because a single pick needs saying what KIND of thing was picked; a sweep of the
+            // whole side does not, and the short word is what fits the frame.
+            "ENEMY_CHARACTERS" => All("an enemy", "enemies"),
             "ENEMY_MINIONS" => All("an enemy minion", "enemy minions"),
             "FRIENDLY_HERO" => One("your hero", "friendly heroes"),
             "FRIENDLY_MINIONS" => All("a friendly minion", "friendly minions"),

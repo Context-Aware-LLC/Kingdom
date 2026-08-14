@@ -11,7 +11,7 @@
     },
     {
       "id": "core_aegis_templar",
-      "count": 1
+      "count": 2
     },
     {
       "id": "core_choking_vines",
@@ -23,62 +23,50 @@
     },
     {
       "id": "core_grove_mender",
-      "count": 2
-    },
-    {
-      "id": "core_hollow_acolyte",
       "count": 1
     },
     {
-      "id": "core_lantern_bearer",
-      "count": 1
-    },
-    {
-      "id": "ember_cinderplate_golem",
+      "id": "core_thistleguard_sprig",
       "count": 1
     },
     {
       "id": "ember_forgeheart_colossus",
-      "count": 1
+      "count": 2
     },
     {
       "id": "ember_fusillade",
       "count": 2
     },
     {
-      "id": "ember_kiln_warden",
+      "id": "ember_pyras_wrath",
       "count": 1
     },
     {
-      "id": "ember_recruit",
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
       "id": "ember_scorch",
-      "count": 1
-    },
-    {
-      "id": "ember_stoke_the_coals",
-      "count": 1
+      "count": 2
     },
     {
       "id": "ember_twin_flame",
       "count": 1
     },
     {
-      "id": "neutral_doublestrike_hawk",
-      "count": 1
-    },
-    {
-      "id": "neutral_galewind_runner",
-      "count": 1
-    },
-    {
-      "id": "relic_bound_revenant",
+      "id": "neutral_ironclad_bulwark",
       "count": 2
     },
     {
-      "id": "relic_corpse_cart",
+      "id": "neutral_searing_quill",
+      "count": 1
+    },
+    {
+      "id": "neutral_spellwarden",
+      "count": 1
+    },
+    {
+      "id": "verdant_bramblehide_guardian",
       "count": 1
     },
     {
@@ -90,11 +78,11 @@
       "count": 1
     },
     {
-      "id": "verdant_menders_bloom",
+      "id": "verdant_mosshide_stag",
       "count": 1
     },
     {
-      "id": "verdant_mosshide_stag",
+      "id": "verdant_primal_mend",
       "count": 1
     },
     {
@@ -102,15 +90,15 @@
       "count": 1
     },
     {
-      "id": "verdant_thorn_swarm",
+      "id": "verdant_thalens_ancient",
       "count": 1
     },
     {
-      "id": "verdant_thornback_cub",
-      "count": 1
+      "id": "verdant_venomthorn",
+      "count": 2
     },
     {
-      "id": "verdant_windroot_sprinter",
+      "id": "verdant_world_titan",
       "count": 1
     }
   ]

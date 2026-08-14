@@ -491,6 +491,41 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(played.CurrentHealth, Is.EqualTo(3), "Herald health unchanged.");
         }
 
+        [Test]
+        public void EnemyCharacters_Is_The_Whole_Enemy_Side_Hero_First()
+        {
+            // The plural of ANY_ENEMY (Sam, 2026-08-13). Hero FIRST, then minions left-to-right —
+            // the reverse of how the same sweep read when it was authored as two rules, so this
+            // pins the order a sweep's damage lands in rather than leaving it to AddCharacters.
+            var db = new FakeCardDatabase().Register(Minion("body"));
+            var state = State();
+            CardInstance left = Board(state, 1, db.Get("body"));
+            CardInstance right = Board(state, 1, db.Get("body"));
+            Board(state, 0, db.Get("body"));   // a friendly minion the sweep must not reach
+
+            var candidates = Targeting.ResolutionCandidates(state, db, state.Players[0].Id,
+                new TargetSpec("ENEMY_CHARACTERS"));
+
+            Assert.That(candidates.Select(c => c.Kind), Is.EqualTo(new[]
+            {
+                TargetCandidateKind.Hero,
+                TargetCandidateKind.Minion,
+                TargetCandidateKind.Minion,
+            }));
+            Assert.That(candidates.Skip(1).Select(c => c.Instance),
+                Is.EqualTo(new[] { left.Id, right.Id }));
+        }
+
+        [Test]
+        public void EnemyCharacters_Is_Automatic_Not_A_Player_Prompt()
+        {
+            // The whole reason the selector exists: ANY_ENEMY defaults to a player prompt, so a
+            // sweep of the side was unauthorable as one rule and had to be written as two.
+            Assert.That(TargetSpec.DefaultsToPlayerChoice("ENEMY_CHARACTERS"), Is.False);
+            Assert.That(TargetSpec.IsPlayerChosen(new TargetSpec("ENEMY_CHARACTERS")), Is.False);
+            Assert.That(TargetSpec.DefaultsToPlayerChoice("ANY_ENEMY"), Is.True);
+        }
+
         [TestCase("FRIENDLY_MINIONS")]
         [TestCase("ALL_MINIONS")]
         public void Automatic_OnPlay_Selectors_Include_Their_Own_Newly_Entered_Body(string selector)

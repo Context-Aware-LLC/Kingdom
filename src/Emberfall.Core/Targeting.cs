@@ -209,6 +209,11 @@ namespace Emberfall.Core
                 case "ENEMY_MINIONS": AddMinions(state, enemy, result); break;
                 case "ALL_MINIONS": AddMinions(state, friendly, result); AddMinions(state, enemy, result); break;
                 case "ANY_CHARACTER": AddCharacters(state, friendly, result); AddCharacters(state, enemy, result); break;
+                // The plural of ANY_ENEMY, the way ENEMY_MINIONS is the plural of ANY_MINION on one
+                // side. AddCharacters puts the hero FIRST and then the minions left-to-right; that
+                // is the enumeration order every automatic sweep resolves in, so it is the order a
+                // sweep's damage lands and its deaths queue in.
+                case "ENEMY_CHARACTERS": AddCharacters(state, enemy, result); break;
                 case "ANY_FRIENDLY": AddCharacters(state, friendly, result); break;
                 case "ANY_ENEMY": AddCharacters(state, enemy, result); break;
                 case "ANY_MINION": AddMinions(state, friendly, result); AddMinions(state, enemy, result); break;

@@ -3146,8 +3146,9 @@
     "id": "night_lurk_wisp",
     "name": "Lurk Wisp",
     "type": "MINION",
+    "flavorText": "Did you see that?!",
     "cost": 1,
-    "attack": 1,
+    "attack": 2,
     "health": 1,
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
@@ -4422,7 +4423,7 @@
     "id": "storm_lightning_storm",
     "name": "Lightning Storm",
     "type": "SPELL",
-    "cost": 5,
+    "cost": 4,
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
@@ -4443,28 +4444,7 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
-          }
-        }
-      },
-      {
-        "id": "rule_2",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DAMAGE",
-          "amount": 3,
-          "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_CHARACTERS"
           }
         }
       },
@@ -4492,8 +4472,9 @@
   },
   {
     "id": "storm_zael_of_the_struck_sky",
-    "name": "Zael of the Struck Sky",
+    "name": "Zael",
     "type": "MINION",
+    "flavorText": "The sky split in half and fell onto us at the same time..",
     "cost": 7,
     "attack": 6,
     "health": 5,
@@ -4619,7 +4600,7 @@
     "id": "neutral_doublestrike_hawk",
     "name": "Doublestrike Hawk",
     "type": "MINION",
-    "cost": 4,
+    "cost": 3,
     "attack": 2,
     "health": 4,
     "class": "NEUTRAL",
@@ -4679,7 +4660,6 @@
     "class": "NEUTRAL",
     "rarity": "EPIC",
     "keywords": [
-      "BULWARK",
       "AEGIS"
     ],
     "rules": [],
@@ -5835,27 +5815,7 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS"
-          }
-        }
-      },
-      {
-        "id": "rule_2",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DAMAGE",
-          "amount": 2,
-          "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_CHARACTERS"
           }
         }
       },

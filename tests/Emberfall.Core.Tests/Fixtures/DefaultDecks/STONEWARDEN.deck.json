@@ -6,48 +6,56 @@
   "seed": 64159285255,
   "entries": [
     {
-      "id": "cinder_drake",
+      "id": "core_arclight_adept",
       "count": 2
     },
     {
       "id": "core_bonehound",
-      "count": 2
-    },
-    {
-      "id": "core_choking_vines",
       "count": 1
     },
     {
       "id": "core_emberling",
-      "count": 1
-    },
-    {
-      "id": "ember_blazewing",
-      "count": 1
-    },
-    {
-      "id": "ember_cinder_lance",
       "count": 2
+    },
+    {
+      "id": "core_lantern_bearer",
+      "count": 1
+    },
+    {
+      "id": "core_stoneback",
+      "count": 1
+    },
+    {
+      "id": "core_veilstalker",
+      "count": 1
     },
     {
       "id": "ember_forgeheart_colossus",
+      "count": 1
+    },
+    {
+      "id": "ember_heat_surge",
       "count": 2
     },
     {
-      "id": "ember_magmacore_warden",
+      "id": "ember_kiln_warden",
       "count": 1
     },
     {
       "id": "ember_scorch_blade",
+      "count": 1
+    },
+    {
+      "id": "ember_slagshell_bulwark",
       "count": 2
     },
     {
-      "id": "ember_twin_flame",
+      "id": "ember_stoke_the_coals",
       "count": 1
     },
     {
-      "id": "ember_vanguard_drake",
-      "count": 1
+      "id": "ember_twin_flame",
+      "count": 2
     },
     {
       "id": "flame_bolt",
@@ -58,15 +66,11 @@
       "count": 1
     },
     {
-      "id": "neutral_galewind_runner",
+      "id": "neutral_doublestrike_hawk",
       "count": 1
     },
     {
-      "id": "neutral_spellwarden",
-      "count": 1
-    },
-    {
-      "id": "relic_bound_revenant",
+      "id": "neutral_lifeclaw_bat",
       "count": 1
     },
     {
@@ -74,24 +78,20 @@
       "count": 1
     },
     {
-      "id": "ward_earth_barrier",
-      "count": 1
-    },
-    {
-      "id": "ward_earthen_blessing",
-      "count": 1
-    },
-    {
-      "id": "ward_granite_guardian",
-      "count": 1
-    },
-    {
       "id": "ward_pebble_sentinel",
-      "count": 2
+      "count": 1
+    },
+    {
+      "id": "ward_siege_golem",
+      "count": 1
+    },
+    {
+      "id": "ward_stomp",
+      "count": 1
     },
     {
       "id": "ward_stone_rain",
-      "count": 1
+      "count": 2
     },
     {
       "id": "ward_stone_throw",

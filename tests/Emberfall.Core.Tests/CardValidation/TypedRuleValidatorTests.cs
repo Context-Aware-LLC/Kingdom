@@ -153,6 +153,7 @@ namespace Emberfall.Core.Tests.CardValidation
         [TestCase("ENEMY_MINIONS", true)]
         [TestCase("ALL_MINIONS", true)]
         [TestCase("ANY_MINION", true)]
+        [TestCase("ENEMY_CHARACTERS", true)]
         public void Reinforce_Only_Targets_The_Controllers_Own_Minions(string selector, bool hostile)
         {
             CardDefinition card = Card(CardType.MINION,
