@@ -132,10 +132,10 @@ namespace Emberfall.Presentation
             if (_model != null) _model.State = state;
 
             // Mulligan toss selection lives only while our seat is still deciding; once the phase
-            // passes or our confirm lands, drop the bookkeeping (the cards are gone/replaced, so
-            // don't touch their now-dead presenters — clearMarks: false).
+            // passes or our confirm lands, clear marks from any presenters that survived the redraw
+            // before dropping the bookkeeping. ResetMulliganSelection skips destroyed presenters.
             if (!IsMulliganActive() && _mulliganToss.Count > 0)
-                ResetMulliganSelection(clearMarks: false);
+                ResetMulliganSelection(clearMarks: true);
 
             if (_gesture != Gesture.None && state != null && state.ActivePlayer != _p0Id)
             {
@@ -588,13 +588,13 @@ namespace Emberfall.Presentation
             Submit(new MulliganIntent(_p0Id, toss));
         }
 
-        // clearMarks: false when the cards are already gone (phase advanced / our redraw landed) —
-        // touching a destroyed presenter would throw, so just drop the bookkeeping.
         private void ResetMulliganSelection(bool clearMarks)
         {
             if (clearMarks)
                 foreach (var kv in _tossPresenters)
-                    kv.Value?.SetMulliganMark(false);
+                    // Unity's != null skips destroyed presenters; ?. would still call through them.
+                    if (kv.Value != null)
+                        kv.Value.SetMulliganMark(false);
             _tossPresenters.Clear();
             _mulliganToss.Clear();
             MulliganSelectionChanged?.Invoke(0);
