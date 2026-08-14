@@ -22,8 +22,8 @@ namespace Emberfall.Core.Tests.TurnLoop
     public sealed class FrostThawPendingTests
     {
         private const string Attacker = "nor367_attacker";      // 2/3 vanilla — survives a counter, can attack
-        private const string Warden   = "nor367_warden";        // 1/1, ON_DEATH FROST ENEMY_MINIONS (the warden)
-        private const string Caster   = "nor367_frost_caster";  // 1/1, ON_PLAY FROST ENEMY_MINIONS (the frost verb)
+        private const string Warden = "nor367_warden";        // 1/1, ON_DEATH FROST ENEMY_MINIONS (the warden)
+        private const string Caster = "nor367_frost_caster";  // 1/1, ON_PLAY FROST ENEMY_MINIONS (the frost verb)
 
         private static FakeCardDatabase Db()
         {

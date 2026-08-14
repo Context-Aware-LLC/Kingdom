@@ -9,7 +9,7 @@ name: Emberfall CI — determinism gates
 #   Stage 3b Collection + CardValidation  BLOCKING   (ran in NO stage before 2026-08-01)
 #   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
 #   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
-#   Stage 5b Networked AI soak            BLOCKING as of EF-077 (real AI, real sockets, real server)
+#   Stage 5b Networked AI soak            ADVISORY as of NOR-189 (was BLOCKING/EF-077; see step for why)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
 #   Stage 6  Content C-series             BLOCKING as of M2 (WS C3 — pure-.NET CardCi over *.cards.json)
 #   Stage 6b Trigger/selector drift guard BLOCKING as of EF-032a (validator list vs the interpreter switch)
@@ -179,7 +179,21 @@ jobs:
       - name: "Stage 5 · Golden-replay (R1 gate)"
         run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
 
-      # ── Stage 5b — Networked AI soak (BLOCKING as of EF-077) ───────────────────
+      # ── Stage 5b — Networked AI soak (ADVISORY as of NOR-189, was BLOCKING/EF-077) ─────
+      #
+      # NOR-189 STOPGAP — `continue-on-error: true` below makes this step advisory: it still runs
+      # and still prints its FAIL report, but a failure no longer fails the job or blocks a merge.
+      # WHY: this stage failed intermittently on diffs it cannot possibly react to (e.g. a Unity
+      # pointer-drag compile fix), always with the same "capped / disconnected: 1" signature, while
+      # the same binary runs 55/55 clean locally. `capped` here is a socket leaving ConnectionState.Live
+      # mid-match (Program.cs, the Dead-socket path — intents≈83..137, far below the 4000 cap; resyncs=0,
+      # so no integrity failure) — a CI-runner-only teardown race in the local real-server harness. And
+      # every match mints a cryptographically random seed (MatchGate.MintSeed), so it is irreducibly
+      # non-deterministic: no PR author can turn it green, and a red run cannot be told apart from an
+      # unlucky RNG draw. It was training everyone to merge the red PR anyway — the expensive failure mode.
+      # RE-ARM: the underlying teardown race is tracked in NOR-376; when it is fixed (or the stage is
+      # reseeded deterministically), delete the `continue-on-error` line and restore BLOCKING. See NOR-189.
+      # ────────────────────────────────────────────────────────────────────────────────────────────
       # Stage 5 replays PINNED fixtures through the engine in-process. This one plays NEW matches
       # through the whole shipped stack: the real ServerApp Kestrel host on an ephemeral 127.0.0.1
       # port, the real wire codec, real WebSocket sockets, and the real GreedyAi on BOTH seats to a
@@ -205,6 +219,7 @@ jobs:
       # the wire. Raise N here rather than adding a second soak step.
       - name: "Stage 5b · Networked AI soak (Emberfall.Tools.NetSoak liveai)"
         timeout-minutes: 10
+        continue-on-error: true   # NOR-189 stopgap — advisory, not blocking. Remove to re-arm (see above).
         run: dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
 
       # ── Stage 6 — Content validation, C-series (BLOCKING as of M2 WS C3) ────────
