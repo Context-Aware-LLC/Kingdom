@@ -928,7 +928,7 @@
       "tribe": null,
       "setId": "CORE",
       "collectible": true,
-      "artId": "grave_lantern_bearer",
+      "artId": "gravelight_lantern_bearer",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -2205,7 +2205,7 @@
       "tribe": "BEAST",
       "setId": "EMBERFALL",
       "collectible": true,
-      "artId": "tide_glacial_leviathan",
+      "artId": "tide_glacierborn_leviathan",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -4552,7 +4552,7 @@
     },
     {
       "id": "rekind_neutral_aric",
-      "name": "Aric, First Among Equals",
+      "name": "Aric",
       "type": "MINION",
       "cost": 7,
       "attack": 5,
@@ -5318,7 +5318,7 @@
       "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "clock_rebuilt_automaton",
+      "artId": "clock_reconstructed_automaton",
       "sourceFile": "Rekindling.cards.json"
     },
     {
