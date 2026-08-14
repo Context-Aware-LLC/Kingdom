@@ -249,6 +249,11 @@ SPELL_INTENT = (
 # laid corner-to-corner loses both ends to the circular mask. The right remedy is to CROP the haft
 # at the frame edge or pull the camera BACK until the whole thing fits, never to tip it at the lens.
 # Keep this clause and the boiler doc saying the same thing.
+#
+# THE HISTORY STAYS IN THIS COMMENT AND NEVER IN THE EMITTED TEXT (Sam, 2026-08-13). A prompt is
+# read by an image model, not by a colleague: "this used to say X" is noise it may try to satisfy.
+# State the rule and the consequence, never the changelog. Same rule applies to a seed's `notes` —
+# do not narrate what a previous pass got wrong, just say what this one must do.
 ICON_INTENT = (
     "READS AS AN ICON ({kind}) — do not stage this like a card illustration. It is rendered into\n"
     "a CIRCULAR SOCKET on the hero frame (HeroSocketsView builds it as socket art), not into a\n"
@@ -256,19 +261,14 @@ ICON_INTENT = (
     "No scene, no environment, no narrative staging, and nothing that matters near the corners —\n"
     "the circle crops them. Size tiers do not apply: the subject is the object itself, and what\n"
     "\"{name}\" suggests it looks like is the only brief that matters.\n"
-    "CAMERA: set the object WELL BACK from the viewer and shoot it with a long lens — near\n"
-    "orthographic, minimal perspective falloff, presented close to its true profile. Do NOT tip it\n"
-    "toward the camera and do NOT foreshorten it: strong foreshortening on a small object makes it\n"
-    "read as a toy, which is the single most common failure here. A shallow three-quarter is fine;\n"
-    "a steep one is not.\n"
-    "THE OBJECT MUST BE WHOLE OR HONESTLY CROPPED, NEVER STUBBED. Exactly two presentations are\n"
-    "acceptable: (a) the ENTIRE object visible head to butt, set back far enough to fit, filling\n"
-    "most of the circle; or (b) led by its business end with the handle, haft or shaft running\n"
-    "OFF THE FRAME EDGE, so the eye reads it as continuing beyond the picture. A handle that simply\n"
-    "stops in mid-air a short distance from the head is the failure to avoid — it reads as a broken\n"
-    "or miniature weapon. Prefer (a).\n"
-    "FILL THE CIRCLE. The object should occupy most of the inscribed circle's width or height. A\n"
-    "small object floating in open background is the other half of why these read diminutive."
+    "CAMERA: set the object well back and shoot it with a long lens — near-orthographic, minimal\n"
+    "perspective falloff, presented close to its true profile. A shallow three-quarter is fine, a\n"
+    "steep one is not. Do not foreshorten: it makes the object read as a toy.\n"
+    "WHOLE, OR CROPPED AT THE FRAME EDGE — NEVER STUBBED. Either (a) the entire object, head to\n"
+    "butt, set back far enough to fit, or (b) led by its business end with the handle, haft or\n"
+    "shaft running clean off the frame edge. Prefer (a). A handle that stops in mid-air reads as a\n"
+    "broken object.\n"
+    "FILL THE CIRCLE. The object occupies most of the inscribed circle's width or height."
 )
 
 
