@@ -20,6 +20,7 @@ Emberfall is still in development. These pages describe the current rules baseli
 
 - [The World of Emberfall](world/the-world-of-emberfall.md) — a short, spoiler-light setting guide.
 - [Economy Principles](progression/economy-principles.md) — the promises that govern cards and purchases.
+- [Pack Odds](progression/pack-odds.md) — the exact drop rates, guarantees, and duplicate rules for every booster pack.
 - [Interface Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.
 
 ## Publication boundary

@@ -11,6 +11,7 @@
     <Project Path="src/Emberfall.Tools.CardCi/Emberfall.Tools.CardCi.csproj" />
     <Project Path="src/Emberfall.Tools.CollectionSelfCheck/Emberfall.Tools.CollectionSelfCheck.csproj" />
     <Project Path="src/Emberfall.Tools.NetSoak/Emberfall.Tools.NetSoak.csproj" />
+    <Project Path="src/Emberfall.Tools.OddsDisclosure/Emberfall.Tools.OddsDisclosure.csproj" />
     <Project Path="src/Emberfall.Tools.TelemetryVerify/Emberfall.Tools.TelemetryVerify.csproj" />
   </Folder>
   <Folder Name="/tests/">
