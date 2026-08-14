@@ -193,6 +193,11 @@ namespace Emberfall.Net.Server.Transport
             //    VULN-003 latent item 2 in security.md remains standing: its trigger is value
             //    attaching to an account, and this ticket attaches none. See security.md §Latent.
             AccountId account;
+            // The durable Account behind this seat, when one was resolved through the store. It carries
+            // the AccountKind that AccountOwnedCounts.For reads to gate L6 on a submitted deck (NOR-313);
+            // null on every path that never touches the store (guest, or authenticated with no store),
+            // which is the "ownership unknown, do not constrain" case DeckValidator L6 already ships.
+            Account? deckOwnerAccount = null;
             if (!string.IsNullOrEmpty(hello.AuthToken))
             {
                 if (_tokenVerifier is null)
@@ -217,6 +222,7 @@ namespace Emberfall.Net.Server.Transport
                     Console.Error.WriteLine("[auth] authenticated player_id={0} email_h={1}",
                         acct.PlayerId, HashCredential(identity.Email));
                     account = AccountId.FromAuthenticatedAccount(acct.PlayerId);
+                    deckOwnerAccount = acct;
                 }
                 else
                 {
@@ -274,7 +280,7 @@ namespace Emberfall.Net.Server.Transport
                     await conn.PumpTask;
                     return;
                 }
-                var outcome = DeckSubmission.Validate(deckMsg, _db);
+                var outcome = DeckSubmission.Validate(deckMsg, _db, AccountOwnedCounts.For(deckOwnerAccount));
                 if (!outcome.Accepted)
                 {
                     conn.Close(1008, CloseReason("deck rejected: " + outcome.Reason));

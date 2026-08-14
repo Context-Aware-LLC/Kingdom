@@ -136,6 +136,32 @@ namespace Emberfall.Net.Server.Tests
             Assert.That(result.Accepted, Is.False, "a negative count cannot underflow the total past the gate");
         }
 
+        [Test]
+        public void Validate_Runs_L6_When_An_Ownership_Source_Is_Supplied()
+        {
+            // NOR-313: the seam MatchGate threads through AccountOwnedCounts.For. The SAME legal deck is
+            // accepted with no source (today's full-pool null) and rejected once an ownership source that
+            // holds nothing is supplied — that flip is L6 actually reaching the submission path.
+            var msg = LegalSubmission(CardClass.GRAVEKEEP, CardClass.VERDANT);
+            Assert.That(DeckSubmission.Validate(msg, Db).Accepted, Is.True,
+                "a null ownership source leaves L6 unenforced, exactly as the game ships");
+
+            var ownsNothing = new OwnedCardCounts();   // present-but-empty: owns nothing, not "unknown"
+            var rejected = DeckSubmission.Validate(msg, Db, ownsNothing);
+            Assert.That(rejected.Accepted, Is.False, "an account that owns none of its cards fails L6");
+            Assert.That(rejected.Reason, Does.StartWith("You don't own"), "the L6 reason reaches the caller verbatim");
+        }
+
+        [Test]
+        public void Validate_Accepts_Under_The_Superuser_All_Cards_Source()
+        {
+            // AccountOwnedCounts.For hands a superuser AllCardsOwnedCounts.Instance; L6 runs but every card
+            // is owned, so a legal deck still passes. This is the bot/QA "unconstrained by construction" path.
+            var msg = LegalSubmission(CardClass.GRAVEKEEP, CardClass.VERDANT);
+            var result = DeckSubmission.Validate(msg, Db, AllCardsOwnedCounts.Instance);
+            Assert.That(result.Accepted, Is.True, result.Reason);
+        }
+
         // ── Over real sockets ─────────────────────────────────────────────────────
 
         [Test]

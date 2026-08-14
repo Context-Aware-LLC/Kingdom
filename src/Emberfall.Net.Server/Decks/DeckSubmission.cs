@@ -64,8 +64,15 @@ namespace Emberfall.Net.Server.Decks
     public static class DeckSubmission
     {
         /// <summary>Validate a submission against <paramref name="db"/> and, on success, return the seat's
-        /// hero class + ordered deck. Pure — no I/O, no ambient state, never throws on wire input.</summary>
-        public static DeckSubmissionResult Validate(SubmitDeckMsg msg, ICardDatabase db)
+        /// hero class + ordered deck. Pure — no I/O, no ambient state, never throws on wire input.
+        ///
+        /// <para><paramref name="owned"/> is the submitting account's ownership source for L6 (NOR-313).
+        /// Null — the default, and what a caller with no account context passes — leaves L6 unenforced
+        /// exactly as before; a real source constrains the submission to cards the account holds. The
+        /// caller resolves it through <c>AccountOwnedCounts.For</c>, which keeps a superuser account
+        /// unconstrained by construction.</para></summary>
+        public static DeckSubmissionResult Validate(SubmitDeckMsg msg, ICardDatabase db,
+                                                    IOwnedCardCounts? owned = null)
         {
             if (msg is null) return DeckSubmissionResult.Rejected("No deck submitted.");
 
@@ -95,7 +102,7 @@ namespace Emberfall.Net.Server.Decks
 
             var character = new Character(msg.CharacterId, "Submitted", msg.PrimaryClass, msg.SecondaryClass);
 
-            var check = QueueEligibility.Check(deck, character, db);
+            var check = QueueEligibility.Check(deck, character, db, owned);
             if (!check.IsEligible) return DeckSubmissionResult.Rejected(check.Reason);
 
             // Expand to the pre-shuffle ordered list MatchSetup wants (BeginMatch shuffles with the seed,
