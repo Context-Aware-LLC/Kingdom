@@ -60,3 +60,7 @@
     --class-gravekeep: rgb(126, 107, 158);
     --class-verdant: rgb(75, 154, 84);
 }
+
+.unity-base-dropdown__label {
+    color: var(--unity-colors-dropdown-text);
+}

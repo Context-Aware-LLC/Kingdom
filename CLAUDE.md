@@ -1,34 +1,31 @@
 # TCG "Hearthlike"
 
-A digital, turn-based **1v1 collectible trading card game** in the lineage of Blizzard's
-*Hearthstone*. Fast to learn, deep to master, readable on one screen, built for live-service
-content cadence (card sets, balance patches, cosmetics).
+A digital, turn-based **1v1 collectible trading card game** 
 
-**Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules engine that runs
-headless on the server. **There is no client-side prediction** (ADR-0004): the client mirrors
-server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
+Inspired by Blizzard's *Hearthstone*. Fast to learn, deep to master, readable on one screen, built for live-service content cadence (card sets, balance patches, cosmetics).
+
+**Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules engine that runs headless on the server. 
+**There is no client-side prediction** (ADR-0004): the client mirrors server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
 
 ## What this file is
 
-Constraints you **cannot infer by looking**. Everything below documents an *absence* or a
-*consequence* — a trigger that parses but never fires, a rename that relocates every save —
-because those are invisible on inspection and expensive to learn by hitting them.
+Constraints you **cannot infer by looking**.
+Everything below documents an *absence* or a *consequence* — a trigger that parses but never fires, a rename that relocates every save — because those are invisible on inspection and expensive to learn by hitting them.
 
-**What is built, what exists, and how many of anything there are is deliberately NOT recorded
-here.** Read the code, the data and the tests; they cannot drift from themselves. Do not add a
-status summary, a file inventory, a directory map, or a count to this file — each one can only
-become wrong, and this file is loaded into every session that touches the repo.
+**What is built, what exists, and how many of anything there are is deliberately NOT recorded here.**
+Read the code, the data and the tests; they cannot drift from themselves. Do not add a status summary, a file inventory, a directory map, or a count to this file — each one can only become wrong, and this file is loaded into every session that touches the repo.
 
 ## Where things are
 
-`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`,
-not `.sln`). `unity/Emberfall/` is the Unity project. `art/` and `art-pipeline/` hold source art and
-generated candidates. `tooling/scripts/` and `tools/ci/` hold automation. See `src/README.md` for
-the engine map.
+`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`, not `.sln`). `unity/Emberfall/` is the Unity project.
+`art/` and `art-pipeline/` hold source art and
+generated candidates.
+`tooling/scripts/` and `tools/ci/` hold automation.
+See `src/README.md` for the engine map.
 
-**The core is `netstandard2.1`, NOT .NET 10.** Every `Emberfall.Core.*` project, plus
-`Emberfall.Net.Client` and `Emberfall.Net.Protocol`, targets `netstandard2.1` because **Unity
-consumes them as local packages** and cannot load a `net10.0` assembly. Only `Emberfall.Net.Server`
+**The core is `netstandard2.1`, NOT .NET 10.**
+Every `Emberfall.Core.*` project, plus `Emberfall.Net.Client` and `Emberfall.Net.Protocol`, targets `netstandard2.1` because:
+**Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Emberfall.Net.Server`
 and the `Emberfall.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
 language feature inside the core compiles nowhere and breaks Unity's consumption of it — so check
 the `.csproj` before using anything modern. Confirm with:
@@ -47,28 +44,17 @@ which points at an access modifier. The live declarations are in
 
 ## Source of truth
 
-- **Your task brief is the source of truth.** For un-built behavior, ask the operator rather
-  than inferring a decision from a document.
-- **Specs and briefs are yours to read. Plans, trackers, status registers and records belong
-  to the operator** — they are not instructions to you and do not outrank your brief.
-- **A count, total or status figure in any document is a RECORD of what existed when it was
-  written — never a target.** Never work backwards from one to decide how much to produce.
-- **A disagreement between your brief and a document is a FINDING, not a problem to quietly
-  solve.** Raise it and stop that track. Silently reconciling the two is the most damaging
-  thing you can do, because the reconciliation never appears in your output.
-- **Any deliverable that is a count, a diff, or an exhaustive check must be produced by a
-  script whose output you quote** — never by reading and summarising. See the hard rule below.
+- **Your task brief is the source of truth.** For un-built behavior, ask the operator rather than inferring a decision from a document.
+- **Specs and briefs are yours to read. Plans, trackers, status registers and records belong to the operator** — they are not instructions to you and do not outrank your brief.
+- **A count, total or status figure in any document is a RECORD of what existed when it was written — never a target.** Never work backwards from one to decide how much to produce.
+- **A disagreement between your brief and a document is a FINDING, not a problem to quietly solve.** Raise it and stop that track. Silently reconciling the two is the most damaging thing you can do, because the reconciliation never appears in your output.
+- **Any deliverable that is a count, a diff, or an exhaustive check must be produced by a script whose output you quote** — never by reading and summarising. See the hard rule below.
 
 ## HARD RULE: quote the output, do not describe it
 
-**If you ran something to get an answer, paste what it printed.** The script is not the
-deliverable. Its stdout is the deliverable. Copy it in verbatim, including the parts that are
-inconvenient.
+**If you ran something to get an answer, paste what it printed.** The script is not the deliverable. Its stdout is the deliverable. Copy it in verbatim, including the parts that are inconvenient.
 
-**Never state a number, a count, or a "none found" that you did not read off a command's
-output in the same session.** "No duplicates found" and "all entries are valid" are the most
-dangerous sentences you can write, because they look like verification and cost nothing to
-fabricate.
+**Never state a number, a count, or a "none found" that you did not read off a command's output in the same session.** "No duplicates found" and "all entries are valid" are the most dangerous sentences you can write, because they look like verification and cost nothing to fabricate.
 
 **Why this is a hard rule and not an obvious one.** On 2026-07-29 an agent was asked to
 inventory the card data. It wrote `tooling/scripts/card_inventory.py` — a correct script, still
@@ -220,15 +206,10 @@ git grep -n "RETIREMENT TRIGGER" -- src tooling tools unity
 that is simply true. Only pin the ones that a known, named change will invalidate.
 
 ## Generated art lands in `art-pipeline/`
+`art-pipeline/` is gitignored in full intentionally
 
-**`art-pipeline/` superseded `art-bakeoff/`, which is fully retired (Sam, 2026-08-06)** — gone from
-disk, gone from `.gitignore`, and named by no surviving script. Sam repointed every generator and
-deleted the one-offs he will not run again in the same pass. `art-pipeline/` is gitignored in full.
-
-**The default path is candidates-first.** `gen_card_art.py` drops candidates into
-`art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png` with a contact sheet per
-(setId, class), and a human picks before anything is promoted. Drafted briefs sit beside them as
-`draft.txt`, so art you like has its prompt next to it.
+**The default path is candidates-first.**
+`gen_card_art.py` drops candidates into `art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png` with a contact sheet per (setId, class), and a human picks before anything is promoted. Drafted briefs sit beside them as `draft.txt`, so art you like has its prompt next to it.
 
 **Candidates and drafts share one key: the `setId`.** A class-keyed candidate group used to live
 here, which put a card's `draft.txt` and its candidates in different directories for 92 of 260
@@ -265,10 +246,8 @@ searches all of `Assets/Art/UI` recursively by sprite NAME, `AddressablesSetup` 
 as `ui/<fileName>`, and the import rule keys on `Assets/Art/UI/` itself. Renaming a subfolder under
 it changes no address and no import setting. Do not reason from `Art/Cards/` to `Art/UI/`.
 
-**Replacing existing art: overwrite the `.png` in place. Never delete the `.png` + `.meta`
-pair.** The `.meta` carries the guid the Addressables entry points at; deleting it mints a new
-one and silently orphans that entry. Overwriting keeps it. New art still needs its generated
-`.meta` committed — a separate and easy-to-forget step.
+**Replacing existing art: overwrite the `.png` in place. Never delete the `.png` + `.meta` pair.**
+The `.meta` carries the guid the Addressables entry points at; deleting it mints a new one and silently orphans that entry. Overwriting keeps it. New art still needs its generated `.meta` committed — a separate and easy-to-forget step.
 
 **`art-pipeline/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31, restated for the
 renamed folder 2026-08-06).** Every final version already lives under `Assets/`, so the whole folder
@@ -276,10 +255,8 @@ could vanish and no build, test or asset would change. It is kept because it is 
 
 **What that changes: nothing there is a deliverable, and losing a candidate is not an incident** —
 do not treat it as recoverable state, do not audit it, do not raise a deletion as a finding.
-**What it does not change: still don't delete it.** "Not precious" is not "please remove." It is
-Sam's to clear when he wants the space. Deleting on his behalf remains outside your scope, and a
-re-roll still lands *beside* the previous candidate rather than on top of it — overwriting a set
-nobody has looked at yet is a different thing from clearing one he has.
+**What it does not change: still don't delete it.**
+"Not precious" is not "please remove." It is Sam's to clear when he wants the space. Deleting on his behalf remains outside your scope, and a re-roll still lands *beside* the previous candidate rather than on top of it — overwriting a set nobody has looked at yet is a different thing from clearing one he has.
 
 ## Never commit a changed `productName`
 
@@ -331,13 +308,7 @@ Unity terminal before work starts. A domain reload takes ~45 s, and every other 
 during that window is told *"Unity not detected"* — which reads like a broken relay rather than
 contention, and sends people debugging the wrong thing. Two further non-obvious ones: *"connection
 revoked"* means a second copy of `~/.unity/relay/relay_win.exe` is running and must be killed, and
-compile errors arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on severity silently
-hides them.
+compile errors arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on severity silently hides them.
 
-**Match that relay on its full path, never on the process name.** Unity's own AI Assistant package
-ships a *different* product using the same binary name, at
-`unity/Emberfall/Library/PackageCache/com.unity.ai.assistant@<hash>/RelayApp~/relay_win.exe`, and it
-is routinely running at the same time — so `Get-Process relay_win` returning two hits is the normal
-state, not the fault above. Killing on a name match takes down the AI Assistant and leaves the
-actual duplicate running. Tell them apart by `.Path`, or by port: the AI Assistant relay listens on
-9001/9002 and the MCP relay owns no TCP port at all.
+**Match that relay on its full path, never on the process name.**
+Unity's own AI Assistant package ships a *different* product using the same binary name, at `unity/Emberfall/Library/PackageCache/com.unity.ai.assistant@<hash>/RelayApp~/relay_win.exe`, and it is routinely running at the same time — so `Get-Process relay_win` returning two hits is the normal state, not the fault above. Killing on a name match takes down the AI Assistant and leaves the actual duplicate running. Tell them apart by `.Path`, or by port: the AI Assistant relay listens on 9001/9002 and the MCP relay owns no TCP port at all.
