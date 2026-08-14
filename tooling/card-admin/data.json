@@ -30,7 +30,7 @@
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 57,
+      "BULWARK": 56,
       "SKIRMISH": 12,
       "SHROUD": 11,
       "VENOM": 9,
@@ -41,8 +41,8 @@
       "ARCANE_SURGE": 4,
       "FERVOR": 4,
       "VANGUARD": 3,
-      "FROST": 2,
-      "LIFEDRAIN": 2
+      "LIFEDRAIN": 2,
+      "FROST": 1
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 33,
@@ -50,7 +50,7 @@
       "ANY_MINION": 24,
       "FRIENDLY_HERO": 20,
       "ENEMY_MINIONS": 18,
-      "ANY_ENEMY": 15,
+      "ANY_ENEMY": 16,
       "ENEMY_CHARACTERS": 6,
       "ENEMY_HERO": 6,
       "ANY_FRIENDLY": 5,
@@ -60,8 +60,8 @@
     "costDistribution": {
       "0": 8,
       "1": 31,
-      "2": 63,
-      "3": 59,
+      "2": 62,
+      "3": 60,
       "4": 45,
       "5": 18,
       "6": 18,
@@ -86,18 +86,18 @@
     "minionCount": 171,
     "attackDistribution": {
       "0": 5,
-      "1": 36,
-      "2": 43,
+      "1": 35,
+      "2": 44,
       "3": 38,
-      "4": 16,
+      "4": 15,
       "5": 17,
-      "6": 12,
+      "6": 13,
       "7": 3,
       "10": 1
     },
     "healthDistribution": {
-      "1": 22,
-      "2": 30,
+      "1": 21,
+      "2": 31,
       "3": 28,
       "4": 35,
       "5": 25,
@@ -118,7 +118,7 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 5,
+        "BULWARK": 4,
         "AEGIS": 1,
         "VANGUARD": 1
       },
@@ -154,9 +154,9 @@
         "1": 6,
         "2": 2,
         "3": 3,
-        "4": 2,
+        "4": 1,
         "5": 1,
-        "6": 1
+        "6": 2
       },
       "healthDistribution": {
         "1": 2,
@@ -346,16 +346,16 @@
       },
       "minionCount": 37,
       "attackDistribution": {
-        "1": 12,
-        "2": 10,
+        "1": 11,
+        "2": 11,
         "3": 9,
         "4": 3,
         "5": 2,
         "6": 1
       },
       "healthDistribution": {
-        "1": 8,
-        "2": 8,
+        "1": 7,
+        "2": 9,
         "3": 7,
         "4": 6,
         "5": 6,
@@ -544,14 +544,14 @@
       },
       "keywordFrequency": {
         "BULWARK": 8,
-        "FROST": 2,
+        "FROST": 1,
         "SKIRMISH": 1,
         "VENOM": 1
       },
       "selectorFrequency": {
         "ENEMY_MINIONS": 8,
+        "ANY_ENEMY": 7,
         "ANY_MINION": 7,
-        "ANY_ENEMY": 6,
         "ANY_FRIENDLY_MINION": 3,
         "FRIENDLY_MINIONS": 2,
         "ANY_FRIENDLY": 1
@@ -559,8 +559,8 @@
       "costDistribution": {
         "0": 1,
         "1": 4,
-        "2": 10,
-        "3": 7,
+        "2": 9,
+        "3": 8,
         "4": 4,
         "5": 2,
         "6": 3,
@@ -783,7 +783,7 @@
       "id": "frost_ripple",
       "name": "Frost Ripple",
       "type": "SPELL",
-      "cost": 2,
+      "cost": 3,
       "attack": null,
       "health": null,
       "durability": null,
@@ -2041,8 +2041,8 @@
       "name": "Corpse Cart",
       "type": "MINION",
       "cost": 2,
-      "attack": 1,
-      "health": 1,
+      "attack": 2,
+      "health": 2,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
@@ -2686,13 +2686,12 @@
       "name": "The Mechanism",
       "type": "MINION",
       "cost": 8,
-      "attack": 4,
+      "attack": 6,
       "health": 6,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "LEGENDARY",
       "keywords": [
-        "BULWARK",
         "AEGIS"
       ],
       "selectors": [],
@@ -4005,10 +4004,10 @@
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "COMMON",
-      "keywords": [
-        "FROST"
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY"
       ],
-      "selectors": [],
       "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": true,

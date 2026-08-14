@@ -117,7 +117,7 @@
     "id": "frost_ripple",
     "name": "Frost Ripple",
     "type": "SPELL",
-    "cost": 2,
+    "cost": 3,
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
@@ -2031,8 +2031,8 @@
     "name": "Corpse Cart",
     "type": "MINION",
     "cost": 2,
-    "attack": 1,
-    "health": 1,
+    "attack": 2,
+    "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
@@ -3077,12 +3077,11 @@
     "tooltip": "The Great Mechanism",
     "type": "MINION",
     "cost": 8,
-    "attack": 4,
+    "attack": 6,
     "health": 6,
     "class": "CLOCKWRIGHT",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK",
       "AEGIS"
     ],
     "rules": [
@@ -5145,10 +5144,28 @@
     "health": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
-    "keywords": [
-      "FROST"
+    "keywords": [],
+        "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY"
+          }
+        }
+      }
     ],
-    "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "tribe": "SPIRIT",
