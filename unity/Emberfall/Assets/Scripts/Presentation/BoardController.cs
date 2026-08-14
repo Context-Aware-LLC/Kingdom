@@ -663,7 +663,15 @@ namespace Emberfall.Presentation
             var bodyFont = BodyFont();   // EF-050: text face here, display face everywhere else
             if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
-            bodyLabel.alignment = TextAlignmentOptions.Center;
+            // Centered across, TOP down the band — not TextAlignmentOptions.Center (Sam,
+            // 2026-08-13). The band is centered on the parchment at BodyCenterY 0.790 with
+            // BodyHeight 0.23, so it runs 0.675..0.905 of the card, while the stat sockets sit at
+            // 0.881/0.884 and their digits reach up to ~0.83. Vertically centering meant a SHORT
+            // line floated to the middle of that band and a two-liner grew DOWNWARD into the
+            // attack/health frames — the shorter the text, the closer to the collision. Growing
+            // from the top instead spends the empty space at the bottom, where the stats already
+            // are, so a one-word rule sits clear of them and only genuinely long text reaches down.
+            bodyLabel.alignment = TextAlignmentOptions.Top;
             bodyLabel.color     = new Color(0.92f, 0.92f, 0.92f);
             bodyLabel.rectTransform.sizeDelta = new Vector2(CardW * 0.90f, CardH * 0.22f);
             bodyLabel.textWrappingMode = TextWrappingModes.Normal;
