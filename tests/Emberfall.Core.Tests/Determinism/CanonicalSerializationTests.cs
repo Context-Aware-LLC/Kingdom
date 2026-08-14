@@ -100,7 +100,10 @@ namespace Emberfall.Core.Tests.Determinism
         // hash-canonical. The seed includes an enchantment so this pin witnesses its walk.
         // NOR-31: the tail now includes active carrierless spell observers and their internal
         // authored rule reference. The seed exercises a finite observer with remaining uses.
-        private const string PinnedSeedDigest = "c6ece0aa9434231a6c4f7d582ed91e45d08db7df450077fa59e07c233e8aaaf6";
+        // Re-pinned 2026-08-13 (NOR-367): HeroInstance.FrostThawPending and CardInstance.FrostThawPending
+        // are public and hash-canonical — the two-step-thaw flag persists across the opponent's turn, so
+        // it controls a future thaw and must be replayed. Old pin: c6ece0aa9434231a6c4f7d582ed91e45d08db7df450077fa59e07c233e8aaaf6
+        private const string PinnedSeedDigest = "fedfa0b2be8dde40d71bd043a09b540d3ba022340eebf8f99aff48cad563ccc9";
 
         [Test]
         public void Known_Vector_Digest_Is_Pinned()

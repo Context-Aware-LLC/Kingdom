@@ -90,6 +90,7 @@ namespace Emberfall.Net.Protocol
             w.Name("armor"); w.I32(h.Armor);
             w.Name("heroPowerId"); w.Str(h.HeroPowerId);
             w.Name("isFrosted"); w.Bool(h.IsFrosted);
+            w.Name("frostThawPending"); w.Bool(h.FrostThawPending);
             w.EndObject();
         }
 
@@ -141,6 +142,7 @@ namespace Emberfall.Net.Protocol
 
             w.Name("hasAegisShield"); w.Bool(c.HasAegisShield);
             w.Name("isFrosted"); w.Bool(c.IsFrosted);
+            w.Name("frostThawPending"); w.Bool(c.FrostThawPending);
             w.Name("isSilenced"); w.Bool(c.IsSilenced);
             w.Name("summonedThisTurn"); w.Bool(c.SummonedThisTurn);
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
@@ -304,6 +306,7 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "armor", out int armor, ref detail)) return false;
             if (!TryStrField(obj, "heroPowerId", out string hpId, ref detail)) return false;
             if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
+            if (!TryBoolField(obj, "frostThawPending", out bool frostPending, ref detail)) return false;
 
             hero = new HeroInstance(id, new PlayerId(controller), cls, maxHp)
             {
@@ -311,6 +314,7 @@ namespace Emberfall.Net.Protocol
                 Armor = armor,
                 HeroPowerId = hpId,
                 IsFrosted = frosted,
+                FrostThawPending = frostPending,
             };
             return true;
         }
@@ -394,6 +398,7 @@ namespace Emberfall.Net.Protocol
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
             if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
+            if (!TryBoolField(obj, "frostThawPending", out bool frostPending, ref detail)) return false;
             if (!TryBoolField(obj, "isSilenced", out bool silenced, ref detail)) return false;
             if (!TryBoolField(obj, "summonedThisTurn", out bool summoned, ref detail)) return false;
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
@@ -401,6 +406,7 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
             card.HasAegisShield = aegis;
             card.IsFrosted = frosted;
+            card.FrostThawPending = frostPending;
             card.IsSilenced = silenced;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;

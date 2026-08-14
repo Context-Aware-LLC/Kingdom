@@ -131,8 +131,9 @@ namespace Emberfall.Core
                 // sourceKeywords (CommandProcessor.cs:530), so it cannot carry Frost to the face.
                 if (HasKeyword(sourceKeywords, Keyword.FROST))
                 {
-                    if (target.IsMinion) target.Minion!.IsFrosted = true;
-                    else target.Hero!.IsFrosted = true;
+                    // NOR-367: arm the two-step thaw alongside the frost flag (see FrostHandler).
+                    if (target.IsMinion) { target.Minion!.IsFrosted = true; target.Minion!.FrostThawPending = true; }
+                    else { target.Hero!.IsFrosted = true; target.Hero!.FrostThawPending = true; }
                     buf.Emit(GameEventKind.FrostApplied, source: source, target: target.Id);
                 }
             }

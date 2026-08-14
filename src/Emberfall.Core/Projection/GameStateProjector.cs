@@ -71,6 +71,7 @@ namespace Emberfall.Core.Projection
                 Armor = ps.Hero.Armor,
                 HeroPowerId = ps.Hero.HeroPowerId,
                 IsFrosted = ps.Hero.IsFrosted,
+                FrostThawPending = ps.Hero.FrostThawPending,
             };
 
             var proj = new PlayerState(ps.Id, hero);
@@ -116,6 +117,7 @@ namespace Emberfall.Core.Projection
                 CurrentDurability = c.CurrentDurability,
                 HasAegisShield = c.HasAegisShield,
                 IsFrosted = c.IsFrosted,
+                FrostThawPending = c.FrostThawPending,
                 IsSilenced = c.IsSilenced,
                 SummonedThisTurn = c.SummonedThisTurn,
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,

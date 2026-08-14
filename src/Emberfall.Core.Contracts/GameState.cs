@@ -185,7 +185,12 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int Armor;
         public string HeroPowerId = "";
-        public bool IsFrosted; // set by FROST verb; cleared at END of the controller's next turn (NOR-355)
+        public bool IsFrosted; // set by FROST verb; cleared at END of the controller's next turn (NOR-355/NOR-367)
+        /// <summary>NOR-367 two-step thaw: armed when frost is applied, cleared at the START of this
+        /// character's controller's turn. <c>ApplyEndTurn</c> thaws only frosted characters that are NOT
+        /// pending, so a unit frozen during its OWN turn still owes its next full turn. See the thaw and
+        /// StartTurnSequence comments in CommandProcessor.</summary>
+        public bool FrostThawPending;
 
         public HeroInstance(InstanceId id, PlayerId controller, CardClass @class, int maxHealth)
         {
@@ -217,6 +222,11 @@ namespace Emberfall.Core.Contracts
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
         public bool IsFrosted;
+        /// <summary>NOR-367 two-step thaw: armed when frost is applied, cleared at the START of this
+        /// card's controller's turn. <c>ApplyEndTurn</c> thaws only frosted cards that are NOT pending, so
+        /// a minion frozen during its OWN turn (e.g. tide_hollowshell_warden's ON_DEATH) still owes its
+        /// next full turn instead of only the remainder of the turn it was already spending.</summary>
+        public bool FrostThawPending;
         /// <summary>True while this live permanent has had its printed and granted abilities removed.
         /// A zone-life reset clears this flag; it is canonical because it changes future resolution.</summary>
         public bool IsSilenced;

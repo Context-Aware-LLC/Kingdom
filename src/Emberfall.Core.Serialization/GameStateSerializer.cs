@@ -70,6 +70,7 @@ namespace Emberfall.Core.Serialization
             w.I32(h.Armor);
             w.Str(h.HeroPowerId);
             w.Bool(h.IsFrosted); // added step 4 — hero frost state is determinism-relevant
+            w.Bool(h.FrostThawPending); // NOR-367 — persists across the opponent's turn, so it is hashed
         }
 
         private static void WalkZone(ICanonicalWriter w, List<CardInstance> zone)
@@ -108,6 +109,7 @@ namespace Emberfall.Core.Serialization
 
             w.Bool(c.HasAegisShield);
             w.Bool(c.IsFrosted);
+            w.Bool(c.FrostThawPending); // NOR-367
             w.Bool(c.IsSilenced);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);

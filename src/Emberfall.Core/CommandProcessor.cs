@@ -288,16 +288,17 @@ namespace Emberfall.Core
             RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;
 
-            // Thaw: frost costs exactly one of the frozen unit's turns — the turn it is frozen ON.
-            // Applying frost on your turn leaves the unit unable to attack on their next turn, and
-            // they thaw here (end of that frozen turn) rather than at the start of it. This is what
-            // makes FROST non-inert: frost applied on Player A's turn holds through all of Player B's
-            // turn and then clears when B ends. Frost applied mid-turn (e.g. ON_DEATH trap) similarly
-            // holds until B ends that same turn. (NOR-355)
+            // Thaw (NOR-355 timing, NOR-367 two-step): frost costs a FULL turn, never a partial one.
+            // A freeze applied on Player A's turn holds through all of Player B's turn and clears when B
+            // ends here. The NOR-367 refinement: a unit frozen DURING its own turn (e.g. the warden's
+            // ON_DEATH trap on the attacker's board) must not thaw at the end of that same turn — it was
+            // already spending it. FrostThawPending is armed at frost-apply and cleared at the START of
+            // the frozen unit's own turn (StartTurnSequence), so a still-pending unit here was frozen
+            // this very turn: skip it and let it serve its next full turn. Only NOT-pending frost thaws.
             var activePs = state.Players[activeSeat];
-            activePs.Hero.IsFrosted = false;
+            if (!activePs.Hero.FrostThawPending) activePs.Hero.IsFrosted = false;
             foreach (var m in activePs.Board)
-                m.IsFrosted = false;
+                if (!m.FrostThawPending) m.IsFrosted = false;
 
             var nextSeat = activeSeat == 0 ? 1 : 0;
             state.ActivePlayer = state.Players[nextSeat].Id;
@@ -626,13 +627,21 @@ namespace Emberfall.Core
             ps.Mana.Temporary = 0;
             ps.Mana.Available = System.Math.Max(0, ps.Mana.Max - locked);
 
-            // Reset summoning sickness / attack budget / hero power. (Thaw runs at END of the frozen
-            // player's turn in ApplyEndTurn — see the comment there for the FROST timing rationale.)
+            // Reset summoning sickness / attack budget / hero power. (Thaw itself runs at END of the
+            // frozen player's turn in ApplyEndTurn — see the comment there for the FROST timing rationale.)
+            //
+            // NOR-367 two-step thaw: clear FrostThawPending for the incoming player's own characters. A
+            // frost that is still pending at THIS start was applied during THIS player's previous own turn
+            // (the warden case); disarming it now means the frost the player carries into this turn — the
+            // full turn it costs them — will thaw normally when they end it. Frost applied on the opponent's
+            // turn is never pending on this seat, so this is a no-op for the ordinary enemy-freeze case.
             foreach (var m in ps.Board)
             {
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
+                m.FrostThawPending = false;
             }
+            ps.Hero.FrostThawPending = false;
             ps.HeroPowerUsedThisTurn = false;
             ps.HeroAttacksUsedThisTurn = 0;
 

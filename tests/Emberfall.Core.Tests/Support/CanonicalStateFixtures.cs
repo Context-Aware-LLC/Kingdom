@@ -41,13 +41,14 @@ namespace Emberfall.Core.Tests.Support
             },
             [typeof(HeroInstance)] = new[]
             {
-                "Armor", "Class", "Controller", "CurrentHealth", "HeroPowerId", "Id", "IsFrosted", "MaxHealth"
+                "Armor", "Class", "Controller", "CurrentHealth", "FrostThawPending", "HeroPowerId", "Id",
+                "IsFrosted", "MaxHealth"
             },
             [typeof(CardInstance)] = new[]
             {
                 "AttacksUsedThisTurn", "Controller", "CurrentAttack", "CurrentDurability", "CurrentHealth",
-                "DefinitionId", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id", "IsFrosted", "IsSilenced",
-                "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
+                "DefinitionId", "Enchantments", "FrostThawPending", "HasAegisShield", "HasUsedRekindle", "Id",
+                "IsFrosted", "IsSilenced", "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
             },
             [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "IsAura", "Source" },
             [typeof(ManaPool)] = new[] { "Available", "Locked", "Max", "Spent", "Temporary" },
@@ -122,6 +123,7 @@ namespace Emberfall.Core.Tests.Support
             ["HeroInstance.Armor"] = s => s.Players[0].Hero.Armor += 3,
             ["HeroInstance.HeroPowerId"] = s => s.Players[0].Hero.HeroPowerId = "hp_other",
             ["HeroInstance.IsFrosted"] = s => s.Players[0].Hero.IsFrosted = !s.Players[0].Hero.IsFrosted,
+            ["HeroInstance.FrostThawPending"] = s => s.Players[0].Hero.FrostThawPending = !s.Players[0].Hero.FrostThawPending,
 
             // CardInstance (the seeded hand card — has durability, keywords, enchantment)
             ["CardInstance.Id"] = s => HandCard(s).Id = new InstanceId(88),
@@ -137,6 +139,7 @@ namespace Emberfall.Core.Tests.Support
                 new Enchantment { Source = new InstanceId(60), AttackDelta = 2, HealthDelta = 2 }),
             ["CardInstance.HasAegisShield"] = s => HandCard(s).HasAegisShield = !HandCard(s).HasAegisShield,
             ["CardInstance.IsFrosted"] = s => HandCard(s).IsFrosted = !HandCard(s).IsFrosted,
+            ["CardInstance.FrostThawPending"] = s => HandCard(s).FrostThawPending = !HandCard(s).FrostThawPending,
             ["CardInstance.IsSilenced"] = s => HandCard(s).IsSilenced = !HandCard(s).IsSilenced,
             ["CardInstance.SummonedThisTurn"] = s => HandCard(s).SummonedThisTurn = !HandCard(s).SummonedThisTurn,
             ["CardInstance.AttacksUsedThisTurn"] = s => HandCard(s).AttacksUsedThisTurn++,

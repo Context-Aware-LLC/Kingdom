@@ -119,6 +119,7 @@ namespace Emberfall.Core
 
             c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
             c.IsFrosted = false;
+            c.FrostThawPending = false; // NOR-367: pending is only meaningful while frosted
             c.IsSilenced = false;
         }
 
@@ -141,6 +142,7 @@ namespace Emberfall.Core
             ApplyStats(c, def, damageTaken);
             c.HasAegisShield = false;
             c.IsFrosted = false;
+            c.FrostThawPending = false; // NOR-367: pending is only meaningful while frosted
             c.IsSilenced = true;
         }
 

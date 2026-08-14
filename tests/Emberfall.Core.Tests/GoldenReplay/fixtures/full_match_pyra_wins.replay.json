@@ -53,7 +53,7 @@
   ],
   "expected": {
     "stateHashAlgo": "sha256",
-    "stateHash": "a6b8ec40ddd482379cd975cca51a907ce37909b1a2fc447636d92fadcd37bd6f",
+    "stateHash": "f581b4ef3bcc320d2b12cd227eaed2c1f1816d02ed8170d1dd6de6164b5f5a6c",
     "eventStream": [
       {
         "seq": 0,

@@ -73,6 +73,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Armor"] = "PUBLIC",
                 ["HeroPowerId"] = "PUBLIC",
                 ["IsFrosted"] = "PUBLIC",
+                ["FrostThawPending"] = "PUBLIC (NOR-367 two-step thaw bookkeeping)",
             },
             [typeof(CardInstance)] = new()
             {
@@ -88,6 +89,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Enchantments"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["HasAegisShield"] = "PUBLIC in visible zones (false in card-backs)",
                 ["IsFrosted"] = "PUBLIC in visible zones (false in card-backs)",
+                ["FrostThawPending"] = "PUBLIC in visible zones (false in card-backs) — NOR-367 two-step thaw",
                 ["IsSilenced"] = "PUBLIC in visible zones (false in card-backs)",
                 ["SummonedThisTurn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",

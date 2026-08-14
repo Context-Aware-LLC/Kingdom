@@ -507,8 +507,11 @@ namespace Emberfall.Core
         {
             foreach (var t in ctx.Targets)
             {
-                if (t.IsMinion) t.Minion!.IsFrosted = true;
-                else if (t.IsHero) t.Hero!.IsFrosted = true;
+                // NOR-367: arm the two-step thaw. FrostThawPending survives until the START of the
+                // frozen character's own turn (StartTurnSequence), so a unit frozen on its own turn
+                // (warden's ON_DEATH) still owes a full turn; the enemy case clears at their next start.
+                if (t.IsMinion) { t.Minion!.IsFrosted = true; t.Minion!.FrostThawPending = true; }
+                else if (t.IsHero) { t.Hero!.IsFrosted = true; t.Hero!.FrostThawPending = true; }
                 else continue;
                 ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Identity, target: t.Id);
             }
