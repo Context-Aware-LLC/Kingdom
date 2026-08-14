@@ -195,10 +195,10 @@
     border-radius: var(--space-2);
     padding: 0 var(--space-6);
 }
-/* Back sits in the deck-header row (§ deck side), not a full-height CTA — shorter and narrower
- * than .db-button's default so it reads as a corner control next to the count, not a footer. */
+/* Back sits in the deck-header row (§ deck side) — narrower than .db-button's default so it
+ * reads as a corner control next to the count, not a footer; but still 48px tall for touch. */
 .db-button--back {
-    height: 36px;
+    height: var(--space-12);
     min-width: 84px;
     padding: 0 var(--space-4);
 }

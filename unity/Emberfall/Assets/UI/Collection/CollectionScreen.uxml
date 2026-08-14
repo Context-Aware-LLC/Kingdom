@@ -56,7 +56,7 @@
                     <ui:Button name="scope-all" text="All" class="db-chip" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Button name="back-button" text="Back" class="col-button col-button--ghost" />
+            <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost" />
         </ui:VisualElement>
 
         <!--
@@ -126,7 +126,7 @@
             -->
             <ui:VisualElement name="deck-panel" class="db-panel db-deck">
                 <ui:VisualElement name="deck-header" class="db-deck-header">
-                    <ui:Button name="done-button" text="Back" class="db-button db-button--ghost db-button--back" />
+                    <ui:Button name="done-button" text="← Back" class="db-button db-button--ghost db-button--back" />
                     <ui:Label name="count-label" text="0 / 30" class="db-count" />
                 </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve" />

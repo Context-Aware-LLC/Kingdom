@@ -64,10 +64,11 @@
     background-color: var(--surface-3);
     border-width: 0;
     border-radius: 999px;
-    padding: var(--space-2) var(--space-5);
+    min-height: var(--space-12);
+    padding: var(--space-2) var(--space-6);
 }
 .col-button--ghost {
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgba(0, 0, 0, 0.55);
 }
 
 /* ---------- Query bar ----------
