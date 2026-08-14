@@ -159,40 +159,27 @@ namespace Emberfall.Net.Server.Bots
             return null;
         }
 
-        /// <summary>
-        /// Ordered target candidates for an explicit-choice card. Hostile cards want enemies, the
-        /// rest want friends; either way the tail covers the other side so a legal play is never
-        /// skipped for want of a guess.
-        ///
-        /// <para>Within each group the board is walked in <b>slot order</b>, not sorted by threat.
-        /// A better AI would sort; a sort here would need a total order to stay deterministic, and
-        /// board order already is one. Killable-first is the whole heuristic, and it is the one that
-        /// matters — spending removal on something it kills.</para>
-        /// </summary>
-        private static List<TargetRef> PlayCandidates(CardDefinition def, PlayerState ps, PlayerState foe)
+        // Depth-first cartesian product over the binding groups. Returns the first legally accepted
+        // combination; canonical (plan-defined) candidate ordering guarantees determinism.
+        private static PlayCardIntent? TryCombinations(
+            GameState state, PlayerId me, CardInstance card, int slot,
+            ICommandValidator validator,
+            IReadOnlyList<TargetChoiceRequirement> plan, TargetRef[] targets, int depth)
         {
-            var list = new List<TargetRef>();
-
-            if (IsHostile(def))
+            if (depth == plan.Count)
             {
-                int dmg = DamageAmount(def);
-                foreach (CardInstance m in foe.Board)
-                    if (dmg > 0 && m.CurrentHealth <= dmg) list.Add(new TargetRef(m.Id));
-                list.Add(new TargetRef(foe.Hero.Id));
-                foreach (CardInstance m in foe.Board) list.Add(new TargetRef(m.Id));
-                foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
-                list.Add(new TargetRef(ps.Hero.Id));
+                var intent = new PlayCardIntent(me, card.Id, slot, (TargetRef[])targets.Clone());
+                return validator.CanExecute(state, intent, out _) ? intent : null;
             }
-            else
+            TargetChoiceRequirement group = plan[depth];
+            foreach (TargetCandidate candidate in group.Candidates)
             {
-                if (ps.Hero.CurrentHealth < ps.Hero.MaxHealth) list.Add(new TargetRef(ps.Hero.Id));
-                foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
-                list.Add(new TargetRef(ps.Hero.Id));
-                foreach (CardInstance m in foe.Board) list.Add(new TargetRef(m.Id));
-                list.Add(new TargetRef(foe.Hero.Id));
+                targets[depth] = new TargetRef(candidate.Instance, group.Binding);
+                PlayCardIntent? result = TryCombinations(
+                    state, me, card, slot, validator, plan, targets, depth + 1);
+                if (result is not null) return result;
             }
-
-            return list;
+            return null;
         }
 
         // ── Attacking ─────────────────────────────────────────────────────────────
@@ -238,33 +225,5 @@ namespace Emberfall.Net.Server.Bots
             return list;
         }
 
-        // ── Reading the card ──────────────────────────────────────────────────────
-
-        private static bool IsHostile(CardDefinition def)
-        {
-            foreach (RuleDefinition rule in def.Rules)
-            {
-                switch (rule.Action)
-                {
-                    case DamageAction _:
-                    case DestroyAction _:
-                    case FrostAction _:
-                    case SilenceAction _:
-                    case ReturnToHandAction _:
-                    case TransformAction _:
-                    case TakeControlAction _:
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        private static int DamageAmount(CardDefinition def)
-        {
-            foreach (RuleDefinition rule in def.Rules)
-                if (rule.Action is DamageAction damage)
-                    return damage.Amount;
-            return 0;
-        }
     }
 }
