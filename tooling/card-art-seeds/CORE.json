@@ -34,5 +34,11 @@
     "perspective": "Straight-on macro icon view with the complete double-ring conductor centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A deep charcoal field with soft hazy violet-grey vapor, maximizing value contrast around the storm-silver rings and cyan-gold spark.",
     "notes": "Hero power art must read at icon size. No caster, enemy figures, labels, giant bolt, explosion, extra rings, or detail outside the central circle."
+  },
+  "ember_cinder_lance": {
+    "subject": "A short thrusting lance-head seen mostly point-forward: a narrow leaf-shaped blade of dark char-black iron with fine ember-red cracks glowing faintly along its spine, socketed into a collar of scorched bronze. Only a stub of the charred wooden shaft shows behind the collar before the frame cuts it off. A few small gold sparks drift up out of the cracks. Plain, cheap, well-used field gear rather than a treasure.",
+    "perspective": "Steep point-toward-viewer three-quarter view with the shaft foreshortened almost entirely away, so the lance-head reads as one compact centred mass inside an imagined circle; all four corners empty.",
+    "background": "A cold, dim blue-grey field with faint cool haze, no setting and no ground, opposing the char-black and ember-red of the lance.",
+    "notes": "Weapon art renders into a CIRCULAR SOCKET — a full-length lance laid corner to corner is the exact shape the mask destroys, so lead with the head and foreshorten the shaft to a stub. This must NOT resemble Scorch Blade (ember_scorch_blade), which today ships the byte-identical file: that one is a broad molten cleaver throwing sparks; this is a SLIM, mostly-dark lance head with only thin ember cracks. It is a 1-mana common — small, modest and worn, not a hero's weapon. The object alone — no hand, no wielder, no ground, no scene. PLACEMENT: this row is setId CORE, so candidates land under art-pipeline/card-art/CORE/, but the FINAL art ships to Assets/Art/Cards/EMBERFALL/ember_cinder_lance.png — Assets/Art/Cards/CORE/ holds hero powers only."
   }
 }

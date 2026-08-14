@@ -364,5 +364,53 @@
     "perspective": "Very low ground-level side view with the heat lens, spark crest, and glowing cracked tile forming one centered horizontal action.",
     "background": "A cool desaturated steel-blue foundry corridor fading into pale smoke, so the warm distortion and sparks remain the sole focal energy.",
     "notes": "Show heat through refraction and a restrained spark crest, not a fireball, explosion, lava flood, caster, enemy, or text-like pattern."
+  },
+  "verdant_ironbark_elder": {
+    "subject": "An ancient treefolk warden, roughly two men tall, whose cedar-brown heartwood is armoured in overlapping plates of iron-hard bark, weathered grey at the edges and seamed with golden-honey sap where the plates meet. It stands squarely with both arms folded across its chest like a closed gate, moss and small ferns growing in the crooks of its shoulders, its face a deep knot of grain with two slow amber lights for eyes. Roots have grown down over its feet and into the ground, as if it has stood in this one spot long enough to become part of it.",
+    "perspective": "Slight low frontal three-quarter view from near ground level, the whole braced silhouette centred and both planted feet visible — one figure, framed as a figure, not as a landscape.",
+    "background": "A pale blue-grey overcast sky over a bare chalk ridge — cool, flat and nearly empty — so the warm cedar-brown body, honey sap seams and weathered grey plates separate cleanly from it.",
+    "notes": "Bulwark reads through the folded-arms, gate-like stance and the rooted feet, never through a literal wall or a shield. Keep it to a single figure at mid-board scale: no forest, no titanic world-tree, no glowing magic, no second creature."
+  },
+  "verdant_elderroot_colossus": {
+    "subject": "A hulking four-limbed shape woven entirely out of thick living roots and packed dark earth, with no face — just a dense knot where a head would be, and a chest cavity glowing faint honey-gold from the sap inside it. It is walking forward with real weight behind it, one root-fist already through a low drystone wall that is coming apart ahead of it, clods and small stones spraying out at knee height.",
+    "perspective": "Frontal three-quarter view at chest height, the whole striding silhouette centred, the breaking wall kept low in the frame so nothing competes with the body.",
+    "background": "A cold pale-grey dusk over open chalk downland, muted and thinly lit, so the warm root-brown mass and the honey-gold chest light read instantly.",
+    "notes": "Overwhelm reads through the wall breaking, not through scale. Hold it to roughly two men tall — this is a 4-mana card and must NOT be staged as a titan, a mountain-sized giant, or a landscape-wide catastrophe. No face, no glowing eyes, no other figures."
+  },
+  "verdant_menders_bloom": {
+    "subject": "One large flower opening in close-up, its petals layered cedar-brown at the base and warm honey-gold at the tips, with a soft green light welling out of its centre like a held breath. Fine green threads of new growth reach down from the bloom and lace closed across a split in the dark bark beneath it, drawing the wound shut — the mending is caught mid-knit, in progress, not finished.",
+    "perspective": "Tight, intimate close-up at the flower's own level, the bloom and the closing seam centred together — small in scale and quiet, never a spell cast over a battlefield.",
+    "background": "Cool blue-grey shadow and wet dark stone falling away sharply behind the bloom, deep in value and almost colourless, so the warm gold petals and green light glow out of it.",
+    "notes": "The spell restores health to one ally, so this is a single contained act of mending: no radiant burst, no beams, no healing wave washing over a field, no runes or spell circles. No hands, no caster, no creature — the bloom and the wound it is closing are the whole image."
+  },
+  "verdant_thalens_ancient": {
+    "subject": "A towering ancient of the deep wood — a walking tree with a trunk-body of fissured cedar bark, a crown of antlered branches still in full leaf, and a long slow stride. Golden honey sap runs bright in the fissures of its chest and down its forelimbs like veins beneath the bark. One heavy limb sweeps forward and low, shearing the top off a ruined stone wall as it comes on, leaves and bark-dust trailing behind it. A mantle of living canopy hangs from its shoulders, echoing Thalen Greenmantle's own cloak without depicting him.",
+    "perspective": "Low heroic three-quarter view looking up at it, the full antlered crown inside the frame and uncropped, the ruined wall small at its feet to carry the scale.",
+    "background": "A cold pale-quartz mountain face under a thin, near-white sky — high in value and drained of colour — so the deep green canopy and sap-gold trunk read as one dark silhouette against it.",
+    "notes": "This is the Verdant legendary and should be the most commanding shape in the class: Bulwark through the immovable rooted trailing leg, Overwhelm through the wall shearing away. One creature only — do not paint Thalen Greenmantle himself, and do not fill the frame with forest."
+  },
+  "verdant_worldroot_behemoth": {
+    "subject": "A four-legged behemoth about the size of a war elephant, its whole body a knotted mass of pale enormous roots torn up from far underground, dark wet earth still packed between them and shedding as it moves. Its head is low and blunt with no eyes, ringed by a collar of broken root-tips like tusks. It is mid-charge, shouldering straight through the trunk of a dead tree that splinters across its chest, hind legs still dragging fresh soil up out of the ground behind it.",
+    "perspective": "Side-on three-quarter charging view at head height, the full body length inside the frame with the splintering trunk crossing low, so the motion reads left-to-right at a glance.",
+    "background": "Cold pale blue-grey rainfall over flat drowned ground, low in contrast and desaturated, so the warm root-brown bulk and the dark packed earth are the only solid mass in the frame.",
+    "notes": "Overwhelm reads through the splintering trunk and the earth being hauled up. It is a beast, not a treefolk — no face, no arms, no antlers, nothing humanoid, no rider. Big, but one charging animal rather than a landscape event."
+  },
+  "verdant_canopy_seer": {
+    "subject": "A tall, long-limbed figure perched high in a fork of branches, wrapped in a hooded mantle of layered green leaves that hangs down over the wood beneath it. Its face is bark-grained and calm with the eyes closed, one hand pressed flat to the branch it is reading; just above that hand a single seed hangs in the air, split open, a thin thread of honey-gold light unwinding out of it. Long-limbed and unarmoured rather than bulky — a watcher, not a fighter, but full-grown and a real presence at its own scale.",
+    "perspective": "Level three-quarter view from just outside the branch fork, at the seer's own height, the seated figure and the floating seed centred together.",
+    "background": "A cold pale-grey dawn haze filling the space beyond the branches, flat and near-white, silhouetting the green mantle and cedar limbs with no second layer of foliage behind them.",
+    "notes": "Drawing a card reads as the split seed and its one thread of light — keep it small and quiet. No glowing eyes, no visionary imagery, no runes, no floating cards, and no forest depth behind the branch; the emptiness is what makes the silhouette read at board size."
+  },
+  "ward_earthwardens_maul": {
+    "subject": "A short, brutally heavy warhammer: a squared block of granite bound in rusted bronze bands for a head, seated on a stubby iron-black haft barely longer than the head is tall. The striking face is chipped and pale where it has been used, moss has taken hold in the seams of the bronze and in the pitting along one flat, and a vein of pale quartz runs through the stone and catches the light.",
+    "perspective": "Head-on three-quarter view of the object alone, floating, head slightly forward and the haft foreshortened almost to nothing, so the whole weapon sits as one compact block dead-centre inside an imagined circle with all four corners empty.",
+    "background": "A dim, warm amber field — low ember-glow in hazy dark air, no setting and no ground — opposing the cold granite grey, iron-black and moss-green of the weapon itself.",
+    "notes": "Weapon art renders into a CIRCULAR SOCKET on the hero frame, so keep every meaningful shape inside the middle 60% and compose it COMPACT: a long haft laid corner to corner is the one shape the mask destroys. The object alone — no hand, no wielder, no ground, no scene, no figure of any kind. It grants Bulwark, so it should look like something that plants and holds rather than something that swings fast."
+  },
+  "ember_scorch_blade": {
+    "subject": "A broad, heavy single-edged cleaver-sword. The blade is dark char-black steel split by a wide molten fissure running its whole length, orange-white at the core, throwing loose gold sparks off the cutting edge. The crossguard is a short bar of blackened iron and the grip is bound in scorched leather. Heat visibly distorts the air along the spine of the blade.",
+    "perspective": "Three-quarter view of the object alone, floating, the blade angled steeply and foreshortened so the whole weapon sits compact and centred inside an imagined circle rather than crossing corner to corner; all four corners empty.",
+    "background": "A cold, dim blue-black night field with faint slate-grey haze, no setting and no ground, opposing the molten orange and gold of the blade.",
+    "notes": "Weapon art renders into a CIRCULAR SOCKET on the hero frame — keep everything inside the middle 60%, compose COMPACT, and never lay the blade corner to corner. This must NOT resemble Cinder Lance (ember_cinder_lance), which today ships the byte-identical file: that one is a slim, mostly-dark thrusting lance head with only thin ember cracks; this is a BROAD cleaver blade that is actively molten and throwing sparks. The object alone — no hand, no wielder, no ground, no scene."
   }
 }
