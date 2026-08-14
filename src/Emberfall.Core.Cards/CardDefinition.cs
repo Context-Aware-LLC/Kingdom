@@ -100,6 +100,18 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>Who supplies the targets selected from a <see cref="TargetSpec"/> candidate set.</summary>
+    /// <remarks>
+    /// There is no AUTOMATIC member, and its absence is load-bearing: an <c>ANY_*</c> selector is a
+    /// player prompt by default (see <c>DefaultPlayerSelectors</c>) with no way to say "take them
+    /// all", so "deal N to every enemy" can only be authored as TWO rules — one at ENEMY_MINIONS and
+    /// one at ENEMY_HERO. <c>CardTextGenerator.TryFoldWholeSide</c> exists solely to print that pair
+    /// as the one sentence it means.
+    ///
+    /// <para>RETIREMENT TRIGGER: adding AUTOMATIC here (or an ALL_ENEMIES set selector in
+    /// <c>TargetSpec.KnownSelectors</c>) makes the split rows authorable as one rule. Collapsing
+    /// them is then part of that change, and <c>TryFoldWholeSide</c> plus its tests come out with
+    /// them — a fold left behind would quietly re-merge some future author's deliberate pair.</para>
+    /// </remarks>
     public enum TargetChosenBy
     {
         PLAYER,

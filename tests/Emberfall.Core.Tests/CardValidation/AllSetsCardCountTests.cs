@@ -119,7 +119,18 @@ namespace Emberfall.Core.Tests.CardValidation
             // core_lantern_bearer: grave_lantern_bearer -> gravelight_lantern_bearer,
             // tide_glacial_leviathan: tide_glacial_leviathan -> tide_glacierborn_leviathan,
             // rekind_clock_rebuilt_automaton: clock_rebuilt_automaton -> clock_reconstructed_automaton.
-            Assert.That(hash, Is.EqualTo("A5B12C98B0A1822F08ADCDB563F3D5E9FA17CCE408BFDB30C07592E28EC403CA"),
+            //
+            // Re-pinned 2026-08-13 (same day): rekind_neutral_aric's Name shortened from "Aric,
+            // First Among Equals" to "Aric", with the epithet moved to flavorText — a title says
+            // nothing mechanical and was competing with the stat line for the one row of the frame
+            // that has to stay readable at hand size. Same shape as the 2026-08-09 title audit above.
+            //
+            // NOTE for whoever lands the next name change: rebake_card_data.py does NOT cover this
+            // pin. It rebakes the three GENERATED artifacts and correctly reports a name edit as
+            // fixture-clean (a name moves no fixture — DefaultDeckGenerator reads cost/rarity/class/
+            // collectible/type/id), so it prints CARD_DATA_REBAKE=CLEAN while this test goes red.
+            // Run the Unit lane, not just the rebake, after touching any field projected here.
+            Assert.That(hash, Is.EqualTo("3D33B9A62D3D46B5EDBE69C3BA155C6355BB4F98864B8D90EEC816DD90557647"),
                 "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's
