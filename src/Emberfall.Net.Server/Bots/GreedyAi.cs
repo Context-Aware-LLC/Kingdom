@@ -182,6 +182,57 @@ namespace Emberfall.Net.Server.Bots
             return null;
         }
 
+        private static List<TargetRef> PlayCandidates(CardDefinition def, PlayerState ps, PlayerState foe)
+        {
+            var list = new List<TargetRef>();
+
+            if (IsHostile(def))
+            {
+                int dmg = DamageAmount(def);
+                foreach (CardInstance m in foe.Board)
+                    if (dmg > 0 && m.CurrentHealth <= dmg) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(foe.Hero.Id));
+                foreach (CardInstance m in foe.Board) list.Add(new TargetRef(m.Id));
+                foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(ps.Hero.Id));
+            }
+            else
+            {
+                if (ps.Hero.CurrentHealth < ps.Hero.MaxHealth) list.Add(new TargetRef(ps.Hero.Id));
+                foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(ps.Hero.Id));
+                foreach (CardInstance m in foe.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(foe.Hero.Id));
+            }
+
+            return list;
+        }
+        private static bool IsHostile(CardDefinition def)
+        {
+            foreach (RuleDefinition rule in def.Rules)
+            {
+                switch (rule.Action)
+                {
+                    case DamageAction _:
+                    case DestroyAction _:
+                    case FrostAction _:
+                    case SilenceAction _:
+                    case ReturnToHandAction _:
+                    case TransformAction _:
+                    case TakeControlAction _:
+                        return true;
+                }
+            }
+            return false;
+        }
+        private static int DamageAmount(CardDefinition def)
+        {
+            foreach (RuleDefinition rule in def.Rules)
+                if (rule.Action is DamageAction damage)
+                    return damage.Amount;
+            return 0;
+        }
+
         // ── Attacking ─────────────────────────────────────────────────────────────
 
         private static AttackIntent? TryAttack(
