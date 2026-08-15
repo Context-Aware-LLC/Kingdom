@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Tools.StoreReconcile — EF-080c reconciliation report (store transactions vs ledger).
+    Read-only: queries entitlement_grant in Postgres, compares against a store-transaction JSONL
+    stub, and prints three finding categories: owed-goods, investigate, owed-clawback.
+    Credential-gated (EMBERFALL_ACCOUNTS_DB), so it lives here rather than in CI.
+    Modelled on Emberfall.Tools.TelemetryVerify.
+
+    Usage:
+      EMBERFALL_ACCOUNTS_DB=... dotnet run -p src/Emberfall.Tools.StoreReconcile path/to/store_transactions.jsonl
+
+    Exit 0 = no issues; 1 = issues found; 2 = misconfiguration.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Tools.StoreReconcile</AssemblyName>
+    <RootNamespace>Emberfall.Tools.StoreReconcile</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Checked-in stub feed for dev use. Replace with a real platform export once EF-080d lands. -->
+    <None Include="sample\store_transactions.jsonl" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

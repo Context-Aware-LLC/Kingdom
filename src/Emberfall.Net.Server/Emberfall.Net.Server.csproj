@@ -23,6 +23,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Emberfall.Net.Server.Tests" />
     <InternalsVisibleTo Include="Emberfall.Tools.TelemetryVerify" />
+    <InternalsVisibleTo Include="Emberfall.Tools.StoreReconcile" />
   </ItemGroup>
 
   <ItemGroup>

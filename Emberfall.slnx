@@ -13,6 +13,7 @@
     <Project Path="src/Emberfall.Tools.NetSoak/Emberfall.Tools.NetSoak.csproj" />
     <Project Path="src/Emberfall.Tools.OddsDisclosure/Emberfall.Tools.OddsDisclosure.csproj" />
     <Project Path="src/Emberfall.Tools.TelemetryVerify/Emberfall.Tools.TelemetryVerify.csproj" />
+    <Project Path="src/Emberfall.Tools.StoreReconcile/Emberfall.Tools.StoreReconcile.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
