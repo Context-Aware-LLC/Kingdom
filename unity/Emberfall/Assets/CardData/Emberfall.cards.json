@@ -1008,7 +1008,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK"
+      "LIFEDRAIN"
     ],
     "rules": [
       {
@@ -1203,7 +1203,7 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [
-      "BULWARK"
+      "LIFEDRAIN"
     ],
     "rules": [
       {
@@ -1238,7 +1238,7 @@
     "attack": 5,
     "health": 5,
     "class": "GRAVEKEEP",
-    "rarity": "LEGENDARY",
+    "rarity": "EPIC",
     "keywords": [],
     "rules": [
       {
@@ -1577,7 +1577,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK"
+      "LIFEDRAIN"
     ],
     "rules": [],
     "setId": "EMBERFALL",
@@ -1679,7 +1679,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK"
+      "VANGUARD"
     ],
     "rules": [],
     "setId": "EMBERFALL",
@@ -1711,7 +1711,7 @@
     "attack": 7,
     "health": 6,
     "class": "VERDANT",
-    "rarity": "LEGENDARY",
+    "rarity": "EPIC",
     "keywords": [
       "BULWARK",
       "OVERWHELM"
@@ -2275,7 +2275,7 @@
     "attack": 6,
     "health": 6,
     "class": "TIDECALLER",
-    "rarity": "LEGENDARY",
+    "rarity": "EPIC",
     "keywords": [],
     "rules": [
       {
@@ -3769,7 +3769,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK"
+      "AEGIS"
     ],
     "rules": [],
     "tribe": "CONSTRUCT",
@@ -3898,7 +3898,7 @@
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [
-      "BULWARK"
+      "VANGUARD"
     ],
     "rules": [
       {
@@ -5606,7 +5606,7 @@
     "attack": 6,
     "health": 7,
     "class": "GRAVEKEEP",
-    "rarity": "LEGENDARY",
+    "rarity": "EPIC",
     "keywords": [
       "BULWARK"
     ],

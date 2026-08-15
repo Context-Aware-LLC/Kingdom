@@ -93,7 +93,7 @@
     "cost": 4,
     "attack": 3,
     "health": 5,
-    "class": "NEUTRAL",
+    "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
       "BULWARK"
@@ -148,7 +148,7 @@
     "cost": 5,
     "attack": 4,
     "health": 5,
-    "class": "NEUTRAL",
+    "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [
       "BULWARK"
@@ -341,61 +341,43 @@
     "artId": "ember_forge_warden"
   },
   {
-    "id": "rekind_ember_reclaimed_fortress",
-    "name": "Reclaimed Fortress",
-    "type": "SPELL",
+    "id": "rekind_clock_clockwork_essence",
+    "name": "Clockwork Essence",
+    "type": "MINION",
     "cost": 3,
-    "class": "EMBERWARD",
-    "rarity": "COMMON",
+    "attack": 2,
+    "health": 3,
+    "class": "CLOCKWRIGHT",
+    "rarity": "RARE",
     "keywords": [],
+    "tribe": "CONSTRUCT",
     "rules": [
       {
         "id": "rule_1",
         "activation": {
           "type": "TRIGGERED",
-          "trigger": "ON_CAST"
+          "trigger": "ON_TURN_START"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "TURN_OWNER",
+          "owner": "CONTROLLER"
         },
         "lifetime": {
-          "type": "ONE_SHOT"
+          "type": "SOURCE_BOUND"
         },
         "action": {
           "type": "MODIFY_STATS",
-          "attack": 2,
-          "health": 2,
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION",
-            "binding": "target"
-          }
-        }
-      },
-      {
-        "id": "rule_2",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "GRANT_KEYWORD",
-          "keyword": "BULWARK",
-          "target": {
-            "selector": "ANY_FRIENDLY_MINION",
-            "binding": "target"
+            "selector": "SELF"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "ember_reclaimed_fortress"
+    "artId": "clock_clockwork_essence"
   },
   {
     "id": "rekind_ember_coalition_blazer",
@@ -430,6 +412,111 @@
     "collectible": true,
     "tribe": "ELEMENTAL",
     "artId": "ember_coalition_blazer"
+  },
+  {
+    "id": "rekind_forge_striker",
+    "name": "Forge Striker",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 4,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "EPIC",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "EQUIP",
+          "cardId": "smithy_hammer"
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "_forge_striker"
+  },
+  {
+    "id": "smithy_hammer",
+    "name": "Smithy Hammer",
+    "type": "WEAPON",
+    "cost": 2,
+    "attack": 2,
+    "durability": 2,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_ATTACK"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "GAIN_ARMOR",
+          "amount": 2
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": false,
+    "artId": "smithy_hammer"
+  },
+  {
+    "id": "rekind_verdant_seedling_guard",
+    "name": "Seedling Guard",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 1,
+    "class": "VERDANT",
+    "rarity": "RARE",
+    "keywords": [
+      "AEGIS"
+    ],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_HEAL"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
+          "target": {
+            "selector": "SELF"
+          }
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "verdant_seedling_guard"
   },
   {
     "id": "rekind_ember_rekindled_flame",
@@ -660,7 +747,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK"
+      "REKINDLE"
     ],
     "rules": [],
     "setId": "REKINDLING",
@@ -1489,7 +1576,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK"
+      "REKINDLE"
     ],
     "rules": [
       {
@@ -2261,7 +2348,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK"
+      "REKINDLE"
     ],
     "rules": [],
     "setId": "REKINDLING",
@@ -2426,7 +2513,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [
-      "BULWARK"
+      "OVERWHELM"
     ],
     "rules": [],
     "setId": "REKINDLING",

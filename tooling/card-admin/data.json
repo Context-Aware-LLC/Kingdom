@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 261,
+  "totalCards": 264,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,31 +22,31 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 261,
+    "total": 264,
     "typeSplit": {
-      "MINION": 171,
-      "SPELL": 71,
-      "WEAPON": 11,
+      "MINION": 174,
+      "SPELL": 70,
+      "WEAPON": 12,
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 56,
+      "BULWARK": 46,
       "SKIRMISH": 12,
       "SHROUD": 11,
       "VENOM": 9,
+      "AEGIS": 8,
+      "REKINDLE": 8,
       "DOUBLESTRIKE": 7,
-      "AEGIS": 6,
-      "OVERWHELM": 6,
-      "REKINDLE": 5,
+      "OVERWHELM": 7,
+      "LIFEDRAIN": 5,
+      "VANGUARD": 5,
       "ARCANE_SURGE": 4,
       "FERVOR": 4,
-      "VANGUARD": 3,
-      "LIFEDRAIN": 2,
       "FROST": 1
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 33,
       "FRIENDLY_MINIONS": 32,
+      "ANY_FRIENDLY_MINION": 31,
       "ANY_MINION": 24,
       "FRIENDLY_HERO": 20,
       "ENEMY_MINIONS": 18,
@@ -55,13 +55,14 @@
       "ENEMY_HERO": 6,
       "ANY_FRIENDLY": 5,
       "ANY_CHARACTER": 4,
-      "ALL_MINIONS": 3
+      "ALL_MINIONS": 3,
+      "SELF": 2
     },
     "costDistribution": {
       "0": 8,
       "1": 31,
-      "2": 62,
-      "3": 60,
+      "2": 64,
+      "3": 61,
       "4": 45,
       "5": 18,
       "6": 18,
@@ -71,34 +72,34 @@
     },
     "rarityBreakdown": {
       "COMMON": 123,
-      "RARE": 84,
-      "EPIC": 32,
-      "LEGENDARY": 22
+      "RARE": 86,
+      "EPIC": 37,
+      "LEGENDARY": 18
     },
     "tribeBreakdown": {
-      "CONSTRUCT": 37,
+      "CONSTRUCT": 38,
       "BEAST": 24,
       "UNDEAD": 21,
       "ELEMENTAL": 15,
       "SPIRIT": 12,
       "DRAGON": 5
     },
-    "minionCount": 171,
+    "minionCount": 174,
     "attackDistribution": {
       "0": 5,
       "1": 35,
-      "2": 44,
+      "2": 46,
       "3": 38,
-      "4": 15,
+      "4": 16,
       "5": 17,
       "6": 13,
       "7": 3,
       "10": 1
     },
     "healthDistribution": {
-      "1": 21,
+      "1": 22,
       "2": 31,
-      "3": 28,
+      "3": 30,
       "4": 35,
       "5": 25,
       "6": 14,
@@ -110,9 +111,9 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 24,
+      "total": 25,
       "typeSplit": {
-        "MINION": 15,
+        "MINION": 16,
         "SPELL": 7,
         "WEAPON": 1,
         "HERO_POWER": 1
@@ -127,13 +128,14 @@
         "ANY_FRIENDLY_MINION": 3,
         "ANY_MINION": 2,
         "ALL_MINIONS": 1,
-        "ANY_CHARACTER": 1
+        "ANY_CHARACTER": 1,
+        "SELF": 1
       },
       "costDistribution": {
         "0": 1,
         "1": 3,
         "2": 5,
-        "3": 6,
+        "3": 7,
         "4": 4,
         "5": 1,
         "6": 1,
@@ -142,17 +144,17 @@
       },
       "rarityBreakdown": {
         "COMMON": 11,
-        "RARE": 8,
+        "RARE": 9,
         "EPIC": 3,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 14
+        "CONSTRUCT": 15
       },
-      "minionCount": 15,
+      "minionCount": 16,
       "attackDistribution": {
         "1": 6,
-        "2": 2,
+        "2": 3,
         "3": 3,
         "4": 1,
         "5": 1,
@@ -161,7 +163,7 @@
       "healthDistribution": {
         "1": 2,
         "2": 2,
-        "3": 3,
+        "3": 4,
         "4": 5,
         "6": 1,
         "7": 1,
@@ -169,10 +171,10 @@
       }
     },
     "EMBERWARD": {
-      "total": 32,
+      "total": 31,
       "typeSplit": {
         "MINION": 21,
-        "SPELL": 8,
+        "SPELL": 7,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -188,17 +190,17 @@
       "selectorFrequency": {
         "ANY_MINION": 5,
         "ENEMY_HERO": 4,
-        "ANY_FRIENDLY_MINION": 3,
         "ANY_CHARACTER": 2,
         "ENEMY_MINIONS": 2,
         "FRIENDLY_HERO": 2,
         "FRIENDLY_MINIONS": 2,
-        "ALL_MINIONS": 1
+        "ALL_MINIONS": 1,
+        "ANY_FRIENDLY_MINION": 1
       },
       "costDistribution": {
         "1": 4,
         "2": 6,
-        "3": 8,
+        "3": 7,
         "4": 6,
         "5": 4,
         "6": 2,
@@ -206,7 +208,7 @@
       },
       "rarityBreakdown": {
         "RARE": 13,
-        "COMMON": 12,
+        "COMMON": 11,
         "EPIC": 5,
         "LEGENDARY": 2
       },
@@ -243,8 +245,9 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 7,
+        "BULWARK": 5,
         "REKINDLE": 3,
+        "LIFEDRAIN": 2,
         "AEGIS": 1,
         "SKIRMISH": 1,
         "VENOM": 1
@@ -268,8 +271,8 @@
       "rarityBreakdown": {
         "COMMON": 12,
         "RARE": 11,
-        "EPIC": 4,
-        "LEGENDARY": 4
+        "EPIC": 6,
+        "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "UNDEAD": 15,
@@ -299,13 +302,13 @@
     "NEUTRAL": {
       "total": 41,
       "typeSplit": {
-        "MINION": 37,
+        "MINION": 36,
         "SPELL": 3,
-        "WEAPON": 1,
+        "WEAPON": 2,
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "BULWARK": 10,
+        "BULWARK": 8,
         "SKIRMISH": 4,
         "AEGIS": 3,
         "ARCANE_SURGE": 2,
@@ -318,37 +321,37 @@
       },
       "selectorFrequency": {
         "FRIENDLY_MINIONS": 4,
-        "FRIENDLY_HERO": 3,
+        "FRIENDLY_HERO": 2,
         "ANY_FRIENDLY": 1,
         "ANY_MINION": 1
       },
       "costDistribution": {
         "0": 5,
         "1": 4,
-        "2": 11,
-        "3": 8,
-        "4": 8,
-        "5": 2,
+        "2": 12,
+        "3": 9,
+        "4": 7,
+        "5": 1,
         "6": 2,
         "7": 1
       },
       "rarityBreakdown": {
         "COMMON": 27,
-        "RARE": 9,
-        "EPIC": 3,
+        "RARE": 8,
+        "EPIC": 4,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "BEAST": 9,
-        "CONSTRUCT": 6,
         "UNDEAD": 6,
+        "CONSTRUCT": 5,
         "DRAGON": 1
       },
-      "minionCount": 37,
+      "minionCount": 36,
       "attackDistribution": {
         "1": 11,
         "2": 11,
-        "3": 9,
+        "3": 8,
         "4": 3,
         "5": 2,
         "6": 1
@@ -356,24 +359,25 @@
       "healthDistribution": {
         "1": 7,
         "2": 9,
-        "3": 7,
+        "3": 8,
         "4": 6,
-        "5": 6,
+        "5": 4,
         "6": 1,
         "7": 1
       }
     },
     "NIGHTVEIL": {
-      "total": 22,
+      "total": 24,
       "typeSplit": {
-        "MINION": 12,
+        "MINION": 14,
         "SPELL": 8,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
       "keywordFrequency": {
         "SHROUD": 9,
-        "VENOM": 4
+        "VENOM": 4,
+        "BULWARK": 2
       },
       "selectorFrequency": {
         "ANY_MINION": 5,
@@ -382,32 +386,34 @@
         "ENEMY_MINIONS": 2,
         "ANY_ENEMY": 1,
         "ENEMY_CHARACTERS": 1,
-        "ENEMY_HERO": 1
+        "ENEMY_HERO": 1,
+        "FRIENDLY_HERO": 1
       },
       "costDistribution": {
         "1": 2,
         "2": 5,
         "3": 7,
-        "4": 4,
-        "5": 1,
+        "4": 5,
+        "5": 2,
         "6": 3
       },
       "rarityBreakdown": {
-        "COMMON": 10,
-        "RARE": 7,
+        "COMMON": 11,
+        "RARE": 8,
         "EPIC": 3,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "BEAST": 4,
-        "SPIRIT": 3
+        "SPIRIT": 3,
+        "CONSTRUCT": 1
       },
-      "minionCount": 12,
+      "minionCount": 14,
       "attackDistribution": {
         "1": 1,
         "2": 4,
-        "3": 3,
-        "4": 2,
+        "3": 4,
+        "4": 3,
         "5": 2
       },
       "healthDistribution": {
@@ -415,7 +421,7 @@
         "2": 2,
         "3": 3,
         "4": 3,
-        "5": 1
+        "5": 3
       }
     },
     "STONEWARDEN": {
@@ -427,8 +433,11 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 15,
-        "OVERWHELM": 1
+        "BULWARK": 11,
+        "OVERWHELM": 2,
+        "AEGIS": 1,
+        "REKINDLE": 1,
+        "VANGUARD": 1
       },
       "selectorFrequency": {
         "FRIENDLY_MINIONS": 8,
@@ -543,8 +552,9 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 8,
+        "BULWARK": 7,
         "FROST": 1,
+        "REKINDLE": 1,
         "SKIRMISH": 1,
         "VENOM": 1
       },
@@ -569,8 +579,8 @@
       "rarityBreakdown": {
         "COMMON": 16,
         "RARE": 11,
-        "EPIC": 4,
-        "LEGENDARY": 3
+        "EPIC": 5,
+        "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "SPIRIT": 6,
@@ -598,18 +608,22 @@
       }
     },
     "VERDANT": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
-        "MINION": 19,
+        "MINION": 20,
         "SPELL": 9,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 8,
+        "BULWARK": 5,
         "OVERWHELM": 5,
+        "AEGIS": 1,
         "ARCANE_SURGE": 1,
+        "LIFEDRAIN": 1,
+        "REKINDLE": 1,
         "SKIRMISH": 1,
+        "VANGUARD": 1,
         "VENOM": 1
       },
       "selectorFrequency": {
@@ -619,11 +633,12 @@
         "FRIENDLY_MINIONS": 2,
         "ANY_CHARACTER": 1,
         "ANY_MINION": 1,
-        "ENEMY_CHARACTERS": 1
+        "ENEMY_CHARACTERS": 1,
+        "SELF": 1
       },
       "costDistribution": {
         "1": 3,
-        "2": 5,
+        "2": 6,
         "3": 8,
         "4": 6,
         "5": 3,
@@ -633,19 +648,19 @@
       },
       "rarityBreakdown": {
         "COMMON": 14,
-        "RARE": 9,
-        "EPIC": 4,
-        "LEGENDARY": 3
+        "RARE": 10,
+        "EPIC": 5,
+        "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "BEAST": 7,
         "CONSTRUCT": 1
       },
-      "minionCount": 19,
+      "minionCount": 20,
       "attackDistribution": {
         "0": 1,
         "1": 2,
-        "2": 6,
+        "2": 7,
         "3": 3,
         "4": 1,
         "5": 1,
@@ -654,6 +669,7 @@
         "10": 1
       },
       "healthDistribution": {
+        "1": 1,
         "2": 2,
         "3": 4,
         "4": 3,
@@ -1435,7 +1451,7 @@
       "class": "GRAVEKEEP",
       "rarity": "COMMON",
       "keywords": [
-        "BULWARK"
+        "LIFEDRAIN"
       ],
       "selectors": [],
       "tribe": "SPIRIT",
@@ -1531,7 +1547,7 @@
       "class": "GRAVEKEEP",
       "rarity": "EPIC",
       "keywords": [
-        "BULWARK"
+        "LIFEDRAIN"
       ],
       "selectors": [],
       "tribe": "UNDEAD",
@@ -1549,7 +1565,7 @@
       "health": 5,
       "durability": null,
       "class": "GRAVEKEEP",
-      "rarity": "LEGENDARY",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
@@ -1728,7 +1744,7 @@
       "class": "VERDANT",
       "rarity": "COMMON",
       "keywords": [
-        "BULWARK"
+        "LIFEDRAIN"
       ],
       "selectors": [],
       "tribe": null,
@@ -1806,7 +1822,7 @@
       "class": "VERDANT",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "VANGUARD"
       ],
       "selectors": [],
       "tribe": null,
@@ -1844,7 +1860,7 @@
       "health": 6,
       "durability": null,
       "class": "VERDANT",
-      "rarity": "LEGENDARY",
+      "rarity": "EPIC",
       "keywords": [
         "BULWARK",
         "OVERWHELM"
@@ -2199,7 +2215,7 @@
       "health": 6,
       "durability": null,
       "class": "TIDECALLER",
-      "rarity": "LEGENDARY",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [
         "ENEMY_MINIONS"
@@ -3115,7 +3131,7 @@
       "class": "STONEWARDEN",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "AEGIS"
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
@@ -3196,7 +3212,7 @@
       "class": "STONEWARDEN",
       "rarity": "EPIC",
       "keywords": [
-        "BULWARK"
+        "VANGUARD"
       ],
       "selectors": [
         "FRIENDLY_MINIONS"
@@ -4268,7 +4284,7 @@
       "health": 7,
       "durability": null,
       "class": "GRAVEKEEP",
-      "rarity": "LEGENDARY",
+      "rarity": "EPIC",
       "keywords": [
         "BULWARK"
       ],
@@ -4474,7 +4490,7 @@
       "attack": 3,
       "health": 5,
       "durability": null,
-      "class": "NEUTRAL",
+      "class": "NIGHTVEIL",
       "rarity": "COMMON",
       "keywords": [
         "BULWARK"
@@ -4514,7 +4530,7 @@
       "attack": 4,
       "health": 5,
       "durability": null,
-      "class": "NEUTRAL",
+      "class": "NIGHTVEIL",
       "rarity": "RARE",
       "keywords": [
         "BULWARK"
@@ -4628,24 +4644,23 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_reclaimed_fortress",
-      "name": "Reclaimed Fortress",
-      "type": "SPELL",
+      "id": "rekind_clock_clockwork_essence",
+      "name": "Clockwork Essence",
+      "type": "MINION",
       "cost": 3,
-      "attack": null,
-      "health": null,
+      "attack": 2,
+      "health": 3,
       "durability": null,
-      "class": "EMBERWARD",
-      "rarity": "COMMON",
+      "class": "CLOCKWRIGHT",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_FRIENDLY_MINION",
-        "ANY_FRIENDLY_MINION"
+        "SELF"
       ],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "ember_reclaimed_fortress",
+      "artId": "clock_clockwork_essence",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4664,6 +4679,64 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_coalition_blazer",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": "rekind_forge_striker",
+      "name": "Forge Striker",
+      "type": "MINION",
+      "cost": 3,
+      "attack": 4,
+      "health": 3,
+      "durability": null,
+      "class": "NEUTRAL",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "_forge_striker",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": "smithy_hammer",
+      "name": "Smithy Hammer",
+      "type": "WEAPON",
+      "cost": 2,
+      "attack": 2,
+      "health": null,
+      "durability": 2,
+      "class": "NEUTRAL",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": false,
+      "artId": "smithy_hammer",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": "rekind_verdant_seedling_guard",
+      "name": "Seedling Guard",
+      "type": "MINION",
+      "cost": 2,
+      "attack": 2,
+      "health": 1,
+      "durability": null,
+      "class": "VERDANT",
+      "rarity": "RARE",
+      "keywords": [
+        "AEGIS"
+      ],
+      "selectors": [
+        "SELF"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "verdant_seedling_guard",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4780,7 +4853,7 @@
       "class": "TIDECALLER",
       "rarity": "COMMON",
       "keywords": [
-        "BULWARK"
+        "REKINDLE"
       ],
       "selectors": [],
       "tribe": "SPIRIT",
@@ -5186,7 +5259,7 @@
       "class": "VERDANT",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "REKINDLE"
       ],
       "selectors": [
         "FRIENDLY_MINIONS"
@@ -5602,7 +5675,7 @@
       "class": "STONEWARDEN",
       "rarity": "COMMON",
       "keywords": [
-        "BULWARK"
+        "REKINDLE"
       ],
       "selectors": [],
       "tribe": null,
@@ -5686,7 +5759,7 @@
       "class": "STONEWARDEN",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "OVERWHELM"
       ],
       "selectors": [],
       "tribe": null,
