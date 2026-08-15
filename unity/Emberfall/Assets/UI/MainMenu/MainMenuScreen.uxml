@@ -69,6 +69,8 @@
                     <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
                 <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
+                <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
+                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden">

@@ -394,6 +394,17 @@
 .mm-signin__resend:disabled {
     color: var(--surface-3);
 }
+.mm-signin__or {
+    color: var(--ink-2);
+    font-size: 20px;
+    align-self: center;
+    padding: var(--space-4) 0 var(--space-2) 0;
+}
+.mm-signin__google {
+    align-self: stretch;
+    justify-content: center;
+    margin-left: 0;
+}
 
 /* ---------- Footer ----------
  * Bottom-left (Sam, 2026-08-09): the in-match settings gear (.ms-gear, matchsettings.uss) lives

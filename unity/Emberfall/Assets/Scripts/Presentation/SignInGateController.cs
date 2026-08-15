@@ -76,6 +76,8 @@ namespace Emberfall.Presentation
         private readonly Button _primary;
         private readonly Button _back;
         private readonly Button _resend;
+        private readonly Button _googleButton;
+        private readonly VisualElement _or;
 
         private readonly AuthTokenProvider _auth;
 
@@ -101,6 +103,8 @@ namespace Emberfall.Presentation
             _primary = root.Q<Button>("btn-signin-primary");
             _back = root.Q<Button>("btn-signin-back");
             _resend = root.Q<Button>("btn-signin-resend");
+            _googleButton = root.Q<Button>("btn-signin-google");
+            _or = root.Q<VisualElement>("signin-or");
 
             if (_modal == null)
             {
@@ -111,6 +115,7 @@ namespace Emberfall.Presentation
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));
             _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
+            _googleButton?.RegisterCallback<ClickEvent>(_ => OnGoogleSignIn());
 
             if (_emailField != null)
             {
@@ -191,13 +196,34 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // A cold start: the OS may have launched this process directly off the mailed link, which
-            // means deepLinkActivated already fired (or never will, for this launch) before anything
-            // here could have subscribed to it. Application.absoluteURL still carries it.
-            if (TryExtractCodeAndEmail(Application.absoluteURL, out string coldEmail, out string coldCode))
+            // A cold start: the OS may have launched this process directly off the mailed or OAuth link,
+            // which means deepLinkActivated already fired (or never will, for this launch) before
+            // anything here could have subscribed to it. Application.absoluteURL carries it on mobile;
+            // on desktop standalone the OS passes the URL as a command-line argument instead.
+            string coldUrl = Application.absoluteURL;
+#if UNITY_STANDALONE && !UNITY_EDITOR
+            if (string.IsNullOrEmpty(coldUrl))
+            {
+                foreach (string arg in System.Environment.GetCommandLineArgs())
+                {
+                    if (arg.StartsWith("emberfall://", System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        coldUrl = arg;
+                        break;
+                    }
+                }
+            }
+#endif
+            if (TryExtractCodeAndEmail(coldUrl, out string coldEmail, out string coldCode))
             {
                 _modal.RemoveFromClassList("mm-modal--hidden");
                 CompleteFromDeepLink(coldEmail, coldCode);
+                return;
+            }
+            if (TryExtractOAuthCode(coldUrl, out string coldOAuthCode))
+            {
+                _modal.RemoveFromClassList("mm-modal--hidden");
+                CompleteFromOAuth(coldOAuthCode);
                 return;
             }
 
@@ -222,6 +248,8 @@ namespace Emberfall.Presentation
             Display(_codeField, false);
             Display(_back, false);
             Display(_resend, false);
+            Display(_googleButton, true);
+            Display(_or, true);
             _codeField?.SetValueWithoutNotify("");
 
             SetError(message);
@@ -241,6 +269,8 @@ namespace Emberfall.Presentation
             Display(_codeField, true);
             Display(_back, true);
             Display(_resend, true);
+            Display(_googleButton, false);
+            Display(_or, false);
             _codeField?.SetValueWithoutNotify("");
 
             SetError("");
@@ -333,10 +363,19 @@ namespace Emberfall.Presentation
         {
             if (_modal == null) return;
             if (_auth.IsSignedIn) return;
-            if (!TryExtractCodeAndEmail(url, out string email, out string code)) return;
 
-            _modal.RemoveFromClassList("mm-modal--hidden");
-            CompleteFromDeepLink(email, code);
+            if (TryExtractCodeAndEmail(url, out string email, out string code))
+            {
+                _modal.RemoveFromClassList("mm-modal--hidden");
+                CompleteFromDeepLink(email, code);
+                return;
+            }
+
+            if (TryExtractOAuthCode(url, out string oauthCode))
+            {
+                _modal.RemoveFromClassList("mm-modal--hidden");
+                CompleteFromOAuth(oauthCode);
+            }
         }
 
         /// <summary>
@@ -377,6 +416,97 @@ namespace Emberfall.Presentation
                 Debug.LogError($"[SignIn] completing from a link threw: {ex}");
                 SetError("Something went wrong signing in. Try again.");
             }
+        }
+
+        /// <summary>
+        /// Open the Google consent page in the platform browser and store the PKCE verifier. The
+        /// redirect lands back via the <c>emberfall://auth</c> scheme, which <see cref="OnDeepLinkActivated"/>
+        /// and <see cref="Open"/> both watch for, so no further action is needed here beyond kicking off
+        /// the browser.
+        /// </summary>
+        private void OnGoogleSignIn()
+        {
+            if (_busy) return;
+            SetBusy(true, null);
+
+            PendingSignIn pending = _auth.BeginOAuth("google");
+            if (!pending.IsStarted)
+            {
+                SetBusy(false, null);
+                SetError("Could not start Google sign-in. Try again.");
+                return;
+            }
+
+            Application.OpenURL(pending.AuthorizeUrl);
+            // The app will receive the redirect asynchronously. SetBusy stays on — the player is now
+            // in the browser; re-enabling the UI while they are away only invites a second tap.
+        }
+
+        /// <summary>
+        /// Redeem the OAuth code the Google redirect carried via <see cref="AuthTokenProvider.CompleteSignInAsync"/>.
+        /// Shows the modal in a waiting state; the player should not need to interact further.
+        /// </summary>
+        private async void CompleteFromOAuth(string oauthCode)
+        {
+            SetBusy(true, "Signing in with Google…");
+            // Show the email step as the backing UI (email field is hidden while busy).
+            if (_step != Step.Email) ToEmailStep("");
+            _primary?.SetEnabled(false);
+
+            try
+            {
+                AuthResult result = await _auth.CompleteSignInAsync(oauthCode);
+                SetBusy(false, null);
+
+                if (result.Ok)
+                {
+                    _modal?.AddToClassList("mm-modal--hidden");
+                    Action done = _onSignedIn;
+                    _onSignedIn = null;
+                    done?.Invoke();
+                    return;
+                }
+
+                Debug.LogWarning($"[SignIn] CompleteSignInAsync (Google OAuth) failed: {result.Failure} — {result.Detail}");
+                SetError(Explain(result, "Google sign-in did not complete. Try again."));
+            }
+            catch (Exception ex)
+            {
+                SetBusy(false, null);
+                Debug.LogError($"[SignIn] Google OAuth completion threw: {ex}");
+                SetError("Something went wrong signing in with Google. Try again.");
+            }
+        }
+
+        /// <summary>
+        /// Pull <c>code</c> out of an OAuth redirect (<c>emberfall://auth?code=...</c>). Unlike
+        /// <see cref="TryExtractCodeAndEmail"/>, email is not required — OAuth redirects carry a code
+        /// only and are distinguished by the absence of the <c>email</c> param.
+        /// </summary>
+        private static bool TryExtractOAuthCode(string url, out string code)
+        {
+            code = "";
+            if (string.IsNullOrEmpty(url)) return false;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri)) return false;
+            if (!string.Equals(uri.Scheme, "emberfall", StringComparison.OrdinalIgnoreCase)) return false;
+
+            string email = "";
+            string query = uri.Query.TrimStart('?');
+            if (query.Length == 0) return false;
+
+            foreach (string pair in query.Split('&'))
+            {
+                int eq = pair.IndexOf('=');
+                if (eq < 0) continue;
+                string key = Uri.UnescapeDataString(pair.Substring(0, eq));
+                string value = Uri.UnescapeDataString(pair.Substring(eq + 1));
+                if (key == "code") code = value;
+                else if (key == "email") email = value;
+            }
+
+            // Only claim this as an OAuth redirect when we have a code and no email (the email flow
+            // always includes both; returning false here lets TryExtractCodeAndEmail claim it instead).
+            return code.Length > 0 && email.Length == 0;
         }
 
         /// <summary>Pull <c>code</c> and <c>email</c> out of the game's deep link
@@ -446,6 +576,7 @@ namespace Emberfall.Presentation
             }
             _back?.SetEnabled(!busy);
             _resend?.SetEnabled(!busy);
+            _googleButton?.SetEnabled(!busy);
             _emailField?.SetEnabled(!busy);
             _codeField?.SetEnabled(!busy);
         }
