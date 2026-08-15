@@ -60,9 +60,9 @@ namespace Emberfall.Presentation
                 return null;
             }
 
-            // depth=0: flat orthographic capture has no depth test; 24-bit depth buffer was
-            // ~40% of the per-tile cost (~320 KB on a 276×387 face) and served no purpose.
-            var rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
+            // depth=16: URP Render Graph API requires a depth buffer on target RenderTextures
+            // used with Camera.Render().
+            var rt = new RenderTexture(width, height, 16, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
             if (!rt.Create())
             {
                 Debug.LogWarning($"[CardSnapshot] RenderTexture.Create failed for {width}×{height} — " +
