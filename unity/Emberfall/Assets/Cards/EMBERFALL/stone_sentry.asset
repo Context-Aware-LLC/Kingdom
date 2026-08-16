@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
   m_Name: stone_sentry
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"stone_sentry","name":"Stone Sentry","type":"MINION","cost":2,"attack":2,"health":3,"class":"NEUTRAL","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"tribe":"CONSTRUCT","setId":"EMBERFALL","collectible":true,"artId":"stone_sentry"}'
+  _json: '{"id":"stone_sentry","name":"Stone Sentry","type":"MINION","cost":3,"attack":2,"health":5,"class":"NEUTRAL","rarity":"COMMON","keywords":["BULWARK"],"rules":[],"tribe":"CONSTRUCT","setId":"EMBERFALL","collectible":true,"artId":"stone_sentry"}'

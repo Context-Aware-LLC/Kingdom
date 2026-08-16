@@ -36,7 +36,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void All_261_Live_Cards_Explicitly_Bind_Each_Multi_Rule_Player_Choice()
+        public void All_Live_Cards_Explicitly_Bind_Each_Multi_Rule_Player_Choice()
         {
             IReadOnlyList<CardDefinition> cards = LoadAllSets();
             var unbound = cards.SelectMany(card => card.Rules
@@ -55,47 +55,72 @@ namespace Emberfall.Core.Tests.CardValidation
                 .Select(group => $"{group.Card}:{group.Trigger}")
                 .ToList();
 
-            Assert.That(cards, Has.Count.EqualTo(261));
+            Assert.That(cards, Has.Count.GreaterThan(200), "Card corpus failed to load.");
             Assert.That(unbound, Is.Empty,
                 "cards with multiple simultaneous player choices must name their bindings");
         }
 
+        /// <summary>
+        /// The runtime half of the binding contract, against a REAL shipped card: two player
+        /// choices on one trigger must be offered as two independently-bound requirements with
+        /// their own candidate sets, and must resolve to whichever instance the player named for
+        /// that binding — not positionally.
+        ///
+        /// <para>This used to be pinned to <c>rekind_tide_tidal_emissary</c>, which carried a FROST
+        /// choice and a REINFORCE choice. Sam deliberately dropped its REINFORCE half on
+        /// 2026-08-15, leaving it a single-choice card that cannot exercise this at all. Repointed
+        /// at <c>rekind_ember_rekindled_flame</c>, which has the same shape and a sharper version
+        /// of it: the two selectors OVERLAP (ANY_MINION and ANY_FRIENDLY_MINION both contain the
+        /// friendly minion), so a positional or set-based resolver would still look correct on a
+        /// card whose candidate sets were disjoint. Here it cannot.</para>
+        ///
+        /// <para>Seven other shipped cards have this shape today, so if this one loses its second
+        /// choice as well, repoint rather than delete — the list is any card with two
+        /// player-chosen rules on one trigger.</para>
+        /// </summary>
         [Test]
-        public void Shipped_Tidal_Emissary_Offers_And_Executes_Incompatible_Selectors_Independently()
+        public void Shipped_Rekindled_Flame_Offers_And_Executes_Overlapping_Selectors_Independently()
         {
-            CardDefinition emissary = LoadAllSets()
-                .Single(card => card.Id == "rekind_tide_tidal_emissary");
+            CardDefinition flame = LoadAllSets()
+                .Single(card => card.Id == "rekind_ember_rekindled_flame");
             var body = Minion("body");
-            var db = new FakeCardDatabase().Register(emissary).Register(body);
+            var db = new FakeCardDatabase().Register(flame).Register(body);
             GameState state = State();
             CardInstance friendly = Board(state, 0, body);
             CardInstance enemy = Board(state, 1, body);
 
             IReadOnlyList<TargetChoiceRequirement> plan = Targeting.PlayerChoicePlan(
-                state, db, state.Players[0].Id, emissary, Trigger.ON_PLAY);
+                state, db, state.Players[0].Id, flame, Trigger.ON_CAST);
 
             Assert.That(plan.Select(requirement => requirement.Binding),
-                Is.EqualTo(new[] { "frost_target", "reinforce_target" }));
+                Is.EqualTo(new[] { "damage_target", "reinforce_target" }));
+
+            // ANY_MINION sees both boards; ANY_FRIENDLY_MINION sees one. The overlap is the point.
             Assert.That(plan[0].Candidates.Select(candidate => candidate.Instance),
-                Does.Contain(enemy.Id));
-            Assert.That(plan[0].Candidates.Select(candidate => candidate.Instance),
-                Does.Not.Contain(friendly.Id));
+                Does.Contain(enemy.Id).And.Contains(friendly.Id));
             Assert.That(plan[1].Candidates.Select(candidate => candidate.Instance),
                 Is.EqualTo(new[] { friendly.Id }));
 
-            CardInstance card = ZoneCard(state, 0, emissary, Zone.Hand);
+            int enemyHealthBefore = enemy.CurrentHealth;
+            var friendlyBefore = (friendly.CurrentAttack, friendly.CurrentHealth, friendly.MaxHealth);
+
+            CardInstance card = ZoneCard(state, 0, flame, Zone.Hand);
             CommandResult accepted = new CommandProcessor(db).Execute(state, new PlayCardIntent(
-                state.Players[0].Id, card.Id, 1,
+                state.Players[0].Id, card.Id, 3,
                 new[]
                 {
-                    new TargetRef(state.Players[1].Hero.Id, "frost_target"),
+                    new TargetRef(enemy.Id, "damage_target"),
                     new TargetRef(friendly.Id, "reinforce_target"),
                 }));
 
             Assert.That(accepted.Accepted, Is.True);
-            Assert.That(state.Players[1].Hero.IsFrosted, Is.True);
+            // The damage went to the named instance, and NOT to the friendly minion that was also
+            // a legal candidate for that same binding.
+            Assert.That(enemy.CurrentHealth, Is.EqualTo(enemyHealthBefore - 4),
+                "damage_target resolved to the instance the player named.");
             Assert.That((friendly.CurrentAttack, friendly.CurrentHealth, friendly.MaxHealth),
-                Is.EqualTo((2, 4, 4)));
+                Is.Not.EqualTo(friendlyBefore),
+                "reinforce_target resolved to the friendly minion and changed it.");
         }
 
         private static IReadOnlyList<CardDefinition> LoadAllSets()

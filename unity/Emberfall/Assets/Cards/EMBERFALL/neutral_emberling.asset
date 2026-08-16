@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 08289f0a33911a045af57dfcddc50e1c, type: 3}
-  m_Name: tide_frostbind
+  m_Name: neutral_emberling
   m_EditorClassIdentifier: Emberfall.Data::Emberfall.Data.CardDefinitionSO
-  _json: '{"id":"tide_frostbind","name":"Frostbind","type":"SPELL","cost":1,"class":"TIDECALLER","rarity":"COMMON","keywords":[],"rules":[{"id":"rule_1","activation":{"type":"TRIGGERED","trigger":"ON_CAST"},"condition":{"type":"ALWAYS"},"lifetime":{"type":"ONE_SHOT"},"action":{"type":"FROST","target":{"selector":"ANY_ENEMY"}}}],"setId":"CORE","collectible":true,"artId":"tide_frostbind"}'
+  _json: '{"id":"neutral_emberling","name":"Emberling Pup","type":"MINION","cost":1,"attack":1,"health":1,"class":"NEUTRAL","rarity":"COMMON","keywords":["FERVOR"],"rules":[],"tribe":"BEAST","setId":"EMBERFALL","collectible":true,"artId":"emberling_pup"}'

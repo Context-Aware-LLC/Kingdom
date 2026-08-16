@@ -77,8 +77,8 @@ namespace Emberfall.Core.Tests.CardBehavior
         {
             var state = State(seed: 7);
             state.Players[0].Hero.HeroPowerId = "hero_power_chain_spark";
-            CardInstance a = Board(state, 1, "core_stoneback");
-            CardInstance b = Board(state, 1, "core_stoneback");
+            CardInstance a = Board(state, 1, "neutral_stoneback_sentry");
+            CardInstance b = Board(state, 1, "neutral_stoneback_sentry");
             int heroBefore = state.Players[1].Hero.CurrentHealth;
 
             var result = new CommandProcessor(_db).Execute(state,
@@ -99,9 +99,9 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void DeathMark_Destroys_The_Player_Target_Then_Grants_Venom_To_One_Random_Friendly_Minion()
         {
             var state = State(seed: 11);
-            CardInstance allyA = Board(state, 0, "core_stoneback");
-            CardInstance allyB = Board(state, 0, "core_stoneback");
-            CardInstance victim = Board(state, 1, "core_stoneback");
+            CardInstance allyA = Board(state, 0, "neutral_stoneback_sentry");
+            CardInstance allyB = Board(state, 0, "neutral_stoneback_sentry");
+            CardInstance victim = Board(state, 1, "neutral_stoneback_sentry");
             CardInstance spell = Hand(state, "night_death_mark");
 
             var result = new CommandProcessor(_db).Execute(state, Play(state, spell, victim.Id));
@@ -115,10 +115,10 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Stomp_Hits_All_Enemies_Then_Buffs_One_Random_Friendly_Minion()
         {
             var state = State(seed: 13);
-            CardInstance allyA = Board(state, 0, "core_stoneback");
-            CardInstance allyB = Board(state, 0, "core_stoneback");
-            CardInstance enemyA = Board(state, 1, "core_stoneback");
-            CardInstance enemyB = Board(state, 1, "core_stoneback");
+            CardInstance allyA = Board(state, 0, "neutral_stoneback_sentry");
+            CardInstance allyB = Board(state, 0, "neutral_stoneback_sentry");
+            CardInstance enemyA = Board(state, 1, "neutral_stoneback_sentry");
+            CardInstance enemyB = Board(state, 1, "neutral_stoneback_sentry");
             CardInstance spell = Hand(state, "ward_stomp");
 
             var result = new CommandProcessor(_db).Execute(state, Play(state, spell));
@@ -133,8 +133,8 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void ChainLightning_Deals_Four_Total_Damage_Through_Three_Random_Selections()
         {
             var state = State(seed: 17);
-            CardInstance a = Board(state, 1, "core_stoneback");
-            CardInstance b = Board(state, 1, "core_stoneback");
+            CardInstance a = Board(state, 1, "neutral_stoneback_sentry");
+            CardInstance b = Board(state, 1, "neutral_stoneback_sentry");
             CardInstance spell = Hand(state, "storm_chain_lightning");
             int before = state.Players[1].Hero.CurrentHealth + a.CurrentHealth + b.CurrentHealth;
 
@@ -151,8 +151,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             string cardId, int damage, int backdraft)
         {
             var state = State(seed: 19);
-            CardInstance a = Board(state, 1, "core_stoneback");
-            CardInstance b = Board(state, 1, "core_stoneback");
+            CardInstance a = Board(state, 1, "neutral_stoneback_sentry");
+            CardInstance b = Board(state, 1, "neutral_stoneback_sentry");
             CardInstance spell = Hand(state, cardId);
             int heroBefore = state.Players[1].Hero.CurrentHealth;
 
@@ -179,8 +179,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             // when the seeded RANDOM target primitive landed, and the flag itself retired in
             // NOR-224. PoolEligible is the surviving witness that this row reaches live pools.
             Assert.That(wispDef.PoolEligible, Is.True);
-            CardInstance allyA = Board(state, 0, "core_stoneback");
-            CardInstance allyB = Board(state, 0, "core_stoneback");
+            CardInstance allyA = Board(state, 0, "neutral_stoneback_sentry");
+            CardInstance allyB = Board(state, 0, "neutral_stoneback_sentry");
             CardInstance wisp = Board(state, 0, wispDef.Id, health: 1);
             wisp.CurrentHealth = 0;
 
@@ -198,7 +198,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void FinishTheJob_Only_Accepts_A_Damaged_Minion()
         {
             var state = State();
-            CardInstance target = Board(state, 1, "core_stoneback");
+            CardInstance target = Board(state, 1, "neutral_stoneback_sentry");
             CardInstance spell = Hand(state, "night_finish_the_job");
             var processor = new CommandProcessor(_db);
 
@@ -236,8 +236,8 @@ namespace Emberfall.Core.Tests.CardBehavior
             (string hash, ulong rng) Run()
             {
                 var state = State(seed: 29);
-                Board(state, 1, "core_stoneback");
-                Board(state, 1, "core_stoneback");
+                Board(state, 1, "neutral_stoneback_sentry");
+                Board(state, 1, "neutral_stoneback_sentry");
                 CardInstance spell = Hand(state, "storm_chain_lightning");
                 new CommandProcessor(_db).Execute(state, Play(state, spell));
                 return (GameStateHasher.Hash(state), state.Rng.RawState);

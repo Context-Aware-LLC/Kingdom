@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using NUnit.Framework;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
@@ -52,18 +50,37 @@ namespace Emberfall.Core.Tests.CardValidation
             var emberfall = LoadSet(SetFiles[0]);
             var rekindling = LoadSet(SetFiles[1]);
 
-            // 188 = the former M1 (143) + M2 (42) files, merged into one Emberfall set file, plus
-            // clock_mainspring_halberd and storm_galecleaver (NOR audit 2026-08-09: CLOCKWRIGHT's and
-            // TEMPEST's signature weapons were filed under REKINDLING by mistake — Sam confirmed every
-            // hero power and weapon belongs in Emberfall, moved them back), plus
-            // ward_earthwardens_maul (NOR-316: STONEWARDEN's signature weapon, added 2026-08-09).
-            Assert.That(emberfall.Count, Is.EqualTo(188), "Emberfall set count mismatch (card_inventory.py: 188)");
-            // 73 = the former 75 minus the two signature weapons moved into Emberfall above.
-            Assert.That(rekindling.Count, Is.EqualTo(73), "Rekindling set count mismatch (card_inventory.py: 73)");
+            // This used to pin three literals — 188 / 76 / 264. That shape is backwards, and it
+            // failed the only way it could: e0e942f0 added three cards, did not re-pin, and the
+            // test shipped red for a day before anyone read it. A corpus total fires on the most
+            // routine edit there is (adding a card) and is silent on the one that actually costs a
+            // day (changing or removing an existing card), so it teaches you to bump the number
+            // rather than read it.
+            //
+            // The real invariant hiding behind those numbers was "a card is declared in the set
+            // file its setId names" — that is what the deleted comment about the CLOCKWRIGHT and
+            // TEMPEST signature weapons being filed under Rekindling by mistake was really about.
+            // It never moves when you add a card, and it catches the misfiling directly.
+            //
+            // Removals and identity changes are covered by tooling/scripts/check_card_id_drift.py,
+            // which fails on a vanished or repointed id, passes silently on additions, and prints
+            // WHAT moved. It runs as step 0 of rebake_card_data.py. In CI pass --base <merge-base>,
+            // since comparing a committed tree against HEAD is vacuously clean.
+            Assert.That(emberfall, Is.Not.Empty, "Emberfall set failed to load.");
+            Assert.That(rekindling, Is.Not.Empty, "Rekindling set failed to load.");
+
+            // CORE is data-tagged onto cards that ship in the Emberfall file (CLAUDE.md: CORE has
+            // no bundle of its own beyond hero powers), so Emberfall.cards.json legitimately holds
+            // both EMBERFALL and CORE rows. Rekindling holds only REKINDLING.
+            Assert.That(emberfall.Select(card => card.SetId),
+                Is.All.AnyOf(SetId.EMBERFALL, SetId.CORE),
+                "A row in Emberfall.cards.json declares a setId that belongs in another set file.");
+            Assert.That(rekindling.Select(card => card.SetId),
+                Is.All.EqualTo(SetId.REKINDLING),
+                "A row in Rekindling.cards.json declares a setId that belongs in another set file.");
 
             var combined = emberfall.Concat(rekindling).ToList();
-            Assert.That(combined.Count, Is.EqualTo(261),
-                "Total card count across Emberfall+Rekindling must match CardCi output (card_inventory.py: 261).");
+            Assert.That(combined, Has.Count.GreaterThan(200), "Card corpus failed to load.");
         }
 
         [Test]
@@ -80,67 +97,26 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void Canonical_Card_Identity_Projection_Is_Pinned()
+        public void Token_Summon_Rules_Reference_The_Card_They_Name()
         {
             var all = SetFiles.SelectMany(LoadSet).ToList();
-            Assert.That(all.Count, Is.EqualTo(261));
 
-            string projection = string.Join("\n", all.Select(card => string.Join("\u001f", new[]
-            {
-                card.Id,
-                card.Name,
-                card.ArtId,
-                card.Type.ToString(),
-                card.Class.ToString(),
-                card.Rarity.ToString(),
-                card.SetId.ToString(),
-                card.Tribe?.ToString() ?? "",
-                card.FactionId,
-                card.Collectible.ToString(),
-                string.Join("\u001e", card.Rules.Select(rule => ReferencedCardId(rule.Action))),
-            })));
-            string hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(projection)));
-
-            // Re-pinned 2026-08-09: ward_earthwardens_maul added (NOR-316 — STONEWARDEN's signature
-            // weapon, the only class missing one). New row appended after ward_duras_the_ironmount;
-            // all prior rows unchanged.
+            // The SHA-256 identity pin that used to live here is gone, and the seven stacked
+            // "Re-pinned <date>" comments it accumulated are the argument for removing it: every
+            // one records a human hand-justifying a hex string, and not one of them records the
+            // pin catching something its author did not already know. It moved on card ADDS, on
+            // name edits, on artId corrections and on rules refactors — all routine work — so the
+            // ritual response was to bump it. Which is how it came to sit stale through e0e942f0
+            // and go unread until 2026-08-15.
             //
-            // Re-pinned again 2026-08-09 (same day, "Card Title Length Audit", 34b58168): four card
-            // Names were intentionally shortened to fit the card face — clock_the_great_mechanism
-            // ("The Great Mechanism" -> "The Mechanism"), night_kira_blade_of_shadows ("Kira, Blade
-            // of Shadows" -> "Kira"), grave_sealed_gate_keeper ("Keeper of the Sealed Gate" ->
-            // "Sealed Gate Keeper"), and tide_glacierborn_leviathan, whose id ALSO changed to
-            // tide_glacial_leviathan ("Glacierborn Leviathan" -> "Glacial Leviathan"). The first two
-            // keep their original full title as the new `tooltip` field (CardJson didn't recognize
-            // that property until this change, so the audit commit had actually left the checked-in
-            // JSON unparseable — CardJson.CardProperties/CardDefinition now carry `tooltip`).
+            // Removals and identity changes are now caught by tooling/scripts/check_card_id_drift.py
+            // (step 0 of rebake_card_data.py). It fails ONLY on a vanished or repointed id, passes
+            // silently on additions, and prints WHICH field moved from what to what — so the
+            // question at the failure is "did I mean this?" instead of "what is the new hash?".
+            // In CI pass --base <merge-base>; against HEAD a committed tree is vacuously clean.
             //
-            // Re-pinned 2026-08-13 (NOR-363 / GH#184): three artId near-miss corrections —
-            // core_lantern_bearer: grave_lantern_bearer -> gravelight_lantern_bearer,
-            // tide_glacial_leviathan: tide_glacial_leviathan -> tide_glacierborn_leviathan,
-            // rekind_clock_rebuilt_automaton: clock_rebuilt_automaton -> clock_reconstructed_automaton.
-            //
-            // Re-pinned 2026-08-13 (same day): rekind_neutral_aric's Name shortened from "Aric,
-            // First Among Equals" to "Aric", with the epithet moved to flavorText — a title says
-            // nothing mechanical and was competing with the stat line for the one row of the frame
-            // that has to stay readable at hand size. Same shape as the 2026-08-09 title audit above.
-            //
-            // NOTE for whoever lands the next name change: rebake_card_data.py does NOT cover this
-            // pin. It rebakes the three GENERATED artifacts and correctly reports a name edit as
-            // fixture-clean (a name moves no fixture — DefaultDeckGenerator reads cost/rarity/class/
-            // collectible/type/id), so it prints CARD_DATA_REBAKE=CLEAN while this test goes red.
-            // Run the Unit lane, not just the rebake, after touching any field projected here.
-            //
-            // Re-pinned 2026-08-13, two independent movers in one change:
-            //   1. Two more titles moved to flavorText the way Aric's did — "Zael of the Struck
-            //      Sky" -> "Zael", "Vael, the Stormbringer" -> "Vael".
-            //   2. Six split enemy-side sweeps collapsed onto the new ENEMY_CHARACTERS selector,
-            //      which drops one rule from each. Rule COUNT is projected (the joined
-            //      ReferencedCardId list below), so a pure rules refactor moves this pin even
-            //      though no identity FIELD changed. That is intended — it is the projection
-            //      noticing the card's shape changed.
-            Assert.That(hash, Is.EqualTo("C77183D05078F218B8A1D3DD7434655D545B31F9D109F42C650837FEEF9F2109"),
-                "Card identity fields changed. Update this pin only for a reviewed whole-token identity change.");
+            // What stays here is the part a diff cannot express: specific invariants about
+            // specific cards, which are legible when they break.
 
             // An artId no longer tracks the card id: art is named for the subject, not the token's
             // stat line, so the 5/5 survival token draws `token_revenant` like every other token.

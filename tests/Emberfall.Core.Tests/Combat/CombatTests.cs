@@ -116,7 +116,7 @@ namespace Emberfall.Core.Tests.Combat
         {
             var s = MainPhase();
             var attacker = Board(s, 0, Minion("bruiser", 6, 8));          // survives retaliation
-            var king = Board(s, 1, Minion("core_throneless_king", 6, 6, Keyword.BULWARK, Keyword.REKINDLE));
+            var king = Board(s, 1, Minion("neutral_throneless_king", 6, 6, Keyword.BULWARK, Keyword.REKINDLE));
 
             var r = Proc().Execute(s, Attack(s, attacker.Id, king.Id));
 
@@ -125,7 +125,7 @@ namespace Emberfall.Core.Tests.Combat
                 "REKINDLE copy should remain on the board after a combat death");
             var copy = s.Players[1].Board[0];
             Assert.That(copy.CurrentHealth, Is.EqualTo(1), "REKINDLE copy returns at 1 HP");
-            Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), "copy is still a Throneless King");
+            Assert.That(copy.DefinitionId, Is.EqualTo("neutral_throneless_king"), "copy is still a Throneless King");
         }
 
         [Test]

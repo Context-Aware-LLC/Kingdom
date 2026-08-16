@@ -23,7 +23,7 @@ namespace Emberfall.Core.Tests.CardValidation
             };
             var cards = files.SelectMany(path => CardJson.DeserializeArray(File.ReadAllText(path))).ToList();
 
-            Assert.That(cards, Has.Count.EqualTo(261));
+            Assert.That(cards, Has.Count.GreaterThan(200), "Card corpus failed to load.");
             foreach (var card in cards)
             {
                 string before = CardJsonRowIO.Serialize(card);

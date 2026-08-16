@@ -114,7 +114,7 @@
     "artId": "tide_oracle"
   },
   {
-    "id": "frost_ripple",
+    "id": "tide_frost_ripple",
     "name": "Frost Ripple",
     "type": "SPELL",
     "cost": 3,
@@ -138,7 +138,10 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ENEMY_MINIONS",
+            "filter": {
+              "tribe": "BEAST"
+            }
           }
         }
       }
@@ -148,7 +151,7 @@
     "artId": "tide_frost_ripple"
   },
   {
-    "id": "wave_caller",
+    "id": "tide_wave_caller",
     "name": "Wave Caller",
     "type": "MINION",
     "cost": 4,
@@ -157,7 +160,30 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
-    "rules": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "MODIFY_STATS",
+          "attack": -1,
+          "health": -2,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "count": 1
+          }
+        }
+      }
+    ],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_wave_caller"
@@ -166,9 +192,9 @@
     "id": "stone_sentry",
     "name": "Stone Sentry",
     "type": "MINION",
-    "cost": 2,
+    "cost": 3,
     "attack": 2,
-    "health": 3,
+    "health": 5,
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [
@@ -199,7 +225,7 @@
     "artId": "wandering_scout"
   },
   {
-    "id": "core_emberling",
+    "id": "neutral_emberling",
     "name": "Emberling Pup",
     "type": "MINION",
     "cost": 1,
@@ -212,12 +238,12 @@
     ],
     "rules": [],
     "tribe": "BEAST",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "emberling_pup"
   },
   {
-    "id": "core_stoneback",
+    "id": "neutral_stoneback_sentry",
     "name": "Stoneback Sentry",
     "type": "MINION",
     "cost": 2,
@@ -229,12 +255,12 @@
       "BULWARK"
     ],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "stoneback_sentry"
   },
   {
-    "id": "core_hollow_acolyte",
+    "id": "neutral_hollow_acolyte",
     "name": "Hollow Acolyte",
     "type": "MINION",
     "cost": 3,
@@ -262,12 +288,12 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "hollow_acolyte"
   },
   {
-    "id": "core_lantern_bearer",
+    "id": "neutral_lantern_bearer",
     "name": "Grave Lantern-Bearer",
     "type": "MINION",
     "cost": 2,
@@ -296,12 +322,12 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "gravelight_lantern_bearer"
+    "artId": "neutral_lantern_bearer"
   },
   {
-    "id": "core_aegis_templar",
+    "id": "neutral_aegis_templar",
     "name": "Aegis Templar",
     "type": "MINION",
     "cost": 4,
@@ -313,12 +339,12 @@
       "AEGIS"
     ],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "aegis_templar"
   },
   {
-    "id": "core_veilstalker",
+    "id": "neutral_veilstalker",
     "name": "Veilstalker",
     "type": "MINION",
     "cost": 3,
@@ -330,18 +356,18 @@
       "SHROUD"
     ],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "veilstalker"
   },
   {
-    "id": "core_grove_mender",
+    "id": "verdant_grove_mender",
     "name": "Grove Mender",
     "type": "MINION",
     "cost": 4,
     "attack": 3,
     "health": 4,
-    "class": "NEUTRAL",
+    "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
     "rules": [
@@ -366,12 +392,12 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "grove_mender"
+    "artId": "verdant_grove_mender"
   },
   {
-    "id": "core_arclight_adept",
+    "id": "neutral_arclight_adept",
     "name": "Arclight Adept",
     "type": "MINION",
     "cost": 2,
@@ -383,12 +409,12 @@
       "ARCANE_SURGE"
     ],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "arclight_adept"
   },
   {
-    "id": "core_bonehound",
+    "id": "neutral_bonehound",
     "name": "Ravenous Bonehound",
     "type": "MINION",
     "cost": 3,
@@ -401,12 +427,12 @@
     ],
     "rules": [],
     "tribe": "UNDEAD",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ravenous_bonehound"
   },
   {
-    "id": "core_throneless_king",
+    "id": "neutral_throneless_king",
     "name": "Throneless King",
     "type": "MINION",
     "cost": 6,
@@ -420,7 +446,7 @@
     ],
     "rules": [],
     "tribe": "UNDEAD",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "throneless_king"
   },
@@ -435,7 +461,7 @@
     "rarity": "COMMON",
     "keywords": [],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ember_cinder_lance"
   },
@@ -469,7 +495,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ember_scorch"
   },
@@ -503,7 +529,7 @@
       }
     ],
     "tribe": "CONSTRUCT",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ember_overheat_golem"
   },
@@ -537,7 +563,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ember_twin_flame_strike"
   },
@@ -576,7 +602,7 @@
       }
     ],
     "tribe": "ELEMENTAL",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "ember_pyras_wrath"
   },
@@ -609,7 +635,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_frostbind"
   },
@@ -642,7 +668,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_undertow"
   },
@@ -677,7 +703,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_hollow_tide_siren"
   },
@@ -695,7 +721,7 @@
     ],
     "rules": [],
     "tribe": "SPIRIT",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_reefguard_wisp"
   },
@@ -726,7 +752,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_marens_deep_bargain"
   },
@@ -758,7 +784,7 @@
         }
       }
     ],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": false,
     "artId": "token_the_spark"
   },
@@ -773,7 +799,7 @@
     "rarity": "COMMON",
     "keywords": [],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": false,
     "artId": "token_wisp"
   },
@@ -925,7 +951,7 @@
       "BULWARK"
     ],
     "rules": [],
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": false,
     "artId": "tide_token_wisp"
   },
@@ -1957,7 +1983,7 @@
     "artId": "verdant_thornfang_matron"
   },
   {
-    "id": "core_choking_vines",
+    "id": "neutral_choking_vines",
     "name": "Choking Vines",
     "type": "SPELL",
     "cost": 4,
@@ -1990,7 +2016,7 @@
     "artId": "choking_vines"
   },
   {
-    "id": "core_thistleguard_sprig",
+    "id": "neutral_thistleguard_sprig",
     "name": "Thistleguard Sprig",
     "type": "MINION",
     "cost": 2,
@@ -2510,7 +2536,7 @@
     "keywords": [],
     "rules": [],
     "tribe": "CONSTRUCT",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": false,
     "artId": "clock_token_gear_wisp"
   },
@@ -2595,7 +2621,7 @@
     ],
     "rules": [],
     "tribe": "CONSTRUCT",
-    "setId": "CORE",
+    "setId": "EMBERFALL",
     "collectible": false,
     "artId": "stone_token_shard"
   },
@@ -2730,13 +2756,13 @@
     "id": "clock_spring_coil",
     "name": "Spring Coil",
     "type": "MINION",
-    "cost": 2,
-    "attack": 1,
-    "health": 4,
+    "cost": 3,
+    "attack": 3,
+    "health": 2,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [
-      "BULWARK"
+      "SKIRMISH"
     ],
     "rules": [],
     "tribe": "CONSTRUCT",
@@ -5145,7 +5171,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
-        "rules": [
+    "rules": [
       {
         "id": "rule_1",
         "activation": {
@@ -5306,7 +5332,7 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "BULWARK"
+      "AEGIS,BULWARK"
     ],
     "rules": [
       {
@@ -5324,7 +5350,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ENEMY_MINIONS",
+            "count": 2
           }
         }
       }

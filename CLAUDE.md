@@ -224,12 +224,25 @@ NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is 
 distinguished nothing. `ArtIds.ToFileName` stays a `Replace('/','_')` against a future namespaced
 id, but nothing today has a separator to flatten.
 
-**CORE is hero powers only (Sam, 2026-08-08, narrows the rule above for CORE specifically).**
-`Assets/Art/Cards/CORE/` holds only the 8 hero-power cards' art. Every other CORE-set card
-(minions, spells, the one CORE weapon, CORE tokens) is data-tagged `setId: CORE` but its art
-ships under `Assets/Art/Cards/EMBERFALL/` instead — CORE has no art bundle of its own beyond hero
-powers, since CORE content ships alongside the Emberfall launch. `tooling/scripts/audit_card_art_names.py`
-encodes this exception when it checks "wrong set folder."
+**CORE is hero powers only — in the DATA as well as the art (Sam, 2026-08-15; this replaces the
+2026-08-08 rule, which was art-only and is now retired).** A card is `setId: CORE` if and only if
+it is a hero power. Nothing else may carry it.
+
+Under the old rule a card could be data-tagged `setId: CORE` while its art shipped under
+`Assets/Art/Cards/EMBERFALL/` — one card, two set answers, and the only thing reconciling them was
+a hard-coded exception in `tooling/scripts/audit_card_art_names.py`. On 2026-08-15 that split was
+closed by moving the data to match the art: 24 non-hero-power rows went `CORE` -> `EMBERFALL`, and
+their baked `CardDefinitionSO` assets moved from `Assets/Cards/CORE/` to `Assets/Cards/EMBERFALL/`.
+`Assets/Cards/CORE/` now holds hero powers only. **If you are here to add that exception back to
+`audit_card_art_names.py`, don't — check whether it is still reachable first.**
+
+The same ruling retired the `core_` id prefix. An id names its owner: `neutral_` for a NEUTRAL
+card, the class token otherwise. `core_` survives on no card, and a new one is a mistake — the
+prefix said "belongs to the CORE set", which is now true only of hero powers, and those are
+already prefixed `hero_power_`.
+
+**RETIREMENT TRIGGER:** if a non-hero-power card is ever legitimately tagged `setId: CORE` again,
+this paragraph and the `Assets/Cards/CORE/`-is-hero-powers-only claim both die with it.
 
 **The set folder decides which BUNDLE a file ships in, not its import settings.**
 `CardArtPostprocessor` keys on `Assets/Art/Cards/` — the root, one rule for every set — so import

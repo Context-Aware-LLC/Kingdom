@@ -6,59 +6,31 @@
   "seed": 64159285250,
   "entries": [
     {
-      "id": "core_arclight_adept",
-      "count": 2
-    },
-    {
-      "id": "core_emberling",
+      "id": "ember_blazewing",
       "count": 1
     },
     {
-      "id": "core_hollow_acolyte",
+      "id": "ember_emberdrinker",
       "count": 1
     },
     {
-      "id": "core_stoneback",
+      "id": "ember_magmacore_warden",
       "count": 1
     },
     {
-      "id": "core_thistleguard_sprig",
-      "count": 1
-    },
-    {
-      "id": "core_throneless_king",
-      "count": 1
-    },
-    {
-      "id": "core_veilstalker",
-      "count": 1
-    },
-    {
-      "id": "ember_ashfall_wyrm",
-      "count": 1
-    },
-    {
-      "id": "ember_heat_surge",
-      "count": 1
-    },
-    {
-      "id": "ember_kiln_warden",
-      "count": 1
-    },
-    {
-      "id": "ember_overheat_golem",
-      "count": 1
-    },
-    {
-      "id": "ember_scalded_striker",
+      "id": "ember_recruit",
       "count": 1
     },
     {
       "id": "ember_scorch_blade",
+      "count": 2
+    },
+    {
+      "id": "ember_stoke_the_coals",
       "count": 1
     },
     {
-      "id": "ember_vanguard_drake",
+      "id": "ember_twin_flame",
       "count": 1
     },
     {
@@ -66,15 +38,47 @@
       "count": 1
     },
     {
+      "id": "flame_bolt",
+      "count": 1
+    },
+    {
+      "id": "neutral_bog_crawler",
+      "count": 1
+    },
+    {
+      "id": "neutral_bonehound",
+      "count": 1
+    },
+    {
+      "id": "neutral_emberling",
+      "count": 1
+    },
+    {
+      "id": "neutral_galewind_runner",
+      "count": 1
+    },
+    {
+      "id": "neutral_hollow_acolyte",
+      "count": 1
+    },
+    {
+      "id": "neutral_lifeclaw_bat",
+      "count": 1
+    },
+    {
       "id": "neutral_spellwarden",
       "count": 1
     },
     {
-      "id": "relic_corpse_cart",
+      "id": "neutral_veilstalker",
       "count": 1
     },
     {
-      "id": "tide_abyssal_devourer",
+      "id": "relic_bound_revenant",
+      "count": 2
+    },
+    {
+      "id": "relic_corpse_cart",
       "count": 1
     },
     {
@@ -82,7 +86,15 @@
       "count": 1
     },
     {
+      "id": "tide_deep_channel",
+      "count": 1
+    },
+    {
       "id": "tide_deepfrost_spear",
+      "count": 1
+    },
+    {
+      "id": "tide_frost_ripple",
       "count": 1
     },
     {
@@ -90,15 +102,7 @@
       "count": 2
     },
     {
-      "id": "tide_hoarfrost_lash",
-      "count": 1
-    },
-    {
-      "id": "tide_hollowshell_warden",
-      "count": 1
-    },
-    {
-      "id": "tide_icescale_whelp",
+      "id": "tide_initiate",
       "count": 1
     },
     {
@@ -106,11 +110,7 @@
       "count": 1
     },
     {
-      "id": "wandering_scout",
-      "count": 2
-    },
-    {
-      "id": "wave_caller",
+      "id": "tide_venomfin",
       "count": 1
     }
   ]

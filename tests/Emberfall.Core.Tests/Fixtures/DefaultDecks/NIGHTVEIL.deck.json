@@ -6,15 +6,7 @@
   "seed": 64159285254,
   "entries": [
     {
-      "id": "core_emberling",
-      "count": 1
-    },
-    {
-      "id": "core_grove_mender",
-      "count": 1
-    },
-    {
-      "id": "core_lantern_bearer",
+      "id": "cinder_drake",
       "count": 1
     },
     {
@@ -22,47 +14,47 @@
       "count": 1
     },
     {
-      "id": "ember_cinderplate_golem",
-      "count": 1
-    },
-    {
-      "id": "ember_emberdrinker",
-      "count": 1
-    },
-    {
-      "id": "ember_forgeheart_colossus",
-      "count": 1
-    },
-    {
-      "id": "ember_fusillade",
-      "count": 1
-    },
-    {
       "id": "ember_overheat_golem",
       "count": 1
     },
     {
-      "id": "ember_pyras_wrath",
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
-      "id": "ember_twin_flame",
-      "count": 2
-    },
-    {
-      "id": "ember_vanguard_drake",
+      "id": "ember_stoke_the_coals",
       "count": 1
     },
     {
-      "id": "ember_zealot",
-      "count": 2
+      "id": "flame_bolt",
+      "count": 1
+    },
+    {
+      "id": "neutral_aegis_templar",
+      "count": 1
     },
     {
       "id": "neutral_bog_crawler",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "neutral_ironclad_bulwark",
+      "id": "neutral_choking_vines",
+      "count": 1
+    },
+    {
+      "id": "neutral_galewind_runner",
+      "count": 1
+    },
+    {
+      "id": "neutral_hollow_acolyte",
+      "count": 1
+    },
+    {
+      "id": "neutral_lantern_bearer",
+      "count": 1
+    },
+    {
+      "id": "neutral_phantom_duelist",
       "count": 2
     },
     {
@@ -70,31 +62,47 @@
       "count": 2
     },
     {
+      "id": "neutral_searing_quill",
+      "count": 1
+    },
+    {
       "id": "neutral_spellwarden",
       "count": 1
     },
     {
-      "id": "night_death_mark",
+      "id": "neutral_stoneback_sentry",
+      "count": 1
+    },
+    {
+      "id": "neutral_venomscale_drake",
       "count": 2
     },
     {
-      "id": "night_shadow_blade",
+      "id": "night_death_mark",
+      "count": 1
+    },
+    {
+      "id": "night_lurk_wisp",
+      "count": 1
+    },
+    {
+      "id": "night_shadow_dart",
       "count": 1
     },
     {
       "id": "night_vanishing_act",
-      "count": 1
-    },
-    {
-      "id": "relic_bound_revenant",
       "count": 2
     },
     {
-      "id": "relic_corpse_cart",
+      "id": "relic_bound_revenant",
       "count": 1
     },
     {
-      "id": "wandering_scout",
+      "id": "relic_corpse_cart",
+      "count": 2
+    },
+    {
+      "id": "stone_sentry",
       "count": 1
     }
   ]

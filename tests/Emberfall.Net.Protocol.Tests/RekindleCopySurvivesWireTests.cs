@@ -24,10 +24,10 @@ namespace Emberfall.Net.Protocol.Tests
     public sealed class RekindleCopySurvivesWireTests
     {
         private static CardDefinition King()
-            => new CardDefinition("core_throneless_king", "Throneless King", CardType.MINION, 6, 6, 6, null,
+            => new CardDefinition("neutral_throneless_king", "Throneless King", CardType.MINION, 6, 6, 6, null,
                 CardClass.NEUTRAL, Rarity.COMMON,
                 new[] { Keyword.BULWARK, Keyword.REKINDLE }, Array.Empty<RuleDefinition>(),
-                "", "art/core_throneless_king", SetId.CORE, true, null, "");
+                "", "art/neutral_throneless_king", SetId.CORE, true, null, "");
 
         private static CardDefinition Bruiser()
             => new CardDefinition("bruiser", "Bruiser", CardType.MINION, 6, 6, 8, null,
@@ -84,7 +84,7 @@ namespace Emberfall.Net.Protocol.Tests
             var authCopy = s.Players[1].Board[0];
             Assert.That(authCopy.Id.Value, Is.Not.EqualTo(king.Id.Value), "copy has a fresh instance id");
             Assert.That(authCopy.CurrentHealth, Is.EqualTo(1));
-            Assert.That(authCopy.DefinitionId, Is.EqualTo("core_throneless_king"));
+            Assert.That(authCopy.DefinitionId, Is.EqualTo("neutral_throneless_king"));
 
             // Both viewers must receive the copy: seat 1 owns it, seat 0 is the opponent watching it.
             foreach (var viewer in new[] { p0, p1 })
@@ -101,7 +101,7 @@ namespace Emberfall.Net.Protocol.Tests
                     $"REKINDLE copy missing from seat-1 board as seen by {viewer} — dropped in projection or codec");
                 var copy = board[0];
                 Assert.That(copy.Id.Value, Is.EqualTo(authCopy.Id.Value), $"[{viewer}] copy kept its instance id over the wire");
-                Assert.That(copy.DefinitionId, Is.EqualTo("core_throneless_king"), $"[{viewer}] copy is still a King");
+                Assert.That(copy.DefinitionId, Is.EqualTo("neutral_throneless_king"), $"[{viewer}] copy is still a King");
                 Assert.That(copy.CurrentHealth, Is.EqualTo(1), $"[{viewer}] copy is at 1 HP");
                 Assert.That(copy.Keywords, Does.Contain(Keyword.BULWARK), $"[{viewer}] copy kept BULWARK");
                 Assert.That(copy.HasUsedRekindle, Is.True, $"[{viewer}] copy is marked rekindle-consumed");

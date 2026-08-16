@@ -33,10 +33,10 @@ namespace Emberfall.Core
             "ember_cinder_lance",    "ember_cinder_lance",
             // Neutral fill
             "stone_sentry",          "stone_sentry",
-            "core_emberling",        "core_emberling",
-            "core_stoneback",        "core_stoneback",
-            "core_hollow_acolyte",
-            "core_aegis_templar",
+            "neutral_emberling",        "neutral_emberling",
+            "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
+            "neutral_hollow_acolyte",
+            "neutral_aegis_templar",
         };
 
         public static IReadOnlyList<string> TidecallerDeck() => new string[]
@@ -44,17 +44,17 @@ namespace Emberfall.Core
             // TIDECALLER class cards
             "tide_initiate",         "tide_initiate",
             "tide_oracle",           "tide_oracle",
-            "frost_ripple",          "frost_ripple",
+            "tide_frost_ripple",          "tide_frost_ripple",
             "tide_reefguard",        "tide_reefguard",
             "tide_deep_bargain",
-            "wave_caller",
+            "tide_wave_caller",
             // Neutral fill
             "stone_sentry",          "stone_sentry",
             "wandering_scout",       "wandering_scout",
-            "core_stoneback",        "core_stoneback",
-            "core_bonehound",        "core_bonehound",
-            "core_hollow_acolyte",
-            "core_throneless_king",
+            "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
+            "neutral_bonehound",        "neutral_bonehound",
+            "neutral_hollow_acolyte",
+            "neutral_throneless_king",
         };
     }
 }

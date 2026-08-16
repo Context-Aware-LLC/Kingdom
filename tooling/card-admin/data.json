@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 264,
+  "totalCards": 265,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,37 +22,38 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 264,
+    "total": 265,
     "typeSplit": {
       "MINION": 174,
-      "SPELL": 70,
+      "SPELL": 71,
       "WEAPON": 12,
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 46,
-      "SKIRMISH": 12,
+      "BULWARK": 44,
+      "SKIRMISH": 13,
       "SHROUD": 11,
       "VENOM": 9,
       "AEGIS": 8,
       "REKINDLE": 8,
       "DOUBLESTRIKE": 7,
       "OVERWHELM": 7,
+      "VANGUARD": 6,
       "LIFEDRAIN": 5,
-      "VANGUARD": 5,
       "ARCANE_SURGE": 4,
       "FERVOR": 4,
+      "AEGIS,BULWARK": 1,
       "FROST": 1
     },
     "selectorFrequency": {
       "FRIENDLY_MINIONS": 32,
-      "ANY_FRIENDLY_MINION": 31,
+      "ANY_FRIENDLY_MINION": 30,
       "ANY_MINION": 24,
+      "ENEMY_MINIONS": 20,
       "FRIENDLY_HERO": 20,
-      "ENEMY_MINIONS": 18,
       "ANY_ENEMY": 16,
+      "ENEMY_HERO": 7,
       "ENEMY_CHARACTERS": 6,
-      "ENEMY_HERO": 6,
       "ANY_FRIENDLY": 5,
       "ANY_CHARACTER": 4,
       "ALL_MINIONS": 3,
@@ -60,12 +61,12 @@
     },
     "costDistribution": {
       "0": 8,
-      "1": 31,
-      "2": 64,
-      "3": 61,
-      "4": 45,
+      "1": 30,
+      "2": 61,
+      "3": 64,
+      "4": 46,
       "5": 18,
-      "6": 18,
+      "6": 19,
       "7": 14,
       "8": 4,
       "9": 1
@@ -73,7 +74,7 @@
     "rarityBreakdown": {
       "COMMON": 123,
       "RARE": 86,
-      "EPIC": 37,
+      "EPIC": 38,
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
@@ -87,10 +88,10 @@
     "minionCount": 174,
     "attackDistribution": {
       "0": 5,
-      "1": 35,
+      "1": 33,
       "2": 46,
-      "3": 38,
-      "4": 16,
+      "3": 39,
+      "4": 17,
       "5": 17,
       "6": 13,
       "7": 3,
@@ -98,10 +99,10 @@
     },
     "healthDistribution": {
       "1": 22,
-      "2": 31,
-      "3": 30,
-      "4": 35,
-      "5": 25,
+      "2": 32,
+      "3": 29,
+      "4": 34,
+      "5": 26,
       "6": 14,
       "7": 8,
       "8": 6,
@@ -119,8 +120,9 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 4,
+        "BULWARK": 3,
         "AEGIS": 1,
+        "SKIRMISH": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
@@ -134,8 +136,8 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 5,
-        "3": 7,
+        "2": 4,
+        "3": 8,
         "4": 4,
         "5": 1,
         "6": 1,
@@ -153,28 +155,28 @@
       },
       "minionCount": 16,
       "attackDistribution": {
-        "1": 6,
+        "1": 5,
         "2": 3,
-        "3": 3,
+        "3": 4,
         "4": 1,
         "5": 1,
         "6": 2
       },
       "healthDistribution": {
         "1": 2,
-        "2": 2,
+        "2": 3,
         "3": 4,
-        "4": 5,
+        "4": 4,
         "6": 1,
         "7": 1,
         "8": 1
       }
     },
     "EMBERWARD": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 21,
-        "SPELL": 7,
+        "SPELL": 8,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -189,9 +191,9 @@
       },
       "selectorFrequency": {
         "ANY_MINION": 5,
-        "ENEMY_HERO": 4,
+        "ENEMY_HERO": 5,
+        "ENEMY_MINIONS": 3,
         "ANY_CHARACTER": 2,
-        "ENEMY_MINIONS": 2,
         "FRIENDLY_HERO": 2,
         "FRIENDLY_MINIONS": 2,
         "ALL_MINIONS": 1,
@@ -203,13 +205,13 @@
         "3": 7,
         "4": 6,
         "5": 4,
-        "6": 2,
+        "6": 3,
         "7": 2
       },
       "rarityBreakdown": {
         "RARE": 13,
         "COMMON": 11,
-        "EPIC": 5,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -300,9 +302,9 @@
       }
     },
     "NEUTRAL": {
-      "total": 41,
+      "total": 40,
       "typeSplit": {
-        "MINION": 36,
+        "MINION": 35,
         "SPELL": 3,
         "WEAPON": 2,
         "HERO_POWER": 0
@@ -322,22 +324,21 @@
       "selectorFrequency": {
         "FRIENDLY_MINIONS": 4,
         "FRIENDLY_HERO": 2,
-        "ANY_FRIENDLY": 1,
         "ANY_MINION": 1
       },
       "costDistribution": {
         "0": 5,
         "1": 4,
-        "2": 12,
-        "3": 9,
-        "4": 7,
+        "2": 11,
+        "3": 10,
+        "4": 6,
         "5": 1,
         "6": 2,
         "7": 1
       },
       "rarityBreakdown": {
         "COMMON": 27,
-        "RARE": 8,
+        "RARE": 7,
         "EPIC": 4,
         "LEGENDARY": 2
       },
@@ -347,11 +348,11 @@
         "CONSTRUCT": 5,
         "DRAGON": 1
       },
-      "minionCount": 36,
+      "minionCount": 35,
       "attackDistribution": {
         "1": 11,
         "2": 11,
-        "3": 8,
+        "3": 7,
         "4": 3,
         "5": 2,
         "6": 1
@@ -359,9 +360,9 @@
       "healthDistribution": {
         "1": 7,
         "2": 9,
-        "3": 8,
-        "4": 6,
-        "5": 4,
+        "3": 7,
+        "4": 5,
+        "5": 5,
         "6": 1,
         "7": 1
       }
@@ -448,8 +449,8 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 6,
-        "3": 5,
+        "2": 5,
+        "3": 6,
         "4": 3,
         "5": 1,
         "6": 2,
@@ -552,26 +553,28 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 7,
+        "BULWARK": 6,
+        "AEGIS,BULWARK": 1,
         "FROST": 1,
         "REKINDLE": 1,
         "SKIRMISH": 1,
+        "VANGUARD": 1,
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ENEMY_MINIONS": 8,
+        "ENEMY_MINIONS": 9,
         "ANY_ENEMY": 7,
         "ANY_MINION": 7,
-        "ANY_FRIENDLY_MINION": 3,
+        "ANY_FRIENDLY_MINION": 2,
         "FRIENDLY_MINIONS": 2,
         "ANY_FRIENDLY": 1
       },
       "costDistribution": {
         "0": 1,
-        "1": 4,
+        "1": 3,
         "2": 9,
         "3": 8,
-        "4": 4,
+        "4": 5,
         "5": 2,
         "6": 3,
         "7": 3
@@ -590,10 +593,10 @@
       "minionCount": 20,
       "attackDistribution": {
         "0": 1,
-        "1": 5,
+        "1": 4,
         "2": 5,
         "3": 3,
-        "4": 2,
+        "4": 3,
         "5": 3,
         "6": 1
       },
@@ -608,9 +611,9 @@
       }
     },
     "VERDANT": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
-        "MINION": 20,
+        "MINION": 21,
         "SPELL": 9,
         "WEAPON": 1,
         "HERO_POWER": 1
@@ -629,7 +632,7 @@
       "selectorFrequency": {
         "FRIENDLY_HERO": 10,
         "ANY_FRIENDLY_MINION": 5,
-        "ANY_FRIENDLY": 3,
+        "ANY_FRIENDLY": 4,
         "FRIENDLY_MINIONS": 2,
         "ANY_CHARACTER": 1,
         "ANY_MINION": 1,
@@ -640,7 +643,7 @@
         "1": 3,
         "2": 6,
         "3": 8,
-        "4": 6,
+        "4": 7,
         "5": 3,
         "6": 2,
         "7": 2,
@@ -648,7 +651,7 @@
       },
       "rarityBreakdown": {
         "COMMON": 14,
-        "RARE": 10,
+        "RARE": 11,
         "EPIC": 5,
         "LEGENDARY": 2
       },
@@ -656,12 +659,12 @@
         "BEAST": 7,
         "CONSTRUCT": 1
       },
-      "minionCount": 20,
+      "minionCount": 21,
       "attackDistribution": {
         "0": 1,
         "1": 2,
         "2": 7,
-        "3": 3,
+        "3": 4,
         "4": 1,
         "5": 1,
         "6": 2,
@@ -672,7 +675,7 @@
         "1": 1,
         "2": 2,
         "3": 4,
-        "4": 3,
+        "4": 4,
         "5": 6,
         "6": 2,
         "7": 1,
@@ -796,7 +799,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "frost_ripple",
+      "id": "tide_frost_ripple",
       "name": "Frost Ripple",
       "type": "SPELL",
       "cost": 3,
@@ -816,7 +819,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "wave_caller",
+      "id": "tide_wave_caller",
       "name": "Wave Caller",
       "type": "MINION",
       "cost": 4,
@@ -826,7 +829,9 @@
       "class": "TIDECALLER",
       "rarity": "RARE",
       "keywords": [],
-      "selectors": [],
+      "selectors": [
+        "ENEMY_MINIONS"
+      ],
       "tribe": null,
       "setId": "EMBERFALL",
       "collectible": true,
@@ -837,9 +842,9 @@
       "id": "stone_sentry",
       "name": "Stone Sentry",
       "type": "MINION",
-      "cost": 2,
+      "cost": 3,
       "attack": 2,
-      "health": 3,
+      "health": 5,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
@@ -874,7 +879,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_emberling",
+      "id": "neutral_emberling",
       "name": "Emberling Pup",
       "type": "MINION",
       "cost": 1,
@@ -888,13 +893,13 @@
       ],
       "selectors": [],
       "tribe": "BEAST",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "emberling_pup",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_stoneback",
+      "id": "neutral_stoneback_sentry",
       "name": "Stoneback Sentry",
       "type": "MINION",
       "cost": 2,
@@ -908,13 +913,13 @@
       ],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "stoneback_sentry",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_hollow_acolyte",
+      "id": "neutral_hollow_acolyte",
       "name": "Hollow Acolyte",
       "type": "MINION",
       "cost": 3,
@@ -926,13 +931,13 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "hollow_acolyte",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_lantern_bearer",
+      "id": "neutral_lantern_bearer",
       "name": "Grave Lantern-Bearer",
       "type": "MINION",
       "cost": 2,
@@ -944,13 +949,13 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
-      "artId": "gravelight_lantern_bearer",
+      "artId": "neutral_lantern_bearer",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_aegis_templar",
+      "id": "neutral_aegis_templar",
       "name": "Aegis Templar",
       "type": "MINION",
       "cost": 4,
@@ -964,13 +969,13 @@
       ],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "aegis_templar",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_veilstalker",
+      "id": "neutral_veilstalker",
       "name": "Veilstalker",
       "type": "MINION",
       "cost": 3,
@@ -984,33 +989,33 @@
       ],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "veilstalker",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_grove_mender",
+      "id": "verdant_grove_mender",
       "name": "Grove Mender",
       "type": "MINION",
       "cost": 4,
       "attack": 3,
       "health": 4,
       "durability": null,
-      "class": "NEUTRAL",
+      "class": "VERDANT",
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_FRIENDLY"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
-      "artId": "grove_mender",
+      "artId": "verdant_grove_mender",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_arclight_adept",
+      "id": "neutral_arclight_adept",
       "name": "Arclight Adept",
       "type": "MINION",
       "cost": 2,
@@ -1024,13 +1029,13 @@
       ],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "arclight_adept",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_bonehound",
+      "id": "neutral_bonehound",
       "name": "Ravenous Bonehound",
       "type": "MINION",
       "cost": 3,
@@ -1044,13 +1049,13 @@
       ],
       "selectors": [],
       "tribe": "UNDEAD",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ravenous_bonehound",
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_throneless_king",
+      "id": "neutral_throneless_king",
       "name": "Throneless King",
       "type": "MINION",
       "cost": 6,
@@ -1065,7 +1070,7 @@
       ],
       "selectors": [],
       "tribe": "UNDEAD",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "throneless_king",
       "sourceFile": "Emberfall.cards.json"
@@ -1083,7 +1088,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_cinder_lance",
       "sourceFile": "Emberfall.cards.json"
@@ -1103,7 +1108,7 @@
         "ANY_CHARACTER"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_scorch",
       "sourceFile": "Emberfall.cards.json"
@@ -1121,7 +1126,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": "CONSTRUCT",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_overheat_golem",
       "sourceFile": "Emberfall.cards.json"
@@ -1141,7 +1146,7 @@
         "ENEMY_MINIONS"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_twin_flame_strike",
       "sourceFile": "Emberfall.cards.json"
@@ -1163,7 +1168,7 @@
         "ENEMY_HERO"
       ],
       "tribe": "ELEMENTAL",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_pyras_wrath",
       "sourceFile": "Emberfall.cards.json"
@@ -1183,7 +1188,7 @@
         "ANY_ENEMY"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_frostbind",
       "sourceFile": "Emberfall.cards.json"
@@ -1203,7 +1208,7 @@
         "ANY_MINION"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_undertow",
       "sourceFile": "Emberfall.cards.json"
@@ -1223,7 +1228,7 @@
         "ENEMY_MINIONS"
       ],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_hollow_tide_siren",
       "sourceFile": "Emberfall.cards.json"
@@ -1243,7 +1248,7 @@
       ],
       "selectors": [],
       "tribe": "SPIRIT",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_reefguard_wisp",
       "sourceFile": "Emberfall.cards.json"
@@ -1261,7 +1266,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_marens_deep_bargain",
       "sourceFile": "Emberfall.cards.json"
@@ -1279,7 +1284,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": false,
       "artId": "token_the_spark",
       "sourceFile": "Emberfall.cards.json"
@@ -1297,7 +1302,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": false,
       "artId": "token_wisp",
       "sourceFile": "Emberfall.cards.json"
@@ -1395,7 +1400,7 @@
       ],
       "selectors": [],
       "tribe": null,
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": false,
       "artId": "tide_token_wisp",
       "sourceFile": "Emberfall.cards.json"
@@ -1992,7 +1997,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_choking_vines",
+      "id": "neutral_choking_vines",
       "name": "Choking Vines",
       "type": "SPELL",
       "cost": 4,
@@ -2012,7 +2017,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_thistleguard_sprig",
+      "id": "neutral_thistleguard_sprig",
       "name": "Thistleguard Sprig",
       "type": "MINION",
       "cost": 2,
@@ -2380,7 +2385,7 @@
       "keywords": [],
       "selectors": [],
       "tribe": "CONSTRUCT",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": false,
       "artId": "clock_token_gear_wisp",
       "sourceFile": "Emberfall.cards.json"
@@ -2438,7 +2443,7 @@
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
-      "setId": "CORE",
+      "setId": "EMBERFALL",
       "collectible": false,
       "artId": "stone_token_shard",
       "sourceFile": "Emberfall.cards.json"
@@ -2504,14 +2509,14 @@
       "id": "clock_spring_coil",
       "name": "Spring Coil",
       "type": "MINION",
-      "cost": 2,
-      "attack": 1,
-      "health": 4,
+      "cost": 3,
+      "attack": 3,
+      "health": 2,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "COMMON",
       "keywords": [
-        "BULWARK"
+        "SKIRMISH"
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
@@ -4105,7 +4110,7 @@
       "class": "TIDECALLER",
       "rarity": "LEGENDARY",
       "keywords": [
-        "BULWARK"
+        "AEGIS,BULWARK"
       ],
       "selectors": [
         "ENEMY_MINIONS"
@@ -4644,8 +4649,8 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_clockwork_essence",
-      "name": "Clockwork Essence",
+      "id": "rekind_clock_mechanical_essence",
+      "name": "Mechanical Essence",
       "type": "MINION",
       "cost": 3,
       "attack": 2,
@@ -4660,7 +4665,7 @@
       "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "clock_clockwork_essence",
+      "artId": "clock_mechanical_essence",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4696,7 +4701,7 @@
       "tribe": null,
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "_forge_striker",
+      "artId": "neutral_forge_striker",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4782,8 +4787,29 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
+      "id": "ember_channeled_pyroclasm",
+      "name": "Channeled Pyroclasm",
+      "type": "SPELL",
+      "cost": 6,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "EMBERWARD",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [
+        "ENEMY_MINIONS",
+        "ENEMY_HERO"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "ember_channeled_pyroclasm",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
       "id": "rekind_ember_general_kira",
-      "name": "General Kira, Flame Reunified",
+      "name": "General Kira",
       "type": "MINION",
       "cost": 7,
       "attack": 6,
@@ -4805,21 +4831,23 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_harbinger",
-      "name": "Tide Harbinger",
+      "id": "tide_prophet_of_the_flood",
+      "name": "Prophet of the Flood",
       "type": "MINION",
-      "cost": 1,
-      "attack": 1,
+      "cost": 4,
+      "attack": 4,
       "health": 2,
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "COMMON",
-      "keywords": [],
+      "keywords": [
+        "VANGUARD"
+      ],
       "selectors": [],
       "tribe": "SPIRIT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "tide_harbinger",
+      "artId": "tide_prophet_of_the_flood",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4895,8 +4923,7 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY",
-        "ANY_FRIENDLY_MINION"
+        "ANY_ENEMY"
       ],
       "tribe": null,
       "setId": "REKINDLING",
@@ -5666,7 +5693,7 @@
     },
     {
       "id": "rekind_stone_quarry_worker",
-      "name": "Quarry Worker",
+      "name": "Stone Quarry Worker",
       "type": "MINION",
       "cost": 2,
       "attack": 1,
@@ -5731,7 +5758,7 @@
       "id": "rekind_stone_iron_foundation",
       "name": "Iron Foundation",
       "type": "SPELL",
-      "cost": 2,
+      "cost": 3,
       "attack": null,
       "health": null,
       "durability": null,

@@ -341,8 +341,8 @@
     "artId": "ember_forge_warden"
   },
   {
-    "id": "rekind_clock_clockwork_essence",
-    "name": "Clockwork Essence",
+    "id": "rekind_clock_mechanical_essence",
+    "name": "Mechanical Essence",
     "type": "MINION",
     "cost": 3,
     "attack": 2,
@@ -377,7 +377,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "clock_clockwork_essence"
+    "artId": "clock_mechanical_essence"
   },
   {
     "id": "rekind_ember_coalition_blazer",
@@ -444,7 +444,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "_forge_striker"
+    "artId": "neutral_forge_striker"
   },
   {
     "id": "smithy_hammer",
@@ -629,9 +629,67 @@
     "artId": "ember_pyre_commander"
   },
   {
+    "id": "ember_channeled_pyroclasm",
+    "name": "Channeled Pyroclasm",
+    "type": "SPELL",
+    "cost": 6,
+    "class": "EMBERWARD",
+    "rarity": "EPIC",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 6,
+          "target": {
+            "selector": "ENEMY_MINIONS",
+            "chosenBy": "PLAYER",
+            "count": 1
+          }
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "ember_channeled_pyroclasm",
+    "flavorText": ""
+  },
+  {
     "id": "rekind_ember_general_kira",
-    "name": "General Kira, Flame Reunified",
+    "name": "General Kira",
     "type": "MINION",
+    "flavorText": "Flame Reunified",
     "cost": 7,
     "attack": 6,
     "health": 6,
@@ -687,20 +745,22 @@
     "artId": "ember_general_kira_flame_reunified"
   },
   {
-    "id": "rekind_tide_harbinger",
-    "name": "Tide Harbinger",
+    "id": "tide_prophet_of_the_flood",
+    "name": "Prophet of the Flood",
     "type": "MINION",
-    "cost": 1,
-    "attack": 1,
+    "cost": 4,
+    "attack": 4,
     "health": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
-    "keywords": [],
+    "keywords": [
+      "VANGUARD"
+    ],
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "SPIRIT",
-    "artId": "tide_harbinger"
+    "artId": "tide_prophet_of_the_flood"
   },
   {
     "id": "rekind_tide_saltshore_scout",
@@ -838,26 +898,6 @@
           "target": {
             "selector": "ANY_ENEMY",
             "binding": "frost_target"
-          }
-        }
-      },
-      {
-        "id": "rule_2",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_PLAY"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "REINFORCE",
-          "target": {
-            "selector": "ANY_FRIENDLY_MINION",
-            "binding": "reinforce_target"
           }
         }
       }
@@ -2340,7 +2380,7 @@
   },
   {
     "id": "rekind_stone_quarry_worker",
-    "name": "Quarry Worker",
+    "name": "Stone Quarry Worker",
     "type": "MINION",
     "cost": 2,
     "attack": 1,
@@ -2454,7 +2494,7 @@
     "id": "rekind_stone_iron_foundation",
     "name": "Iron Foundation",
     "type": "SPELL",
-    "cost": 2,
+    "cost": 3,
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],

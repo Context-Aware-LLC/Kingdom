@@ -37,6 +37,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SO_REBAKE = ROOT / "tooling" / "scripts" / "rebake_card_definition_so_assets.py"
 DRIFT_PROBE = ROOT / "tooling" / "scripts" / "check_deck_pool_drift.py"
+ID_DRIFT = ROOT / "tooling" / "scripts" / "check_card_id_drift.py"
 ADMIN_BUILD = ROOT / "tooling" / "card-admin" / "build_data.py"
 ADMIN_OUTPUTS = (
     ROOT / "tooling" / "card-admin" / "data.json",
@@ -69,8 +70,29 @@ def run(argv, cwd=ROOT):
     return done.returncode, done.stdout or ""
 
 
+def step_id_drift():
+    """Report ids that vanished or were repointed. Advisory here, never a blocker.
+
+    This runs FIRST because it is the only step that can tell you the edit reached data this
+    script cannot fix. The three artifacts below all live in the repo and are regenerable; a
+    renamed id also breaks every saved deck under the player's LocalLow folder, which is outside
+    the repo, invisible to `dotnet test`, and silently hidden by the deckbuilder when it fails to
+    resolve. `--write` cannot repair that, so this step's job is to say so out loud.
+    """
+    banner("0/4  CARD ID DRIFT  (advisory — saved decks live outside this repo)")
+    code, _ = run([sys.executable, str(ID_DRIFT)])
+    if code == 0:
+        return "OK"
+    print(
+        "\nAdvisory only: the rebake continues. But a removed or repointed id is NOT fixed by\n"
+        "anything below — repair the saved decks in the same change, or they keep an entry that\n"
+        "resolves to nothing and cannot be seen or removed in the deckbuilder."
+    )
+    return "DRIFT"
+
+
 def step_so_assets(write):
-    banner("1/3  BAKED CardDefinitionSO ASSETS")
+    banner("1/4  BAKED CardDefinitionSO ASSETS")
     code, _ = run([sys.executable, str(SO_REBAKE), "--write" if write else "--check"])
     if code == 2:
         return "ERROR"
@@ -78,7 +100,7 @@ def step_so_assets(write):
 
 
 def step_admin_aggregate(write):
-    banner("2/3  CARD-ADMIN AGGREGATE  (data.json + data.js)")
+    banner("2/4  CARD-ADMIN AGGREGATE  (data.json + data.js)")
     argv = [sys.executable, str(ADMIN_BUILD)] + ([] if write else ["--check"])
     code, _ = run(argv)
     if write:
@@ -110,7 +132,7 @@ def dotnet_test(filter_expr):
 
 
 def step_deck_fixtures(write, skip):
-    banner("3/3  STARTER DECK FIXTURES")
+    banner("3/4  STARTER DECK FIXTURES")
     if skip:
         print("SKIPPED by --skip-fixtures. The Unit lane still gates this; run it before you push.")
         return "SKIPPED"
@@ -144,6 +166,7 @@ def main():
     args = parser.parse_args()
 
     results = {
+        "card_id_drift": step_id_drift(),
         "baked_so_assets": step_so_assets(args.write),
         "card_admin_aggregate": step_admin_aggregate(args.write),
         "deck_fixtures": step_deck_fixtures(args.write, args.skip_fixtures),
@@ -160,6 +183,12 @@ def main():
     if "STALE" in results.values():
         print("CARD_DATA_REBAKE=STALE")
         return 1
+    # DRIFT does not fail the run — the three derived artifacts really are clean. It changes the
+    # headline so `CLEAN` can never be read as "everything a card edit touched is now consistent",
+    # which is exactly how a renamed id sat unrepaired in seven saved decks on 2026-08-15.
+    if "DRIFT" in results.values():
+        print("CARD_DATA_REBAKE=CLEAN_WITH_ID_DRIFT")
+        return 0
     print("CARD_DATA_REBAKE=CLEAN")
     return 0
 

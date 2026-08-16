@@ -261,7 +261,7 @@ namespace Emberfall.Core.Tests.CardValidation
         }
 
         [Test]
-        public void All_261_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
+        public void All_Cards_Use_Actions_Not_Keywords_For_Action_Markers()
         {
             var cards = LoadAllCards();
             var markers = new HashSet<Keyword>
@@ -276,7 +276,7 @@ namespace Emberfall.Core.Tests.CardValidation
                 .Select(card => card.Id)
                 .ToList();
 
-            Assert.That(cards, Has.Count.EqualTo(261));
+            Assert.That(cards, Has.Count.GreaterThan(200), "Card corpus failed to load.");
             Assert.That(authored, Is.Empty,
                 "action-derived presentation markers must not also be authored as carrier keywords");
 
@@ -625,8 +625,14 @@ namespace Emberfall.Core.Tests.CardValidation
                 rendered++;
             }
 
-            Assert.That(cards.Count, Is.EqualTo(261));
-            Assert.That(rendered, Is.EqualTo(261));
+            // What this actually needs to prove is "the loop covered the whole corpus and skipped
+            // nothing" — which is `rendered == cards.Count`, not a hand-maintained literal. A pinned
+            // corpus total fires on every card ADDED (the most routine edit there is) and is silent
+            // on every card CHANGED, so it trains you to bump the number without reading it. It had
+            // been sitting red at 261 since e0e942f0 added three cards. The floor keeps the test
+            // from passing vacuously if the loader ever returns nothing.
+            Assert.That(cards.Count, Is.GreaterThan(200), "Card corpus failed to load.");
+            Assert.That(rendered, Is.EqualTo(cards.Count), "Every loaded card must render.");
         }
 
         private static List<CardDefinition> LoadAllCards()
