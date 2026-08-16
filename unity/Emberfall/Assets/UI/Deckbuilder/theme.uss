@@ -1,21 +1,4 @@
-/*
- * theme.uss — Emberfall meta-screen design tokens (single source of truth).
- *
- * dev-docs/ui/client-surfaces.md:22: "Tokens live in a single theme.uss ... One source of truth,
- * two consumers." This file is the UI Toolkit consumer; the in-match HUD mirrors these
- * values in a ThemeTokens ScriptableObject.
- *
- * Token NAMES are locked to dev-docs/ui/client-surfaces.md:22. The hex VALUES here are the
- * dark-first M1 baseline; the rarity/class values are placeholders pending the Tech
- * Artist's exact hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md gem/accent colors, which the UI adopts verbatim
- * (design-system §4.1/§4.2) — do not treat these hexes as the source of truth for those.
- *
- * Applied via the .emb-root class on the top VisualElement (UI Toolkit resolves var()
- * against the nearest ancestor that defines the custom property).
- */
-
 .emb-root {
-    /* --- Spacing (§2.1, 4px base) --- */
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -24,36 +7,28 @@
     --space-8: 32px;
     --space-12: 48px;
     --space-16: 64px;
-
-    /* --- Type scale (§3.2) --- */
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;
     --type-body: 18px;
     --type-label: 16px;
     --type-caption: 14px;
-
-    /* --- Semantic / system palette (§4.3, dark-first §4.5) --- */
     --surface-0: rgb(11, 14, 19);
     --surface-1: rgb(20, 25, 34);
     --surface-2: rgb(30, 37, 48);
     --surface-3: rgb(42, 51, 64);
     --ink-1: rgb(237, 241, 246);
     --ink-2: rgb(154, 167, 182);
-    --accent: rgb(240, 166, 60);     /* ember-gold CTA */
+    --accent: rgb(240, 166, 60);
     --positive: rgb(75, 208, 123);
     --negative: rgb(229, 72, 77);
     --warning: rgb(245, 166, 35);
     --info: rgb(76, 154, 255);
-    --mana: rgb(61, 165, 245);       /* §4.4 signature blue */
-
-    /* --- Rarity (§4.1 — adopt Tech Art verbatim; placeholders below) --- */
+    --mana: rgb(61, 165, 245);
     --rarity-common: rgb(154, 167, 182);
     --rarity-rare: rgb(61, 123, 245);
     --rarity-epic: rgb(162, 75, 229);
     --rarity-legendary: rgb(240, 166, 60);
-
-    /* --- Class accents (§4.2 — meta-screen only, never inside a card frame) --- */
     --class-neutral: rgb(138, 143, 152);
     --class-emberward: rgb(229, 96, 42);
     --class-tidecaller: rgb(31, 138, 143);
@@ -69,3 +44,20 @@
     color: var(--unity-colors-dropdown-text);
 }
 
+.class-tab__art {
+    width: 56px;
+    height: 56px;
+    border-top-left-radius: 28px;
+    border-top-right-radius: 28px;
+    border-bottom-right-radius: 28px;
+    border-bottom-left-radius: 28px;
+    overflow: hidden;
+    -unity-background-scale-mode: scale-and-crop;
+}
+
+.class-tab__art--emberward {
+    background-image: url("project://database/Assets/Art/UI/hptabs/ember_hp.png?fileID=2800000&guid=723e5ec5e4632ad49a447f9e7a80dbb1&type=3#ember_hp");
+}
+
+.class-tab {
+}

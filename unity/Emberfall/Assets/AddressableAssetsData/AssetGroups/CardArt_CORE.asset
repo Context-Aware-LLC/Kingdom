@@ -75,11 +75,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9d7c3b5f540585647a08069e0fdb134b
-    m_Address: card_art/storm_hero_power_chain_spark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0b122105a5944740bf49e8e800147bf
     m_Address: card_art/hero_tempest
     m_ReadOnly: 0
@@ -87,11 +82,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e40dba5df342fdd42bb5a5a69ac84fbd
     m_Address: card_art/hero_verdant
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ec6ac1abc0a0bf740bb8d8d38ca9d85f
-    m_Address: card_art/hero_stonewarden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

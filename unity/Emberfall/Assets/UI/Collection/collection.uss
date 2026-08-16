@@ -219,3 +219,43 @@
     background-color: var(--surface-1);
     border-radius: var(--space-2);
 }
+#class-tab-bar {
+
+
+
+}
+.class-tab__art {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    overflow: hidden;
+    -unity-background-scale-mode: scale-and-crop;
+}
+.class-tab__art--emberward {
+    background-image: url("/Assets/Art/UI/hptabs/ember_hp.png");
+}
+.class-tab__art--tempest {
+    background-image: url("/Assets/Art/UI/hptabs/tempest_hp")
+    }
+.class-tab__art--stonewarden {
+    background-image: url("/Assets/Art/UI/hptabs/stone_hp");
+    }
+.class-tab__art--nightveil {
+    background-image: url("/Assets/Art/UI/hptabs/night_hp");
+    }
+.class-tab__art--verdant {
+    background-image: url("/Assets/Art/UI/hptabs/verdant_hp");  
+    }
+.class-tab__art--gravekeep {
+    background-image: url("/Assets/Art/UI/hptabs/grave_hp");
+    }
+.class-tab__art--clockwright {
+    background-image: url("/Assets/Art/UI/hptabs/clock_hp");
+    }
+.class-tab__art--tidecaller {
+    background-image: url("/Assets/Art/UI/hptabs/tide_hp");
+    }
+/* .class-tab__art--neutral {
+    background-image: url("/Assets/Art/UI/hptabs/neutral_hp");
+    } */
+
