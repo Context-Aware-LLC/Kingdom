@@ -336,7 +336,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56ad92607bff7ca478df793c378fec37
-    m_Address: card_art/grave_lantern_bearer
+    m_Address: card_art/neutral_lantern_bearer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -527,11 +527,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b5dd77eed70c52428ef2858f0369339
     m_Address: card_art/tide_undertow
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8db92d31ebfea4c419b3f4d7caa9ea41
-    m_Address: card_art/grove_mender
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

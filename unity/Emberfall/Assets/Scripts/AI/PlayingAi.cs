@@ -21,7 +21,7 @@ namespace Emberfall.AI
     /// <para><b>2026-07-22 — three holes closed.</b> This could not target, could not swing a weapon,
     /// and never used the hero power. That reads as mild weakness until you notice it lands
     /// asymmetrically: EMBERWARD's removal is <c>ANY_CHARACTER</c> (flame_bolt, ember_scorch) and its
-    /// weapon is ember_cinder_lance, while TIDECALLER's frost_ripple auto-resolves and deep_bargain
+    /// weapon is ember_cinder_lance, while TIDECALLER's tide_frost_ripple auto-resolves and deep_bargain
     /// just draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were —
     /// found when the soak reported a 72.5/27.5 split that turned out to be this bug, not the cards.
     /// In the shipped single-player game it meant the AI played EMBERWARD with a third of its deck

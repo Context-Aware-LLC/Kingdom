@@ -31,7 +31,7 @@
     --type-h2: 22px;
     --type-body: 18px;
     --type-label: 16px;
-    --type-caption: 13px;
+    --type-caption: 14px;
 
     /* --- Semantic / system palette (§4.3, dark-first §4.5) --- */
     --surface-0: rgb(11, 14, 19);
@@ -59,8 +59,13 @@
     --class-tidecaller: rgb(31, 138, 143);
     --class-gravekeep: rgb(126, 107, 158);
     --class-verdant: rgb(75, 154, 84);
+    --class-tempest: rgb(16, 14, 150);
+    --class-clockwright: rgb(114, 101, 61);
+    --class-stonewarden: rgb(107, 129, 141);
+    --class-nightveil: rgb(35, 5, 78);
 }
 
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);
 }
+

@@ -86,7 +86,7 @@ namespace Emberfall.Net.Protocol.Tests
             var cards = new List<DeckCardLine>
             {
                 new DeckCardLine("ember_recruit", 2),
-                new DeckCardLine("core_stoneback", 1),
+                new DeckCardLine("neutral_stoneback_sentry", 1),
             };
             var m = RoundTrip<SubmitDeckMsg>(
                 new SubmitDeckMsg("char-7", CardClass.GRAVEKEEP, CardClass.VERDANT, cards));
@@ -95,7 +95,7 @@ namespace Emberfall.Net.Protocol.Tests
             Assert.That(m.SecondaryClass, Is.EqualTo(CardClass.VERDANT));
             Assert.That(m.Cards, Has.Count.EqualTo(2));
             Assert.That((m.Cards[0].CardId, m.Cards[0].Count), Is.EqualTo(("ember_recruit", 2)));
-            Assert.That((m.Cards[1].CardId, m.Cards[1].Count), Is.EqualTo(("core_stoneback", 1)));
+            Assert.That((m.Cards[1].CardId, m.Cards[1].Count), Is.EqualTo(("neutral_stoneback_sentry", 1)));
         }
 
         [Test]
