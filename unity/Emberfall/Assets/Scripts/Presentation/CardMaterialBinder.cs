@@ -17,7 +17,9 @@ namespace Emberfall.Presentation
     ///                     DamageApplied/HealthRestored
     ///   _ShroudAmount  → bodyRenderer   SG_Shroud alpha body — tween to 0.6 (not 1; keeps card readable)
     ///   _FrostAmount    → frostRenderer  SG_Frost — tween 0↔1 on AuraSet.Frosted change (0.3s)
-    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) | AttackReadiness.Ready
+    ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) only — attack-readiness
+    ///                     used to also light it gold; Sam ruled it hideous and a duplicate of the
+    ///                     exhausted-dim cue (CardPresenter.cs), removed 2026-08-16
     ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Bulwark is spatial (row offset)
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
@@ -98,18 +100,17 @@ namespace Emberfall.Presentation
         // overriding it, so every non-targeting signal keeps looking exactly as it always has.
         private static readonly Color DefaultGlowColor = new Color(1.6f, 1.3f, 0.2f, 1f);
 
-        // A deliberately different color from the shared gold (Sam, 2026-08-09): Arcane Surge,
-        // attack-readiness and Aegis all glow the identical gold, so a player cannot tell
-        // "this is a legal spell/herald target" apart from any of the other reasons a card
-        // might already be lit up. Cyan reads as a distinct, unclaimed signal against a
-        // gold-heavy board.
+        // A deliberately different color from the shared gold (Sam, 2026-08-09): Arcane Surge
+        // and Aegis both glow the identical gold, so a player cannot tell "this is a legal
+        // spell/herald target" apart from any of the other reasons a card might already be lit
+        // up. Cyan reads as a distinct, unclaimed signal against a gold-heavy board.
         private static readonly Color TargetGlowColor = new Color(0.2f, 1.4f, 1.6f, 1f);
 
-        // Glow overlay is shared by two signals: Arcane Surge aura and can-attack readiness.
-        // Either keeps it on. While targeting is armed (_targetOverride set by BoardController
-        // from InputRouter.TargetingChanged) the normal signals are suppressed so ONLY valid
-        // targets glow — targeting-state visibility beats readiness noise for the duration of
-        // the aim.
+        // Glow overlay signals Arcane Surge only (Sam, 2026-08-16: attack-readiness used to also
+        // light it gold — every minion lighting up gold the instant it could attack was "hideous"
+        // and redundant with the exhausted-dim cue CardPresenter already applies to the opposite
+        // state). While targeting is armed (_targetOverride set by BoardController from
+        // InputRouter.TargetingChanged) the normal signal is suppressed so ONLY valid targets glow.
         private void ApplyGlow()
         {
             if (_glowRenderer == null) return;
@@ -121,9 +122,8 @@ namespace Emberfall.Presentation
                     isValidTarget ? TargetGlowColor : DefaultGlowColor);
                 return;
             }
-            bool auraGlow  = _live != null && (_live.Auras & AuraSet.Glow) != 0;
-            bool readyGlow = _live != null && _live.AttackReadiness == AttackReadiness.Ready;
-            _glowRenderer.enabled = auraGlow || readyGlow;
+            bool auraGlow = _live != null && (_live.Auras & AuraSet.Glow) != 0;
+            _glowRenderer.enabled = auraGlow;
             PushColorTo(_glowRenderer, ShaderIds.GlowColor, DefaultGlowColor);
         }
 

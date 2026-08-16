@@ -44,11 +44,18 @@ namespace Emberfall.Presentation
         // pixel count is either a hair-trigger on mobile or unreachable on desktop.
         private static float DragThresholdPx => Screen.dpi > 1f ? Mathf.Max(10f, Screen.dpi * 0.06f) : 10f;
 
+        // Depth a dragged card lifts to, so it draws in front of the whole hand fan and board row
+        // (fan staggers to -0.27, HandCardHover's reveal reaches -0.40). Reuses the exact value the
+        // deleted AimLineView drew at (AimZ) rather than inventing a new one.
+        private const float DragLiftZ = -1.5f;
+
         private Gesture       _gesture;
         private DragSource    _source;
         private Vector2       _pressPos;
         private CardPresenter _sourcePresenter;
         private Transform     _sourceTransform;
+        private Vector3       _sourceRestLocalPos;
+        private Quaternion    _sourceRestLocalRot;
         private bool          _sourceIsOwnHero;
 
         private readonly PointerSampler _pointer = new PointerSampler();
@@ -201,6 +208,7 @@ namespace Emberfall.Presentation
             _sourceTransform = hitTransform;
             _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
             _gesture         = Gesture.Pressed;
+            CaptureSourceRestPose(hitTransform);
         }
 
         private void OnPointerHeld(Vector2 screenPos)
@@ -212,6 +220,40 @@ namespace Emberfall.Presentation
                 ArmVisuals();
             }
 
+            if (_gesture == Gesture.Dragging) FollowPointer(screenPos);
+        }
+
+        /// <summary>Remembers where a source card rests so a cancelled drag can put it back
+        /// exactly, rather than merely zeroing it (see <see cref="RestoreSourceVisual"/>).</summary>
+        private void CaptureSourceRestPose(Transform t)
+        {
+            if (t == null) return;
+            _sourceRestLocalPos = t.localPosition;
+            _sourceRestLocalRot = t.localRotation;
+        }
+
+        /// <summary>
+        /// The source card lifts to <see cref="DragLiftZ"/> and tracks the pointer for the rest of
+        /// the gesture (Sam, 2026-08-16). #173/#174 removed every other drag-in-progress cue — the
+        /// aim line and the picked-up card's own selection glow — leaving nothing on screen that
+        /// distinguished an active drag from a completed tap, on a card with no legal-target set to
+        /// glow cyan (a plain vanilla minion, say). Hero and hero-power sources are excluded: they
+        /// carry other UI this has never been asked to move.
+        /// </summary>
+        private void FollowPointer(Vector2 screenPos)
+        {
+            if (_sourceTransform == null || _sourceIsOwnHero) return;
+            if (_source.Kind == DragSourceKind.HeroPower) return;
+
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            float planeDistance = -cam.transform.position.z;
+            Vector3 world = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, planeDistance));
+            world.z = DragLiftZ;
+
+            _sourceTransform.position = world;
+            _sourceTransform.rotation = Quaternion.identity;
         }
 
         private void OnPointerReleased(Vector2 screenPos)
@@ -250,11 +292,15 @@ namespace Emberfall.Presentation
             _sourceTransform = hitTransform;
             _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
             _gesture         = Gesture.Pressed;
+            CaptureSourceRestPose(hitTransform);
             ArmByTap();
         }
 
         /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
-        /// we entered AwaitingEffectTarget (two-step herald), in which case we stay armed.</summary>
+        /// we entered AwaitingEffectTarget (two-step herald), in which case we stay armed. A drop
+        /// that produced nothing restores the source's visual position — one that succeeded leaves
+        /// it at the drop point, because the coming state sync is about to relocate it for real, and
+        /// snapping it back first would just be a flicker on the way there.</summary>
         private bool TryResolve(PointerSubject released, DropPoint drop)
         {
             PlayerIntent intent = _model.Resolve(_source, released, drop);
@@ -268,7 +314,7 @@ namespace Emberfall.Presentation
                 return true;   // Consumed the release; no intent submitted yet.
             }
 
-            CancelGesture();
+            CancelGesture(restoreVisual: intent == null);
             if (intent == null) return false;
             Submit(intent);
             return true;
@@ -311,10 +357,13 @@ namespace Emberfall.Presentation
             RefreshTargeting();
         }
 
-        private void CancelGesture()
+        /// <param name="restoreVisual">Put the source card back at its rest pose. False only from
+        /// <see cref="TryResolve"/>'s success path — see its comment.</param>
+        private void CancelGesture(bool restoreVisual = true)
         {
             _sourcePresenter?.SetSelectionHighlight(false);
             _p0HeroPlate?.SetSelected(false);
+            if (restoreVisual) RestoreSourceVisual();
             _sourcePresenter = null;
             _sourceTransform = null;
             _sourceIsOwnHero = false;
@@ -325,6 +374,15 @@ namespace Emberfall.Presentation
             // Clear any awaiting-effect-target state (two-step herald).
             if (_model != null)
                 _model.Phase = DragTargetingModel.TargetingPhase.Direct;
+        }
+
+        /// <summary>Undoes <see cref="FollowPointer"/> — puts a source card back exactly where it
+        /// was picked up from. A no-op for hero/hero-power sources, which FollowPointer never moved.</summary>
+        private void RestoreSourceVisual()
+        {
+            if (_sourceTransform == null) return;
+            _sourceTransform.localPosition = _sourceRestLocalPos;
+            _sourceTransform.localRotation = _sourceRestLocalRot;
         }
 
         private void OnApplicationFocus(bool hasFocus)
