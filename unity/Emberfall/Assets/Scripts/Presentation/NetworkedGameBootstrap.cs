@@ -210,7 +210,29 @@ namespace Emberfall.Presentation
                 yield break;
             }
 
-            while (!connect.IsCompleted) yield return null;
+            // Bound the CONNECTING phase only, never pairing. ConnectAsync does not resolve until
+            // the match starts, so a blanket timeout would abandon a legitimate matchmaking queue;
+            // once the server has answered and we reach Pairing, the wait is unbounded on purpose.
+            //
+            // Why this exists: a half-open server — Fly's proxy terminating TLS with no healthy
+            // machine behind it — accepts TCP and then answers nothing, so the WebSocket upgrade
+            // never completes and ConnectAsync hangs forever. The failure branch below was
+            // unreachable, and the player sat on "Connecting…" with no error and nothing logged.
+            // That is how a crash-looping server presented as a silent client hang (2026-08-16).
+            const float connectTimeoutSeconds = 20f;
+            float connectDeadline = Time.realtimeSinceStartup + connectTimeoutSeconds;
+            while (!connect.IsCompleted)
+            {
+                if (_net.State == ConnectionState.Connecting && Time.realtimeSinceStartup > connectDeadline)
+                {
+                    Debug.LogError($"[NetworkedGameBootstrap] no answer from {serverUrl} after " +
+                                   $"{connectTimeoutSeconds:0}s — still Connecting, so the socket opened " +
+                                   $"but the server never completed the handshake.");
+                    BootFailed("Couldn't reach the server — it isn't responding.");
+                    yield break;
+                }
+                yield return null;
+            }
             if (connect.IsFaulted || _net.State != ConnectionState.Live)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
