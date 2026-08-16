@@ -32,7 +32,7 @@
     "artId": "ember_zealot"
   },
   {
-    "id": "flame_bolt",
+    "id": "ember_flame_bolt",
     "name": "Flame Bolt",
     "type": "SPELL",
     "cost": 1,
@@ -66,7 +66,7 @@
     "artId": "ember_flame_bolt"
   },
   {
-    "id": "cinder_drake",
+    "id": "ember_cinder_drake",
     "name": "Cinder Drake",
     "type": "MINION",
     "cost": 4,
@@ -189,7 +189,7 @@
     "artId": "tide_wave_caller"
   },
   {
-    "id": "stone_sentry",
+    "id": "neutral_stone_sentry",
     "name": "Stone Sentry",
     "type": "MINION",
     "cost": 3,
@@ -207,7 +207,7 @@
     "artId": "stone_sentry"
   },
   {
-    "id": "wandering_scout",
+    "id": "neutral_wandering_scout",
     "name": "Wandering Scout",
     "type": "MINION",
     "cost": 1,
@@ -2034,7 +2034,7 @@
     "artId": "thistleguard_sprig"
   },
   {
-    "id": "relic_bound_revenant",
+    "id": "neutral_relic_bound_revenant",
     "name": "Bound Revenant",
     "type": "MINION",
     "cost": 3,
@@ -2053,7 +2053,7 @@
     "artId": "bound_revenant"
   },
   {
-    "id": "relic_corpse_cart",
+    "id": "neutral_relic_corpse_cart",
     "name": "Corpse Cart",
     "type": "MINION",
     "cost": 2,

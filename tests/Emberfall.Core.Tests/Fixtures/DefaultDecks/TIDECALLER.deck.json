@@ -6,31 +6,31 @@
   "seed": 64159285250,
   "entries": [
     {
-      "id": "ember_blazewing",
+      "id": "ember_ashfall_wyrm",
       "count": 1
     },
     {
-      "id": "ember_emberdrinker",
+      "id": "ember_cinder_lance",
       "count": 1
     },
     {
-      "id": "ember_magmacore_warden",
+      "id": "ember_flame_bolt",
       "count": 1
     },
     {
-      "id": "ember_recruit",
+      "id": "ember_heat_surge",
       "count": 1
     },
     {
-      "id": "ember_scorch_blade",
-      "count": 2
+      "id": "ember_pyras_wrath",
+      "count": 1
+    },
+    {
+      "id": "ember_scalded_striker",
+      "count": 1
     },
     {
       "id": "ember_stoke_the_coals",
-      "count": 1
-    },
-    {
-      "id": "ember_twin_flame",
       "count": 1
     },
     {
@@ -38,19 +38,11 @@
       "count": 1
     },
     {
-      "id": "flame_bolt",
-      "count": 1
-    },
-    {
       "id": "neutral_bog_crawler",
       "count": 1
     },
     {
-      "id": "neutral_bonehound",
-      "count": 1
-    },
-    {
-      "id": "neutral_emberling",
+      "id": "neutral_choking_vines",
       "count": 1
     },
     {
@@ -62,35 +54,35 @@
       "count": 1
     },
     {
-      "id": "neutral_lifeclaw_bat",
-      "count": 1
-    },
-    {
-      "id": "neutral_spellwarden",
-      "count": 1
-    },
-    {
-      "id": "neutral_veilstalker",
-      "count": 1
-    },
-    {
-      "id": "relic_bound_revenant",
+      "id": "neutral_razorcoil_adder",
       "count": 2
     },
     {
-      "id": "relic_corpse_cart",
+      "id": "neutral_relic_corpse_cart",
       "count": 1
     },
     {
-      "id": "tide_coldsnap_knife",
+      "id": "neutral_searing_quill",
+      "count": 1
+    },
+    {
+      "id": "neutral_soulbound_revenant",
+      "count": 2
+    },
+    {
+      "id": "neutral_stone_sentry",
+      "count": 1
+    },
+    {
+      "id": "tide_abyssal_devourer",
+      "count": 1
+    },
+    {
+      "id": "tide_deep_bargain",
       "count": 1
     },
     {
       "id": "tide_deep_channel",
-      "count": 1
-    },
-    {
-      "id": "tide_deepfrost_spear",
       "count": 1
     },
     {
@@ -99,18 +91,30 @@
     },
     {
       "id": "tide_frostwhisper",
-      "count": 2
+      "count": 1
+    },
+    {
+      "id": "tide_hollowshell_warden",
+      "count": 1
+    },
+    {
+      "id": "tide_icecrown_herald",
+      "count": 1
+    },
+    {
+      "id": "tide_icescale_whelp",
+      "count": 1
     },
     {
       "id": "tide_initiate",
       "count": 1
     },
     {
-      "id": "tide_undertow",
+      "id": "tide_reefguard",
       "count": 1
     },
     {
-      "id": "tide_venomfin",
+      "id": "tide_wave_caller",
       "count": 1
     }
   ]

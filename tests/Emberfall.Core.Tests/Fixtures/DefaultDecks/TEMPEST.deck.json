@@ -6,10 +6,6 @@
   "seed": 64159285256,
   "entries": [
     {
-      "id": "cinder_drake",
-      "count": 1
-    },
-    {
       "id": "ember_blazewing",
       "count": 1
     },
@@ -18,15 +14,11 @@
       "count": 1
     },
     {
+      "id": "ember_flame_bolt",
+      "count": 1
+    },
+    {
       "id": "ember_fusillade",
-      "count": 1
-    },
-    {
-      "id": "ember_kiln_warden",
-      "count": 1
-    },
-    {
-      "id": "ember_magmacore_warden",
       "count": 1
     },
     {
@@ -47,11 +39,7 @@
     },
     {
       "id": "ember_scorch_blade",
-      "count": 1
-    },
-    {
-      "id": "ember_stoke_the_coals",
-      "count": 1
+      "count": 2
     },
     {
       "id": "neutral_arclight_adept",
@@ -78,35 +66,43 @@
       "count": 1
     },
     {
-      "id": "neutral_phantom_duelist",
+      "id": "neutral_relic_corpse_cart",
       "count": 1
     },
     {
-      "id": "neutral_razorcoil_adder",
+      "id": "neutral_soulbound_revenant",
       "count": 1
     },
     {
-      "id": "neutral_searing_quill",
+      "id": "neutral_stone_sentry",
       "count": 2
     },
     {
-      "id": "storm_chain_lightning",
+      "id": "neutral_stoneback_sentry",
       "count": 1
     },
     {
-      "id": "storm_galecleaver",
+      "id": "storm_crackle",
+      "count": 1
+    },
+    {
+      "id": "storm_gust_sprite",
       "count": 2
     },
     {
-      "id": "storm_hurricane",
-      "count": 2
+      "id": "storm_spark_imp",
+      "count": 1
     },
     {
       "id": "storm_static_discharge",
-      "count": 1
+      "count": 2
     },
     {
       "id": "storm_static_shock",
+      "count": 1
+    },
+    {
+      "id": "storm_tempest_striker",
       "count": 1
     }
   ]

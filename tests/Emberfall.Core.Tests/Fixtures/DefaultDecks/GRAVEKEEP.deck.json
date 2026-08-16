@@ -6,27 +6,27 @@
   "seed": 64159285251,
   "entries": [
     {
-      "id": "cinder_drake",
+      "id": "ember_ashfall_wyrm",
       "count": 1
     },
     {
-      "id": "ember_blazewing",
+      "id": "ember_cinder_drake",
+      "count": 1
+    },
+    {
+      "id": "ember_overheat_golem",
+      "count": 1
+    },
+    {
+      "id": "ember_scorch",
       "count": 2
-    },
-    {
-      "id": "ember_recruit",
-      "count": 1
-    },
-    {
-      "id": "ember_scorch_blade",
-      "count": 1
     },
     {
       "id": "ember_stoke_the_coals",
-      "count": 2
+      "count": 1
     },
     {
-      "id": "ember_vanguard_drake",
+      "id": "ember_twin_flame",
       "count": 1
     },
     {
@@ -34,15 +34,11 @@
       "count": 1
     },
     {
-      "id": "flame_bolt",
-      "count": 1
-    },
-    {
       "id": "grave_ashen_archivist",
       "count": 1
     },
     {
-      "id": "grave_bell_maul",
+      "id": "grave_bell_novice",
       "count": 1
     },
     {
@@ -50,15 +46,19 @@
       "count": 2
     },
     {
-      "id": "grave_deathweaver",
-      "count": 1
-    },
-    {
       "id": "grave_gatewatch_whelp",
       "count": 1
     },
     {
+      "id": "grave_harrower_of_ash",
+      "count": 1
+    },
+    {
       "id": "grave_last_rite",
+      "count": 1
+    },
+    {
+      "id": "grave_sable_watcher",
       "count": 1
     },
     {
@@ -74,6 +74,14 @@
       "count": 1
     },
     {
+      "id": "neutral_doublestrike_hawk",
+      "count": 1
+    },
+    {
+      "id": "neutral_ironclad_bulwark",
+      "count": 1
+    },
+    {
       "id": "neutral_phantom_duelist",
       "count": 2
     },
@@ -82,31 +90,23 @@
       "count": 1
     },
     {
-      "id": "neutral_searing_quill",
+      "id": "neutral_relic_bound_revenant",
       "count": 1
     },
     {
-      "id": "neutral_soulbound_revenant",
+      "id": "neutral_relic_corpse_cart",
       "count": 1
     },
     {
-      "id": "neutral_throneless_king",
-      "count": 1
+      "id": "neutral_stoneback_sentry",
+      "count": 2
     },
     {
-      "id": "neutral_veilstalker",
+      "id": "neutral_thistleguard_sprig",
       "count": 1
     },
     {
       "id": "neutral_venomscale_drake",
-      "count": 1
-    },
-    {
-      "id": "relic_bound_revenant",
-      "count": 1
-    },
-    {
-      "id": "stone_sentry",
       "count": 1
     }
   ]

@@ -132,7 +132,7 @@ namespace Emberfall.Presentation
             // keywords — can never reach this line. It exists solely for CardRevealVerify's enum
             // walk. The copy here used to read "Herald — give a friendly minion +1/+1", which the
             // engine never guaranteed: REINFORCE is a bare +1/+1 (BuffHandler hardcodes 1/1) with no
-            // timing of its own, and rekind_grave_memorial_wisp applies it ON_DEATH. Card text now
+            // timing of its own, and grave_memorial_wisp applies it ON_DEATH. Card text now
             // prints the stats directly instead of a marker (CardTextGenerator), so no player ever
             // meets this word and no glossary entry is owed for it.
             Keyword.REINFORCE =>

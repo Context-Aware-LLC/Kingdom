@@ -42,7 +42,7 @@ namespace Emberfall.Editor
 
         // A minion with real illustration + frame chrome, so the flatten is exercised across art,
         // frame, gem, keyword icons and six TMP labels rather than a bare body quad.
-        private const string CardId = "cinder_drake";
+        private const string CardId = "ember_cinder_drake";
 
         [MenuItem("Emberfall/Preview Card Dissolve (offscreen)")]
         public static void Render()
@@ -118,7 +118,7 @@ namespace Emberfall.Editor
             {
                 AddBackdrop(root.transform);
 
-                string[] ids     = { "ember_recruit", "ember_zealot", "cinder_drake" };
+                string[] ids     = { "ember_recruit", "ember_zealot", "ember_cinder_drake" };
                 float[]  amounts = { 0.2f, 0.45f, 0.7f };
 
                 for (int i = 0; i < ids.Length; i++)

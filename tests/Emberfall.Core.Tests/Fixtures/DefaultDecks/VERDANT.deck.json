@@ -6,75 +6,67 @@
   "seed": 64159285252,
   "entries": [
     {
-      "id": "cinder_drake",
-      "count": 1
-    },
-    {
-      "id": "ember_cinderplate_golem",
-      "count": 1
+      "id": "ember_ashfall_wyrm",
+      "count": 2
     },
     {
       "id": "ember_emberdrinker",
       "count": 1
     },
     {
-      "id": "ember_fusillade",
+      "id": "ember_heat_surge",
       "count": 1
     },
     {
-      "id": "ember_kiln_warden",
+      "id": "ember_recruit",
       "count": 1
     },
     {
-      "id": "ember_overheat_golem",
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
-      "id": "ember_pyras_wrath",
-      "count": 1
-    },
-    {
-      "id": "ember_scorch",
-      "count": 1
+      "id": "ember_stoke_the_coals",
+      "count": 2
     },
     {
       "id": "ember_twin_flame",
       "count": 1
     },
     {
-      "id": "ember_zealot",
+      "id": "ember_vanguard_drake",
       "count": 1
     },
     {
-      "id": "flame_bolt",
+      "id": "neutral_arclight_adept",
       "count": 1
     },
     {
-      "id": "neutral_bog_crawler",
+      "id": "neutral_doublestrike_hawk",
       "count": 1
     },
     {
       "id": "neutral_emberling",
-      "count": 2
+      "count": 1
     },
     {
       "id": "neutral_galewind_runner",
       "count": 1
     },
     {
+      "id": "neutral_hollow_acolyte",
+      "count": 1
+    },
+    {
       "id": "neutral_lantern_bearer",
+      "count": 1
+    },
+    {
+      "id": "neutral_stone_sentry",
       "count": 2
     },
     {
-      "id": "neutral_searing_quill",
-      "count": 1
-    },
-    {
-      "id": "neutral_soulbound_revenant",
-      "count": 1
-    },
-    {
-      "id": "neutral_spellwarden",
+      "id": "neutral_throneless_king",
       "count": 1
     },
     {
@@ -82,11 +74,11 @@
       "count": 1
     },
     {
-      "id": "relic_corpse_cart",
-      "count": 2
+      "id": "neutral_venomscale_drake",
+      "count": 1
     },
     {
-      "id": "verdant_bramblehide_guardian",
+      "id": "neutral_wandering_scout",
       "count": 1
     },
     {
@@ -94,19 +86,31 @@
       "count": 1
     },
     {
-      "id": "verdant_ironbark_elder",
-      "count": 2
-    },
-    {
-      "id": "verdant_mosshide_stag",
+      "id": "verdant_grove_mender",
       "count": 1
     },
     {
-      "id": "verdant_thorn_swarm",
+      "id": "verdant_menders_bloom",
       "count": 1
     },
     {
-      "id": "wandering_scout",
+      "id": "verdant_sapsurge",
+      "count": 1
+    },
+    {
+      "id": "verdant_thalens_ancient",
+      "count": 1
+    },
+    {
+      "id": "verdant_thornback_cub",
+      "count": 1
+    },
+    {
+      "id": "verdant_thornfang_matron",
+      "count": 1
+    },
+    {
+      "id": "verdant_wild_bloom",
       "count": 1
     }
   ]

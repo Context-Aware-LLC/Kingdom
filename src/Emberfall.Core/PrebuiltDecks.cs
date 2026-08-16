@@ -26,13 +26,13 @@ namespace Emberfall.Core
             // EMBERWARD class cards (2x each Common/Rare; 1x Legendary)
             "ember_recruit",         "ember_recruit",
             "ember_zealot",          "ember_zealot",
-            "flame_bolt",            "flame_bolt",
+            "ember_flame_bolt",            "ember_flame_bolt",
             "ember_scorch",          "ember_scorch",
-            "cinder_drake",
+            "ember_cinder_drake",
             "ember_overheat_golem",
             "ember_cinder_lance",    "ember_cinder_lance",
             // Neutral fill
-            "stone_sentry",          "stone_sentry",
+            "neutral_stone_sentry",          "neutral_stone_sentry",
             "neutral_emberling",        "neutral_emberling",
             "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
             "neutral_hollow_acolyte",
@@ -49,8 +49,8 @@ namespace Emberfall.Core
             "tide_deep_bargain",
             "tide_wave_caller",
             // Neutral fill
-            "stone_sentry",          "stone_sentry",
-            "wandering_scout",       "wandering_scout",
+            "neutral_stone_sentry",          "neutral_stone_sentry",
+            "neutral_wandering_scout",       "neutral_wandering_scout",
             "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
             "neutral_bonehound",        "neutral_bonehound",
             "neutral_hollow_acolyte",

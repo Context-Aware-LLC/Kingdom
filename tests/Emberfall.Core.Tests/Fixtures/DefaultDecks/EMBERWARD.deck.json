@@ -6,19 +6,23 @@
   "seed": 64159285249,
   "entries": [
     {
-      "id": "cinder_drake",
-      "count": 2
-    },
-    {
-      "id": "ember_blazewing",
+      "id": "ember_ashfall_wyrm",
       "count": 1
     },
     {
-      "id": "ember_kiln_warden",
+      "id": "ember_cinder_drake",
       "count": 1
     },
     {
-      "id": "ember_overheat_golem",
+      "id": "ember_forgeheart_colossus",
+      "count": 1
+    },
+    {
+      "id": "ember_fusillade",
+      "count": 1
+    },
+    {
+      "id": "ember_recruit",
       "count": 1
     },
     {
@@ -34,35 +38,51 @@
       "count": 1
     },
     {
-      "id": "ember_stoke_the_coals",
-      "count": 2
+      "id": "ember_twin_flame",
+      "count": 1
     },
     {
       "id": "ember_vanguard_drake",
       "count": 1
     },
     {
-      "id": "ember_zealot",
+      "id": "neutral_arclight_adept",
       "count": 1
     },
     {
-      "id": "flame_bolt",
-      "count": 1
+      "id": "neutral_bog_crawler",
+      "count": 2
     },
     {
       "id": "neutral_bonehound",
-      "count": 2
+      "count": 1
+    },
+    {
+      "id": "neutral_choking_vines",
+      "count": 1
     },
     {
       "id": "neutral_duneborn_construct",
       "count": 1
     },
     {
-      "id": "neutral_searing_quill",
+      "id": "neutral_razorcoil_adder",
       "count": 1
     },
     {
-      "id": "neutral_throneless_king",
+      "id": "neutral_relic_bound_revenant",
+      "count": 2
+    },
+    {
+      "id": "neutral_relic_corpse_cart",
+      "count": 1
+    },
+    {
+      "id": "neutral_stoneback_sentry",
+      "count": 2
+    },
+    {
+      "id": "neutral_thistleguard_sprig",
       "count": 1
     },
     {
@@ -70,15 +90,7 @@
       "count": 1
     },
     {
-      "id": "relic_bound_revenant",
-      "count": 1
-    },
-    {
-      "id": "tide_coldsnap_knife",
-      "count": 1
-    },
-    {
-      "id": "tide_deep_channel",
+      "id": "tide_deep_bargain",
       "count": 1
     },
     {
@@ -86,23 +98,11 @@
       "count": 2
     },
     {
-      "id": "tide_fathom_crush",
+      "id": "tide_hoarfrost_lash",
       "count": 2
     },
     {
-      "id": "tide_glacial_echo",
-      "count": 1
-    },
-    {
-      "id": "tide_hollowshell_warden",
-      "count": 1
-    },
-    {
-      "id": "tide_icecrown_herald",
-      "count": 1
-    },
-    {
-      "id": "tide_icescale_whelp",
+      "id": "tide_reefguard",
       "count": 1
     }
   ]

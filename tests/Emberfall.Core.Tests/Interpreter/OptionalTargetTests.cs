@@ -219,7 +219,7 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void One_Binding_Can_Fizzle_While_Another_Is_Still_Owed()
         {
-            // The shipped shape of rekind_tide_tidal_emissary: an enemy target (the hero always
+            // The shipped shape of tide_tidal_emissary: an enemy target (the hero always
             // exists) plus a friendly-minion target that may have nowhere to go.
             var emissary = Card("emissary", CardType.MINION,
                 TestRules.Rule("r1", Trigger.ON_PLAY,

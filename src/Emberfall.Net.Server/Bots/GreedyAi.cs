@@ -18,7 +18,7 @@ namespace Emberfall.Net.Server.Bots
     /// <para><b>2026-07-22 — the three holes that invalidated the first 200-match run.</b> The
     /// original could not (1) target, (2) equip-and-swing a weapon, or (3) use the hero power. That
     /// reads as a mild weakness until you notice it is not evenly distributed: EMBERWARD's removal is
-    /// <c>ANY_CHARACTER</c> (flame_bolt ×2, ember_scorch ×2) and its weapon is ember_cinder_lance ×2,
+    /// <c>ANY_CHARACTER</c> (ember_flame_bolt ×2, ember_scorch ×2) and its weapon is ember_cinder_lance ×2,
     /// while TIDECALLER's tide_frost_ripple auto-resolves via <c>ENEMY_MINIONS</c> and deep_bargain just
     /// draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were, which
     /// produced a 72.5/27.5 split that was a harness artifact end to end. A driver's weaknesses have

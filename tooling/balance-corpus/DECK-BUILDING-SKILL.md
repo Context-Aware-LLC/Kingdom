@@ -97,7 +97,7 @@ Read from the whole pool, not from a handful of marquee cards.
   condition simply draws out.
 - **CLOCKWRIGHT** — card advantage and board-wide pumps. Its `ON_DEATH: DRAW` bodies pair naturally
   with Stonewarden's walls (both *want* to be attacked), and its `MODIFY_STATS -> FRIENDLY_MINIONS`
-  effects are the answer to Stonewarden's attack problem. `rekind_clock_cogsworth` turning a board
+  effects are the answer to Stonewarden's attack problem. `clock_cogsworth` turning a board
   of 0/3 tokens into 2/5s is the clearest example of the pairing working.
 - **TEMPEST** — reach and `DOUBLESTRIKE`. Damage that may go to the enemy hero, plus minions that
   attack twice, so a pump on a Tempest body is worth double. The tax is `BACKDRAFT` on its best
@@ -119,15 +119,15 @@ Rekindling (`rekind_*`) is not a power-creep set; it is a *shape* set. The patte
 cards is a second small effect stapled onto a familiar body.
 
 - **A Rekindling card is usually the better version of an Emberfall card at the same cost**, at the
-  price of being narrower. `rekind_grave_tomb_warden` (1/3, `BULWARK`, `ON_DEATH: draw 1`) does two
+  price of being narrower. `grave_tomb_warden` (1/3, `BULWARK`, `ON_DEATH: draw 1`) does two
   jobs where `grave_deathweaver` does one. Prefer Rekindling for a slot you already knew you wanted;
   prefer Emberfall when you want flexibility.
 - **`REINFORCE` is Rekindling's signature rider.** It appears on a dozen cards
-  (`rekind_clock_assembly_line`, `rekind_stone_iron_foundation`, `rekind_verdant_wildbloom_surge`)
+  (`clock_assembly_line`, `ward_iron_foundation`, `verdant_wildbloom_surge`)
   and is worth +1/+1. On a wide board it is quietly one of the strongest riders available, which is
   why the go-wide decks here lean on it.
-- **The Rekindling legendaries are build-arounds, not just big bodies.** `rekind_stone_aldric` and
-  `rekind_clock_cogsworth` each convert a stalled board into a threat in one card. If a deck wants a
+- **The Rekindling legendaries are build-arounds, not just big bodies.** `ward_aldric` and
+  `clock_cogsworth` each convert a stalled board into a threat in one card. If a deck wants a
   top end, check that class's Rekindling legendary first.
 - **How much Rekindling a deck ends up with is an outcome, not a target.** These three landed at
   12, 13 and 4 cards of 30 respectively — the aggro deck is low because Emberfall's Tempest spells
@@ -154,7 +154,7 @@ cards is a second small effect stapled onto a familiar body.
 - **Trusting a keyword's name.** See the table above. `BACKDRAFT` and `SHROUD` both do something
   other than what they sound like, and both change deck construction.
 - **Shrouding your own walls.** A board-wide grant of `SHROUD` (`night_vanishing_act`,
-  `rekind_night_seraphine`) is anti-synergy with a `BULWARK` deck. It protects a deck whose threats
+  `night_seraphine`) is anti-synergy with a `BULWARK` deck. It protects a deck whose threats
   are not blockers.
 - **Reporting counts you did not read off a script.** Run `validate_decks.py` and paste what it
   printed. See the top-level `CLAUDE.md` for why this is a hard rule.

@@ -209,10 +209,10 @@ namespace Emberfall.Core.Tests.CardValidation
             {
                 "storm_lightning_storm",
                 "verdant_thorn_swarm",
-                "rekind_night_double_agent",
-                "rekind_tempest_voltaic_sentinel",
-                "rekind_tempest_stormcallers_pact",
-                "rekind_tempest_vael",
+                "night_double_agent",
+                "storm_voltaic_sentinel",
+                "storm_stormcallers_pact",
+                "storm_vael",
             };
 
             List<CardDefinition> cards = LoadAllCards();

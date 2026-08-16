@@ -6,43 +6,27 @@
   "seed": 64159285255,
   "entries": [
     {
-      "id": "cinder_drake",
+      "id": "ember_kiln_warden",
       "count": 1
     },
     {
-      "id": "ember_ashfall_wyrm",
-      "count": 1
-    },
-    {
-      "id": "ember_cinderplate_golem",
-      "count": 1
-    },
-    {
-      "id": "ember_heat_surge",
+      "id": "ember_pyras_wrath",
       "count": 1
     },
     {
       "id": "ember_recruit",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "ember_scorch",
+      "id": "ember_scalded_striker",
       "count": 1
     },
     {
       "id": "ember_scorch_blade",
-      "count": 1
+      "count": 2
     },
     {
       "id": "ember_slagshell_bulwark",
-      "count": 2
-    },
-    {
-      "id": "flame_bolt",
-      "count": 2
-    },
-    {
-      "id": "neutral_arclight_adept",
       "count": 1
     },
     {
@@ -50,52 +34,48 @@
       "count": 2
     },
     {
-      "id": "neutral_choking_vines",
-      "count": 1
-    },
-    {
-      "id": "neutral_doublestrike_hawk",
+      "id": "neutral_duneborn_construct",
       "count": 1
     },
     {
       "id": "neutral_emberling",
-      "count": 2
-    },
-    {
-      "id": "neutral_ironclad_bulwark",
       "count": 1
     },
     {
-      "id": "neutral_lantern_bearer",
+      "id": "neutral_hollow_acolyte",
       "count": 1
     },
     {
       "id": "neutral_lifeclaw_bat",
+      "count": 2
+    },
+    {
+      "id": "neutral_phantom_duelist",
       "count": 1
     },
     {
       "id": "neutral_razorcoil_adder",
-      "count": 1
+      "count": 2
     },
     {
-      "id": "neutral_searing_quill",
-      "count": 1
+      "id": "neutral_relic_corpse_cart",
+      "count": 2
     },
     {
       "id": "neutral_soulbound_revenant",
       "count": 1
     },
     {
-      "id": "neutral_stoneback_sentry",
+      "id": "neutral_thistleguard_sprig",
       "count": 1
     },
     {
-      "id": "neutral_venomscale_drake",
+      "id": "neutral_throneless_king",
       "count": 1
     },
     {
-      "id": "ward_earth_barrier",
-      "count": 1
+      "id": "neutral_veilstalker",
+      "count": 2
     },
     {
       "id": "ward_pebble_sentinel",
@@ -107,6 +87,10 @@
     },
     {
       "id": "ward_stomp",
+      "count": 2
+    },
+    {
+      "id": "ward_stone_throw",
       "count": 1
     }
   ]

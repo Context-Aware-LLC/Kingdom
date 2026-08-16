@@ -66,10 +66,10 @@ namespace Emberfall.Core.Tests.CardValidation
         /// their own candidate sets, and must resolve to whichever instance the player named for
         /// that binding — not positionally.
         ///
-        /// <para>This used to be pinned to <c>rekind_tide_tidal_emissary</c>, which carried a FROST
+        /// <para>This used to be pinned to <c>tide_tidal_emissary</c>, which carried a FROST
         /// choice and a REINFORCE choice. Sam deliberately dropped its REINFORCE half on
         /// 2026-08-15, leaving it a single-choice card that cannot exercise this at all. Repointed
-        /// at <c>rekind_ember_rekindled_flame</c>, which has the same shape and a sharper version
+        /// at <c>ember_rekindled_flame</c>, which has the same shape and a sharper version
         /// of it: the two selectors OVERLAP (ANY_MINION and ANY_FRIENDLY_MINION both contain the
         /// friendly minion), so a positional or set-based resolver would still look correct on a
         /// card whose candidate sets were disjoint. Here it cannot.</para>
@@ -82,7 +82,7 @@ namespace Emberfall.Core.Tests.CardValidation
         public void Shipped_Rekindled_Flame_Offers_And_Executes_Overlapping_Selectors_Independently()
         {
             CardDefinition flame = LoadAllSets()
-                .Single(card => card.Id == "rekind_ember_rekindled_flame");
+                .Single(card => card.Id == "ember_rekindled_flame");
             var body = Minion("body");
             var db = new FakeCardDatabase().Register(flame).Register(body);
             GameState state = State();

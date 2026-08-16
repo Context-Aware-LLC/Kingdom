@@ -74,8 +74,8 @@ namespace Emberfall.Net.Server.Tests
         public void FileCardDatabase_Loads_The_Canonical_Card_Data()
         {
             var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
-            Assert.That(db.TryGet("stone_sentry", out var def), Is.True);
-            Assert.That(def.Id, Is.EqualTo("stone_sentry"));
+            Assert.That(db.TryGet("neutral_stone_sentry", out var def), Is.True);
+            Assert.That(def.Id, Is.EqualTo("neutral_stone_sentry"));
             Assert.That(db.AllCollectible(), Is.Not.Empty);
         }
 

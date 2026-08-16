@@ -43,7 +43,7 @@ namespace Emberfall.Editor
 
         // A minion with real illustration + frame chrome, so the overlay is judged over art,
         // parchment and stat bosses rather than a flat quad.
-        private const string CardId = "cinder_drake";
+        private const string CardId = "ember_cinder_drake";
 
         [MenuItem("Emberfall/Preview Card Frost (offscreen)")]
         public static void Render()

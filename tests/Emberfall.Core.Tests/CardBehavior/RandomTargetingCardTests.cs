@@ -174,7 +174,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void MemorialWisp_Is_Live_And_Reinforces_One_Random_Friendly_Minion_On_Death()
         {
             var state = State(seed: 23);
-            CardDefinition wispDef = _db.Get("rekind_grave_memorial_wisp");
+            CardDefinition wispDef = _db.Get("grave_memorial_wisp");
             // The Wisp was the last row held behind requiresEngineeringPrimitive; it was released
             // when the seeded RANDOM target primitive landed, and the flag itself retired in
             // NOR-224. PoolEligible is the surviving witness that this row reaches live pools.

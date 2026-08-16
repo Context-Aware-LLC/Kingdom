@@ -723,7 +723,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "flame_bolt",
+      "id": "ember_flame_bolt",
       "name": "Flame Bolt",
       "type": "SPELL",
       "cost": 1,
@@ -743,7 +743,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "cinder_drake",
+      "id": "ember_cinder_drake",
       "name": "Cinder Drake",
       "type": "MINION",
       "cost": 4,
@@ -839,7 +839,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "stone_sentry",
+      "id": "neutral_stone_sentry",
       "name": "Stone Sentry",
       "type": "MINION",
       "cost": 3,
@@ -859,7 +859,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "wandering_scout",
+      "id": "neutral_wandering_scout",
       "name": "Wandering Scout",
       "type": "MINION",
       "cost": 1,
@@ -2037,7 +2037,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "relic_bound_revenant",
+      "id": "neutral_relic_bound_revenant",
       "name": "Bound Revenant",
       "type": "MINION",
       "cost": 3,
@@ -2058,7 +2058,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "relic_corpse_cart",
+      "id": "neutral_relic_corpse_cart",
       "name": "Corpse Cart",
       "type": "MINION",
       "cost": 2,
@@ -4430,7 +4430,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "rekind_neutral_reclaimed_scout",
+      "id": "neutral_reclaimed_scout",
       "name": "Reclaimed Scout",
       "type": "MINION",
       "cost": 1,
@@ -4450,7 +4450,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_alliance_messenger",
+      "id": "neutral_alliance_messenger",
       "name": "Alliance Messenger",
       "type": "MINION",
       "cost": 2,
@@ -4468,7 +4468,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_restored_bulwark",
+      "id": "neutral_restored_bulwark",
       "name": "Restored Bulwark",
       "type": "MINION",
       "cost": 3,
@@ -4488,7 +4488,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_salvaged_golem",
+      "id": "night_neutral_salvaged_golem",
       "name": "Salvaged Golem",
       "type": "MINION",
       "cost": 4,
@@ -4508,7 +4508,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_bannerman",
+      "id": "neutral_bannerman",
       "name": "New Dawn Bannerman",
       "type": "MINION",
       "cost": 4,
@@ -4528,7 +4528,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_bridge_warden",
+      "id": "night_neutral_bridge_warden",
       "name": "Bridge Warden",
       "type": "MINION",
       "cost": 5,
@@ -4550,7 +4550,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_truce_pact",
+      "id": "neutral_truce_pact",
       "name": "Truce Pact",
       "type": "SPELL",
       "cost": 4,
@@ -4570,7 +4570,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_aric",
+      "id": "neutral_aric",
       "name": "Aric",
       "type": "MINION",
       "cost": 7,
@@ -4591,7 +4591,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_vanguard_conscript",
+      "id": "ember_vanguard_conscript",
       "name": "Vanguard Conscript",
       "type": "MINION",
       "cost": 1,
@@ -4611,7 +4611,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_brazier_keeper",
+      "id": "ember_brazier_keeper",
       "name": "Brazier Keeper",
       "type": "MINION",
       "cost": 2,
@@ -4629,7 +4629,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_forge_warden",
+      "id": "ember_forge_warden",
       "name": "Forge Warden",
       "type": "MINION",
       "cost": 3,
@@ -4649,7 +4649,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_mechanical_essence",
+      "id": "clock_mechanical_essence",
       "name": "Mechanical Essence",
       "type": "MINION",
       "cost": 3,
@@ -4669,7 +4669,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_coalition_blazer",
+      "id": "ember_coalition_blazer",
       "name": "Coalition Blazer",
       "type": "MINION",
       "cost": 4,
@@ -4687,7 +4687,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_forge_striker",
+      "id": "neutral_forge_striker",
       "name": "Forge Striker",
       "type": "MINION",
       "cost": 3,
@@ -4705,7 +4705,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "smithy_hammer",
+      "id": "neutral_smithy_hammer",
       "name": "Smithy Hammer",
       "type": "WEAPON",
       "cost": 2,
@@ -4723,7 +4723,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_seedling_guard",
+      "id": "verdant_seedling_guard",
       "name": "Seedling Guard",
       "type": "MINION",
       "cost": 2,
@@ -4745,7 +4745,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_rekindled_flame",
+      "id": "ember_rekindled_flame",
       "name": "Rekindled Flame",
       "type": "SPELL",
       "cost": 3,
@@ -4766,7 +4766,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_pyre_commander",
+      "id": "ember_pyre_commander",
       "name": "Pyre Commander",
       "type": "MINION",
       "cost": 5,
@@ -4808,7 +4808,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_general_kira",
+      "id": "ember_general_kira",
       "name": "General Kira",
       "type": "MINION",
       "cost": 7,
@@ -4851,7 +4851,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_saltshore_scout",
+      "id": "tide_saltshore_scout",
       "name": "Saltshore Scout",
       "type": "MINION",
       "cost": 2,
@@ -4871,7 +4871,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_reef_reclaimer",
+      "id": "tide_reef_reclaimer",
       "name": "Reef Reclaimer",
       "type": "MINION",
       "cost": 3,
@@ -4891,7 +4891,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_channel_mender",
+      "id": "tide_channel_mender",
       "name": "Channel Mender",
       "type": "SPELL",
       "cost": 2,
@@ -4912,7 +4912,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_tidal_emissary",
+      "id": "tide_tidal_emissary",
       "name": "Tidal Emissary",
       "type": "MINION",
       "cost": 4,
@@ -4932,7 +4932,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_shoreline_pact",
+      "id": "tide_shoreline_pact",
       "name": "Shoreline Pact",
       "type": "SPELL",
       "cost": 3,
@@ -4953,7 +4953,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_deepwater_alliance",
+      "id": "tide_deepwater_alliance",
       "name": "Deepwater Alliance",
       "type": "SPELL",
       "cost": 5,
@@ -4974,7 +4974,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_marens_peacebroker",
+      "id": "tide_marens_peacebroker",
       "name": "Maren's Peacebroker",
       "type": "MINION",
       "cost": 6,
@@ -4997,7 +4997,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_memorial_wisp",
+      "id": "grave_memorial_wisp",
       "name": "Memorial Wisp",
       "type": "MINION",
       "cost": 1,
@@ -5017,7 +5017,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_tomb_warden",
+      "id": "grave_tomb_warden",
       "name": "Tomb Warden",
       "type": "MINION",
       "cost": 2,
@@ -5037,7 +5037,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_last_honor",
+      "id": "grave_last_honor",
       "name": "Last Honor",
       "type": "SPELL",
       "cost": 2,
@@ -5057,7 +5057,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_grave_builder",
+      "id": "grave_grave_builder",
       "name": "Grave Builder",
       "type": "MINION",
       "cost": 3,
@@ -5075,7 +5075,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_pact_of_mourning",
+      "id": "grave_pact_of_mourning",
       "name": "Pact of Mourning",
       "type": "SPELL",
       "cost": 3,
@@ -5096,7 +5096,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_risen_champion",
+      "id": "grave_risen_champion",
       "name": "Risen Champion",
       "type": "MINION",
       "cost": 4,
@@ -5118,7 +5118,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_mass_rebirth",
+      "id": "grave_mass_rebirth",
       "name": "Mass Rebirth",
       "type": "SPELL",
       "cost": 5,
@@ -5138,7 +5138,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_token_risen_guardian",
+      "id": "token_risen_guardian",
       "name": "Risen Guardian",
       "type": "MINION",
       "cost": 0,
@@ -5156,7 +5156,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_caretaker_solen",
+      "id": "grave_caretaker_solen",
       "name": "Caretaker Solen",
       "type": "MINION",
       "cost": 7,
@@ -5176,7 +5176,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_sapling_tender",
+      "id": "verdant_sapling_tender",
       "name": "Sapling Tender",
       "type": "MINION",
       "cost": 1,
@@ -5196,7 +5196,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_thornsprout_cub",
+      "id": "verdant_thornsprout_cub",
       "name": "Thornsprout Cub",
       "type": "MINION",
       "cost": 2,
@@ -5214,7 +5214,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_rebloom_vine",
+      "id": "verdant_rebloom_vine",
       "name": "Rebloom Vine",
       "type": "SPELL",
       "cost": 2,
@@ -5235,7 +5235,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_overgrowth_dryad",
+      "id": "verdant_overgrowth_dryad",
       "name": "Overgrowth Dryad",
       "type": "MINION",
       "cost": 4,
@@ -5255,7 +5255,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_blossoming_pact",
+      "id": "verdant_blossoming_pact",
       "name": "Blossoming Pact",
       "type": "SPELL",
       "cost": 3,
@@ -5276,7 +5276,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_rootswell_champion",
+      "id": "verdant_rootswell_champion",
       "name": "Rootswell Champion",
       "type": "MINION",
       "cost": 4,
@@ -5298,7 +5298,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_wildbloom_surge",
+      "id": "verdant_wildbloom_surge",
       "name": "Wildbloom Surge",
       "type": "SPELL",
       "cost": 4,
@@ -5319,7 +5319,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_praxis",
+      "id": "verdant_praxis",
       "name": "Praxis, Seed of New Ages",
       "type": "MINION",
       "cost": 7,
@@ -5342,7 +5342,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_repair_drone",
+      "id": "clock_repair_drone",
       "name": "Repair Drone",
       "type": "MINION",
       "cost": 1,
@@ -5362,7 +5362,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_blueprint_archive",
+      "id": "clock_blueprint_archive",
       "name": "Blueprint Archive",
       "type": "MINION",
       "cost": 2,
@@ -5380,7 +5380,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_tinkers_gambit",
+      "id": "clock_tinkers_gambit",
       "name": "Tinker's Gambit",
       "type": "SPELL",
       "cost": 2,
@@ -5400,7 +5400,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_rebuilt_automaton",
+      "id": "clock_rebuilt_automaton",
       "name": "Reconstructed Automaton",
       "type": "MINION",
       "cost": 3,
@@ -5420,7 +5420,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_assembly_line",
+      "id": "clock_assembly_line",
       "name": "Assembly Line",
       "type": "SPELL",
       "cost": 3,
@@ -5440,7 +5440,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_upgrade_protocol",
+      "id": "clock_upgrade_protocol",
       "name": "Upgrade Protocol",
       "type": "SPELL",
       "cost": 4,
@@ -5460,7 +5460,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_masterwork_construct",
+      "id": "clock_masterwork_construct",
       "name": "Masterwork Constructor",
       "type": "MINION",
       "cost": 6,
@@ -5480,7 +5480,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_cogsworth",
+      "id": "clock_cogsworth",
       "name": "Cogsworth, The Grand Rebuilder",
       "type": "MINION",
       "cost": 8,
@@ -5502,7 +5502,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_shadow_scout",
+      "id": "night_shadow_scout",
       "name": "Shadow Scout",
       "type": "MINION",
       "cost": 3,
@@ -5522,7 +5522,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_ink_viper",
+      "id": "night_ink_viper",
       "name": "Ink Viper",
       "type": "MINION",
       "cost": 2,
@@ -5543,7 +5543,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_marked_for_death",
+      "id": "night_marked_for_death",
       "name": "Marked for Death",
       "type": "SPELL",
       "cost": 2,
@@ -5563,7 +5563,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_veilborn_spy",
+      "id": "night_veilborn_spy",
       "name": "Veilborn Spy",
       "type": "MINION",
       "cost": 3,
@@ -5585,7 +5585,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_contract_kill",
+      "id": "night_contract_kill",
       "name": "Contract Kill",
       "type": "SPELL",
       "cost": 4,
@@ -5605,7 +5605,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_network_operative",
+      "id": "night_network_operative",
       "name": "Network Operative",
       "type": "MINION",
       "cost": 4,
@@ -5627,7 +5627,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_double_agent",
+      "id": "night_double_agent",
       "name": "Double Agent",
       "type": "MINION",
       "cost": 4,
@@ -5649,7 +5649,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_seraphine",
+      "id": "night_seraphine",
       "name": "Seraphine, Whisper Queen",
       "type": "MINION",
       "cost": 6,
@@ -5672,7 +5672,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_stone_layer",
+      "id": "ward_stone_layer",
       "name": "Stone Layer",
       "type": "MINION",
       "cost": 1,
@@ -5692,7 +5692,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_quarry_worker",
+      "id": "ward_quarry_worker",
       "name": "Stone Quarry Worker",
       "type": "MINION",
       "cost": 2,
@@ -5712,7 +5712,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_earthen_rampart",
+      "id": "ward_earthen_rampart",
       "name": "Earthen Rampart",
       "type": "SPELL",
       "cost": 3,
@@ -5733,7 +5733,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_boulder_sentinel",
+      "id": "ward_boulder_sentinel",
       "name": "Boulder Sentinel",
       "type": "MINION",
       "cost": 3,
@@ -5755,7 +5755,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_iron_foundation",
+      "id": "ward_iron_foundation",
       "name": "Iron Foundation",
       "type": "SPELL",
       "cost": 3,
@@ -5776,7 +5776,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_fortified_colossus",
+      "id": "ward_fortified_colossus",
       "name": "Fortified Colossus",
       "type": "MINION",
       "cost": 5,
@@ -5796,7 +5796,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_unbreakable_wall",
+      "id": "ward_unbreakable_wall",
       "name": "Unbreakable Wall",
       "type": "MINION",
       "cost": 6,
@@ -5816,7 +5816,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_aldric",
+      "id": "ward_aldric",
       "name": "Aldric, The Fortifier",
       "type": "MINION",
       "cost": 7,
@@ -5839,7 +5839,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_static_wisp",
+      "id": "storm_static_wisp",
       "name": "Static Wisp",
       "type": "MINION",
       "cost": 1,
@@ -5859,7 +5859,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_chain_caller",
+      "id": "storm_chain_caller",
       "name": "Chain Caller",
       "type": "MINION",
       "cost": 2,
@@ -5879,7 +5879,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_lightning_lash",
+      "id": "storm_lightning_lash",
       "name": "Lightning Lash",
       "type": "SPELL",
       "cost": 2,
@@ -5899,7 +5899,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_storm_channeler",
+      "id": "storm_storm_channeler",
       "name": "Storm Channeler",
       "type": "MINION",
       "cost": 3,
@@ -5919,7 +5919,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_voltaic_sentinel",
+      "id": "storm_voltaic_sentinel",
       "name": "Voltaic Sentinel",
       "type": "MINION",
       "cost": 4,
@@ -5941,7 +5941,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_thunderstrike",
+      "id": "storm_thunderstrike",
       "name": "Thunderstrike",
       "type": "SPELL",
       "cost": 3,
@@ -5962,7 +5962,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_stormcallers_pact",
+      "id": "storm_stormcallers_pact",
       "name": "Stormcaller's Pact",
       "type": "SPELL",
       "cost": 6,
@@ -5983,7 +5983,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_vael",
+      "id": "storm_vael",
       "name": "Vael",
       "type": "MINION",
       "cost": 7,

@@ -899,7 +899,7 @@ namespace Emberfall.Core.Cards
 
         /// <summary>
         /// Whether an id segment is a namespace word a token/hero id is built from
-        /// (rekind_token_x for a Rekindling token), never part of the printed name.
+        /// (neutral_token_x for a token), never part of the printed name.
         /// </summary>
         private static bool IsIdNamespaceWord(string segment)
             => segment == "token" || segment == "hero" || segment == "rekind";
