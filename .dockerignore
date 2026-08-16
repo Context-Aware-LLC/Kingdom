@@ -1,0 +1,41 @@
+# Build context for deploy/walking-skeleton/Dockerfile.server.
+#
+# The context is the REPO ROOT (RC F4: the server references five sibling src/ projects and bakes
+# in the canonical card data), but the image COPYs exactly three paths. Without this file fly
+# uploads the whole working tree on every deploy — measured 2026-08-15 at 16 GB / 86,570 files,
+# of which unity/ was 15 GB, .git/ 843 MB and art-pipeline/ 568 MB. The three paths total ~2.9 MB.
+#
+# This is an ALLOWLIST: deny everything, then re-admit only what the Dockerfile reads. Each parent
+# directory has to be re-admitted and then re-emptied (`!unity/` then `unity/*`) or the exception
+# for the nested path can never be reached. Written this way rather than as a denylist so that a
+# new top-level directory is excluded by default instead of silently re-inflating the upload.
+#
+# RETIREMENT TRIGGER: adding a COPY to Dockerfile.server means adding its path here, in the same
+# commit — a missing entry fails the build with "file not found", which reads like a bad COPY path
+# rather than an ignore rule.
+
+*
+
+# --- src/ : the server plus its eight transitive project references, and Directory.Build.props ---
+!src/
+
+# Windows-restored intermediates must NOT enter a Linux build: obj/project.assets.json pins
+# absolute package paths under C:\Users\...\.nuget\packages, which do not exist in the container.
+src/**/bin/
+src/**/obj/
+
+# --- card definitions: source of truth is the Unity tree (Dockerfile.server line 15) ---
+!unity/
+unity/*
+!unity/Emberfall/
+unity/Emberfall/*
+!unity/Emberfall/Assets/
+unity/Emberfall/Assets/*
+!unity/Emberfall/Assets/CardData/
+
+# --- AI-opponent bot roster (Dockerfile.server line 18) ---
+!tooling/
+tooling/*
+!tooling/data/
+tooling/data/*
+!tooling/data/bot-roster.json
