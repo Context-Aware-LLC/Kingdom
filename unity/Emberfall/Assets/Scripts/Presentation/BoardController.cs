@@ -578,8 +578,15 @@ namespace Emberfall.Presentation
             var artGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             artGo.name = "Art";
             artGo.transform.SetParent(root.transform, false);
-            artGo.transform.localScale    = new Vector3(CardW * 0.92f, CardH * 0.52f, 1f);
-            artGo.transform.localPosition = new Vector3(0f, CardH * 0.12f, -0.005f);
+            // Derived from the one ArtWindow rather than restated: CardPresenter.Layout overwrites
+            // both of these on Bind, so a second hand-written copy is invisible when it drifts —
+            // and it had, by 2026-08-16, to a window two frame revisions old.
+            Vector4 artWin = FrameRarityCatalog.ArtWindow; // l, t, r, b
+            artGo.transform.localScale    = new Vector3((artWin.z - artWin.x) * CardW,
+                                                        (artWin.w - artWin.y) * CardH, 1f);
+            artGo.transform.localPosition = new Vector3(
+                ((artWin.x + artWin.z) * 0.5f - 0.5f) * CardW,
+                (0.5f - (artWin.y + artWin.w) * 0.5f) * CardH, -0.005f);
             DestroyObj(artGo.GetComponent<MeshCollider>());
             var artRenderer = artGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(artRenderer, MaterialCatalog.CardArt);

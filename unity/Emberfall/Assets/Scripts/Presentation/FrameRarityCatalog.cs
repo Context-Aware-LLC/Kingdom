@@ -46,31 +46,48 @@ namespace Emberfall.Presentation
 
         private static string Key(Rarity rarity) => rarity.ToString().ToLowerInvariant();
 
-        // ── Unified socket geometry (2026-08-09, art-pipeline/frames/README.md "Shared geometry") ──
-        // Fractions of the 1456×2048 master frame, measured from the top-left; identical across
-        // all 4 rarities and, aside from the two stat sockets below, across spell and minion too.
-        // Measured off the real assets: ArtWindow from art-opening-mask.png's opaque bbox, CostSocket
-        // from the gold ring in frame_common_minion.png, TextPanel from shared-text-panel.png's bbox,
-        // stat sockets from the README's XCF placement (lower-left/right, 250×250 px each).
-        public static readonly Vector4 ArtWindow = new(0.0755f, 0.0659f, 0.9265f, 0.5498f); // l, t, r, b
+        // ── Unified socket geometry (2026-08-09, art-pipeline/frames/README.md "Shared geometry";
+        //    re-measured 2026-08-16 against Sam's enlarged-aperture frame_common.png) ──
+        // Fractions of the 1456×2048 master frame, measured from the top-left. Aside from the two
+        // stat sockets below, one layout serves spell and minion alike.
+        //
+        // Every socket moved on 2026-08-16: Sam widened the art aperture (0.8516 × 0.4844 of the
+        // card -> 0.9114 × 0.5254) and the rest of the furniture shifted to make room — the stat
+        // bosses most of all, ~100px down into the bottom corners. The numbers below were tracked
+        // from the 2026-08-09 ones by template-matching each socket's neighbourhood from the old
+        // frame onto the new (scoring only pixels opaque in BOTH, so the changed aperture cannot
+        // drag the match), which carries Sam's live hand-tuning forward instead of re-detecting
+        // over the top of it. Each match beat the residual floor set by a control run against an
+        // unconformed sibling frame, and the disc radii are unchanged (0.0444h -> 0.0454h), which
+        // is why the digit em sizes below did not move.
+        //
+        // ONLY frame_common.png carries this geometry today. The other seven frames still measure
+        // the 2026-08-09 aperture (0.0755, 0.0659, 0.9272, 0.5503), so a non-common card overflows
+        // its art past the border — accepted knowingly (Sam, 2026-08-16) pending their conform pass.
+        // RETIREMENT TRIGGER: conforming the other seven frames to common's aperture is what makes
+        // this file's geometry unified again — delete the previous paragraph in that same commit.
+        public static readonly Vector4 ArtWindow = new(0.0460f, 0.0308f, 0.9574f, 0.5562f); // l, t, r, b
 
-        public static readonly Vector2 CostSocket = new(0.100f, 0.076f); // nudged down a couple px (Sam, 2026-08-09 live check)
+        public static readonly Vector2 CostSocket = new(0.0911f, 0.0731f); // carries the 2026-08-09 "nudge it down a couple px" (Sam, live check)
         public const float CostDigitEm = 200f / 2048f;
 
         // Minion/weapon-only — spells never show these (ShowAttack/ShowHealth/ShowDurability below).
-        public static readonly Vector2 StatSocketLeft  = new(0.113f, 0.884f); // attack
-        public static readonly Vector2 StatSocketRight = new(0.883f, 0.881f); // health / durability
+        public static readonly Vector2 StatSocketLeft  = new(0.0876f, 0.9343f); // attack
+        public static readonly Vector2 StatSocketRight = new(0.9139f, 0.9332f); // health / durability
         public const float StatDigitEm = 220f / 2048f;
 
         // §3.1 type spec. Title now sits in the frame's own title band, between the art window
         // and the rules parchment — Sam moved it there 2026-08-09 specifically to free up room,
         // so it no longer shares a row with the cost socket and needs no left clamp.
+        // The title band is the same 0.1118h tall as before, just pushed down with everything
+        // else; the parchment grew a little in both axes (0.8489 × 0.2598 -> 0.8743 × 0.2637), so
+        // the body bed follows it and keeps the insets it had (13px top, 17px bottom, flush l/r).
         public const float NameCenterX   = 0.5f;    // of card width
-        public const float NameCenterY   = 0.607f;  // of card height, from the top (title-band center)
+        public const float NameCenterY   = 0.613f;  // of card height, from the top (title-band center)
         public const float NameEm        = 107f / 2048f;
-        public const float BodyCenterY   = 0.790f;  // rules-parchment center
-        public const float BodyWidth     = 0.85f;   // of card width
-        public const float BodyHeight    = 0.23f;   // of card height
+        public const float BodyCenterY   = 0.798f;  // rules-parchment center
+        public const float BodyWidth     = 0.874f;  // of card width
+        public const float BodyHeight    = 0.234f;  // of card height
         public const float BodyEm        = 100f / 2048f;
         public const float BodyEmFloor   = 72f / 2048f; // auto-shrink floor for long rules text
         public const int   KeywordLeadPct = 115;    // keyword lead, % of body (~124px — held steady as body grew)
