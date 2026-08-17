@@ -54,5 +54,29 @@
                 </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="deck-drawer" class="deck-drawer">
+            <ui:VisualElement class="deck-drawer__header">
+                <ui:VisualElement>
+                    <ui:Label name="deck-drawer-title" text="Decks" class="deck-drawer__title"/>
+                    <ui:Label name="deck-drawer-subtitle" text="Choose a deck to edit" class="deck-drawer__subtitle"/>
+                </ui:VisualElement>
+                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost"/>
+            </ui:VisualElement>
+            <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
+                <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
+                <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
+            </ui:ScrollView>
+            <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden">
+                <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back"/>
+                <ui:VisualElement class="deck-editor__identity">
+                    <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
+                    <ui:Label name="deck-name" text="" class="deck-editor__name"/>
+                    <ui:Label name="count-label" text="0 / 30" class="db-count"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="curve-strip" class="db-curve"/>
+                <ui:ListView name="deck-list" class="db-list"/>
+            </ui:VisualElement>
+            <ui:Button name="manage-decks-button" text="Manage Characters &amp; Decks" class="deck-drawer__manage"/>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

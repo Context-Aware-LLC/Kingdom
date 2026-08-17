@@ -10,21 +10,14 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The card wall, in one of two modes (#144, Sam, 2026-08-11). This screen used to be two
-    /// screens — <c>CollectionController</c> and <c>DeckbuilderController</c> — on the argument that
-    /// the deckbuilder's wall is character-scoped by construction and so structurally cannot show
-    /// you the game. That is true, and it is a <i>mode</i> rather than a screen:
+    /// The one persistent card-collection screen (NOR-210). Browsing is the screen; editing a deck is
+    /// an optional context presented in a right-side drawer. Opening that drawer never replaces the
+    /// header, query bar, card wall, background or scene, so the old deckbuilder is no longer visible
+    /// to the player as a second screen wearing shared controls.
     ///
-    /// <list type="bullet">
-    /// <item><b>Browse</b> — no character. The whole pool, no deck panel, nothing a tap can do.</item>
-    /// <item><b>Deckbuild</b> — a character. The pool force-filtered to that character's pairing
-    /// plus neutral, the deck panel present, a tap adds a copy.</item>
-    /// </list>
-    ///
-    /// <para><b>The mode is decided by <see cref="PendingCharacterId"/>, and reading it consumes
-    /// it.</b> A static that survives one navigation would silently put the browse screen into
-    /// deckbuild mode on the visit after a deckbuild visit, which is the one failure this design can
-    /// have. <see cref="PendingDeckId"/> has always been consume-on-read for the same reason.</para>
+    /// <para><see cref="PendingCharacterId"/> and <see cref="PendingDeckId"/> are only navigation
+    /// conveniences for an existing roster doorway. They request that the drawer open after the
+    /// Collection shell is live; they do not decide the screen's shape. Both are consumed once.</para>
     ///
     /// <para><b>It shows what you own when the account knows, and the whole pool when it doesn't.</b>
     /// Ownership has three states, not two:</para>
@@ -50,17 +43,10 @@ namespace Emberfall.Presentation
     /// and <see cref="CardQueryBar.Reset"/> deliberately leaves it alone — resetting the filters should
     /// not silently move you between your collection and the game.</para>
     ///
-    /// <para><b>That ownership scoping is browse-only</b>, and deliberately: in deckbuild mode an
-    /// unowned card stays on the wall and is refused at the copy cap instead (see
-    /// <see cref="BuildPool"/>), because #150 wants it visible-but-spent rather than absent.</para>
-    ///
-    /// <para><b>One plate declares every region; the mode hides what it does not use</b> (#153).
-    /// The deck panel, the browse header, the query bar and the three filter chips all exist on
-    /// CollectionScreen.uxml in both modes. <see cref="StampMode"/> writes a modifier onto the plate
-    /// root and the stylesheet does the hiding, so <b>an absent element is now a broken plate rather
-    /// than a mode</b>. The null guards below are diagnostics, not a second way to configure this
-    /// screen: a missing deck list while deckbuilding means the UXML is wrong, not that this visit
-    /// declined the deck panel.</para>
+    /// <para><b>Deck editing widens ownership scope to All while it is active</b>, preserving #150's
+    /// visible-but-spent rule for unowned cards. Closing the editor restores the scope the player had
+    /// before opening it. The query object itself stays mounted, so search, sort and facet selections
+    /// survive the round trip.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// CollectionScreen.uxml.
@@ -68,8 +54,8 @@ namespace Emberfall.Presentation
     [RequireComponent(typeof(UIDocument))]
     public sealed class CollectionController : MonoBehaviour
     {
-        /// <summary>Where the exit button returns to. Set by the caller; the roster is the only door today.</summary>
-        public static string ReturnScene = "CharacterRoster";
+        /// <summary>Where the persistent screen's Back control returns. Set by the caller.</summary>
+        public static string ReturnScene = "MainMenu";
 
         /// <summary>Which character to build a deck for, or empty to browse. Consumed on read.</summary>
         public static string PendingCharacterId;
@@ -82,7 +68,7 @@ namespace Emberfall.Presentation
         private CardFaceBaker _faceBaker;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
 
-        /// <summary>The character being built for, or null in browse mode. This field IS the mode.</summary>
+        /// <summary>The optional deck-edit context. Null means the drawer is browsing deck choices.</summary>
         private Character _character;
         private DeckList _deck;
 
@@ -105,9 +91,10 @@ namespace Emberfall.Presentation
         /// </summary>
         private bool _ownedScope = true;
 
-        // Cached elements. All of these exist on the plate in both modes; a null here is a broken
-        // UXML, not a mode that declined the region. See the "one plate declares every region" remark.
+        // Cached elements. The collection shell is permanent; only the drawer's chooser/editor panes
+        // trade visibility.
         private VisualElement _root;
+        private VisualElement _plate;
         private VisualElement _grid;
         private CardWall _wall;
         private CardQueryBar _query;
@@ -122,28 +109,32 @@ namespace Emberfall.Presentation
         private VisualElement _scopeRow;
         private Button _scopeOwnedButton;
         private Button _scopeAllButton;
+        private VisualElement _drawer;
+        private ScrollView _deckChooser;
+        private VisualElement _deckChooserList;
+        private Label _deckChooserEmpty;
+        private VisualElement _deckEditor;
+        private Label _drawerTitle;
+        private Label _drawerSubtitle;
+        private Label _deckCharacterName;
+        private Label _deckName;
+        private bool _drawerOpen;
+        private bool _scopeBeforeEditing;
 
-        /// <summary>The pairing chips' selected classes (deckbuild only). Multi-select, and empty
+        /// <summary>The active deck's pairing-chip selections. Multi-select, and empty
         /// means unconstrained — the same all-off convention <see cref="CardQueryBar"/> uses for its
         /// own class facet. Composed into the one wall query by <see cref="ApplyQuery"/>.</summary>
         private readonly HashSet<CardClass> _chipClasses = new HashSet<CardClass>();
 
-        /// <summary>True when this visit is editing a deck. The one predicate every mode-dependent
-        /// branch below reads, so the mode is never re-derived from something correlated with it.</summary>
-        private bool Deckbuilding => _character != null;
+        private bool EditingDeck => _character != null && _deck != null;
 
         /// <summary>
         /// True when the wall is scoped to what this account owns — the one predicate for it, read by
         /// both the pool and the count label so the two can never disagree about which of them the
         /// player is looking at.
         ///
-        /// <para>False while deckbuilding, and that is the mode's own rule rather than a side effect:
-        /// that pool is scoped by the character's pairing and never by ownership, because #150 wants an
-        /// unowned card visible-but-spent (see <see cref="BuildPool"/>). Folding the mode in here rather
-        /// than testing it again at each site is why <see cref="UpdateWallLabels"/> still needs no mode
-        /// check.</para>
         /// </summary>
-        private bool OwnedOnly => !Deckbuilding && _owned != null && _ownedScope;
+        private bool OwnedOnly => _owned != null && _ownedScope;
 
         private void OnEnable()
         {
@@ -172,11 +163,8 @@ namespace Emberfall.Presentation
             //     return;
             // }
 
-            if (!ResolveMode()) return;
-
-            StampMode();
-            BuildPool();
             CacheElements();
+            BuildPool();
             InitFaceBaker();
             BuildWall();
             WireQueryBar();
@@ -186,80 +174,55 @@ namespace Emberfall.Presentation
             WireChrome();
 
             ApplyQuery();
-            if (Deckbuilding) Refresh();
-
             WireCollectionScroll();
+            OpenPendingDeckIfAny();
         }
 
         /// <summary>
-        /// Decide browse vs deckbuild and, when deckbuilding, open the deck. Returns false only when
-        /// the screen cannot open at all.
-        ///
-        /// <para>Consumes <see cref="PendingCharacterId"/>, so a stale one cannot leak into the next
-        /// visit. A pending id that matches nothing on the roster falls back to browse rather than
-        /// erroring: the roster is the only thing that sets it, and a browse wall is a truthful
-        /// screen where a half-initialised deckbuilder is not.</para>
+        /// Consume the legacy roster handoff after the Collection shell is fully live. A broken id
+        /// leaves the player on the truthful collection wall rather than producing a half-open drawer.
         /// </summary>
-        private bool ResolveMode()
+        private void OpenPendingDeckIfAny()
         {
             string pendingCharacter = PendingCharacterId;
             PendingCharacterId = "";
-            if (string.IsNullOrEmpty(pendingCharacter)) return true;
+            string pendingDeck = PendingDeckId;
+            PendingDeckId = "";
+            if (string.IsNullOrEmpty(pendingCharacter)) return;
 
+            Character character = null;
             IReadOnlyList<Character> roster = _account.Roster();
             foreach (var c in roster)
-                if (c.Id == pendingCharacter) { _character = c; break; }
+                if (c.Id == pendingCharacter) { character = c; break; }
 
-            if (_character == null)
+            if (character == null)
             {
                 Debug.LogWarning($"[Collection] no character '{pendingCharacter}' on this account; " +
-                                 "opening the browse wall instead of a deckbuilder with no deck.");
-                return true;
-            }
-
-            CharacterDecks characterDecks = _account.DecksOf(_character, _db);
-            _deck = FindPendingDeck(characterDecks.Decks) ?? characterDecks.Opening?.Deck;
-            if (_deck == null)
-            {
-                Debug.LogError($"[Collection] '{_character.Name}' has no deck to open.");
-                return false;
-            }
-            return true;
-        }
-
-        /// <summary>
-        /// Put the mode on the plate root, which is what decides the whole screen's shape (#153).
-        ///
-        /// <para><b>Both modifiers are written every visit, one on and one off</b>, rather than one
-        /// modifier and a bare-class default. The stylesheet then never needs <c>:not()</c>, whose
-        /// support in UI Toolkit is narrower than in CSS — a negation that silently failed to match
-        /// would show the browse chrome and the deck panel at the same time.</para>
-        ///
-        /// <para>The class goes on the element NAMED "root", not on <c>rootVisualElement</c>: the
-        /// latter is the document's own container and carries none of this plate's classes, so
-        /// <c>.collection</c> and its modifiers would never meet on the same element.</para>
-        /// </summary>
-        private void StampMode()
-        {
-            VisualElement plate = _root.Q<VisualElement>("root");
-            if (plate == null)
-            {
-                Debug.LogError("[Collection] no element named 'root' in the UXML, so the mode class " +
-                               "has nowhere to go — the deck panel and the browse header will both " +
-                               "be visible. Check CollectionScreen.uxml.");
+                                 "leaving the deck drawer closed.");
                 return;
             }
-            plate.EnableInClassList("collection--deckbuild", Deckbuilding);
-            plate.EnableInClassList("collection--browse", !Deckbuilding);
+
+            CharacterDecks characterDecks = DeckQuery.ForCharacter(
+                character, _account.Decks(), _db, _owned);
+            DeckList deck = FindDeck(characterDecks.Decks, pendingDeck)
+                            ?? characterDecks.Opening?.Deck;
+            if (deck == null)
+            {
+                Debug.LogWarning($"[Collection] '{character.Name}' has no deck to open; " +
+                                 "opening the deck chooser instead.");
+                OpenDeckDrawer();
+                return;
+            }
+
+            OpenDeckDrawer();
+            OpenDeckEditor(character, deck);
         }
 
-        private static DeckList FindPendingDeck(IReadOnlyList<DeckSummary> decks)
+        private static DeckList FindDeck(IReadOnlyList<DeckSummary> decks, string deckId)
         {
-            string pending = PendingDeckId;
-            PendingDeckId = "";
-            if (string.IsNullOrEmpty(pending)) return null;
+            if (string.IsNullOrEmpty(deckId)) return null;
             for (int i = 0; i < decks.Count; i++)
-                if (decks[i].Deck.Id == pending) return decks[i].Deck;
+                if (decks[i].Deck.Id == deckId) return decks[i].Deck;
             return null;
         }
 
@@ -286,14 +249,15 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The wall's pool, scoped by mode.
+        /// The wall's pool, scoped by the optional edit context.
         ///
-        /// <para><b>Deckbuild</b> — the character's pairing plus neutral. Ownership does NOT scope it:
+        /// <para><b>Editing</b> — the character's pairing plus neutral. Opening an editor switches
+        /// ownership scope to All, so
         /// an unowned card stays on the wall and <see cref="AddCopy"/> refuses it at the copy cap,
         /// because the copy limit is already <c>min(MaxCopies, copies owned)</c>. Removing it from the
         /// pool instead would make a card you nearly own invisible, and #150 wants it dimmed.</para>
         ///
-        /// <para><b>Browse</b> — every card this account owns a copy of, or, when it has no ownership
+        /// <para><b>At rest</b> — every card this account owns a copy of, or, when it has no ownership
         /// record or the player has asked for All (#146), every collectible card in the game. These two
         /// pools look identical on screen and mean completely different things, which is why the count
         /// label is load-bearing.</para>
@@ -312,11 +276,8 @@ namespace Emberfall.Presentation
             _pool.Clear();
             foreach (var def in _db.AllCollectible())
             {
-                if (Deckbuilding)
-                {
-                    if (!_character.AllowsClass(def.Class)) continue;
-                }
-                else if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
+                if (EditingDeck && !_character.AllowsClass(def.Class)) continue;
+                if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
 
                 _pool.Add(def);
             }
@@ -326,6 +287,7 @@ namespace Emberfall.Presentation
 
         private void CacheElements()
         {
+            _plate           = _root.Q<VisualElement>("root");
             _countLabel      = _root.Q<Label>("collection-count");
             _emptyLabel      = _root.Q<Label>("collection-empty");
             _deckList        = _root.Q<ListView>("deck-list");
@@ -337,6 +299,15 @@ namespace Emberfall.Presentation
             _scopeRow            = _root.Q<VisualElement>("scope-row");
             _scopeOwnedButton    = _root.Q<Button>("scope-owned");
             _scopeAllButton      = _root.Q<Button>("scope-all");
+            _drawer              = _root.Q<VisualElement>("deck-drawer");
+            _deckChooser         = _root.Q<ScrollView>("deck-chooser");
+            _deckChooserList     = _root.Q<VisualElement>("deck-chooser-list");
+            _deckChooserEmpty    = _root.Q<Label>("deck-chooser-empty");
+            _deckEditor          = _root.Q<VisualElement>("deck-editor");
+            _drawerTitle         = _root.Q<Label>("deck-drawer-title");
+            _drawerSubtitle      = _root.Q<Label>("deck-drawer-subtitle");
+            _deckCharacterName   = _root.Q<Label>("deck-character-name");
+            _deckName            = _root.Q<Label>("deck-name");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -351,45 +322,19 @@ namespace Emberfall.Presentation
         }
 
         // The tile building, the bake, the per-row gutter solve and the Yoga-safe deferred layout all
-        // live in CardWall (Sam, 2026-08-07), so both modes render the same wall. What stays here is
+        // live in CardWall (Sam, 2026-08-07), so every drawer state renders the same wall. What stays here is
         // the part that is genuinely about a DECK: what a tap does, and which tiles are at their cap.
         private void BuildWall()
         {
             _wall = new CardWall(_grid, _faceBaker);
+            _wall.TileClicked += AddCopy;
 
-            if (Deckbuilding)
-            {
-                _wall.TileClicked += AddCopy;
-
-                // The copy-cap fade — the ONLY per-tile deck-state treatment on the wall, and the
-                // reason CardWall exposes a decorator rather than owning this itself: "you already
-                // hold every copy" is a fact about a deck, and browse mode has none.
-                //
-                // This deliberately does NOT ask DeckValidator.CanAdd. CanAdd is false for L1 (deck
-                // at 30) and L4 (off-class) too, and keying the fade on it is exactly the bug removed
-                // in c31da55: a deck at 30 refuses every card, so every tile faded and the wall the
-                // screen exists to show went dark at the moment the player stopped building and
-                // started browsing. The fade means one thing only — "you already hold every copy of
-                // THIS card you are allowed" — so it reads the copy cap directly. It can never take
-                // more than a handful of tiles, and clears the moment a copy comes back out.
-                //
-                // MaxCopies is rarity-dependent (L3 Legendary = 1, L2 everything else = 2), so a
-                // Legendary fades at one copy, not two.
-                //
-                // NOR-238 replaced MaxCopies with CopyLimit — min(MaxCopies, copies you own), or
-                // MaxCopies alone when this account has no ownership record. The fade's ONE meaning is
-                // unchanged and that is why it could absorb L6 rather than needing a treatment of its
-                // own: "you already hold every copy of THIS card you are allowed" is the same sentence
-                // whether the limit came from the format or from your collection. A card you own none
-                // of therefore fades at zero copies in the deck, which is exactly what AddCopy refuses.
-                _wall.TileDecorator = (def, tile) =>
-                    tile.EnableInClassList("card-tile--maxed",
-                        _deck.CountOf(def.Id) >= DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
-            }
-
-            // No TileClicked handler in browse mode on purpose: there is no deck to add to, and
-            // in-match inspect was cut (board layout rulings, 2026-07-23). A tap does nothing until
-            // there is something for it to do.
+            // The copy-cap fade is the only per-tile deck treatment. The decorator remains installed
+            // because the wall remains installed; it simply has nothing to say without an edit context.
+            _wall.TileDecorator = (def, tile) =>
+                tile.EnableInClassList("card-tile--maxed",
+                    EditingDeck && _deck.CountOf(def.Id) >=
+                    DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
 
             _wall.SetPool(_pool);
         }
@@ -404,46 +349,52 @@ namespace Emberfall.Presentation
         }
 
         // ---- Pairing chips: primary / secondary / neutral (#160) ------------------------------
-        // The class axis for deckbuild. Three chips — the character's primary class, its secondary
+        // The class axis while editing. Three chips — the character's primary class, its secondary
         // class, and NEUTRAL — each a multi-select toggle where all-off means unconstrained, matching
         // CardQueryBar's own class-facet convention. That is what replaced the old radio All/Class/
         // Neutral set: "all" is now nothing selected, not a fourth chip. Labels are the real class
         // names, written here at runtime rather than authored in UXML, so a rename can never drift.
-        //
-        // Meaningless without a pairing, so the plate hides them while browsing and this returns early
-        // in that mode — two guards for one fact, deliberately: the class is what the player sees and
-        // the early return is what stops us wiring a callback onto a chip that can never be pressed.
         //
         // These do NOT write the wall themselves. Both filter surfaces — these chips and the query
         // bar — compose into one CardFilter at the single ApplyQuery site, so neither clobbers the
         // other (and, critically, a chip press no longer resets the player's chosen sort).
         private void WireCollectionFilters()
         {
-            if (!Deckbuilding || _filterPrimaryButton == null) return;
-
-            _filterPrimaryButton.text   = ClassLabel(_character.PrimaryClass);
-            _filterSecondaryButton.text = ClassLabel(_character.SecondaryClass);
-            _filterNeutralButton.text   = ClassLabel(CardClass.NEUTRAL);
-
-            WireChipToggle(_filterPrimaryButton,   _character.PrimaryClass);
-            WireChipToggle(_filterSecondaryButton, _character.SecondaryClass);
-            WireChipToggle(_filterNeutralButton,   CardClass.NEUTRAL);
+            _filterPrimaryButton?.RegisterCallback<ClickEvent>(_ =>
+                TogglePairingClass(_character?.PrimaryClass));
+            _filterSecondaryButton?.RegisterCallback<ClickEvent>(_ =>
+                TogglePairingClass(_character?.SecondaryClass));
+            _filterNeutralButton?.RegisterCallback<ClickEvent>(_ =>
+                TogglePairingClass(EditingDeck ? CardClass.NEUTRAL : (CardClass?)null));
         }
 
-        private void WireChipToggle(Button chip, CardClass klass)
+        private void ConfigureCollectionFilters()
         {
-            chip.RegisterCallback<ClickEvent>(_ =>
-            {
-                if (!_chipClasses.Remove(klass)) _chipClasses.Add(klass);
-                StampChips();
-                ApplyQuery();
-            });
+            _chipClasses.Clear();
+            if (!EditingDeck) return;
+
+            if (_filterPrimaryButton != null)
+                _filterPrimaryButton.text = ClassLabel(_character.PrimaryClass);
+            if (_filterSecondaryButton != null)
+                _filterSecondaryButton.text = ClassLabel(_character.SecondaryClass);
+            if (_filterNeutralButton != null)
+                _filterNeutralButton.text = ClassLabel(CardClass.NEUTRAL);
+            StampChips();
+        }
+
+        private void TogglePairingClass(CardClass? klass)
+        {
+            if (!EditingDeck || !klass.HasValue) return;
+            if (!_chipClasses.Remove(klass.Value)) _chipClasses.Add(klass.Value);
+            StampChips();
+            ApplyQuery();
         }
 
         // Every chip is repainted from the set, not just the one clicked — a character whose primary
         // and secondary happen to coincide would otherwise leave the other chip's highlight stale.
         private void StampChips()
         {
+            if (!EditingDeck) return;
             _filterPrimaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.PrimaryClass));
             _filterSecondaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.SecondaryClass));
             _filterNeutralButton.EnableInClassList("db-chip--on", _chipClasses.Contains(CardClass.NEUTRAL));
@@ -464,8 +415,8 @@ namespace Emberfall.Presentation
         /// today, which is exactly why this must be hidden rather than shown-and-inert — an alpha player
         /// meeting a toggle that does nothing learns the wrong thing about their collection.</para>
         ///
-        /// <para>Hidden in deckbuild mode by the plate, not by this: the whole browse header is
-        /// display:none there (#153), so the row is unpickable and this needs no mode check.</para>
+        /// <para>The persistent header keeps this scope visible while the drawer is open. Opening an
+        /// editor selects All for #150; the player can still narrow to Owned explicitly.</para>
         /// </summary>
         private void WireScopeToggle()
         {
@@ -504,21 +455,182 @@ namespace Emberfall.Presentation
             UpdateWallLabels();
         }
 
-        // Both chips are written on every change, one on and one off — same reason as StampMode.
+        // Both chips are written on every change so the control cannot retain stale state.
         private void StampScope()
         {
             _scopeOwnedButton.EnableInClassList("db-chip--on", OwnedOnly);
             _scopeAllButton.EnableInClassList("db-chip--on", !OwnedOnly);
         }
 
+        // ---- Right-side deck drawer (NOR-210) -----------------------------------------------
+        private void OpenDeckDrawer()
+        {
+            if (_drawer == null)
+            {
+                Debug.LogError("[Collection] 'deck-drawer' is missing from CollectionScreen.uxml.");
+                return;
+            }
+
+            _drawerOpen = true;
+            _drawer.AddToClassList("deck-drawer--open");
+            if (EditingDeck) ShowDrawerPane(editor: true);
+            else
+            {
+                RebuildDeckChooser();
+                ShowDrawerPane(editor: false);
+            }
+        }
+
+        private void CloseDeckDrawer()
+        {
+            if (!_drawerOpen) return;
+            if (EditingDeck) SaveDeck();
+            EndDeckEditing();
+            _drawerOpen = false;
+            _drawer?.RemoveFromClassList("deck-drawer--open");
+        }
+
+        private void ShowDeckChooser()
+        {
+            if (EditingDeck) SaveDeck();
+            EndDeckEditing();
+            RebuildDeckChooser();
+            ShowDrawerPane(editor: false);
+        }
+
+        private void ShowDrawerPane(bool editor)
+        {
+            _deckChooser?.EnableInClassList("deck-chooser--hidden", editor);
+            _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
+            if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";
+            if (_drawerSubtitle != null)
+                _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";
+        }
+
+        private void RebuildDeckChooser()
+        {
+            if (_deckChooserList == null) return;
+            _deckChooserList.Clear();
+
+            IReadOnlyList<Character> characters = _account.Roster();
+            IReadOnlyList<DeckList> decks = _account.Decks();
+            int choices = 0;
+
+            foreach (Character character in characters)
+            {
+                CharacterDecks characterDecks = DeckQuery.ForCharacter(character, decks, _db, _owned);
+                if (characterDecks.Count == 0) continue;
+
+                var group = new VisualElement();
+                group.AddToClassList("deck-choice-group");
+
+                var characterName = new Label(character.Name);
+                characterName.AddToClassList("deck-choice-character");
+                group.Add(characterName);
+
+                var pairing = new Label(
+                    $"{ClassLabel(character.PrimaryClass)} + {ClassLabel(character.SecondaryClass)}");
+                pairing.AddToClassList("deck-choice-pairing");
+                group.Add(pairing);
+
+                foreach (DeckSummary summary in characterDecks.Decks)
+                {
+                    DeckList capturedDeck = summary.Deck;
+                    Character capturedCharacter = character;
+                    string defaultMark = summary.IsDefault ? " · Default" : "";
+                    string standing = summary.IsDraft ? "Draft" : "Ready";
+                    var button = new Button(() => OpenDeckEditor(capturedCharacter, capturedDeck))
+                    {
+                        text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}" +
+                               $"  ·  {standing}{defaultMark}"
+                    };
+                    button.AddToClassList("deck-choice");
+                    button.AddToClassList(ClassEdgeClass(character.PrimaryClass));
+                    group.Add(button);
+                    choices++;
+                }
+
+                _deckChooserList.Add(group);
+            }
+
+            if (_deckChooserEmpty != null)
+            {
+                _deckChooserEmpty.text = choices == 0
+                    ? "No decks yet — manage characters and decks to create one."
+                    : "";
+                _deckChooserEmpty.EnableInClassList("deck-chooser__empty--on", choices == 0);
+            }
+        }
+
+        private void OpenDeckEditor(Character character, DeckList deck)
+        {
+            if (character == null || deck == null) return;
+            if (EditingDeck) SaveDeck();
+
+            _scopeBeforeEditing = _ownedScope;
+            _ownedScope = false; // #150: unowned eligible cards stay visible-but-spent while editing.
+            _character = character;
+            _deck = deck;
+
+            if (_deckCharacterName != null)
+                _deckCharacterName.text = $"{character.Name} · " +
+                                          $"{ClassLabel(character.PrimaryClass)} + " +
+                                          ClassLabel(character.SecondaryClass);
+            if (_deckName != null) _deckName.text = deck.Name;
+
+            ConfigureCollectionFilters();
+            StampEditing();
+            StampScope();
+            BuildPool();
+            _wall.SetPool(_pool);
+            BindOpenDeck();
+            ApplyQuery();
+            Refresh();
+            ShowDrawerPane(editor: true);
+        }
+
+        private void EndDeckEditing()
+        {
+            if (!EditingDeck) return;
+
+            _character = null;
+            _deck = null;
+            _chipClasses.Clear();
+            _ownedScope = _scopeBeforeEditing;
+            StampEditing();
+            StampScope();
+
+            if (_deckList != null)
+            {
+                _deckList.itemsSource = null;
+                _deckList.RefreshItems();
+            }
+
+            BuildPool();
+            _wall.SetPool(_pool);
+            ApplyQuery();
+            _wall.RefreshTiles();
+        }
+
+        private void StampEditing()
+        {
+            _plate?.EnableInClassList("collection--editing", EditingDeck);
+        }
+
+        private void ManageCharactersAndDecks()
+        {
+            if (EditingDeck) SaveDeck();
+            CharacterRosterController.ReturnScene = "Collection";
+            Go("CharacterRoster");
+        }
+
         // ---- Deck ListView ----
         private void WireDeckList()
         {
-            if (!Deckbuilding || _deckList == null) return;
+            if (_deckList == null) return;
 
             _deckList.fixedItemHeight = 54;
             _deckList.selectionType = SelectionType.None;
-            _deckList.itemsSource = _deck.Entries;
             _deckList.makeItem = MakeCardRow;
             _deckList.bindItem = BindDeckRow;
             _deckList.RegisterCallback<ClickEvent>(OnDeckClick);
@@ -534,8 +646,20 @@ namespace Emberfall.Presentation
             }
         }
 
+        private void BindOpenDeck()
+        {
+            if (_deckList == null || !EditingDeck) return;
+            _deckList.itemsSource = _deck.Entries;
+            _deckList.RefreshItems();
+        }
+
         private void BindDeckRow(VisualElement row, int index)
         {
+            if (!EditingDeck || index < 0 || index >= _deck.Entries.Count)
+            {
+                row.style.display = DisplayStyle.None;
+                return;
+            }
             var entry = _deck.Entries[index];
             if (!_db.TryGet(entry.CardId, out var def)) { row.style.display = DisplayStyle.None; return; }
             row.style.display = DisplayStyle.Flex;
@@ -576,6 +700,7 @@ namespace Emberfall.Presentation
         // ---- Mutations ----
         private void AddCopy(CardDefinition def)
         {
+            if (!EditingDeck) return;
             // L1 ceiling / L2/L3 cap / L4 off-class / L6 you don't own another copy.
             if (!DeckValidator.CanAdd(_deck, _character, def, _owned)) return;
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
@@ -587,6 +712,7 @@ namespace Emberfall.Presentation
 
         private void RemoveCopy(CardDefinition def)
         {
+            if (!EditingDeck) return;
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
             if (i < 0) return;
             int c = _deck.Entries[i].Count - 1;
@@ -610,16 +736,15 @@ namespace Emberfall.Presentation
         // ---- Collection scroll (NOR-360) ----
         //
         // The Android system back gesture (and keyboard Escape on PC) routes through
-        // NavigationCancelEvent. This is the belt-and-suspenders exit: back-button and done-button
-        // are already wired below, but both require the player to scroll back to them. The gesture
-        // escapes the screen regardless of scroll position.
+        // NavigationCancelEvent. The gesture closes the drawer first, then exits Collection on the
+        // next invocation, regardless of wall scroll position.
         //
         // The DEVELOPMENT_BUILD block logs the data the issue asks for: scroll offset, grid content
         // height, and layout call count sampled every 500ms. On a loop-free build the layout count
         // should only tick up on resize or filter changes, not while idle or during a scroll gesture.
         private void WireCollectionScroll()
         {
-            _root.RegisterCallback<NavigationCancelEvent>(_ => Exit());
+            _root.RegisterCallback<NavigationCancelEvent>(_ => HandleBack());
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             var scroll = _root.Q<ScrollView>("collection-scroll");
@@ -637,25 +762,29 @@ namespace Emberfall.Presentation
 
         // ---- Chrome (buttons) ----
         //
-        // Both exits are called "Back" and both live on the plate; only their names differ, because
-        // each sits in a region the other mode hides — back-button in the browse header, done-button
-        // in the deck panel. Wire both: the hidden one is display:none, so it is unpickable and the
-        // player only ever meets the one belonging to the mode they are in.
-        //
-        // The exit saves in deckbuild mode, and it is the only way out. The alternative is a confirm
-        // dialog on a screen whose whole model is "an illegal deck is a savable draft" — there is
-        // nothing to lose by writing it. There is deliberately no second Save button beside it (Sam,
-        // 2026-08-07): two controls performing one write is two things to explain and one of them
-        // redundant.
+        // One persistent Back: dismiss and save the transient drawer first, leave Collection second.
         private void WireChrome()
         {
-            _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => Exit());
-            _root.Q<Button>("done-button")?.RegisterCallback<ClickEvent>(_ => Exit());
+            _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
+            _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
+            _root.Q<Button>("deck-drawer-close")?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
+            _root.Q<Button>("choose-another-deck")?.RegisterCallback<ClickEvent>(_ => ShowDeckChooser());
+            _root.Q<Button>("manage-decks-button")?.RegisterCallback<ClickEvent>(_ => ManageCharactersAndDecks());
+        }
+
+        private void HandleBack()
+        {
+            if (_drawerOpen)
+            {
+                CloseDeckDrawer();
+                return;
+            }
+            Exit();
         }
 
         private void Exit()
         {
-            if (Deckbuilding) SaveDeck();
+            if (EditingDeck) SaveDeck();
             Go(ReturnScene);
         }
 
@@ -664,6 +793,7 @@ namespace Emberfall.Presentation
         /// eligibility (computed fresh on load, never stored) refuses it a match.</summary>
         private void SaveDeck()
         {
+            if (!EditingDeck) return;
             _account.Save(_deck);
             Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards) for {_character.Name}.");
         }
@@ -685,23 +815,24 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// The one site that writes the wall query. Composes the two filter surfaces — the query bar
-        /// and (in deckbuild) the pairing chips — into a single <see cref="CardFilter"/>, so neither
+        /// and (while editing) the pairing chips — into a single <see cref="CardFilter"/>, so neither
         /// clobbers the other the way two separate <c>SetQuery</c> writers did before #160.
         ///
-        /// <para>The bar's own class facet is hidden in deckbuild (the plate hides <c>query-classes</c>
-        /// there), so its <see cref="CardFilter.Classes"/> is empty in that mode and the pairing chips
-        /// own the class axis with no contention. In browse the chips are never wired, <see
-        /// cref="_chipClasses"/> stays empty, and this passes the bar's filter through untouched.</para>
+        /// <para>The bar's class selections are suppressed, not cleared, while editing. The active
+        /// deck's three pairing chips own that axis; closing the drawer restores exactly the browse
+        /// class filter the player had before opening it.</para>
         ///
-        /// <para>Runs in both modes; on a plate that declares no query controls the filter is empty,
+        /// <para>Runs with or without an edit context; on a plate that declares no query controls the filter is empty,
         /// which matches everything. The sort is always the bar's own — a chip press no longer reverts
         /// it to default.</para>
         /// </summary>
         private void ApplyQuery()
         {
             CardFilter filter = _query.Filter;
-            if (_chipClasses.Count > 0)
-                filter.Classes = new List<CardClass>(_chipClasses);
+            if (EditingDeck)
+                filter.Classes = _chipClasses.Count > 0
+                    ? new List<CardClass>(_chipClasses)
+                    : null;
 
             _wall.SetQuery(filter, _query.Sort);
             UpdateWallLabels();
@@ -721,10 +852,8 @@ namespace Emberfall.Presentation
         /// ends here — the query bar and the three filter chips both — so the count can never
         /// describe a wall the player is no longer looking at.
         ///
-        /// <para>Both labels now live on the same plate as both filter surfaces, so routing every
-        /// path through here is what keeps that true. It writes to the count label in deckbuild mode
-        /// too, where the browse header hiding it makes the write invisible rather than wrong — the
-        /// alternative is a mode check here, which is one more place to get the mode wrong.</para>
+        /// <para>The label stays visible while editing and names the active deck's eligible pool, so
+        /// the same count remains truthful as the drawer opens and closes.</para>
         /// </summary>
         private void UpdateWallLabels()
         {
@@ -741,7 +870,11 @@ namespace Emberfall.Presentation
             // one lie this screen is built to avoid.
             if (_countLabel != null)
             {
-                string noun = OwnedOnly ? "in your collection" : "in the game";
+                string noun;
+                if (EditingDeck)
+                    noun = OwnedOnly ? $"owned for {_deck.Name}" : $"available to {_deck.Name}";
+                else
+                    noun = OwnedOnly ? "in your collection" : "in the game";
                 _countLabel.text = shown == _pool.Count
                     ? $"{_pool.Count} {noun}"
                     : $"{shown} of {_pool.Count} {noun}";
@@ -770,6 +903,7 @@ namespace Emberfall.Presentation
         // ---- The live legality loop: single source, runs on every mutation ----
         private void Refresh()
         {
+            if (!EditingDeck) return;
             if (_deckList != null)
             {
                 _deckList.itemsSource = _deck.Entries;
@@ -791,7 +925,7 @@ namespace Emberfall.Presentation
 
         private void RebuildCurve()
         {
-            if (_curve == null) return;
+            if (_curve == null || !EditingDeck) return;
 
             _curve.Clear();
             const int buckets = 8;                 // 0..6, 7+
@@ -823,7 +957,7 @@ namespace Emberfall.Presentation
         /// </summary>
         public void DevFill(int target)
         {
-            if (!Deckbuilding) return;
+            if (!EditingDeck) return;
             bool progressed = true;
             while (_deck.TotalCount < target && progressed)
             {
