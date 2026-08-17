@@ -71,7 +71,7 @@
     background-color: rgba(0, 0, 0, 0.55);
 }
 
-/* ---------- Query bar ----------
+/* Query bar 
  * Sits on its own scrim rather than directly on the vault plate: the controls are small text on a
  * busy, high-contrast painting, and the braziers run straight through where the chips sit.
  */
@@ -221,41 +221,39 @@
 }
 #class-tab-bar {
 
-
-
 }
-.class-tab__art {
+.class-tab_art {
     width: 56px;
     height: 56px;
     border-radius: 28px;
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
-.class-tab__art--emberward {
+.class-tab_art-emberward {
     background-image: url("/Assets/Art/UI/hptabs/ember_hp.png");
 }
-.class-tab__art--tempest {
+.class-tab_art-tempest {
     background-image: url("/Assets/Art/UI/hptabs/tempest_hp")
     }
-.class-tab__art--stonewarden {
+.class-tab_art-stonewarden {
     background-image: url("/Assets/Art/UI/hptabs/stone_hp");
     }
-.class-tab__art--nightveil {
+.class-tab_art-nightveil {
     background-image: url("/Assets/Art/UI/hptabs/night_hp");
     }
-.class-tab__art--verdant {
+.class-tab_art-verdant {
     background-image: url("/Assets/Art/UI/hptabs/verdant_hp");  
     }
-.class-tab__art--gravekeep {
+.class-tab_art-gravekeep {
     background-image: url("/Assets/Art/UI/hptabs/grave_hp");
     }
-.class-tab__art--clockwright {
+.class-tab_art-clockwright {
     background-image: url("/Assets/Art/UI/hptabs/clock_hp");
     }
-.class-tab__art--tidecaller {
+.class-tab_art-tidecaller {
     background-image: url("/Assets/Art/UI/hptabs/tide_hp");
     }
-/* .class-tab__art--neutral {
+/* .class-tab_art-neutral {
     background-image: url("/Assets/Art/UI/hptabs/neutral_hp");
     } */
 

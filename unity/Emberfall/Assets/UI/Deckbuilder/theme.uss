@@ -44,20 +44,3 @@
     color: var(--unity-colors-dropdown-text);
 }
 
-.class-tab__art {
-    width: 56px;
-    height: 56px;
-    border-top-left-radius: 28px;
-    border-top-right-radius: 28px;
-    border-bottom-right-radius: 28px;
-    border-bottom-left-radius: 28px;
-    overflow: hidden;
-    -unity-background-scale-mode: scale-and-crop;
-}
-
-.class-tab__art--emberward {
-    background-image: url("project://database/Assets/Art/UI/hptabs/ember_hp.png?fileID=2800000&guid=723e5ec5e4632ad49a447f9e7a80dbb1&type=3#ember_hp");
-}
-
-.class-tab {
-}
