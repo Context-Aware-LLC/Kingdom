@@ -13,12 +13,15 @@
     <Project Path="src/Emberfall.Tools.NetSoak/Emberfall.Tools.NetSoak.csproj" />
     <Project Path="src/Emberfall.Tools.OddsDisclosure/Emberfall.Tools.OddsDisclosure.csproj" />
     <Project Path="src/Emberfall.Tools.TelemetryVerify/Emberfall.Tools.TelemetryVerify.csproj" />
+    <Project Path="src/Emberfall.Tools.TrainingCorpus/Emberfall.Tools.TrainingCorpus.csproj" />
     <Project Path="src/Emberfall.Tools.StoreReconcile/Emberfall.Tools.StoreReconcile.csproj" />
+    <Project Path="src/Emberfall.Training.Corpus/Emberfall.Training.Corpus.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
     <Project Path="tests/Emberfall.Net.Client.Tests/Emberfall.Net.Client.Tests.csproj" />
     <Project Path="tests/Emberfall.Net.Protocol.Tests/Emberfall.Net.Protocol.Tests.csproj" />
     <Project Path="tests/Emberfall.Net.Server.Tests/Emberfall.Net.Server.Tests.csproj" />
+    <Project Path="tests/Emberfall.Training.Corpus.Tests/Emberfall.Training.Corpus.Tests.csproj" />
   </Folder>
 </Solution>
