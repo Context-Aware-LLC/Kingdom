@@ -61,12 +61,15 @@ namespace Emberfall.Presentation
         // unconformed sibling frame, and the disc radii are unchanged (0.0444h -> 0.0454h), which
         // is why the digit em sizes below did not move.
         //
-        // ONLY frame_common.png carries this geometry today. The other seven frames still measure
-        // the 2026-08-09 aperture (0.0755, 0.0659, 0.9272, 0.5503), so a non-common card overflows
-        // its art past the border — accepted knowingly (Sam, 2026-08-16) pending their conform pass.
-        // RETIREMENT TRIGGER: conforming the other seven frames to common's aperture is what makes
-        // this file's geometry unified again — delete the previous paragraph in that same commit.
-        public static readonly Vector4 ArtWindow = new(0.0460f, 0.0308f, 0.9574f, 0.5562f); // l, t, r, b
+        // All eight frames are conformed as of 2026-08-17 — every socket is inside tolerance, worst
+        // in the set 10%. The apertures still differ per frame and that is FINE, because the frame
+        // draws on top of the art quad: an aperture SMALLER than ArtWindow is covered, and only one
+        // LARGER opens a gap onto the dark body quad behind. So the single rule is that ArtWindow
+        // must cover the largest aperture in the set. The bottom edge below is set 2px past epic's
+        // 1144, the lowest in the set, which closes the 5-row strip epic showed before.
+        // RETIREMENT TRIGGER: if any frame's aperture is ever enlarged past this rect, this edge
+        // moves with it in the same commit — see docs/dev-docs/specs/card-frame-geo.md.
+        public static readonly Vector4 ArtWindow = new(0.0460f, 0.0308f, 0.9574f, 0.5596f); // l, t, r, b
 
         public static readonly Vector2 CostSocket = new(0.0911f, 0.0731f); // carries the 2026-08-09 "nudge it down a couple px" (Sam, live check)
         public const float CostDigitEm = 200f / 2048f;
@@ -86,7 +89,11 @@ namespace Emberfall.Presentation
         public const float NameCenterY   = 0.613f;  // of card height, from the top (title-band center)
         public const float NameEm        = 107f / 2048f;
         public const float BodyCenterY   = 0.798f;  // rules-parchment center
-        public const float BodyWidth     = 0.874f;  // of card width
+        // 0.846 = 1232px, which fits the NARROWEST parchment in the set (epic_spell and
+        // legendary_spell both measure 1233 wide). The previous 0.874 was 1273px and overhung
+        // those two, and rare, by ~20px per side — rules text ran off the parchment onto the
+        // stone rails, which the parchment edge sitting right there makes obvious.
+        public const float BodyWidth     = 0.846f;  // of card width
         public const float BodyHeight    = 0.234f;  // of card height
         public const float BodyEm        = 100f / 2048f;
         public const float BodyEmFloor   = 72f / 2048f; // auto-shrink floor for long rules text
