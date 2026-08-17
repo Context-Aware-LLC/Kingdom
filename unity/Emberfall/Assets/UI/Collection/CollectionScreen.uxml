@@ -4,30 +4,22 @@
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
         <ui:VisualElement name="collection-header" class="col-header">
-            <ui:VisualElement class="col-heading">
-                <ui:Label text="Collection" class="col-title"/>
-                <ui:Label name="collection-count" text="" class="col-count"/>
-                <ui:VisualElement name="scope-row" class="col-scope">
-                    <ui:Button name="scope-owned" text="Owned" class="db-chip db-chip--on"/>
-                    <ui:Button name="scope-all" text="All" class="db-chip"/>
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement class="col-header-actions">
-                <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks"/>
-                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost"/>
-            </ui:VisualElement>
+            <ui:VisualElement name="scope-row" class="col-scope">
+            <ui:Button name="scope-owned" text="Owned" class="db-chip db-chip--on"/>
+            <ui:Button name="scope-all" text="All" class="db-chip"/>
         </ui:VisualElement>
-        <ui:VisualElement name="query-bar" class="col-query">
-            <ui:VisualElement class="col-query-row">
-                <ui:TextField name="query-search" class="col-search"/>
-                <ui:DropdownField name="query-sort" class="col-sort"/>
-                <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
-                <ui:Button name="query-reset" text="Reset" class="db-chip"/>
-                <ui:VisualElement name="filter-row" class="db-filter-row">
-                    <ui:Button name="filter-primary" text="Primary" class="db-chip"/>
-                    <ui:Button name="filter-secondary" text="Secondary" class="db-chip"/>
-                    <ui:Button name="filter-neutral" text="Neutral" class="db-chip"/>
-                </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="query-bar" class="col-query">
+    <ui:VisualElement class="col-query-row">
+        <ui:TextField name="query-search" class="col-search"/>
+        <ui:DropdownField name="query-sort" class="col-sort"/>
+        <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
+        <ui:Button name="query-reset" text="Reset" class="db-chip"/>
+        <ui:VisualElement name="filter-row" class="db-filter-row">
+            <ui:Button name="filter-primary" text="Primary" class="db-chip"/>
+            <ui:Button name="filter-secondary" text="Secondary" class="db-chip"/>
+            <ui:Button name="filter-neutral" text="Neutral" class="db-chip"/>
+        </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="query-rarities" class="col-chip-row"/>
             <ui:VisualElement name="query-types" class="col-chip-row"/>

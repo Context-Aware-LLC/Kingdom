@@ -315,14 +315,13 @@
 }
 
 #class-tab-bar {
-    flex-shrink: 0;
-    margin-right: var(--space-4);
+    flex-stretch: 0;
 }
 .class-tab_art {
-    width: 56px;
-    height: 56px;
-    margin-bottom: var(--space-2);
-    border-radius: 28px;
+    width: 70px;
+    height: 10%;
+    /* margin-bottom: var(--space-2); */
+    border-radius: 28px 0 0 28px
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
