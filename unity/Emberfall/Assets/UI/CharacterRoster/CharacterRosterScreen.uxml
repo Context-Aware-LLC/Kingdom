@@ -177,7 +177,7 @@
                     <ui:Label name="create-name-error" text="" class="create-error" />
                     <ui:VisualElement class="delete-actions">
                         <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
-                        <ui:Button name="create-continue" text="Continue to Deck Builder" class="roster-button roster-button--cta" />
+                        <ui:Button name="create-continue" text="Create Character" class="roster-button roster-button--cta" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 

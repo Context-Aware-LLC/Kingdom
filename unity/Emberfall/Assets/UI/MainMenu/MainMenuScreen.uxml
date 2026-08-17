@@ -1,5 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <ui:Template name="CollectionScreen" src="project://database/Assets/UI/Collection/CollectionScreen.uxml?fileID=9197481963319205126&amp;guid=c2b9a146e6e8bc54b884c6fa1b972992&amp;type=3#CollectionScreen"/>
     <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
@@ -14,13 +13,10 @@
             <ui:Label text="EMBERFALL" class="mm-wordmark"/>
             <ui:Label text="A duel of embers" class="mm-tagline"/>
         </ui:VisualElement>
-        <ui:VisualElement name="tab-bar" style="flex-grow: 1; flex-direction: column-reverse; align-self: flex-start; position: relative; left: 0; bottom: 0;">
-            <ui:Tab label="Tab" name="Tab" class="class-tab__art class-tab__art--emberward class-tab"/>
-        </ui:VisualElement>
         <ui:VisualElement name="menu" class="mm-menu">
             <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
             <ui:Button name="btn-single-player" text="Single Player" class="mm-button"/>
-            <ui:Button name="btn-deck-builder" text="Deck Builder" class="mm-button"/>
+            <ui:Button name="btn-collection" text="Collection" class="mm-button"/>
             <ui:Button name="btn-store" text="Store" class="mm-button"/>
             <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
@@ -94,5 +90,4 @@
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
-    <ui:Instance template="CollectionScreen" style="height: 0;"/>
 </ui:UXML>

@@ -14,7 +14,7 @@ namespace Emberfall.Presentation
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
     /// <para>Each destination has a named handler so a scene-loader drops straight in. The Store opens
-    /// its in-scene panel; Deck Builder opens the character roster; the remaining unfinished
+    /// its in-scene panel; Collection opens the persistent card wall and deck drawer; the remaining unfinished
     /// destinations still log their intent.</para>
     ///
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
@@ -80,7 +80,7 @@ namespace Emberfall.Presentation
 
             Wire("btn-find-game", OnFindGame);
             Wire("btn-single-player", OnSinglePlayer);
-            Wire("btn-deck-builder", OnDeckBuilder);
+            Wire("btn-collection", OnCollection);
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
 
@@ -293,7 +293,7 @@ namespace Emberfall.Presentation
 
             int characters = _account.Roster().Count;
             string sub = characters == 0
-                ? "No characters yet — open Deck Builder"
+                ? "No characters yet — open Collection"
                 : characters == 1 ? "1 character" : $"{characters} characters";
 
             // Which seat, but only once there is more than one to confuse it with. Two accounts on one
@@ -433,7 +433,11 @@ namespace Emberfall.Presentation
 
             // Keep the first-run continuation, but move it to the roster: character creation never
             // lives on the Main Menu. First run is the only run that reaches here (OpenNameModal).
-            if (_account.Roster().Count == 0) Go("CharacterRoster");
+            if (_account.Roster().Count == 0)
+            {
+                CharacterRosterController.ReturnScene = "MainMenu";
+                Go("CharacterRoster");
+            }
         }
 
         private void SetNameBusy(bool busy)
@@ -511,6 +515,7 @@ namespace Emberfall.Presentation
         private void OnFindGame()
         {
             MatchDeckSelection.BeginChoosing();
+            CharacterRosterController.ReturnScene = "MainMenu";
             Go("CharacterRoster");
         }
 
@@ -542,13 +547,16 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Deck Builder → CharacterRoster.unity. The roster owns character selection, creation and
-        /// deletion; the Main Menu never does.
+        /// Collection is the one home for the card wall and deck editing. The deck drawer starts
+        /// closed; character/deck management remains one explicit doorway inside it.
         /// </summary>
-        private void OnDeckBuilder()
+        private void OnCollection()
         {
             MatchDeckSelection.Cancel();
-            Go("CharacterRoster");
+            CollectionController.ReturnScene = "MainMenu";
+            CollectionController.PendingCharacterId = "";
+            CollectionController.PendingDeckId = "";
+            Go("Collection");
         }
 
         // Store stays in this scene: its full-screen UI Toolkit panel owns the purchase/reveal flow.

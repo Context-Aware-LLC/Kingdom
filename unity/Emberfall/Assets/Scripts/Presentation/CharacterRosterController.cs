@@ -79,6 +79,12 @@ namespace Emberfall.Presentation
     public sealed class CharacterRosterController : MonoBehaviour
     {
         /// <summary>
+        /// Where Back returns for this visit. Collection sets this when the drawer's management
+        /// doorway is used; every other entry leaves the Main Menu default. Consumed on enable.
+        /// </summary>
+        public static string ReturnScene = "MainMenu";
+
+        /// <summary>
         /// Every real hero class, in enum order — the four original plus CLOCKWRIGHT, NIGHTVEIL,
         /// STONEWARDEN and TEMPEST (NOR-243). <b>Derived from <see cref="CardClass"/> minus NEUTRAL,
         /// not hardcoded.</b> A second hardcoded copy of the class list is exactly what stranded
@@ -103,6 +109,7 @@ namespace Emberfall.Presentation
         private VisualElement _root;
         private PlayerAccount _account;
         private ICardDatabase _db;
+        private string _returnScene = "MainMenu";
 
         /// <summary>This account's ownership record (L6), read once per visit — mirrors
         /// CollectionController._owned. Every <see cref="QueueEligibility.Check"/> call on this
@@ -209,6 +216,8 @@ namespace Emberfall.Presentation
 
         private void OnEnable()
         {
+            _returnScene = string.IsNullOrEmpty(ReturnScene) ? "MainMenu" : ReturnScene;
+            ReturnScene = "MainMenu";
             _root = GetComponent<UIDocument>().rootVisualElement?.Q<VisualElement>("root");
             if (_root == null)
             {
@@ -330,7 +339,7 @@ namespace Emberfall.Presentation
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ =>
             {
                 MatchDeckSelection.Cancel();
-                Go("MainMenu");
+                Go(_returnScene);
             });
 
             // The whole card pool, no deck panel (Sam, 2026-08-07). Deliberately does NOT cancel
@@ -338,7 +347,9 @@ namespace Emberfall.Presentation
             // abandonment, and Back returns here with the pick still live.
             _root.Q<Button>("view-collection")?.RegisterCallback<ClickEvent>(_ =>
             {
-                CollectionController.ReturnScene = "CharacterRoster";
+                CollectionController.ReturnScene = _returnScene == "Collection"
+                    ? "MainMenu"
+                    : "CharacterRoster";
                 Go("Collection");
             });
             if (MatchDeckSelection.Choosing)
