@@ -14,9 +14,6 @@
             <ui:Label text="EMBERFALL" class="mm-wordmark"/>
             <ui:Label text="A duel of embers" class="mm-tagline"/>
         </ui:VisualElement>
-        <ui:VisualElement name="tab-bar" style="flex-grow: 1; flex-direction: column-reverse; align-self: flex-start; position: relative; left: 0; bottom: 0;">
-            <ui:Tab label="Tab" name="Tab" class="class-tab__art class-tab__art--emberward class-tab"/>
-        </ui:VisualElement>
         <ui:VisualElement name="menu" class="mm-menu">
             <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
             <ui:Button name="btn-single-player" text="Single Player" class="mm-button"/>

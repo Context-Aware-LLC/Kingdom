@@ -163,14 +163,14 @@ namespace Emberfall.Presentation
 
             LoadOwnership();
 
-            _grid = _root.Q<VisualElement>("collection-grid");
-            if (_grid == null)
-            {
-                Debug.LogError("[Collection] 'collection-grid' not found in the UXML. If the whole " +
-                               "screen is empty, check the UXML for a double dash inside a comment " +
-                               "— that fails the import silently.");
-                return;
-            }
+            // _grid = _root.Q<VisualElement>("collection-grid");
+            // if (_grid == null)
+            // {
+            //     Debug.LogError("[Collection] 'collection-grid' not found in the UXML. If the whole " +
+            //                    "screen is empty, check the UXML for a double dash inside a comment " +
+            //                    "— that fails the import silently.");
+            //     return;
+            // }
 
             if (!ResolveMode()) return;
 

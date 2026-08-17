@@ -13,35 +13,32 @@
                         <ui:Button name="scope-all" text="All" class="db-chip"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost"/>
-            </ui:VisualElement>
-            <ui:VisualElement name="query-bar" class="col-query">
-                <ui:VisualElement class="col-query-row">
-                    <ui:TextField name="query-search" class="col-search"/>
-                    <ui:DropdownField name="query-sort" class="col-sort"/>
-                    <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
-                    <ui:Button name="query-reset" text="Reset" class="db-chip"/>
-                    <ui:VisualElement name="filter-row" class="db-filter-row">
-                        <ui:Button name="filter-primary" text="Primary" class="db-chip"/>
-                        <ui:Button name="filter-secondary" text="Secondary" class="db-chip"/>
-                        <ui:Button name="filter-neutral" text="Neutral" class="db-chip"/>
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:VisualElement name="query-rarities" class="col-chip-row"/>
-                <ui:VisualElement name="query-types" class="col-chip-row"/>
-                <ui:VisualElement name="query-costs" class="col-chip-row"/>
-            </ui:VisualElement>
-    
                 <ui:VisualElement name="tab-bar" style="flex-direction: column, flex-grow: 1;">
-                    <ui:VisualElement class="class-tab_art class-tab_art-emberward"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-stonewarden"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-tempest"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-nightveil"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-clockwright"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-verdant"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-tidecaller"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-gravekeep"/>
-                    <ui:VisualElement class="class-tab_art class-tab_art-neutral"/>
+                    <ui:Button class="class-tab_art class-tab_art-emberward"/>
+                    <ui:Button class="class-tab_art class-tab_art-stonewarden"/>
+                    <ui:Button class="class-tab_art class-tab_art-tempest"/>
+                    <ui:Button class="class-tab_art class-tab_art-nightveil"/>
+                    <ui:Button class="class-tab_art class-tab_art-clockwright"/>
+                    <ui:Button class="class-tab_art class-tab_art-verdant"/>
+                    <ui:Button class="class-tab_art class-tab_art-tidecaller"/>
+                    <ui:Button class="class-tab_art class-tab_art-gravekeep"/>
+                    <ui:Button class="class-tab_art class-tab_art-neutral"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="query-bar" class="col-query">
+                    <ui:VisualElement class="col-query-row">
+                        <ui:TextField name="query-search" class="col-search"/>
+                        <ui:DropdownField name="query-sort" class="col-sort"/>
+                        <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
+                        <ui:Button name="query-reset" text="Reset" class="db-chip"/>
+                        <ui:VisualElement name="filter-row" class="db-filter-row">
+                            <ui:Button name="filter-primary" text="Primary" class="db-chip"/>
+                            <ui:Button name="filter-secondary" text="Secondary" class="db-chip"/>
+                            <ui:Button name="filter-neutral" text="Neutral" class="db-chip"/>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="query-rarities" class="col-chip-row"/>
+                    <ui:VisualElement name="query-types" class="col-chip-row"/>
+                    <ui:VisualElement name="query-costs" class="col-chip-row"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="deck-panel" class="db-panel db-deck">
                     <ui:VisualElement name="deck-header" class="db-deck-header">
@@ -50,6 +47,11 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="curve-strip" class="db-curve"/>
                     <ui:ListView name="deck-list" class="db-list"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="collection-panel" class="db-panel db-collection">
+                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll">
+                <ui:VisualElement name="collection-grid" class="db-grid"/>
+                </ui:ScrollView>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
