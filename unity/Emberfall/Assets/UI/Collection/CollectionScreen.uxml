@@ -13,7 +13,8 @@
                         <ui:Button name="scope-all" text="All" class="db-chip"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement name="tab-bar" style="flex-direction: column, flex-grow: 1;">
+
+                <ui:VisualElement name="tab-bar" style="grid-item flex-direction: column, flex-grow: 1;">
                     <ui:Button class="class-tab_art class-tab_art-emberward"/>
                     <ui:Button class="class-tab_art class-tab_art-stonewarden"/>
                     <ui:Button class="class-tab_art class-tab_art-tempest"/>
@@ -40,7 +41,7 @@
                     <ui:VisualElement name="query-types" class="col-chip-row"/>
                     <ui:VisualElement name="query-costs" class="col-chip-row"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="deck-panel" class="db-panel db-deck">
+                <ui:VisualElement name="deck-panel" class="grid-item db-panel db-deck">
                     <ui:VisualElement name="deck-header" class="db-deck-header">
                         <ui:Button name="done-button" text="← Back" class="db-button db-button--ghost db-button--back"/>
                         <ui:Label name="count-label" text="0 / 30" class="db-count"/>
@@ -77,6 +78,7 @@
                 <ui:ListView name="deck-list" class="db-list"/>
             </ui:VisualElement>
             <ui:Button name="manage-decks-button" text="Manage Characters &amp; Decks" class="deck-drawer__manage"/>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

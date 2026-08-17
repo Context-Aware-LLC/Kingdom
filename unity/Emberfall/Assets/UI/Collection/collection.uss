@@ -159,6 +159,16 @@
 .collection--editing #query-classes {
     display: none;
 }
+.db-body {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.grid-item {
+    /* Set explicit sizes so items line up evenly */
+    width: 64px;
+    height: 64px;
+    margin: 5px; 
+}
 
 /* ---------- Deck drawer ----------
  * Absolute positioning and translate animation are load-bearing. Animating width would emit a
