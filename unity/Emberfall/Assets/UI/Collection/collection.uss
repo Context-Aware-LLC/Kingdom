@@ -45,6 +45,38 @@
     margin-left: var(--space-3);
     margin-bottom: var(--space-1);
 }
+
+/* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
+.col-scope {
+    display: none;
+    flex-direction: row;
+    margin-left: var(--space-4);
+    margin-bottom: var(--space-1);
+}
+.col-scope--on {
+    display: flex;
+}
+
+.col-button {
+    min-height: var(--space-12);
+    padding: var(--space-2) var(--space-6);
+    border-width: 0;
+    border-radius: 999px;
+    color: var(--ink-1);
+    background-color: var(--surface-3);
+    font-size: var(--type-label);
+}
+.col-button--ghost {
+    background-color: rgba(0, 0, 0, 0.55);
+}
+.col-button--decks {
+    min-width: 120px;
+    margin-right: var(--space-3);
+    color: var(--surface-0);
+    background-color: var(--accent);
+    -unity-font-style: bold;
+}
+
 /* Query bar 
  * Sits on its own scrim rather than directly on the vault plate: the controls are small text on a
  * busy, high-contrast painting, and the braziers run straight through where the chips sit.
@@ -156,18 +188,8 @@
 .collection--editing .db-filter-row {
     display: flex;
 }
-.collection--editing #query-classes {
+.collection--editing {
     display: none;
-}
-.db-body {
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-.grid-item {
-    /* Set explicit sizes so items line up evenly */
-    width: 64px;
-    height: 64px;
-    margin: 5px; 
 }
 
 /* ---------- Deck drawer ----------
@@ -293,16 +315,13 @@
 }
 
 #class-tab-bar {
-    position: relative;
-    top: 0;
-    right: 0;
-    height: auto;
-    width: auto;
-    margin-left: var(--space-4);
+    flex-shrink: 0;
+    margin-right: var(--space-4);
 }
 .class-tab_art {
     width: 56px;
     height: 56px;
+    margin-bottom: var(--space-2);
     border-radius: 28px;
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
@@ -311,27 +330,26 @@
     background-image: url("/Assets/Art/UI/hptabs/ember_hp.png");
 }
 .class-tab_art-tempest {
-    background-image: url("/Assets/Art/UI/hptabs/storm_hp.png")
-    }
+    background-image: url("/Assets/Art/UI/hptabs/storm_hp.png");
+}
 .class-tab_art-stonewarden {
     background-image: url("/Assets/Art/UI/hptabs/stone_hp.png");
-    }
+}
 .class-tab_art-nightveil {
     background-image: url("/Assets/Art/UI/hptabs/night_hp.png");
-    }
-.class-tab__art--verdant {
-    background-image: url("/Assets/Art/UI/hptabs/verdant_hp");
-    }
+}
+.class-tab_art-verdant {
+    background-image: url("/Assets/Art/UI/hptabs/verdant_hp.png");
+}
 .class-tab_art-gravekeep {
     background-image: url("/Assets/Art/UI/hptabs/grave_hp.png");
-    }
+}
 .class-tab_art-clockwright {
     background-image: url("/Assets/Art/UI/hptabs/clock_hp.png");
-    }
+}
 .class-tab_art-tidecaller {
     background-image: url("/Assets/Art/UI/hptabs/tide_hp.png");
-    }
-/* .class-tab_art-neutral {
-    background-image: url("/Assets/Art/UI/hptabs/neutral_hp.png");
-    } */
-
+}
+.class-tab_art-neutral {
+    background-color: var(--class-neutral);
+}

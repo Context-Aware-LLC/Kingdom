@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using Emberfall.Core.Tests.Support;
 using NUnit.Framework;
 
@@ -47,10 +48,45 @@ namespace Emberfall.Core.Tests.Presentation
             {
                 Assert.That(uxml, Does.Contain("name=\"collection-grid\""));
                 Assert.That(uxml, Does.Contain("name=\"decks-button\" text=\"Decks\""));
+                Assert.That(uxml, Does.Contain("name=\"back-button\" text=\"← Back\""));
+                Assert.That(uxml, Does.Contain("name=\"collection-empty\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-drawer\" class=\"deck-drawer\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-chooser-list\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-editor\""));
                 Assert.That(uxml, Does.Contain("name=\"manage-decks-button\""));
+                Assert.That(uxml, Does.Not.Contain("name=\"deck-panel\""),
+                    "The retired inline deck panel must not compete with the right drawer.");
+            });
+        }
+
+        [Test]
+        public void Collection_assets_keep_the_visual_tree_styles_and_wall_binding_valid()
+        {
+            string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
+            string styles = Asset("UI", "Collection", "collection.uss");
+            string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(() => XDocument.Parse(uxml), Throws.Nothing,
+                    "Malformed UXML makes Unity reject the complete collection visual tree.");
+                Assert.That(Regex.Matches(uxml, "name=\"collection-grid\"").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(uxml, "name=\"deck-list\"").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(uxml, "name=\"curve-strip\"").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(uxml, "name=\"count-label\"").Count, Is.EqualTo(1));
+
+                Assert.That(styles, Does.Contain(".col-scope {"));
+                Assert.That(styles, Does.Contain(".col-button {"));
+                Assert.That(styles, Does.Contain(".col-button--decks {"));
+                Assert.That(styles, Does.Contain(".class-tab_art-verdant {"));
+                Assert.That(styles, Does.Not.Match(@"background-image:\s*url\([^\r\n]+\)(?!\s*;)"),
+                    "One incomplete declaration makes Unity discard the entire USS file.");
+
+                Assert.That(controller, Does.Match(
+                    @"(?m)^\s*_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);$"));
+                Assert.That(controller, Does.Match(
+                    @"(?s)_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);\s*if \(_grid == null\).*?return;"),
+                    "CardWall must never be constructed with a null collection-grid host.");
             });
         }
 

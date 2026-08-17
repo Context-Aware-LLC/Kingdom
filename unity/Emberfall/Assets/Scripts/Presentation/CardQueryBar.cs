@@ -19,7 +19,7 @@ namespace Emberfall.Presentation
     /// <para><b>Binds what is present.</b> Every control is looked up by name and every absent one is
     /// simply a facet this host does not offer — so a screen wanting only a search box declares only
     /// the search box, and no second implementation appears. Expected names: <c>query-search</c>,
-    /// <c>query-classes</c>, <c>query-rarities</c>, <c>query-types</c>, <c>query-costs</c>,
+    /// <c>query-rarities</c>, <c>query-types</c>, <c>query-costs</c>,
     /// <c>query-sort</c>, <c>query-sort-dir</c>.</para>
     ///
     /// <para><b>Chips are generated from the enums, never authored in UXML.</b> A ninth class or a
@@ -63,7 +63,6 @@ namespace Emberfall.Presentation
             if (_search != null)
                 _search.RegisterValueChangedCallback(_ => Changed?.Invoke());
 
-            BuildChips(root.Q<VisualElement>("query-classes"), AllClasses(), Label, _classes);
             BuildChips(root.Q<VisualElement>("query-rarities"), AllRarities(), Label, _rarities);
             BuildChips(root.Q<VisualElement>("query-types"), AllTypes(), Label, _types);
             BuildCostChips(root.Q<VisualElement>("query-costs"));
