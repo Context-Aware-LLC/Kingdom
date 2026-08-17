@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Emberfall.Core.Tests.Support;
@@ -43,12 +44,28 @@ namespace Emberfall.Core.Tests.Presentation
         public void Collection_keeps_the_wall_mounted_and_declares_one_right_drawer()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
+            XDocument document = XDocument.Parse(uxml);
+            XElement screenRoot = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "root");
+            XElement queryBar = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "query-bar");
 
             Assert.Multiple(() =>
             {
                 Assert.That(uxml, Does.Contain("name=\"collection-grid\""));
                 Assert.That(uxml, Does.Contain("name=\"decks-button\" text=\"Decks\""));
                 Assert.That(uxml, Does.Contain("name=\"back-button\" text=\"← Back\""));
+                Assert.That(uxml, Does.Not.Contain("name=\"collection-header\""));
+                Assert.That(uxml, Does.Not.Contain("name=\"collection-count\""));
+                Assert.That(uxml, Does.Not.Contain("text=\"Collection\""));
+                Assert.That((string?)screenRoot.Elements().First().Attribute("name"),
+                    Is.EqualTo("query-bar"), "The query bar should slide into the header's old space.");
+                Assert.That(queryBar.Descendants().Any(element =>
+                    (string?)element.Attribute("name") == "decks-button"), Is.True,
+                    "Decks belongs inside the query bar once the header is removed.");
+                Assert.That(queryBar.Descendants().Any(element =>
+                    (string?)element.Attribute("name") == "back-button"), Is.True,
+                    "Back belongs inside the query bar once the header is removed.");
                 Assert.That(uxml, Does.Contain("name=\"collection-empty\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-drawer\" class=\"deck-drawer\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-chooser-list\""));
@@ -84,6 +101,7 @@ namespace Emberfall.Core.Tests.Presentation
 
                 Assert.That(controller, Does.Match(
                     @"(?m)^\s*_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);$"));
+                Assert.That(controller, Does.Not.Contain("collection-count"));
                 Assert.That(controller, Does.Match(
                     @"(?s)_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);\s*if \(_grid == null\).*?return;"),
                     "CardWall must never be constructed with a null collection-grid host.");

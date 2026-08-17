@@ -19,39 +19,10 @@
     padding: var(--space-6);
 }
 
-/* ---------- Header ---------- */
-.col-header {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-4);
-}
-.col-header-actions {
-    flex-direction: row;
-    align-items: center;
-}
-.col-heading {
-    flex-direction: row;
-    align-items: flex-end;
-}
-.col-title {
-    font-size: var(--type-h1);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-}
-.col-count {
-    font-size: var(--type-label);
-    color: var(--ink-2);
-    margin-left: var(--space-3);
-    margin-bottom: var(--space-1);
-}
-
 /* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
 .col-scope {
     display: none;
     flex-direction: row;
-    margin-left: var(--space-4);
-    margin-bottom: var(--space-1);
 }
 .col-scope--on {
     display: flex;
@@ -101,6 +72,25 @@
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-2);
+}
+.col-query-utility-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+.col-query-actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex-grow: 1;
+}
+.col-query-actions .col-button {
+    min-height: 32px;
+    height: 32px;
+    padding: 0 var(--space-4);
+}
+.col-query-actions .col-button--decks {
+    min-width: 96px;
 }
 .col-search {
     flex-grow: 1;

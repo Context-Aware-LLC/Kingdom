@@ -12,7 +12,7 @@ namespace Emberfall.Presentation
     /// <summary>
     /// The one persistent card-collection screen (NOR-210). Browsing is the screen; editing a deck is
     /// an optional context presented in a right-side drawer. Opening that drawer never replaces the
-    /// header, query bar, card wall, background or scene, so the old deckbuilder is no longer visible
+    /// query bar, card wall, background or scene, so the old deckbuilder is no longer visible
     /// to the player as a second screen wearing shared controls.
     ///
     /// <para><see cref="PendingCharacterId"/> and <see cref="PendingDeckId"/> are only navigation
@@ -24,18 +24,17 @@ namespace Emberfall.Presentation
     ///
     /// <list type="bullet">
     /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — nobody has told
-    /// this account what it owns. The wall shows the full collectible pool and the label says "in the
-    /// game". This is every machine today.</item>
-    /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and the label
-    /// says "in your collection". This is the default the moment a grant path writes that record.</item>
+    /// this account what it owns. The wall shows the full collectible pool and the scope toggle stays
+    /// hidden. This is every machine today.</item>
+    /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and Owned is
+    /// highlighted. This is the default the moment a grant path writes that record.</item>
     /// <item>A record, showing everything anyway — the Owned/All toggle (#146). Same wall as the first
-    /// state and the same label, from a completely different reason.</item>
+    /// state, with All highlighted, from a completely different reason.</item>
     /// </list>
     ///
     /// <para><b>So the player-facing copy rule holds in two of the three:</b> do not describe this
-    /// screen as a collection of owned cards while it is showing the pool. The label is the only thing
-    /// that says which of the two you are looking at, so it is not decoration — read
-    /// <see cref="OwnedOnly"/> and <see cref="UpdateWallLabels"/> before changing its wording.</para>
+    /// screen as a collection of owned cards while it is showing the pool. When ownership is known,
+    /// the scope toggle is the visible source of truth for which pool the player is viewing.</para>
     ///
     /// <para><b>The toggle is a scope, not a facet</b>, which is why it is not a chip on
     /// <see cref="CardQueryBar"/>: the bar's chips are generated from the card enums and filter a pool,
@@ -98,7 +97,6 @@ namespace Emberfall.Presentation
         private VisualElement _grid;
         private CardWall _wall;
         private CardQueryBar _query;
-        private Label _countLabel;
         private Label _emptyLabel;
         private ListView _deckList;
         private VisualElement _curve;
@@ -130,7 +128,7 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// True when the wall is scoped to what this account owns — the one predicate for it, read by
-        /// both the pool and the count label so the two can never disagree about which of them the
+        /// both the pool and the scope controls so the two can never disagree about which pool the
         /// player is looking at.
         ///
         /// </summary>
@@ -244,7 +242,7 @@ namespace Emberfall.Presentation
                 _owned = null;
                 Debug.LogError($"[Collection] could not read this account's card ownership " +
                                $"({ex.GetType().Name}: {ex.Message}); showing the full card pool instead " +
-                               "of your collection. The count label says which one you are looking at.");
+                               "of your collection.");
             }
         }
 
@@ -258,9 +256,7 @@ namespace Emberfall.Presentation
         /// pool instead would make a card you nearly own invisible, and #150 wants it dimmed.</para>
         ///
         /// <para><b>At rest</b> — every card this account owns a copy of, or, when it has no ownership
-        /// record or the player has asked for All (#146), every collectible card in the game. These two
-        /// pools look identical on screen and mean completely different things, which is why the count
-        /// label is load-bearing.</para>
+        /// record or the player has asked for All (#146), every collectible card in the game.</para>
         ///
         /// <para>A card recorded at 0 copies is NOT owned. Zero is a real recorded value — every copy
         /// dusted, or a refund — and it is exactly the case a truthiness check on "is it in the
@@ -288,7 +284,6 @@ namespace Emberfall.Presentation
         private void CacheElements()
         {
             _plate           = _root.Q<VisualElement>("root");
-            _countLabel      = _root.Q<Label>("collection-count");
             _emptyLabel      = _root.Q<Label>("collection-empty");
             _deckList        = _root.Q<ListView>("deck-list");
             _curve           = _root.Q<VisualElement>("curve-strip");
@@ -415,7 +410,7 @@ namespace Emberfall.Presentation
         /// today, which is exactly why this must be hidden rather than shown-and-inert — an alpha player
         /// meeting a toggle that does nothing learns the wrong thing about their collection.</para>
         ///
-        /// <para>The persistent header keeps this scope visible while the drawer is open. Opening an
+        /// <para>The persistent query bar keeps this scope visible while the drawer is open. Opening an
         /// editor selects All for #150; the player can still narrow to Owned explicitly.</para>
         /// </summary>
         private void WireScopeToggle()
@@ -848,37 +843,11 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The wall's own count and empty-state text. Every path that changes what the wall shows
-        /// ends here — the query bar and the three filter chips both — so the count can never
-        /// describe a wall the player is no longer looking at.
-        ///
-        /// <para>The label stays visible while editing and names the active deck's eligible pool, so
-        /// the same count remains truthful as the drawer opens and closes.</para>
+        /// Keeps the wall's empty state in sync with every path that changes what the wall shows.
         /// </summary>
         private void UpdateWallLabels()
         {
             int shown = _wall.Visible.Count;
-
-            // The label is the ONLY thing that distinguishes "your collection" from "every card in
-            // the game" — the wall is identical either way (see the class remarks). So it names the
-            // pool in both directions rather than only the interesting one: a bare count would leave
-            // the two states differing by nothing a player could see.
-            //
-            // It reads OwnedOnly, never `_owned != null`. Those were the same predicate until the
-            // toggle landed, and the difference is the whole of #146: an account WITH a record that
-            // has asked for All is looking at the game, and telling it "in your collection" is the
-            // one lie this screen is built to avoid.
-            if (_countLabel != null)
-            {
-                string noun;
-                if (EditingDeck)
-                    noun = OwnedOnly ? $"owned for {_deck.Name}" : $"available to {_deck.Name}";
-                else
-                    noun = OwnedOnly ? "in your collection" : "in the game";
-                _countLabel.text = shown == _pool.Count
-                    ? $"{_pool.Count} {noun}"
-                    : $"{shown} of {_pool.Count} {noun}";
-            }
 
             // A wall that goes blank with no text reads as a broken screen rather than an empty
             // result, and this one can go blank easily — the facets are ANDed, so "Legendary" plus
