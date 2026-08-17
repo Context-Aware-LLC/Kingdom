@@ -409,12 +409,6 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Offer the toggle, but only to an account that has an ownership record.
         ///
-        /// <para><b>With no record there is no second pool to switch to</b>: the wall is already every
-        /// collectible card in the game, so the control would offer a choice between a pool and itself,
-        /// and "All" would read as a claim that some other view is being withheld. That is every machine
-        /// today, which is exactly why this must be hidden rather than shown-and-inert — an alpha player
-        /// meeting a toggle that does nothing learns the wrong thing about their collection.</para>
-        ///
         /// <para>The persistent header keeps this scope visible while the drawer is open. Opening an
         /// editor selects All for #150; the player can still narrow to Owned explicitly.</para>
         /// </summary>

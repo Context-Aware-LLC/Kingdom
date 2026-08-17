@@ -157,6 +157,9 @@ unity/Emberfall/GeneratedAssets/
 # Miscellaneous
 .wrangler
 
+#node
+node_modules/
+
 # Card-art seeds are TRACKED. They were ignored by a bare rule here with no comment, which
 # left the only copy of the hand-authored per-card art direction untracked on one disk - the
 # same way docs/design/card-drafts-*.md was lost to the 2026-07-31 reorg. Seeds are the
