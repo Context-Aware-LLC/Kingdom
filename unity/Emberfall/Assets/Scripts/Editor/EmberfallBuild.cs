@@ -115,7 +115,7 @@ namespace Emberfall.Editor
                 }
 
                 // Force IL2CPP + ARM64 for this build regardless of editor overrides.
-                PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,
+                PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,
                     ScriptingImplementation.IL2CPP);
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
