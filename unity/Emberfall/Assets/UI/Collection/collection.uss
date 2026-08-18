@@ -16,7 +16,9 @@
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
     -unity-background-scale-mode: scale-and-crop;
-    padding: var(--space-6);
+    /* No top inset: the query bar is anchored to the top bound of the plate. The other three sides
+     * keep theirs, so the wall and the class strip stay inset from the edges as before. */
+    padding: 0 var(--space-6) var(--space-6);
 }
 
 /* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
@@ -54,7 +56,9 @@
  */
 .col-query {
     background-color: rgba(0, 0, 0, 0.45);
-    border-radius: var(--space-2);
+    /* Square at the top, rounded below: the bar meets the top bound flush rather than reading as a
+     * floating pill pushed into the corner. Restore `border-radius: var(--space-2)` to undo. */
+    border-radius: 0 0 var(--space-2) var(--space-2);
     padding: var(--space-3);
     margin-bottom: var(--space-4);
     /* Never let the wall shrink the bar away (#160 non-render, deckbuild). The body below is
@@ -304,13 +308,28 @@
     -unity-font-style: bold;
 }
 
-/* #class-tab-bar {
-    flex-stretch: 0;
-} */
+/* The class strip divides the body's height between its nine tabs, so it starts flush with the top
+ * of the card wall and runs clean to the bottom with nothing left over.
+ *
+ * flex-grow on the tabs rather than a height: nine tabs at 10% each came to 90% and left a gap at
+ * the bottom, and any change to the tab count reopens it at a different size. flex-basis:0 makes
+ * the nine shares equal regardless of what the art measures, so the strip always lands exactly on
+ * both edges no matter how tall the screen is.
+ *
+ * What makes that resolvable: .db-body is a row and its align-items defaults to stretch, so this
+ * bar already has the body's full height as a definite value to divide. A percentage height would
+ * have needed the same thing and stayed brittle — see the percent-height-needs-a-definite-parent
+ * trap this project has already paid for.
+ *
+ * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip's 70px away when space is tight;
+ * Yoga does not floor a flex item at its content size the way CSS min-width:auto does. */
+#class-tab-bar {
+    flex-shrink: 0;
+}
 .class-tab_art {
     width: 70px;
-    height: 10%;
-    /* margin-bottom: var(--space-2); */
+    flex-grow: 1;
+    flex-basis: 0;
     border-radius: 28px 0 0 28px;
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
