@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Training.Corpus\Emberfall.Training.Corpus.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Tools.NetSoak\Emberfall.Tools.NetSoak.csproj" />
   </ItemGroup>
 
 </Project>

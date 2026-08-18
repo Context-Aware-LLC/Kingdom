@@ -107,6 +107,43 @@ Invoke-Stage 'Stage 6b · Trigger/selector drift guard' {
 Invoke-Stage 'Stage 6c · Training exporter tests' {
     python3 tests/python/test_training_exporters.py -v
 }
+Invoke-Stage 'Stage 6d · Training trainer tests' {
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    if ($env:EMBERFALL_TRAINING_PYTHON) {
+        $candidates.Add($env:EMBERFALL_TRAINING_PYTHON)
+    }
+    $candidates.Add('python3')
+    $unslothPython = Join-Path $env:USERPROFILE '.unsloth/studio/unsloth_studio/Scripts/python.exe'
+    if (Test-Path -LiteralPath $unslothPython) {
+        $candidates.Add($unslothPython)
+    }
+    $trainingPython = $null
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path -LiteralPath $candidate) -and
+            -not (Get-Command $candidate -ErrorAction SilentlyContinue)) {
+            continue
+        }
+        & $candidate -c 'import numpy, torch' 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            $trainingPython = $candidate
+            break
+        }
+    }
+    if (-not $trainingPython) {
+        throw 'No Python with NumPy and Torch found; set EMBERFALL_TRAINING_PYTHON'
+    }
+    $previousRequirement = $env:EMBERFALL_REQUIRE_TORCH
+    try {
+        $env:EMBERFALL_REQUIRE_TORCH = '1'
+        & $trainingPython tests/python/test_training_trainer.py -v
+    } finally {
+        if ($null -eq $previousRequirement) {
+            Remove-Item Env:EMBERFALL_REQUIRE_TORCH -ErrorAction SilentlyContinue
+        } else {
+            $env:EMBERFALL_REQUIRE_TORCH = $previousRequirement
+        }
+    }
+}
 
 if ($Nightly) {
     Invoke-Stage 'Nightly · Category=Nightly' {

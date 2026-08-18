@@ -123,7 +123,8 @@ namespace Emberfall.Core
         }
 
         /// <summary>
-        /// WinCheck (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §4): a hero at ≤0 health ends the match; both at once is a Draw.
+        /// A hero at ≤0 health ends the match. If both heroes die in the same resolution,
+        /// the hero with the lower final health loses; equal health is a draw.
         /// Idempotent — does nothing once an outcome is set.
         /// </summary>
         public static void CheckWin(GameState state, EventBuffer buf)
@@ -134,7 +135,14 @@ namespace Emberfall.Core
             bool dead1 = state.Players[1].Hero.CurrentHealth <= 0;
             if (!dead0 && !dead1) return;
 
-            if (dead0 && dead1) state.Outcome = MatchOutcome.Draw;
+            if (dead0 && dead1)
+            {
+                int health0 = state.Players[0].Hero.CurrentHealth;
+                int health1 = state.Players[1].Hero.CurrentHealth;
+                if (health0 == health1) state.Outcome = MatchOutcome.Draw;
+                else if (health0 > health1) state.Outcome = MatchOutcome.Player0Win;
+                else state.Outcome = MatchOutcome.Player1Win;
+            }
             else if (dead1) state.Outcome = MatchOutcome.Player0Win;
             else state.Outcome = MatchOutcome.Player1Win;
 

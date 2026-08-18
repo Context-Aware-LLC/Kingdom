@@ -29,7 +29,7 @@ When no player remains connected, the match is voided immediately. A void has no
 - **Victory or defeat:** a hero reaches 0 Health.
 - **Concession:** a player confirms a forfeit; the opponent wins.
 - **Idle forfeit:** one player has two consecutive turns ended by the clock.
-- **Draw:** both heroes reach 0 during the same resolution.
+- **Simultaneous lethal:** if both heroes reach 0 or less during the same resolution, the hero with the lower final Health loses; equal final Health is a draw.
 - **Void:** both players are disconnected, so no competitive outcome is assigned.
 
 If a previous match cannot be found after reconnecting, it has already ended or been voided.
