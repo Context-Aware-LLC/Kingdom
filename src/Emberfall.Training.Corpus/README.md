@@ -22,6 +22,26 @@ dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
 Use a new directory for each run. Match IDs and manifest rows are unique within a run, and capture
 refuses to append a duplicate episode.
 
+For a diverse training capture, `dataset-matrix` expands the requested playable classes into every
+unordered pairing, alternates seats inside each pairing, and writes the whole schedule through one
+replay store and episode manifest. IDs and seeds are stable across runs with the same configuration:
+
+```powershell
+dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
+  dataset-matrix 200 "E:\EmberfallData\raw\matrix-001" `
+  --classes EMBERWARD,TIDECALLER,GRAVEKEEP,VERDANT
+
+# Use every playable class instead:
+dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
+  dataset-matrix 200 "E:\EmberfallData\raw\matrix-all-001" --all-classes
+```
+
+`200` is matches per pairing, not the total, and must be positive and even so each class occupies
+each seat equally. An explicit class list must contain at least two unique, non-neutral classes. The
+command reports composition and clean/outcome counts for each pairing and
+fails the complete run on the same integrity, rejection, stall, replay, and telemetry conditions as
+the existing single-matchup `dataset` command.
+
 ## Materialize
 
 The .NET builder, rather than Python, replays through the real Emberfall core and enumerates legal
