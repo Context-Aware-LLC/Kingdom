@@ -6,9 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Emberfall — Card Corpus Admin Panel</title>
   <link rel="stylesheet" href="styles.css">
-  </link>
+  <!-- data.js must execute before admin-panel.js: it defines window.CARD_DATA.
+       Both are deferred, and deferred scripts run in document order. -->
+  <script src="data.js" defer></script>
   <script src="admin-panel.js" defer></script>
-
 </head>
 
 <body>
@@ -41,11 +42,11 @@
       </div>
       <div class="filter-group">
         <h3>Keyword</h3>
-        <div class="check-list wrap" id="f-tribe"></div>
+        <div class="check-list wrap" id="f-keyword"></div>
       </div>
       <div class="filter-group">
         <h3>Tribe</h3>
-        <div class="check-list wrap" id="f-keyword"></div>
+        <div class="check-list wrap" id="f-tribe"></div>
       </div>
       <button class="reset" id="f-reset">Reset filters</button>
     </aside>
@@ -56,12 +57,25 @@
         <span class="muted" id="scope-desc"></span>
       </div>
 
-      <div class="card span-2">
-        <h2>Type split</h2>
-        <div id="type-split"></div>
-      </div>
+      <div class="cards-grid">
+        <div class="card span-2">
+          <h2>Type split</h2>
+          <div id="type-split"></div>
+        </div>
 
-      <div class="cards-grid" style="margin-top:16px">
+        <div class="card span-2">
+          <div class="card-head">
+            <h2>Rarity distribution</h2>
+            <div class="seg-toggle" id="rarity-mode" role="group" aria-label="Rarity units">
+              <button type="button" data-mode="count" class="on">Counts</button>
+              <button type="button" data-mode="share">Share %</button>
+            </div>
+          </div>
+          <div id="rarity-split"></div>
+          <h3 class="sub-head" id="rarity-matrix-head">By class</h3>
+          <div class="rarity-matrix" id="rarity-matrix"></div>
+        </div>
+
         <div class="card">
           <h2>Keyword frequency</h2>
           <div class="bars" id="keyword-bars"></div>
@@ -72,35 +86,30 @@
         </div>
         <div class="card">
           <h2>Tribes</h2>
-        <div class="bars" id="tribe-bars"></div>
-      </div>
+          <div class="bars" id="tribe-bars"></div>
+        </div>
 
-      <div class="card span-2" style="margin-top:16px">
-        <h2>Cost distribution</h2>
-        <div class="hist" id="cost-hist"></div>
-      </div>
+        <div class="card span-2">
+          <h2>Cost distribution</h2>
+          <div class="hist" id="cost-hist"></div>
+        </div>
 
-      <div class="card span-2" style="margin-top:16px">
-        <h2>Minion attack / health distribution</h2>
-        <div class="hist-wrap">
-          <div class="hist-block">
-            <h3>Attack</h3>
-            <div class="hist" id="attack-hist"></div>
-          </div>
-          <div class="hist-block">
-            <h3>Health</h3>
-            <div class="hist" id="health-hist"></div>
+        <div class="card span-2">
+          <h2>Minion attack / health distribution</h2>
+          <div class="hist-wrap">
+            <div class="hist-block">
+              <h3>Attack</h3>
+              <div class="hist" id="attack-hist"></div>
+            </div>
+            <div class="hist-block">
+              <h3>Health</h3>
+              <div class="hist" id="health-hist"></div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="card" style="margin-top:16px">
-
-      </div>
     </main>
   </div>
-
-  <script src="data.js"></script>
-
 </body>
 
 </html>
