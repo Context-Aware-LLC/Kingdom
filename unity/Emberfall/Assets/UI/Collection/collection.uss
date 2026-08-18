@@ -304,9 +304,9 @@
     -unity-font-style: bold;
 }
 
-#class-tab-bar {
+/* #class-tab-bar {
     flex-stretch: 0;
-}
+} */
 .class-tab_art {
     width: 70px;
     height: 10%;
