@@ -32,7 +32,8 @@ namespace Emberfall.Core.Cards
             // "Freeze": frost is not a verb in English, so "Frost a minion." did not parse as a
             // sentence. Freeze collides with the genre's word for the same mechanic and that is
             // accepted here — one collision on a plain English verb, ruled cheaper than a keyword
-            // the player cannot read. tools/ci/vocabulary-gate.ps1 permits it for that reason.
+            // the player cannot read. (This used to note that the vocabulary gate carved out an
+            // exception for it; that gate was removed 2026-08-18. The ruling stands on its own.)
             => keyword == Keyword.FROST ? "Freeze" : null;
     }
 }

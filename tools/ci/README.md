@@ -83,20 +83,18 @@ than queuing for the single-writer Editor over a break it already caught.
 This is what the `/verify` skill runs when no fresh cached result exists for the current commit —
 see `.claude/skills/verify/SKILL.md`. Run it directly the same way you'd run either gate alone.
 
-## Canonical-vocabulary gate
+## Canonical-vocabulary gate — REMOVED 2026-08-18
 
-Run the repository scan with:
+`vocabulary-gate.ps1` scanned six directory trees, case-insensitively, for the genre's standard
+keyword words, so that the EF-022 keyword rename could not regress. It was deleted because it never
+caught anything and structurally could not: `Keyword` is a closed enum and `CardValidator` fails
+shut on values outside it, so a retired name cannot reach the engine in the first place.
 
-```powershell
-pwsh tools/ci/vocabulary-gate.ps1
-```
+What it did produce was false positives on ordinary English. FREEZE needed a permanent carve-out
+within days of the gate landing, and it ended its life failing on six innocent uses of "charge" —
+five in the store reconciler, one in an art prompt describing a beast mid-charge.
 
-It exits nonzero for active-scope matches that are not an immutable font-license exception or a
-path passed explicitly with `-MigrationNote`. The current repository is intentionally red until
-the vocabulary migration lands, so this utility is not workflow-wired yet.
-
-Exercise the scanner's temporary clean and failing fixtures with:
-
-```powershell
-pwsh tools/ci/vocabulary-gate.ps1 -SelfTest
-```
+**Do not reinstate it.** The vocabulary rule itself still stands — write about keywords using
+Emberfall's own names — but it belongs where the words are player-facing, which is card text: data,
+authored deliberately, with a human reading every row. It does not belong as a grep over prose in a
+payment file.

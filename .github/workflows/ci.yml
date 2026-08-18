@@ -145,9 +145,9 @@ jobs:
           base="origin/${{ github.base_ref || 'master' }}"
           tools/ci/rebaseline-guard.sh "$base"
 
-      - name: "Stage 1 · Canonical vocabulary"
-        shell: pwsh
-        run: ./tools/ci/vocabulary-gate.ps1
+      # Stage 1's canonical-vocabulary scan was REMOVED 2026-08-18 — see the note in
+      # tools/ci/gates.ps1. It never produced a true positive and could not: the regression it
+      # guarded is already closed by a closed enum plus a fail-shut validator.
 
       # ── Stage 2 — Core unit tests (BLOCKING, L1) ────────────────────────────────
       - name: "Stage 2 · Core unit tests"

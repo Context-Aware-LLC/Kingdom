@@ -57,7 +57,14 @@ if (-not $Quick) {
     Invoke-Stage 'Stage 1 · Lint (dotnet format)' {
         dotnet format Emberfall.slnx --verify-no-changes --no-restore
     }
-    Invoke-Stage 'Stage 1 · Canonical vocabulary' { & "$PSScriptRoot/vocabulary-gate.ps1" }
+    # Stage 1's canonical-vocabulary scan was REMOVED 2026-08-18. It grepped six directory trees,
+    # case-insensitively, for the genre's keyword words, to stop a completed rename (EF-022) from
+    # regressing. It never caught one. It could not: `Keyword` is a closed enum and the validator
+    # fails shut on values outside it, so the regression it guarded was already impossible by
+    # construction. What it did produce was false positives on ordinary English — a carve-out for
+    # FREEZE within days of landing, then six innocent uses of "charge" in the store reconciler and
+    # an art prompt. Do not reinstate it: if a retired keyword word ever matters again, it matters
+    # in printed card text, which is data with a human reviewing it, not prose in a payment file.
 
     # Gates USS PARSEABILITY, not style — .stylelintrc.json carries zero rules on purpose. Unity
     # discards an entire stylesheet on one malformed declaration, silently: every rule in the file

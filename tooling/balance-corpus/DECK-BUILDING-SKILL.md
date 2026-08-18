@@ -9,10 +9,11 @@ drafting a corpus deck does not have to re-derive the card pool's shape from scr
 source. Where a brief and the data disagreed, the data won — see *Corrections to briefs* at the
 bottom, which is the most load-bearing section in this file.
 
-**Write about keywords using Emberfall's own vocabulary.** `tools/ci/vocabulary-gate.ps1` is a
-blocking CI stage that scans `tooling/` prose, not just code, and rejects the genre's standard
-keyword words. Describe what a keyword *does*; do not reach for the word another game uses. The one
-deliberate exception is **Freeze**, permitted by ruling — see the `FROST` row below.
+**Write about keywords using Emberfall's own vocabulary.** Describe what a keyword *does*; do not
+reach for the word another game uses. The one deliberate exception is **Freeze**, permitted by
+ruling — see the `FROST` row below. This was enforced by a CI scan until 2026-08-18; it is now a
+convention you follow rather than a gate that stops you, because the scan only ever caught innocent
+English and never a real leak.
 
 ---
 
