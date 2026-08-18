@@ -5,6 +5,7 @@ using System.Linq;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
+using Emberfall.Presentation;
 using UnityEditor;
 using UnityEngine;
 
@@ -62,6 +63,14 @@ namespace Emberfall.Editor
         private IContentLinter _linter;
         private IAddressableArtCatalog _artCatalog;
         private IBalanceGuardrails _guardrails;
+
+        // Art preview cache, keyed on the artId we last SEARCHED — a miss is cached too. IMGUI
+        // repaints continuously, and AssetDatabase.FindAssets is a project-wide scan, so caching
+        // only the hits would leave every card whose art is missing running that scan every frame.
+        // "Recheck" is the way back out when the file is fixed on disk while the window stays open.
+        private string _artPreviewFor;
+        private Sprite _artPreviewSprite;
+        private string _artPreviewPath;
 
         private void OnEnable()
         {
@@ -141,6 +150,81 @@ namespace Emberfall.Editor
             EditorGUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// Show the art the selected card's artId actually resolves to, or say plainly that it
+        /// resolves to nothing.
+        ///
+        /// Resolution goes through the game's own <see cref="EditorArtProvider"/> rather than a
+        /// private lookup of its own. A preview that agreed with nothing would be worse than no
+        /// preview: the whole value here is that a card looking right in this window is a card
+        /// whose art the vertical slice will find.
+        /// </summary>
+        private void DrawArtPreview(EditableCard card)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Art", EditorStyles.boldLabel);
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Recheck", EditorStyles.miniButton, GUILayout.Width(64)))
+                _artPreviewFor = null;
+            EditorGUILayout.EndHorizontal();
+
+            string artId = card.ArtId ?? "";
+            if (_artPreviewFor != artId)
+            {
+                _artPreviewFor = artId;
+                _artPreviewSprite = null;
+                _artPreviewPath = null;
+                new EditorArtProvider().LoadArt(artId, sprite =>
+                {
+                    _artPreviewSprite = sprite;
+                    _artPreviewPath = sprite == null ? null : AssetDatabase.GetAssetPath(sprite);
+                });
+            }
+
+            if (artId.Length == 0)
+            {
+                EditorGUILayout.HelpBox("No artId on this row, so nothing to show.", MessageType.Info);
+                return;
+            }
+
+            string expectedFolder = $"Assets/Art/Cards/{card.SetId}/";
+            if (_artPreviewSprite == null)
+            {
+                // The exact sentence an author needs, because the failure is otherwise silent until
+                // CI: audit_card_art_names.py --fail-missing-only is a blocking stage, and the
+                // artId IS the filename, so a dropped separator is the whole bug.
+                EditorGUILayout.HelpBox(
+                    $"artId '{artId}' resolves to no sprite under Assets/Art/.\n" +
+                    $"Expected {expectedFolder}{ArtIds.ToFileName(artId)}.png — the artId IS the " +
+                    "filename. Check for a missing separator before assuming the art is absent.",
+                    MessageType.Error);
+                return;
+            }
+
+            var texture = _artPreviewSprite.texture;
+            const float previewWidth = 220f;
+            float height = texture.width > 0 ? previewWidth * texture.height / texture.width : previewWidth;
+            Rect rect = GUILayoutUtility.GetRect(previewWidth, height, GUILayout.ExpandWidth(false));
+            GUI.DrawTexture(rect, texture, ScaleMode.ScaleToFit);
+
+            EditorGUILayout.LabelField($"{texture.width} × {texture.height}", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(_artPreviewPath, EditorStyles.miniLabel);
+
+            // The set folder decides which Addressables bundle the file ships in, and NOTHING else
+            // reports a mismatch: the address is a flat card_art/<fileName> with no set in it, so a
+            // file in the wrong folder still renders here and still passes CardCi while shipping in
+            // the wrong bundle. Only audit_card_art_names.py looks — and now this line.
+            if (!_artPreviewPath.StartsWith(expectedFolder, StringComparison.OrdinalIgnoreCase))
+                EditorGUILayout.HelpBox(
+                    $"This row is setId {card.SetId}, but its art sits outside {expectedFolder}. " +
+                    "It will render correctly and ship in the wrong Addressables bundle.",
+                    MessageType.Warning);
+
+            if (GUILayout.Button("Select in Project", GUILayout.Width(140)))
+                EditorGUIUtility.PingObject(_artPreviewSprite);
+        }
+
         private static string BadgeFor(ValidationReport core, ValidationReport lint)
         {
             if (!core.Ok) return "✕";
@@ -199,12 +283,13 @@ namespace Emberfall.Editor
             card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
 
-            // The requiresEngineeringPrimitive toggle stood here until NOR-224. It let an author
-            // park a card whose effect no engine verb could compose. Authoring is backend-first
-            // now: the primitive lands first, so there is nothing to declare.
-
             if (EditorGUI.EndChangeCheck())
                 _dirtyIds.Add(card.Id);
+
+            // Deliberately OUTSIDE the change check above. Every control in this block is a button,
+            // and a clicked button sets GUI.changed — inside the check, merely pinging the art in
+            // the Project window would mark the card unsaved.
+            DrawArtPreview(card);
 
             EditorGUILayout.Space();
             DrawValidationPanel(card);
