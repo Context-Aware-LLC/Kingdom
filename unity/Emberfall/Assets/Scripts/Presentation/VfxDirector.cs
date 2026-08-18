@@ -26,26 +26,37 @@ namespace Emberfall.Presentation
         [Header("Board anchors for world-position resolution")]
         [SerializeField] private BoardAnchors boardAnchors;
 
-        [Header("Spell reveal (opponent-spell-cast-has-no-visible-tell)")]
-        [Tooltip("How long the whole entry holds before the spell's effect becomes visible — the " +
-                 "beat the reveal is read in. Also fed to MatchRunner.SpellRevealClassifier via " +
-                 "GameBootstrap, so this is the one tunable for the pause itself.")]
-        [SerializeField, Range(0f, 3f)] private float spellRevealHoldSeconds = 0.6f;
-        [Tooltip("How much longer the reveal visual stays up AFTER the hold ends (overlapping the " +
-                 "now-visible effect) so it doesn't feel like it vanishes the instant damage lands.")]
-        [SerializeField, Range(0f, 3f)] private float spellRevealLingerSeconds = 1.2f;
+        [Header("Play reveal — every played card gets a readable beat")]
+        [Tooltip("A cast spell resolves and is gone, so its reveal IS the whole tell. Longest hold.")]
+        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.9f, 1.2f);
+        [Tooltip("A minion announces itself by arriving a moment later, so its reveal is a lead-in " +
+                 "rather than the whole story — about half a spell's, and it clears out fast so it " +
+                 "isn't sitting on top of the board it just changed.")]
+        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.45f, 0.35f);
+        [Tooltip("An equip is a discrete moment like a cast, but the weapon stays visible in its " +
+                 "socket afterwards.")]
+        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.6f, 0.6f);
         [Tooltip("Reveal card size as a multiple of the in-hand/board card size.")]
-        [SerializeField, Range(0.5f, 2f)] private float spellRevealScale = 1.2f;
+        [SerializeField, Range(0.5f, 2f)] private float playRevealScale = 1.2f;
 
         private readonly Dictionary<PresentationCue, ParticleSystem> _lookup = new();
         private GameState _state;
         private IArtProvider _artProvider;
         private BoardController _board;
 
-        /// <summary>The one tunable MatchRunner needs to know about — how long the reveal holds
-        /// up the rest of the command. Read by GameBootstrap when it builds the classifier
-        /// delegate, so this stays the single source for the number (Sam, 2026-08-01).</summary>
-        public float SpellRevealHoldSeconds => spellRevealHoldSeconds;
+        /// <summary>The tunables MatchRunner needs to know about — how long each card type's
+        /// reveal holds up the rest of the command. Read by GameBootstrap when it builds the
+        /// classifier delegate, so this stays the single source for the numbers (Sam, 2026-08-01;
+        /// per-type 2026-08-18).</summary>
+        public PlayRevealHolds RevealHolds =>
+            new PlayRevealHolds(minionReveal.HoldSeconds, spellReveal.HoldSeconds, weaponReveal.HoldSeconds);
+
+        private RevealTiming TimingFor(CardType type) => type switch
+        {
+            CardType.SPELL  => spellReveal,
+            CardType.WEAPON => weaponReveal,
+            _               => minionReveal,
+        };
 
         private void Awake()
         {
@@ -67,42 +78,55 @@ namespace Emberfall.Presentation
         // Called by MatchRunner.OnStateUpdated — keeps _state current for anchor resolution.
         public void OnStateUpdated(GameState state) => _state = state;
 
-        /// <summary>Called by MatchRunner.OnSpellReveal, the instant a spell-cast entry begins its
-        /// extra hold — shows the cast card over its target (or the caster's hero, if there's no
-        /// single target) for spellRevealHoldSeconds + spellRevealLingerSeconds, then self-destroys.
+        /// <summary>Called by MatchRunner.OnPlayReveal, the instant a card-play entry begins its
+        /// extra hold — shows the played card over its target (or centre stage, if it didn't
+        /// single out anything) for that type's hold + linger, then self-destroys.
         /// Uses _state as of THIS call (the pre-effect snapshot: MatchRunner fires this before the
         /// held entry releases), which matters for a lethal hit — the target is still on the board
         /// in this snapshot even though it won't be once the hold ends.</summary>
-        public void ShowSpellReveal(SpellReveal reveal)
+        public void ShowPlayReveal(PlayReveal reveal)
         {
             if (boardAnchors == null || reveal.Def == null || _board == null) return;
 
-            Vector3? pos = ResolvePosition(reveal.Target) ?? ResolveHeroPosition(reveal.Controller);
+            RevealTiming timing = TimingFor(reveal.Type);
+
+            // Targeted → over what it hit, which is the reveal doing double duty as "this is what
+            // just happened to that". Untargeted → centre stage, between the two board rows, where
+            // both seats read it equally. The caster's own hero anchor was the old fallback and is
+            // the wrong place for it: off to one side, on top of the portrait, and it reads as
+            // something happening TO the caster.
+            Vector3? pos = ResolvePosition(reveal.Target) ?? ResolveCentrePosition();
             if (pos == null) return;
 
             // A real card, not a stretched texture: BuildDetachedCard gives the same frame,
             // art-cover-fit and name label a card in hand or on the board gets, through the
             // shipping CreatePresenter rig — one card face implementation, not a second one drifting
             // here. anchorGo's scale carries down to every child quad/label uniformly.
-            var anchorGo = new GameObject($"SpellReveal_{reveal.Def.Name}");
+            var anchorGo = new GameObject($"PlayReveal_{reveal.Def.Name}");
             anchorGo.transform.position = pos.Value + new Vector3(0f, 0f, -0.2f); // in front of the target
-            anchorGo.transform.localScale = Vector3.one * spellRevealScale;
+            anchorGo.transform.localScale = Vector3.one * playRevealScale;
 
             CardPresenter card = _board.BuildDetachedCard(anchorGo.transform);
             card.Bind(reveal.Def, new CardLiveState(new InstanceId(-1)));
             if (_artProvider != null && !string.IsNullOrEmpty(reveal.Def.ArtId))
                 _artProvider.LoadArt(reveal.Def.ArtId, card.SetArt);
 
-            Destroy(anchorGo, spellRevealHoldSeconds + spellRevealLingerSeconds);
+            Destroy(anchorGo, timing.HoldSeconds + timing.LingerSeconds);
         }
 
-        private Vector3? ResolveHeroPosition(PlayerId controller)
+        /// <summary>Centre of the play area, derived from the scene rather than hard-coded: the
+        /// two hero anchors are mirrored about the origin (ProceduralBoardSetup places them at
+        /// ±HeroX, ±HeroY), so their midpoint is the point between the two board rows however the
+        /// layout is retuned.</summary>
+        private Vector3? ResolveCentrePosition()
         {
-            if (boardAnchors == null || _state == null) return null;
-            foreach (var ps in _state.Players)
-                if (ps.Id == controller)
-                    return boardAnchors.HeroAnchor(ps.Id)?.position;
-            return null;
+            if (boardAnchors == null || _state == null || _state.Players.Length < 2) return null;
+
+            Transform a = boardAnchors.HeroAnchor(_state.Players[0].Id);
+            Transform b = boardAnchors.HeroAnchor(_state.Players[1].Id);
+            if (a == null || b == null) return null;
+
+            return (a.position + b.position) * 0.5f;
         }
 
         // Called by MatchRunner.OnMatchEvent — plays one effect per event in emission order.
@@ -161,5 +185,29 @@ namespace Emberfall.Presentation
     {
         public PresentationCue Cue;
         public ParticleSystem Prefab;
+    }
+
+    /// <summary>
+    /// One card type's play-reveal timing. HOLD is the part that costs the match time — the whole
+    /// playback entry waits on it, so nothing the card does is visible yet. LINGER is free by
+    /// comparison: the entry has already released and the board is moving again underneath, the
+    /// card just hasn't faded out. Tune hold for readability and linger for how abruptly the beat
+    /// ends.
+    /// </summary>
+    [Serializable]
+    public struct RevealTiming
+    {
+        [Tooltip("Holds the entire playback entry: the card's effects are not visible yet.")]
+        [Range(0f, 3f)] public float HoldSeconds;
+
+        [Tooltip("How much longer the card stays up AFTER the hold ends, overlapping the now-" +
+                 "visible effect, so it doesn't vanish the instant damage lands.")]
+        [Range(0f, 3f)] public float LingerSeconds;
+
+        public RevealTiming(float holdSeconds, float lingerSeconds)
+        {
+            HoldSeconds = holdSeconds;
+            LingerSeconds = lingerSeconds;
+        }
     }
 }

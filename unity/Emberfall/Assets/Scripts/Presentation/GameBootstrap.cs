@@ -232,16 +232,18 @@ namespace Emberfall.Presentation
                 matchRunner.OnMatchEvent   += vfxDirector.OnMatchEvent;
                 matchRunner.OnStateUpdated += vfxDirector.OnStateUpdated;
 
-                // Opponent-spell-cast-has-no-visible-tell: a played spell has no reveal moment
-                // today, unlike a minion (which announces itself by appearing on the board). Holds
-                // the whole entry for a beat and shows the cast card over its target before the
-                // effect becomes visible. db lives here, not on MatchRunner, so the classifier is
-                // built here and handed down rather than teaching MatchRunner about card types.
+                // Play reveal: every played card holds the entry for a beat and is shown magnified
+                // — over its target if it singled one out, centre stage otherwise — before its
+                // effects become visible. Started spell-only (a cast has no other tell at all);
+                // now per-type, because the beat is what makes a match followable rather than just
+                // what makes a spell identifiable (Sam, 2026-08-18). db lives here, not on
+                // MatchRunner, so the classifier is built here and handed down rather than
+                // teaching MatchRunner about card types.
                 vfxDirector.Init(artProvider, boardController);
-                float holdSeconds = vfxDirector.SpellRevealHoldSeconds;
-                matchRunner.SpellRevealClassifier = (snapshot, events) =>
-                    SpellRevealClassifier.Classify(snapshot, events, db, holdSeconds);
-                matchRunner.OnSpellReveal += vfxDirector.ShowSpellReveal;
+                PlayRevealHolds holds = vfxDirector.RevealHolds;
+                matchRunner.PlayRevealClassifier = (snapshot, events) =>
+                    PlayRevealClassifier.Classify(snapshot, events, db, holds);
+                matchRunner.OnPlayReveal += vfxDirector.ShowPlayReveal;
             }
 
             // ── Debug logging ─────────────────────────────────────────────────────
