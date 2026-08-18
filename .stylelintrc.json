@@ -1,0 +1,11 @@
+{
+  "//": "USS syntax gate. Deliberately ZERO rules — see .stylelintrc.README in gates.ps1 Stage 1b.",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["**/*.uss"],
+      "customSyntax": "postcss"
+    }
+  ],
+  "ignoreFiles": ["node_modules/**", "unity/Emberfall/Library/**", "art-pipeline/**"]
+}

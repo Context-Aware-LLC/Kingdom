@@ -58,6 +58,22 @@ if (-not $Quick) {
         dotnet format Emberfall.slnx --verify-no-changes --no-restore
     }
     Invoke-Stage 'Stage 1 · Canonical vocabulary' { & "$PSScriptRoot/vocabulary-gate.ps1" }
+
+    # Gates USS PARSEABILITY, not style — .stylelintrc.json carries zero rules on purpose. Unity
+    # discards an entire stylesheet on one malformed declaration, silently: every rule in the file
+    # stops applying with nothing logged, so it presents as a layout bug rather than a syntax one
+    # and you debug the wrong thing. collection.uss shipped three of them (a missing semicolon, a
+    # stray character) before this existed. stylelint-config-standard was tried and rejected: ~40
+    # cosmetic hits on a clean file plus genuine false positives on `-unity-*` values, and a gate
+    # nobody reads is not a gate. Parse errors are reported regardless of the rule set, so zero
+    # rules is the whole check.
+    Invoke-Stage 'Stage 1b · USS syntax (stylelint)' {
+        if (-not (Test-Path "$repo/node_modules/stylelint")) {
+            Write-Host "   stylelint is not installed — run 'npm install' at the repo root" -ForegroundColor Yellow
+            throw "node_modules/stylelint missing"
+        }
+        npx stylelint "unity/Emberfall/Assets/UI/**/*.uss"
+    }
 }
 
 # Stage 1's rebaseline-guard is deliberately absent: it diffs against a base ref that only means

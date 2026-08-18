@@ -1,6 +1,10 @@
 {
+  "scripts": {
+    "lint:uss": "stylelint \"unity/Emberfall/Assets/UI/**/*.uss\""
+  },
   "devDependencies": {
     "@prettier/plugin-xml": "^3.4.2",
-    "prettier": "^3.9.6"
+    "prettier": "^3.9.6",
+    "stylelint": "^17.14.1"
   }
 }
