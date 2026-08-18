@@ -26,7 +26,7 @@ namespace Emberfall.Net.Client.Tests
             await StartPairAsync(peer, c0, c1);
             int baseline = c0.InboundProcessed;
 
-            TurnTimer captured = null;
+            TurnTimer? captured = null;
             int fired = 0;
             c0.OnTurnTimer += t => { captured = t; fired++; };
 

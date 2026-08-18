@@ -130,7 +130,14 @@ namespace Emberfall.Core
         // Hot-seat is the authority in-process with no turn clock: there is no server deadline to
         // report, so this never fires (IMatchSession.OnTurnTimer contract). The E2 visible clock is
         // networked-only; its view is exercised against a stub session, not this one.
+        //
+        // CS0067 ("never used") is therefore the correct and permanent state of this member, not a
+        // defect: IMatchSession requires it, and only NetworkedMatchSession has a deadline to raise
+        // it with. Suppressed at the declaration rather than solution-wide so that a genuinely dead
+        // event anywhere else still fails the build under TreatWarningsAsErrors.
+#pragma warning disable CS0067
         public event Action<TurnTimer>? OnTurnTimer;
+#pragma warning restore CS0067
 
         public Task<CommandResult> SubmitAsync(PlayerIntent intent)
             => Task.FromResult(_coordinator.Submit(intent, _seat));

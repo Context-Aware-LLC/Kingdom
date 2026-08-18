@@ -10,4 +10,23 @@
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\.dotnet-build\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)..\.dotnet-build\bin\$(MSBuildProjectName)\</BaseOutputPath>
   </PropertyGroup>
+
+  <!--
+    A compiler warning here is a build failure. The solution carried exactly two warnings when this
+    was turned on, so the floor was already clean and the only thing missing was something to hold
+    it there: a warning nobody fails on is read once and then never again.
+
+    SCOPED TO src/ ON PURPOSE — do NOT move this to a repo-root Directory.Build.props. Unity
+    generates its own .csproj files under unity/Emberfall/, and tools/ci/unity-compile.ps1 builds
+    those with `dotnet build` (see its line ~91). A root-level props file would reach them, so a
+    warning in Unity-generated source — which nobody in this repo authors or can fix — would fail
+    the Unity gate. tests/Directory.Build.props carries the same setting for the test projects.
+
+    Suppress a deliberate warning at its declaration with a justification comment, the way
+    LocalMatchSession.OnTurnTimer suppresses CS0067, rather than adding it to NoWarn here. A
+    solution-wide exemption also hides the next genuine instance of that warning.
+  -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 </Project>
