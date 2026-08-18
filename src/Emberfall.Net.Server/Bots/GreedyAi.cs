@@ -29,6 +29,9 @@ namespace Emberfall.Net.Server.Bots
     /// </summary>
     public static class GreedyAi
     {
+        /// <summary>Dataset provenance label. Bump whenever choice ordering or heuristics change.</summary>
+        public const string PolicyVersion = "greedy-ai.v1";
+
         /// <summary>The intent this seat wants next, or null if it is not this seat's move.</summary>
         public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator, ICardDatabase db)
         {
