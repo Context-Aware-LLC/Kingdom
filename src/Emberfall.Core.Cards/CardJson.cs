@@ -15,9 +15,7 @@ namespace Emberfall.Core.Cards
     {
         private static readonly HashSet<string> CardProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            // "requiresEngineeringPrimitive" was removed here in NOR-224 rather than accepted-and-
-            // ignored: RejectUnknownProperties now throws on a row still carrying it, which is the
-            // loud failure a resurrected quarantine row deserves.
+
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "artId",
             "flavorText", "tooltip", "factionId", "keywords", "rules", "_comment"

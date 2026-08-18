@@ -12,11 +12,6 @@ supply the target, so `ChosenTargets` is non-empty and the selector is never con
 OTHER trigger fires with an empty target list, so its selector MUST be auto-resolvable or the
 card is a live crash the moment it fires.
 
-There is no longer any way to park such a row. `requiresEngineeringPrimitive` — a per-row
-quarantine that held a card out of every pool until the engine grew the primitive it needed —
-was retired in NOR-224 once no row set it, so this scan has no HELD category any more: every
-match is an offender. The standing rule is backend-first (Sam, 2026-08-03): no card ships
-against a primitive that doesn't exist yet, so there is nothing to hold.
 
 Exit 1 if any offender is found.
 """

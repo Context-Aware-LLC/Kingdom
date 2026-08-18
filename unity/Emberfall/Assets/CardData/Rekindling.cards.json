@@ -1,4 +1,40 @@
 [
+    {
+    "id": "stone_heartstone_herald",
+    "name": "Heartstone Herald",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 2,
+    "health": 6,
+    "class": "STONEWARDEN",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 1,
+          "target": {
+            "selector": "FRIENDLY_HERO"
+          }
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "stone_heartstone_herald"
+  },
   {
     "id": "neutral_reclaimed_scout",
     "name": "Reclaimed Scout",

@@ -270,14 +270,8 @@ namespace Emberfall.Core.Cards
                         $"{actionName} may only affect the controller's own side, but " +
                         $"'{target.Selector}' can produce an enemy candidate. Use a FRIENDLY_* / " +
                         "SELF / ADJACENT selector.");
-                // C14b — an ANY_* selector is legal ONLY where a player supplies the target. On a
-                // fired trigger it is not a mistarget, it is a crash: EF-032a, where one ON_DEATH
-                // ANY_FRIENDLY_MINION row took out 6 of 64 balance-matrix cells and loaded clean
-                // through this very rule, because C14 checked the selector without the trigger.
-                // This rule is permanent. It once carried a `!def.RequiresEngineeringPrimitive`
-                // exemption letting an author park such a row until the engine grew the primitive;
-                // that quarantine was retired in NOR-224 (no row had used it since EF-032b) and the
-                // standing rule is backend-first — the primitive lands before the card is authored.
+
+
                 else if (target != null &&
                          TargetSpec.IsPlayerChosen(target)
                          && !PlayerTargetedTriggers.Contains(trigger))
@@ -365,10 +359,6 @@ namespace Emberfall.Core.Cards
             // shared CardJson parser throws on an unknown value before a CardDefinition can exist,
             // so there is nothing further to check on the POCO itself.
 
-            // C20 retired with the requiresEngineeringPrimitive flag (NOR-224). It existed only to
-            // pass that flag through to the report so the importer and the authoring window could
-            // block a data-only bake on a quarantined row. There is no quarantine now: a row the
-            // engine cannot run is a validation error, which Ok already carries.
 
             bool ok = true;
             foreach (var issue in issues)

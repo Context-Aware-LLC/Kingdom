@@ -62,11 +62,7 @@ namespace Emberfall.Core.Cards
         /// it, and the gate came half-loose because the other call sites never heard about it. One
         /// named seam means the next pool restriction lands in one place instead of ten. Collapsing
         /// this to a plain <c>Collectible</c> read at each call site would re-scatter it.</para>
-        /// <para>The gate it used to carry — <c>requiresEngineeringPrimitive</c>, a per-row
-        /// quarantine that held a card authored against a not-yet-existing engine primitive out of
-        /// every pool — was retired in NOR-224 once no row set it. The standing rule that replaced
-        /// it is backend-first: don't author a card against a primitive that doesn't exist yet.
-        /// The validator now rejects such a row outright (C14b) instead of offering to park it.</para>
+        /// 
         /// </summary>
         public bool PoolEligible => Collectible;
 

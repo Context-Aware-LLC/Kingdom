@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 265,
+  "totalCards": 266,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,9 +22,9 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 265,
+    "total": 266,
     "typeSplit": {
-      "MINION": 174,
+      "MINION": 175,
       "SPELL": 71,
       "WEAPON": 12,
       "HERO_POWER": 8
@@ -49,8 +49,8 @@
       "FRIENDLY_MINIONS": 32,
       "ANY_FRIENDLY_MINION": 30,
       "ANY_MINION": 24,
+      "FRIENDLY_HERO": 21,
       "ENEMY_MINIONS": 20,
-      "FRIENDLY_HERO": 20,
       "ANY_ENEMY": 16,
       "ENEMY_HERO": 7,
       "ENEMY_CHARACTERS": 6,
@@ -64,7 +64,7 @@
       "1": 30,
       "2": 61,
       "3": 64,
-      "4": 46,
+      "4": 47,
       "5": 18,
       "6": 19,
       "7": 14,
@@ -73,7 +73,7 @@
     },
     "rarityBreakdown": {
       "COMMON": 123,
-      "RARE": 86,
+      "RARE": 87,
       "EPIC": 38,
       "LEGENDARY": 18
     },
@@ -85,11 +85,11 @@
       "SPIRIT": 12,
       "DRAGON": 5
     },
-    "minionCount": 174,
+    "minionCount": 175,
     "attackDistribution": {
       "0": 5,
       "1": 33,
-      "2": 46,
+      "2": 47,
       "3": 39,
       "4": 17,
       "5": 17,
@@ -103,7 +103,7 @@
       "3": 29,
       "4": 34,
       "5": 26,
-      "6": 14,
+      "6": 15,
       "7": 8,
       "8": 6,
       "10": 2,
@@ -426,9 +426,9 @@
       }
     },
     "STONEWARDEN": {
-      "total": 24,
+      "total": 25,
       "typeSplit": {
-        "MINION": 15,
+        "MINION": 16,
         "SPELL": 7,
         "WEAPON": 1,
         "HERO_POWER": 1
@@ -444,14 +444,14 @@
         "FRIENDLY_MINIONS": 8,
         "ANY_FRIENDLY_MINION": 4,
         "ENEMY_MINIONS": 3,
-        "FRIENDLY_HERO": 1
+        "FRIENDLY_HERO": 2
       },
       "costDistribution": {
         "0": 1,
         "1": 3,
         "2": 5,
         "3": 6,
-        "4": 3,
+        "4": 4,
         "5": 1,
         "6": 2,
         "7": 1,
@@ -459,18 +459,18 @@
       },
       "rarityBreakdown": {
         "COMMON": 11,
-        "RARE": 8,
+        "RARE": 9,
         "EPIC": 3,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "CONSTRUCT": 11
       },
-      "minionCount": 15,
+      "minionCount": 16,
       "attackDistribution": {
         "0": 3,
         "1": 2,
-        "2": 3,
+        "2": 4,
         "3": 3,
         "4": 1,
         "5": 2,
@@ -481,7 +481,7 @@
         "3": 2,
         "4": 3,
         "5": 1,
-        "6": 1,
+        "6": 2,
         "7": 2,
         "8": 3,
         "10": 1,
@@ -4428,6 +4428,26 @@
       "collectible": true,
       "artId": "verdant_thorn_swarm",
       "sourceFile": "Emberfall.cards.json"
+    },
+    {
+      "id": "stone_heartstone_herald",
+      "name": "Heartstone Herald",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 2,
+      "health": 6,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "FRIENDLY_HERO"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_heartstone_herald",
+      "sourceFile": "Rekindling.cards.json"
     },
     {
       "id": "neutral_reclaimed_scout",
