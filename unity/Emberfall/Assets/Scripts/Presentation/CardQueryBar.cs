@@ -22,6 +22,12 @@ namespace Emberfall.Presentation
     /// <c>query-rarities</c>, <c>query-types</c>, <c>query-costs</c>,
     /// <c>query-sort</c>, <c>query-sort-dir</c>.</para>
     ///
+    /// <para><b>Class is not one of them.</b> It is a facet of <see cref="CardFilter"/> like the rest,
+    /// but its control is the Collection screen's left tab strip, which is nine pieces of portrait art
+    /// down the edge of the wall rather than a row of chips — so the host owns that axis and composes
+    /// it in itself. This bar held a class chip group until 2026-08-18; what was left of it by then was
+    /// a selection set no control could write, quietly contributing an always-null facet.</para>
+    ///
     /// <para><b>Chips are generated from the enums, never authored in UXML.</b> A ninth class or a
     /// fifth rarity appears here the moment it appears in <c>Enums.cs</c>. Authoring them by hand is
     /// how a set of things silently stops matching the set it describes.</para>
@@ -41,7 +47,6 @@ namespace Emberfall.Presentation
         private readonly DropdownField _sort;
         private readonly Button _sortDir;
 
-        private readonly HashSet<CardClass> _classes = new HashSet<CardClass>();
         private readonly HashSet<Rarity> _rarities = new HashSet<Rarity>();
         private readonly HashSet<CardType> _types = new HashSet<CardType>();
         private int _cost = -1;                 // -1 = any
@@ -79,7 +84,6 @@ namespace Emberfall.Presentation
                 string text = _search?.value;
                 if (!string.IsNullOrWhiteSpace(text)) f.Text = text;
 
-                if (_classes.Count  > 0) f.Classes  = new List<CardClass>(_classes);
                 if (_rarities.Count > 0) f.Rarities = new List<Rarity>(_rarities);
                 if (_types.Count    > 0) f.Types    = new List<CardType>(_types);
 
@@ -109,7 +113,6 @@ namespace Emberfall.Presentation
         /// <summary>Clear every facet and return to the default order.</summary>
         public void Reset()
         {
-            _classes.Clear();
             _rarities.Clear();
             _types.Clear();
             _cost = -1;
@@ -201,7 +204,6 @@ namespace Emberfall.Presentation
 
         private void SyncChipStates()
         {
-            SyncGroup(_classes);
             SyncGroup(_rarities);
             SyncGroup(_types);
         }
@@ -231,13 +233,6 @@ namespace Emberfall.Presentation
         // already unions keyword, type and tribe names, so "bulwark" and "dragon" both work typed —
         // and the Keyword enum carries reserved wire slots (SILENCE, BACKDRAFT, REINFORCE) that are
         // illegal as carrier keywords, which would render as chips matching nothing.
-        private static IReadOnlyList<CardClass> AllClasses()
-        {
-            var list = new List<CardClass>();
-            foreach (CardClass c in Enum.GetValues(typeof(CardClass))) list.Add(c);
-            return list;
-        }
-
         private static IReadOnlyList<Rarity> AllRarities()
         {
             var list = new List<Rarity>();

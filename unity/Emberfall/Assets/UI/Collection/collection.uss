@@ -361,3 +361,32 @@
 .class-tab_art-neutral {
     background-color: var(--class-neutral);
 }
+
+/* Two states over that base, and they are about different questions.
+ *
+ * --off answers "can this tab lead anywhere": the pool holds no card of that class, because the
+ * player owns none of them or the open character's pairing excludes them. It is dimmed and its
+ * picking is turned off in CollectionController.StampClassTabs, so it reads as present-but-spent
+ * rather than missing. Sam's ruling (2026-08-18): the strip never changes shape. All nine tabs are
+ * on screen in every state; scoping deactivates, it does not hide, so the strip a player learns the
+ * position of is the strip they always get.
+ *
+ * The tint is what carries it. Opacity alone on a strip of full-bleed portraits still reads as
+ * eight lit tabs, so the art is also tinted toward the surface it sits on; the neutral tab paints a
+ * flat colour rather than an image and takes the opacity half only.
+ *
+ * --on answers "is this tab filtering the wall", and slides the tab out toward the wall it is
+ * narrowing. Nothing selected means unconstrained, so the resting strip carries no --on at all and
+ * an unselected tab needs no treatment of its own to be distinguishable from a selected one. */
+.class-tab_art {
+    transition-property: translate, opacity, -unity-background-image-tint-color;
+    transition-duration: 0.16s;
+    transition-timing-function: ease-out;
+}
+.class-tab_art--on {
+    translate: 10px 0;
+}
+.class-tab_art--off {
+    opacity: 0.3;
+    -unity-background-image-tint-color: rgb(104, 110, 124);
+}

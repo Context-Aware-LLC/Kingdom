@@ -118,11 +118,27 @@ namespace Emberfall.Presentation
         private Label _deckName;
         private bool _drawerOpen;
         private bool _scopeBeforeEditing;
+        private readonly HashSet<CardClass> _classesBeforeEditing = new HashSet<CardClass>();
 
-        /// <summary>The active deck's pairing-chip selections. Multi-select, and empty
-        /// means unconstrained — the same all-off convention <see cref="CardQueryBar"/> uses for its
-        /// own class facet. Composed into the one wall query by <see cref="ApplyQuery"/>.</summary>
-        private readonly HashSet<CardClass> _chipClasses = new HashSet<CardClass>();
+        /// <summary>
+        /// The class axis, as one set. Multi-select, and empty means unconstrained — the all-off
+        /// convention the rest of the query bar uses. Composed into the one wall query by
+        /// <see cref="ApplyQuery"/>.
+        ///
+        /// <para>Two controls write it and both write <b>this</b> set: the left class strip, which
+        /// offers all nine, and the pairing chips, which are a shortcut naming the three an open
+        /// character allows. They are one axis with two affordances, not two filters — pressing
+        /// either lights both, because <see cref="StampClassSelection"/> repaints from the set rather
+        /// than from the control that was touched.</para>
+        /// </summary>
+        private readonly HashSet<CardClass> _selectedClasses = new HashSet<CardClass>();
+
+        /// <summary>Every class tab by the class it stands for, bound once from the enum.</summary>
+        private readonly Dictionary<CardClass, VisualElement> _classTabs =
+            new Dictionary<CardClass, VisualElement>();
+
+        /// <summary>The classes the current pool actually holds a card of — see <see cref="BuildPool"/>.</summary>
+        private readonly HashSet<CardClass> _availableClasses = new HashSet<CardClass>();
 
         private bool EditingDeck => _character != null && _deck != null;
 
@@ -166,6 +182,7 @@ namespace Emberfall.Presentation
             InitFaceBaker();
             BuildWall();
             WireQueryBar();
+            WireClassTabs();
             WireCollectionFilters();
             WireScopeToggle();
             WireDeckList();
@@ -270,15 +287,22 @@ namespace Emberfall.Presentation
         private void BuildPool()
         {
             _pool.Clear();
+            _availableClasses.Clear();
             foreach (var def in _db.AllCollectible())
             {
                 if (EditingDeck && !_character.AllowsClass(def.Class)) continue;
                 if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
 
                 _pool.Add(def);
+                _availableClasses.Add(def.Class);
             }
             _pool.Sort((a, b) => a.Cost != b.Cost ? a.Cost.CompareTo(b.Cost)
                                                   : string.CompareOrdinal(a.Name, b.Name));
+
+            // The strip is a read of the pool, so it is re-derived at the site that decides the pool
+            // and nowhere else — every path that narrows what the player is looking at (scope, opening
+            // a character, closing one) already comes through here.
+            StampClassTabs();
         }
 
         private void CacheElements()
@@ -339,18 +363,99 @@ namespace Emberfall.Presentation
             _query = new CardQueryBar(_root);
             _query.Changed += ApplyQuery;
 
+            // The class axis lives here rather than in the bar, so Reset has to clear it explicitly
+            // — the bar's own Reset cannot reach a facet it does not hold, and a Reset that leaves a
+            // class ticked is worse than no Reset. Cleared before _query.Reset(), whose Changed fires
+            // the single ApplyQuery that writes both halves at once.
             var reset = _root.Q<Button>("query-reset");
-            if (reset != null) reset.clicked += () => _query.Reset();
+            if (reset != null)
+                reset.clicked += () =>
+                {
+                    _selectedClasses.Clear();
+                    StampClassSelection();
+                    _query.Reset();
+                };
+        }
+
+        // ---- The class strip down the left edge -----------------------------------------------
+        //
+        // Nine tabs, one per CardClass, and the strip never changes shape (Sam, 2026-08-18): every
+        // tab is on screen in every state, and narrowing the screen deactivates the tabs it excludes
+        // rather than removing them. A strip that reflows would move the tab under the player's thumb
+        // each time they opened a character; a strip that only dims keeps a class in the position
+        // they learned it in, and says plainly that it is still a class, just not one of theirs here.
+        //
+        // The ENUM is the roster, not the UXML. Each tab is looked up by the name the class implies,
+        // so a tenth class shows up as a startup error naming the tab that is missing instead of
+        // silently having no way to be filtered for. The order stays authored, because it is an art
+        // arrangement of nine portraits and not something the enum has an opinion about.
+        private void WireClassTabs()
+        {
+            var bar = _root.Q<VisualElement>("class-tab-bar");
+            if (bar == null)
+            {
+                Debug.LogError("[Collection] 'class-tab-bar' is missing from CollectionScreen.uxml, " +
+                               "so the class strip cannot filter anything.");
+                return;
+            }
+
+            foreach (CardClass klass in Enum.GetValues(typeof(CardClass)))
+            {
+                string tabName = "class-tab-" + klass.ToString().ToLowerInvariant();
+                var tab = bar.Q<VisualElement>(tabName);
+                if (tab == null)
+                {
+                    Debug.LogError($"[Collection] no '{tabName}' in the class strip, so {klass} cards " +
+                                   "cannot be filtered for. Add the tab to CollectionScreen.uxml.");
+                    continue;
+                }
+
+                CardClass captured = klass;
+                tab.RegisterCallback<ClickEvent>(_ => ToggleClass(captured));
+                _classTabs[klass] = tab;
+            }
+
+            StampClassTabs();
+        }
+
+        /// <summary>
+        /// Deactivate the tabs the current pool has nothing behind, and repaint the rest.
+        ///
+        /// <para><b>Availability is read off the pool, never off what is currently visible.</b> The pool
+        /// is the screen's scope — your collection, or an open character's pairing plus neutral — while
+        /// the visible set is that scope minus whatever facets are ticked. Deriving from the visible set
+        /// would kill the Tempest tab the moment you ticked Legendary and owned no legendary Tempest,
+        /// which is exactly when pressing it is how you would find that out.</para>
+        ///
+        /// <para>A tab that goes unavailable while selected is also <b>deselected</b>. Leaving it set
+        /// would filter the wall to a class the pool cannot contain — a blank wall, with the control
+        /// that emptied it now greyed out and unpressable, and no way for the player to undo it.</para>
+        /// </summary>
+        private void StampClassTabs()
+        {
+            if (_classTabs.Count == 0) return;   // called from BuildPool, which runs before the bind
+
+            bool selectionChanged = false;
+            foreach (var pair in _classTabs)
+            {
+                bool available = _availableClasses.Contains(pair.Key);
+                if (!available && _selectedClasses.Remove(pair.Key)) selectionChanged = true;
+
+                pair.Value.EnableInClassList("class-tab_art--off", !available);
+                pair.Value.pickingMode = available ? PickingMode.Position : PickingMode.Ignore;
+            }
+
+            StampClassSelection();
+            if (selectionChanged) ApplyQuery();
         }
 
         // ---- Pairing chips: primary / secondary / neutral (#160) ------------------------------
-        // The class axis while editing. Three chips — the character's primary class, its secondary
-        // class, and NEUTRAL — each a multi-select toggle where all-off means unconstrained, matching
-        // CardQueryBar's own class-facet convention. That is what replaced the old radio All/Class/
-        // Neutral set: "all" is now nothing selected, not a fourth chip. Labels are the real class
+        // A shortcut onto the same axis the strip drives, offered while editing: the character's
+        // primary class, its secondary class, and NEUTRAL, which is the whole of what the pool holds
+        // then. All-off means unconstrained, matching every other facet. Labels are the real class
         // names, written here at runtime rather than authored in UXML, so a rename can never drift.
         //
-        // These do NOT write the wall themselves. Both filter surfaces — these chips and the query
+        // These do NOT write the wall themselves. Both filter surfaces — the class axis and the query
         // bar — compose into one CardFilter at the single ApplyQuery site, so neither clobbers the
         // other (and, critically, a chip press no longer resets the player's chosen sort).
         private void WireCollectionFilters()
@@ -365,7 +470,6 @@ namespace Emberfall.Presentation
 
         private void ConfigureCollectionFilters()
         {
-            _chipClasses.Clear();
             if (!EditingDeck) return;
 
             if (_filterPrimaryButton != null)
@@ -374,25 +478,40 @@ namespace Emberfall.Presentation
                 _filterSecondaryButton.text = ClassLabel(_character.SecondaryClass);
             if (_filterNeutralButton != null)
                 _filterNeutralButton.text = ClassLabel(CardClass.NEUTRAL);
-            StampChips();
+            StampClassSelection();
         }
 
         private void TogglePairingClass(CardClass? klass)
         {
             if (!EditingDeck || !klass.HasValue) return;
-            if (!_chipClasses.Remove(klass.Value)) _chipClasses.Add(klass.Value);
-            StampChips();
+            ToggleClass(klass.Value);
+        }
+
+        /// <summary>The one write to the class axis, whichever control was pressed.</summary>
+        private void ToggleClass(CardClass klass)
+        {
+            // A tab the pool has nothing behind is already picking-disabled; the guard is here too
+            // because the pairing chips reach this by a different path.
+            if (!_availableClasses.Contains(klass)) return;
+
+            if (!_selectedClasses.Remove(klass)) _selectedClasses.Add(klass);
+            StampClassSelection();
             ApplyQuery();
         }
 
-        // Every chip is repainted from the set, not just the one clicked — a character whose primary
-        // and secondary happen to coincide would otherwise leave the other chip's highlight stale.
-        private void StampChips()
+        // Every control is repainted from the set, not just the one that was pressed. Two reasons it
+        // has to be all of them: the strip and the chips are the same axis, so a chip press has to
+        // light a tab; and a character whose primary and secondary happen to coincide would otherwise
+        // leave the other chip's highlight stale.
+        private void StampClassSelection()
         {
+            foreach (var pair in _classTabs)
+                pair.Value.EnableInClassList("class-tab_art--on", _selectedClasses.Contains(pair.Key));
+
             if (!EditingDeck) return;
-            _filterPrimaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.PrimaryClass));
-            _filterSecondaryButton.EnableInClassList("db-chip--on", _chipClasses.Contains(_character.SecondaryClass));
-            _filterNeutralButton.EnableInClassList("db-chip--on", _chipClasses.Contains(CardClass.NEUTRAL));
+            _filterPrimaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_character.PrimaryClass));
+            _filterSecondaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_character.SecondaryClass));
+            _filterNeutralButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(CardClass.NEUTRAL));
         }
 
         // ---- Owned / All scope toggle (#146) --------------------------------------------------
@@ -558,6 +677,14 @@ namespace Emberfall.Presentation
 
             _scopeBeforeEditing = _ownedScope;
             _ownedScope = false; // #150: unowned eligible cards stay visible-but-spent while editing.
+
+            // A character opens on its whole pairing, not on whatever class the player happened to be
+            // browsing — which is usually one this character cannot play anyway, and would open the
+            // editor on a blank wall. Parked rather than dropped so closing gives the browse back
+            // unchanged; StampClassTabs would otherwise have deselected it for being out of pool.
+            _classesBeforeEditing.Clear();
+            _classesBeforeEditing.UnionWith(_selectedClasses);
+            _selectedClasses.Clear();
             _character = character;
             _deck = deck;
 
@@ -584,7 +711,8 @@ namespace Emberfall.Presentation
 
             _character = null;
             _deck = null;
-            _chipClasses.Clear();
+            _selectedClasses.Clear();
+            _selectedClasses.UnionWith(_classesBeforeEditing);
             _ownedScope = _scopeBeforeEditing;
             StampEditing();
             StampScope();
@@ -807,9 +935,10 @@ namespace Emberfall.Presentation
         /// and (while editing) the pairing chips — into a single <see cref="CardFilter"/>, so neither
         /// clobbers the other the way two separate <c>SetQuery</c> writers did before #160.
         ///
-        /// <para>The bar's class selections are suppressed, not cleared, while editing. The active
-        /// deck's three pairing chips own that axis; closing the drawer restores exactly the browse
-        /// class filter the player had before opening it.</para>
+        /// <para>The class axis is one set with two controls on it — the left strip and, while
+        /// editing, the pairing chips — so there is nothing to suppress or reconcile here; it applies
+        /// the same way in both states. The browse selection is parked across an edit and restored on
+        /// close, the same shape as the ownership scope.</para>
         ///
         /// <para>Runs with or without an edit context; on a plate that declares no query controls the filter is empty,
         /// which matches everything. The sort is always the bar's own — a chip press no longer reverts
@@ -818,10 +947,8 @@ namespace Emberfall.Presentation
         private void ApplyQuery()
         {
             CardFilter filter = _query.Filter;
-            if (EditingDeck)
-                filter.Classes = _chipClasses.Count > 0
-                    ? new List<CardClass>(_chipClasses)
-                    : null;
+            if (_selectedClasses.Count > 0)
+                filter.Classes = new List<CardClass>(_selectedClasses);
 
             _wall.SetQuery(filter, _query.Sort);
             UpdateWallLabels();
