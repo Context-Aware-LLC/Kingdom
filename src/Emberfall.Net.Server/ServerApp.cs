@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Net.WebSockets;
+using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
@@ -233,14 +235,44 @@ namespace Emberfall.Net.Server
                 }
                 using var socket = await context.WebSockets.AcceptWebSocketAsync();
                 bool reconnect = context.Request.Query.ContainsKey("reconnect");
-                if (reconnect)
-                    await gate.HandleReconnectAsync(socket, context.RequestAborted);
-                else
-                    // EF-071: ?deck=1 opts the fresh socket into client-supplied decks — it owes a
-                    // SubmitDeckMsg as its second handshake frame, revalidated server-side. Absent the
-                    // flag the socket is dealt the prebuilt fallback (additive; existing clients unchanged).
-                    await gate.HandleFreshAsync(socket, context.RequestAborted,
-                        expectDeck: context.Request.Query.ContainsKey("deck"));
+                try
+                {
+                    if (reconnect)
+                        await gate.HandleReconnectAsync(socket, context.RequestAborted);
+                    else
+                        // EF-071: ?deck=1 opts the fresh socket into client-supplied decks — it owes a
+                        // SubmitDeckMsg as its second handshake frame, revalidated server-side. Absent the
+                        // flag the socket is dealt the prebuilt fallback (additive; existing clients unchanged).
+                        await gate.HandleFreshAsync(socket, context.RequestAborted,
+                            expectDeck: context.Request.Query.ContainsKey("deck"));
+                }
+                catch (Exception ex) when (!context.RequestAborted.IsCancellationRequested)
+                {
+                    // A gate fault used to escape into Kestrel's generic handler, which drops the
+                    // socket with no close frame at all. The client cannot distinguish that from an
+                    // opponent walking out, so it reports DeadReason.Forfeited and the player is told
+                    // the match could not be found — a server-side database fault presenting as a
+                    // matchmaking failure (2026-08-18, an Npgsql pool gone stale across a Fly
+                    // resume-from-suspend; PostgresAccountStore.WithConnectionAsync is the fix for
+                    // that particular cause, this is the fix for every future one).
+                    //
+                    // Close DELIBERATELY instead: 1011 is "internal error" and the reason string is
+                    // what the next person reads. The client still collapses this to Forfeited today
+                    // — it discards the close status in WebSocketTransport's 0x8 arm — so the honest
+                    // signal here is the server log; wiring the status through is separate work.
+                    Console.Error.WriteLine("[ws] handler faulted ({0}): {1}",
+                        reconnect ? "reconnect" : "fresh", ex);
+                    try
+                    {
+                        if (socket.State == WebSocketState.Open)
+                            await socket.CloseAsync(WebSocketCloseStatus.InternalServerError,
+                                "server error", CancellationToken.None);
+                    }
+                    catch (Exception closeEx)
+                    {
+                        Console.Error.WriteLine("[ws] close after fault also failed: {0}", closeEx.Message);
+                    }
+                }
             });
 
             return (app, gate);

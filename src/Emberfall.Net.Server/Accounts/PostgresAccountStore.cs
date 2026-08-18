@@ -27,73 +27,126 @@ namespace Emberfall.Net.Server.Accounts
             _time = time;
         }
 
-        /// <summary>Apply the canonical DDL idempotently. Call once before use (mirrors the drain).</summary>
-        public async Task EnsureSchemaAsync(CancellationToken ct = default)
+        /// <summary>
+        /// Open a pooled connection, run <paramref name="work"/>, and retry ONCE from scratch if the
+        /// attempt died on a broken connection.
+        ///
+        /// <para>WHY THIS EXISTS. Npgsql pools connectors, and this server runs with
+        /// <c>auto_stop_machines = "suspend"</c> (fly.toml): Fly snapshots RAM when the lobby goes
+        /// idle and restores it on the next request. The pool comes back believing its sockets are
+        /// live — but the far end closed them minutes ago, so the first query after a resume is
+        /// issued down a dead socket and fails with <c>Connection reset by peer</c>. Npgsql discards
+        /// the broken connector as it fails, so one retry gets a genuinely fresh one. Idle pools
+        /// going stale is normal for any pooled client; this deployment merely guarantees it.</para>
+        ///
+        /// <para>Cost of not having it, 2026-08-18: this killed the FIRST match join after every
+        /// idle window. The exception escaped <c>MatchGate.HandleFreshAsync</c>, took the WebSocket
+        /// down with it, and reached the player as <c>DeadReason.Forfeited</c> — i.e. as a
+        /// matchmaking failure, which is where the debugging went. The database never appeared in
+        /// the client's account of it.</para>
+        ///
+        /// <para>PRECONDITION: every caller must be idempotent, because a retry re-runs the whole
+        /// unit. All four operations here are — the upsert is <c>ON CONFLICT DO NOTHING</c>, the
+        /// kind update is a scalar assignment, and the rest are reads.</para>
+        /// </summary>
+        private async Task<T> WithConnectionAsync<T>(
+            Func<NpgsqlConnection, Task<T>> work, CancellationToken ct)
         {
-            await using var conn = new NpgsqlConnection(_connString);
-            await conn.OpenAsync(ct);
-            await using var cmd = new NpgsqlCommand(AccountsSchema.Ddl, conn);
-            await cmd.ExecuteNonQueryAsync(ct);
+            for (int attempt = 0; ; attempt++)
+            {
+                try
+                {
+                    await using var conn = new NpgsqlConnection(_connString);
+                    await conn.OpenAsync(ct);
+                    return await work(conn);
+                }
+                catch (Exception ex) when (attempt == 0 && !ct.IsCancellationRequested && IsBrokenConnection(ex))
+                {
+                    Console.Error.WriteLine(
+                        "[accounts] transient DB fault on a pooled connection ({0}) — retrying once with a fresh one.",
+                        ex.GetBaseException().Message);
+                }
+            }
         }
 
-        public async Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
+        /// <summary>A dead pooled socket rather than a query the database rejected. Npgsql's own
+        /// <c>IsTransient</c> covers it plus server-side retryables (deadlock, serialization
+        /// failure); the cause walk catches the resume case explicitly, which arrives as
+        /// NpgsqlException → IOException → SocketException(104).</summary>
+        private static bool IsBrokenConnection(Exception ex)
+        {
+            if (ex is NpgsqlException { IsTransient: true }) return true;
+            for (Exception? e = ex; e != null; e = e.InnerException)
+                if (e is System.Net.Sockets.SocketException or System.IO.IOException) return true;
+            return false;
+        }
+
+        /// <summary>Apply the canonical DDL idempotently. Call once before use (mirrors the drain).</summary>
+        public Task EnsureSchemaAsync(CancellationToken ct = default)
+            => WithConnectionAsync<object?>(async conn =>
+            {
+                await using var cmd = new NpgsqlCommand(AccountsSchema.Ddl, conn);
+                await cmd.ExecuteNonQueryAsync(ct);
+                return null;
+            }, ct);
+
+        public Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
             string? email = null, CancellationToken ct = default)
         {
             InMemoryAccountStore.Require(credentialKind, credentialHash);
             string playerId = AccountIdentity.DerivePlayerId(credentialKind, credentialHash);
             var createdAt = DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
 
-            await using var conn = new NpgsqlConnection(_connString);
-            await conn.OpenAsync(ct);
-
-            await using (var ins = new NpgsqlCommand(
-                "insert into account (player_id, credential_kind, credential_hash, email, created_at) " +
-                "values ($1,$2,$3,$4,$5) on conflict (credential_kind, credential_hash) do nothing", conn))
+            return WithConnectionAsync(async conn =>
             {
-                ins.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                ins.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
-                ins.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
-                ins.Parameters.Add(P(NpgsqlDbType.Text, (object?)email ?? DBNull.Value));
-                ins.Parameters.Add(P(NpgsqlDbType.TimestampTz, createdAt.UtcDateTime));
-                await ins.ExecuteNonQueryAsync(ct);
-            }
+                await using (var ins = new NpgsqlCommand(
+                    "insert into account (player_id, credential_kind, credential_hash, email, created_at) " +
+                    "values ($1,$2,$3,$4,$5) on conflict (credential_kind, credential_hash) do nothing", conn))
+                {
+                    ins.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    ins.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
+                    ins.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
+                    ins.Parameters.Add(P(NpgsqlDbType.Text, (object?)email ?? DBNull.Value));
+                    ins.Parameters.Add(P(NpgsqlDbType.TimestampTz, createdAt.UtcDateTime));
+                    await ins.ExecuteNonQueryAsync(ct);
+                }
 
-            // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
-            await using var sel = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, email, created_at, kind from account " +
-                "where credential_kind=$1 and credential_hash=$2", conn);
-            sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
-            sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
-            await using var r = await sel.ExecuteReaderAsync(ct);
-            if (!await r.ReadAsync(ct))
-                throw new InvalidOperationException("account row missing immediately after upsert — this should be impossible.");
-            return ReadAccount(r);
+                // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
+                await using var sel = new NpgsqlCommand(
+                    "select player_id, credential_kind, credential_hash, email, created_at, kind from account " +
+                    "where credential_kind=$1 and credential_hash=$2", conn);
+                sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
+                sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
+                await using var r = await sel.ExecuteReaderAsync(ct);
+                if (!await r.ReadAsync(ct))
+                    throw new InvalidOperationException("account row missing immediately after upsert — this should be impossible.");
+                return ReadAccount(r);
+            }, ct);
         }
 
-        public async Task<Account?> FindByPlayerIdAsync(string playerId, CancellationToken ct = default)
-        {
-            await using var conn = new NpgsqlConnection(_connString);
-            await conn.OpenAsync(ct);
-            await using var cmd = new NpgsqlCommand(
-                "select player_id, credential_kind, credential_hash, email, created_at, kind from account where player_id=$1", conn);
-            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-            await using var r = await cmd.ExecuteReaderAsync(ct);
-            if (!await r.ReadAsync(ct)) return null;
-            return ReadAccount(r);
-        }
+        public Task<Account?> FindByPlayerIdAsync(string playerId, CancellationToken ct = default)
+            => WithConnectionAsync(async conn =>
+            {
+                await using var cmd = new NpgsqlCommand(
+                    "select player_id, credential_kind, credential_hash, email, created_at, kind from account where player_id=$1", conn);
+                cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                await using var r = await cmd.ExecuteReaderAsync(ct);
+                if (!await r.ReadAsync(ct)) return (Account?)null;
+                return ReadAccount(r);
+            }, ct);
 
         public async Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default)
         {
-            await using var conn = new NpgsqlConnection(_connString);
-            await conn.OpenAsync(ct);
-            await using (var upd = new NpgsqlCommand(
-                "update account set kind=$1 where player_id=$2", conn))
+            bool found = await WithConnectionAsync(async conn =>
             {
+                await using var upd = new NpgsqlCommand(
+                    "update account set kind=$1 where player_id=$2", conn);
                 upd.Parameters.Add(P(NpgsqlDbType.Text, KindToDb(kind)));
                 upd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                int affected = await upd.ExecuteNonQueryAsync(ct);
-                if (affected == 0) return null;
-            }
+                return await upd.ExecuteNonQueryAsync(ct) != 0;
+            }, ct);
+
+            if (!found) return null;
             return await FindByPlayerIdAsync(playerId, ct);
         }
 
