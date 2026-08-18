@@ -149,35 +149,20 @@ jobs:
       # tools/ci/gates.ps1. It never produced a true positive and could not: the regression it
       # guarded is already closed by a closed enum plus a fail-shut validator.
 
-      # ── Stage 2 — Core unit tests (BLOCKING, L1) ────────────────────────────────
-      - name: "Stage 2 · Core unit tests"
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Unit" --logger "trx;LogFileName=core-unit.trx" --results-directory artifacts
-
-      # ── Stage 3 — Contract / interface tests (BLOCKING, L2) ─────────────────────
-      - name: "Stage 3 · Contract tests"
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Contract" --logger "trx;LogFileName=contract.trx" --results-directory artifacts
-
-      # ── Stage 3b — Collection + CardValidation (BLOCKING) ───────────────────────
-      # These two categories existed in the suite but were filtered by NO stage until
-      # 2026-08-01 — a change could gut the collection backend with CI still green.
-      # Run as their own step so a failure names the category instead of hiding in Stage 2.
+      # ── Stages 2, 3, 3b, 4, 5 — REMOVED 2026-08-18 ─────────────────────────────
+      # Every one of these ran a .NET test suite, and those suites were archived out of the repo
+      # (Sam's ruling) to C:\Users\User\Documents\emberfall-test-archive. 1250 tests that existed as
+      # scaffolding for agent-authored changes and had grown into a larger failure surface than the
+      # code they guarded. Nothing returns until a real break happens and an archived test would
+      # have caught it — then that one test comes back, alone.
       #
-      # ADDING A NEW [Category("X")]? Add it to a stage here in the same commit, or it
-      # runs nowhere and green stops meaning anything.
+      # DO NOT re-add a `dotnet test` step here without the test projects also returning to
+      # Emberfall.slnx; there is nothing for the filters to match, and a filter that matches zero
+      # tests exits 0, which would make this workflow green for the wrong reason.
       #
-      # EXCEPTION: Category=Nightly is deliberately excluded from every stage in this file.
-      # It exists for tests too slow for a blocking per-push gate (real bot-vs-bot matches,
-      # not fixture replays) and is gated instead by nightly.yml on its own schedule.
-      - name: "Stage 3b · Collection + CardValidation"
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Collection|Category=CardValidation" --logger "trx;LogFileName=collection-cardvalidation.trx" --results-directory artifacts
-
-      # ── Stage 4 — Assembly firewall + banned-API (BLOCKING, criterion 7) ────────
-      - name: "Stage 4 · Assembly firewall + banned-API"
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Firewall" --logger "trx;LogFileName=firewall.trx" --results-directory artifacts
-
-      # ── Stage 5 — Golden-replay, the R1 gate (BLOCKING, criterion 6) ────────────
-      - name: "Stage 5 · Golden-replay (R1 gate)"
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay" --logger "trx;LogFileName=golden-replay.trx" --results-directory artifacts
+      # The weight-bearing checks were never in tests/ and still run below: CardCi validates every
+      # row of every card set, and the NetSoak soak plays live networked matches asserting zero
+      # resyncs — which is also what now covers the determinism question Stage 5 used to.
 
       # ── Stage 5b — Networked AI soak (ADVISORY as of NOR-189, was BLOCKING/EF-077) ─────
       #
@@ -293,10 +278,9 @@ jobs:
       # ~2m30s) in a suite that is millisecond-scale everywhere else — Sam's ruling 2026-08-09,
       # ai-opponent-matchmaking-fallback. It runs on the daily tick, or on demand via the
       # `nightly` dispatch input when chasing a Nightly-only regression.
-      - name: "Nightly · Category=Nightly (slow corpus)"
-        if: github.event_name == 'schedule' || inputs.nightly
-        timeout-minutes: 15
-        run: dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Nightly" --logger "trx;LogFileName=nightly.trx" --results-directory artifacts
+      # REMOVED 2026-08-18 with the rest of the .NET suites — BotSeatRunnerTests and the whole
+      # Category=Nightly corpus are in the archive. The live bot-vs-bot coverage it provided is
+      # still exercised by Stage 5b's NetSoak run, which plays real networked matches.
 
       - name: Upload gate artifacts
         if: always()

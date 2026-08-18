@@ -11,8 +11,8 @@
 # machine instead of four minutes of a metered runner.
 #
 #   pwsh tools/ci/gates.ps1              # everything below
-#   pwsh tools/ci/gates.ps1 -Quick       # skip format+vocabulary, just build and test
-#   pwsh tools/ci/gates.ps1 -Nightly     # add the slow Category=Nightly corpus
+#   pwsh tools/ci/gates.ps1 -Quick       # skip the lint stages, just build and run the tools
+#   pwsh tools/ci/gates.ps1 -Nightly     # (inert — the Nightly corpus left with the test suites)
 #
 # Run this before a push the way you already run unity-compile.ps1. They cover different halves:
 # this one gates the pure-.NET core, unity-compile.ps1 gates the Unity-side assemblies that no
@@ -87,21 +87,16 @@ if (-not $Quick) {
 # something for a PR. Run it by hand as `bash tools/ci/rebaseline-guard.sh origin/master` when
 # you have touched a golden fixture.
 
-Invoke-Stage 'Stage 2 · Core unit tests' {
-    dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Unit"
-}
-Invoke-Stage 'Stage 3 · Contract tests' {
-    dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Contract"
-}
-Invoke-Stage 'Stage 3b · Collection + CardValidation' {
-    dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Collection|Category=CardValidation"
-}
-Invoke-Stage 'Stage 4 · Assembly firewall + banned-API' {
-    dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Firewall"
-}
-Invoke-Stage 'Stage 5 · Golden-replay (R1 gate)' {
-    dotnet test Emberfall.slnx -c Release --no-build --filter "Category=GoldenReplay"
-}
+# Stages 2, 3, 3b, 4, 5 and Nightly ran the .NET test suites. Those suites were ARCHIVED OUT of the
+# repo 2026-08-18 (Sam's ruling) to C:\Users\User\Documents\emberfall-test-archive — 1250 tests that
+# were scaffolding for agent-authored changes and had become a bigger failure surface than the code.
+# Nothing here comes back until something actually breaks and an archived test would have caught it;
+# then that ONE test returns. See the archive's README.
+#
+# What still runs below is the part that was never in tests/ and carries the real weight: CardCi
+# validates every row of every card set, NetSoak plays live networked matches and asserts zero
+# resyncs, and the drift guard, format, stylelint and warnings-as-errors are all untouched.
+
 Invoke-Stage 'Stage 5b · Networked AI soak' {
     dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
 }
@@ -153,9 +148,9 @@ Invoke-Stage 'Stage 6d · Training trainer tests' {
 }
 
 if ($Nightly) {
-    Invoke-Stage 'Nightly · Category=Nightly' {
-        dotnet test Emberfall.slnx -c Release --no-build --filter "Category=Nightly"
-    }
+    Write-Host ""
+    Write-Host "-Nightly has nothing to run: the Category=Nightly corpus left with the .NET test" -ForegroundColor Yellow
+    Write-Host "suites on 2026-08-18 (C:\Users\User\Documents\emberfall-test-archive)." -ForegroundColor Yellow
 }
 
 Pop-Location
