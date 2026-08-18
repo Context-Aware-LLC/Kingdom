@@ -69,13 +69,13 @@ namespace Emberfall.Net.Server.Bots
         public void Close(int closeCode, string reason)
         {
             _closed = true;
-            // ServerClose() raises the transport's OnClosed synchronously, which NetworkedMatchSession
-            // routes to OnPeerClosed — that now resolves a still-pending ConnectAsync's internal
-            // match-start wait with a fault (see NetworkedMatchSession.OnPeerClosed), so a Close()
-            // that lands before Bind()/ConnectAsync's match_start ever arrives no longer hangs
-            // RunAiAsync forever. _cts.Cancel() is the secondary/defensive path — harmless and
-            // idempotent even if ConnectAsync (or a future transport whose ConnectAsync/SendAsync
-            // actually observes the token, e.g. a real socket) is still mid-flight.
+            // ServerClose() wakes an active receive immediately when there are no buffered frames,
+            // which NetworkedMatchSession routes to OnPeerClosed. That resolves a still-pending
+            // ConnectAsync's internal match-start wait with a fault, so a Close() that lands before
+            // Bind()/ConnectAsync's match_start ever arrives no longer hangs RunAiAsync forever.
+            // _cts.Cancel() is the secondary/defensive path — harmless and idempotent even if
+            // ConnectAsync (or a future transport whose ConnectAsync/SendAsync actually observes
+            // the token, e.g. a real socket) is still mid-flight.
             _transport.ServerClose();
             _cts.Cancel();
         }

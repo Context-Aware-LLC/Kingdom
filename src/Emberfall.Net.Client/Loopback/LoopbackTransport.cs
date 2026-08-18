@@ -26,6 +26,7 @@ namespace Emberfall.Net.Client.Loopback
         private readonly Queue<byte[]> _outbound = new Queue<byte[]>();  // client → server
         private TaskCompletionSource<byte[]?>? _waiter;
         private bool _serverClosed;
+        private WireCloseReason _serverCloseReason = WireCloseReason.PeerClosed;
         private bool _closed;
 
         public event Action<WireCloseReason>? OnClosed;
@@ -50,17 +51,27 @@ namespace Emberfall.Net.Client.Loopback
 
         public Task<byte[]?> ReceiveAsync(CancellationToken ct)
         {
-            TaskCompletionSource<byte[]?> waiter;
+            TaskCompletionSource<byte[]?>? waiter = null;
+            WireCloseReason? peerClose = null;
             lock (_gate)
             {
                 if (_inbound.Count > 0) return Task.FromResult<byte[]?>(_inbound.Dequeue());
-                if (_serverClosed) return Task.FromResult<byte[]?>(null);
-                waiter = new TaskCompletionSource<byte[]?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _waiter = waiter;
+                if (_serverClosed)
+                    peerClose = _serverCloseReason;
+                else
+                {
+                    waiter = new TaskCompletionSource<byte[]?>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _waiter = waiter;
+                }
+            }
+            if (peerClose is WireCloseReason reason)
+            {
+                RaiseClosed(reason);
+                return Task.FromResult<byte[]?>(null);
             }
             if (ct.CanBeCanceled)
-                ct.Register(() => waiter.TrySetResult(null));
-            return waiter.Task;
+                ct.Register(() => waiter!.TrySetResult(null));
+            return waiter!.Task;
         }
 
         public Task CloseAsync(WireCloseReason reason)
@@ -111,10 +122,14 @@ namespace Emberfall.Net.Client.Loopback
             lock (_gate)
             {
                 _serverClosed = true;
+                _serverCloseReason = reason;
                 if (_waiter is not null) { waiter = _waiter; _waiter = null; }
             }
             waiter?.TrySetResult(null);
-            RaiseClosed(reason);
+            // With no buffered frames, waking an active receive is the close boundary and can
+            // signal immediately. Otherwise ReceiveAsync drains the queue first and raises the
+            // event only when it reaches EOF, matching an orderly socket close.
+            if (waiter is not null) RaiseClosed(reason);
         }
     }
 }

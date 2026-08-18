@@ -67,12 +67,32 @@ namespace Emberfall.Net.Client.Tests
             await StartPairAsync(peer, c0, c1);
             await ConfirmMulligansAsync(peer, c0, c1);
 
-            _ = c1.SubmitAsync(new ConcedeIntent(c1.Player));
+            Task<CommandResult> submitted = c1.SubmitAsync(new ConcedeIntent(c1.Player));
             await peer.RelayAsync();
 
+            Assert.That((await submitted).Accepted, Is.True,
+                "the terminal snapshot must resolve the accepted intent before the buffered peer close");
             Assert.That(c0.State, Is.EqualTo(ConnectionState.Ended));
             Assert.That(c1.State, Is.EqualTo(ConnectionState.Ended));
             Assert.That(c0.Current.Outcome, Is.Not.EqualTo(MatchOutcome.InProgress));
+        }
+
+        [Test]
+        public async Task Server_Close_Drains_Buffered_Frames_Before_Signaling_Peer_Close()
+        {
+            var transport = new LoopbackTransport();
+            byte[] buffered = { 1, 2, 3 };
+            WireCloseReason? closed = null;
+            transport.OnClosed += reason => closed = reason;
+
+            transport.EnqueueInbound(buffered);
+            transport.ServerClose();
+
+            Assert.That(closed, Is.Null,
+                "a close signal must not overtake server frames already accepted by the transport");
+            Assert.That(await transport.ReceiveAsync(default), Is.EqualTo(buffered));
+            Assert.That(await transport.ReceiveAsync(default), Is.Null);
+            Assert.That(closed, Is.EqualTo(WireCloseReason.PeerClosed));
         }
 
         [Test]
