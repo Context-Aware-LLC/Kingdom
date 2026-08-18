@@ -10,9 +10,13 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.CardValidation
 {
     /// <summary>
-    /// Loader test: asserts the client card database (Emberfall+Rekindling) equals CardCi's count.
-    /// Satisfies EF-040 DONE-WHEN: client database count equals 260.
-    /// Update counts here when cards are added to any set.
+    /// Loader test for the client card database (Emberfall+Rekindling). It asserts INVARIANTS, not
+    /// totals: both sets load, every row carries its own set id, ids are unique across sets, and a
+    /// rule that names a card names one that exists.
+    ///
+    /// <para>The class name is a fossil. It used to pin 188/76/264 and the counts are gone — see the
+    /// comment in <see cref="Client_Database_Loads_Both_Sets"/> for why that shape was backwards.
+    /// <b>Do not add a count back, and do not "update counts here"</b> — there are none to update.</para>
     /// </summary>
     [TestFixture]
     [Category("CardValidation")]
