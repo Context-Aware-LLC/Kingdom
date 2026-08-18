@@ -237,6 +237,9 @@ jobs:
       - name: "Stage 6b · Trigger/selector drift guard (tooling/scripts)"
         run: python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
 
+      - name: "Stage 6c · Training exporter tests (stdlib unittest)"
+        run: python3 tests/python/test_training_exporters.py -v
+
       # CardCi (Stage 6 above) warns on missing art — placeholder-art policy, M2 decision 18.
       # This step closes the gap for artIds that point at filenames that never existed: it fails
       # (exit 1) when any artId in card data resolves to no .png on disk, which is breakage rather

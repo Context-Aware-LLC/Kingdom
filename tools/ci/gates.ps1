@@ -88,6 +88,9 @@ Invoke-Stage 'Stage 6 · Content C-series card gate' {
 Invoke-Stage 'Stage 6b · Trigger/selector drift guard' {
     python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
 }
+Invoke-Stage 'Stage 6c · Training exporter tests' {
+    python3 tests/python/test_training_exporters.py -v
+}
 
 if ($Nightly) {
     Invoke-Stage 'Nightly · Category=Nightly' {

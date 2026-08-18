@@ -42,6 +42,24 @@ record counts and output checksums and is path-independent for reproducible buil
 Python tensor, analytics, and conversational exporters should consume these model-neutral rows.
 They must not reimplement game rules or reconstruct hidden authority state.
 
+## Export
+
+The dependency-free streaming exporters validate this directory and can write all large artifacts
+to an external drive. Full format, split, padding, and restart semantics are documented in
+`tooling/scripts/training_exporters/README.md`.
+
+```powershell
+python -m tooling.scripts.training_exporters export-rl `
+  --input "E:\EmberfallData\corpus\v1" `
+  --out "E:\EmberfallData\exports\rl-v1" `
+  --seed "season-001" --shard-rows 10000
+
+python -m tooling.scripts.training_exporters export-chat `
+  --input "E:\EmberfallData\corpus\v1" `
+  --out "E:\EmberfallData\exports\chat-v1" `
+  --seed "season-001" --shard-rows 10000
+```
+
 Decision-row `reward` and `done` describe the immediate transition. `episodeReturn` carries the
 eventual `-1`/`0`/`+1` outcome from that row's actor perspective, so the winning player retains a
 training signal when the opponent performs the final action (for example, concession).
