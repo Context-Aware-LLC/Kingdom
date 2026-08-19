@@ -47,8 +47,10 @@ cd "$REPO_ROOT"
 # rebase or branch switch moves HEAD without firing a commit hook, and those commits sit behind
 # HEAD~1 where a default update would never look at them again.
 #
-# PYTHONIOENCODING is not optional: the Token Savings panel is drawn with box characters, and
-# git's console is cp1252, so without it every commit prints a UnicodeEncodeError traceback.
+# `detect-changes --brief` is deliberately NOT run here. Its Token Savings panel compares the
+# changed files' BYTE SIZE / 4 against the JSON summary's, so it reports a large percentage for
+# saying nothing, and its test-gap half counts a .NET suite that was archived out of the repo in
+# a9eaa0e3. PYTHONIOENCODING stays because that panel is not the only box-drawn output.
 if command -v code-review-graph >/dev/null 2>&1; then
     CRG_BASE=$(code-review-graph status --json 2>/dev/null | python -c "import json,sys; print(json.load(sys.stdin).get('built_at_commit') or '')" 2>/dev/null) || CRG_BASE=
     if [ -n "$CRG_BASE" ] && git cat-file -e "$CRG_BASE^{commit}" 2>/dev/null; then
@@ -56,7 +58,6 @@ if command -v code-review-graph >/dev/null 2>&1; then
     else
         PYTHONIOENCODING=utf-8 code-review-graph update --quiet || true
     fi
-    PYTHONIOENCODING=utf-8 code-review-graph detect-changes --brief || true
 fi
 
 STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \
