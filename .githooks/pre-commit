@@ -34,6 +34,31 @@ set -e
 REPO_ROOT=$(git rev-parse --show-toplevel)
 cd "$REPO_ROOT"
 
+# ── code-review-graph ────────────────────────────────────────────────────────────────────────
+#
+# Advisory, never blocking: refreshes the incremental knowledge graph and prints the change
+# impact. Deliberately ABOVE the `-z "$STAGED_CARDS"` early exit below — the card-derivation
+# checks are scoped to commits that stage card rows, but this one has to see every commit.
+# `code-review-graph install` appends its own copy to the END of this file, which is past that
+# early exit AND past the final `exit 0`, so the installed version never runs at all. If you
+# reinstall, delete what it appends and keep this.
+#
+# The base is the commit the graph was last built at, not the default HEAD~1: a pull, merge,
+# rebase or branch switch moves HEAD without firing a commit hook, and those commits sit behind
+# HEAD~1 where a default update would never look at them again.
+#
+# PYTHONIOENCODING is not optional: the Token Savings panel is drawn with box characters, and
+# git's console is cp1252, so without it every commit prints a UnicodeEncodeError traceback.
+if command -v code-review-graph >/dev/null 2>&1; then
+    CRG_BASE=$(code-review-graph status --json 2>/dev/null | python -c "import json,sys; print(json.load(sys.stdin).get('built_at_commit') or '')" 2>/dev/null) || CRG_BASE=
+    if [ -n "$CRG_BASE" ] && git cat-file -e "$CRG_BASE^{commit}" 2>/dev/null; then
+        PYTHONIOENCODING=utf-8 code-review-graph update --base "$CRG_BASE" --quiet || true
+    else
+        PYTHONIOENCODING=utf-8 code-review-graph update --quiet || true
+    fi
+    PYTHONIOENCODING=utf-8 code-review-graph detect-changes --brief || true
+fi
+
 STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \
     'unity/Emberfall/Assets/CardData/*.cards.json')
 
@@ -80,15 +105,5 @@ echo "$REPORT"
 # and the new decks deserve eyes rather than a rubber stamp. DefaultDeckFixtureTests is the
 # real gate; this only says so at the moment of the edit instead of after a CI round trip.
 python tooling/scripts/check_deck_pool_drift.py
-
-# ── 3. code-review-graph ─────────────────────────────────────────────────────────────────
-#
-# Advisory, never blocking: keeps the incremental knowledge graph current with the commit and
-# prints the change impact. Installed by `code-review-graph install`, which appends its own
-# copy AFTER `exit 0` (dead) — this is that block, relocated. Delete to disable.
-if command -v code-review-graph >/dev/null 2>&1; then
-    code-review-graph update || true
-    code-review-graph detect-changes --brief || true
-fi
 
 exit 0
