@@ -147,11 +147,6 @@
     -unity-font-style: bold;
     color: var(--ink-1);
 }
-.mm-identity__sub {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    margin-top: var(--space-1);
-}
 
 /* ---------- Account switcher rows ---------- */
 .mm-accounts {
