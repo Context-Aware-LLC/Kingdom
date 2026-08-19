@@ -318,16 +318,18 @@ namespace Emberfall.Presentation
 
             if (gemRenderer != null)
             {
-                // The painted frame carries the rarity read — the gem was the placeholder cue.
-                bool showGem = frameSprite == null;
-                gemRenderer.gameObject.SetActive(showGem);
-                if (showGem)
-                {
-                    Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
-                    SetSpritePreserveSize(gemRenderer, gem);
-                    // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
-                    gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
-                }
+                // The gem is now the rarity read on every card, painted frame or not. It used to
+                // be suppressed whenever a frame resolved ("the painted frame carries the rarity")
+                // — which, once every rarity had real frame art, meant it was suppressed always
+                // and Sam's gem art was drawing nowhere (2026-08-19). The frames were built with
+                // an empty socket waiting for it the whole time.
+                Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
+                gemRenderer.gameObject.SetActive(true);
+                gemRenderer.sprite = gem;
+                // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
+                gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
+
+                if (_hasPaintedFrame) PlaceGem(gem);
             }
 
             bool showAttack     = FrameRarityCatalog.ShowAttack(_def.Type);
@@ -411,6 +413,37 @@ namespace Emberfall.Presentation
             label.rectTransform.localPosition = new Vector3(
                 (frac.x - 0.5f) * BoardController.CardW,
                 (0.5f - frac.y) * BoardController.CardH, z);
+        }
+
+        /// <summary>Sets the gem into the frame's bottom-centre socket, sized by HEIGHT with width
+        /// following the sprite's own aspect ratio.
+        ///
+        /// <para>Aspect matters because the gems are not one shape: the rare is a square princess
+        /// cut, the common and legendary are ovals, the epic is round. Sizing both axes to the
+        /// same number would squash whichever ones disagree with it, and it would do so silently —
+        /// a stretched gem still looks like a gem.</para>
+        ///
+        /// <para>It follows that the gem PNGs must be trimmed to their art, since the sprite rect
+        /// is all this can see and transparent padding inside it renders as size. They are:
+        /// <c>tooling/scripts/normalize_gem_art.py</c> squares them off their content. Re-run it
+        /// after any gem is re-exported — an export tool pads, and padding here reads as a gem
+        /// that is mysteriously too small.</para></summary>
+        private void PlaceGem(Sprite gem)
+        {
+            if (gemRenderer == null) return;
+
+            const float W = BoardController.CardW, H = BoardController.CardH;
+
+            float height = FrameRarityCatalog.GemHeight * H;
+            float aspect = gem != null && gem.rect.height > 0f
+                ? gem.rect.width / gem.rect.height
+                : 1f;
+
+            gemRenderer.size = new Vector2(height * aspect, height);
+            gemRenderer.transform.localPosition = new Vector3(
+                (FrameRarityCatalog.GemSocket.x - 0.5f) * W,
+                (0.5f - FrameRarityCatalog.GemSocket.y) * H,
+                -0.012f);
         }
 
         // The equipped weapon is no longer rendered as a card, so nothing pushes live weapon

@@ -621,7 +621,11 @@ namespace Emberfall.Presentation
             // when AuraSet.Frosted arrives, so an unfrosted card costs no draw call.
             frostRenderer.enabled = false;
 
-            // Rarity gem — bottom-center; sprite (gem_{rarity}) assigned per-rarity by ApplyFrame.
+            // Rarity gem — set into the frame's bottom-centre socket; sprite (gem_{rarity}) and
+            // final size assigned per-rarity by ApplyFrame, which is also where the socket
+            // geometry is applied. Position and size here are only the pre-frame placeholder
+            // fallback for a card with no painted frame; ApplyFrame overrides both the moment
+            // one resolves.
             var gemRenderer = MakeSprite(root.transform, "Gem",
                 new Vector3(0f, -CardH * 0.42f, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
 

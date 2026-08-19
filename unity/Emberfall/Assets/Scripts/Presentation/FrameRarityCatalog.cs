@@ -102,6 +102,26 @@ namespace Emberfall.Presentation
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);
         public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);
 
+        // ── Rarity gem socket ────────────────────────────────────────────────────────────────
+        // The frames have carried an empty oval setting at bottom-centre, between the two stat
+        // bosses, since the painted set landed — nothing had ever drawn into it. Measured off the
+        // eight shipping frames by tooling/scripts/measure_gem_socket.py, which validates itself
+        // against CostSocket in the same run; re-run it if the frames are re-conformed.
+        //
+        // x is a flat 0.5: the eight frames measured 0.4983–0.5000, i.e. centred, and the same
+        // "one constant, not one per rarity" rule the rest of this file follows. The socket
+        // opening runs about 0.096w × 0.078h, so GemHeight sits inside it with a margin rather
+        // than filling it edge to edge — a gem is set INTO a bezel, not pressed against it.
+        //
+        // Sized by HEIGHT, with width following the gem's own aspect ratio (CardPresenter), for
+        // two reasons: the socket is an oval taller than it is wide, and the gems are not all the
+        // same shape — the rare is a square princess cut and the others are round or oval. Forcing
+        // a square would stretch whichever ones disagree.
+        // RETIREMENT TRIGGER: re-conforming the frame set moves this the same way it moves the
+        // stat sockets — re-run measure_gem_socket.py in that commit.
+        public static readonly Vector2 GemSocket = new(0.5000f, 0.9520f);
+        public const float GemHeight = 0.068f;  // of card height
+
         public static string GemSprite(Rarity rarity) =>
             $"gem_{rarity.ToString().ToLowerInvariant()}";
 
