@@ -6,9 +6,11 @@ namespace Emberfall.Session
 {
     /// <summary>
     /// How long a played card of each type holds the playback queue for its reveal beat, in
-    /// seconds. A spell reads longest because it has no other tell — it resolves and is gone.
-    /// A minion gets a shorter beat because the board itself announces it a moment later, so the
-    /// reveal is a lead-in rather than the whole story (Sam, 2026-08-18).
+    /// seconds. This is the WHOLE beat — fly-in, hold, and fly-out — because the entry may not
+    /// release until the reveal card has finished travelling: the instant it does, the board
+    /// redraws with the real card in place, and anything still in flight is a second copy of a
+    /// card already on the board (Sam, 2026-08-19: "it both renders to the board and renders to
+    /// the hold position at the same time").
     ///
     /// UnityEngine-free: VfxDirector owns the authored numbers and hands a copy down, same as it
     /// already did for the single spell hold.
@@ -39,27 +41,66 @@ namespace Emberfall.Session
     }
 
     /// <summary>
-    /// What a play reveal needs to draw: the card that was played, who it hit (if anyone), who
-    /// played it (fallback anchor when there is no single target), its type (the reveal's timing
-    /// and placement both key off it), and how long to hold the whole entry so the reveal has
-    /// time to read before the card's effect becomes visible.
+    /// Where a reveal card goes when its beat ends. This is what stops the double-render: a card
+    /// with a destination FLIES there and is gone the moment the board redraws, so the reveal and
+    /// the real card are never both on screen. A card with <see cref="None"/> has nowhere to be —
+    /// it fades in place instead, which is safe precisely because nothing takes its position.
+    /// </summary>
+    public enum RevealDestination
+    {
+        /// <summary>Spell — resolves into the graveyard, which has no anchor and would read as
+        /// nothing anyway. Fades where it was cast.</summary>
+        None,
+
+        /// <summary>Minion — lands in its slot on the controller's board row.</summary>
+        BoardSlot,
+
+        /// <summary>Weapon — lands in the controller's weapon socket.</summary>
+        WeaponSocket,
+    }
+
+    /// <summary>
+    /// What a play reveal needs to draw: the card, the instance it came from (which is how the
+    /// reveal finds the hand slot it flew OUT of), who it hit (if anyone), who played it, its type,
+    /// where it is headed, and how long the whole beat holds the entry.
     /// </summary>
     public readonly struct PlayReveal
     {
         public readonly CardDefinition Def;
+
+        /// <summary>The played card's instance. VfxDirector looks this up in the PRE-play snapshot
+        /// it still holds to find the exact hand slot the card flew out of — post-play the card is
+        /// no longer in hand, so the classifier cannot answer this and does not try.</summary>
+        public readonly InstanceId Source;
+
         public readonly InstanceId? Target;
         public readonly PlayerId Controller;
         public readonly CardType Type;
         public readonly float HoldSeconds;
 
-        public PlayReveal(CardDefinition def, InstanceId? target, PlayerId controller,
-                          CardType type, float holdSeconds)
+        public readonly RevealDestination Destination;
+
+        /// <summary>Board slot the minion landed in, and the board size AFTER the play. Both are
+        /// needed because the row re-centres on its own count (BoardRowLayout): the anchor the
+        /// scene currently holds is laid out for the board WITHOUT this minion, so flying at it
+        /// would land the card where the row is about to stop being. Meaningless unless
+        /// <see cref="Destination"/> is <see cref="RevealDestination.BoardSlot"/>.</summary>
+        public readonly int DestSlot;
+        public readonly int DestBoardCount;
+
+        public PlayReveal(CardDefinition def, InstanceId source, InstanceId? target,
+                          PlayerId controller, CardType type, float holdSeconds,
+                          RevealDestination destination, int destSlot, int destBoardCount)
         {
             Def = def;
+            Source = source;
             Target = target;
             Controller = controller;
             Type = type;
             HoldSeconds = holdSeconds;
+            Destination = destination;
+            DestSlot = destSlot;
+            DestBoardCount = destBoardCount;
         }
     }
 
@@ -91,8 +132,10 @@ namespace Emberfall.Session
                 GameEvent e = events[i];
                 if (e.Kind != GameEventKind.CardPlayed || !e.Source.HasValue) continue;
 
-                CardInstance played = FindInstance(snapshot, e.Source.Value);
-                if (played == null) continue;
+                InstanceId source = e.Source.Value;
+                if (!TryLocate(snapshot, source, out CardInstance played,
+                               out RevealDestination dest, out int slot, out int boardCount))
+                    continue;
                 if (!db.TryGet(played.DefinitionId, out CardDefinition def)) continue;
 
                 float hold = holds.For(def.Type);
@@ -104,7 +147,8 @@ namespace Emberfall.Session
                     if (events[j].Target.HasValue) { target = events[j].Target; break; }
                 }
 
-                return new PlayReveal(def, target, played.Controller, def.Type, hold);
+                return new PlayReveal(def, source, target, played.Controller, def.Type, hold,
+                                      dest, slot, boardCount);
             }
 
             return null;
@@ -114,16 +158,46 @@ namespace Emberfall.Session
         // (CommandProcessor sets Zone before emitting CardPlayed), but this checks every public
         // zone rather than assume — the snapshot is the only source of truth for where an
         // instance actually landed, and the answer now differs by card type.
-        private static CardInstance FindInstance(GameState state, InstanceId id)
+        //
+        // WHERE it landed is the half that matters for the flight: a minion's board index and the
+        // resulting row size are read here, off the post-command snapshot, because this is the only
+        // place that has them. VfxDirector cannot re-derive either — the snapshot it is holding
+        // when the reveal fires is deliberately the PRE-play one.
+        private static bool TryLocate(GameState state, InstanceId id, out CardInstance card,
+                                      out RevealDestination dest, out int slot, out int boardCount)
         {
+            card = null;
+            dest = RevealDestination.None;
+            slot = -1;
+            boardCount = 0;
+
             foreach (var ps in state.Players)
             {
-                foreach (var c in ps.Graveyard) if (c.Id == id) return c;
-                foreach (var c in ps.Board)     if (c.Id == id) return c;
-                foreach (var c in ps.Hand)      if (c.Id == id) return c;
-                if (ps.Weapon != null && ps.Weapon.Id == id) return ps.Weapon;
+                for (int i = 0; i < ps.Board.Count; i++)
+                {
+                    if (ps.Board[i].Id != id) continue;
+                    card = ps.Board[i];
+                    dest = RevealDestination.BoardSlot;
+                    slot = i;
+                    boardCount = ps.Board.Count;
+                    return true;
+                }
+
+                if (ps.Weapon != null && ps.Weapon.Id == id)
+                {
+                    card = ps.Weapon;
+                    dest = RevealDestination.WeaponSocket;
+                    return true;
+                }
+
+                foreach (var c in ps.Graveyard)
+                    if (c.Id == id) { card = c; return true; }
+
+                foreach (var c in ps.Hand)
+                    if (c.Id == id) { card = c; return true; }
             }
-            return null;
+
+            return card != null;
         }
     }
 }

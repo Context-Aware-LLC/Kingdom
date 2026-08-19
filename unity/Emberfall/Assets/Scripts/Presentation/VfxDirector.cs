@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using Emberfall.Session;
@@ -26,18 +27,27 @@ namespace Emberfall.Presentation
         [Header("Board anchors for world-position resolution")]
         [SerializeField] private BoardAnchors boardAnchors;
 
-        [Header("Play reveal — every played card gets a readable beat")]
-        [Tooltip("A cast spell resolves and is gone, so its reveal IS the whole tell. Longest hold.")]
-        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.9f, 1.2f);
-        [Tooltip("A minion announces itself by arriving a moment later, so its reveal is a lead-in " +
-                 "rather than the whole story — about half a spell's, and it clears out fast so it " +
-                 "isn't sitting on top of the board it just changed.")]
-        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.45f, 0.35f);
-        [Tooltip("An equip is a discrete moment like a cast, but the weapon stays visible in its " +
-                 "socket afterwards.")]
-        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.6f, 0.6f);
-        [Tooltip("Reveal card size as a multiple of the in-hand/board card size.")]
+        [Header("Play reveal — every played card flies out, holds, and lands")]
+        [Tooltip("A cast spell resolves into the graveyard, which has no anchor and would read as " +
+                 "nothing — so it fades where it was cast instead of flying anywhere. That also " +
+                 "makes it the ONLY type that may linger: nothing takes its place, so nothing doubles.")]
+        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.20f, 0.90f, 0f, 0.55f);
+        [Tooltip("Flies up out of the hand slot it was played from, holds centre stage, then floats " +
+                 "down into its board slot — landing exactly as the board redraws with the real " +
+                 "card. Linger MUST stay 0: it is the overlap that put two of the same minion on " +
+                 "screen at once (Sam, 2026-08-19).")]
+        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.18f, 0.55f, 0.28f, 0f);
+        [Tooltip("Same three-phase flight as a minion, landing in the weapon socket. Linger 0 for " +
+                 "the same reason — the socket fills the instant the entry releases.")]
+        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.18f, 0.70f, 0.28f, 0f);
+        [Tooltip("Reveal card size at the top of the beat, as a multiple of the in-hand/board size. " +
+                 "The flight scales between 1 and this, so the card leaves and lands at the size a " +
+                 "real card is and is only magnified while it is being read.")]
         [SerializeField, Range(0.5f, 2f)] private float playRevealScale = 1.2f;
+
+        /// <summary>How far in front of everything the reveal card rides while it is in flight, so
+        /// it never clips into the hand fan it is leaving or the board row it is joining.</summary>
+        private const float RevealZBias = -0.2f;
 
         private readonly Dictionary<PresentationCue, ParticleSystem> _lookup = new();
         private GameState _state;
@@ -49,7 +59,9 @@ namespace Emberfall.Presentation
         /// classifier delegate, so this stays the single source for the numbers (Sam, 2026-08-01;
         /// per-type 2026-08-18).</summary>
         public PlayRevealHolds RevealHolds =>
-            new PlayRevealHolds(minionReveal.HoldSeconds, spellReveal.HoldSeconds, weaponReveal.HoldSeconds);
+            new PlayRevealHolds(minionReveal.TotalHoldSeconds,
+                                spellReveal.TotalHoldSeconds,
+                                weaponReveal.TotalHoldSeconds);
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
@@ -103,7 +115,7 @@ namespace Emberfall.Presentation
             // shipping CreatePresenter rig — one card face implementation, not a second one drifting
             // here. anchorGo's scale carries down to every child quad/label uniformly.
             var anchorGo = new GameObject($"PlayReveal_{reveal.Def.Name}");
-            anchorGo.transform.position = pos.Value + new Vector3(0f, 0f, -0.2f); // in front of the target
+            anchorGo.transform.position = pos.Value + new Vector3(0f, 0f, RevealZBias);
             anchorGo.transform.localScale = Vector3.one * playRevealScale;
 
             CardPresenter card = _board.BuildDetachedCard(anchorGo.transform);
@@ -111,7 +123,153 @@ namespace Emberfall.Presentation
             if (_artProvider != null && !string.IsNullOrEmpty(reveal.Def.ArtId))
                 _artProvider.LoadArt(reveal.Def.ArtId, card.SetArt);
 
-            Destroy(anchorGo, timing.HoldSeconds + timing.LingerSeconds);
+            StartCoroutine(FlyReveal(anchorGo, ResolveHandOrigin(reveal),
+                                     pos.Value + new Vector3(0f, 0f, RevealZBias),
+                                     ResolveDestination(reveal), timing));
+        }
+
+        /// <summary>
+        /// The beat itself: out of the hand, still and magnified to be read, then down into
+        /// whatever slot the card is going to — arriving as the entry releases and the board
+        /// redraws with the real card, which is the point.
+        ///
+        /// <para>Timing is not decorative here. The three phases sum to
+        /// <see cref="RevealTiming.TotalHoldSeconds"/>, the same number GameBootstrap hands the
+        /// classifier as the entry's hold, so this coroutine and the playback queue finish
+        /// together. A phase with nothing to animate (no hand slot to leave, no destination to
+        /// land in) still WAITS out its share rather than returning early — cutting it short
+        /// would destroy the card before the board redraws and leave a hole where the handoff
+        /// should be. Retune a phase on <see cref="RevealTiming"/>, never here.</para>
+        /// </summary>
+        private IEnumerator FlyReveal(GameObject go, Vector3? origin, Vector3 hold,
+                                      Vector3? destination, RevealTiming timing)
+        {
+            Transform t = go.transform;
+            float big = playRevealScale;
+
+            if (timing.FlyInSeconds > 0f)
+            {
+                if (origin.HasValue)
+                {
+                    Vector3 from = origin.Value + new Vector3(0f, 0f, RevealZBias);
+                    for (float e = 0f; e < timing.FlyInSeconds; e += Time.deltaTime)
+                    {
+                        float k = Mathf.SmoothStep(0f, 1f, e / timing.FlyInSeconds);
+                        t.position   = Vector3.Lerp(from, hold, k);
+                        t.localScale = Vector3.one * Mathf.Lerp(1f, big, k);
+                        yield return null;
+                    }
+                }
+                else
+                {
+                    // A token, or a hand we cannot see into — nothing to fly out OF. Keep the
+                    // beat's shape anyway; see the timing note above.
+                    yield return new WaitForSeconds(timing.FlyInSeconds);
+                }
+            }
+
+            t.position   = hold;
+            t.localScale = Vector3.one * big;
+
+            if (timing.HoldSeconds > 0f)
+                yield return new WaitForSeconds(timing.HoldSeconds);
+
+            if (timing.FlyOutSeconds > 0f)
+            {
+                if (destination.HasValue)
+                {
+                    Vector3 to = destination.Value + new Vector3(0f, 0f, RevealZBias);
+                    for (float e = 0f; e < timing.FlyOutSeconds; e += Time.deltaTime)
+                    {
+                        float k = Mathf.SmoothStep(0f, 1f, e / timing.FlyOutSeconds);
+                        t.position   = Vector3.Lerp(hold, to, k);
+                        t.localScale = Vector3.one * Mathf.Lerp(big, 1f, k);
+                        yield return null;
+                    }
+                }
+                else
+                {
+                    yield return new WaitForSeconds(timing.FlyOutSeconds);
+                }
+            }
+
+            // Linger is what a card with nowhere to go does INSTEAD of flying, so a card that
+            // just landed does not get one — enforced here rather than left to the authored 0,
+            // because the authored value is not trustworthy across this change. Unity's
+            // domain-reload restore matches serialized fields by NAME: an Editor holding the
+            // two-field RevealTiming restores HoldSeconds and LingerSeconds onto the four-field
+            // one and lets the new fields keep their initializers. A minion would come back with
+            // its old 0.35s linger, which IS the double-render — the exact bug this flight was
+            // written to remove, silently reintroduced by a reload rather than by an edit.
+            //
+            // Structural, not defensive: by the time the entry has released the real card is
+            // already sitting exactly where this one is. There is no value of LingerSeconds that
+            // is correct for a card with a destination.
+            if (timing.LingerSeconds > 0f && !destination.HasValue)
+                yield return new WaitForSeconds(timing.LingerSeconds);
+
+            Destroy(go);
+        }
+
+        /// <summary>The hand slot the card flew out of.
+        /// <para><c>_state</c> is the PRE-play snapshot here (MatchRunner fires the reveal before
+        /// the held entry releases), which is exactly why this can be answered at all — post-play
+        /// the card is in nobody's hand. The hand fan is still laid out for that same pre-play
+        /// count too, so the anchor is the literal position the player was looking at.</para></summary>
+        private Vector3? ResolveHandOrigin(PlayReveal reveal)
+        {
+            if (boardAnchors == null || _state == null) return null;
+
+            foreach (var ps in _state.Players)
+            {
+                if (ps.Id != reveal.Controller) continue;
+
+                for (int i = 0; i < ps.Hand.Count; i++)
+                    if (ps.Hand[i].Id == reveal.Source)
+                        return boardAnchors.AnchorFor(ps.Id, Zone.Hand, i)?.position;
+
+                // The opponent's hand is redacted to id-0 placeholders
+                // (dev-docs/architecture/determinism-and-projection.md:23), so the exact slot is
+                // not knowable from this side and never will be. The middle of their fan is the
+                // honest answer and reads the same: it came out of that hand, somewhere.
+                if (ps.Hand.Count > 0)
+                    return boardAnchors.AnchorFor(ps.Id, Zone.Hand, ps.Hand.Count / 2)?.position;
+
+                return null;
+            }
+            return null;
+        }
+
+        /// <summary>Where the card is headed, or null for one that just fades where it was cast.</summary>
+        private Vector3? ResolveDestination(PlayReveal reveal)
+        {
+            if (boardAnchors == null) return null;
+
+            switch (reveal.Destination)
+            {
+                case RevealDestination.WeaponSocket:
+                    return boardAnchors.WeaponAnchor(reveal.Controller)?.position;
+
+                case RevealDestination.BoardSlot:
+                {
+                    Transform slot = boardAnchors.AnchorFor(reveal.Controller, Zone.Board, reveal.DestSlot);
+                    if (slot == null) return null;
+
+                    // x is re-derived for the row this minion is ABOUT to be part of; y and z come
+                    // from the anchor as built (BoardRowLayout only ever touches x, for the same
+                    // reason). The scene's anchors are still centred for the board WITHOUT this
+                    // minion — BoardController re-centres them when the entry releases, which is
+                    // after this flight lands. Reading slot.position.x straight would aim the card
+                    // at where the row is about to stop being, and it would touch down half a slot
+                    // off the real card it is handing over to.
+                    float half = reveal.DestBoardCount > 1 ? (reveal.DestBoardCount - 1) * 0.5f : 0f;
+                    Vector3 p = slot.position;
+                    return new Vector3(BoardRowGeometry.XForSlot(reveal.DestSlot, half), p.y, p.z);
+                }
+
+                default:
+                    return null;
+            }
         }
 
         /// <summary>Centre of the play area, derived from the scene rather than hard-coded: the
@@ -188,25 +346,53 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// One card type's play-reveal timing. HOLD is the part that costs the match time — the whole
-    /// playback entry waits on it, so nothing the card does is visible yet. LINGER is free by
-    /// comparison: the entry has already released and the board is moving again underneath, the
-    /// card just hasn't faded out. Tune hold for readability and linger for how abruptly the beat
-    /// ends.
+    /// One card type's play-reveal beat, in phases.
+    ///
+    /// <para>FLY-IN, HOLD and FLY-OUT all cost the match real time: the playback entry is held for
+    /// their sum (<see cref="TotalHoldSeconds"/>), so none of the card's effects are visible for
+    /// any of it. Only HOLD is time spent READING — the other two are travel, and travel that is
+    /// too slow reads as the game being sluggish rather than as the card being important.</para>
+    ///
+    /// <para>LINGER is the one phase that is nearly free, and the one that is dangerous. It runs
+    /// AFTER the entry releases, so the board has already redrawn underneath it. For a spell that
+    /// is exactly right — nothing takes a cast spell's place, so it can fade over its own effect.
+    /// For anything that LANDS somewhere, a non-zero linger is the double-render bug: the reveal
+    /// and the real card, both on screen, both the same minion (Sam, 2026-08-19). Give those types
+    /// a fly-out instead; arriving as the board redraws is what a handoff looks like.</para>
     /// </summary>
     [Serializable]
     public struct RevealTiming
     {
-        [Tooltip("Holds the entire playback entry: the card's effects are not visible yet.")]
+        [Tooltip("Travel from the hand slot the card was played out of, up to the reveal position, " +
+                 "growing from real-card size to full reveal size.")]
+        [Range(0f, 3f)] public float FlyInSeconds;
+
+        [Tooltip("Still, magnified, at the reveal position. The part that is actually READ — tune " +
+                 "this one for readability and the travel phases for feel.")]
         [Range(0f, 3f)] public float HoldSeconds;
 
-        [Tooltip("How much longer the card stays up AFTER the hold ends, overlapping the now-" +
-                 "visible effect, so it doesn't vanish the instant damage lands.")]
+        [Tooltip("Travel down into whatever slot the card is going to, shrinking back to real-card " +
+                 "size, landing exactly as the board redraws with the real card. 0 for a type with " +
+                 "no destination (a spell).")]
+        [Range(0f, 3f)] public float FlyOutSeconds;
+
+        [Tooltip("Time on screen AFTER the entry releases and the board has moved on. Applies ONLY " +
+                 "to a card with no destination — a card that lands somewhere IGNORES this at " +
+                 "runtime, whatever you set here, because by then the real card is already in the " +
+                 "slot and any overlap is two copies of it.")]
         [Range(0f, 3f)] public float LingerSeconds;
 
-        public RevealTiming(float holdSeconds, float lingerSeconds)
+        /// <summary>What the playback entry is held for: the whole flight, not just the still part.
+        /// The board must not redraw until the card has landed, or the thing it is handing over to
+        /// appears underneath it mid-flight.</summary>
+        public float TotalHoldSeconds => FlyInSeconds + HoldSeconds + FlyOutSeconds;
+
+        public RevealTiming(float flyInSeconds, float holdSeconds, float flyOutSeconds,
+                            float lingerSeconds)
         {
+            FlyInSeconds = flyInSeconds;
             HoldSeconds = holdSeconds;
+            FlyOutSeconds = flyOutSeconds;
             LingerSeconds = lingerSeconds;
         }
     }
