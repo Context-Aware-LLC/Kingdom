@@ -477,6 +477,27 @@ namespace Emberfall.Presentation
             {
                 matchRunner.OnMatchEvent   += vfxDirector.OnMatchEvent;
                 matchRunner.OnStateUpdated += vfxDirector.OnStateUpdated;
+
+                // Play reveal — THE SAME FOUR LINES GameBootstrap RUNS. They were missing here,
+                // which is the whole reason the beat never showed up in a real game: this is the
+                // bootstrap the shipped build uses (EmberfallBuild ships BoardNetworked.unity and
+                // nothing else) and the one Find Game loads. Board.unity/GameBootstrap — Single
+                // Player only — had the beat; every other way into a match had none, and the
+                // absence is invisible from the outside, because an entry with no hold just looks
+                // like ordinary commandDelaySeconds pacing (Sam, 2026-08-19).
+                //
+                // Init() is what makes the reveal a real card face rather than nothing at all:
+                // without it _board is null and ShowPlayReveal returns silently. It has to follow
+                // boardController.Initialize above, which it does.
+                //
+                // RETIREMENT TRIGGER: a third bootstrap, or match wiring lifted into something
+                // shared — this block moves with it, or that path loses the beat exactly the way
+                // this one did.
+                vfxDirector.Init(artProvider, boardController);
+                PlayRevealHolds holds = vfxDirector.RevealHolds;
+                matchRunner.PlayRevealClassifier = (snapshot, events) =>
+                    PlayRevealClassifier.Classify(snapshot, events, db, holds);
+                matchRunner.OnPlayReveal += vfxDirector.ShowPlayReveal;
             }
 
             matchRunner.OnMatchEnded += outcome =>
