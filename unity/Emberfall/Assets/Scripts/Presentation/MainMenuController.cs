@@ -34,7 +34,6 @@ namespace Emberfall.Presentation
         private LoadingOverlay _loading;
 
         private Label _identityName;
-        private Label _identitySub;
         private Label _shardBalance;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
@@ -114,7 +113,7 @@ namespace Emberfall.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[MainMenu] could not open this device's collection: {ex.Message}");
-                SetIdentity("Collection unreadable", "See the console — nothing was overwritten.");
+                SetIdentity("Collection unreadable");
                 FinishBootstrap();
                 return;
             }
@@ -217,13 +216,11 @@ namespace Emberfall.Presentation
         private void BindIdentity()
         {
             _identityName = _root.Q<Label>("identity-name");
-            _identitySub = _root.Q<Label>("identity-sub");
         }
 
-        private void SetIdentity(string name, string sub)
+        private void SetIdentity(string name)
         {
             if (_identityName != null) _identityName.text = name;
-            if (_identitySub != null) _identitySub.text = sub;
         }
 
         // ── Shard balance ──────────────────────────────────────────────────────────────
@@ -291,21 +288,9 @@ namespace Emberfall.Presentation
         {
             if (_account == null) return;
 
-            int characters = _account.Roster().Count;
-            string sub = characters == 0
-                ? "No characters yet — open Collection"
-                : characters == 1 ? "1 character" : $"{characters} characters";
-
-            // Which seat, but only once there is more than one to confuse it with. Two accounts on one
-            // machine exist to be played against each other, and the failure that wastes the most time
-            // is not noticing you are signed in as the other one. Naturally absent in a release build,
-            // where the registry only ever holds the grandfathered account.
-            int seat = SeatNumberOrZero();
-            if (seat > 0) sub = $"Account {seat} · {sub}";
-
             // "Unnamed player" rather than an invented default: a saved default is indistinguishable
             // from a chosen name, and the prompt would never fire again (PlayerAccount.DisplayNameOr).
-            SetIdentity(_account.DisplayNameOr("Unnamed player"), sub);
+            SetIdentity(_account.DisplayNameOr("Unnamed player"));
         }
 
         // ── Name modal ──────────────────────────────────────────────────────────────────
@@ -470,25 +455,6 @@ namespace Emberfall.Presentation
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
             var settings = uiGo.AddComponent<MatchSettingsController>();
             settings.Init(onConcede: null, showConcede: false);
-        }
-
-        /// <summary>This account's 1-based position, or 0 when it is the only one on the device.</summary>
-        private static int SeatNumberOrZero()
-        {
-            try
-            {
-                var all = DeviceAccounts.All();
-                if (all.Count < 2) return 0;
-                string activeId = DeviceAccounts.Active.Id;
-                for (int i = 0; i < all.Count; i++)
-                    if (all[i].Id == activeId) return i + 1;
-            }
-            catch (Exception ex)
-            {
-                // A nameplate must not die of an unreadable registry — the switcher reports it instead.
-                Debug.LogWarning($"[MainMenu] account registry unreadable ({ex.GetType().Name}).");
-            }
-            return 0;
         }
 
         // ── Shared modal plumbing ───────────────────────────────────────────────────────
