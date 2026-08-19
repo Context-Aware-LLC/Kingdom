@@ -81,4 +81,14 @@ echo "$REPORT"
 # real gate; this only says so at the moment of the edit instead of after a CI round trip.
 python tooling/scripts/check_deck_pool_drift.py
 
+# ── 3. code-review-graph ─────────────────────────────────────────────────────────────────
+#
+# Advisory, never blocking: keeps the incremental knowledge graph current with the commit and
+# prints the change impact. Installed by `code-review-graph install`, which appends its own
+# copy AFTER `exit 0` (dead) — this is that block, relocated. Delete to disable.
+if command -v code-review-graph >/dev/null 2>&1; then
+    code-review-graph update || true
+    code-review-graph detect-changes --brief || true
+fi
+
 exit 0

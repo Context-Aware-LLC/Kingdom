@@ -166,3 +166,5 @@ node_modules/
 # quality constraint on generated art (an unseeded card briefs from a placeholder the
 # generator itself calls "plausible but general"), so they are source, not scratch.
 # Generated CANDIDATES still belong in art-pipeline/, which is ignored in full.
+# Added by code-review-graph
+.code-review-graph/
