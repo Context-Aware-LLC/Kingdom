@@ -334,6 +334,16 @@ It answers *where is this defined, what calls it, what does it call, which flow 
 answers *which files contain this string*. Reaching for the second when you wanted the first is
 the default failure, because grep always looks like it worked.
 
+**Its callers/callees stop at the assembly boundary, and it does not say so.** C# node keys are
+path-scoped (`...\CardDefinition.cs::TargetSpec.IsKnown`) while `CALLS` targets are stored as
+bare names (`FromSeconds`, `nameof`), so cross-project calls do not resolve: measured
+2026-08-20, **edges joining `Emberfall.Net.Server` to `Emberfall.Core` numbered 0**, and 67% of
+all edges point at a target that is not a node. Treat "Called by" as *within this project*, and
+never as an exhaustive list. Everything derived from those edges inherits the hole —
+`caller_count` claims 2327 symbols have none, `test_coverage` claims 16 of 3924 are tested, 92%
+of `risk_score` is the 0.3 default, and **`code-review-graph dead-code` is therefore unusable**.
+`tooling/scripts/graph_view.py` carries the numbers and a retirement trigger.
+
 **You should not normally have to do anything.** `.claude/settings.json` registers a
 `PreToolUse` hook on `Grep|Glob|Read|Bash` that runs `code-review-graph enrich`, which injects
 the graph's answer ahead of the tool result. On a `Read` it returns every symbol in the file
