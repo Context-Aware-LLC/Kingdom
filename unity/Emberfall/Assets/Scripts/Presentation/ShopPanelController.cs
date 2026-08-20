@@ -28,9 +28,13 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// Binds the main-menu shop and pack reveal. Pricing and placeholder art slots may render while
+    /// Binds the store's catalog and pack reveal. Pricing and placeholder art slots may render while
     /// disconnected; balances, purchase success, and every reveal award come only from
     /// <see cref="IShopGateway"/>.
+    ///
+    /// <para>Host-agnostic on purpose: it queries its elements by name and hands Back back to
+    /// whoever built it. <see cref="ShopScreenController"/> is that host today, and leaves for its
+    /// return scene — but nothing here knows it lives in a scene of its own.</para>
     /// </summary>
     public sealed class ShopPanelController
     {
@@ -46,7 +50,7 @@ namespace Emberfall.Presentation
         private readonly Label _revealSummary;
         private readonly ShopFlow _flow;
         private readonly IBoosterPackagingArtProvider _packagingArt;
-        private readonly System.Action<long?> _shardBalanceChanged;
+        private readonly System.Action _onClose;
 
         private ICardDatabase _cards;
         private bool _busy;
@@ -55,9 +59,11 @@ namespace Emberfall.Presentation
             VisualElement root,
             IShopGateway gateway,
             IBoosterPackagingArtProvider packagingArt,
-            System.Action<long?> shardBalanceChanged)
+            System.Action onClose)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
+            // Unlike the gateway, this one is structural: with no way home, Back is a dead button.
+            if (onClose == null) throw new ArgumentNullException(nameof(onClose));
 
             _overlay = root.Q<VisualElement>("shop-overlay");
             _packList = root.Q<VisualElement>("shop-pack-list");
@@ -71,7 +77,7 @@ namespace Emberfall.Presentation
             _revealSummary = root.Q<Label>("reveal-summary");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packagingArt = packagingArt;
-            _shardBalanceChanged = shardBalanceChanged;
+            _onClose = onClose;
 
             Wire(root, "btn-shop-close", Close);
             Wire(root, "btn-reveal-done", CloseReveal);
@@ -83,24 +89,11 @@ namespace Emberfall.Presentation
             if (_overlay == null) return;
             _overlay.RemoveFromClassList("shop-overlay--hidden");
 
+            // With no gateway the constructor's disconnected catalog is already on screen, wallet
+            // included — an unbound wallet reads as unavailable, never as zero.
             if (_flow == null)
             {
                 SetStatus("Purchases are waiting for the server wallet connection.");
-                return;
-            }
-
-            RefreshWallet();
-        }
-
-        /// <summary>
-        /// Refresh the shared wallet projection for both the shop and the persistent main-menu
-        /// shard readout. With no gateway, the readout remains explicitly unavailable.
-        /// </summary>
-        public void RefreshWallet()
-        {
-            if (_flow == null)
-            {
-                SetWalletUnavailable();
                 return;
             }
 
@@ -164,7 +157,6 @@ namespace Emberfall.Presentation
             if (snapshot == null) return;
             if (_gold != null) _gold.text = $"Gold  {snapshot.Wallet.Gold:N0}";
             if (_gems != null) _gems.text = WalletDisplay.Gems(snapshot.Wallet.Gems);
-            _shardBalanceChanged?.Invoke(snapshot.Wallet.Shards);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
         }
@@ -173,7 +165,6 @@ namespace Emberfall.Presentation
         {
             if (_gold != null) _gold.text = "Gold  —";
             if (_gems != null) _gems.text = "Gems  —";
-            _shardBalanceChanged?.Invoke(null);
         }
 
         private void RenderPacks(IReadOnlyList<PackOffer> offers, WalletBalances? wallet)
@@ -358,10 +349,13 @@ namespace Emberfall.Presentation
             if (_status != null) _status.text = message ?? "";
         }
 
+        /// <summary>Back. The overlay is deliberately left visible: the host decides what
+        /// replaces this screen, and hiding it first would show a bare panel for the frame or
+        /// two that a scene load takes to arrive.</summary>
         private void Close()
         {
             CloseReveal();
-            _overlay?.AddToClassList("shop-overlay--hidden");
+            _onClose();
         }
 
         private void CloseReveal()

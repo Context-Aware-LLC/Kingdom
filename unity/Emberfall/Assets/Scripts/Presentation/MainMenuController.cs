@@ -13,9 +13,10 @@ namespace Emberfall.Presentation
     /// A UI Toolkit meta-screen in the deckbuilder's lineage: theme.uss tokens, a UIDocument
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
-    /// <para>Each destination has a named handler so a scene-loader drops straight in. The Store opens
-    /// its in-scene panel; Collection opens the persistent card wall and deck drawer; the remaining unfinished
-    /// destinations still log their intent.</para>
+    /// <para>Each destination has a named handler so a scene-loader drops straight in. Store, Collection
+    /// and the roster are scenes of their own; the remaining unfinished destinations still log their
+    /// intent. Nothing but the shard plate outlives a departure — every screen rebinds from
+    /// <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being handed state.</para>
     ///
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
     /// asked once here — <b>once</b> being the whole of it: a display name is permanent (NOR-287), so the
@@ -50,7 +51,6 @@ namespace Emberfall.Presentation
         private Button _nameConfirm;
         private bool _nameBusy;
 
-        private ShopPanelController _shop;
         private SignInGateController _signIn;
 
         /// <summary>Frame-0 coverage, the same rig GameBootstrap/NetworkedGameBootstrap use
@@ -84,17 +84,7 @@ namespace Emberfall.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
 
             BindShardBalance();
-
-            // ShopRuntime.PackagingArt stays an override seam (a test or a future streamed loader
-            // can set it); with nobody overriding it the packaging slots resolve through the same
-            // sprite pipeline as the rest of the meta screens. The gateway has no such default on
-            // purpose — an unbound wallet must read as unavailable, never as zero.
-            _shop = new ShopPanelController(
-                _root,
-                ShopRuntime.Gateway,
-                ShopRuntime.PackagingArt ?? new UiSpriteBoosterArtProvider(),
-                RenderShardBalance);
-            _shop.RefreshWallet();
+            RefreshShardBalance();
 
             BindIdentity();
             BindNameModal();
@@ -231,6 +221,36 @@ namespace Emberfall.Presentation
             if (_shardBalance != null) _shardBalance.text = WalletDisplay.ShardsUnavailable;
             _lastSafeAreaScreenWidth = -1;
             RefreshShardSafeArea();
+        }
+
+        /// <summary>
+        /// Read the wallet the plate reports. This used to arrive as a side effect of building the
+        /// store's in-scene panel; with the store on its own scene (2026-08-20) the menu owns the
+        /// read, and re-runs it on every <c>OnEnable</c> — which includes the return from a
+        /// purchase, so an opened pack's shards land on the plate with no cross-scene wiring at all.
+        ///
+        /// <para>Failure is not silent-but-zero: an unreachable account server leaves the plate on
+        /// its em dash, the same as having no gateway bound.</para>
+        /// </summary>
+        private async void RefreshShardBalance()
+        {
+            if (ShopRuntime.Gateway == null)
+            {
+                RenderShardBalance(null);
+                return;
+            }
+
+            try
+            {
+                var wallet = new ShopFlow(ShopRuntime.Gateway);
+                await wallet.RefreshAsync();
+                RenderShardBalance(wallet.Snapshot?.Wallet.Shards);
+            }
+            catch (Exception ex)
+            {
+                RenderShardBalance(null);
+                Debug.LogWarning($"[MainMenu] shard balance unavailable: {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -525,8 +545,14 @@ namespace Emberfall.Presentation
             Go("Collection");
         }
 
-        // Store stays in this scene: its full-screen UI Toolkit panel owns the purchase/reveal flow.
-        private void OnStore() => _shop?.Open();
+        /// <summary>Store → <c>Shop</c>. It rendered as an overlay on this screen until
+        /// 2026-08-20; it is a destination like Collection and the roster, and its plate was
+        /// already full-screen and opaque — the overlay was hosting, not design.</summary>
+        private void OnStore()
+        {
+            ShopScreenController.ReturnScene = "MainMenu";
+            Go("Shop");
+        }
 
         // Leaderboards → no backend yet.
         private void OnLeaderboards() => Debug.Log("[MainMenu] Leaderboards → coming soon. No backend yet.");

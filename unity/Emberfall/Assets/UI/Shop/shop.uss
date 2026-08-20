@@ -1,3 +1,11 @@
+/* The store's own scene root. `.emb-root` carries only design tokens, so — exactly like
+ * `.main-menu` and `.collection` do for their screens — the sizing lives here: the two overlays
+ * below are absolutely positioned against it and need a parent that actually fills the panel. */
+.shop-screen {
+    flex-grow: 1;
+    background-color: var(--surface-0);
+}
+
 .shop-overlay {
     position: absolute;
     top: 0;
