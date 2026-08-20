@@ -51,6 +51,10 @@ cd "$REPO_ROOT"
 # changed files' BYTE SIZE / 4 against the JSON summary's, so it reports a large percentage for
 # saying nothing, and its test-gap half counts a .NET suite that was archived out of the repo in
 # a9eaa0e3. PYTHONIOENCODING stays because that panel is not the only box-drawn output.
+# RETIREMENT TRIGGER: deleting this block retires code-review-graph for this repo. If you do,
+# also delete the "Ask the graph before you grep" section at the end of CLAUDE.md and the
+# PreToolUse `enrich` hook in .claude/settings.json - both promise a graph that would no longer
+# be refreshed, and neither says anything when it is stale rather than absent.
 if command -v code-review-graph >/dev/null 2>&1; then
     CRG_BASE=$(code-review-graph status --json 2>/dev/null | python -c "import json,sys; print(json.load(sys.stdin).get('built_at_commit') or '')" 2>/dev/null) || CRG_BASE=
     if [ -n "$CRG_BASE" ] && git cat-file -e "$CRG_BASE^{commit}" 2>/dev/null; then

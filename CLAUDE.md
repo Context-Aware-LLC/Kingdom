@@ -325,3 +325,37 @@ compile errors arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on s
 
 **Match that relay on its full path, never on the process name.**
 Unity's own AI Assistant package ships a *different* product using the same binary name, at `unity/Emberfall/Library/PackageCache/com.unity.ai.assistant@<hash>/RelayApp~/relay_win.exe`, and it is routinely running at the same time — so `Get-Process relay_win` returning two hits is the normal state, not the fault above. Killing on a name match takes down the AI Assistant and leaves the actual duplicate running. Tell them apart by `.Path`, or by port: the AI Assistant relay listens on 9001/9002 and the MCP relay owns no TCP port at all.
+
+## Ask the graph before you grep
+
+There is a persistent knowledge graph of this repo — ~4,600 nodes and ~25,000 edges over
+csharp, sql, python, javascript, powershell, bash, c and cpp — built by `code-review-graph`.
+It answers *where is this defined, what calls it, what does it call, which flow is it in*. Grep
+answers *which files contain this string*. Reaching for the second when you wanted the first is
+the default failure, because grep always looks like it worked.
+
+**You should not normally have to do anything.** `.claude/settings.json` registers a
+`PreToolUse` hook on `Grep|Glob|Read|Bash` that runs `code-review-graph enrich`, which injects
+the graph's answer ahead of the tool result. On a `Read` it returns every symbol in the file
+with its callers, callees and flows. It costs about 0.9 s and it cannot block a tool call —
+the `|| true` is load-bearing, because **a `PreToolUse` hook that exits 2 blocks the tool**, and
+`timeout` returns 124 while a DB lock during a concurrent pre-commit `update` is a real
+possibility.
+
+**The hazard is that its absence is invisible.** The hook opens with
+`command -v code-review-graph >/dev/null 2>&1 || exit 0`, so on any machine where the tool is
+not installed — a fresh clone, a WSL agent checkout — you get no context, no warning and no
+error. It looks exactly like a repo with nothing interesting to say about itself. **If you have
+run several searches and never once seen a `[code-review-graph]` block, assume it is not
+installed rather than that the graph is empty**, and check:
+
+```
+code-review-graph status
+```
+
+Judge that by **node count, not exit code**. A broken install — grammars invisible to its
+`python -I` probe, which is what `pip install --user` produces — reports `449 files, 2 nodes,
+10 edges` and exits 0. Install it as `uv tool install "code-review-graph[communities,embeddings]"`,
+never with `pip --user`. The graph refreshes itself from `.githooks/pre-commit` on every commit,
+and `built_at_commit` trailing HEAD by exactly one commit is correct — the hook runs before the
+commit exists. Do not "fix" that lag.

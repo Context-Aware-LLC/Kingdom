@@ -134,7 +134,22 @@ __pycache__/
 .env
 
 # Agent Related
-.claude
+# .claude IS tracked: hooks, skills and agent definitions are project config, and they are only
+# useful if they reach every worktree and agent checkout. Four things stay out of it —
+#   - the vendored skill symlinks. They target ABSOLUTE paths into the ignored .agents/, and this
+#     repo runs core.symlinks=false, so git would store each one as a text file containing
+#     "/c/Users/User/Documents/...". skills-lock.json already pins them for reinstall.
+#   - settings.local.json: per-user permissions and machine-absolute additionalDirectories.
+#   - .playwright-mcp/: 2.7M of scratch page captures.
+#   - worktrees/ and *.bak: transient.
+.claude/settings.local.json
+.claude/.playwright-mcp/
+.claude/worktrees/
+.claude/*.bak
+.claude/skills/unity/
+.claude/skills/gemini-interactions
+.claude/skills/supabase
+.claude/skills/supabase-postgres-best-practices
 # Vendor-installed agent skills — .claude/skills/* are symlinks into here.
 # Content is disposable; skills-lock.json (tracked) pins source + hash to reinstall it.
 .agents
