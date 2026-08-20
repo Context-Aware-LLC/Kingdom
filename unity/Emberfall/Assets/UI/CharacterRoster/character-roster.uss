@@ -317,6 +317,49 @@
  * another one silently (Sam, 2026-08-07) — an error message above somebody's decks, about a deck
  * they deleted on purpose, is not news they can act on. */
 
+/* ---- Deck modal header: account name + class badges (NOR-404) --------------------------------
+ * The header row sits above the deck title. Account name is on the left; class badges pin to
+ * the right. Hidden on orphan dialogs (no character, so no classes to show). */
+.deck-modal-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+}
+
+.deck-modal-account {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    flex-shrink: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.deck-modal-classes {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+}
+
+.deck-modal-class-badge {
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    color: var(--surface-0);
+    padding: 2px var(--space-2);
+    border-radius: 10px;
+    margin-left: var(--space-1);
+    background-color: var(--class-neutral);
+}
+
+.deck-modal-class-badge--emberward  { background-color: var(--class-emberward); }
+.deck-modal-class-badge--tidecaller { background-color: var(--class-tidecaller); }
+.deck-modal-class-badge--gravekeep  { background-color: var(--class-gravekeep); }
+.deck-modal-class-badge--verdant    { background-color: var(--class-verdant); }
+.deck-modal-class-badge--tempest    { background-color: var(--class-tempest); }
+.deck-modal-class-badge--clockwright { background-color: var(--class-clockwright); }
+.deck-modal-class-badge--stonewarden { background-color: var(--class-stonewarden); }
+.deck-modal-class-badge--nightveil  { background-color: var(--class-nightveil); }
+
 /* ---- Deck modal panes ---- */
 .deck-pane {
     margin-bottom: var(--space-2);

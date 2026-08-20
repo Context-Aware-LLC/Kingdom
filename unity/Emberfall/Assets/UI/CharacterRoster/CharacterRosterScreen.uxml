@@ -49,6 +49,10 @@
         -->
         <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden">
             <ui:VisualElement name="deck-dialog" class="delete-dialog">
+                <ui:VisualElement name="deck-modal-header" class="deck-modal-header">
+                    <ui:Label name="deck-modal-account" text="" class="deck-modal-account" />
+                    <ui:VisualElement name="deck-modal-classes" class="deck-modal-classes" />
+                </ui:VisualElement>
                 <ui:Label name="deck-modal-title" text="" class="delete-title" />
                 <ui:Label name="deck-modal-sub" text="" class="create-help" />
 

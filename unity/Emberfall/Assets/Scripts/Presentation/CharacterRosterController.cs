@@ -171,6 +171,8 @@ namespace Emberfall.Presentation
 
         private VisualElement _deckModal;
         private VisualElement _deckDialog;
+        private Label _deckModalAccount;
+        private VisualElement _deckModalClasses;
         private Label _deckModalTitle;
         private Label _deckModalSub;
         private Label _deckModalError;
@@ -310,6 +312,8 @@ namespace Emberfall.Presentation
 
             _deckModal = _root.Q<VisualElement>("deck-modal");
             _deckDialog = _root.Q<VisualElement>("deck-dialog");
+            _deckModalAccount = _root.Q<Label>("deck-modal-account");
+            _deckModalClasses = _root.Q<VisualElement>("deck-modal-classes");
             _deckModalTitle = _root.Q<Label>("deck-modal-title");
             _deckModalSub = _root.Q<Label>("deck-modal-sub");
             _deckModalError = _root.Q<Label>("deck-modal-error");
@@ -864,6 +868,10 @@ namespace Emberfall.Presentation
             _pendingCardBackId = deck.CardBackId;
             _pendingShowcaseCardId = deck.ShowcaseCardId;
 
+            if (_deckModalAccount != null)
+                _deckModalAccount.text = _account.DisplayNameOr("");
+            BuildClassBadges(character);
+
             if (_deckModalSub != null)
             {
                 string standing = summary.Queue.IsEligible ? "Queue ready" : $"Draft · {summary.Queue.Reason}";
@@ -929,10 +937,31 @@ namespace Emberfall.Presentation
             _menuSiblingCount = 0;
             _menuQueueReady = false;
 
+            if (_deckModalAccount != null)
+                _deckModalAccount.text = _account.DisplayNameOr("");
+            BuildClassBadges(null);
+
             Show(_deckSelectButton, false);
             ShowDeckPane(DeckPane.Delete);
             if (_deckModalSub != null) _deckModalSub.text = queue.Reason;
             _deckModal?.RemoveFromClassList("delete-modal--hidden");
+        }
+
+        private void BuildClassBadges(Character character)
+        {
+            if (_deckModalClasses == null) return;
+            _deckModalClasses.Clear();
+            if (character == null) return;
+            AddClassBadge(character.PrimaryClass);
+            AddClassBadge(character.SecondaryClass);
+        }
+
+        private void AddClassBadge(CardClass c)
+        {
+            var badge = new Label(Pretty(c));
+            badge.AddToClassList("deck-modal-class-badge");
+            badge.AddToClassList("deck-modal-class-badge--" + ClassSlug(c));
+            _deckModalClasses.Add(badge);
         }
 
         private void ShowDeckPane(DeckPane pane)
