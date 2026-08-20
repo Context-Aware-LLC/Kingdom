@@ -65,11 +65,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3b253e6b7e26f1649b90cd9af42f67b3
-    m_Address: ui/frame_epic_tribal_type_with_stats
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b672eb5215660941bc2412e4dcd0601
     m_Address: ui/icon_kw_backdraft
     m_ReadOnly: 0
@@ -272,11 +267,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbd67f49f7df9334da1f041fa01afed4
     m_Address: materials/M_CardArt
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cc6ede76ab00cfa43b622bb32f4d24fb
-    m_Address: ui/frame_epic_tribal_type
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
