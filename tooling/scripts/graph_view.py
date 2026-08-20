@@ -3,21 +3,35 @@
 
 WHY THIS IS A TREEMAP AND NOT A NODE-LINK GRAPH
 -----------------------------------------------
-The graph's C# edges do not carry architecture. Node keys are path-scoped
-(`...\\CardDefinition.cs::TargetSpec.IsKnown`) while CALLS targets are stored as bare
-names (`FromSeconds`, `Delay`, `nameof`), so a call almost never resolves to a node
-across a file, let alone across an assembly. Measured on 2026-08-20:
+Node keys are path-scoped (`...\\CardDefinition.cs::TargetSpec.IsKnown`) while the C#
+parser emits CALLS and INHERITS targets as bare names (`FromSeconds`, `RuleAction`),
+so a call did not resolve to a node across a file, let alone across an assembly.
+Measured on 2026-08-20, BEFORE `tooling/scripts/csharp_resolver.py` existed:
 
-    edges whose target is not a node in the graph : 16755 / 25042  (67%)
+    edges whose target is not a node in the graph : 16814 / 25114  (67%)
     edges joining Emberfall.Net.Server -> Core    : 0
     distinct cross-project pairs (CALLS/INHERITS) : 1   (and it is a Python one)
     distinct cross-community pairs, all kinds     : 9
 
-So `visualize --mode community` draws 562 bubbles that are nearly edgeless, and any
-filtered node-link view is disconnected confetti. Everything derived from those edges
-is unreliable too - `caller_count` says 2327 symbols have no callers, `test_coverage`
-says 16 of 3924 are tested, and 92% of `risk_score` is the 0.3 default. Do not use
-`dead-code` against this graph.
+TRIGGER PARTIALLY TRIPPED, same day. `csharp_resolver.py` supplies the namespace ->
+files index upstream's resolver lacks and re-runs its evidence rule. After it and a
+`code-review-graph postprocess`:
+
+    edges whose target is not a node in the graph : 15008 / 25114  (59.8%)
+    cross-PROJECT node-to-node edges              : 797  (259 distinct pairs)
+    distinct cross-community pairs                : 58
+    communities                                   : 241  (was 565 on the same nodes)
+
+So the flat claim "the edges do not carry architecture" is now FALSE at project and
+type level: INHERITS is 58% resolved and the assembly dependency graph is real and
+readable. Run `tooling/scripts/graph_metrics.py` for the current numbers rather than
+trusting this comment.
+
+It remains TRUE at symbol level. CALLS is still 71% unresolved, because two thirds of
+those targets are external (`echo`, `FromSeconds`) and the parser drops the receiver,
+so a filtered symbol-level node-link view is still confetti. `caller_count`,
+`test_coverage` and `risk_score` are still mostly defaults. Do not use `dead-code`
+against this graph.
 
 What the graph records reliably is WHERE code lives and HOW BIG it is. That is what
 this draws: a zoomable treemap, area -> project -> file -> symbol, sized by lines.
@@ -26,10 +40,12 @@ this draws: a zoomable treemap, area -> project -> file -> symbol, sized by line
     python tooling/scripts/graph_view.py --area engine
     python tooling/scripts/graph_view.py --min-loc 25 --no-symbols
 
-RETIREMENT TRIGGER: if the C# call resolver is ever fixed so cross-assembly edges
-resolve, this file's premise dies - re-check the four numbers above and a node-link
-view becomes the better default. The same applies to the "Ask the graph before you
-grep" section in CLAUDE.md, which promises callers/callees.
+RETIREMENT TRIGGER: a project-level node-link view is now defensible and would be the
+better default for "what talks to what" - this treemap answers "what is big", which
+is a different question. Note that community LEVELS will not help: `_split_oversized`
+in the package only splits a community larger than 25% of all nodes (~844 here) and
+the largest is 67, so level-1 communities can never form for this repo. Any drill-down
+hierarchy has to come from the structural CONTAINS tree, which is 100% resolved.
 """
 
 from __future__ import annotations

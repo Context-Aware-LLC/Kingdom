@@ -225,6 +225,9 @@ jobs:
       - name: "Stage 6c · Training exporter tests (stdlib unittest)"
         run: python3 tests/python/test_training_exporters.py -v
 
+      - name: "Stage 6c2 · C# graph resolver tests (stdlib unittest)"
+        run: python3 tests/python/test_csharp_resolver.py -v
+
       - name: "Stage 6d · Install training trainer validation dependency"
         run: python3 -m pip install "numpy>=1.26"
 

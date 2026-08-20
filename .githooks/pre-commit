@@ -62,6 +62,16 @@ if command -v code-review-graph >/dev/null 2>&1; then
     else
         PYTHONIOENCODING=utf-8 code-review-graph update --quiet || true
     fi
+
+    # `update` re-parses changed files, and the C# parser emits CALLS/INHERITS
+    # targets as bare names that upstream's resolver cannot bind (it needs
+    # file-level import evidence; C# `using` names a namespace). Re-run the
+    # namespace-aware resolver so a commit that touches .cs files does not
+    # silently walk the graph back to unresolved. See the module docstring in
+    # tooling/scripts/csharp_resolver.py for the measurements.
+    if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.cs$'; then
+        python tooling/scripts/csharp_resolver.py >/dev/null 2>&1 || true
+    fi
 fi
 
 STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \

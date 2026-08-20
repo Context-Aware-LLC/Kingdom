@@ -109,6 +109,9 @@ Invoke-Stage 'Stage 6b · Trigger/selector drift guard' {
 Invoke-Stage 'Stage 6c · Training exporter tests' {
     python3 tests/python/test_training_exporters.py -v
 }
+Invoke-Stage 'Stage 6c2 · C# graph resolver tests' {
+    python3 tests/python/test_csharp_resolver.py -v
+}
 Invoke-Stage 'Stage 6d · Training trainer tests' {
     $candidates = [System.Collections.Generic.List[string]]::new()
     if ($env:EMBERFALL_TRAINING_PYTHON) {
