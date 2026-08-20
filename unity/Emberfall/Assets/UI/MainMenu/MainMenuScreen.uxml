@@ -56,14 +56,14 @@
             <ui:VisualElement name="shop-shell" class="shop-shell">
                 <ui:VisualElement class="shop-header">
                     <ui:VisualElement class="shop-heading">
-                        <ui:Label text="Booster Shop" class="shop-title"/>
-                        <ui:Label text="Choose a set. Pack contents and wallet changes are resolved by the server." class="shop-subtitle"/>
+                        <ui:Label text="Shop" class="shop-title"/>
+                        <ui:Label text="Choose a set, then buy with Gold or Gems." class="shop-subtitle"/>
                     </ui:VisualElement>
                     <ui:VisualElement class="shop-wallet">
                         <ui:Label name="shop-gold-balance" text="Gold  —" class="shop-wallet__balance shop-wallet__balance--gold"/>
                         <ui:Label name="shop-gem-balance" text="Gems  —" class="shop-wallet__balance shop-wallet__balance--gems"/>
                     </ui:VisualElement>
-                    <ui:Button name="btn-shop-close" text="Close" class="shop-close"/>
+                    <ui:Button name="btn-shop-close" text="← Back" class="shop-close"/>
                 </ui:VisualElement>
                 <ui:ScrollView name="shop-scroll" class="shop-scroll">
                     <ui:VisualElement class="shop-section">
@@ -73,7 +73,7 @@
                     </ui:VisualElement>
                     <ui:VisualElement class="shop-section">
                         <ui:Label text="Gem Bundles" class="shop-section__title"/>
-                        <ui:Label text="Founder-approved tiers. Live platform purchasing remains disabled until store product IDs are bound." class="shop-section__help"/>
+                        <ui:Label text="Gem purchases are coming soon." class="shop-section__help"/>
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
                 </ui:ScrollView>
