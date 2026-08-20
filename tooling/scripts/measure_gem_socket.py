@@ -1,3 +1,10 @@
+"""SUPERSEDED 2026-08-19. The rarity-gem socket is no longer painted into the frame art --
+it is its own sprite (Assets/Art/UI/Frames/socket_gem.png) composited on top, so there is
+nothing in the frame left to measure. GemSocket/GemHeight are now placement constants for that
+sprite, derived in docs/dev-docs/specs/card-frame-geo.md. Kept because it is the record of how
+the old socket was found, not because it still runs against anything meaningful.
+"""
+
 """Measure the rarity-gem socket painted into each card frame.
 
 The frame set carries three sockets of the same construction: a stone bezel around a dark,

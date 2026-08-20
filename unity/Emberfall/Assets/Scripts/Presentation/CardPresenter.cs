@@ -28,6 +28,13 @@ namespace Emberfall.Presentation
         [SerializeField] private SpriteRenderer frameRenderer;
         [SerializeField] private SpriteRenderer gemRenderer;
         [SerializeField] private SpriteRenderer[] keywordIcons;
+        // The three digit sockets and the gem bezel are composited over the frame rather than
+        // painted into it (2026-08-19) — that is what lets one frame serve every card type, since
+        // a spell just leaves the two stat sockets undrawn.
+        [SerializeField] private SpriteRenderer costSocketRenderer;
+        [SerializeField] private SpriteRenderer attackSocketRenderer;
+        [SerializeField] private SpriteRenderer healthSocketRenderer;
+        [SerializeField] private SpriteRenderer gemSocketRenderer;
         private IUiSpriteProvider _ui;
 
         // Tooltip banner (top-of-card, on hover) — see BoardController.CreatePresenter for layout.
@@ -74,12 +81,18 @@ namespace Emberfall.Presentation
         // Frame/rarity layer wiring (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2). Separate from Setup() so the
         // sprite composition is optional — a card still renders (art + labels) without it.
         public void SetupFrameLayer(SpriteRenderer frame, SpriteRenderer gem,
-                                    SpriteRenderer[] icons, IUiSpriteProvider ui)
+                                    SpriteRenderer[] icons, IUiSpriteProvider ui,
+                                    SpriteRenderer costSocket = null, SpriteRenderer attackSocket = null,
+                                    SpriteRenderer healthSocket = null, SpriteRenderer gemSocket = null)
         {
-            frameRenderer = frame;
-            gemRenderer   = gem;
-            keywordIcons  = icons;
-            _ui           = ui;
+            frameRenderer        = frame;
+            gemRenderer          = gem;
+            keywordIcons         = icons;
+            _ui                  = ui;
+            costSocketRenderer   = costSocket;
+            attackSocketRenderer = attackSocket;
+            healthSocketRenderer = healthSocket;
+            gemSocketRenderer    = gemSocket;
         }
 
         // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
@@ -305,16 +318,21 @@ namespace Emberfall.Presentation
         // one shared layout (FrameRarityCatalog). No per-card branching.
         private void ApplyFrame()
         {
-            // One painted frame per rarity per type (minion, spell — weapons draw the minion
-            // frame). Falls back to the empty-sprite placeholder look if the frame asset is missing.
+            // ONE frame for every card — no rarity axis, no type axis. Falls back to the
+            // empty-sprite placeholder look if the frame asset is missing.
             Sprite frameSprite = null;
             if (frameRenderer != null && _ui != null)
             {
-                frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite(_def.Type, _def.Rarity));
+                frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite);
                 SetSpritePreserveSize(frameRenderer, frameSprite);
             }
             _hasPaintedFrame = frameSprite != null;
             if (_hasPaintedFrame) ApplySockets();
+
+            // The socket housings ride on top of the frame. Type decides which of them exist at
+            // all: a spell draws the cost socket only, and the frame behind the two stat sockets
+            // is plain rail, so leaving them undrawn is the finished look rather than a hole.
+            ApplySocketSprites();
 
             if (gemRenderer != null)
             {
@@ -444,6 +462,62 @@ namespace Emberfall.Presentation
                 (FrameRarityCatalog.GemSocket.x - 0.5f) * W,
                 (0.5f - FrameRarityCatalog.GemSocket.y) * H,
                 -0.012f);
+        }
+
+        /// <summary>Composites the three digit sockets and the gem bezel over the frame.
+        ///
+        /// <para>These used to be painted into the frame art, which is why there were eight
+        /// frames: a spell needed a copy with the two stat housings removed, and every rarity
+        /// needed its own metal. Lifting them out collapsed that to one frame plus two sprites
+        /// (2026-08-19) — the stat socket is a single sprite drawn three times, and rarity now
+        /// reads from the gem alone.</para>
+        ///
+        /// <para>Sizing is by the sprite's CANVAS span, not its disc: each socket PNG centres its
+        /// disc with a transparent margin so that drawing it at canvas span lands it concentric on
+        /// the socket centre. Width and height scale off CardW and CardH independently so a socket
+        /// distorts exactly as the frame does rather than staying circular against a stretched
+        /// card.</para></summary>
+        private void ApplySocketSprites()
+        {
+            const float W = BoardController.CardW, H = BoardController.CardH;
+
+            Sprite stat = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.StatSocketSprite) : null;
+            Sprite bezel = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.GemSocketSprite) : null;
+
+            var statSize = new Vector2(
+                FrameRarityCatalog.StatSocketPx / FrameRarityCatalog.MasterW * W,
+                FrameRarityCatalog.StatSocketPx / FrameRarityCatalog.MasterH * H);
+            var bezelSize = new Vector2(
+                FrameRarityCatalog.GemSocketPx / FrameRarityCatalog.MasterW * W,
+                FrameRarityCatalog.GemSocketPx / FrameRarityCatalog.MasterH * H);
+
+            // Cost is on every card; the two stat sockets follow the same visibility rules as the
+            // digits that sit in them, so a weapon keeps both (attack + durability).
+            PlaceSocket(costSocketRenderer,   stat,  FrameRarityCatalog.CostSocket,      statSize,  true);
+            PlaceSocket(attackSocketRenderer, stat,  FrameRarityCatalog.StatSocketLeft,  statSize,
+                        FrameRarityCatalog.ShowAttack(_def.Type));
+            PlaceSocket(healthSocketRenderer, stat,  FrameRarityCatalog.StatSocketRight, statSize,
+                        FrameRarityCatalog.ShowHealth(_def.Type) || FrameRarityCatalog.ShowDurability(_def.Type));
+            PlaceSocket(gemSocketRenderer,    bezel, FrameRarityCatalog.GemSocket,       bezelSize, true, z: -0.011f);
+        }
+
+        // z −0.009 sits the socket in front of the frame (−0.006) and the frost overlay (−0.008)
+        // but behind every digit (−0.010): a frosted minion still has to be readable, and the ice
+        // covers the illustration, never the numbers. The gem bezel goes to −0.011 so the gem
+        // itself (−0.012) sets into it.
+        private static void PlaceSocket(SpriteRenderer sr, Sprite sprite, Vector2 frac,
+                                        Vector2 size, bool show, float z = -0.009f)
+        {
+            if (sr == null) return;
+            bool visible = show && sprite != null;
+            sr.gameObject.SetActive(visible);
+            if (!visible) return;
+
+            sr.sprite = sprite;
+            sr.size   = size;
+            sr.transform.localPosition = new Vector3(
+                (frac.x - 0.5f) * BoardController.CardW,
+                (0.5f - frac.y) * BoardController.CardH, z);
         }
 
         // The equipped weapon is no longer rendered as a card, so nothing pushes live weapon

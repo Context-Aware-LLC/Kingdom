@@ -65,6 +65,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b253e6b7e26f1649b90cd9af42f67b3
+    m_Address: ui/frame_epic_tribal_type_with_stats
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b672eb5215660941bc2412e4dcd0601
     m_Address: ui/icon_kw_backdraft
     m_ReadOnly: 0
@@ -75,6 +80,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 467ef0cab3a3404db7b6336508fe1b72
+    m_Address: ui/socket_stat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4995c8a52bd79f04796b75112514cdb5
     m_Address: ui/frame_common_spell
     m_ReadOnly: 0
@@ -82,6 +92,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de6ac9c8bfa16941bdc2f87450939e1
     m_Address: ui/gem_legendary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4fc84507c69d415994886bbe45c51623
+    m_Address: ui/frame_card
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 522629fbea2807c40b3067938b8aea99
+    m_Address: ui/clock_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -97,6 +117,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5c3e72eb0d0817b40b16f746e19d7536
     m_Address: ui/gem_epic
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d65802299d858f4db1a370b392332fb
+    m_Address: ui/grave_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6388db4718a0e60498fc0296e8271d35
+    m_Address: ui/stone_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -125,8 +155,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 723e5ec5e4632ad49a447f9e7a80dbb1
+    m_Address: ui/ember_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
     m_Address: materials/M_Glow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c925719407fbdb4db387a2005036c77
+    m_Address: ui/storm_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -137,6 +177,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83a82d771cb515c4ca6bb923dcf1a92e
     m_Address: materials/M_Aegis
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 869fa2f9008b458b8167d3d9f872b596
+    m_Address: ui/socket_gem
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99f40e68ca097e8469ce1dad911d4e46
+    m_Address: ui/tide_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -210,6 +260,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc6ede76ab00cfa43b622bb32f4d24fb
+    m_Address: ui/frame_epic_tribal_type
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1dc52688f0c16142a6e765c906d3023
     m_Address: ui/icon_kw_herald
     m_ReadOnly: 0
@@ -232,6 +287,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db20ebe440881c44492ea9f13b581be5
     m_Address: ui/HeroFrames_CarvedStone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbd56dadf571ea3439b341b3d5fa1271
+    m_Address: ui/verdant_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df41997c499025949bfe17a12747f50b
+    m_Address: ui/night_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

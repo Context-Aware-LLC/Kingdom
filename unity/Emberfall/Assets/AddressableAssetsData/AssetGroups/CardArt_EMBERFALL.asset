@@ -95,6 +95,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b9b3c7f44ae9524fada11908f096d2a
+    m_Address: card_art/verdant_grove_mender
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1cac0667002d74b43a71187b344fab0e
     m_Address: card_art/verdant_wild_bloom
     m_ReadOnly: 0
@@ -361,7 +366,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5e0bb383c903ae94ca262f375812fcc0
-    m_Address: card_art/tide_glacial_leviathan
+    m_Address: card_art/tide_glacierborn_leviathan
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -422,6 +427,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7174b2284ed23c54c8e267524763083d
     m_Address: card_art/ember_vanguard_drake
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71e71fe50e2140ada3ddda80e96af3cd
+    m_Address: card_art/clock_mainspring_halberd
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -770,6 +780,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5f3d3542d4146479bdd9e02d57b2d2e
+    m_Address: card_art/stone_earthwardens_maul
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d942cdf6fa7b1064c834b9d4d3d4c813
     m_Address: card_art/grave_deathweaver
     m_ReadOnly: 0
@@ -842,6 +857,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f104bc6a4396ce24cb9a34ce2c989729
     m_Address: card_art/verdant_ironbark_elder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4f0fab9f9574e28b27d1a27f3f5ae10
+    m_Address: card_art/storm_galecleaver
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

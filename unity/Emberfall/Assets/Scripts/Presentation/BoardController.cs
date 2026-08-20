@@ -594,7 +594,7 @@ namespace Emberfall.Presentation
 
             // Frame border — full card face, in front of the (opaque) art quad so the border ring
             // overlaps the illustration edges; its transparent window lets the art show through.
-            // Sprite (frame_{type}_{rarity}) assigned by CardPresenter.ApplyFrame (D2).
+            // Sprite (the one frame_card) assigned by CardPresenter.ApplyFrame (D2).
             var frameRenderer = MakeSprite(root.transform, "Frame",
                 new Vector3(0f, 0f, -0.006f), new Vector2(CardW, CardH));
 
@@ -628,6 +628,26 @@ namespace Emberfall.Presentation
             // one resolves.
             var gemRenderer = MakeSprite(root.transform, "Gem",
                 new Vector3(0f, -CardH * 0.42f, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
+
+            // Socket housings — the three digit bosses and the gem bezel, composited OVER the
+            // frame rather than painted into it (2026-08-19). That is what lets one frame serve
+            // minion, spell and weapon: type only decides which of these get drawn, and the frame
+            // behind an undrawn one is finished rail, not a hole. Sprite, size and position are
+            // all assigned by CardPresenter.ApplySocketSprites; the values here are placeholders
+            // for the pre-frame fallback, and each starts inactive so a card with no painted
+            // frame costs no draw call.
+            SpriteRenderer MakeSocket(string goName, float z) =>
+                MakeSprite(root.transform, goName, new Vector3(0f, 0f, z),
+                           new Vector2(CardW * 0.17f, CardH * 0.12f));
+
+            var costSocket   = MakeSocket("CostSocket",   -0.009f);
+            var attackSocket = MakeSocket("AttackSocket", -0.009f);
+            var healthSocket = MakeSocket("HealthSocket", -0.009f);
+            var gemSocket    = MakeSocket("GemSocket",    -0.011f);
+            costSocket.gameObject.SetActive(false);
+            attackSocket.gameObject.SetActive(false);
+            healthSocket.gameObject.SetActive(false);
+            gemSocket.gameObject.SetActive(false);
 
             // Keyword icon strip — up to 4 icons laid left-to-right just below the art window.
             // Sprites (icon_kw_*) assigned from live keywords by RebuildKeywords (§4).
@@ -748,7 +768,8 @@ namespace Emberfall.Presentation
 
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
-            presenter.SetupFrameLayer(frameRenderer, gemRenderer, keywordIcons, _uiSprites);
+            presenter.SetupFrameLayer(frameRenderer, gemRenderer, keywordIcons, _uiSprites,
+                                      costSocket, attackSocket, healthSocket, gemSocket);
             presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.

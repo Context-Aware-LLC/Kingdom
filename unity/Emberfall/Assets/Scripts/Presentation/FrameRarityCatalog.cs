@@ -5,18 +5,24 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2 + hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/card-rendering.md §3.1).
-    /// The eight painted frames (4 rarities × spell/minion, weapons reuse the minion art) are
-    /// keyed by rarity+type only for sprite selection (<see cref="FrameSprite"/>) — the
-    /// 2026-08-09 standardized frame set (art-pipeline/frames/) is pixel-identical geometry
-    /// across all 4 rarities for a given type, so there is exactly ONE socket layout per type
-    /// (art-pipeline/frames/README.md "Shared geometry"), measured directly off
-    /// frame_common_minion.png/art-opening-mask.png/shared-text-panel.png rather than per-rarity.
-    /// <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the no-sprite fallback. No
-    /// per-card, per-rarity branching for placement: everything below is a flat constant.
+    ///
+    /// <para>ONE frame serves every card (2026-08-19). There is no rarity axis and no type axis:
+    /// the three digit sockets and the gem bezel are their own sprites composited on top, so a
+    /// spell is not a different frame — it is the same frame that simply does not draw two of the
+    /// sockets. That collapsed the eight painted frames (4 rarities × spell/minion) to one, and it
+    /// is what lets <see cref="FrameSprite"/> be a constant rather than a lookup.</para>
+    ///
+    /// <para><b>Rarity now reads entirely from the gem</b> (<see cref="GemSprite"/>) in the
+    /// bottom-centre socket. <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the
+    /// no-sprite fallback.</para>
     /// </summary>
     public static class FrameRarityCatalog
     {
         public enum GlowTierKind { None, Pulse, Legendary }
+
+        // The master frame art is authored at this size; every fraction below is measured off it.
+        public const float MasterW = 1456f;
+        public const float MasterH = 2048f;
 
         // §2 rarity gem colors.
         public static Color GemColor(Rarity rarity) => rarity switch
@@ -28,7 +34,7 @@ namespace Emberfall.Presentation
             _                => Color.gray,
         };
 
-        // Type silhouette proxy (real frame art is a per-type sprite; this is the placeholder tint).
+        // Type silhouette proxy (real frame art is a sprite; this is the placeholder tint).
         public static Color FrameTint(CardType type) => type switch
         {
             CardType.MINION => new Color(0.30f, 0.30f, 0.34f), // rounded shield/portrait
@@ -37,93 +43,77 @@ namespace Emberfall.Presentation
             _               => new Color(0.22f, 0.22f, 0.32f),
         };
 
-        // Frame sprite key. Every rarity now has a real painted frame for both types (2026-08-09
-        // standardized set, art-pipeline/frames/) — weapons draw the minion frame (Sam ruled
-        // weapons get no dedicated art; the minion stat sockets already cover attack+durability).
-        // Resolves through IUiSpriteProvider.
-        public static string FrameSprite(CardType type, Rarity rarity) =>
-            type == CardType.SPELL ? $"frame_{Key(rarity)}_spell" : $"frame_{Key(rarity)}";
-
-        private static string Key(Rarity rarity) => rarity.ToString().ToLowerInvariant();
-
-        // ── Unified socket geometry (2026-08-09, art-pipeline/frames/README.md "Shared geometry";
-        //    re-measured 2026-08-16 against Sam's enlarged-aperture frame_common.png) ──
-        // Fractions of the 1456×2048 master frame, measured from the top-left. Aside from the two
-        // stat sockets below, one layout serves spell and minion alike.
+        // ── The four composited sprites ──────────────────────────────────────────────────────
+        // All resolve through IUiSpriteProvider, which searches Assets/Art/UI by sprite NAME, so
+        // the Frames/ subfolder they live in is organisational only.
         //
-        // Every socket moved on 2026-08-16: Sam widened the art aperture (0.8516 × 0.4844 of the
-        // card -> 0.9114 × 0.5254) and the rest of the furniture shifted to make room — the stat
-        // bosses most of all, ~100px down into the bottom corners. The numbers below were tracked
-        // from the 2026-08-09 ones by template-matching each socket's neighbourhood from the old
-        // frame onto the new (scoring only pixels opaque in BOTH, so the changed aperture cannot
-        // drag the match), which carries Sam's live hand-tuning forward instead of re-detecting
-        // over the top of it. Each match beat the residual floor set by a control run against an
-        // unconformed sibling frame, and the disc radii are unchanged (0.0444h -> 0.0454h), which
-        // is why the digit em sizes below did not move.
-        //
-        // All eight frames are conformed as of 2026-08-17 — every socket is inside tolerance, worst
-        // in the set 10%. The apertures still differ per frame and that is FINE, because the frame
-        // draws on top of the art quad: an aperture SMALLER than ArtWindow is covered, and only one
-        // LARGER opens a gap onto the dark body quad behind. So the single rule is that ArtWindow
-        // must cover the largest aperture in the set. The bottom edge below is set 2px past epic's
-        // 1144, the lowest in the set, which closes the 5-row strip epic showed before.
-        // RETIREMENT TRIGGER: if any frame's aperture is ever enlarged past this rect, this edge
-        // moves with it in the same commit — see docs/dev-docs/specs/card-frame-geo.md.
-        public static readonly Vector4 ArtWindow = new(0.0460f, 0.0308f, 0.9574f, 0.5596f); // l, t, r, b
+        // The frame carries NO socket art: it is plain rail wherever a socket lands, and each
+        // socket sprite brings its own housing. That is the whole reason one frame can serve
+        // minion, spell and weapon alike — the type only decides which sockets get drawn.
+        // RETIREMENT TRIGGER: if a socket's housing is ever painted back INTO the frame, this
+        // claim and the keep-clear zones in docs/dev-docs/specs/card-frame-geo.md both die.
+        public const string FrameSprite      = "frame_card";
+        public const string StatSocketSprite = "socket_stat"; // cost, attack, health/durability — one sprite, drawn three times
+        public const string GemSocketSprite  = "socket_gem";  // the rope bezel the rarity gem sits in
 
-        public static readonly Vector2 CostSocket = new(0.0911f, 0.0731f); // carries the 2026-08-09 "nudge it down a couple px" (Sam, live check)
-        public const float CostDigitEm = 200f / 2048f;
+        // Socket sprite canvas sizes, in master pixels. The disc is centred in its canvas with a
+        // transparent margin, so the sprite is drawn at CANVAS span and lands concentric on the
+        // socket centre — do not size these to the disc.
+        public const float StatSocketPx = 256f; // O246 disc, O210 flat interior, ~18px rope band
+        public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
-        // Minion/weapon-only — spells never show these (ShowAttack/ShowHealth/ShowDurability below).
-        public static readonly Vector2 StatSocketLeft  = new(0.0876f, 0.9343f); // attack
-        public static readonly Vector2 StatSocketRight = new(0.9139f, 0.9332f); // health / durability
-        public const float StatDigitEm = 220f / 2048f;
+        public static string GemSprite(Rarity rarity) =>
+            $"gem_{rarity.ToString().ToLowerInvariant()}";
 
-        // §3.1 type spec. Title now sits in the frame's own title band, between the art window
-        // and the rules parchment — Sam moved it there 2026-08-09 specifically to free up room,
-        // so it no longer shares a row with the cost socket and needs no left clamp.
-        // The title band is the same 0.1118h tall as before, just pushed down with everything
-        // else; the parchment grew a little in both axes (0.8489 × 0.2598 -> 0.8743 × 0.2637), so
-        // the body bed follows it and keeps the insets it had (13px top, 17px bottom, flush l/r).
-        public const float NameCenterX   = 0.5f;    // of card width
-        public const float NameCenterY   = 0.613f;  // of card height, from the top (title-band center)
-        public const float NameEm        = 107f / 2048f;
-        public const float BodyCenterY   = 0.798f;  // rules-parchment center
-        // 0.846 = 1232px, which fits the NARROWEST parchment in the set (epic_spell and
-        // legendary_spell both measure 1233 wide). The previous 0.874 was 1273px and overhung
-        // those two, and rare, by ~20px per side — rules text ran off the parchment onto the
-        // stone rails, which the parchment edge sitting right there makes obvious.
-        public const float BodyWidth     = 0.846f;  // of card width
-        public const float BodyHeight    = 0.234f;  // of card height
-        public const float BodyEm        = 100f / 2048f;
-        public const float BodyEmFloor   = 72f / 2048f; // auto-shrink floor for long rules text
-        public const int   KeywordLeadPct = 115;    // keyword lead, % of body (~124px — held steady as body grew)
+        // ── Unified geometry (2026-08-19) ────────────────────────────────────────────────────
+        // Fractions of the 1456×2048 master, measured from the top-left off the shipped PNGs.
+        // One layout, no branching. The pixel figures are in the comment beside each value and
+        // the full derivation is docs/dev-docs/specs/card-frame-geo.md.
+
+        // The aperture is cut to transparency and the frame draws ON TOP of the art quad, so the
+        // art may overflow — the border occludes it. The frame's aperture is now a plain rounded
+        // rect: the arc that used to bite the top-left corner was the cost boss's own footprint,
+        // and the boss is a separate sprite drawn over the art now.
+        // RETIREMENT TRIGGER: re-cutting the aperture moves this rect in the same commit.
+        public static readonly Vector4 ArtWindow = new(0.045330f, 0.031250f, 0.953709f, 0.556152f); // 66, 64, 1389, 1139
+
+        public static readonly Vector2 CostSocket = new(0.091346f, 0.073242f); // 133, 150
+        public const float CostDigitEm = 200f / MasterH;
+
+        // Minion/weapon-only — spells never show these (ShowAttack/ShowHealth/ShowDurability below),
+        // and on a spell the two sockets are simply not drawn, leaving clean rail behind.
+        public static readonly Vector2 StatSocketLeft  = new(0.087912f, 0.934082f); // 128, 1913  attack
+        public static readonly Vector2 StatSocketRight = new(0.911401f, 0.933105f); // 1327, 1911 health / durability
+        public const float StatDigitEm = 220f / MasterH;
+
+        // Title band, between the art aperture and the rules parchment: y 1139..1369, 230 tall.
+        public const float NameCenterX = 0.5f;
+        public const float NameCenterY = 0.612305f; // 1254
+        public const float NameEm      = 107f / MasterH;
+
+        // Rules text box. NOTE this is NOT the parchment's centre — the parchment runs y 1369..1905
+        // (centre 1637) but the two stat sockets bite its bottom corners from y 1790 up, so the
+        // text box stops there and sits higher than the panel it is printed on. Setting
+        // BodyCenterY from the parchment instead pushes the last line under the stat rings.
+        // RETIREMENT TRIGGER: moving StatSocketLeft/Right vertically moves this floor with them.
+        public const float BodyCenterY = 0.771240f; // 1579   box y 1369..1790
+        public const float BodyWidth   = 0.851648f; // 1240   in a 1262-wide parchment
+        public const float BodyHeight  = 0.205566f; // 421
+        public const float BodyEm      = 100f / MasterH;
+        public const float BodyEmFloor = 72f / MasterH; // auto-shrink floor for long rules text
+        public const int   KeywordLeadPct = 115;        // keyword lead, % of body
 
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);
         public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);
 
-        // ── Rarity gem socket ────────────────────────────────────────────────────────────────
-        // The frames have carried an empty oval setting at bottom-centre, between the two stat
-        // bosses, since the painted set landed — nothing had ever drawn into it. Measured off the
-        // eight shipping frames by tooling/scripts/measure_gem_socket.py, which validates itself
-        // against CostSocket in the same run; re-run it if the frames are re-conformed.
-        //
-        // x is a flat 0.5: the eight frames measured 0.4983–0.5000, i.e. centred, and the same
-        // "one constant, not one per rarity" rule the rest of this file follows. The socket
-        // opening runs about 0.096w × 0.078h, so GemHeight sits inside it with a margin rather
-        // than filling it edge to edge — a gem is set INTO a bezel, not pressed against it.
-        //
-        // Sized by HEIGHT, with width following the gem's own aspect ratio (CardPresenter), for
-        // two reasons: the socket is an oval taller than it is wide, and the gems are not all the
-        // same shape — the rare is a square princess cut and the others are round or oval. Forcing
-        // a square would stretch whichever ones disagree.
-        // RETIREMENT TRIGGER: re-conforming the frame set moves this the same way it moves the
-        // stat sockets — re-run measure_gem_socket.py in that commit.
-        public static readonly Vector2 GemSocket = new(0.5000f, 0.9520f);
-        public const float GemHeight = 0.068f;  // of card height
-
-        public static string GemSprite(Rarity rarity) =>
-            $"gem_{rarity.ToString().ToLowerInvariant()}";
+        // Rarity gem socket, bottom-centre. y is the lowest the O206 bezel can sit: the frame's
+        // last opaque row under it is 2044, so 2044 − 103 = 1941. The gem is sized by HEIGHT and
+        // the four gem PNGs are normalised to square canvases of equal fill by
+        // tooling/scripts/normalize_gem_art.py — re-run it after any gem is re-exported, because
+        // a padded export renders as a gem that is mysteriously too small.
+        // RETIREMENT TRIGGER: re-cutting the frame's bottom rail moves this y.
+        public static readonly Vector2 GemSocket = new(0.5f, 0.947754f); // 728, 1941
+        public const float GemHeight = 0.075684f; // 155 — O155 stone in the O170 well
 
         // §4: SILENCE is an effect, not a card-face keyword — it has no icon.
         public static string KeywordIcon(Keyword keyword) =>

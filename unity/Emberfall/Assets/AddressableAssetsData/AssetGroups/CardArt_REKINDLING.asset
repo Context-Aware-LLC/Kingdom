@@ -135,6 +135,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b4ed65dd956e4a4c88e2186249c8cd7
+    m_Address: card_art/ember_channeled_pyroclasm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4dc54c55603549d0b0de6319c464ed49
     m_Address: card_art/verdant_wildbloom_surge
     m_ReadOnly: 0
@@ -175,8 +180,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c0866d1774bbad4e817a79ad24946fb
+    m_Address: card_art/stone_heartstone_herald
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 65a240359c174c22a8d42937dcf2361c
     m_Address: card_art/night_seraphine_whisper_queen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 680b80dca1e459745b753ee6692fdff8
+    m_Address: card_art/smithy_hammer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,8 +200,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 71e71fe50e2140ada3ddda80e96af3cd
-    m_Address: card_art/clock_mainspring_halberd
+  - m_GUID: 71bddec0c50d30e4b859069547f71bfa
+    m_Address: card_art/clock_mechanical_essence
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -197,6 +212,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 78f37da0e2b54576b7e9773fa8f97675
     m_Address: card_art/night_contract_kill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79205e3c2e0333a4397c4c357052eebd
+    m_Address: card_art/verdant_seedling_guard
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -316,7 +336,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca5c75f22b0840dbb65bfc35ee37e9ec
-    m_Address: card_art/clock_rebuilt_automaton
+    m_Address: card_art/clock_reconstructed_automaton
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -370,11 +390,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f4f0fab9f9574e28b27d1a27f3f5ae10
-    m_Address: card_art/storm_galecleaver
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6af8e7683914203862aad57df9e2859
     m_Address: card_art/stone_iron_foundation
     m_ReadOnly: 0
@@ -382,6 +397,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fc7d9b476695460983d61a69318242ab
     m_Address: card_art/tide_channel_mender
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fce168112aba8404792b45ca13868c1c
+    m_Address: card_art/neutral_forge_striker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

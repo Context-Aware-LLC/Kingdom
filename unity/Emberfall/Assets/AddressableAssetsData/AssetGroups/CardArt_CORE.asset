@@ -55,6 +55,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 756eeb33fe5476649af92acd2505ce59
+    m_Address: card_art/hero_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8787be3d4887fd6802a3290bdc3c9cce
     m_Address: card_art/stone_hero_power_earthwall
     m_ReadOnly: 0
@@ -77,6 +82,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0b122105a5944740bf49e8e800147bf
     m_Address: card_art/hero_tempest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbe6097ee27f8244c9b7e3b572aff461
+    m_Address: card_art/storm_hero_power_chain_spark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
