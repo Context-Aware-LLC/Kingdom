@@ -150,6 +150,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e0d23c5f7ab48bfa96410e8c4d19b14
+    m_Address: ui/ui_button_secondary_slate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f1e6a3119a3bed44952a895206ce486
     m_Address: ui/frame_epic_spell
     m_ReadOnly: 0
@@ -185,6 +190,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91c4e6f72a1b43deb490ef0c6e2d5a13
+    m_Address: ui/ui_button_primary_ember
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 99f40e68ca097e8469ce1dad911d4e46
     m_Address: ui/tide_hp
     m_ReadOnly: 0
@@ -207,6 +217,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af42c3d0e69b4e5d98a5117cb2bca812
+    m_Address: ui/ui_panel_recessed_slate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -262,6 +277,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cc6ede76ab00cfa43b622bb32f4d24fb
     m_Address: ui/frame_epic_tribal_type
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf1892a40ed34ddc9b72a614e53f2c15
+    m_Address: ui/ui_input_recessed_slate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d13f1e2c38414bd897fa6a5c9372a011
+    m_Address: ui/ui_panel_outer_forged
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
