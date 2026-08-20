@@ -390,3 +390,138 @@
     opacity: 0.3;
     -unity-background-image-tint-color: rgb(104, 110, 124);
 }
+
+/* ---------- Collection chrome kit ----------
+ * These five sprites are deliberately separate assets. They have different proportions, materials,
+ * and slice borders; combining them into an atlas would make iteration harder without reducing the
+ * number of UI Toolkit style references. USS slice values are repeated here so the treatment remains
+ * deterministic even if an importer border is changed while another screen experiments with it. */
+.chrome-panel {
+    border-width: 0;
+    border-radius: 0;
+}
+.chrome-panel--outer {
+    background-color: rgba(18, 23, 31, 0.96);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
+    -unity-slice-left: 64px;
+    -unity-slice-right: 64px;
+    -unity-slice-top: 64px;
+    -unity-slice-bottom: 64px;
+    -unity-slice-scale: 0.35px;
+}
+.chrome-panel--recessed {
+    background-color: rgba(8, 12, 18, 0.88);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_recessed_slate.png");
+    -unity-slice-left: 56px;
+    -unity-slice-right: 56px;
+    -unity-slice-top: 56px;
+    -unity-slice-bottom: 56px;
+    -unity-slice-scale: 0.35px;
+}
+
+/* The two nested panel sprites replace the former flat wall while keeping the fixed-width card
+ * contract untouched. Their compact padding spends 56px total horizontally at the reference scale,
+ * leaving the landscape wall room for the same practical card count. */
+.collection .db-collection.chrome-panel--outer {
+    padding: 16px;
+    background-color: rgba(18, 23, 31, 0.96);
+    overflow: hidden;
+}
+.collection .col-scroll.chrome-panel--recessed {
+    padding: 12px;
+}
+.deck-drawer.chrome-panel--outer {
+    padding: 24px;
+    border-left-width: 0;
+    background-color: rgba(18, 23, 31, 0.98);
+}
+
+.chrome-button {
+    min-height: 44px;
+    padding: 0 24px;
+    border-width: 0;
+    border-radius: 0;
+    color: var(--ink-1);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.chrome-button--primary {
+    background-color: rgba(16, 13, 10, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-left: 64px;
+    -unity-slice-right: 64px;
+    -unity-slice-top: 34px;
+    -unity-slice-bottom: 34px;
+    -unity-slice-scale: 0.5px;
+    color: rgb(250, 230, 193);
+}
+.chrome-button--secondary {
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64px;
+    -unity-slice-right: 64px;
+    -unity-slice-top: 36px;
+    -unity-slice-bottom: 36px;
+    -unity-slice-scale: 0.5px;
+}
+.chrome-button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.chrome-button:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(205, 211, 220);
+}
+.chrome-button:disabled {
+    opacity: 0.42;
+}
+.col-query-actions .chrome-button {
+    min-height: 40px;
+    height: 40px;
+    padding: 0 20px;
+}
+.deck-drawer__back.chrome-button {
+    min-height: 44px;
+    height: 44px;
+    padding-left: 20px;
+    color: var(--ink-1);
+    -unity-text-align: middle-left;
+}
+.deck-drawer__manage.chrome-button {
+    min-height: 52px;
+    background-color: rgba(16, 13, 10, 0.98);
+    color: rgb(250, 230, 193);
+}
+
+.chrome-input {
+    min-height: 44px;
+    height: 44px;
+}
+.chrome-input > .unity-base-text-field__input,
+.chrome-input .unity-base-popup-field__input {
+    min-height: 44px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(8, 12, 18, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_input_recessed_slate.png");
+    -unity-slice-left: 48px;
+    -unity-slice-right: 48px;
+    -unity-slice-top: 28px;
+    -unity-slice-bottom: 28px;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(224, 229, 236);
+    color: var(--ink-1);
+    font-size: var(--type-body);
+}
+.chrome-input > .unity-base-text-field__input:hover,
+.chrome-input .unity-base-popup-field__input:hover {
+    -unity-background-image-tint-color: rgb(244, 247, 250);
+}
+.chrome-input > .unity-base-text-field__input:focus {
+    -unity-background-image-tint-color: rgb(255, 239, 211);
+}

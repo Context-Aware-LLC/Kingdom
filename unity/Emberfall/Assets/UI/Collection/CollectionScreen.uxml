@@ -5,8 +5,8 @@
     <ui:VisualElement name="root" class="emb-root collection">
         <ui:VisualElement name="query-bar" class="col-query">
             <ui:VisualElement class="col-query-row">
-                <ui:TextField name="query-search" class="col-search"/>
-                <ui:DropdownField name="query-sort" class="col-sort"/>
+                <ui:TextField name="query-search" class="col-search chrome-input"/>
+                <ui:DropdownField name="query-sort" class="col-sort chrome-input"/>
                 <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
                 <ui:Button name="query-reset" text="Reset" class="db-chip"/>
                 <ui:VisualElement name="filter-row" class="db-filter-row">
@@ -21,8 +21,8 @@
                     <ui:Button name="scope-all" text="All" class="db-chip"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="col-query-actions">
-                    <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks"/>
-                    <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost"/>
+                    <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--primary"/>
+                    <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="query-rarities" class="col-chip-row"/>
@@ -41,27 +41,27 @@
                 <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"/>
                 <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"/>
             </ui:VisualElement>
-            <ui:VisualElement name="collection-panel" class="db-panel db-collection">
-                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll">
+            <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
+                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll chrome-panel chrome-panel--recessed">
                     <ui:VisualElement name="collection-grid" class="db-grid"/>
                 </ui:ScrollView>
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="deck-drawer" class="deck-drawer">
+        <ui:VisualElement name="deck-drawer" class="deck-drawer chrome-panel chrome-panel--outer">
             <ui:VisualElement class="deck-drawer__header">
                 <ui:VisualElement>
                     <ui:Label name="deck-drawer-title" text="Decks" class="deck-drawer__title"/>
                     <ui:Label name="deck-drawer-subtitle" text="Choose a deck to edit" class="deck-drawer__subtitle"/>
                 </ui:VisualElement>
-                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost"/>
+                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
             <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
                 <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
                 <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
             </ui:ScrollView>
             <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden">
-                <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back"/>
+                <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
                 <ui:VisualElement class="deck-editor__identity">
                     <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
                     <ui:Label name="deck-name" text="" class="deck-editor__name"/>
@@ -70,7 +70,7 @@
                 <ui:VisualElement name="curve-strip" class="db-curve"/>
                 <ui:ListView name="deck-list" class="db-list"/>
             </ui:VisualElement>
-            <ui:Button name="manage-decks-button" text="Manage Characters &amp; Decks" class="deck-drawer__manage"/>
+            <ui:Button name="manage-decks-button" text="Manage Characters &amp; Decks" class="deck-drawer__manage chrome-button chrome-button--primary"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
