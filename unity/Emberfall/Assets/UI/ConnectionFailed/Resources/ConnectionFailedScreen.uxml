@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ConnectionFailedScreen.uxml — #232: the boot-failure recovery panel. Whatever loading/versus
+  overlay is already up when a networked match fails to start (deck rejected, no seat, dead
+  server, ...) stays up behind this and keeps showing the failure text; this panel is the only
+  way OUT of that state short of killing the app — before it, the player was simply stuck.
+
+  Built at runtime by NetworkedGameBootstrap.BootFailed via Resources, same pattern
+  MatchSettingsController uses for its own UXML. Reuses .mm-modal / .mm-modal__panel etc. from
+  mainmenu.uss instead of inventing a second modal language — this is the same "one thing you
+  must resolve before anything else" shape as the account switcher.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Deckbuilder/theme.uss" />
+    <Style src="../../MainMenu/mainmenu.uss" />
+
+    <ui:VisualElement name="modal" class="mm-modal">
+        <ui:VisualElement name="panel" class="mm-modal__panel">
+            <ui:Label text="Couldn't reach the match" class="mm-modal__title" />
+            <ui:Label name="reason" text=" " class="mm-modal__help" />
+            <ui:VisualElement class="mm-modal__actions">
+                <ui:Button name="btn-back" text="Back to menu" class="mm-modal__button" />
+                <ui:Button name="btn-retry" text="Retry" class="mm-modal__button mm-modal__button--cta" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

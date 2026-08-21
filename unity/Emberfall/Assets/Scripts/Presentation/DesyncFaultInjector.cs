@@ -60,7 +60,7 @@ namespace Emberfall.Presentation
 
         public Task CloseAsync(WireCloseReason reason) => _inner.CloseAsync(reason);
 
-        public event Action<WireCloseReason> OnClosed
+        public event Action<WireCloseReason, string> OnClosed
         {
             add => _inner.OnClosed += value;
             remove => _inner.OnClosed -= value;

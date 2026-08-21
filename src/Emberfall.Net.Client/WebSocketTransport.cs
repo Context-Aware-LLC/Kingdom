@@ -42,7 +42,7 @@ namespace Emberfall.Net.Client
         private Stream? _stream;
         private int _closedRaised;
 
-        public event Action<WireCloseReason>? OnClosed;
+        public event Action<WireCloseReason, string?>? OnClosed;
 
         public WebSocketTransport(int maxBytes = ProtocolCodec.MaxMessageBytes)
         {
@@ -204,7 +204,13 @@ namespace Emberfall.Net.Client
                     switch (opcode)
                     {
                         case 0x8: // Close
-                            RaiseClosed(WireCloseReason.PeerClosed);
+                            // #232: RFC6455 §5.5.1 — a close frame's body is [2-byte status code]
+                            // [optional UTF-8 reason]. This used to be read into `payload` and
+                            // dropped; the server's refusal text (MatchGate.CloseReason) lives
+                            // entirely in that reason, so every close read identically upstream —
+                            // "Connection closed before the match started (Forfeited)" regardless
+                            // of which of the server's four refusals actually fired.
+                            RaiseClosed(WireCloseReason.PeerClosed, ParseCloseReason(payload));
                             return null;
                         case 0x9: // Ping — echo a Pong, keep reading.
                             await SendControlAsync(0xA, payload, ct).ConfigureAwait(false);
@@ -278,10 +284,26 @@ namespace Emberfall.Net.Client
             try { _tcp?.Close(); } catch { }
         }
 
-        private void RaiseClosed(WireCloseReason reason)
+        private void RaiseClosed(WireCloseReason reason, string? detail = null)
         {
             if (Interlocked.Exchange(ref _closedRaised, 1) == 0)
-                OnClosed?.Invoke(reason);
+                OnClosed?.Invoke(reason, detail);
+        }
+
+        /// <summary>Decode a close frame's optional reason text. Malformed input (too short to hold
+        /// even the status code, or bytes that aren't valid UTF-8) yields null rather than throwing —
+        /// a badly-formed close frame is still a close, and losing the human-readable reason is far
+        /// better than losing the close itself.</summary>
+        private static string? ParseCloseReason(byte[] payload)
+        {
+            const int StatusCodeLen = 2;
+            if (payload.Length <= StatusCodeLen) return null;
+            try
+            {
+                string text = Encoding.UTF8.GetString(payload, StatusCodeLen, payload.Length - StatusCodeLen);
+                return text.Length == 0 ? null : text;
+            }
+            catch (DecoderFallbackException) { return null; }
         }
     }
 }

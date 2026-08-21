@@ -27,9 +27,10 @@ namespace Emberfall.Net.Client.Loopback
         private TaskCompletionSource<byte[]?>? _waiter;
         private bool _serverClosed;
         private WireCloseReason _serverCloseReason = WireCloseReason.PeerClosed;
+        private string? _serverCloseDetail;
         private bool _closed;
 
-        public event Action<WireCloseReason>? OnClosed;
+        public event Action<WireCloseReason, string?>? OnClosed;
 
         /// <summary>Phase-3 impairment injection point (§8, §10 soak/loss gate): return true to DROP
         /// a server→client frame. Null (default) delivers everything, which is what keeps commit-1
@@ -53,11 +54,15 @@ namespace Emberfall.Net.Client.Loopback
         {
             TaskCompletionSource<byte[]?>? waiter = null;
             WireCloseReason? peerClose = null;
+            string? peerCloseDetail = null;
             lock (_gate)
             {
                 if (_inbound.Count > 0) return Task.FromResult<byte[]?>(_inbound.Dequeue());
                 if (_serverClosed)
+                {
                     peerClose = _serverCloseReason;
+                    peerCloseDetail = _serverCloseDetail;
+                }
                 else
                 {
                     waiter = new TaskCompletionSource<byte[]?>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -66,7 +71,7 @@ namespace Emberfall.Net.Client.Loopback
             }
             if (peerClose is WireCloseReason reason)
             {
-                RaiseClosed(reason);
+                RaiseClosed(reason, peerCloseDetail);
                 return Task.FromResult<byte[]?>(null);
             }
             if (ct.CanBeCanceled)
@@ -80,11 +85,11 @@ namespace Emberfall.Net.Client.Loopback
             return Task.CompletedTask;
         }
 
-        private void RaiseClosed(WireCloseReason reason)
+        private void RaiseClosed(WireCloseReason reason, string? detail = null)
         {
             bool first;
             lock (_gate) { first = !_closed; _closed = true; }
-            if (first) OnClosed?.Invoke(reason);
+            if (first) OnClosed?.Invoke(reason, detail);
         }
 
         // ── Peer (server-side) surface — used by LoopbackServerPeer in the test tree ──────────
@@ -115,21 +120,24 @@ namespace Emberfall.Net.Client.Loopback
         }
 
         /// <summary>The server end closed the socket: the client's <see cref="ReceiveAsync"/> returns
-        /// null (peer closed), which the session treats as a drop.</summary>
-        public void ServerClose(WireCloseReason reason = WireCloseReason.PeerClosed)
+        /// null (peer closed), which the session treats as a drop. <paramref name="detail"/> mirrors
+        /// the WS close-frame reason text a real socket would carry (#232) — optional, since most
+        /// callers (bot seats, the soak) close with no reason to report.</summary>
+        public void ServerClose(WireCloseReason reason = WireCloseReason.PeerClosed, string? detail = null)
         {
             TaskCompletionSource<byte[]?>? waiter = null;
             lock (_gate)
             {
                 _serverClosed = true;
                 _serverCloseReason = reason;
+                _serverCloseDetail = detail;
                 if (_waiter is not null) { waiter = _waiter; _waiter = null; }
             }
             waiter?.TrySetResult(null);
             // With no buffered frames, waking an active receive is the close boundary and can
             // signal immediately. Otherwise ReceiveAsync drains the queue first and raises the
             // event only when it reaches EOF, matching an orderly socket close.
-            if (waiter is not null) RaiseClosed(reason);
+            if (waiter is not null) RaiseClosed(reason, detail);
         }
     }
 }

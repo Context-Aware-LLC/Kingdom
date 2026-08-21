@@ -236,8 +236,15 @@ namespace Emberfall.Presentation
             if (connect.IsFaulted || _net.State != ConnectionState.Live)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
-                               $"(state={_net.State}, dead={_net.DeadReason}, fault={connect.Exception?.GetBaseException().Message}).");
-                BootFailed($"Couldn't reach the server ({_net.DeadReason})");
+                               $"(state={_net.State}, dead={_net.DeadReason}, detail={_net.DeadReasonDetail}, " +
+                               $"fault={connect.Exception?.GetBaseException().Message}).");
+                // #232: DeadReasonDetail is the server's actual WS close-frame reason ("deck
+                // rejected: ...", "no seat available", ...) when it sent one — falling every
+                // refusal back to the bare DeadReason bucket is exactly the bug this replaces.
+                string reason = string.IsNullOrEmpty(_net.DeadReasonDetail)
+                    ? _net.DeadReason.ToString()
+                    : _net.DeadReasonDetail;
+                BootFailed($"Couldn't reach the server — {reason}");
                 yield break;
             }
 
@@ -595,11 +602,20 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Terminal boot failure. Whichever screen is up stays up and shows the reason —
-        /// neither ever fades on a failure, so the player is never dropped onto an empty board.</summary>
+        /// neither ever fades on a failure, so the player is never dropped onto an empty board.
+        /// #232: that used to be a dead end — no retry, no way back, kill-the-app was the only
+        /// exit. The recovery panel is the fix; it renders over whichever overlay is showing the
+        /// reason text, so the two combine into one screen rather than replacing each other.</summary>
         private void BootFailed(string reason)
         {
             if (_versus != null) _versus.NotifyBootFailed(reason);
             else if (_overlay != null) _overlay.NotifyBootFailed(reason);
+
+            var uiGo = new GameObject("ConnectionFailedUI");
+            var doc = uiGo.AddComponent<UIDocument>();
+            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("ConnectionFailedScreen");
+            uiGo.AddComponent<ConnectionFailedOverlay>().Init(reason);
         }
 
         private void OnDestroy() => _net?.Dispose();
