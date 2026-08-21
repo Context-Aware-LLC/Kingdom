@@ -26,6 +26,7 @@ namespace Emberfall.Editor
         // keeps the Store button alive: this array is also what SyncSceneList writes, so a scene
         // missing from it is missing from the Editor build list too, however the .asset reads.
         private const string ShopScenePath = "Assets/Scenes/Shop.unity";
+        private const string PackRevealScenePath = "Assets/Scenes/PackReveal.unity";
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
         private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
 
@@ -60,7 +61,7 @@ namespace Emberfall.Editor
                 // Both board scenes ride along so Find Game and Single Player actually go somewhere,
                 // and roster + collection so Deck Builder isn't a dead end in this build too. Deck
                 // Builder lands on the roster, and the roster is the only door to Collection (#154).
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath },
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath },
                 locationPathName = DevOutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.Development,
@@ -135,7 +136,7 @@ namespace Emberfall.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
                 var options = new BuildPlayerOptions
                 {
-                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath },
+                    scenes             = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath },
                     locationPathName   = AndroidOutputPath,
                     target             = BuildTarget.Android,
                     targetGroup        = BuildTargetGroup.Android,
@@ -166,7 +167,7 @@ namespace Emberfall.Editor
                 // Find Game, Single Player and Deck Builder each need their target scene
                 // present or the button is a dead end in the shipping build. Deck Builder's
                 // target is the roster, which reaches Collection in either mode (#154).
-                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath },
+                scenes = new[] { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath },
                 locationPathName = OutputPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,
@@ -232,7 +233,7 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
         public static void SyncSceneList()
         {
-            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath };
+            string[] paths = { MenuScenePath, ScenePath, LocalScenePath, RosterScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath };
             var entries = new EditorBuildSettingsScene[paths.Length];
             for (int i = 0; i < paths.Length; i++)
                 entries[i] = new EditorBuildSettingsScene(paths[i], enabled: true);
