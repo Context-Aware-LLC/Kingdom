@@ -3,7 +3,7 @@
     <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
     <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
     <ui:VisualElement name="root" class="emb-root shop-screen">
-        <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden">
+        <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden emb-bleed">
             <ui:VisualElement name="shop-shell" class="shop-shell">
                 <ui:VisualElement class="shop-header">
                     <ui:VisualElement class="shop-heading">

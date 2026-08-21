@@ -90,7 +90,7 @@
           The buttons currently go nowhere. See CraftModal's class comment for what has to land
           before they do.
         -->
-        <ui:VisualElement name="craft-scrim" class="craft-scrim" />
+        <ui:VisualElement name="craft-scrim" class="craft-scrim emb-bleed" />
 
         <ui:VisualElement name="craft-modal" class="craft-modal">
 

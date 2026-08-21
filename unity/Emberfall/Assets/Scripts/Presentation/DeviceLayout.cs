@@ -162,6 +162,75 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
+        /// Safe-area insets for a UI Toolkit panel, in PANEL units (#237).
+        ///
+        /// <para>Named for the four screen edges, not for CSS order. All four are &gt;= 0 and are
+        /// measured inward from the corresponding panel edge, so they drop straight onto
+        /// padding-left / padding-top / padding-right / padding-bottom.</para>
+        /// </summary>
+        public readonly struct PanelInsets
+        {
+            public readonly float Left, Top, Right, Bottom;
+
+            public PanelInsets(float left, float top, float right, float bottom)
+            {
+                Left = left; Top = top; Right = right; Bottom = bottom;
+            }
+
+            /// <summary>True when nothing is inset — a desktop screen, the Editor, or an Android
+            /// build whose OEM reports no cutout.</summary>
+            public bool IsIdentity => Left < 0.5f && Top < 0.5f && Right < 0.5f && Bottom < 0.5f;
+
+            public override string ToString()
+                => $"L{Left:F1} T{Top:F1} R{Right:F1} B{Bottom:F1}";
+        }
+
+        /// <summary>
+        /// The UI Toolkit counterpart of <see cref="Solve"/> (#237). The board camera has had a
+        /// safe-area answer since EF-062; the UI Toolkit screens had none, so on a Pixel 5a the
+        /// identity plate, the shard counter and the footer sat under the 136 px cutout.
+        ///
+        /// <para>WHY THIS IS NOT SIMPLY THE PIXEL RECT. A panel does not draw in screen pixels.
+        /// All three PanelSettings use <c>ScaleWithScreenSize</c>, so a panel has its own
+        /// coordinate space and an inset expressed in px is wrong there by the scale factor.
+        /// Taking the panel's own height in its own units is what makes this exact without this
+        /// file having to know the reference resolution or the match axis — both are authored in
+        /// the asset and free to change (see the NOR-358 retirement trigger above).</para>
+        ///
+        /// <para>Y IS FLIPPED between the two spaces and that is the whole trap.
+        /// <c>Screen.safeArea</c> has its origin bottom-left; a panel has its origin top-left. So
+        /// the safe area's <c>yMin</c> — the gesture bar — is the BOTTOM padding, and the TOP
+        /// padding comes from <c>screenH - yMax</c>. Swapping the two is invisible on any device
+        /// whose insets happen to be symmetric, and every phone tested so far has a zero top
+        /// inset, so nothing on the bench would catch it.</para>
+        /// </summary>
+        /// <param name="safeAreaPx"><c>Screen.safeArea</c>, in pixels, origin bottom-left.</param>
+        /// <param name="screenW"><c>Screen.width</c>.</param>
+        /// <param name="screenH"><c>Screen.height</c>.</param>
+        /// <param name="panelH">The panel's height in PANEL units — the resolved height of the
+        /// panel's own visual tree. The px-to-panel factor is uniform, so one axis fixes both.</param>
+        public static PanelInsets SolvePanelInsets(Rect safeAreaPx, int screenW, int screenH, float panelH)
+        {
+            if (screenW <= 0 || screenH <= 0 || panelH <= 0f)
+                return default;
+
+            // Same degenerate-safe-area guard as Solve: some Android OEM builds report an empty
+            // Rect where they mean "no cutout". Read it as no insets, not as a screen that is
+            // entirely unsafe.
+            if (safeAreaPx.width <= 1f || safeAreaPx.height <= 1f)
+                return default;
+
+            float leftPx   = Mathf.Max(0f, safeAreaPx.xMin);
+            float rightPx  = Mathf.Max(0f, screenW - safeAreaPx.xMax);
+            float bottomPx = Mathf.Max(0f, safeAreaPx.yMin);           // origin bottom-left ...
+            float topPx    = Mathf.Max(0f, screenH - safeAreaPx.yMax);  // ... so THIS is the top
+
+            float toPanel = panelH / screenH;
+            return new PanelInsets(leftPx * toPanel, topPx * toPanel,
+                                   rightPx * toPanel, bottomPx * toPanel);
+        }
+
+        /// <summary>
         /// On-screen pixel width of a card ON THE BOARD at a given ortho size. 137.3 px on any
         /// 1080p phone at the authored 4.6 — 52% of the 265 px collection tile EF-050's acuity
         /// margin was computed against, which is the whole reason EF-062 gates that re-check.
@@ -268,6 +337,46 @@ namespace Emberfall.Presentation
             ok &= Line(sb, bandBottom > -DesignHalfHeight,
                 $"hand rules band bottom y {bandBottom:F4} > screen edge {-DesignHalfHeight:F2} "
                 + $"— readable at rest, {(bandBottom + DesignHalfHeight):F3} clear");
+
+            // 7b. The UI Toolkit insets (#237). The board camera has had a safe-area answer
+            //     since EF-062 and the panels had none; this is that answer's arithmetic.
+            //     Numbers are the Pixel 5a's, quoted from the SafeAreaCamera line on the
+            //     2026-08-21 device run: 2400x1080, safeArea x136 y0 w2264 h1080.
+            const int p5aW = 2400, p5aH = 1080;
+            var p5aSafe = new Rect(136f, 0f, 2264f, 1080f);
+
+            // At a 1:1 panel (panelH == screenH) the insets ARE the pixel insets — the case that
+            // pins the px arithmetic on its own, before any scaling is involved.
+            PanelInsets raw = SolvePanelInsets(p5aSafe, p5aW, p5aH, p5aH);
+            ok &= Line(sb, Mathf.Abs(raw.Left - 136f) < 0.01f && Mathf.Abs(raw.Right) < 0.01f
+                           && Mathf.Abs(raw.Top) < 0.01f && Mathf.Abs(raw.Bottom) < 0.01f,
+                $"Pixel 5a safeArea x136 w2264 @1:1 panel -> insets {raw} (expect L136 T0 R0 B0)");
+
+            // And scaled into a panel's own units. An inset applied WITHOUT this conversion is
+            // wrong by the whole scale factor, which on this screen is over 4x.
+            PanelInsets scaled = SolvePanelInsets(p5aSafe, p5aW, p5aH, 250f);
+            ok &= Line(sb, Mathf.Abs(scaled.Left - 136f * 250f / 1080f) < 0.01f,
+                $"same, into a 250-unit-tall panel -> insets {scaled} "
+                + $"(expect L{136f * 250f / 1080f:F1}, i.e. px / {1080f / 250f:F2})");
+
+            // The y flip. A gesture bar is a BOTTOM screen inset and must come out as Bottom,
+            // never Top — every device tested so far has a zero top inset, so a swapped pair
+            // would look correct on all of them.
+            PanelInsets barIns = SolvePanelInsets(new Rect(0f, 132f, 2400f, 1080f - 132f), p5aW, p5aH, p5aH);
+            ok &= Line(sb, Mathf.Abs(barIns.Bottom - 132f) < 0.01f && Mathf.Abs(barIns.Top) < 0.01f,
+                $"48dp gesture bar (a BOTTOM screen inset) -> {barIns} (expect B132 T0, not the reverse)");
+
+            // The mirror of it. The pair is what actually pins the flip; either alone does not.
+            PanelInsets topIns = SolvePanelInsets(new Rect(0f, 0f, 2400f, 1080f - 90f), p5aW, p5aH, p5aH);
+            ok &= Line(sb, Mathf.Abs(topIns.Top - 90f) < 0.01f && Mathf.Abs(topIns.Bottom) < 0.01f,
+                $"90px top inset -> {topIns} (expect T90 B0)");
+
+            // Identity and degenerate cases: this runs on every screen, and a non-identity
+            // identity would move all six layouts on desktop.
+            ok &= Line(sb, SolvePanelInsets(new Rect(0f, 0f, 2400f, 1080f), p5aW, p5aH, 250f).IsIdentity,
+                "2400x1080 with no insets -> panel insets identity");
+            ok &= Line(sb, SolvePanelInsets(new Rect(0f, 0f, 0f, 0f), p5aW, p5aH, 250f).IsIdentity,
+                "empty safeArea -> panel insets identity (the OEM 'no cutout API' case)");
 
             // 8. The measured figure EF-062 exists to produce, restated so a harness run
             //    carries it. Not an assertion — a number in the log.

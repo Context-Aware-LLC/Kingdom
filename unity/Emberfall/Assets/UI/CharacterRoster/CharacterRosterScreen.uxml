@@ -47,7 +47,7 @@
           picked — because a deck's name and its card back are both edited from here now and two
           separate modals would be two separate places to leave a deck half-renamed.
         -->
-        <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden">
+        <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden emb-bleed">
             <ui:VisualElement name="deck-dialog" class="delete-dialog">
                 <ui:VisualElement name="deck-modal-header" class="deck-modal-header">
                     <ui:Label name="deck-modal-account" text="" class="deck-modal-account" />
@@ -116,8 +116,8 @@
           standing Delete button, which spent permanent width on the one action nobody wants to
           reach for by accident (Sam, 2026-08-07).
         -->
-        <ui:VisualElement name="character-menu" class="character-menu character-menu--hidden">
-            <ui:VisualElement name="character-menu-scrim" class="character-menu-scrim" />
+        <ui:VisualElement name="character-menu" class="character-menu character-menu--hidden emb-bleed">
+            <ui:VisualElement name="character-menu-scrim" class="character-menu-scrim emb-bleed" />
             <ui:VisualElement name="character-menu-card" class="character-menu-card">
                 <ui:Label name="character-menu-title" text="" class="character-menu-title" />
                 <ui:Button name="character-menu-delete" text="Delete character" class="roster-button roster-button--danger deck-action" />
@@ -130,7 +130,7 @@
           (its Hero Power); pass 2 picks the secondary (cards only). Three views share the dialog:
           the grid, a per-hero detail overlay, and a confirm screen that also collects the name.
         -->
-        <ui:VisualElement name="character-create" class="delete-modal delete-modal--hidden character-create">
+        <ui:VisualElement name="character-create" class="delete-modal delete-modal--hidden character-create emb-bleed">
             <ui:VisualElement class="delete-dialog character-create-dialog">
 
                 <!-- GRID: 2×4 portraits, one per real class. Pass-specific title/help above it. -->
@@ -188,7 +188,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden">
+        <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden emb-bleed">
             <ui:VisualElement class="delete-dialog">
                 <ui:Label text="Delete character?" class="delete-title" />
                 <ui:Label name="delete-message" text="" class="delete-message" />
