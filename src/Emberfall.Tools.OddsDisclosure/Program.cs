@@ -8,8 +8,13 @@ namespace Emberfall.Tools.OddsDisclosure
 {
     /// <summary>
     /// EF-080f / NOR-260. Generates the published pack-odds disclosure from the live constants in
-    /// PackRarityOdds, PackPityState, BoosterPack, and ShardValues. The output is a player-facing
+    /// PackRarityOdds, PackPityState, BoosterPack, and DeckValidator. The output is a player-facing
     /// Markdown file committed to docs/pub-docs/progression/pack-odds.md.
+    ///
+    /// ShardValues is deliberately NOT read here any more. A pack converts nothing to shards
+    /// (Sam, 2026-08-20), so a shard payout table on a page about what packs contain would be
+    /// describing a transaction that cannot happen. Those numbers belong to Reduce, in the
+    /// collection, and to whatever disclosure covers crafting.
     ///
     /// Usage: Emberfall.Tools.OddsDisclosure [outputPath]
     ///   outputPath  path to write; defaults to docs/pub-docs/progression/pack-odds.md relative to cwd.
@@ -97,23 +102,26 @@ namespace Emberfall.Tools.OddsDisclosure
             sb.AppendLine("they upgrade separate slots rather than collapsing into one.");
             sb.AppendLine();
 
-            sb.AppendLine("## Duplicate protection");
+            // There is no duplicate protection and no preference of any kind (Sam, 2026-08-20), so this
+            // section states the absence rather than omitting it. An odds disclosure that simply goes
+            // quiet about duplicates reads as though some protection exists and was left undescribed —
+            // which is the exact impression the previous version of this section gave while promising a
+            // dupe shield the code has never had at the strength a player would read into it.
+            sb.AppendLine("## Duplicates");
             sb.AppendLine();
-            sb.AppendLine("Within each rarity, a pack prefers cards you do not yet own at their copy limit.");
-            sb.AppendLine("You will not receive a duplicate until you own the maximum allowed copies");
-            sb.AppendLine("of every card at that rarity in the pool.");
+            sb.AppendLine("**There is no duplicate protection.** Every slot is drawn independently from");
+            sb.AppendLine("all cards of its rarity in that pack's pool. Owning a card does not lower your");
+            sb.AppendLine("chance of being given it again, and a pack does not steer toward cards you are");
+            sb.AppendLine("missing. A pack can hand you a copy of something you already hold while cards");
+            sb.AppendLine("you have never seen sit in the same pool.");
             sb.AppendLine();
-            sb.AppendLine("When all cards of a rarity are already owned at the copy limit, that slot");
-            sb.AppendLine("pays out in Shards instead of a card. The card you would have received is");
-            sb.AppendLine("still revealed before it converts. Your pity counter resets based on the");
-            sb.AppendLine("rarity rolled, even when the slot becomes Shards.");
+            sb.AppendLine("**Nothing a pack gives you is destroyed or converted.** Copies beyond the");
+            sb.AppendLine($"{DeckValidator.MaxCopies(Rarity.COMMON)} a deck may run "
+                          + $"({DeckValidator.MaxCopies(Rarity.LEGENDARY)} for a Legendary) stay in");
+            sb.AppendLine("your collection as cards. Your collection has no copy limit; only decks do.");
             sb.AppendLine();
-            sb.AppendLine("| Rarity    | Shards per converted slot |");
-            sb.AppendLine("|-----------|--------------------------|");
-            sb.AppendLine($"| Common    | {ShardValues.Common,4}                     |");
-            sb.AppendLine($"| Rare      | {ShardValues.Rare,4}                     |");
-            sb.AppendLine($"| Epic      | {ShardValues.Epic,4}                     |");
-            sb.AppendLine($"| Legendary | {ShardValues.Legendary,4}                     |");
+            sb.AppendLine("Shards come from **Reduce**, in your collection, where you choose which copy to");
+            sb.AppendLine("break down. A pack never makes that choice for you.");
             sb.AppendLine();
 
             sb.AppendLine("---");

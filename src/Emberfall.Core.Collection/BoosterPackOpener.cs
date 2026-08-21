@@ -107,10 +107,17 @@ namespace Emberfall.Core.Collection
 
     /// <summary>
     /// The deterministic booster-pack open (NOR-109 §2). <b>Pure</b>: same
-    /// <c>(pack, pool, owned, pity, seed, packIndex)</c> in, byte-identical result out, on any platform,
+    /// <c>(pack, pool, pity, seed, packIndex)</c> in, byte-identical result out, on any platform,
     /// forever. It touches no clock, no <c>System.Random</c>, no float and no store — which is what lets
     /// a golden fixture pin it and what lets the server resolve an open authoritatively (ADR-0004: the
     /// client renders the result, it never speculates one).
+    ///
+    /// <para><b><c>owned</c> is no longer one of those inputs.</b> Since the 2026-08-20 ruling a slot
+    /// draws uniformly from its rarity bucket, so two players on the same seed and index open the same
+    /// pack whatever their collections look like. The parameter is still threaded through both
+    /// overloads, and the server still passes real ownership, purely so the commented-out preference in
+    /// the pick phase can be restored in place. Do not read its presence as an influence on the
+    /// result.</para>
     ///
     /// <para><b>The RNG call order is the contract, not an implementation detail.</b> The pack draws
     /// exactly <c>CardCount</c> rarities and then exactly <c>CardCount</c> card picks, in slot order.
@@ -176,9 +183,14 @@ namespace Emberfall.Core.Collection
             ApplyGuarantees(rarities, upgrades, byRarity, pity);
 
             // ── phase 2: CardCount card picks, one RNG value each ────────────────────────────
-            // Copies awarded earlier in THIS pack count against later slots, so a five-card pack
-            // cannot hand out three copies of the same common while claiming dupe protection.
-            var awardedThisPack = new Dictionary<string, int>(StringComparer.Ordinal);
+            // A slot draws UNIFORMLY from every card of its rarity in the pool. Ownership is not an
+            // input: what you already hold does not change what you can be handed, so a pack can give
+            // you a third copy of a common while commons you have never seen sit beside it in the pool.
+            //
+            // That is the ruling, not an oversight (Sam, 2026-08-20). NOR-109 §6's "new cards before
+            // dupes" preference is retained below as commented code rather than deleted, because a
+            // LESS GENEROUS form of it may be reintroduced and the shape is worth keeping. Nothing is
+            // owed to the old behaviour in the meantime: read the live loop, not the block under it.
             var awards = new List<PackSlotAward>(pack.CardCount);
 
             for (int i = 0; i < pack.CardCount; i++)
@@ -186,29 +198,40 @@ namespace Emberfall.Core.Collection
                 Rarity rarity = rarities[i];
                 var candidates = byRarity[rarity];
 
-                // §6 new-cards-before-dupes: cards still under their copy limit are PREFERRED, and the
-                // limit is the deck/collection limit itself (DeckValidator L2/L3) — one source of truth,
-                // so a format change to the copy cap cannot leave pack odds behind.
-                //
-                // The preference is all it is. When every card of this rarity is already maxed the slot
-                // draws from the full pool and hands the card over anyway: it used to pay out in shards,
-                // which destroyed a card the player never agreed to lose (Sam, 2026-08-12 — see
-                // PackSlotAward). Note the draw is one rng.NextInt either way, on a list whose length
-                // does not depend on that decision, so the RNG stream is identical to before the ruling
-                // and every pinned open still reproduces.
-                int limit = DeckValidator.MaxCopies(rarity);
-                var eligible = new List<CardDefinition>(candidates.Count);
-                for (int c = 0; c < candidates.Count; c++)
-                {
-                    var def = candidates[c];
-                    if (EffectiveOwned(owned, awardedThisPack, def.Id) < limit) eligible.Add(def);
-                }
-
-                var draw = eligible.Count == 0 ? candidates : eligible;
-                var picked = draw[rng.NextInt(draw.Count)];
-
-                awardedThisPack[picked.Id] = EffectiveOwnedDelta(awardedThisPack, picked.Id) + 1;
+                var picked = candidates[rng.NextInt(candidates.Count)];
                 awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
+
+                // ── DISABLED: NOR-109 §6 new-cards-before-dupes (Sam, 2026-08-20) ────────────
+                // To restore, delete the two lines above and uncomment this, plus `awardedThisPack`
+                // below the loop header and the two EffectiveOwned helpers at the foot of the class.
+                // The `owned` parameter is still threaded through both Open overloads for exactly
+                // this, and BoosterPackGrantService still projects and passes real ownership.
+                //
+                // Cards still under their copy limit were PREFERRED, the limit being the
+                // deck/collection limit itself (DeckValidator L2/L3) so that a format change to the
+                // copy cap could not leave pack odds behind. Copies awarded earlier in THIS pack
+                // counted against later slots, so one pack could not hand out three copies of a
+                // common while claiming dupe protection.
+                //
+                // It was only ever a preference: when every card of the rarity was already maxed the
+                // slot drew from the full pool anyway.
+                //
+                //   int limit = DeckValidator.MaxCopies(rarity);
+                //   var eligible = new List<CardDefinition>(candidates.Count);
+                //   for (int c = 0; c < candidates.Count; c++)
+                //   {
+                //       var def = candidates[c];
+                //       if (EffectiveOwned(owned, awardedThisPack, def.Id) < limit) eligible.Add(def);
+                //   }
+                //
+                //   var draw = eligible.Count == 0 ? candidates : eligible;
+                //   var picked = draw[rng.NextInt(draw.Count)];
+                //
+                //   awardedThisPack[picked.Id] = EffectiveOwnedDelta(awardedThisPack, picked.Id) + 1;
+                //   awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
+                //
+                // and above the loop:
+                //   var awardedThisPack = new Dictionary<string, int>(StringComparer.Ordinal);
             }
 
             var after = pity.AfterPack(ToRarityList(rarities));
@@ -328,11 +351,14 @@ namespace Emberfall.Core.Collection
         private static bool Has(Dictionary<Rarity, List<CardDefinition>> byRarity, Rarity r)
             => byRarity.TryGetValue(r, out var bucket) && bucket.Count > 0;
 
-        private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
-            => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
-
-        private static int EffectiveOwnedDelta(Dictionary<string, int> thisPack, string cardId)
-            => thisPack.TryGetValue(cardId, out int n) ? n : 0;
+        // DISABLED with the new-cards-before-dupes preference in the pick phase (Sam, 2026-08-20).
+        // Uncomment both together with that block; nothing else calls them.
+        //
+        //   private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
+        //       => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
+        //
+        //   private static int EffectiveOwnedDelta(Dictionary<string, int> thisPack, string cardId)
+        //       => thisPack.TryGetValue(cardId, out int n) ? n : 0;
 
         private static IReadOnlyList<Rarity> ToRarityList(Rarity[] rarities)
         {

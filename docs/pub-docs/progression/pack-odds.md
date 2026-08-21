@@ -36,23 +36,20 @@ your pity counter for any other set.
 When a pack owes both an Epic and a Legendary, it delivers both —
 they upgrade separate slots rather than collapsing into one.
 
-## Duplicate protection
+## Duplicates
 
-Within each rarity, a pack prefers cards you do not yet own at their copy limit.
-You will not receive a duplicate until you own the maximum allowed copies
-of every card at that rarity in the pool.
+**There is no duplicate protection.** Every slot is drawn independently from
+all cards of its rarity in that pack's pool. Owning a card does not lower your
+chance of being given it again, and a pack does not steer toward cards you are
+missing. A pack can hand you a copy of something you already hold while cards
+you have never seen sit in the same pool.
 
-When all cards of a rarity are already owned at the copy limit, that slot
-pays out in Shards instead of a card. The card you would have received is
-still revealed before it converts. Your pity counter resets based on the
-rarity rolled, even when the slot becomes Shards.
+**Nothing a pack gives you is destroyed or converted.** Copies beyond the
+2 a deck may run (1 for a Legendary) stay in
+your collection as cards. Your collection has no copy limit; only decks do.
 
-| Rarity    | Shards per converted slot |
-|-----------|--------------------------|
-| Common    |   10                     |
-| Rare      |   25                     |
-| Epic      |  100                     |
-| Legendary |  400                     |
+Shards come from **Reduce**, in your collection, where you choose which copy to
+break down. A pack never makes that choice for you.
 
 ---
 
