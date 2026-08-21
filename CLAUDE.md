@@ -316,15 +316,38 @@ even `--only`, via the temp index) — that one is about writes *during* the com
 about what was already sitting in the index before it. Both end with your name on someone else's
 file.
 
-**The Unity Editor is a single-writer resource.** One Editor, and one terminal designated as the
-Unity terminal before work starts. A domain reload takes ~45 s, and every other session calling in
-during that window is told *"Unity not detected"* — which reads like a broken relay rather than
-contention, and sends people debugging the wrong thing. Two further non-obvious ones: *"connection
-revoked"* means a second copy of `~/.unity/relay/relay_win.exe` is running and must be killed, and
-compile errors arrive over MCP typed as `"Log"`, not `"Error"`, so a filter on severity silently hides them.
+**The Unity Editor is a single-writer resource — but only against `-batchmode`.** An open Editor
+holds `unity/Emberfall/Temp/UnityLockfile`, and anything spawning its own Editor blocks on it. That
+is what `tools/ci/unity-verify.ps1` does, so **the verify half of the gate still needs the Editor
+closed** and still reports the lock as an error rather than clearing it. A domain reload takes ~45 s
+and nothing else gets in during that window.
 
-**Match that relay on its full path, never on the process name.**
-Unity's own AI Assistant package ships a *different* product using the same binary name, at `unity/Emberfall/Library/PackageCache/com.unity.ai.assistant@<hash>/RelayApp~/relay_win.exe`, and it is routinely running at the same time — so `Get-Process relay_win` returning two hits is the normal state, not the fault above. Killing on a name match takes down the AI Assistant and leaves the actual duplicate running. Tell them apart by `.Path`, or by port: the AI Assistant relay listens on 9001/9002 and the MCP relay owns no TCP port at all.
+**Drive the open Editor instead of spawning one, whenever there is one.** The Unity CLI
+(`~/AppData/Local/Unity/bin/unity.exe`, not on PATH — call it by absolute path) talks to a running
+Editor over the project's `com.unity.pipeline` package, so it takes no lock and contends with
+nobody. `unity command menu --path "<menu item>"` replaces
+`Unity.exe -batchmode -executeMethod`, and every command takes `--json`.
+
+- **`unity status` lies when the Editor is busy.** Mid-compile it returns `STATUS_NO_INSTANCES` —
+  *"Open Unity and install the Pipeline package"* — with the package installed and the Editor open,
+  sending you to redo work you have already done. **`unity pipeline list` is the honest one**: it
+  reports `hasPipelinePackage`, `isRunning`, and `pipelineServer.isReachable` separately, which is
+  what actually distinguishes "not installed" from "still compiling".
+- **Compile results are structured and correctly typed.** `unity command recompile_status` returns
+  `failed` plus the error text, and `console --level error` really does filter errors. Verified
+  2026-08-20 against a deliberate break, and it is why the old MCP hazard here — compile errors
+  arriving typed `"Log"`, so a severity filter hid them — is gone rather than merely undocumented.
+- **The Editor was not started with `-automated`**, and the Pipeline server says so on startup: a
+  modal dialog can stall the command channel. Relaunch with `-automated` before anything that can
+  raise one.
+- **UNTESTED: Safe Mode.** A project that *boots* with compile errors drops the Editor into Safe
+  Mode, where the Pipeline package does not load and the CLI cannot connect at all — it will look
+  like a connection fault, not a compile fault. Breaking a file in an *already running* Editor does
+  not reproduce this and is not evidence against it. If the CLI goes silent, run `unity pipeline
+  list` and suspect Safe Mode before anything else.
+
+**RETIREMENT TRIGGER:** the Unity MCP relay and its two skills were removed 2026-08-20 in favour of
+the above; if an MCP path is ever reinstated, this section and `.claude/skills/` change together.
 
 ## Ask the graph before you grep
 

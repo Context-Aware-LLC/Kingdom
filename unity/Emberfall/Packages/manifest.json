@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.besty.unity-skills": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity",
-    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main",
     "com.emberfall.core": "file:../../../src/Emberfall.Core",
     "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
     "com.emberfall.core.collection": "file:../../../src/Emberfall.Core.Collection",
@@ -22,6 +21,7 @@
     "com.unity.microsoft.gdk.tools": "1.7.0",
     "com.unity.ml-agents": "4.1.0",
     "com.unity.multiplayer.playmode": "2.0.2",
+    "com.unity.pipeline": "0.5.0-exp.1",
     "com.unity.purchasing": "5.4.2",
     "com.unity.render-pipelines.universal": "17.5.0",
     "com.unity.ugui": "2.5.0",
