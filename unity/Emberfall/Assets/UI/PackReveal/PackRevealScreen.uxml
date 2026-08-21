@@ -5,7 +5,7 @@
          its own so pack opening has somewhere to grow. Nothing here is dressed yet. The element
          NAMES are the contract PackRevealPanel queries; the classes are only presentation. -->
     <ui:VisualElement name="root" class="emb-root pack-reveal-screen">
-        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden">
+        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden emb-bleed">
             <ui:VisualElement class="reveal-shell">
                 <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
                 <ui:Label name="reveal-summary" text="" class="reveal-summary"/>

@@ -34,8 +34,8 @@
         </ui:Button>
 
         <!-- Modal overlay (display toggled by the controller) -->
-        <ui:VisualElement name="overlay" class="ms-overlay">
-            <ui:VisualElement name="scrim" class="ms-scrim" />
+        <ui:VisualElement name="overlay" class="ms-overlay emb-bleed">
+            <ui:VisualElement name="scrim" class="ms-scrim emb-bleed" />
 
             <ui:VisualElement name="panel" class="ms-panel">
 

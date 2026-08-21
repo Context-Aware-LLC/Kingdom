@@ -2,7 +2,7 @@
     <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
-        <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim" style="background-image: none;"/>
+        <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
         <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance"/>
         <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity">
             <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
@@ -21,7 +21,7 @@
         <ui:VisualElement name="footer" class="mm-footer">
             <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version"/>
         </ui:VisualElement>
-        <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden">
+        <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:VisualElement name="name-panel" class="mm-modal__panel">
                 <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
                 <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
@@ -35,7 +35,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--onboard mm-modal--hidden">
+        <ui:VisualElement name="signin-modal" class="mm-modal mm-modal--gate mm-modal--onboard mm-modal--hidden emb-bleed">
             <ui:VisualElement name="signin-panel" class="mm-modal__panel">
                 <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
                 <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
