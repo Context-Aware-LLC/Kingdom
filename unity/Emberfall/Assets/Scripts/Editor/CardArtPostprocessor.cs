@@ -44,6 +44,8 @@ namespace Emberfall.Editor
             LeafTreatments = new(System.StringComparer.OrdinalIgnoreCase)
             {
                 ["background"] = ApplyBackground,
+                ["packs"] = ApplyIllustration, // card pack art is a card illustration, not a background
+
             };
 
         void OnPreprocessTexture()
