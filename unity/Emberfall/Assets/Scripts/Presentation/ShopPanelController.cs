@@ -18,6 +18,15 @@ namespace Emberfall.Presentation
     /// this owns but does not reach into — the store hands it a receipt and hides it on the way
     /// out, and that is the entire relationship. It was inlined until 2026-08-20, which left the
     /// only pack-opening surface in the game locked inside the only screen that sells them.</para>
+    ///
+    /// <para><b>A host may take the reveal somewhere else.</b> Pass <c>revealElsewhere</c> and the
+    /// store hands the receipt over instead of showing its own overlay — that is how
+    /// <see cref="ShopScreenController"/> sends it to the PackReveal scene. It returns a bool
+    /// rather than being an <see cref="Action"/> because the handoff can fail for a reason the
+    /// host discovers and the store must survive: a scene missing from the build list. False means
+    /// "I did not take it", and the overlay runs as it always did. <b>Never drop a receipt on that
+    /// path</b> — the cards are already bought and server-side, so a silent no-show is the one
+    /// outcome the player cannot tell apart from being robbed.</para>
     /// </summary>
     public sealed class ShopPanelController
     {
@@ -31,6 +40,7 @@ namespace Emberfall.Presentation
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
         private readonly System.Action _onClose;
+        private readonly Func<PackOpenReceipt, bool> _revealElsewhere;
 
         private bool _busy;
 
@@ -38,7 +48,8 @@ namespace Emberfall.Presentation
             VisualElement root,
             IShopGateway gateway,
             IPackArtProvider packArt,
-            System.Action onClose)
+            System.Action onClose,
+            Func<PackOpenReceipt, bool> revealElsewhere = null)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             // Unlike the gateway, this one is structural: with no way home, Back is a dead button.
@@ -53,6 +64,7 @@ namespace Emberfall.Presentation
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
+            _revealElsewhere = revealElsewhere;
 
             // No onDone: here the reveal is an overlay over a screen the player is still on, so
             // dismissing it means returning to the store, which is what hiding it already does.
@@ -109,7 +121,14 @@ namespace Emberfall.Presentation
             {
                 PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency);
                 RenderSnapshot(result.Shop);
-                _reveal.Show(result.OpenedPack);
+
+                // Hand off if a host wants the reveal on its own stage; fall back to the overlay
+                // when it declines, so the receipt is always shown somewhere.
+                if (_revealElsewhere == null || !_revealElsewhere(result.OpenedPack))
+                {
+                    _reveal.Show(result.OpenedPack);
+                }
+
                 SetStatus("");
             }
             catch (Exception ex)

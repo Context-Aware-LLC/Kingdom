@@ -1,3 +1,4 @@
+using Emberfall.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,7 +15,8 @@ namespace Emberfall.Presentation
     /// scene load untouched, so this screen binds the same transport the menu would have.</para>
     ///
     /// <para>The purchase flow itself stays entirely in <see cref="ShopPanelController"/>. This
-    /// type owns only what a scene adds: where Back goes, and opening on arrival.</para>
+    /// type owns only what a scene adds: where Back goes, opening on arrival, and — since the
+    /// PackReveal scene landed — where a bought pack goes to be opened.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// ShopScreen.uxml and whose Panel Settings is MainMenuPanelSettings.
@@ -49,11 +51,40 @@ namespace Emberfall.Presentation
                 root,
                 ShopRuntime.Gateway,
                 ShopRuntime.PackArt ?? new PackArtProvider(),
-                Exit);
+                Exit,
+                RevealOnItsOwnScreen);
             _shop.Open();
         }
 
         private void Exit() => Go(ReturnScene);
+
+        /// <summary>Send a freshly bought pack to the PackReveal scene rather than opening it over
+        /// the store. Returns false without touching anything if that scene cannot be loaded, which
+        /// hands the reveal back to the store's own overlay — a receipt is already-purchased cards,
+        /// so the one unacceptable outcome is showing it nowhere.
+        ///
+        /// <para><c>Pending</c> is written only after the scene is known to be loadable. Setting it
+        /// first and failing the load would leave a receipt armed for whatever lands on that scene
+        /// next, replaying cards the player already saw.</para></summary>
+        private static bool RevealOnItsOwnScreen(PackOpenReceipt receipt)
+        {
+            if (receipt == null) return false;
+
+            const string revealScene = "PackReveal";
+            if (!Application.CanStreamedLevelBeLoaded(revealScene))
+            {
+                Debug.LogError($"[Shop] Scene '{revealScene}' is not in the build list, so the pack " +
+                               "is being opened over the store instead. Run Emberfall/Build/Sync Scene List.");
+                return false;
+            }
+
+            // Come back to the store, not to whatever opened the store: the player is mid-shopping
+            // and the wallet they just spent from is here.
+            PackRevealScreenController.ReturnScene = "Shop";
+            PackRevealScreenController.Pending = receipt;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(revealScene);
+            return true;
+        }
 
         /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
         /// (a scene missing from the build list is a dead button with nothing logged in the
