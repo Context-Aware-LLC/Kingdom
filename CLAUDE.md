@@ -322,6 +322,20 @@ is what `tools/ci/unity-verify.ps1` does, so **the verify half of the gate still
 closed** and still reports the lock as an error rather than clearing it. A domain reload takes ~45 s
 and nothing else gets in during that window.
 
+**But the eight checks themselves do not need a closed Editor — only the wrapper does.**
+`HeadlessVerify.RunAll` is a loop over eight plain statics (`A5WireVerify.Run`,
+`CardSetValidator.RunAndLog`, `UxmlIntegrityCheck.Check`, `CharacterRosterVerify.Check`,
+`PlayerAccountTools.SelfCheck`, `AddressablesGuard.Check`, `DeviceLayoutVerify.Check`,
+`InputGestureVerify.Run`); the *only* reason it needs a dedicated Editor is the
+`EditorApplication.Exit()` on its last line. Call them yourself through `unity command eval` — same
+`logMessageReceived` capture, no `Exit` — and you get the PASS/FAIL table against the Editor that is
+already open. **Never `eval` `RunAll` itself: it will close the operator's Editor.**
+
+This is evidence, not a substitute. The gate runs them `-batchmode -nographics` on a cold domain
+after a forced reimport; an `eval` runs them in a warm graphical Editor, so a check that only fails
+on a cold domain still slips through. Use it to keep moving while the Editor is open; still run the
+real gate before a push. Verified 2026-08-21 (all eight PASS both ways).
+
 **Drive the open Editor instead of spawning one, whenever there is one.** The Unity CLI
 (`~/AppData/Local/Unity/bin/unity.exe`, not on PATH — call it by absolute path) talks to a running
 Editor over the project's `com.unity.pipeline` package, so it takes no lock and contends with
@@ -334,9 +348,12 @@ nobody. `unity command menu --path "<menu item>"` replaces
   reports `hasPipelinePackage`, `isRunning`, and `pipelineServer.isReachable` separately, which is
   what actually distinguishes "not installed" from "still compiling".
 - **Compile results are structured and correctly typed.** `unity command recompile_status` returns
-  `failed` plus the error text, and `console --level error` really does filter errors. Verified
-  2026-08-20 against a deliberate break, and it is why the old MCP hazard here — compile errors
-  arriving typed `"Log"`, so a severity filter hid them — is gone rather than merely undocumented.
+  `failed` plus the error text, and `unity command console --level error` really does filter
+  errors. Verified 2026-08-20 against a deliberate break, and it is why the old MCP hazard here —
+  compile errors arriving typed `"Log"`, so a severity filter hid them — is gone rather than
+  merely undocumented. **`console` is a `command` subcommand, not a top-level one** — bare
+  `unity console` is `unknown command 'console'`, which reads like a missing feature rather
+  than a wrong invocation (CLI 0.5.0-exp.1, 2026-08-21).
 - **The Editor was not started with `-automated`**, and the Pipeline server says so on startup: a
   modal dialog can stall the command channel. Relaunch with `-automated` before anything that can
   raise one.
