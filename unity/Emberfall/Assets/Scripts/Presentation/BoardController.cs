@@ -149,6 +149,18 @@ namespace Emberfall.Presentation
             }
         }
 
+        // #236: the played card's hand presenter is still live here — MatchRunner holds
+        // OnStateUpdated for this entry until the reveal beat finishes, so without this the
+        // original sits in the fan for the whole hold while VfxDirector flies a second copy of
+        // it to the board. Hide it the instant the beat starts; GetOrCreate below reactivates
+        // whichever presenter the next real snapshot resolves it to, board or hand alike, so a
+        // fizzled/rejected play (no state change) can't strand it invisible.
+        public void OnPlayReveal(PlayReveal reveal)
+        {
+            if (_presenters.TryGetValue(reveal.Source, out CardPresenter p) && p != null)
+                p.gameObject.SetActive(false);
+        }
+
         public void OnStateUpdated(GameState state)
         {
             if (_db == null) return;
@@ -333,6 +345,12 @@ namespace Emberfall.Presentation
                 clickable?.UpdateZone(zone);
             }
 
+            // #236: undoes OnPlayReveal's hide. Every card still live in this snapshot passes
+            // through here every tick, so a presenter parked mid-reveal always resurfaces the
+            // moment its real state lands — wherever that turns out to be, not only the board
+            // slot the reveal was flying toward.
+            if (!presenter.gameObject.activeSelf) presenter.gameObject.SetActive(true);
+
             // Update live state regardless (stats may have changed).
             if (_liveStates.TryGetValue(ci.Id, out CardLiveState liveState))
                 liveState.UpdateFrom(ci, zone == Zone.Board && ownerMayAct);
@@ -431,6 +449,13 @@ namespace Emberfall.Presentation
                 _presenters.Remove(id);   // out of the diff immediately, even while it burns
                 if (p != null)
                 {
+                    // A card that dies from its own play-reveal batch (e.g. a self-sacrifice
+                    // effect) can still be OnPlayReveal-hidden here: GetOrCreate never ran for it
+                    // (a dead card is in neither Board nor Hand), so nothing undid the hide. A
+                    // dissolve on an inactive GameObject never starts its coroutine and would
+                    // leak the object invisibly forever — reactivate before the burn either way.
+                    if (!p.gameObject.activeSelf) p.gameObject.SetActive(true);
+
                     if (died && Application.isPlaying && TryStartDissolve(p))
                     {
                         _liveStates.Remove(id);

@@ -244,6 +244,9 @@ namespace Emberfall.Presentation
                 matchRunner.PlayRevealClassifier = (snapshot, events) =>
                     PlayRevealClassifier.Classify(snapshot, events, db, holds);
                 matchRunner.OnPlayReveal += vfxDirector.ShowPlayReveal;
+                // #236: hide the hand copy for the beat's duration, or it and the flying reveal
+                // both read on screen at once. See BoardController.OnPlayReveal.
+                matchRunner.OnPlayReveal += boardController.OnPlayReveal;
             }
 
             // ── Debug logging ─────────────────────────────────────────────────────
