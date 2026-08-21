@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -13,6 +14,9 @@ namespace Emberfall.Editor
     ///   CardArt_&lt;setId&gt;   — one group per subfolder of Assets/Art/Cards/, at "card_art/&lt;fileName&gt;".
     ///                       CORE additionally carries Assets/Art/Hero/**.
     ///   CardData          — card set JSON at "cards/&lt;setId&gt;.cards"
+    ///   PackArt_&lt;setId&gt;   — one group per subfolder of Assets/Art/Shop/Packs/, sprites at
+    ///                       "pack_art/&lt;fileName&gt;" and that set's packart.json at
+    ///                       "pack_art/&lt;setId&gt;.manifest".
     /// A new card set needs NO edit here — drop Assets/Art/Cards/&lt;setId&gt;/ and re-run. Re-running
     /// the menu item after an art drop re-syncs entries without duplicating them.
     /// Also migrates Assets/Resources/cards/*.cards.json out of Resources/ (M2 D1).
@@ -23,10 +27,15 @@ namespace Emberfall.Editor
         private const string CardArtRoot = "Assets/Art/Cards";
         private const string PackArtRoot = "Assets/Art/Shop/Packs";
 
+        /// <summary>Every group name this run touched, in the order it touched them, so the
+        /// closing log reports the run rather than a list someone has to remember to edit.</summary>
+        private static readonly List<string> SyncedGroups = new List<string>();
+
         [MenuItem("Emberfall/Addressables/Setup Groups + Migrate Card Data")]
         public static void Run()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            SyncedGroups.Clear();
 
             MigrateCardDataOutOfResources();
 
@@ -106,7 +115,11 @@ namespace Emberfall.Editor
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
-            Debug.Log("[AddressablesSetup] groups synced: UI_Core, CardArt_CORE, CardArt_EMBERFALL, CardData, Backgrounds, Orbs, Fonts");
+            // Report what this run actually touched, never a written-down list. The literal one
+            // here named seven groups and was already wrong the moment a set folder appeared that
+            // it did not mention — which is what a per-set loop guarantees will happen. A summary
+            // you have to remember to update is a summary that lies about the run you just did.
+            Debug.Log("[AddressablesSetup] groups synced: " + string.Join(", ", SyncedGroups));
         }
 
         private static void MigrateCardDataOutOfResources()
@@ -128,6 +141,7 @@ namespace Emberfall.Editor
 
         private static AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string name)
         {
+            if (!SyncedGroups.Contains(name)) SyncedGroups.Add(name);
             AddressableAssetGroup group = settings.FindGroup(name);
             if (group == null)
             {

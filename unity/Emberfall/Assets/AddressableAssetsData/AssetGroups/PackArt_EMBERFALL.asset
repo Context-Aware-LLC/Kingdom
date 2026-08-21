@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: PackArt_EMBERFALL
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: PackArt_EMBERFALL
+  m_GUID: 166e9aa6348caf743a782d5b02f7125d
+  m_SerializeEntries:
+  - m_GUID: 254c9686329226f4ea2ce80e625bcacc
+    m_Address: pack_art/pack_ef_02_maren_threading_catastrophe
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c895ac6e607eff4ea6e197daf9e7039
+    m_Address: pack_art/pack_ef_01_pyra_cinderbound_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a7851a74a571b84c9a77bf60310a318
+    m_Address: pack_art/pack_ef_04_thalen_smallest_force
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6385b144034fdb246bd60143b9153481
+    m_Address: pack_art/pack_ef_01_pyra_cinderbound_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 830517e0b09b40099a314d5779189ab5
+    m_Address: pack_art/EMBERFALL.manifest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afc96c4541b40344593efc2bdbf0b135
+    m_Address: pack_art/pack_ef_01_pyra_cinderbound_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b02669e90ae393f4a9fe49645f136762
+    m_Address: pack_art/pack_ef_01_pyra_cinderbound_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6808e283ec61584da02906136041650
+    m_Address: pack_art/pack_ef_03_sorrow_last_gate_release
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 7dae4ebe35a3ec443a9a709f193a8f0c, type: 2}
+    - {fileID: 11400000, guid: 4f143d828c49dd6498492c6427f1cd7f, type: 2}
