@@ -51,26 +51,44 @@ def _lines(path: pathlib.Path) -> list[str]:
 FOUND: list[tuple[str, str, str]] = []   # (label, value, provenance)
 
 
-def const(path: pathlib.Path, name: str, label: str | None = None) -> float:
+def const(path: pathlib.Path, name: str, label: str | None = None,
+          record: bool = True) -> float:
     """Read a `const float NAME = <expr>;` out of a C# source file.
 
-    <expr> is either a literal or a literal-over-literal ratio — the two forms the
-    board constants actually use (`4.27f` and `108f / 2048f`). Anything else must be
-    added deliberately rather than eval'd; a silent partial parse is the failure mode
+    <expr> is a literal, a literal-over-literal ratio, or a literal over a NAMED const
+    declared in the same file - the three forms the board constants actually use
+    (`4.27f`, `108f / 2048f`, and `100f / MasterH`).
+
+    The third form arrived with the one-frame refactor (f3931865), which re-expressed
+    the frame metrics against `MasterH` instead of a bare `2048f`. This parser did not
+    follow, so it reported "const BodyEm not found" for a constant sitting plainly in
+    the file - a rename-shaped message for what was really an expression-shape change.
+    Repaired 2026-08-21.
+
+    Anything beyond these three must be added deliberately rather than eval'd, and an
+    unresolvable name still raises Missing: a silent partial parse is the failure mode
     this whole script exists to avoid.
     """
     num = r"-?[\d.]+f?"
+    ident = r"[A-Za-z_]\w*"
     pat = re.compile(
         r"\bconst\s+(?:float|int)\s+" + re.escape(name)
-        + rf"\s*=\s*({num})(?:\s*/\s*({num}))?\s*;")
+        + rf"\s*=\s*({num})(?:\s*/\s*({num}|{ident}))?\s*;")
     for i, line in enumerate(_lines(path), 1):
         m = pat.search(line)
         if m:
             v = float(m.group(1).rstrip("f"))
-            if m.group(2):
-                v /= float(m.group(2).rstrip("f"))
-            FOUND.append((label or name, f"{v:g}",
-                          f"{path.relative_to(REPO).as_posix()}:{i}"))
+            denom = m.group(2)
+            if denom:
+                if re.fullmatch(num, denom):
+                    v /= float(denom.rstrip("f"))
+                else:
+                    # A named denominator declared in the SAME file. Resolved, never
+                    # assumed - if it is absent this raises Missing like any other.
+                    v /= const(path, denom, record=False)
+            if record:
+                FOUND.append((label or name, f"{v:g}",
+                              f"{path.relative_to(REPO).as_posix()}:{i}"))
             return v
     raise Missing(f"const {name} not found in {path.relative_to(REPO)}")
 
@@ -174,6 +192,10 @@ def main() -> int:
     mana = SCRIPTS / "ManaTrayView.cs"
     frames = SCRIPTS / "FrameRarityCatalog.cs"
     backdrop = SCRIPTS / "BoardBackdrop.cs"
+    # SlotSpacing moved out of ProceduralBoardSetup into BoardRowGeometry in c79fc8b8 (the #139
+    # placement work, committed under the message "docs migrated"), which left this script dead
+    # with "const SlotSpacing not found". Same value, new home; read it where it lives now.
+    rowgeom = SCRIPTS / "BoardRowGeometry.cs"
 
     ortho = yaml_scalar(SCENES / "Board.unity", "orthographic size", "camera orthographicSize")
     ortho_net = yaml_scalar(SCENES / "BoardNetworked.unity", "orthographic size",
@@ -190,7 +212,7 @@ def main() -> int:
     deck_x = const(setup, "DeckX", "ProceduralBoardSetup.DeckX")
     mana_x = const(setup, "ManaRailX", "ProceduralBoardSetup.ManaRailX")
     baseline = const(setup, "Baseline", "ProceduralBoardSetup.Baseline")
-    slot_gap = const(setup, "SlotSpacing", "ProceduralBoardSetup.SlotSpacing")
+    slot_gap = const(rowgeom, "SlotSpacing", "BoardRowGeometry.SlotSpacing")
     slot_n = const(setup, "BoardSlotCount", "ProceduralBoardSetup.BoardSlotCount")
     plate_w = const(hero, "PlateW", "HeroPlateView.PlateW")
     pile_w = const(deck, "PileW", "DeckPileView.PileW")
