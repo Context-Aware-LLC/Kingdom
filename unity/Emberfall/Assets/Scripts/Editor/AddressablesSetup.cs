@@ -21,6 +21,7 @@ namespace Emberfall.Editor
     {
         private const string CardDataFolder = "Assets/CardData";
         private const string CardArtRoot = "Assets/Art/Cards";
+        private const string PackArtRoot = "Assets/Art/Shop/Packs";
 
         [MenuItem("Emberfall/Addressables/Setup Groups + Migrate Card Data")]
         public static void Run()
@@ -46,6 +47,37 @@ namespace Emberfall.Editor
 
                 // Hero portraits ride along with CORE — they are set-agnostic and always loaded.
                 if (setId == "CORE") AddFolderSprites(settings, group, "Assets/Art/Hero", "card_art");
+            }
+
+            // One PackArt_<setId> group per pack-art folder found on disk — same enumerate-the-disk
+            // rule as CardArt above, for the same reason: an expansion's packaging must not be
+            // forgettable. Sprites address flat as pack_art/<fileName> (so filenames stay unique
+            // across sets, exactly as card art already requires); the manifest cannot, because
+            // every set's is called packart.json, so it is addressed from its FOLDER name.
+            if (Directory.Exists(PackArtRoot))
+            {
+                foreach (string setFolder in Directory.GetDirectories(PackArtRoot))
+                {
+                    string setId = Path.GetFileName(setFolder);
+                    var packGroup = GetGroup(settings, "PackArt_" + setId);
+                    AddFolderSprites(settings, packGroup, $"{PackArtRoot}/{setId}", "pack_art");
+
+                    string manifestPath = $"{PackArtRoot}/{setId}/packart.json";
+                    string manifestGuid = AssetDatabase.AssetPathToGUID(manifestPath);
+                    if (string.IsNullOrEmpty(manifestGuid))
+                    {
+                        // Art with no manifest resolves to nothing at runtime: PackArtProvider reads
+                        // the manifest first and never scans the folder in a build. Say so here,
+                        // because the Editor's AssetDatabase fallback hides it during authoring.
+                        Debug.LogWarning($"[AddressablesSetup] {manifestPath} is missing — " +
+                                         $"PackArt_{setId} will ship art that nothing can look up.");
+                    }
+                    else
+                    {
+                        settings.CreateOrMoveEntry(manifestGuid, packGroup)
+                                .SetAddress($"pack_art/{setId}.manifest");
+                    }
+                }
             }
 
             var dataGroup = GetGroup(settings, "CardData");

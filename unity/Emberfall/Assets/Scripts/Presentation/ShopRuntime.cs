@@ -1,17 +1,7 @@
 using Emberfall.Net.Client.Shop;
-using UnityEngine;
 
 namespace Emberfall.Presentation
 {
-    /// <summary>
-    /// Unity-only seam for the approved booster faces. The art delivery can bind sprites by the
-    /// catalog's stable art keys without teaching the transport layer about Unity assets.
-    /// </summary>
-    public interface IBoosterPackagingArtProvider
-    {
-        void LoadArt(string artKey, System.Action<Sprite> onLoaded);
-    }
-
     /// <summary>
     /// Composition seam for the account transport delivered with the server wallet/purchase path.
     /// The store can render its locked catalog without one, but all purchase controls stay disabled.
@@ -24,6 +14,10 @@ namespace Emberfall.Presentation
     public static class ShopRuntime
     {
         public static IShopGateway Gateway { get; set; }
-        public static IBoosterPackagingArtProvider PackagingArt { get; set; }
+
+        /// <summary>Override seam for packaging art. Left null in every ordinary path — the store
+        /// defaults to <see cref="PackArtProvider"/>, which reads the art folders — so this exists
+        /// for a test or a future streamed loader, not for wiring.</summary>
+        public static IPackArtProvider PackArt { get; set; }
     }
 }

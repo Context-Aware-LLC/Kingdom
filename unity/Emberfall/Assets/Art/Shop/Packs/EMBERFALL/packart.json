@@ -1,0 +1,39 @@
+{
+  "pieces": [
+    {
+      "id": "emberfall_pyra_1",
+      "file": "pack_ef_01_pyra_cinderbound_1",
+      "title": "Cinderbound I"
+    },
+    {
+      "id": "emberfall_pyra_2",
+      "file": "pack_ef_01_pyra_cinderbound_2",
+      "title": "Cinderbound II"
+    },
+    {
+      "id": "emberfall_pyra_3",
+      "file": "pack_ef_01_pyra_cinderbound_3",
+      "title": "Cinderbound III"
+    },
+    {
+      "id": "emberfall_pyra_4",
+      "file": "pack_ef_01_pyra_cinderbound_4",
+      "title": "Cinderbound IV"
+    },
+    {
+      "id": "emberfall_maren",
+      "file": "pack_ef_02_maren_threading_catastrophe",
+      "title": "Threading Catastrophe"
+    },
+    {
+      "id": "emberfall_sorrow",
+      "file": "pack_ef_03_sorrow_last_gate_release",
+      "title": "Last Gate Release"
+    },
+    {
+      "id": "emberfall_thalen",
+      "file": "pack_ef_04_thalen_smallest_force",
+      "title": "Smallest Force"
+    }
+  ]
+}

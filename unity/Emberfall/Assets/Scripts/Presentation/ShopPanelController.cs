@@ -29,7 +29,7 @@ namespace Emberfall.Presentation
         private readonly Label _status;
         private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
-        private readonly IBoosterPackagingArtProvider _packagingArt;
+        private readonly IPackArtProvider _packArt;
         private readonly System.Action _onClose;
 
         private bool _busy;
@@ -37,7 +37,7 @@ namespace Emberfall.Presentation
         public ShopPanelController(
             VisualElement root,
             IShopGateway gateway,
-            IBoosterPackagingArtProvider packagingArt,
+            IPackArtProvider packArt,
             System.Action onClose)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
@@ -51,7 +51,7 @@ namespace Emberfall.Presentation
             _gems = root.Q<Label>("shop-gem-balance");
             _status = root.Q<Label>("shop-status");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
-            _packagingArt = packagingArt;
+            _packArt = packArt;
             _onClose = onClose;
 
             // No onDone: here the reveal is an overlay over a screen the player is still on, so
@@ -156,11 +156,18 @@ namespace Emberfall.Presentation
                 var tile = new VisualElement();
                 tile.AddToClassList("shop-pack");
 
-                var artRail = new VisualElement();
-                artRail.AddToClassList("shop-pack__art-rail");
-                for (int art = 0; art < offer.PackagingArtKeys.Count; art++)
-                    artRail.Add(BuildArtSlot(offer.PackagingArtKeys[art]));
-                tile.Add(artRail);
+                // The rail is added only if the set actually has art. An empty rail is a visible
+                // hole in the tile, and a pack whose art has not been drawn yet should read as a
+                // pack without a picture, not as a picture that failed to load.
+                _packArt?.LoadPackArt(offer.PackId, pieces =>
+                {
+                    if (pieces == null || pieces.Count == 0) return;
+                    var artRail = new VisualElement();
+                    artRail.AddToClassList("shop-pack__art-rail");
+                    for (int art = 0; art < pieces.Count; art++)
+                        artRail.Add(BuildArtSlot(pieces[art]));
+                    tile.Insert(0, artRail);
+                });
 
                 var name = new Label(offer.DisplayName);
                 name.AddToClassList("shop-pack__name");
@@ -180,21 +187,21 @@ namespace Emberfall.Presentation
             }
         }
 
-        private VisualElement BuildArtSlot(string artKey)
+        private static VisualElement BuildArtSlot(PackArtPiece piece)
         {
-            var slot = new VisualElement { name = artKey };
+            // Named for the PIECE, not its file: this is the element name a later gallery or a
+            // profile picker would look up, and the id is the half that does not move.
+            var slot = new VisualElement { name = piece.Id };
             slot.AddToClassList("shop-pack__art-slot");
+            slot.AddToClassList("shop-pack__art-slot--loaded");
+            slot.style.backgroundImage = new StyleBackground(piece.Sprite);
 
-            var label = new Label(TokenText.Pretty(artKey));
+            // The title stays in the tree behind the art rather than being dropped once a sprite
+            // lands — it is what a screen reader and a tooltip have to work with, and the slot is
+            // otherwise a nameless rectangle.
+            var label = new Label(piece.Title);
             label.AddToClassList("shop-pack__art-slot-label");
             slot.Add(label);
-
-            _packagingArt?.LoadArt(artKey, sprite =>
-            {
-                if (sprite == null) return;
-                slot.style.backgroundImage = new StyleBackground(sprite);
-                slot.AddToClassList("shop-pack__art-slot--loaded");
-            });
             return slot;
         }
 

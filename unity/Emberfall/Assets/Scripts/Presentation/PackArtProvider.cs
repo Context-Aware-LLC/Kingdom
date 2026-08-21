@@ -1,0 +1,149 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Emberfall.Presentation
+{
+    /// <summary>
+    /// Reads <c>Assets/Art/Shop/Packs/&lt;setId&gt;/</c> — the manifest, then the sprites it names.
+    /// Addressables in a build, AssetDatabase in the Editor, the same two-path shape
+    /// <see cref="CardDatabaseLoader"/> uses so tools work before a catalog has been built.
+    ///
+    /// <para><b>Adding an expansion's art is a content drop, not a code change.</b> Drop the folder,
+    /// write its manifest, re-run <c>Emberfall/Addressables/Setup Groups + Migrate Card Data</c>.
+    /// Nothing here and nothing in the transport layer names a set.</para>
+    ///
+    /// <para><b>Two silences are deliberate, and they are not the same silence.</b> A set with no
+    /// manifest logs nothing — art that has not been drawn yet is the normal state of an
+    /// expansion, not a fault. A manifest entry whose file will not resolve DOES warn: something
+    /// declared that piece, so its absence is a mistake rather than an absence.</para>
+    ///
+    /// <para>Results are cached per set, misses included — a pack tile re-renders on every wallet
+    /// refresh and on every busy-state flip, and re-hitting Addressables for each is wasted work.
+    /// The cache is per instance and per session; there is no invalidation, because art does not
+    /// change under a running player. In the Editor it means a newly imported file needs a domain
+    /// reload to appear, which is the same rule the UI sprite providers already follow.</para>
+    /// </summary>
+    public sealed class PackArtProvider : IPackArtProvider
+    {
+        private const string ArtRoot = "Assets/Art/Shop/Packs";
+        private const string ManifestFileName = "packart.json";
+
+        private readonly Dictionary<string, IReadOnlyList<PackArtPiece>> _cache =
+            new Dictionary<string, IReadOnlyList<PackArtPiece>>();
+
+        public void LoadPackArt(string packId, Action<IReadOnlyList<PackArtPiece>> onLoaded)
+        {
+            if (onLoaded == null) return;
+
+            string setId = PackArtSet.SetIdFor(packId);
+            if (setId.Length == 0)
+            {
+                onLoaded(Array.Empty<PackArtPiece>());
+                return;
+            }
+
+            if (!_cache.TryGetValue(setId, out IReadOnlyList<PackArtPiece> pieces))
+            {
+                pieces = Resolve(setId);
+                _cache[setId] = pieces;
+            }
+
+            // Synchronous by contract, like IBoosterPackagingArtProvider before it: both paths
+            // resolve inline. The callback shape is kept for a future streamed loader.
+            onLoaded(pieces);
+        }
+
+        private static IReadOnlyList<PackArtPiece> Resolve(string setId)
+        {
+            PackArtManifest manifest = LoadManifest(setId);
+            if (manifest == null || manifest.pieces == null || manifest.pieces.Count == 0)
+                return Array.Empty<PackArtPiece>();
+
+            var pieces = new List<PackArtPiece>(manifest.pieces.Count);
+            for (int i = 0; i < manifest.pieces.Count; i++)
+            {
+                PackArtManifestEntry entry = manifest.pieces[i];
+                if (entry == null || string.IsNullOrEmpty(entry.id) || string.IsNullOrEmpty(entry.file))
+                {
+                    Debug.LogWarning($"[PackArt] {setId}/{ManifestFileName} entry {i} is missing an id or file; skipped.");
+                    continue;
+                }
+
+                Sprite sprite = LoadSprite(setId, entry.file);
+                if (sprite == null)
+                {
+                    Debug.LogWarning($"[PackArt] {setId}/{ManifestFileName} declares '{entry.id}' at file " +
+                                     $"'{entry.file}', which did not resolve. Is it in the folder, and have " +
+                                     "Addressables groups been re-run since it was added?");
+                    continue;
+                }
+
+                pieces.Add(new PackArtPiece(entry.id, string.IsNullOrEmpty(entry.title) ? entry.id : entry.title, sprite));
+            }
+            return pieces;
+        }
+
+        private static PackArtManifest LoadManifest(string setId)
+        {
+            TextAsset asset = null;
+            try
+            {
+                var handle = UnityEngine.AddressableAssets.Addressables
+                    .LoadAssetAsync<TextAsset>($"pack_art/{setId}.manifest");
+                asset = handle.WaitForCompletion();
+            }
+            catch (Exception)
+            {
+                // Not in the catalog. Expected in the Editor before a groups run, and expected in a
+                // build for a set whose art has not shipped — the fallback below decides which.
+            }
+
+#if UNITY_EDITOR
+            if (asset == null)
+                asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>($"{ArtRoot}/{setId}/{ManifestFileName}");
+#endif
+            if (asset == null) return null;
+
+            try
+            {
+                return JsonUtility.FromJson<PackArtManifest>(asset.text);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PackArt] {setId}/{ManifestFileName} did not parse: {ex.GetType().Name}: {ex.Message}");
+                return null;
+            }
+        }
+
+        private static Sprite LoadSprite(string setId, string fileName)
+        {
+            try
+            {
+                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<Sprite>($"pack_art/{fileName}");
+                Sprite loaded = handle.WaitForCompletion();
+                if (loaded != null) return loaded;
+            }
+            catch (Exception)
+            {
+                // Fall through to the Editor path.
+            }
+
+#if UNITY_EDITOR
+            // FindAssets matches loosely, so require the exact file name — the same guard
+            // EditorUiSpriteProvider carries, for the same reason.
+            string folder = $"{ArtRoot}/{setId}";
+            if (UnityEditor.AssetDatabase.IsValidFolder(folder))
+            {
+                foreach (string guid in UnityEditor.AssetDatabase.FindAssets($"t:Sprite {fileName}", new[] { folder }))
+                {
+                    string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                    if (System.IO.Path.GetFileNameWithoutExtension(path) != fileName) continue;
+                    return UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                }
+            }
+#endif
+            return null;
+        }
+    }
+}

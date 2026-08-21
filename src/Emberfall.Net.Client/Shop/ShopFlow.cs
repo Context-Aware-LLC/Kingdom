@@ -79,10 +79,8 @@ namespace Emberfall.Net.Client.Shop
         public string DisplayName { get; }
         public int GoldPrice { get; }
         public int GemPrice { get; }
-        public IReadOnlyList<string> PackagingArtKeys { get; }
 
-        public PackOffer(string packId, string displayName, int goldPrice, int gemPrice,
-                         IReadOnlyList<string>? packagingArtKeys = null)
+        public PackOffer(string packId, string displayName, int goldPrice, int gemPrice)
         {
             if (string.IsNullOrWhiteSpace(packId)) throw new ArgumentException("Pack id is required.", nameof(packId));
             if (string.IsNullOrWhiteSpace(displayName)) throw new ArgumentException("Display name is required.", nameof(displayName));
@@ -92,7 +90,6 @@ namespace Emberfall.Net.Client.Shop
             DisplayName = displayName;
             GoldPrice = goldPrice;
             GemPrice = gemPrice;
-            PackagingArtKeys = packagingArtKeys ?? Array.Empty<string>();
         }
     }
 
@@ -178,35 +175,20 @@ namespace Emberfall.Net.Client.Shop
     /// Founder-locked display catalog for the client shell. The authoritative gateway remains free
     /// to return updated offers; these values keep the disconnected UI useful without inventing
     /// wallet balances or pack contents.
+    ///
+    /// <para><b>An offer carries no art.</b> It used to name its packaging sprites in a
+    /// <c>PackagingArtKeys</c> list, which meant a new expansion's art needed an edit here — in a
+    /// transport project, to add a picture. Art is discovered from disk instead
+    /// (<c>Assets/Art/Shop/Packs/&lt;setId&gt;/</c>, presentation-side), joined to an offer by the
+    /// last segment of its <see cref="PackOffer.PackId"/>. Nothing about a purchasable belongs in
+    /// an art folder and nothing about art belongs here.</para>
     /// </summary>
     public static class ShopCatalog
     {
         public static IReadOnlyList<PackOffer> Packs { get; } = Array.AsReadOnly(new[]
         {
-            new PackOffer(
-                "pack.emberfall",
-                "Emberfall Pack",
-                100,
-                100,
-                new[]
-                {
-                    "booster_pack_emberfall_pyra",
-                    "booster_pack_emberfall_maren",
-                    "booster_pack_emberfall_sorrow",
-                    "booster_pack_emberfall_thalen",
-                }),
-            new PackOffer(
-                "pack.rekindling",
-                "Rekindling Pack",
-                100,
-                100,
-                new[]
-                {
-                    "booster_pack_rekindling_tessalt",
-                    "booster_pack_rekindling_kira",
-                    "booster_pack_rekindling_duras",
-                    "booster_pack_rekindling_zael",
-                }),
+            new PackOffer("pack.emberfall", "Emberfall Pack", 100, 100),
+            new PackOffer("pack.rekindling", "Rekindling Pack", 100, 100),
         });
 
         public static IReadOnlyList<GemBundleOffer> GemBundles { get; } = Array.AsReadOnly(new[]

@@ -10,7 +10,7 @@ namespace Emberfall.Presentation
     /// 2026-08-20, which put a third of the menu's markup in a file about the menu.
     ///
     /// <para>The split costs nothing at the seams because the store's composition is static:
-    /// <see cref="ShopRuntime.Gateway"/> and <see cref="ShopRuntime.PackagingArt"/> survive a
+    /// <see cref="ShopRuntime.Gateway"/> and <see cref="ShopRuntime.PackArt"/> survive a
     /// scene load untouched, so this screen binds the same transport the menu would have.</para>
     ///
     /// <para>The purchase flow itself stays entirely in <see cref="ShopPanelController"/>. This
@@ -42,14 +42,13 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // PackagingArt stays an override seam (a test or a future streamed loader can set it);
-            // with nobody overriding it the packaging slots resolve through the same sprite
-            // pipeline as the rest of the meta screens. The gateway has no such default on
-            // purpose — an unbound wallet must read as unavailable, never as zero.
+            // PackArt stays an override seam (a test or a future streamed loader can set it); with
+            // nobody overriding it the rails come from the art folders on disk. The gateway has no
+            // such default on purpose — an unbound wallet must read as unavailable, never as zero.
             _shop = new ShopPanelController(
                 root,
                 ShopRuntime.Gateway,
-                ShopRuntime.PackagingArt ?? new UiSpriteBoosterArtProvider(),
+                ShopRuntime.PackArt ?? new PackArtProvider(),
                 Exit);
             _shop.Open();
         }
