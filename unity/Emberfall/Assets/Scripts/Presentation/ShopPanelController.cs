@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -9,32 +7,17 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Unity-only seam for the approved booster faces. The art delivery can bind sprites by the
-    /// catalog's stable art keys without teaching the transport layer about Unity assets.
-    /// </summary>
-    public interface IBoosterPackagingArtProvider
-    {
-        void LoadArt(string artKey, System.Action<Sprite> onLoaded);
-    }
-
-    /// <summary>
-    /// Composition seam for the account transport delivered with the server wallet/purchase path.
-    /// The menu can render its locked catalog without one, but all purchase controls stay disabled.
-    /// </summary>
-    public static class ShopRuntime
-    {
-        public static IShopGateway Gateway { get; set; }
-        public static IBoosterPackagingArtProvider PackagingArt { get; set; }
-    }
-
-    /// <summary>
-    /// Binds the store's catalog and pack reveal. Pricing and placeholder art slots may render while
-    /// disconnected; balances, purchase success, and every reveal award come only from
-    /// <see cref="IShopGateway"/>.
+    /// Binds the store's catalog and purchase flow. Pricing and placeholder art slots may render
+    /// while disconnected; balances and purchase success come only from <see cref="IShopGateway"/>.
     ///
     /// <para>Host-agnostic on purpose: it queries its elements by name and hands Back back to
     /// whoever built it. <see cref="ShopScreenController"/> is that host today, and leaves for its
     /// return scene — but nothing here knows it lives in a scene of its own.</para>
+    ///
+    /// <para><b>The reveal is not here.</b> Opening a pack is <see cref="PackRevealPanel"/>, which
+    /// this owns but does not reach into — the store hands it a receipt and hides it on the way
+    /// out, and that is the entire relationship. It was inlined until 2026-08-20, which left the
+    /// only pack-opening surface in the game locked inside the only screen that sells them.</para>
     /// </summary>
     public sealed class ShopPanelController
     {
@@ -44,15 +27,11 @@ namespace Emberfall.Presentation
         private readonly Label _gold;
         private readonly Label _gems;
         private readonly Label _status;
-        private readonly VisualElement _revealOverlay;
-        private readonly VisualElement _revealCards;
-        private readonly Label _revealTitle;
-        private readonly Label _revealSummary;
+        private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
         private readonly IBoosterPackagingArtProvider _packagingArt;
         private readonly System.Action _onClose;
 
-        private ICardDatabase _cards;
         private bool _busy;
 
         public ShopPanelController(
@@ -71,16 +50,15 @@ namespace Emberfall.Presentation
             _gold = root.Q<Label>("shop-gold-balance");
             _gems = root.Q<Label>("shop-gem-balance");
             _status = root.Q<Label>("shop-status");
-            _revealOverlay = root.Q<VisualElement>("reveal-overlay");
-            _revealCards = root.Q<VisualElement>("reveal-cards");
-            _revealTitle = root.Q<Label>("reveal-title");
-            _revealSummary = root.Q<Label>("reveal-summary");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packagingArt = packagingArt;
             _onClose = onClose;
 
+            // No onDone: here the reveal is an overlay over a screen the player is still on, so
+            // dismissing it means returning to the store, which is what hiding it already does.
+            _reveal = new PackRevealPanel(root);
+
             Wire(root, "btn-shop-close", Close);
-            Wire(root, "btn-reveal-done", CloseReveal);
             RenderDisconnectedCatalog();
         }
 
@@ -131,7 +109,7 @@ namespace Emberfall.Presentation
             {
                 PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency);
                 RenderSnapshot(result.Shop);
-                ShowReveal(result.OpenedPack);
+                _reveal.Show(result.OpenedPack);
                 SetStatus("");
             }
             catch (Exception ex)
@@ -207,7 +185,7 @@ namespace Emberfall.Presentation
             var slot = new VisualElement { name = artKey };
             slot.AddToClassList("shop-pack__art-slot");
 
-            var label = new Label(PrettyToken(artKey));
+            var label = new Label(TokenText.Pretty(artKey));
             label.AddToClassList("shop-pack__art-slot-label");
             slot.Add(label);
 
@@ -263,76 +241,6 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void ShowReveal(PackOpenReceipt receipt)
-        {
-            if (receipt == null || _revealOverlay == null || _revealCards == null) return;
-            _revealCards.Clear();
-            if (_revealTitle != null) _revealTitle.text = PrettyToken(receipt.PackId) + " opened";
-
-            // "n new cards" / "n cards + shards from duplicates" both went with the no-auto-sharding
-            // ruling: a pack yields cards, and the receipt no longer says which of them are new.
-            if (_revealSummary != null)
-                _revealSummary.text = receipt.Awards.Count == 1
-                    ? "1 card"
-                    : $"{receipt.Awards.Count} cards";
-
-            for (int i = 0; i < receipt.Awards.Count; i++)
-            {
-                VisualElement card = BuildRevealCard(receipt.Awards[i]);
-                _revealCards.Add(card);
-                int delay = 140 + (i * 170);
-                card.schedule.Execute(() => card.AddToClassList("reveal-card--shown")).StartingIn(delay);
-            }
-
-            _revealOverlay.RemoveFromClassList("shop-overlay--hidden");
-        }
-
-        private VisualElement BuildRevealCard(PackCardAward award)
-        {
-            var card = new VisualElement();
-            card.AddToClassList("reveal-card");
-            card.AddToClassList(RarityClass(award.Rarity));
-
-            var flourish = new VisualElement();
-            flourish.AddToClassList("reveal-card__flourish");
-            card.Add(flourish);
-
-            var rarity = new Label(award.Rarity.ToString());
-            rarity.AddToClassList("reveal-card__rarity");
-            card.Add(rarity);
-
-            var name = new Label(CardName(award.CardId));
-            name.AddToClassList("reveal-card__name");
-            card.Add(name);
-
-            // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
-            // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
-            // receipt no longer carries, and a third copy would be labelled new. Rarity, name and the
-            // pity flourish are what the reveal has to say.
-            if (award.Upgrade != PackUpgradeReason.None)
-            {
-                var upgrade = new Label(UpgradeLabel(award.Upgrade));
-                upgrade.AddToClassList("reveal-card__upgrade");
-                card.Add(upgrade);
-            }
-
-            return card;
-        }
-
-        private string CardName(string cardId)
-        {
-            try
-            {
-                _cards ??= CardDatabaseLoader.Load();
-                if (_cards.TryGet(cardId, out CardDefinition definition)) return definition.Name;
-            }
-            catch (Exception ex)
-            {
-                UnityEngine.Debug.LogWarning($"[Shop] card names unavailable: {ex.GetType().Name}: {ex.Message}");
-            }
-            return PrettyToken(cardId);
-        }
-
         private void SetBusy(bool busy)
         {
             _busy = busy;
@@ -351,46 +259,14 @@ namespace Emberfall.Presentation
         /// two that a scene load takes to arrive.</summary>
         private void Close()
         {
-            CloseReveal();
+            _reveal.Hide();
             _onClose();
-        }
-
-        private void CloseReveal()
-        {
-            _revealOverlay?.AddToClassList("shop-overlay--hidden");
         }
 
         private static void Wire(VisualElement root, string buttonName, System.Action action)
         {
             Button button = root.Q<Button>(buttonName);
             if (button != null) button.clicked += action;
-        }
-
-        private static string RarityClass(Rarity rarity) => rarity switch
-        {
-            Rarity.RARE => "reveal-card--rare",
-            Rarity.EPIC => "reveal-card--epic",
-            Rarity.LEGENDARY => "reveal-card--legendary",
-            _ => "reveal-card--common",
-        };
-
-        private static string UpgradeLabel(PackUpgradeReason upgrade) => upgrade switch
-        {
-            PackUpgradeReason.RareFloor => "RARE+ GUARANTEED",
-            PackUpgradeReason.EpicPity => "EPIC GUARANTEE",
-            PackUpgradeReason.LegendaryPity => "LEGENDARY GUARANTEE",
-            _ => "",
-        };
-
-        private static string PrettyToken(string raw)
-        {
-            if (string.IsNullOrEmpty(raw)) return "";
-            int split = Math.Max(raw.LastIndexOf('.'), raw.LastIndexOf('_'));
-            string token = split >= 0 ? raw.Substring(split + 1) : raw;
-            token = token.Replace('-', ' ');
-            return token.Length == 0
-                ? token
-                : char.ToUpperInvariant(token[0]) + token.Substring(1).ToLowerInvariant();
         }
 
         private static string FormatUsd(int cents) => $"${cents / 100}.{cents % 100:00}";

@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
+    <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
+    <!-- A frame, deliberately: the same reveal tree the store overlay carries, given a screen of
+         its own so pack opening has somewhere to grow. Nothing here is dressed yet. The element
+         NAMES are the contract PackRevealPanel queries; the classes are only presentation. -->
+    <ui:VisualElement name="root" class="emb-root pack-reveal-screen">
+        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden">
+            <ui:VisualElement class="reveal-shell">
+                <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
+                <ui:Label name="reveal-summary" text="" class="reveal-summary"/>
+                <ui:VisualElement name="reveal-cards" class="reveal-cards"/>
+                <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

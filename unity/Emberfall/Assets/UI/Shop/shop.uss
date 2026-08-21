@@ -23,8 +23,13 @@
 }
 
 /* The store uses the same plate-and-scrim language as Collection: illustrated space is the page,
- * and controls sit on dark translucent surfaces instead of inside a second generic modal. Keep
- * this scoped to the store overlay so the pack-reveal stage retains its focused presentation. */
+ * and controls sit on dark translucent surfaces instead of inside a second generic modal.
+ *
+ * The id scope kept this off the pack-reveal stage, which shared `.shop-overlay`. It no longer
+ * does — the reveal moved to packreveal.uss on 2026-08-20 and `#shop-overlay` is now the only
+ * `.shop-overlay` there is, so the two blocks could be collapsed into one whenever someone is
+ * in here anyway. Left split because a merge is a re-test of the store's whole layout for no
+ * behaviour change. */
 #shop-overlay {
     align-items: stretch;
     justify-content: flex-start;
@@ -325,124 +330,4 @@
     border-radius: var(--space-2);
     padding: var(--space-2) var(--space-3);
     margin-top: 0;
-}
-
-.reveal-shell {
-    align-items: center;
-    justify-content: center;
-}
-
-.reveal-title {
-    color: var(--ink-1);
-    font-size: var(--type-h1);
-    -unity-font-style: bold;
-    margin-bottom: var(--space-2);
-}
-
-.reveal-summary {
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    margin-bottom: var(--space-4);
-}
-
-.reveal-cards {
-    width: 96%;
-    flex-grow: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-}
-
-.reveal-card {
-    width: 18%;
-    min-width: 135px;
-    max-width: 230px;
-    aspect-ratio: 0.7;
-    align-items: stretch;
-    justify-content: space-between;
-    background-color: var(--surface-0);
-    border-width: 3px;
-    border-color: var(--rarity-common);
-    border-radius: var(--space-3);
-    padding: var(--space-3);
-    margin: 1%;
-    opacity: 0;
-    scale: 0 1;
-    transition-property: opacity, scale;
-    transition-duration: 0.22s;
-    transition-timing-function: ease-out;
-    overflow: hidden;
-}
-
-.reveal-card--shown {
-    opacity: 1;
-    scale: 1 1;
-}
-
-.reveal-card--rare {
-    border-color: var(--rarity-rare);
-}
-
-.reveal-card--epic {
-    border-color: var(--rarity-epic);
-}
-
-.reveal-card--legendary {
-    border-color: var(--rarity-legendary);
-    background-color: rgb(48, 35, 20);
-}
-
-.reveal-card__flourish {
-    position: absolute;
-    top: -18%;
-    left: -15%;
-    width: 130%;
-    height: 34%;
-    rotate: -8deg;
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.reveal-card--rare .reveal-card__flourish {
-    background-color: rgba(77, 149, 255, 0.18);
-}
-
-.reveal-card--epic .reveal-card__flourish {
-    background-color: rgba(181, 102, 255, 0.22);
-}
-
-.reveal-card--legendary .reveal-card__flourish {
-    background-color: rgba(255, 190, 65, 0.28);
-}
-
-.reveal-card__rarity {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    letter-spacing: 1px;
-}
-
-.reveal-card__name {
-    color: var(--ink-1);
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    white-space: normal;
-    -unity-text-align: middle-center;
-}
-
-.reveal-card__upgrade {
-    color: var(--accent);
-    font-size: var(--type-caption);
-    white-space: normal;
-    -unity-text-align: middle-center;
-}
-
-.reveal-done {
-    min-width: 28%;
-    min-height: 48px;
-    color: var(--surface-0);
-    background-color: var(--accent);
-    border-color: var(--accent);
-    border-radius: var(--space-2);
-    -unity-font-style: bold;
 }

@@ -1,0 +1,158 @@
+/* The pack-opening reveal. Moved out of shop.uss on 2026-08-20 with the controller it styles:
+ * the reveal now has two hosts (the store overlay and PackRevealScreen), and a shared surface
+ * cannot live in one host's stylesheet.
+ *
+ * Both hosts link this sheet. It is self-sufficient on purpose — the overlay and shell rules below
+ * used to be borrowed from `.shop-overlay` / `.shop-shell`, which is exactly what made the reveal
+ * impossible to host anywhere but the store. `.emb-root` (theme.uss) is the only outside
+ * dependency, and only for the design tokens. */
+
+/* Scene root, for the standalone screen only. Mirrors `.shop-screen`: `.emb-root` carries tokens
+ * and nothing else, so the overlay below needs a parent that actually fills the panel. */
+.pack-reveal-screen {
+    flex-grow: 1;
+    background-color: var(--surface-0);
+}
+
+.reveal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 14, 19, 0.94);
+    padding: var(--space-4);
+}
+
+.reveal-overlay--hidden {
+    display: none;
+}
+
+.reveal-shell {
+    width: 96%;
+    height: 94%;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+    padding: var(--space-4);
+}
+
+.reveal-title {
+    color: var(--ink-1);
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    margin-bottom: var(--space-2);
+}
+
+.reveal-summary {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    margin-bottom: var(--space-4);
+}
+
+.reveal-cards {
+    width: 96%;
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.reveal-card {
+    width: 18%;
+    min-width: 135px;
+    max-width: 230px;
+    aspect-ratio: 0.7;
+    align-items: stretch;
+    justify-content: space-between;
+    background-color: var(--surface-0);
+    border-width: 3px;
+    border-color: var(--rarity-common);
+    border-radius: var(--space-3);
+    padding: var(--space-3);
+    margin: 1%;
+    opacity: 0;
+    scale: 0 1;
+    transition-property: opacity, scale;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    overflow: hidden;
+}
+
+.reveal-card--shown {
+    opacity: 1;
+    scale: 1 1;
+}
+
+.reveal-card--rare {
+    border-color: var(--rarity-rare);
+}
+
+.reveal-card--epic {
+    border-color: var(--rarity-epic);
+}
+
+.reveal-card--legendary {
+    border-color: var(--rarity-legendary);
+    background-color: rgb(48, 35, 20);
+}
+
+.reveal-card__flourish {
+    position: absolute;
+    top: -18%;
+    left: -15%;
+    width: 130%;
+    height: 34%;
+    rotate: -8deg;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.reveal-card--rare .reveal-card__flourish {
+    background-color: rgba(77, 149, 255, 0.18);
+}
+
+.reveal-card--epic .reveal-card__flourish {
+    background-color: rgba(181, 102, 255, 0.22);
+}
+
+.reveal-card--legendary .reveal-card__flourish {
+    background-color: rgba(255, 190, 65, 0.28);
+}
+
+.reveal-card__rarity {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.reveal-card__name {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.reveal-card__upgrade {
+    color: var(--accent);
+    font-size: var(--type-caption);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.reveal-done {
+    min-width: 28%;
+    min-height: 48px;
+    color: var(--surface-0);
+    background-color: var(--accent);
+    border-color: var(--accent);
+    border-radius: var(--space-2);
+    -unity-font-style: bold;
+}
