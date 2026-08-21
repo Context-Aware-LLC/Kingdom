@@ -29,6 +29,10 @@ namespace Emberfall.Net.Client
 
         private ConnectionState _state = ConnectionState.Idle;
         private DeadReason _deadReason = DeadReason.None;
+        // #232: the server's WS close-frame reason text, when the peer supplied one (MatchGate's
+        // "deck timeout" / "deck rejected: ..." / "server full" — see WebSocketTransport). DeadReason
+        // stays the coarse bucket UI code branches on; this is what a player actually reads.
+        private string? _deadReasonDetail;
 
         private GameState? _current;
         private MatchId _matchId;
@@ -132,6 +136,11 @@ namespace Emberfall.Net.Client
         public string OpponentName { get { lock (_lock) return _opponentName; } }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
+        /// <summary>The server's close-frame reason text, when it sent one (#232) — null for a local
+        /// close, a transport fault, or a peer close that carried no text. Prefer this over
+        /// <see cref="DeadReason"/> when presenting a refusal to the player; it is the difference
+        /// between "deck rejected: too many copies of X" and every refusal reading as "Forfeited".</summary>
+        public string? DeadReasonDetail { get { lock (_lock) return _deadReasonDetail; } }
         public bool HasPendingSubmit { get { lock (_lock) return _pending is not null; } }
         /// <summary>True while a resync we sent is awaiting the server's same-version answer (RC-F8).</summary>
         public bool ResyncPending { get { lock (_lock) return _resyncPending; } }
@@ -521,7 +530,7 @@ namespace Emberfall.Net.Client
             return true;
         }
 
-        private void OnPeerClosed()
+        private void OnPeerClosed(string? detail = null)
         {
             lock (_lock)
             {
@@ -531,6 +540,7 @@ namespace Emberfall.Net.Client
                 // (RC-F10) is what commit 1 must get right so the runner stops.
                 SetStateUnlocked(ConnectionState.Dead);
                 _deadReason = DeadReason.Forfeited;
+                _deadReasonDetail = detail;
                 _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
                 ClearPendingUnlocked();
                 // A transport close that lands while ConnectAsync is still awaiting the match_start
@@ -539,12 +549,13 @@ namespace Emberfall.Net.Client
                 // else resolves that TCS besides OnMatchStart and FailContractMismatch, and neither
                 // fires on a plain peer-close. Mirrors FailContractMismatch's own TrySetException; a
                 // no-op once OnMatchStart already resolved it (TrySet*, RC-F7-style idempotence).
+                string shown = string.IsNullOrEmpty(detail) ? _deadReason.ToString() : detail;
                 _matchStarted?.TrySetException(
-                    new InvalidOperationException($"Connection closed before the match started ({_deadReason})."));
+                    new InvalidOperationException($"Connection closed before the match started ({shown})."));
             }
         }
 
-        private void OnTransportClosed(WireCloseReason reason) => OnPeerClosed();
+        private void OnTransportClosed(WireCloseReason reason, string? detail) => OnPeerClosed(detail);
 
         // ── Deterministic test synchronization (no Task.Delay — §11) ─────────────────
 

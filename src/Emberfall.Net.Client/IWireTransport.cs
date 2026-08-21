@@ -35,6 +35,10 @@ namespace Emberfall.Net.Client
 
         Task CloseAsync(WireCloseReason reason);
 
-        event Action<WireCloseReason> OnClosed;
+        /// <summary>Fires once, on either end of the wire closing. <c>detail</c> is the raw text a
+        /// peer-initiated close carried (the server's WS close-frame reason, e.g. "deck rejected:
+        /// too many copies of X") — null for a local close or a transport fault, which have no such
+        /// text (#232: this used to be thrown away entirely, so every refusal looked identical).</summary>
+        event Action<WireCloseReason, string?> OnClosed;
     }
 }
