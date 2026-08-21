@@ -142,6 +142,9 @@ namespace Emberfall.Presentation
 
         private bool EditingDeck => _character != null && _deck != null;
 
+        /// <summary>The crafting modal. Declared on the same plate in both modes; see <see cref="BuildCraftModal"/>.</summary>
+        private CraftModal _craftModal;
+
         /// <summary>
         /// True when the wall is scoped to what this account owns — the one predicate for it, read by
         /// both the pool and the scope controls so the two can never disagree about which pool the
@@ -180,6 +183,7 @@ namespace Emberfall.Presentation
             CacheElements();
             BuildPool();
             InitFaceBaker();
+            BuildCraftModal();   // before the wall: a tile click can open it, so it must exist first
             BuildWall();
             WireQueryBar();
             WireClassTabs();
@@ -346,16 +350,101 @@ namespace Emberfall.Presentation
         private void BuildWall()
         {
             _wall = new CardWall(_grid, _faceBaker);
-            _wall.TileClicked += AddCopy;
 
-            // The copy-cap fade is the only per-tile deck treatment. The decorator remains installed
-            // because the wall remains installed; it simply has nothing to say without an edit context.
-            _wall.TileDecorator = (def, tile) =>
-                tile.EnableInClassList("card-tile--maxed",
-                    EditingDeck && _deck.CountOf(def.Id) >=
-                    DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
+            // Both modes now, where browse used to have no handler at all: "a tap does nothing until
+            // there is something for it to do" was true right up until crafting gave it something.
+            _wall.TileClicked += OnTileClicked;
 
+            _wall.TileDecorator = DecorateTile;
             _wall.SetPool(_pool);
+        }
+
+        /// <summary>
+        /// What a tap on a wall tile means, which differs by mode because the modes have different
+        /// primary verbs.
+        ///
+        /// <para><b>Browse</b> — crafting. Nothing competes for the gesture: there is no deck to add
+        /// to, and in-match inspect was cut (board layout rulings, 2026-07-23).</para>
+        ///
+        /// <para><b>Deckbuild</b> — adding a copy, which stays the primary verb and must not be taken
+        /// away from the tap. It falls through to crafting in exactly one case: the account owns NO
+        /// copy of the card. That is the case where <see cref="AddCopy"/> is a guaranteed silent
+        /// no-op (L6 puts the copy limit at 0), so the tap is otherwise dead, and it is the case where
+        /// what the player wants is for a copy to exist at all. Every other refusal — deck full,
+        /// off-class, already holding every copy — leaves the tap doing nothing, as before.</para>
+        ///
+        /// <para>A card you own SOME but not all of is therefore reachable only from browse today.
+        /// Crafting a second copy from inside the deckbuilder wants a gesture of its own — a hold, or
+        /// a right-click — and that is deliberately not invented here: this modal is groundwork and a
+        /// new input gesture is a real decision with a verify check of its own
+        /// (<c>InputGestureVerify</c>).</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER — drag-to-add/remove in the deckbuilder (Sam, 2026-08-12,
+        /// "pretty soon").</b> Drag takes over add and remove, which frees the tap completely. When
+        /// that lands, DELETE the owns-zero fall-through below and make the tap mean crafting in both
+        /// modes unconditionally: the special case exists only because add currently owns the gesture,
+        /// and once it does not, the case is not a simplification to notice later — it is dead weight
+        /// that makes the deckbuilder's tap mean two different things for no reason. The paragraph
+        /// above about "a gesture of its own" retires with it.</para>
+        /// </summary>
+        private void OnTileClicked(CardDefinition def)
+        {
+            if (!EditingDeck)
+            {
+                OpenCraft(def);
+                return;
+            }
+
+            if (_owned != null && _owned.CopiesOwned(def.Id) <= 0)
+            {
+                OpenCraft(def);
+                return;
+            }
+
+            AddCopy(def);
+        }
+
+        /// <summary>
+        /// The per-tile treatments. Two of them, and keeping them apart is the whole point — see
+        /// <see cref="BuildWall"/> for why there is a decorator at all.
+        ///
+        /// <para><b>Neither one asks <see cref="DeckValidator.CanAdd"/>.</b> CanAdd is false for L1
+        /// (deck at 30) and L4 (off-class) too, and keying a fade on it is exactly the bug removed in
+        /// c31da55: a deck at 30 refuses every card, so every tile faded and the wall the screen exists
+        /// to show went dark at the moment the player stopped building and started browsing. Every
+        /// treatment here reads a per-CARD fact, never the wall's state — which is the line the
+        /// no-dimming ruling actually draws (Sam, 2026-08-07).</para>
+        /// </summary>
+        private void DecorateTile(CardDefinition def, VisualElement tile)
+        {
+            // "You own none of this." A per-card fact, true in BOTH modes, and the one thing that makes
+            // a card you might want to craft findable at all.
+            //
+            // Until 2026-08-12 this had no treatment of its own and was absorbed by the copy-cap fade
+            // below, on the reasoning that "you hold every copy you are allowed" is the same sentence
+            // whether the limit came from the format or from your collection. It is the same sentence
+            // and it was still wrong, because the two want opposite pixels: a spent card is finished
+            // with and fades to nearly nothing, while an unowned card is the one you are shopping for.
+            // Owning none put CopyLimit at 0, `0 >= 0` was true on arrival, and every unowned card in
+            // the deckbuilder sat at the spent fade's 0.1 from the moment the screen opened — present
+            // in the pool, invisible on the glass, and the reason crafting had nothing to click.
+            bool unowned = _owned != null && _owned.CopiesOwned(def.Id) <= 0;
+            tile.EnableInClassList("card-tile--unowned", unowned);
+
+            // The copy-cap fade — "you already hold every copy of THIS card you are allowed", so it
+            // reads the copy limit directly. Deckbuild only: it is a fact about a DECK, and browse mode
+            // has none (_deck is null there, which the mode check below is what guards).
+            //
+            // CopyLimit is min(MaxCopies, copies owned) (NOR-238), and MaxCopies is rarity-dependent
+            // (L3 Legendary = 1, L2 everything else = 2), so a Legendary fades at one copy, not two.
+            //
+            // The `!unowned` term is what keeps the two treatments from stacking. Without it an unowned
+            // card is trivially "at its limit" and takes both classes, and the 0.1 wins — which is the
+            // exact bug described above. An unowned card is never ALSO spent: there was nothing to
+            // spend.
+            tile.EnableInClassList("card-tile--maxed",
+                EditingDeck && !unowned &&
+                _deck.CountOf(def.Id) >= DeckValidator.CopyLimit(def.Rarity, _owned, def.Id));
         }
 
         private void WireQueryBar()
@@ -812,6 +901,84 @@ namespace Emberfall.Presentation
             row.Q<Label>("name").text = def.Name;
 
             SwapPrefixedClass(row, "edge--", ClassEdgeClass(def.Class));
+        }
+
+        // ---- Crafting (GH#157 Render / GH#158 Reduce) ----
+
+        /// <summary>
+        /// The shard balance the modal displays.
+        ///
+        /// <para><b>STUB (Sam, 2026-08-12) — this is a made-up number and nothing reads a real one.</b>
+        /// Shards are held by <c>IEntitlementLedger</c> server-side; Unity has no client path to a
+        /// balance, because <c>Emberfall.Net.Server</c> is net10.0 and there is no protocol message or
+        /// gateway between the two. The shape to copy when that lands is
+        /// <c>ShopFlow.IShopGateway.GetShopAsync</c>, which is how the wallet already reaches
+        /// <see cref="ShopPanelController"/>.</para>
+        ///
+        /// <para>It is deliberately generous rather than realistic: the point of the number today is to
+        /// let both halves of the modal be seen in their live state. RETIREMENT TRIGGER: delete this
+        /// constant the moment a real balance is reachable, and update the stub paragraph on
+        /// <see cref="CraftModal"/> with it.</para>
+        /// </summary>
+        private const long StubShardBalance = 2500;
+
+        /// <summary>
+        /// Open the crafting modal on one card.
+        ///
+        /// <para>Both offers come from <see cref="Crafting"/> — the same pure predicates
+        /// <c>CraftingService</c> binds to the ledger — so what this draws is what the server would
+        /// decide. Nothing here computes a cost, a payout or a refusal.</para>
+        ///
+        /// <para><b>A null ownership record is reported as owning zero, which is a fiction</b> and the
+        /// one place this stub knowingly lies. Null means "ownership unknown" everywhere else in this
+        /// screen (see <see cref="_owned"/>), and today it is null on every machine — so the modal
+        /// currently shows a live Render half and a dead Reduce half for every card in the game. That
+        /// is the right shape to look at and the wrong data to trust. It resolves itself: the day an
+        /// ownership record exists, this reads it and the fiction is gone with no change here.</para>
+        /// </summary>
+        private void OpenCraft(CardDefinition def)
+        {
+            if (_craftModal == null || def == null) return;
+
+            int copies = _owned != null ? _owned.CopiesOwned(def.Id) : 0;
+
+            _craftModal.Open(def,
+                Crafting.OfferRender(def, copies, StubShardBalance),
+                Crafting.OfferReduce(def, copies),
+                StubShardBalance);
+        }
+
+        /// <summary>
+        /// Binds the modal and hooks its two commits.
+        ///
+        /// <para><b>Both handlers are stubs and move nothing.</b> The real ones spend or pay out
+        /// through <c>CraftingService</c>, which Unity cannot reach — see
+        /// <see cref="StubShardBalance"/>. They log at Warning rather than Log so that a build where
+        /// someone believes crafting works says so in the console on the first click, instead of
+        /// looking like a button that did its job quietly.</para>
+        /// </summary>
+        private void BuildCraftModal()
+        {
+            _craftModal = new CraftModal(_root, _faceBaker);
+
+            if (!_craftModal.IsBound)
+            {
+                Debug.LogError("[Collection] the crafting modal is missing elements on the plate, so " +
+                               "tapping a card will do nothing. Check CollectionScreen.uxml for the " +
+                               "craft block — and for a double dash inside a comment, which fails the " +
+                               "whole import silently.");
+                return;
+            }
+
+            _craftModal.RenderRequested += def =>
+                Debug.LogWarning($"[Craft] STUB: Render '{def.Id}' for " +
+                                 $"{ShardCosts.ForRarity(def.Rarity)} shards. Nothing was spent and no " +
+                                 "card was minted — there is no client path to CraftingService yet.");
+
+            _craftModal.ReduceRequested += def =>
+                Debug.LogWarning($"[Craft] STUB: Reduce '{def.Id}' for " +
+                                 $"{ShardValues.ForRarity(def.Rarity)} shards. Nothing was destroyed " +
+                                 "and nothing was paid out — there is no client path to CraftingService yet.");
         }
 
         // ---- Mutations ----

@@ -269,12 +269,12 @@ namespace Emberfall.Presentation
             _revealCards.Clear();
             if (_revealTitle != null) _revealTitle.text = PrettyToken(receipt.PackId) + " opened";
 
-            int shards = 0;
-            for (int i = 0; i < receipt.Awards.Count; i++) shards += receipt.Awards[i].Shards;
+            // "n new cards" / "n cards + shards from duplicates" both went with the no-auto-sharding
+            // ruling: a pack yields cards, and the receipt no longer says which of them are new.
             if (_revealSummary != null)
-                _revealSummary.text = shards > 0
-                    ? $"{receipt.Awards.Count} cards · {shards:N0} Shards from duplicates"
-                    : $"{receipt.Awards.Count} new cards";
+                _revealSummary.text = receipt.Awards.Count == 1
+                    ? "1 card"
+                    : $"{receipt.Awards.Count} cards";
 
             for (int i = 0; i < receipt.Awards.Count; i++)
             {
@@ -305,13 +305,10 @@ namespace Emberfall.Presentation
             name.AddToClassList("reveal-card__name");
             card.Add(name);
 
-            var awardLabel = new Label(award.ConvertedToShards
-                ? $"DUPE → {award.Shards:N0} SHARDS"
-                : "NEW CARD");
-            awardLabel.AddToClassList("reveal-card__award");
-            if (award.ConvertedToShards) awardLabel.AddToClassList("reveal-card__award--dupe");
-            card.Add(awardLabel);
-
+            // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
+            // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
+            // receipt no longer carries, and a third copy would be labelled new. Rarity, name and the
+            // pity flourish are what the reveal has to say.
             if (award.Upgrade != PackUpgradeReason.None)
             {
                 var upgrade = new Label(UpgradeLabel(award.Upgrade));

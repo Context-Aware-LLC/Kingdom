@@ -99,12 +99,30 @@
     -unity-background-scale-mode: scale-to-fit;
     border-radius: var(--space-2);
 }
-/* The ONE opacity allowed on the wall (Sam, 2026-08-07): a card the deck already holds the
- * maximum copies of. This is a per-CARD fact, not the wall's state — the no-dimming ruling that
- * removed .card-tile--disabled was about a full deck greying out all ~90 tiles at once, which
- * this cannot do. See CardWall.RefreshTiles. */
+/* The two opacities allowed on the wall, both per-CARD facts and never the wall's state — the
+ * no-dimming ruling that removed .card-tile--disabled was about a full deck greying out all ~90
+ * tiles at once, which neither of these can do (Sam, 2026-08-07). See
+ * CollectionController.DecorateTile, which is the only thing that sets either, and CardWall.RefreshTiles.
+ *
+ * They must never both land on one tile — DecorateTile's `!unowned` term is what guarantees it.
+ * They mean opposite things and want opposite pixels. */
+
+/* Spent: the deck already holds every copy of this card you are allowed. You are finished with it,
+ * so it gets out of the way. Deckbuild only. */
 .card-tile--maxed {
     opacity: 0.1;
+}
+
+/* Unowned: you hold no copy of this card. The opposite of spent — this is the one you are shopping
+ * for, so it stays legible and reads as "not yours yet" rather than "gone". Both modes.
+ *
+ * THIS NUMBER IS THE TUNING KNOB. Too low and the wall goes dark for a new account, where nearly
+ * every card is unowned — which is the no-dimming ruling's spirit even though its letter (per-card,
+ * not wall-state) is satisfied. Sam's brief was "full colour, 100% opacity, your collection, mixed
+ * in with those some dimmer unowned cards", so the contrast has to be readable at a glance without
+ * the unowned half becoming furniture. */
+.card-tile--unowned {
+    opacity: 0.5;
 }
 /* Deck-side row (§2.3 full tiles are collection-only for now; the deck list stays a legible
  * full-width row for L1–L5 proof) */

@@ -52,15 +52,6 @@ namespace Emberfall.Net.Server.Accounts
             Pity = pity;
         }
 
-        public int TotalShards
-        {
-            get
-            {
-                int sum = 0;
-                for (int i = 0; i < Awards.Count; i++) sum += Awards[i].Shards;
-                return sum;
-            }
-        }
     }
 
     /// <summary>
@@ -231,11 +222,8 @@ namespace Emberfall.Net.Server.Accounts
             for (int slot = 0; slot < result.Awards.Count; slot++)
             {
                 var award = result.Awards[slot];
-                var grant = award.ConvertedToShards
-                    ? new EntitlementGrant(playerId, ShardValues.LedgerItem, award.Shards,
-                                           DupeSource(pack.Id, award.CardId), instanceTxnPrefix + slot, now)
-                    : new EntitlementGrant(playerId, CardItemPrefix + award.CardId, 1,
-                                           GrantSource, instanceTxnPrefix + slot, now);
+                var grant = new EntitlementGrant(playerId, CardItemPrefix + award.CardId, 1,
+                                                 GrantSource, instanceTxnPrefix + slot, now);
                 await _ledger.GrantAsync(grant, ct).ConfigureAwait(false);
             }
 
@@ -301,15 +289,12 @@ namespace Emberfall.Net.Server.Accounts
             {
                 if (!bySlot.TryGetValue(slot, out var row)) continue;
 
-                if (row.Item == ShardValues.LedgerItem)
-                {
-                    string dupeId = DupeCardIdFromSource(row.Source);
-                    awards.Add(new PackSlotAward(dupeId, RarityOf(dupeId), true, (int)row.Qty, PackUpgrade.None));
-                }
-                else if (row.Item != null && row.Item.StartsWith(CardItemPrefix, StringComparison.Ordinal))
+                // Every slot is a card row since the no-auto-sharding ruling (Sam, 2026-08-12), so there
+                // is no shard-row arm here and no card id to recover out of a grant's source string.
+                if (row.Item != null && row.Item.StartsWith(CardItemPrefix, StringComparison.Ordinal))
                 {
                     string cardId = row.Item.Substring(CardItemPrefix.Length);
-                    awards.Add(new PackSlotAward(cardId, RarityOf(cardId), false, 0, PackUpgrade.None));
+                    awards.Add(new PackSlotAward(cardId, RarityOf(cardId), PackUpgrade.None));
                 }
             }
             return awards;
@@ -318,22 +303,9 @@ namespace Emberfall.Net.Server.Accounts
         private Rarity RarityOf(string cardId)
             => !string.IsNullOrEmpty(cardId) && _cards.TryGet(cardId, out CardDefinition def) ? def.Rarity : Rarity.COMMON;
 
-        /// <summary>
-        /// A shard row's <c>source</c> carries the card that was duplicated:
-        /// <c>pack_open:pack.emberfall:emberward_ember_acolyte</c>.
-        ///
-        /// <para>The shard row's <c>item</c> has to be the currency (that is what a balance sums), so
-        /// there is nowhere else for the card id to go — and without it a replayed open could report the
-        /// shards but not what dissolved into them. Attribution is exactly what <c>source</c> is for.</para>
-        /// </summary>
-        private static string DupeSource(string packId, string cardId) => GrantSource + ":" + packId + ":" + cardId;
-
-        private static string DupeCardIdFromSource(string? source)
-        {
-            if (string.IsNullOrEmpty(source)) return "";
-            int lastColon = source!.LastIndexOf(':');
-            return lastColon >= 0 && lastColon + 1 < source.Length ? source.Substring(lastColon + 1) : "";
-        }
+        // DupeSource / DupeCardIdFromSource lived here to attribute a shard row to the card that
+        // dissolved into it. A pack no longer dissolves anything (Sam, 2026-08-12), so a pack open writes
+        // exactly one row shape — a card grant — and the card id is in the row's item.
 
         private static bool Contains(IReadOnlyList<EntitlementGrant> history, string txnId)
         {

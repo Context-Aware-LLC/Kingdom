@@ -70,10 +70,13 @@ namespace Emberfall.Core.Collection
     /// the full-pool alpha the game runs today. An <i>empty but present</i> record is a different thing
     /// and means what it says: this player owns nothing, and every deck they hold is a draft.</para>
     ///
-    /// <para><b>Why not seed an absent record with a starter grant.</b> Because what a new account starts
-    /// out owning is a product decision nobody has made, and inventing one here would bake it into the
-    /// persistence layer where it is invisible. The absent state is honest about not knowing; the day a
-    /// grant path writes this file, L6 starts constraining that account with no further change here.</para>
+    /// <para><b>The absence is also the once-only key for the starter grant</b> (Sam, 2026-08-12 —
+    /// <see cref="OnboardingGrant"/>). What a new account starts out owning is no longer an open product
+    /// decision, but the answer still does not live here: this interface stores a record, it does not
+    /// decide one. <see cref="OnboardingGrant.IsDue"/> reads the null, and the Save that follows is what
+    /// marks the account granted — so there is no first-run flag and no extra facet file. Note the
+    /// consequence: an <i>empty but present</i> record is a granted account that spent everything, and is
+    /// correctly never re-granted, while an absent one is granted on sight.</para>
     ///
     /// <para><b>No Delete.</b> Same shape as <see cref="IProfileStore"/> and for the same reason: there
     /// is one record per scope, so there is nothing to enumerate, and clearing it is a Save of an empty

@@ -525,3 +525,204 @@
 .chrome-input > .unity-base-text-field__input:focus {
     -unity-background-image-tint-color: rgb(255, 239, 211);
 }
+
+/* ---------- Crafting modal (GH#157 Render / GH#158 Reduce) ----------
+ *
+ * Declared once, used by both modes. Bound by CraftModal, opened by CollectionController.
+ *
+ * Both the scrim and the panel are position: absolute against the plate root and both are hidden
+ * at rest by an inline display written from code, not from here — CraftModal.Close() is the only
+ * writer, and a display rule in this file would fight it. What lives here is what they look like
+ * once shown.
+ *
+ * Percentages throughout, per the sizing ruling, with ONE exception: the card face is a fixed
+ * 340x477. UI Toolkit has no aspect-ratio property, so a card's 276:387 can only be held by giving
+ * both axes — the same reason CardWall.TileWidth is a fixed 276 and a contract rather than a
+ * percentage. Change one of those two numbers and you must change the other.
+ */
+
+.craft-scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(11, 14, 19, 0.82);
+}
+
+.craft-modal {
+    position: absolute;
+    left: 10%;
+    top: 8%;
+    width: 80%;
+    height: 84%;
+    background-color: var(--surface-1);
+    border-radius: var(--space-3);
+    padding: var(--space-6);
+    border-width: 1px;
+    border-color: var(--surface-3);
+}
+
+.craft-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-6);
+}
+.craft-heading {
+    flex-grow: 1;
+}
+.craft-name {
+    font-size: var(--type-h1);
+    color: var(--ink-1);
+    -unity-font-style: bold;
+}
+.craft-rarity {
+    font-size: var(--type-label);
+    color: var(--rarity-common);
+    -unity-font-style: bold;
+}
+
+/* The rarity accent is the fastest read of what a card costs to make — the word and the price are
+ * saying the same thing, so they are coloured the same. CraftModal swaps exactly one of these on. */
+.craft-rarity--common {
+    color: var(--rarity-common);
+}
+.craft-rarity--rare {
+    color: var(--rarity-rare);
+}
+.craft-rarity--epic {
+    color: var(--rarity-epic);
+}
+.craft-rarity--legendary {
+    color: var(--rarity-legendary);
+}
+
+/* The balance. #159 put this on the main menu's top edge; this is the same number at the moment it
+ * is about to be spent, which is the one place a player actually needs it. */
+.craft-wallet {
+    flex-direction: row;
+    align-items: flex-end;
+    margin-right: var(--space-6);
+}
+.craft-wallet-value {
+    font-size: var(--type-h2);
+    color: var(--accent);
+    -unity-font-style: bold;
+}
+.craft-wallet-word {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-left: var(--space-1);
+    margin-bottom: var(--space-1);
+}
+
+.craft-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.craft-cardpane {
+    align-items: center;
+    margin-right: var(--space-8);
+}
+.craft-card-face {
+    width: 340px;
+    height: 477px;
+    background-color: var(--surface-3);   /* shows through until the bake resolves */
+    border-radius: var(--space-2);
+    -unity-background-scale-mode: scale-to-fit;
+}
+.craft-owned {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    margin-top: var(--space-3);
+}
+
+/* The two directions, stacked. Equal flex so neither reads as the primary one: Render and Reduce
+ * are opposite moves of the same standing, not an action and its footnote. */
+.craft-halves {
+    flex-grow: 1;
+    justify-content: space-between;
+}
+.craft-half {
+    flex-grow: 1;
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    padding: var(--space-6);
+    margin-bottom: var(--space-4);
+    justify-content: center;
+}
+.craft-half-title {
+    font-size: var(--type-h2);
+    color: var(--ink-1);
+    -unity-font-style: bold;
+}
+.craft-half-blurb {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-bottom: var(--space-4);
+    white-space: normal;
+}
+.craft-price {
+    flex-direction: row;
+    align-items: flex-end;
+}
+.craft-price-value {
+    font-size: var(--type-display);
+    color: var(--accent);
+    -unity-font-style: bold;
+}
+.craft-price-word {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    margin-left: var(--space-2);
+    margin-bottom: var(--space-2);
+}
+.craft-half-note {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    margin-top: var(--space-1);
+    margin-bottom: var(--space-4);
+    white-space: normal;
+}
+
+/* A half you cannot take right now. It stays READABLE — the price and the reason are exactly what
+ * the player came to find out, and a half that dimmed to nothing would answer "can I break this
+ * down?" with silence. This is a per-CARD fact like the wall's own treatments, never a mode. */
+.craft-half--dead {
+    opacity: 0.55;
+}
+
+.craft-action {
+    height: 15%;
+    min-height: 44px;             /* touch target floor; mobile-first */
+    background-color: var(--accent);
+    color: var(--surface-0);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    border-radius: var(--space-2);
+    border-width: 0;
+}
+.craft-action:hover {
+    background-color: var(--warning);
+}
+.craft-action:disabled {
+    background-color: var(--surface-3);
+    color: var(--ink-2);
+}
+
+/* Reduce is destructive, so it does not get the ember-gold CTA treatment Render has. It is a real
+ * button, not a warning — the confirmation this needs is a surface of its own and is not built. */
+.craft-action--ghost {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--ink-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+}
+.craft-action--ghost:hover {
+    background-color: var(--surface-3);
+}
+.craft-action--ghost:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--ink-2);
+}
