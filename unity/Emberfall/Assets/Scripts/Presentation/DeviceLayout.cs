@@ -15,7 +15,7 @@ namespace Emberfall.Presentation
     /// <para>RETIREMENT TRIGGER (NOR-358): if you unlock portrait autorotation
     /// (ProjectSettings.asset <c>allowedAutorotateToPortrait</c>), revisit all three
     /// UI PanelSettings assets — Deckbuilder, MainMenu, MatchSettings. They currently use
-    /// <c>ScaleWithScreenSize</c> (<c>m_ScaleMode: 1</c>) with <c>m_Match: 1</c> (pure height
+    /// <c>ScaleWithScreenSize</c> (<c>m_ScaleMode: 2</c>) with <c>m_Match: 1</c> (pure height
     /// axis). That choice follows from the board being landscape-only: height is the stable axis
     /// across all supported aspects. Portrait support makes height unstable; the match axis must
     /// be re-evaluated before any portrait build ships.</para>
