@@ -269,6 +269,12 @@ namespace Emberfall.Net.Server.Transport
                 }
                 if (deckFrame is null)
                 {
+                    // The reason has to be logged HERE. Kestrel only ever reports "the application
+                    // aborted the connection", and the client discards the WebSocket close status —
+                    // so without this line a refusal is invisible from BOTH ends and reads to the
+                    // player as "Forfeited". Cost hours on 2026-08-21.
+                    Console.Error.WriteLine("[gate] refused player_id={0}: deck timeout after {1}ms",
+                                            account.Value, _opts.HelloTimeoutMs);
                     conn.Close(1008, "deck timeout");
                     await conn.PumpTask;
                     return;
@@ -276,6 +282,9 @@ namespace Emberfall.Net.Server.Transport
                 var deckRes = ProtocolCodec.Decode(deckFrame);
                 if (!deckRes.Ok || deckRes.Message is not SubmitDeckMsg deckMsg)
                 {
+                    Console.Error.WriteLine("[gate] refused player_id={0}: expected deck, got {1}",
+                                            account.Value,
+                                            deckRes.Ok ? deckRes.Message?.GetType().Name ?? "null" : "undecodable frame");
                     conn.Close(1008, "expected deck");
                     await conn.PumpTask;
                     return;
@@ -283,16 +292,20 @@ namespace Emberfall.Net.Server.Transport
                 var outcome = DeckSubmission.Validate(deckMsg, _db, AccountOwnedCounts.For(deckOwnerAccount));
                 if (!outcome.Accepted)
                 {
+                    Console.Error.WriteLine("[gate] refused player_id={0}: deck rejected: {1}",
+                                            account.Value, outcome.Reason);
                     conn.Close(1008, CloseReason("deck rejected: " + outcome.Reason));
                     await conn.PumpTask;
                     return;
                 }
+                Console.Error.WriteLine("[gate] accepted deck player_id={0}", account.Value);
                 submitted = outcome.Seat;
             }
 
             Seating? seating = await PairAsync(conn, account, checkedName, submitted, ct);
             if (seating is null)
             {
+                Console.Error.WriteLine("[gate] refused player_id={0}: no seat available", account.Value);
                 conn.Close(1013, "server full");
                 await conn.PumpTask;
                 return;
