@@ -24,6 +24,7 @@ namespace Emberfall.Editor
         const string ArtRoot = "Assets/Art/";
         const string CardsRoot = "Assets/Art/Cards/";
         const string HeroRoot = "Assets/Art/Hero/";
+        const string PackArtRoot = "Assets/Art/Shop/Packs/";
         const string BackgroundsRoot = "Assets/Art/Backgrounds/";
         const string OrbsRoot = "Assets/Art/Orbs/";
         const string UiRoot = "Assets/Art/UI/";
@@ -44,8 +45,6 @@ namespace Emberfall.Editor
             LeafTreatments = new(System.StringComparer.OrdinalIgnoreCase)
             {
                 ["background"] = ApplyBackground,
-                ["packs"] = ApplyIllustration, // card pack art is a card illustration, not a background
-
             };
 
         void OnPreprocessTexture()
@@ -54,10 +53,19 @@ namespace Emberfall.Editor
             var path = assetPath.Replace('\\', '/');
             if (!path.StartsWith(ArtRoot)) return;
 
-            // Card illustrations and hero portraits win outright. These are setId-keyed and feed
-            // the shipped card pipeline, so a folder somebody happens to name "background" must
-            // not be able to reclassify them.
-            if (path.StartsWith(CardsRoot) || path.StartsWith(HeroRoot))
+            // Card illustrations, hero portraits and booster packaging win outright. These are
+            // setId-keyed and feed the shipped card pipeline, so a folder somebody happens to name
+            // "background" must not be able to reclassify them.
+            //
+            // Pack art is a ROOT rule, not a leaf one, and that distinction cost an evening on
+            // 2026-08-21. It was `["packs"] = ApplyIllustration` — correct while the files sat
+            // directly in Packs/, dead the moment they were filed by set into Packs/<setId>/,
+            // because the leaf is then the SET name. The failure is invisible in the worst way:
+            // a move carries the existing .meta, so art imported under the old rule keeps correct
+            // settings forever and only NEWLY DROPPED art breaks. It surfaces as a set whose
+            // sprites silently fail to register with Addressables — AddFolderSprites searches
+            // t:Sprite, and an illustration that imported as a plain texture is not one.
+            if (path.StartsWith(CardsRoot) || path.StartsWith(HeroRoot) || path.StartsWith(PackArtRoot))
             {
                 ApplyIllustration(importer);
                 return;

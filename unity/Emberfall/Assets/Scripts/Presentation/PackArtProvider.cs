@@ -86,18 +86,12 @@ namespace Emberfall.Presentation
 
         private static PackArtManifest LoadManifest(string setId)
         {
-            TextAsset asset = null;
-            try
-            {
-                var handle = UnityEngine.AddressableAssets.Addressables
-                    .LoadAssetAsync<TextAsset>($"pack_art/{setId}.manifest");
-                asset = handle.WaitForCompletion();
-            }
-            catch (Exception)
-            {
-                // Not in the catalog. Expected in the Editor before a groups run, and expected in a
-                // build for a set whose art has not shipped — the fallback below decides which.
-            }
+            // ASK BEFORE FETCHING. LoadAssetAsync on an absent key throws InvalidKeyException —
+            // and Addressables LOGS it as an error first, so a catch cannot keep it out of the
+            // console. In the Editor the miss is the NORMAL path (AssetDatabase serves authoring
+            // before any content build), which turned an expected fallback into a red error every
+            // session. Checking locations first is the only way to make the miss silent.
+            TextAsset asset = LoadAddressable<TextAsset>($"pack_art/{setId}.manifest");
 
 #if UNITY_EDITOR
             if (asset == null)
@@ -116,18 +110,29 @@ namespace Emberfall.Presentation
             }
         }
 
-        private static Sprite LoadSprite(string setId, string fileName)
+        /// <summary>Load an Addressable, or null if the key is not in the catalog — without the
+        /// console error a missing key otherwise produces. See LoadManifest for why that matters.</summary>
+        private static T LoadAddressable<T>(string key) where T : UnityEngine.Object
         {
             try
             {
-                var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<Sprite>($"pack_art/{fileName}");
-                Sprite loaded = handle.WaitForCompletion();
-                if (loaded != null) return loaded;
+                var locations = UnityEngine.AddressableAssets.Addressables
+                    .LoadResourceLocationsAsync(key, typeof(T)).WaitForCompletion();
+                if (locations == null || locations.Count == 0) return null;
+                return UnityEngine.AddressableAssets.Addressables
+                    .LoadAssetAsync<T>(locations[0]).WaitForCompletion();
             }
             catch (Exception)
             {
-                // Fall through to the Editor path.
+                // No catalog at all (Editor before a build). Callers fall back to AssetDatabase.
+                return null;
             }
+        }
+
+        private static Sprite LoadSprite(string setId, string fileName)
+        {
+            Sprite loaded = LoadAddressable<Sprite>($"pack_art/{fileName}");
+            if (loaded != null) return loaded;
 
 #if UNITY_EDITOR
             // FindAssets matches loosely, so require the exact file name — the same guard

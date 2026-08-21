@@ -1,0 +1,24 @@
+{
+  "pieces": [
+    {
+      "id": "rekindling_tessalt",
+      "file": "pack_rk_01_tessalt_cogbound",
+      "title": "Cogbound"
+    },
+    {
+      "id": "rekindling_kira",
+      "file": "pack_rk_02_kira_blade_of_shadows",
+      "title": "Blade of Shadows"
+    },
+    {
+      "id": "rekindling_duras",
+      "file": "pack_rk_03_duras_ironmount",
+      "title": "Ironmount"
+    },
+    {
+      "id": "rekindling_zael",
+      "file": "pack_rk_04_zael_struck_sky",
+      "title": "Struck Sky"
+    }
+  ]
+}
