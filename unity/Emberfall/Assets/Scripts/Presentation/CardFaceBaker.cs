@@ -173,6 +173,17 @@ namespace Emberfall.Presentation
         // would put one stack frame per card between the first Bake and the last. The guard turns
         // that into a loop: an inner completion clears _awaitingArt and returns, and the outer
         // while picks up the next card.
+        //
+        // ONE CARD'S BAKE MUST NOT COST THE WALL (#230). The pump usually runs from inside an
+        // Addressables completion callback, so a throw here does not land in a caller that can
+        // deal with it — it unwinds into ResourceManager.Update, the queue stops being pumped by
+        // anything, and every remaining tile stays blank forever with no further clue. That is a
+        // catastrophic response to one card failing to bind. So each card is bounded: it logs,
+        // delivers no face, and the wall carries on. The bug this was written for was
+        // WaitForCompletion re-entering ResourceManager.Update (see AddressableUiSpriteProvider,
+        // which now prewarms so it cannot happen on that path) — but the guard is deliberately
+        // not specific to it, because the next lazily-resolved Addressable on the card-build path
+        // arms the same trap and nothing would report it.
         private void PumpQueue()
         {
             if (_pumping) return;
@@ -180,7 +191,21 @@ namespace Emberfall.Presentation
             try
             {
                 while (_queue.Count > 0 && !_awaitingArt)
-                    BeginBake(_queue.Dequeue());
+                {
+                    CardDefinition next = _queue.Dequeue();
+                    try
+                    {
+                        BeginBake(next);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[CardFaceBaker] bake of '{next?.Id}' threw and was skipped; " +
+                                       $"its tile will be blank. {ex}");
+                        // BeginBake may have died after arming the wait, and no callback is coming.
+                        _awaitingArt = false;
+                        if (next != null) Deliver(next.Id, null);
+                    }
+                }
             }
             finally { _pumping = false; }
         }
@@ -209,31 +234,46 @@ namespace Emberfall.Presentation
             // once after we were destroyed — would otherwise photograph the rig out of turn.
             if (!_waiting.ContainsKey(def.Id) || _rig == null) return;
 
-            // A null sprite is a legitimate outcome — art not generated yet — and still gets a
-            // face. SetArt hides the illustration quad and the frame reads as an empty window.
-            _rig.SetArt(sprite);
+            // Bounded for the same reason the pump is (#230): nothing but this callback advances
+            // the queue, so a throw between here and _awaitingArt = false would wedge the wall
+            // permanently. The finally is the queue's only guarantee of forward progress.
+            try
+            {
+                // A null sprite is a legitimate outcome — art not generated yet — and still gets a
+                // face. SetArt hides the illustration quad and the frame reads as an empty window.
+                _rig.SetArt(sprite);
 
-            RenderTexture rt = CardSnapshot.Capture(_rigVisual, faceWidth, faceHeight);
-            if (rt != null)
-            {
-                _cache[def.Id] = rt;
-            }
-            else
-            {
-                // Distinguish permanent (missing layer) from transient (RT alloc / memory pressure).
-                // Latch only on the permanent case — an alloc failure should not poison every card
-                // that follows; the next attempt might succeed once memory is available again.
-                // Capture already logged the specific reason.
-                if (LayerMask.NameToLayer(CardSnapshot.CaptureLayerName) < 0)
-                    _captureFailed = true;
+                RenderTexture rt = CardSnapshot.Capture(_rigVisual, faceWidth, faceHeight);
+                if (rt != null)
+                {
+                    _cache[def.Id] = rt;
+                }
                 else
-                    Debug.LogWarning($"[CardFaceBaker] capture returned null for '{def.Id}' " +
-                                     "(RT alloc failure — see above); tile will be blank.");
+                {
+                    // Distinguish permanent (missing layer) from transient (RT alloc / memory pressure).
+                    // Latch only on the permanent case — an alloc failure should not poison every card
+                    // that follows; the next attempt might succeed once memory is available again.
+                    // Capture already logged the specific reason.
+                    if (LayerMask.NameToLayer(CardSnapshot.CaptureLayerName) < 0)
+                        _captureFailed = true;
+                    else
+                        Debug.LogWarning($"[CardFaceBaker] capture returned null for '{def.Id}' " +
+                                         "(RT alloc failure — see above); tile will be blank.");
+                }
+
+                Deliver(def.Id, rt);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[CardFaceBaker] '{def.Id}' failed after its art resolved; " +
+                               $"its tile will be blank. {ex}");
+                Deliver(def.Id, null);   // no-op if Deliver above already ran
+            }
+            finally
+            {
+                _awaitingArt = false;
             }
 
-            Deliver(def.Id, rt);
-
-            _awaitingArt = false;
             PumpQueue();
         }
 
