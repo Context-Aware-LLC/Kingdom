@@ -114,11 +114,19 @@ namespace Emberfall.Tools.OddsDisclosure
             sb.AppendLine("and it becomes available again. Once you own every Legendary in the pairing,");
             sb.AppendLine("further Legendary slots can only repeat one — they still give you the card.");
             sb.AppendLine();
-            sb.AppendLine("**Every other rarity has no duplicate protection at all.** Common, Rare and Epic");
-            sb.AppendLine("slots are drawn independently from all cards of that rarity in the pack's pool.");
-            sb.AppendLine("Owning a card does not lower your chance of being given it again, and a pack");
-            sb.AppendLine("does not steer toward cards you are missing. A pack can hand you a third copy of");
-            sb.AppendLine("a Common while Commons you have never seen sit in the same pool.");
+            sb.AppendLine("**Common, Rare and Epic slots lean toward cards you are missing, but nothing is");
+            sb.AppendLine("off the table.** Within a slot's rarity, every card can be drawn; how likely it is");
+            sb.AppendLine("depends on how many copies you already hold:");
+            sb.AppendLine();
+            sb.AppendLine("| Copies you hold                | Relative chance |");
+            sb.AppendLine("|--------------------------------|-----------------|");
+            sb.AppendLine($"| None                           | {BoosterPackOpener.DrawWeights.Unowned,15} |");
+            sb.AppendLine($"| Some, below the deck limit     | {BoosterPackOpener.DrawWeights.PartiallyOwned,15} |");
+            sb.AppendLine($"| At or above the deck limit     | {BoosterPackOpener.DrawWeights.AtOrOverCap,15} |");
+            sb.AppendLine();
+            sb.AppendLine("These are relative weights, not percentages. A card you already hold at the deck");
+            sb.AppendLine("limit is still reachable — it is simply outweighed by cards you have never seen.");
+            sb.AppendLine("Copies handed to you earlier in the same pack count toward this too.");
             sb.AppendLine();
             sb.AppendLine("**Nothing a pack gives you is destroyed or converted.** Copies beyond the");
             sb.AppendLine($"{DeckValidator.MaxCopies(Rarity.COMMON)} a deck may run "

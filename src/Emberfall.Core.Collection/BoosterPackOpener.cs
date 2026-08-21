@@ -112,12 +112,11 @@ namespace Emberfall.Core.Collection
     /// a golden fixture pin it and what lets the server resolve an open authoritatively (ADR-0004: the
     /// client renders the result, it never speculates one).
     ///
-    /// <para><b><c>owned</c> influences LEGENDARY slots and nothing else.</b> Common, rare and epic
-    /// slots draw uniformly from their rarity bucket, so two players on the same seed and index get
-    /// the same cards in those slots whatever their collections look like. A legendary slot skips
-    /// legendaries the player already holds (Sam, 2026-08-20) — see <see cref="LegendaryEligible"/> —
-    /// so two players on the same seed CAN open different legendaries. That is the only place a
-    /// collection changes a pack, and it is why the parameter is not a leftover.</para>
+    /// <para><b><c>owned</c> is a real input to every slot.</b> Cards are weighted by how many copies
+    /// the player holds (<see cref="DrawWeights"/>), and legendaries they already hold are removed
+    /// outright (<see cref="LegendaryEligible"/>), so two players on the same seed and index open
+    /// DIFFERENT packs when their collections differ. Determinism is per collection-state, not
+    /// global — <c>(pack, pool, owned, pity, seed, packIndex)</c> is the full key.</para>
     ///
     /// <para><b>The RNG call order is the contract, not an implementation detail.</b> The pack draws
     /// exactly <c>CardCount</c> rarities and then exactly <c>CardCount</c> card picks, in slot order.
@@ -183,19 +182,25 @@ namespace Emberfall.Core.Collection
             ApplyGuarantees(rarities, upgrades, byRarity, pity);
 
             // ── phase 2: CardCount card picks, one RNG value each ────────────────────────────
-            // COMMON, RARE and EPIC slots draw UNIFORMLY from every card of that rarity in the pool.
-            // What you already hold does not change what you can be handed, so a pack can give you a
-            // third copy of a common while commons you have never seen sit beside it in the pool.
+            // A slot draws from its whole rarity bucket, but NOT uniformly: each card is weighted by
+            // how many copies the player already holds (Sam, 2026-08-20). See DrawWeights. Nothing is
+            // excluded — a third copy of a common is still reachable, just heavily out-weighted by
+            // the commons you have never seen.
             //
-            // LEGENDARY is the one exception (Sam, 2026-08-20): a legendary you already hold is
-            // removed from its own slot's draw. See LegendaryEligible for the reasoning and the two
-            // ways it fails open.
+            // LEGENDARY is narrowed BEFORE weighting: a legendary already in the collection is removed
+            // outright rather than merely out-weighted, because its cap is 1 and the second copy is
+            // the first that can never be played. Within what survives that filter every card is
+            // unowned, so the weighting is a no-op there and the draw is uniform — which is exactly
+            // the behaviour LegendaryEligible describes. Folding legendary into the weights instead is
+            // a one-line change: drop the filter and AtOrOverCap catches it.
             //
-            // NOR-109 §6's full "new cards before dupes" preference — the same rule across every
-            // rarity — stays commented out below rather than deleted. The legendary carve-out IS the
-            // less generous form it was kept for; a further widening would start from that block.
+            // Copies handed out earlier in THIS pack count too, so one pack cannot deal three copies
+            // of a common at full weight.
+            //
+            // NOR-109 §6's original all-or-nothing preference stays commented out below. This weighted
+            // form supersedes it; that block is kept only as the record of what the hard version was.
             var awards = new List<PackSlotAward>(pack.CardCount);
-            var legendariesThisPack = new HashSet<string>(StringComparer.Ordinal);
+            var awardedThisPack = new Dictionary<string, int>(StringComparer.Ordinal);
 
             for (int i = 0; i < pack.CardCount; i++)
             {
@@ -203,11 +208,11 @@ namespace Emberfall.Core.Collection
                 var candidates = byRarity[rarity];
 
                 var draw = rarity == Rarity.LEGENDARY
-                    ? LegendaryEligible(candidates, owned, legendariesThisPack)
+                    ? LegendaryEligible(candidates, owned, awardedThisPack)
                     : candidates;
 
-                var picked = draw[rng.NextInt(draw.Count)];
-                if (rarity == Rarity.LEGENDARY) legendariesThisPack.Add(picked.Id);
+                var picked = PickWeighted(draw, rarity, owned, awardedThisPack, rng);
+                awardedThisPack[picked.Id] = EffectiveOwnedDelta(awardedThisPack, picked.Id) + 1;
                 awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
 
                 // ── DISABLED: NOR-109 §6 new-cards-before-dupes (Sam, 2026-08-20) ────────────
@@ -361,6 +366,72 @@ namespace Emberfall.Core.Collection
             => byRarity.TryGetValue(r, out var bucket) && bucket.Count > 0;
 
         /// <summary>
+        /// How heavily one card is weighted in its slot's draw, by how many copies the player already
+        /// holds (Sam, 2026-08-20). <b>Relative weights, not probabilities</b> — what matters is the
+        /// ratio between them, so they can be retuned without touching anything else.
+        ///
+        /// <para><b>Nothing is ever zero.</b> A card you are at the deck cap on is still reachable,
+        /// just heavily out-weighted. That is the deliberate difference from the hard NOR-109 §6
+        /// filter this replaces: a pack that can never repeat becomes predictable, and once a player
+        /// nears completion a hard filter turns the last few packs into a guaranteed checklist.</para>
+        ///
+        /// <para>The middle band is why this is not just "owned or not". Holding one of a two-copy
+        /// card is real progress but the second copy is what makes it playable, so it is nudged down
+        /// rather than pushed to the back — a smaller step than the one at the cap.</para>
+        /// </summary>
+        public static class DrawWeights
+        {
+            /// <summary>Never seen it. The baseline every other weight is a fraction of.</summary>
+            public const int Unowned = 100;
+
+            /// <summary>Holding some, but fewer than the deck cap — a slight reduction.</summary>
+            public const int PartiallyOwned = 70;
+
+            /// <summary>At or past the deck cap. Greatly reduced, deliberately not eliminated.</summary>
+            public const int AtOrOverCap = 30;
+
+            public static int For(int copiesOwned, int copyCap)
+                => copiesOwned <= 0 ? Unowned
+                 : copiesOwned < copyCap ? PartiallyOwned
+                 : AtOrOverCap;
+        }
+
+        /// <summary>
+        /// Pick one card from <paramref name="candidates"/>, weighted by <see cref="DrawWeights"/>.
+        ///
+        /// <para><b>Exactly one <see cref="DeterministicRandom.NextInt"/> call, like the uniform draw
+        /// it replaces.</b> One roll into the summed weight, then a walk down the cumulative total —
+        /// the call COUNT is part of the determinism contract, so a weighted pick must not consume a
+        /// second value or the whole stream shifts for every later slot.</para>
+        ///
+        /// <para>Weights are integers because the RNG is integer-only (ADR-0003). The sum is bounded
+        /// by <c>candidates.Count * Unowned</c> — a few thousand for the largest rarity bucket — so it
+        /// cannot approach overflow.</para>
+        /// </summary>
+        private static CardDefinition PickWeighted(IReadOnlyList<CardDefinition> candidates, Rarity rarity,
+                                                   IOwnedCardCounts owned, Dictionary<string, int> awardedThisPack,
+                                                   DeterministicRandom rng)
+        {
+            int cap = DeckValidator.MaxCopies(rarity);
+
+            int total = 0;
+            for (int i = 0; i < candidates.Count; i++)
+                total += DrawWeights.For(EffectiveOwned(owned, awardedThisPack, candidates[i].Id), cap);
+
+            int roll = rng.NextInt(total);
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                roll -= DrawWeights.For(EffectiveOwned(owned, awardedThisPack, candidates[i].Id), cap);
+                if (roll < 0) return candidates[i];
+            }
+
+            // Unreachable: the weights summed to `total` and every one is >= AtOrOverCap > 0, so the
+            // walk always crosses zero. Returning the last card rather than throwing keeps a rounding
+            // surprise from taking down an open.
+            return candidates[candidates.Count - 1];
+        }
+
+        /// <summary>
         /// The legendaries a legendary slot may actually award: those the player does not already
         /// hold, minus any this same pack has already handed over (Sam, 2026-08-20).
         ///
@@ -382,7 +453,7 @@ namespace Emberfall.Core.Collection
         /// thing the slot can be, and it is still a card, because a pack converts nothing to shards.</para>
         /// </summary>
         private static IReadOnlyList<CardDefinition> LegendaryEligible(
-            List<CardDefinition> candidates, IOwnedCardCounts owned, HashSet<string> awardedThisPack)
+            List<CardDefinition> candidates, IOwnedCardCounts owned, Dictionary<string, int> awardedThisPack)
         {
             int limit = DeckValidator.MaxCopies(Rarity.LEGENDARY);
 
@@ -390,23 +461,26 @@ namespace Emberfall.Core.Collection
             for (int i = 0; i < candidates.Count; i++)
             {
                 var def = candidates[i];
-                if (awardedThisPack.Contains(def.Id)) continue;
-                if (owned != null && owned.CopiesOwned(def.Id) >= limit) continue;
-                eligible.Add(def);
+                if (EffectiveOwned(owned, awardedThisPack, def.Id) < limit) eligible.Add(def);
             }
 
             return eligible.Count > 0 ? eligible : (IReadOnlyList<CardDefinition>)candidates;
         }
 
-        // DISABLED with the new-cards-before-dupes preference in the pick phase (Sam, 2026-08-20).
-        // The LEGENDARY half of it is live again as LegendaryEligible above; these two helpers are the
-        // all-rarities version and stay off. Uncomment both with that block; nothing else calls them.
-        //
-        //   private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
-        //       => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
-        //
-        //   private static int EffectiveOwnedDelta(Dictionary<string, int> thisPack, string cardId)
-        //       => thisPack.TryGetValue(cardId, out int n) ? n : 0;
+        /// <summary>
+        /// Copies of a card the player effectively holds for draw purposes: what the collection says,
+        /// plus anything this same pack has already handed over.
+        ///
+        /// <para>A null <paramref name="owned"/> reads as zero — ownership UNKNOWN, so nothing is
+        /// down-weighted. That is the same reading <see cref="DeckValidator"/> gives a null, and it
+        /// means an unauthenticated or unprojected caller gets the old uniform draw rather than a
+        /// silently skewed one.</para>
+        /// </summary>
+        private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
+            => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
+
+        private static int EffectiveOwnedDelta(Dictionary<string, int> thisPack, string cardId)
+            => thisPack.TryGetValue(cardId, out int n) ? n : 0;
 
         private static IReadOnlyList<Rarity> ToRarityList(Rarity[] rarities)
         {

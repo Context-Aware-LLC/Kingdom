@@ -13,10 +13,10 @@ These are the odds applied to each card slot individually, before guarantees.
 
 | Rarity    | Chance per slot |
 |-----------|----------------|
-| Common    | 71.5%          |
-| Rare      | 23.0%          |
-| Epic      | 4.5%           |
-| Legendary | 1.0%           |
+| Common    | 64.0%          |
+| Rare      | 26.5%          |
+| Epic      | 8.0%           |
+| Legendary | 1.5%           |
 
 ## Guarantees
 
@@ -43,11 +43,19 @@ in your collection it is taken out of your Legendary draws entirely. Reduce it
 and it becomes available again. Once you own every Legendary in the pairing,
 further Legendary slots can only repeat one — they still give you the card.
 
-**Every other rarity has no duplicate protection at all.** Common, Rare and Epic
-slots are drawn independently from all cards of that rarity in the pack's pool.
-Owning a card does not lower your chance of being given it again, and a pack
-does not steer toward cards you are missing. A pack can hand you a third copy of
-a Common while Commons you have never seen sit in the same pool.
+**Common, Rare and Epic slots lean toward cards you are missing, but nothing is
+off the table.** Within a slot's rarity, every card can be drawn; how likely it is
+depends on how many copies you already hold:
+
+| Copies you hold                | Relative chance |
+|--------------------------------|-----------------|
+| None                           |             100 |
+| Some, below the deck limit     |              70 |
+| At or above the deck limit     |              30 |
+
+These are relative weights, not percentages. A card you already hold at the deck
+limit is still reachable — it is simply outweighed by cards you have never seen.
+Copies handed to you earlier in the same pack count toward this too.
 
 **Nothing a pack gives you is destroyed or converted.** Copies beyond the
 2 a deck may run (1 for a Legendary) stay in

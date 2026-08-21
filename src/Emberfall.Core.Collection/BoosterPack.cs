@@ -47,10 +47,16 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
-        /// The shipped table (NOR-109 §3, SOURCE OF TRUTH — do not retune here): Common 71.5%,
-        /// Rare 23%, Epic 4.5%, Legendary 1%.
+        /// The shipped table (NOR-109 §3, SOURCE OF TRUTH — do not retune here): Common 64%,
+        /// Rare 26.5%, Epic 8%, Legendary 1.5%.
+        ///
+        /// <para>Retuned by Sam 2026-08-20 from 715/230/45/10. Epic went 4.5% -> 8% (+3.5pp),
+        /// Rare 23% -> 26.5% (+3.5pp), Legendary 1% -> 1.5% (+0.5pp), the whole 7.5pp coming off
+        /// Common, which drops 71.5% -> 64%. Epic was the lever
+        /// that opened it: at 4.5% a player broadened too slowly across a 27-card epic tier while
+        /// epic pity kept forcing slots that landed on the handful they already held.</para>
         /// </summary>
-        public static readonly PackRarityOdds Default = new PackRarityOdds(715, 230, 45, 10);
+        public static readonly PackRarityOdds Default = new PackRarityOdds(640, 265, 80, 15);
 
         public int PermilleOf(Rarity rarity) => rarity switch
         {
@@ -83,7 +89,6 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// What a duplicate past the collection limit converts into (NOR-109 §6).
     ///
     /// <para><b>LOCKED BY SAM, 2026-08-02 (NOR-109).</b> An economy call, not an engineering one: the
     /// mechanism (a dupe past <see cref="DeckValidator.MaxCopies"/> becomes shards instead of a card) is
