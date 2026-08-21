@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 266,
+  "totalCards": 267,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,9 +22,9 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 266,
+    "total": 267,
     "typeSplit": {
-      "MINION": 175,
+      "MINION": 176,
       "SPELL": 71,
       "WEAPON": 12,
       "HERO_POWER": 8
@@ -35,9 +35,9 @@
       "SHROUD": 11,
       "VENOM": 9,
       "AEGIS": 8,
+      "OVERWHELM": 8,
       "REKINDLE": 8,
       "DOUBLESTRIKE": 7,
-      "OVERWHELM": 7,
       "VANGUARD": 6,
       "LIFEDRAIN": 5,
       "ARCANE_SURGE": 4,
@@ -64,7 +64,7 @@
       "1": 30,
       "2": 61,
       "3": 64,
-      "4": 47,
+      "4": 48,
       "5": 18,
       "6": 19,
       "7": 14,
@@ -74,7 +74,7 @@
     "rarityBreakdown": {
       "COMMON": 123,
       "RARE": 87,
-      "EPIC": 38,
+      "EPIC": 39,
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
@@ -85,7 +85,7 @@
       "SPIRIT": 12,
       "DRAGON": 5
     },
-    "minionCount": 175,
+    "minionCount": 176,
     "attackDistribution": {
       "0": 5,
       "1": 33,
@@ -93,7 +93,7 @@
       "3": 39,
       "4": 17,
       "5": 17,
-      "6": 13,
+      "6": 14,
       "7": 3,
       "10": 1
     },
@@ -102,7 +102,7 @@
       "2": 32,
       "3": 29,
       "4": 34,
-      "5": 26,
+      "5": 27,
       "6": 15,
       "7": 8,
       "8": 6,
@@ -112,9 +112,9 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 25,
+      "total": 26,
       "typeSplit": {
-        "MINION": 16,
+        "MINION": 17,
         "SPELL": 7,
         "WEAPON": 1,
         "HERO_POWER": 1
@@ -122,6 +122,7 @@
       "keywordFrequency": {
         "BULWARK": 3,
         "AEGIS": 1,
+        "OVERWHELM": 1,
         "SKIRMISH": 1,
         "VANGUARD": 1
       },
@@ -138,7 +139,7 @@
         "1": 3,
         "2": 4,
         "3": 8,
-        "4": 4,
+        "4": 5,
         "5": 1,
         "6": 1,
         "7": 1,
@@ -147,26 +148,27 @@
       "rarityBreakdown": {
         "COMMON": 11,
         "RARE": 9,
-        "EPIC": 3,
+        "EPIC": 4,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "CONSTRUCT": 15
       },
-      "minionCount": 16,
+      "minionCount": 17,
       "attackDistribution": {
         "1": 5,
         "2": 3,
         "3": 4,
         "4": 1,
         "5": 1,
-        "6": 2
+        "6": 3
       },
       "healthDistribution": {
         "1": 2,
         "2": 3,
         "3": 4,
         "4": 4,
+        "5": 1,
         "6": 1,
         "7": 1,
         "8": 1
@@ -4428,6 +4430,26 @@
       "collectible": true,
       "artId": "verdant_thorn_swarm",
       "sourceFile": "Emberfall.cards.json"
+    },
+    {
+      "id": "clock_nameless_bell",
+      "name": "Nameless Bell",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 6,
+      "health": 5,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "EPIC",
+      "keywords": [
+        "OVERWHELM"
+      ],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_nameless_bell",
+      "sourceFile": "Rekindling.cards.json"
     },
     {
       "id": "stone_heartstone_herald",

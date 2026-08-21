@@ -1,4 +1,19 @@
 [
+      {
+    "id": "clock_nameless_bell",
+    "name": "Nameless Bell",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 6,
+    "health": 5,
+    "class": "CLOCKWRIGHT",
+    "rarity": "EPIC",
+    "keywords": ["OVERWHELM"],
+   
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "clock_nameless_bell"
+  },
     {
     "id": "stone_heartstone_herald",
     "name": "Heartstone Herald",
