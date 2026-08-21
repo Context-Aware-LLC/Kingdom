@@ -109,11 +109,16 @@ namespace Emberfall.Tools.OddsDisclosure
             // dupe shield the code has never had at the strength a player would read into it.
             sb.AppendLine("## Duplicates");
             sb.AppendLine();
-            sb.AppendLine("**There is no duplicate protection.** Every slot is drawn independently from");
-            sb.AppendLine("all cards of its rarity in that pack's pool. Owning a card does not lower your");
-            sb.AppendLine("chance of being given it again, and a pack does not steer toward cards you are");
-            sb.AppendLine("missing. A pack can hand you a copy of something you already hold while cards");
-            sb.AppendLine("you have never seen sit in the same pool.");
+            sb.AppendLine("**Legendary slots never give you a Legendary you already own.** While a copy is");
+            sb.AppendLine("in your collection it is taken out of your Legendary draws entirely. Reduce it");
+            sb.AppendLine("and it becomes available again. Once you own every Legendary in the pairing,");
+            sb.AppendLine("further Legendary slots can only repeat one — they still give you the card.");
+            sb.AppendLine();
+            sb.AppendLine("**Every other rarity has no duplicate protection at all.** Common, Rare and Epic");
+            sb.AppendLine("slots are drawn independently from all cards of that rarity in the pack's pool.");
+            sb.AppendLine("Owning a card does not lower your chance of being given it again, and a pack");
+            sb.AppendLine("does not steer toward cards you are missing. A pack can hand you a third copy of");
+            sb.AppendLine("a Common while Commons you have never seen sit in the same pool.");
             sb.AppendLine();
             sb.AppendLine("**Nothing a pack gives you is destroyed or converted.** Copies beyond the");
             sb.AppendLine($"{DeckValidator.MaxCopies(Rarity.COMMON)} a deck may run "

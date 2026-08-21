@@ -38,11 +38,16 @@ they upgrade separate slots rather than collapsing into one.
 
 ## Duplicates
 
-**There is no duplicate protection.** Every slot is drawn independently from
-all cards of its rarity in that pack's pool. Owning a card does not lower your
-chance of being given it again, and a pack does not steer toward cards you are
-missing. A pack can hand you a copy of something you already hold while cards
-you have never seen sit in the same pool.
+**Legendary slots never give you a Legendary you already own.** While a copy is
+in your collection it is taken out of your Legendary draws entirely. Reduce it
+and it becomes available again. Once you own every Legendary in the pairing,
+further Legendary slots can only repeat one — they still give you the card.
+
+**Every other rarity has no duplicate protection at all.** Common, Rare and Epic
+slots are drawn independently from all cards of that rarity in the pack's pool.
+Owning a card does not lower your chance of being given it again, and a pack
+does not steer toward cards you are missing. A pack can hand you a third copy of
+a Common while Commons you have never seen sit in the same pool.
 
 **Nothing a pack gives you is destroyed or converted.** Copies beyond the
 2 a deck may run (1 for a Legendary) stay in

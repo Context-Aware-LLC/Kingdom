@@ -112,12 +112,12 @@ namespace Emberfall.Core.Collection
     /// a golden fixture pin it and what lets the server resolve an open authoritatively (ADR-0004: the
     /// client renders the result, it never speculates one).
     ///
-    /// <para><b><c>owned</c> is no longer one of those inputs.</b> Since the 2026-08-20 ruling a slot
-    /// draws uniformly from its rarity bucket, so two players on the same seed and index open the same
-    /// pack whatever their collections look like. The parameter is still threaded through both
-    /// overloads, and the server still passes real ownership, purely so the commented-out preference in
-    /// the pick phase can be restored in place. Do not read its presence as an influence on the
-    /// result.</para>
+    /// <para><b><c>owned</c> influences LEGENDARY slots and nothing else.</b> Common, rare and epic
+    /// slots draw uniformly from their rarity bucket, so two players on the same seed and index get
+    /// the same cards in those slots whatever their collections look like. A legendary slot skips
+    /// legendaries the player already holds (Sam, 2026-08-20) — see <see cref="LegendaryEligible"/> —
+    /// so two players on the same seed CAN open different legendaries. That is the only place a
+    /// collection changes a pack, and it is why the parameter is not a leftover.</para>
     ///
     /// <para><b>The RNG call order is the contract, not an implementation detail.</b> The pack draws
     /// exactly <c>CardCount</c> rarities and then exactly <c>CardCount</c> card picks, in slot order.
@@ -183,22 +183,31 @@ namespace Emberfall.Core.Collection
             ApplyGuarantees(rarities, upgrades, byRarity, pity);
 
             // ── phase 2: CardCount card picks, one RNG value each ────────────────────────────
-            // A slot draws UNIFORMLY from every card of its rarity in the pool. Ownership is not an
-            // input: what you already hold does not change what you can be handed, so a pack can give
-            // you a third copy of a common while commons you have never seen sit beside it in the pool.
+            // COMMON, RARE and EPIC slots draw UNIFORMLY from every card of that rarity in the pool.
+            // What you already hold does not change what you can be handed, so a pack can give you a
+            // third copy of a common while commons you have never seen sit beside it in the pool.
             //
-            // That is the ruling, not an oversight (Sam, 2026-08-20). NOR-109 §6's "new cards before
-            // dupes" preference is retained below as commented code rather than deleted, because a
-            // LESS GENEROUS form of it may be reintroduced and the shape is worth keeping. Nothing is
-            // owed to the old behaviour in the meantime: read the live loop, not the block under it.
+            // LEGENDARY is the one exception (Sam, 2026-08-20): a legendary you already hold is
+            // removed from its own slot's draw. See LegendaryEligible for the reasoning and the two
+            // ways it fails open.
+            //
+            // NOR-109 §6's full "new cards before dupes" preference — the same rule across every
+            // rarity — stays commented out below rather than deleted. The legendary carve-out IS the
+            // less generous form it was kept for; a further widening would start from that block.
             var awards = new List<PackSlotAward>(pack.CardCount);
+            var legendariesThisPack = new HashSet<string>(StringComparer.Ordinal);
 
             for (int i = 0; i < pack.CardCount; i++)
             {
                 Rarity rarity = rarities[i];
                 var candidates = byRarity[rarity];
 
-                var picked = candidates[rng.NextInt(candidates.Count)];
+                var draw = rarity == Rarity.LEGENDARY
+                    ? LegendaryEligible(candidates, owned, legendariesThisPack)
+                    : candidates;
+
+                var picked = draw[rng.NextInt(draw.Count)];
+                if (rarity == Rarity.LEGENDARY) legendariesThisPack.Add(picked.Id);
                 awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
 
                 // ── DISABLED: NOR-109 §6 new-cards-before-dupes (Sam, 2026-08-20) ────────────
@@ -351,8 +360,47 @@ namespace Emberfall.Core.Collection
         private static bool Has(Dictionary<Rarity, List<CardDefinition>> byRarity, Rarity r)
             => byRarity.TryGetValue(r, out var bucket) && bucket.Count > 0;
 
+        /// <summary>
+        /// The legendaries a legendary slot may actually award: those the player does not already
+        /// hold, minus any this same pack has already handed over (Sam, 2026-08-20).
+        ///
+        /// <para><b>Why legendary alone.</b> Every other rarity caps at
+        /// <see cref="DeckValidator.MaxCopies"/> 2 and has a deep pool, so a duplicate is a top-up
+        /// toward a playset. A legendary caps at 1, so the SECOND copy is the first one that can never
+        /// be played — the only rarity where a duplicate is pure waste on arrival rather than progress.
+        /// It is also the rarity a player remembers: pulling a legendary is the moment a pack exists
+        /// to create, and pulling one you already own is the moment that ruins it.</para>
+        ///
+        /// <para><b>It reads live ownership, so it is not permanent.</b> Reduce a legendary and it
+        /// returns to your draws, because <c>owned</c> is projected from the ledger on every open.
+        /// "You will not be given one you have" is the rule, not "you will never see it again".</para>
+        ///
+        /// <para><b>Two fail-open paths, both deliberate.</b> A null <c>owned</c> means ownership is
+        /// unknown, not that nothing is owned, so it constrains nothing — the same reading
+        /// <see cref="DeckValidator"/> gives it. And a player holding EVERY legendary in the pairing
+        /// gets the full list back rather than an empty draw: at that point a duplicate is the only
+        /// thing the slot can be, and it is still a card, because a pack converts nothing to shards.</para>
+        /// </summary>
+        private static IReadOnlyList<CardDefinition> LegendaryEligible(
+            List<CardDefinition> candidates, IOwnedCardCounts owned, HashSet<string> awardedThisPack)
+        {
+            int limit = DeckValidator.MaxCopies(Rarity.LEGENDARY);
+
+            var eligible = new List<CardDefinition>(candidates.Count);
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                var def = candidates[i];
+                if (awardedThisPack.Contains(def.Id)) continue;
+                if (owned != null && owned.CopiesOwned(def.Id) >= limit) continue;
+                eligible.Add(def);
+            }
+
+            return eligible.Count > 0 ? eligible : (IReadOnlyList<CardDefinition>)candidates;
+        }
+
         // DISABLED with the new-cards-before-dupes preference in the pick phase (Sam, 2026-08-20).
-        // Uncomment both together with that block; nothing else calls them.
+        // The LEGENDARY half of it is live again as LegendaryEligible above; these two helpers are the
+        // all-rarities version and stay off. Uncomment both with that block; nothing else calls them.
         //
         //   private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
         //       => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
