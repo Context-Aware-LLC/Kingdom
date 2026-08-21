@@ -403,19 +403,19 @@
 .chrome-panel--outer {
     background-color: rgba(18, 23, 31, 0.96);
     background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
-    -unity-slice-left: 64px;
-    -unity-slice-right: 64px;
-    -unity-slice-top: 64px;
-    -unity-slice-bottom: 64px;
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 64;
+    -unity-slice-bottom: 64;
     -unity-slice-scale: 0.35px;
 }
 .chrome-panel--recessed {
     background-color: rgba(8, 12, 18, 0.88);
     background-image: url("/Assets/Art/UI/Chrome/ui_panel_recessed_slate.png");
-    -unity-slice-left: 56px;
-    -unity-slice-right: 56px;
-    -unity-slice-top: 56px;
-    -unity-slice-bottom: 56px;
+    -unity-slice-left: 56;
+    -unity-slice-right: 56;
+    -unity-slice-top: 56;
+    -unity-slice-bottom: 56;
     -unity-slice-scale: 0.35px;
 }
 
@@ -452,20 +452,20 @@
 .chrome-button--primary {
     background-color: rgba(16, 13, 10, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
-    -unity-slice-left: 64px;
-    -unity-slice-right: 64px;
-    -unity-slice-top: 34px;
-    -unity-slice-bottom: 34px;
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
     -unity-slice-scale: 0.5px;
     color: rgb(250, 230, 193);
 }
 .chrome-button--secondary {
     background-color: rgba(21, 28, 38, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
-    -unity-slice-left: 64px;
-    -unity-slice-right: 64px;
-    -unity-slice-top: 36px;
-    -unity-slice-bottom: 36px;
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
     -unity-slice-scale: 0.5px;
 }
 .chrome-button:hover {
@@ -509,10 +509,10 @@
     border-radius: 0;
     background-color: rgba(8, 12, 18, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_input_recessed_slate.png");
-    -unity-slice-left: 48px;
-    -unity-slice-right: 48px;
-    -unity-slice-top: 28px;
-    -unity-slice-bottom: 28px;
+    -unity-slice-left: 48;
+    -unity-slice-right: 48;
+    -unity-slice-top: 28;
+    -unity-slice-bottom: 28;
     -unity-slice-scale: 0.5px;
     -unity-background-image-tint-color: rgb(224, 229, 236);
     color: var(--ink-1);
