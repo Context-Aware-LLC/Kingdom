@@ -970,6 +970,14 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // RETIREMENT TRIGGER — wiring these two stubs to CraftingService.
+            // docs/pub-docs/progression/pack-odds.md already tells players, in its "Duplicates"
+            // section, that "Shards come from Reduce, in your collection". Since 2026-08-20 a pack
+            // converts nothing, so Reduce is the ONLY shard faucet the game claims to have — and
+            // until the line below stops being a LogWarning, that page promises an economy the build
+            // cannot deliver. The sentence is generated from
+            // src/Emberfall.Tools.OddsDisclosure/Program.cs; when you wire this, regenerate the page
+            // and delete this comment. If Reduce is cut instead, that sentence has to go with it.
             _craftModal.RenderRequested += def =>
                 Debug.LogWarning($"[Craft] STUB: Render '{def.Id}' for " +
                                  $"{ShardCosts.ForRarity(def.Rarity)} shards. Nothing was spent and no " +
