@@ -82,8 +82,9 @@
       "BEAST": 24,
       "UNDEAD": 21,
       "ELEMENTAL": 15,
-      "SPIRIT": 12,
-      "DRAGON": 5
+      "SPIRIT": 11,
+      "DRAGON": 5,
+      "HUMAN": 5
     },
     "minionCount": 176,
     "attackDistribution": {
@@ -348,6 +349,7 @@
         "BEAST": 9,
         "UNDEAD": 6,
         "CONSTRUCT": 5,
+        "HUMAN": 2,
         "DRAGON": 1
       },
       "minionCount": 35,
@@ -528,7 +530,8 @@
       },
       "tribeBreakdown": {
         "ELEMENTAL": 6,
-        "BEAST": 1
+        "BEAST": 1,
+        "HUMAN": 1
       },
       "minionCount": 11,
       "attackDistribution": {
@@ -588,9 +591,10 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "SPIRIT": 6,
+        "SPIRIT": 5,
         "ELEMENTAL": 4,
-        "BEAST": 2
+        "BEAST": 2,
+        "HUMAN": 2
       },
       "minionCount": 20,
       "attackDistribution": {
@@ -4503,7 +4507,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "alliance_messenger",
@@ -4563,7 +4567,7 @@
       "selectors": [
         "FRIENDLY_MINIONS"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "new_dawn_bannerman",
@@ -4886,7 +4890,7 @@
         "VANGUARD"
       ],
       "selectors": [],
-      "tribe": "SPIRIT",
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "tide_prophet_of_the_flood",
@@ -4906,7 +4910,7 @@
       "selectors": [
         "ANY_ENEMY"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "tide_saltshore_scout",
@@ -5954,7 +5958,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_channeler",
@@ -5976,7 +5980,7 @@
       "selectors": [
         "ENEMY_CHARACTERS"
       ],
-      "tribe": null,
+      "tribe": "",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_voltaic_sentinel",

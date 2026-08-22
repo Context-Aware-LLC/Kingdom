@@ -24,7 +24,7 @@ namespace Emberfall.Core.Contracts
 
     public enum SetId { CORE, EMBERFALL, REKINDLING }
 
-    public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT }
+    public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN }
 
     /// <summary>
     /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized
