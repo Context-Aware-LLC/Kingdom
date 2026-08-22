@@ -10,7 +10,8 @@ namespace Emberfall.Core.Collection
     ///
     /// <para><b>Why permille and not a percentage float.</b> The odds are consumed by
     /// <see cref="DeterministicRandom.NextInt"/>, which is integer-only by the determinism contract
-    /// (ADR-0003 / <c>BannedApiTests.No_Float_Or_Double_Field_In_Core_Types</c>). A <c>float</c> field
+    /// (ADR-0003, enforced by <c>Emberfall.Tools.DeterminismGate</c> check 1 — CI Stage 4; it was
+    /// <c>BannedApiTests.No_Float_Or_Double_Field_In_Core_Types</c> until 2026-08-18). A <c>float</c> field
     /// anywhere in a core type fails that scan, so the brief's 71.5% is carried as 715/1000 — which is
     /// also exact, where 0.715f is not.</para>
     ///

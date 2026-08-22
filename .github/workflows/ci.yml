@@ -4,11 +4,11 @@ name: Emberfall CI — determinism gates
 # (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
 #
 #   Stage 1  Lint + vocabulary + rebaseline-guard      BLOCKING   (format + vocabulary + golden path-pair)
-#   Stage 2  Core unit tests              BLOCKING   (L1)
-#   Stage 3  Contract / interface tests   BLOCKING   (L2)
-#   Stage 3b Collection + CardValidation  BLOCKING   (ran in NO stage before 2026-08-01)
-#   Stage 4  Assembly firewall + banned   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
-#   Stage 5  Golden-replay (R1 gate)      BLOCKING   (criterion 6 — the most important M1 deliverable)
+#   Stage 2  Core unit tests              ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
+#   Stage 3  Contract / interface tests   ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
+#   Stage 3b Collection + CardValidation  ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
+#   Stage 4  Determinism + asm firewall   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
+#   Stage 5  Golden-replay (R1 gate)      ARCHIVED 2026-08-18 with its fixtures — Stage 5b covers determinism now
 #   Stage 5b Networked AI soak            ADVISORY as of NOR-189 (was BLOCKING/EF-077; see step for why)
 #   ─────────────────────────────────────────────────────────────────────────────────────────────
 #   Stage 6  Content C-series             BLOCKING as of M2 (WS C3 — pure-.NET CardCi over *.cards.json)
@@ -17,8 +17,11 @@ name: Emberfall CI — determinism gates
 #   Stage 8  Unity PlayMode integration   informational at M1 (no seat — becomes blocking at M2)
 #   Stage 9  On-device perf gate (D8)     manual device job at the milestone boundary (not per-PR)
 #
-# => Every stage marked BLOCKING above runs here. This line used to restate that as a number; it was
-#    wrong by the time EF-077 read it, so the map above and the steps below are the only list.
+# => Every stage marked BLOCKING above runs here; every stage marked ARCHIVED has NO step and is
+#    listed only so its absence is deliberate rather than discovered. Checked 2026-08-22 by
+#    counting steps per stage — 2/3/3b/5 had none while the map still called all four BLOCKING,
+#    which is how Stage 4 stayed "blocking" for four days with nothing behind it. If you archive a
+#    stage, edit the map in the same commit.
 #    Runs on Linux x64 on purpose: baking the golden fixtures on a
 #    Windows dev box and asserting them on a Linux runner proves the little-endian, platform-independent
 #    canonical hash (golden-replay.md §4.4).
@@ -202,6 +205,21 @@ jobs:
       # One match is not enough to read the intent-mix rows the tool prints: a verb the AI simply
       # never reached in a single game is indistinguishable from a verb that no longer works over
       # the wire. Raise N here rather than adding a second soak step.
+      # ── Stage 4 — Determinism + assembly firewall (BLOCKING, M1 exit criterion 7) ────
+      # RESTORED 2026-08-22. This stage was implemented as BannedApiTests / FirewallTests /
+      # ServerFirewallTests, archived with the rest of the .NET suites in a9eaa0e3 on 2026-08-18 —
+      # but the stage map at the top of this file went on calling Stage 4 BLOCKING, and two source
+      # comments went on telling readers the bans were enforced. For four days they were not.
+      #
+      # It came back as a TOOL rather than a test project, which is what a9eaa0e3's own reasoning
+      # asks for: "the guards that carry real weight were never in tests/ at all." Eight static
+      # checks — no float/double in core or server state, no System.Random / UnityEngine /
+      # DateTime.Now in core source (UtcNow stays legal server-side), no reflection in the canonical
+      # encode path, zero UnityEngine references in core/server, and a client that cannot see the
+      # server assembly. Emits artifacts/firewall-scan.json, same shape as the archived test did.
+      - name: "Stage 4 · Determinism + assembly firewall (Emberfall.Tools.DeterminismGate)"
+        run: dotnet run --project src/Emberfall.Tools.DeterminismGate -c Release --no-build -- .
+
       - name: "Stage 5b · Networked AI soak (Emberfall.Tools.NetSoak liveai)"
         timeout-minutes: 10
         continue-on-error: true   # NOR-189 stopgap — advisory, not blocking. Remove to re-arm (see above).

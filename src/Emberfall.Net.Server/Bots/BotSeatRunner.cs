@@ -153,7 +153,8 @@ namespace Emberfall.Net.Server.Bots
                     if (intent is null) continue;
 
                     // Human-like pacing (design doc): the bot never acts with inhuman instancy.
-                    // System.Random is banned by ServerFirewallTests (determinism); the CSPRNG is
+                    // System.Random is banned by Emberfall.Tools.DeterminismGate check 7 (CI Stage 4;
+                    // it was ServerFirewallTests until 2026-08-18) — determinism. The CSPRNG is
                     // pacing jitter only, matching MatchGate.MintSeed's own convention.
                     await Task.Delay(RandomNumberGenerator.GetInt32(500, 2000)).ConfigureAwait(false);
                     CommandResult result = await client.SubmitAsync(intent).ConfigureAwait(false);
