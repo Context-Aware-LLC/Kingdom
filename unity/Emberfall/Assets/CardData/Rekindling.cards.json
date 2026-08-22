@@ -3,11 +3,32 @@
     "id": "stone_reclaimed_fortress",
     "name": "Reclaimed Fortress",
     "type": "SPELL",
-    "cost": 5,
+    "cost": 6,
     "class": "STONEWARDEN",
     "rarity": "EPIC",
     "keywords": [],
-    "rules": [],
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "AEGIS",
+          "target": {
+            "selector": "FRIENDLY_MINIONS"
+          }
+        }
+      }
+    ],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "stone_reclaimed_fortress"

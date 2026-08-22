@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 267,
+  "totalCards": 268,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,10 +22,10 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 267,
+    "total": 268,
     "typeSplit": {
       "MINION": 176,
-      "SPELL": 71,
+      "SPELL": 72,
       "WEAPON": 12,
       "HERO_POWER": 8
     },
@@ -46,7 +46,7 @@
       "FROST": 1
     },
     "selectorFrequency": {
-      "FRIENDLY_MINIONS": 32,
+      "FRIENDLY_MINIONS": 33,
       "ANY_FRIENDLY_MINION": 30,
       "ANY_MINION": 24,
       "FRIENDLY_HERO": 21,
@@ -66,7 +66,7 @@
       "3": 64,
       "4": 48,
       "5": 18,
-      "6": 19,
+      "6": 20,
       "7": 14,
       "8": 4,
       "9": 1
@@ -74,7 +74,7 @@
     "rarityBreakdown": {
       "COMMON": 123,
       "RARE": 87,
-      "EPIC": 39,
+      "EPIC": 40,
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
@@ -430,10 +430,10 @@
       }
     },
     "STONEWARDEN": {
-      "total": 25,
+      "total": 26,
       "typeSplit": {
         "MINION": 16,
-        "SPELL": 7,
+        "SPELL": 8,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
@@ -445,7 +445,7 @@
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "FRIENDLY_MINIONS": 8,
+        "FRIENDLY_MINIONS": 9,
         "ANY_FRIENDLY_MINION": 4,
         "ENEMY_MINIONS": 3,
         "FRIENDLY_HERO": 2
@@ -457,14 +457,14 @@
         "3": 6,
         "4": 4,
         "5": 1,
-        "6": 2,
+        "6": 3,
         "7": 1,
         "8": 2
       },
       "rarityBreakdown": {
         "COMMON": 11,
         "RARE": 9,
-        "EPIC": 3,
+        "EPIC": 4,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -4434,6 +4434,26 @@
       "collectible": true,
       "artId": "verdant_thorn_swarm",
       "sourceFile": "Emberfall.cards.json"
+    },
+    {
+      "id": "stone_reclaimed_fortress",
+      "name": "Reclaimed Fortress",
+      "type": "SPELL",
+      "cost": 6,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [
+        "FRIENDLY_MINIONS"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_reclaimed_fortress",
+      "sourceFile": "Rekindling.cards.json"
     },
     {
       "id": "clock_nameless_bell",
