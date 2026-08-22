@@ -16,7 +16,7 @@ namespace Emberfall.Presentation
     /// Persistent auras (Shield / Bulwark / Frosted tinting) are handled by CardPresenter.ApplyAuras()
     /// via ICardLiveState.Changed — no per-frame event required.
     ///
-    /// Phase C step 5 scene setup: add VfxDirector MonoBehaviour to the GameBootstrap GameObject
+    /// Phase C step 5 scene setup: add VfxDirector MonoBehaviour to the bootstrap GameObject
     /// and assign boardAnchors + any prefabs you have in the Inspector. Null prefab = no VFX.
     /// </summary>
     public sealed class VfxDirector : MonoBehaviour
@@ -55,7 +55,7 @@ namespace Emberfall.Presentation
         private BoardController _board;
 
         /// <summary>The tunables MatchRunner needs to know about — how long each card type's
-        /// reveal holds up the rest of the command. Read by GameBootstrap when it builds the
+        /// reveal holds up the rest of the command. Read by NetworkedGameBootstrap when it builds the
         /// classifier delegate, so this stays the single source for the numbers (Sam, 2026-08-01;
         /// per-type 2026-08-18).</summary>
         public PlayRevealHolds RevealHolds =>
@@ -80,7 +80,7 @@ namespace Emberfall.Presentation
         /// <summary>Wire what's needed to draw a spell reveal as a REAL card, not a bare texture:
         /// the art provider for its illustration and BoardController.BuildDetachedCard for the
         /// same frame/art-fit/name rig a card in hand or on the board gets. Called once by
-        /// GameBootstrap, after boardController.Initialize (BuildDetachedCard depends on it).</summary>
+        /// NetworkedGameBootstrap, after boardController.Initialize (BuildDetachedCard depends on it).</summary>
         public void Init(IArtProvider artProvider, BoardController board)
         {
             _artProvider = artProvider;
@@ -134,7 +134,7 @@ namespace Emberfall.Presentation
         /// redraws with the real card, which is the point.
         ///
         /// <para>Timing is not decorative here. The three phases sum to
-        /// <see cref="RevealTiming.TotalHoldSeconds"/>, the same number GameBootstrap hands the
+        /// <see cref="RevealTiming.TotalHoldSeconds"/>, the same number NetworkedGameBootstrap hands the
         /// classifier as the entry's hold, so this coroutine and the playback queue finish
         /// together. A phase with nothing to animate (no hand slot to leave, no destination to
         /// land in) still WAITS out its share rather than returning early — cutting it short

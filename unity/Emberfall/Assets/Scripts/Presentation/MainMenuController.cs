@@ -78,7 +78,6 @@ namespace Emberfall.Presentation
             }
 
             Wire("btn-find-game", OnFindGame);
-            Wire("btn-single-player", OnSinglePlayer);
             Wire("btn-collection", OnCollection);
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
@@ -504,9 +503,6 @@ namespace Emberfall.Presentation
             CharacterRosterController.ReturnScene = "MainMenu";
             Go("CharacterRoster");
         }
-
-        /// <summary>Single Player → <c>Board</c>, the local vs-AI slice (<c>GameBootstrap</c>).</summary>
-        private void OnSinglePlayer() => Go("Board");
 
         /// <summary>
         /// Load a scene by name, reporting the one failure mode that is otherwise silent.

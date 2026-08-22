@@ -13,7 +13,6 @@
         </ui:VisualElement>
         <ui:VisualElement name="menu" class="mm-menu">
             <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
-            <ui:Button name="btn-single-player" text="Single Player" class="mm-button"/>
             <ui:Button name="btn-collection" text="Collection" class="mm-button"/>
             <ui:Button name="btn-store" text="Store" class="mm-button"/>
             <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>

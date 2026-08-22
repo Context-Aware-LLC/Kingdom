@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     // Creates the full D6 anchor hierarchy at runtime so the board works without a hand-crafted
-    // Unity scene. Runs before GameBootstrap.Start() (Awake order).
+    // Unity scene. Runs before NetworkedGameBootstrap.Start() (Awake order).
     // Attach this to the same GameObject as BoardAnchors.
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
@@ -88,10 +88,9 @@ namespace Emberfall.Presentation
         }
 
         // EF-062. The safe-area solve is attached here rather than authored into the scene:
-        // Board.unity and BoardNetworked.unity both build their board through this component,
-        // so one call covers both and neither can drift from the other. Must run AFTER
-        // BoardBackdrop.Create — SafeAreaCamera.Awake rescales the plate, and there has to be
-        // a plate to rescale.
+        // every board scene builds its board through this component, so one call covers all of
+        // them and no scene can drift from the code. Must run AFTER BoardBackdrop.Create —
+        // SafeAreaCamera.Awake rescales the plate, and there has to be a plate to rescale.
         private static void AttachSafeAreaCamera()
         {
             var cam = Camera.main;
@@ -131,7 +130,7 @@ namespace Emberfall.Presentation
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
         }
 
-        // Called from GameBootstrap.Start() after SetPlayers() — attaches the ClickableHeroPower /
+        // Called from NetworkedGameBootstrap's boot after SetPlayers() — attaches the ClickableHeroPower /
         // ClickableHero raycast descriptors so InputRouter's press/drag/release machine can identify
         // what the pointer is over (EF-048). Both seats get them: ownership is read off the
         // descriptor, not implied by which ones exist, and the enemy side has to be identifiable to

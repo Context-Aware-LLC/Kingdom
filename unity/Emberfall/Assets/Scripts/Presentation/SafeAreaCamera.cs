@@ -15,8 +15,9 @@ namespace Emberfall.Presentation
     /// <c>Screen.safeArea</c> knows.</para>
     ///
     /// <para>Attached by <c>ProceduralBoardSetup.Awake</c> rather than authored into the scene,
-    /// so Board.unity and BoardNetworked.unity pick it up without a YAML edit and neither can
-    /// drift from the other.</para>
+    /// so BoardNetworked.unity picks it up without a YAML edit — and so does any board scene
+    /// added later, which is what the two-scene era proved: an authored component is a copy,
+    /// and copies drift.</para>
     ///
     /// <para>On a screen with no insets — the Editor, a desktop build, an emulator with the
     /// bars hidden — <see cref="DeviceLayout.Solve"/> returns identity and this component sets

@@ -27,10 +27,10 @@ namespace Emberfall.Presentation
     /// is content the player cannot see.</para>
     ///
     /// <para>ATTACHED AUTOMATICALLY, not authored into six scenes. <see cref="SafeAreaCamera"/>
-    /// set the precedent for the same reason — Board.unity and BoardNetworked.unity could not be
-    /// allowed to drift from each other, and here there are six screens plus every one added
-    /// later. A screen opts in by using <c>emb-root</c>, which it already does; a UIDocument
-    /// without one is left alone.</para>
+    /// set the precedent for the same reason — an authored component is a per-scene copy and
+    /// copies drift, and here there are six screens plus every one added later. A screen opts
+    /// in by using <c>emb-root</c>, which it already does; a UIDocument without one is left
+    /// alone.</para>
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SafeAreaPanel : MonoBehaviour

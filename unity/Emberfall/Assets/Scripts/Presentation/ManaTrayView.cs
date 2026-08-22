@@ -17,7 +17,7 @@ namespace Emberfall.Presentation
     /// when the tray was a uniform-tint quad and the count was not otherwise readable; once the
     /// orbs became countable it was saying the same thing twice (Sam, 2026-07-25).
     ///
-    /// Created procedurally by GameBootstrap — one instance per player.
+    /// Created procedurally by NetworkedGameBootstrap — one instance per player.
     /// </summary>
     public sealed class ManaTrayView : MonoBehaviour
     {

@@ -8,7 +8,7 @@ namespace Emberfall.Session
 {
     /// <summary>Whose projection the presentation events carry (dev-docs/contracts/gameplay-and-session.md:5).
     /// ActiveSeat (two-human hot-seat view flip) is reserved — it has no input driver yet
-    /// (design §11 finding 8); GameBootstrap wires FixedSeat0.</summary>
+    /// (design §11 finding 8); NetworkedGameBootstrap wires the server-dealt seat.</summary>
     public enum PresentationViewer { FixedSeat0, ActiveSeat }
 
     /// <summary>
@@ -54,7 +54,7 @@ namespace Emberfall.Session
 
         /// <summary>Optional: classify a queued-but-not-yet-visible command as a card play worth
         /// a reveal beat. Null = no reveal beats, instant-effect behavior. Set by the scene's
-        /// bootstrap (GameBootstrap), which is where the card database lives — this class stays
+        /// bootstrap (NetworkedGameBootstrap), which is where the card database lives — this class stays
         /// card-type-agnostic, same as everywhere else in it.</summary>
         public Func<GameState, IReadOnlyList<GameEvent>, PlayReveal?> PlayRevealClassifier { get; set; }
 

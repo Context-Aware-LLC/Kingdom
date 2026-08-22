@@ -8,7 +8,7 @@ namespace Emberfall.Presentation
     /// <summary>
     /// World-space hero plate for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1 HeroAnchor/HeroPowerAnchor).
     /// Portrait + name + HP read-out at HeroAnchor; hero-power disc (cost + name, greyed when
-    /// spent/unaffordable) at HeroPowerAnchor. Created procedurally by GameBootstrap — one per
+    /// spent/unaffordable) at HeroPowerAnchor. Created procedurally by NetworkedGameBootstrap — one per
     /// player, same pattern as ManaTrayView. Purely state-driven; ClickableHeroPower (attached
     /// to the anchor by ProceduralBoardSetup) handles hot-seat input separately.
     /// </summary>

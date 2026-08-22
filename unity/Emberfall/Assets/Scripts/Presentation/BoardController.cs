@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     // Owns all CardPresenter instances on the board and in hand.
-    // Called by GameBootstrap: Initialize() once, then OnStateUpdated() on every engine tick.
+    // Called by NetworkedGameBootstrap: Initialize() once, then OnStateUpdated() on every engine tick.
     // Diffs successive GameState snapshots → spawn/move/destroy CardPresenters accordingly.
     public sealed class BoardController : MonoBehaviour
     {

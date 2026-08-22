@@ -8,8 +8,8 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// EF-062. Holds <see cref="DeviceLayout"/>'s constants against the three things outside
-    /// its own assembly that can silently falsify them: the authored orthographicSize in both
-    /// board scenes, the real pixel size of the backdrop plate, and the layout constants the
+    /// its own assembly that can silently falsify them: the authored orthographicSize in the
+    /// board scene, the real pixel size of the backdrop plate, and the layout constants the
     /// board actually builds from.
     ///
     /// <para>WHY A CHECK AND NOT A COMMENT. Every number this file guards is a claim about the
@@ -19,12 +19,11 @@ namespace Emberfall.Editor
     /// falsifies it; this is that trigger made executable, so the commit that breaks the 16:9
     /// floor fails the harness rather than quietly shipping a clipped hero.</para>
     ///
-    /// <para>Reads the scenes as TEXT rather than opening them. Opening a scene in
+    /// <para>Reads the scene as TEXT rather than opening it. Opening a scene in
     /// -nographics batchmode mutates the project and the harness is a read-only check.</para>
     /// </summary>
     public static class DeviceLayoutVerify
     {
-        private const string BoardScene = "Assets/Scenes/Board.unity";
         private const string NetworkedScene = "Assets/Scenes/BoardNetworked.unity";
         private const string BackdropTex = "Assets/Art/Backgrounds/BoardPlate_Master.png";
 
@@ -37,7 +36,6 @@ namespace Emberfall.Editor
                 Debug.LogError("[DeviceLayoutVerify] DeviceLayout.SelfCheck FAILED — see the "
                                + "FAIL lines above.");
 
-            ok &= CheckSceneOrtho(BoardScene);
             ok &= CheckSceneOrtho(NetworkedScene);
             ok &= CheckBackdropSize();
 
@@ -57,7 +55,7 @@ namespace Emberfall.Editor
                 return false;
             }
 
-            // First match wins. Both board scenes hold exactly one camera today, and if a
+            // First match wins. The board scene holds exactly one camera today, and if a
             // second is ever added this reads the first one in the file — which fails loudly
             // and sends someone to look, rather than passing on the wrong camera.
             var m = Regex.Match(File.ReadAllText(full), @"^\s*orthographic size:\s*([\d.]+)\s*$",

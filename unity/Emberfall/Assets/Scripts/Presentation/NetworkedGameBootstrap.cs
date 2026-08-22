@@ -19,11 +19,16 @@ using Action = System.Action;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The NETWORKED scene entry point (dev-docs/architecture/system-overview.md:17). Sibling to
-    /// <see cref="GameBootstrap"/>; the hot-seat boot is left untouched and green (the kickoff's C1
-    /// entry requirement — hot-seat-green before any networked playtest — depends on that).
+    /// The match entry point (dev-docs/architecture/system-overview.md:17), and since 2026-08-21
+    /// the ONLY one. It had a sibling — <c>GameBootstrap</c> in <c>Board.unity</c>, an in-process
+    /// hot-seat/vs-AI host kept green as the C1 entry requirement for the first networked
+    /// playtest. That gate is long since passed and the local path went unplayed, so both were
+    /// deleted: the two boots had to be wired twice for every presentation feature, with nothing
+    /// reporting a miss (the play-reveal beat shipped invisible for a day that way, 48e99d80).
+    /// Solo play is now Find Game: the server's <c>MatchGate</c> pairs a queue that times out
+    /// with a <c>BotSeatRunner</c> from its <c>BotPool</c>, through the same <c>StartMatch</c>.
     ///
-    /// Three things this does that the local boot cannot:
+    /// Three things this does that an in-process host would not have to:
     ///  1. ASYNC boot — connect + pair + match_start is not synchronous (a socket, not an in-process
     ///     call). Boot runs as a coroutine that awaits <see cref="NetworkedMatchSession.ConnectAsync"/>.
     ///  2. SEAT-AWARE — the server deals our seat (0 or 1). The runner is driven with
@@ -431,8 +436,9 @@ namespace Emberfall.Presentation
 
             // ── Visible turn clock (E2 minimal slice; C-G1-2a) ──────────────────────
             // Binds to the seam's OnTurnTimer (main-thread-marshaled by MainThreadMatchSession).
-            // Networked-only by design: LocalMatchSession raises no timer, so the hot-seat boot has
-            // no clock and this block has no hot-seat sibling. Above the end-turn button.
+            // Server-driven: the turn clock is a server timer, so it exists only on this path.
+            // (It is why the deleted in-process hot-seat boot never had one.) Above the end-turn
+            // button.
             var clockGo = new GameObject("TurnClock");
             clockGo.transform.position = new Vector3(6.3f, 1.2f, 0f);
             var turnClock = clockGo.AddComponent<TurnClockView>();
@@ -513,7 +519,7 @@ namespace Emberfall.Presentation
             matchRunner.OnMatchEnded += outcome =>
             {
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
-                MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware, unlike the hot-seat boot
+                MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware — the server deals the seat
             };
 
             // ── §14 step 4 diagnostic (v9 frost retest): playback-side twin of the [Net] snap
