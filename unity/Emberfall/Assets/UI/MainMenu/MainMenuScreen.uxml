@@ -3,8 +3,8 @@
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
-        <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance"/>
-        <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity">
+        <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance emb-edge"/>
+        <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity emb-edge">
             <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
         </ui:VisualElement>
         <ui:VisualElement name="brand" class="mm-brand">
@@ -17,7 +17,7 @@
             <ui:Button name="btn-store" text="Store" class="mm-button"/>
             <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
-        <ui:VisualElement name="footer" class="mm-footer">
+        <ui:VisualElement name="footer" class="mm-footer emb-edge">
             <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version"/>
         </ui:VisualElement>
         <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden emb-bleed">

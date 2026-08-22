@@ -78,7 +78,7 @@
     overflow: hidden;                            /* slats clip to the rounded group */
 }
 .mm-button {
-    font-size: var(--type-h2);
+    font-size: 30px;                             /* was --type-h2 22px — ~1.3mm on a 420dpi phone */
     -unity-font-style: bold;
     color: var(--ink-1);
     background-color: rgba(30, 37, 48, 0);      /*fully transparent — backdrop shows straight through (styling base) */
@@ -87,7 +87,7 @@
     border-radius: 0;                            /* the group owns the shape, not the slat */
     border-top-width: 1px;                       /* groove between slats */
     border-top-color: rgba(11, 14, 19, 0.55);
-    height: 64px;
+    height: 88px;                                /* was 64 — 3.9mm, under the touch floor (#233) */
     margin-bottom: 0;                            /* slats touch */
     padding: 0 var(--space-6);
     letter-spacing: 1px;
@@ -112,10 +112,13 @@
  */
 .mm-shard-balance {
     position: absolute;
-    top: 2%;
-    right: 2%;
+    top: var(--space-6);                         /* was 2% — a percentage of the WIDTH, so it
+                                                    moved with aspect and landed differently on
+                                                    every device. Edge clearance comes from
+                                                    .emb-edge in theme.uss; this is the gutter. */
+    right: var(--space-6);
     min-width: 12%;
-    font-size: var(--type-label);
+    font-size: var(--type-h2);                   /* was --type-label 16px */
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
@@ -133,7 +136,7 @@
  */
 .mm-identity {
     position: absolute;
-    top: var(--space-6);
+    top: var(--space-6);                         /* clearance is .emb-edge's, not this rule's */
     left: var(--space-6);
     align-items: flex-start;
     background-color: rgba(20, 25, 34, 0.55);
@@ -143,7 +146,7 @@
     padding: var(--space-2) var(--space-4);
 }
 .mm-identity__name {
-    font-size: var(--type-label);
+    font-size: var(--type-h2);                   /* was --type-label 16px */
     -unity-font-style: bold;
     color: var(--ink-1);
 }
@@ -409,10 +412,10 @@
  */
 .mm-footer {
     position: absolute;
-    bottom: var(--space-6);
+    bottom: var(--space-6);                      /* clearance is .emb-edge's, not this rule's */
     left: var(--space-6);
 }
 .mm-version {
-    font-size: var(--type-caption);
+    font-size: var(--type-label);                /* was --type-caption 14px — ~0.85mm */
     color: var(--ink-2);
 }
