@@ -74,27 +74,16 @@ if command -v code-review-graph >/dev/null 2>&1; then
     fi
 fi
 
-STAGED_CARDS=$(git diff --cached --name-only --diff-filter=ACMR -- \
-    'unity/Emberfall/Assets/CardData/*.cards.json')
-
-if [ -z "$STAGED_CARDS" ]; then
-    exit 0
-fi
-
-if ! command -v python >/dev/null 2>&1; then
-    echo "pre-commit: python not on PATH — skipping the card-derivation checks." >&2
-    echo "            Run tooling/scripts/check_deck_pool_drift.py by hand." >&2
-    exit 0
-fi
-
-echo "pre-commit: card rows staged — checking what is derived from them."
-echo "$STAGED_CARDS" | sed 's/^/  /'
-
-# ── The generated starter decks ───────────────────────────────────────────────────────────
+# ── Card rows ────────────────────────────────────────────────────────────────────────────────
 #
-# Advisory, never blocking: regenerating needs a dotnet build, far too slow for a commit hook,
-# and the new decks deserve eyes rather than a rubber stamp. DefaultDeckFixtureTests is the
-# real gate; this only says so at the moment of the edit instead of after a CI round trip.
-python tooling/scripts/check_deck_pool_drift.py
-
+# There is deliberately NO card check here as of 2026-08-22. There was one — check_deck_pool_drift.py,
+# which warned when a staged card edit moved DefaultDeckGenerator's output. It was removed because
+# the thing it guarded does not exist: the starter deck is generated LIVE from the card database on
+# every character creation (CharacterCreation.cs), nothing loads a DefaultDecks fixture at runtime,
+# and the fixtures plus DefaultDeckFixtureTests it told you to re-run were archived in a9eaa0e3
+# (2026-08-18). It detected real drift and then printed a dotnet test command that exits MSB1003.
+#
+# What DOES gate card rows is CI Stage 6 — Emberfall.Tools.CardCi over every row of every set — plus
+# Stage 6b's trigger/selector drift guard. Neither needs a commit hook. If you want the local
+# equivalent before pushing: python tooling/scripts/rebake_card_data.py --check
 exit 0
