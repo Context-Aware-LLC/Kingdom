@@ -6,24 +6,28 @@ Usage:
   python tooling/scripts/rebake_card_data.py --write --skip-fixtures   # no dotnet test
   python tooling/scripts/rebake_card_data.py --check --skip-gates      # no CI-gate replay
 
-Editing `unity/Emberfall/Assets/CardData/*.cards.json` silently stales THREE derived
-artifacts, and nothing at edit time forces any of them. This is the controller that runs all
-three, so the answer to "did I remember everything?" is one line instead of three.
+Editing `unity/Emberfall/Assets/CardData/*.cards.json` silently stales TWO derived
+artifacts, and nothing at edit time forces either of them. This is the controller that runs
+both, so the answer to "did I remember everything?" is one line instead of two.
 
-  1. Baked CardDefinitionSO YAML   -> rebake_card_definition_so_assets.py
-  2. Card-admin aggregate          -> tooling/card-admin/build_data.py  (data.json + data.js)
-  3. Starter deck fixtures         -> [Explicit] DefaultDeckFixtureTests.Regenerate_Fixtures
+  1. Card-admin aggregate          -> tooling/card-admin/build_data.py  (data.json + data.js)
+  2. Starter deck fixtures         -> [Explicit] DefaultDeckFixtureTests.Regenerate_Fixtures
 
-REGENERATING IS NOT THE SAME AS BEING SHIPPABLE, which is the trap this script grew a fourth
+A third artifact used to sit at the top of this list: baked CardDefinitionSO assets under
+Assets/Cards. They were deleted 2026-08-22 — nothing read them at runtime, they were in no
+Addressables group, and they covered only the 36 cards of the original vertical slice while a
+pre-commit hook blocked commits when they drifted.
+
+REGENERATING IS NOT THE SAME AS BEING SHIPPABLE, which is the trap this script grew a third
 step for. Every artifact above can be perfectly in sync with a card row that CI will still
 reject, because the blocking content gates read the ROWS, not the derived copies — so this
 script reported CLEAN on 2026-08-18 for a row whose artId was missing a separator and whose
-art therefore resolved to nothing. Step 4 replays the three blocking gates from
+art therefore resolved to nothing. Step 3 replays the three blocking gates from
 .github/workflows/ci.yml Stage 6 so the failure lands here instead of on the runner:
 
-  4a. Emberfall.Tools.CardCi          — rows parse; C-series validation
-  4b. audit_card_art_names.py         — every artId resolves to a png (--fail-missing-only)
-  4c. scan_unresolvable_trigger_selectors.py — no fired trigger with a player-choice selector
+  3a. Emberfall.Tools.CardCi          — rows parse; C-series validation
+  3b. audit_card_art_names.py         — every artId resolves to a png (--fail-missing-only)
+  3c. scan_unresolvable_trigger_selectors.py — no fired trigger with a player-choice selector
 
 They VERIFY and never write, so they behave identically under --check and --write. A gate
 failure is a real defect rather than staleness: it exits 2, not 1. `--skip-gates` exists for
@@ -61,7 +65,6 @@ for _stream in (sys.stdout, sys.stderr):
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SO_REBAKE = ROOT / "tooling" / "scripts" / "rebake_card_definition_so_assets.py"
 DRIFT_PROBE = ROOT / "tooling" / "scripts" / "check_deck_pool_drift.py"
 ID_DRIFT = ROOT / "tooling" / "scripts" / "check_card_id_drift.py"
 ADMIN_BUILD = ROOT / "tooling" / "card-admin" / "build_data.py"
@@ -120,7 +123,7 @@ def step_id_drift():
     the repo, invisible to `dotnet test`, and silently hidden by the deckbuilder when it fails to
     resolve. `--write` cannot repair that, so this step's job is to say so out loud.
     """
-    banner("0/5  CARD ID DRIFT  (advisory — saved decks live outside this repo)")
+    banner("0/4  CARD ID DRIFT  (advisory — saved decks live outside this repo)")
     code, _ = run([sys.executable, str(ID_DRIFT)])
     if code == 0:
         return "OK"
@@ -132,16 +135,8 @@ def step_id_drift():
     return "DRIFT"
 
 
-def step_so_assets(write):
-    banner("1/5  BAKED CardDefinitionSO ASSETS")
-    code, _ = run([sys.executable, str(SO_REBAKE), "--write" if write else "--check"])
-    if code == 2:
-        return "ERROR"
-    return "OK" if code == 0 else "STALE"
-
-
 def step_admin_aggregate(write):
-    banner("2/5  CARD-ADMIN AGGREGATE  (data.json + data.js)")
+    banner("1/4  CARD-ADMIN AGGREGATE  (data.json + data.js)")
     argv = [sys.executable, str(ADMIN_BUILD)] + ([] if write else ["--check"])
     code, _ = run(argv)
     if write:
@@ -173,7 +168,7 @@ def dotnet_test(filter_expr):
 
 
 def step_deck_fixtures(write, skip):
-    banner("3/5  STARTER DECK FIXTURES")
+    banner("2/4  STARTER DECK FIXTURES")
     if skip:
         print("SKIPPED by --skip-fixtures. The Unit lane still gates this; run it before you push.")
         return "SKIPPED"
@@ -273,7 +268,7 @@ def step_gates(write, skip):
     These verify and never regenerate, so --check and --write reach the same verdict; --write
     only differs in that it may repair an art-name typo before re-asking 4b.
     """
-    banner("4/5  CONTENT GATES  (what CI Stage 6 will fail on)")
+    banner("3/4  CONTENT GATES  (what CI Stage 6 will fail on)")
     if skip:
         print("SKIPPED by --skip-gates. CI still runs all three; skipping only defers the failure.")
         return "SKIPPED"
@@ -337,7 +332,6 @@ def main():
 
     results = {
         "card_id_drift": step_id_drift(),
-        "baked_so_assets": step_so_assets(args.write),
         "card_admin_aggregate": step_admin_aggregate(args.write),
         "deck_fixtures": step_deck_fixtures(args.write, args.skip_fixtures),
         "content_gates": step_gates(args.write, args.skip_gates),

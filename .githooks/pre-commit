@@ -90,31 +90,7 @@ fi
 echo "pre-commit: card rows staged — checking what is derived from them."
 echo "$STAGED_CARDS" | sed 's/^/  /'
 
-# ── 1. The baked CardDefinitionSO assets ─────────────────────────────────────────────────────
-#
-# --check lists every mismatch across all 36 assets rather than stopping at the first, which is
-# exactly where the parity test is weak: its Assert.Multiple sits inside a foreach, so the test
-# only ever names the alphabetically-first stale asset.
-if ! REPORT=$(python tooling/scripts/rebake_card_definition_so_assets.py --check); then
-    echo "$REPORT"
-    cat >&2 <<'BLOCKED'
-
-pre-commit: BLOCKED — baked CardDefinitionSO assets disagree with the card rows.
-
-Nothing in Unity will fix this for you: there is no ScriptedImporter, and
-`Emberfall/Validate All Cards` reads the rows without ever opening Assets/Cards.
-
-  python tooling/scripts/rebake_card_definition_so_assets.py --write
-
-then stage the assets it rewrites and commit again. Staging is left to you on purpose —
-a hook that stages files puts them in whichever commit happens to be running, which is
-not always yours.
-BLOCKED
-    exit 1
-fi
-echo "$REPORT"
-
-# ── 2. The generated starter decks ───────────────────────────────────────────────────────────
+# ── The generated starter decks ───────────────────────────────────────────────────────────
 #
 # Advisory, never blocking: regenerating needs a dotnet build, far too slow for a commit hook,
 # and the new decks deserve eyes rather than a rubber stamp. DefaultDeckFixtureTests is the

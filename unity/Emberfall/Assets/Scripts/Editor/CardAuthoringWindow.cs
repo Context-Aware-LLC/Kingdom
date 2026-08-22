@@ -116,9 +116,7 @@ namespace Emberfall.Editor
             if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(70))) OnDuplicate();
             if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(50))) OnDelete();
             GUILayout.Space(8);
-            if (GUILayout.Button("Save (JSON only)", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
-            if (GUILayout.Button("Bake Selected", EditorStyles.toolbarButton, GUILayout.Width(90))) OnBakeSelected();
-            if (GUILayout.Button("Bake All", EditorStyles.toolbarButton, GUILayout.Width(60))) OnBakeAll();
+            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
             if (GUILayout.Button("Validate All", EditorStyles.toolbarButton, GUILayout.Width(80))) CardSetValidator.RunAndLog();
             GUILayout.FlexibleSpace();
             GUILayout.Label(_dirtyIds.Count > 0 ? $"● {_dirtyIds.Count} unsaved" : "saved", EditorStyles.miniLabel);
@@ -518,47 +516,6 @@ namespace Emberfall.Editor
             CardJsonRowIO.SaveRows(CardJsonRowIO.DefaultEmberfallJsonPath, defs);
             AssetDatabase.Refresh();
             _dirtyIds.Clear();
-        }
-
-        private void OnBakeSelected()
-        {
-            if (_selected < 0) return;
-            var card = _cards[_selected];
-            var (core, _) = Validate(card);
-            if (!core.Ok)
-            {
-                EditorUtility.DisplayDialog("Bake Blocked",
-                    $"'{card.Id}' has validation errors — fix them before baking.",
-                    "OK");
-                return;
-            }
-
-            SaveAll();
-            var importer = new CardImporter(_validator, LiveDb());
-            var result = importer.ImportRow(card.ToDefinition());
-            if (result.Success)
-                Debug.Log($"[Card Authoring] Baked '{card.Id}' -> {string.Join(", ", result.AssetPaths)}");
-            else
-                Debug.LogError($"[Card Authoring] Bake failed for '{card.Id}'.");
-        }
-
-        private void OnBakeAll()
-        {
-            var blocked = _cards.Select(c => (c, report: Validate(c).core))
-                .Where(r => !r.report.Ok)
-                .ToList();
-            if (blocked.Count > 0)
-            {
-                bool proceed = EditorUtility.DisplayDialog("Some Cards Blocked",
-                    $"{blocked.Count} card(s) fail validation and will be skipped: {string.Join(", ", blocked.Select(b => b.c.Id))}. Bake the rest?",
-                    "Bake Rest", "Cancel");
-                if (!proceed) return;
-            }
-
-            SaveAll();
-            var importer = new CardImporter(_validator, LiveDb());
-            var result = importer.ImportAllFromFlatFile(CardJsonRowIO.DefaultEmberfallJsonPath);
-            Debug.Log($"[Card Authoring] Baked {result.AssetPaths.Count} card(s). Success={result.Success}");
         }
     }
 }
