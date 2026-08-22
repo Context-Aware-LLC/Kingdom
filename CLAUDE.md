@@ -155,12 +155,6 @@ rewrites `productName` to its role name, so expect it after every scenario run.
 Unity holds project settings in memory and overwrites a file edited underneath it). The rename
 is harmless while it stays in the working tree; only the commit is damaging.
 
-## Conventions
-
-- Shaders use the `SG_<Name>` naming convention.
-- Keep cross-references explicit (e.g. "see `hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.3`") when one spec depends on
-  another.
-
 ## Two things about this working copy that will cost you a day
 
 **Stage every commit by explicit path. Never `git add -A`.** More than one session or worktree can
