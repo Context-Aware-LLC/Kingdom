@@ -27,7 +27,7 @@
     <ui:VisualElement name="root" class="emb-root ms-root" picking-mode="Ignore">
 
         <!-- Persistent corner button -->
-        <ui:Button name="btn-settings" class="ms-gear">
+        <ui:Button name="btn-settings" class="ms-gear emb-edge">
             <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
             <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
             <ui:VisualElement class="ms-gear-bar" picking-mode="Ignore" />
