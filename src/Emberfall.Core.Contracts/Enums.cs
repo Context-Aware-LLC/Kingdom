@@ -50,15 +50,17 @@ namespace Emberfall.Core.Contracts
     ///
     /// <para>AURA is live as a continuous board-minion recompute, not an event raise. Its narrow
     /// capability relation lives in <c>AuraCapabilities</c>; all other source/action/target shapes fail
-    /// closed. The markers below are the guard, and `CLAUDE.md` repeats them for card authors.</para>
+    /// closed. The markers below are the guard; `dev-docs/specs/card-schema.md` ("Hazards") repeats
+    /// them for card authors.</para>
     ///
     /// <para><b>RETIREMENT TRIGGER — you are the person this comment was left for.</b> Every member
     /// below is currently LIVE for at least one source kind, so this fires for a trigger you ADD.
     /// Adding one — or adding the first `RaiseSelf`/`Raise` site for a member you marked DEAD —
     /// must, in that same change: (1) mark its liveness here, (2) table its exact source/trigger
     /// pairs in `EffectSourceCapabilities`, since omitting it is the only thing that makes
-    /// `C21-TRIGGER-DEAD` reachable and that branch cannot fire today, and (3) update the trigger
-    /// section of `CLAUDE.md` ("Continuous AURA"), which states that unreachability as a fact.
+    /// `C21-TRIGGER-DEAD` reachable and that branch cannot fire today, and (3) update the
+    /// "Hazards" section of `dev-docs/specs/card-schema.md`, which states that unreachability as a
+    /// fact (it lived in `CLAUDE.md` until 2026-08-22).
     /// Do all three in the commit that adds it — nobody will come back for them later.</para>
     ///
     /// <para>Order is load-bearing: these are serialized by name, but do not reorder casually.</para>

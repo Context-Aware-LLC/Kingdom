@@ -2,8 +2,6 @@
 
 A digital, turn-based **1v1 collectible trading card game** 
 
-Inspired by Blizzard's *Hearthstone*. Fast to learn, deep to master, readable on one screen, built for live-service content cadence (card sets, balance patches, cosmetics).
-
 **Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules engine that runs headless on the server. 
 **There is no client-side prediction** (ADR-0004): the client mirrors server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
 
@@ -56,114 +54,31 @@ which points at an access modifier. The live declarations are in
 
 **Never state a number, a count, or a "none found" that you did not read off a command's output in the same session.** "No duplicates found" and "all entries are valid" are the most dangerous sentences you can write, because they look like verification and cost nothing to fabricate.
 
-**Why this is a hard rule and not an obvious one.** On 2026-07-29 an agent was asked to
-inventory the card data. It wrote `tooling/scripts/card_inventory.py` — a correct script, still
-in this repo, which prints 143/42/73 for a total of 258. It then reported 114/47/72 for a total
-of 233, in a formatted table with bold totals, contradicted its own per-class breakdown, closed
-with two confident all-clears over data it had never read, and marked the issue **done**. The
-run recorded **succeeded**, exit 0.
 
-It had the right answer in front of it and typed a different one. Having the tool is not the
-safeguard. **Reading its output is the safeguard.**
+## Card effects: the trigger name is not the behaviour
 
-## Continuous AURA
+**Before authoring or changing anything inside a card's `rules[]` — activation, condition, lifetime,
+action, target — or touching an engine raise site behind one, read the `Hazards` and `What a weapon
+can and cannot do` sections of `docs/dev-docs/specs/card-schema.md`.** That is where the
+trigger-by-trigger behaviour lives: what each one actually raises, what it deliberately stays
+silent on, and what a weapon can express. Same shape as the vulnerability-index rule below — a
+match is obvious and the scan takes seconds.
 
-**`AURA` is a continuous derived-stat recompute, not a queued event.** It is currently limited
-to unsilenced board minions with `ALWAYS` + `SOURCE_BOUND` `MODIFY_STATS` rules targeting an
-automatic minion set (`SELF`, friendly/enemy/all minions, or adjacent). Player/random choices,
-filters, counts, bindings, non-minion targets, keyword grants, and every other source/action
-shape fail closed in `AuraCapabilities` and `CardValidator`.
+The one line to carry without reading: **a trigger that parses is not a trigger that fires, and
+liveness is per SOURCE TYPE, never per trigger name.** `ON_ATTACK` is valid on a weapon and dead on
+a minion; `ON_TURN_END` fires on *both* players' turn ends; `ON_HEAL` means "this minion was
+healed" and never fires on a hero. A membership check against the `Trigger` enum catches none of
+that. `CardValidator` rule C21 enforces the real relation — **assign the exact source/trigger pair
+in the same commit that lands its raise path.**
 
-**`ON_HEAL` is a SELF trigger on the healed minion, and minion-only** (EF-015) —
-`DamagePipeline.ApplyHeal` raises it with `RaiseSelf`, mirroring `ON_DAMAGED` at the sibling site. It
-means "whenever *this* minion is healed", never "whenever anything is healed"; a card that reacts to
-somebody else being healed cannot be expressed today. Two silences are deliberate and both are load-
-bearing: an **overheal raises nothing** (a target already at max restores nothing, so nothing was
-healed — the same "the no-op is not the event" precedent as an Aegis-absorbed hit), and a **hero heal
-raises nothing**, because heroes carry no card effects. That second one is why the reentrant LIFEDRAIN
-heal inside `ApplyDamage` — the path the trigger was expected to fire on — fires it on nobody: lifedrain
-always heals the source's own *hero*. Dead on `SPELL`/`WEAPON` permanently, not pending a lifecycle:
-neither has health to restore.
+**When the doc and the code disagree, the code wins.** The `Trigger` enum in
+`src/Emberfall.Core.Contracts/Enums.cs` carries a liveness marker, raise site and retirement
+trigger per member; `EffectSourceCapabilities`, `AuraCapabilities` and `CardValidator` hold the
+tables. The spec doc is a copy of those, and the copy is the thing to fix.
 
-**`ON_TURN_START` is live for board minions, equipped weapons, and resolved ongoing spell effects
-with an explicit turn-owner condition** (EF-011 / NOR-31).
-Every such effect must declare `condition: {type: TURN_OWNER, value: CONTROLLER|OPPONENT|ANY}`;
-missing ownership fails validation and runtime fails closed. It is raised in `StartTurnSequence`
-**after** the mana reset and **before** the draw, so a start-of-turn effect sees a board with mana
-already refilled, and a lethal start-of-turn cascade ends the match instead of drawing into a
-finished game. **The board it sees may still be frosted** — since NOR-355 the thaw runs at the
-END of the frozen player's turn in `ApplyEndTurn`, not at the start of the next one. A resolved spell creates a carrierless ongoing observer for an
-explicit `ONE_SHOT`, `FINITE`, or `PERMANENT` future rule; ordinary hand, deck, and graveyard cards
-never observe.
-
-**`ON_TURN_END` fires on BOTH players' turn ends** (EF-012) — it is an observer sweep over every
-permanent on both boards, not "at the end of *your* turn". A card that should only fire on its
-controller's turn end cannot be expressed today.
-
-**`ON_SPELL_CAST` fires on BOTH players' casts and NOT on hero powers** (EF-016) — it is an
-observer sweep over both boards, so it means "whenever *any* spell is cast", not "whenever *you*
-cast". It is raised only from `ApplyPlayCard`'s `CardType.SPELL` arm; a hero power raises the same
-`ON_CAST` through a carrierless `HERO_POWER` source context and deliberately does not fire this. **Subscribers
-are snapshotted at cast time**, so a minion the spell itself kills still reacts — that is
-`RaiseObservers`' shape, shared with `ON_FRIENDLY_SUMMON` and `ON_TURN_END`.
-
-**`ON_ATTACK` is the trap** — it is raised for **weapons only**, so it is *valid* on a weapon
-and *dead* on a minion. A membership check alone will not catch that.
-
-**`ON_DEATH` fires on a weapon as well as a minion** (EF-020) — `RulesEngine.BreakWeapon` raises it
-on **durability exhaustion** and on **equip-replacement**. The non-obvious half: it *enqueues* like a
-minion's, so on a replacement the **new weapon is already equipped** when the old one's rattle
-resolves — an `ON_DEATH` that equips will break the replacement, not itself.
-
-Lift a name from this list only when its raise site actually exists. `CardValidator`
-rule **C21** now enforces this (EF-021): it rejects a dead trigger (`C21-TRIGGER-DEAD`) and
-rejects source types without a wired lifecycle. The source of truth is the shared
-`EffectSourceCapabilities` relation — **assign the exact source/trigger pair in the same commit
-that lands its raise path**.
-
-**Liveness is per source type, never per trigger name — generalise the `ON_ATTACK` trap above.**
-Every member of the `Trigger` enum is tabled against at least one source kind, so
-`EffectSourceCapabilities.SupportsAny` is true for all of them and **`C21-TRIGGER-DEAD` is
-currently unreachable**: it can only fire for an enum member added without a table entry. The
-rejection an author actually meets is source-scoped — `C21-TRIGGER-WEAPON-ONLY`,
-`C21-TRIGGER-MINION-ONLY`, `C21-TRIGGER-SOURCE-UNSUPPORTED`. Reading "the trigger is live" as
-"live on my card type" is the mistake this rule exists to catch. The enum's own retirement
-trigger covers this paragraph: adding a trigger is what makes the dead branch reachable again.
-Do not promote a type-scoped trigger to Live until every accepted source type has a runtime path.
-This prose list is no longer the only guard, but keep it in sync with the table.
-
-**This list does not live here alone.** Each member of the `Trigger` enum in
-`Emberfall.Core.Contracts/Enums.cs` is marked with its exact liveness on its own line, with the
-intended raise site and the retirement trigger. That is the copy an implementer actually meets.
-If the two ever disagree, **the enum markers win** — they sit next to the code and this file does
-not.
-
-## What a weapon can and cannot do
-
-A weapon is the original `CardInstance` moved from hand into `Zone.Weapon`; it keeps that identity
-until `BreakWeapon` moves the same object to the graveyard. Its keywords, enchantments and current
-durability are ordinary card state and survive those public-zone transitions.
-
-Weapon attacks carry `LIFEDRAIN`, `VENOM`, `FROST`, and `DOUBLESTRIKE`. The first three enter the
-existing fixed damage-rider order; `DOUBLESTRIKE` raises the hero's attack budget to two.
-`SILENCE`, `BACKDRAFT`, and `REINFORCE` remain enum slots only for wire/hash ordinal stability:
-their behavior and generated markers come from typed actions, so they are illegal as carrier or
-granted keywords. `CardValidator`'s fail-closed weapon-carrier table rejects every other keyword
-with no weapon behavior; weapon-ness alone is not a rejection reason.
-
-A weapon's expressive surface includes **stats**, **`ON_PLAY`** (equip herald), **`ON_ATTACK` with
-a static selector** — that trigger fires with an empty target list, so "the minion this hits" is not
-addressable — **`ON_DEATH`** (EF-020), and persistent observer rules such as `ON_TURN_START`,
-`ON_TURN_END`, `ON_FRIENDLY_SUMMON`, and `ON_SPELL_CAST`. Observer ordering is board minions
-left-to-right, then the equipped weapon, for the incoming/active side before the other side.
-
-**A weapon toll resolves with the weapon already in its controller's graveyard**, and on an
-equip-replacement with the *replacement* already in the slot. A `SELF`-selector effect on one
-therefore targets nothing: a weapon is not in `Zone.Board`.
-
-Changing a weapon's runtime shape is **hash-canonical** because `PlayerState.Weapon` is game state.
-Update the canonical serializer, projection, snapshot codec, shared field/mutation manifest, pinned
-digest, and affected golden fixtures under the rebaseline guard in one reviewed change.
+**Changing a weapon's runtime shape is hash-canonical**, because `PlayerState.Weapon` is game state.
+Canonical serializer, projection, snapshot codec, shared field/mutation manifest, pinned digest and
+affected golden fixtures move together in one reviewed change, under the rebaseline guard.
 
 ## Player-facing input consults the vulnerability index
 
@@ -193,8 +108,8 @@ leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touc
 to update. Conversely — **if you are editing a line that carries one, discharging it is part of
 your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
 
-**Do not list the placed markers here — a list of them is itself a record that drifts.** One went
-stale within days of being written, naming `CardValidator`, which never carried a marker at all.
+**Do not list placed markers here**
+ — a list of them is itself a record that drifts.** 
 Ask the repo instead, and note that they are spread across the engine, the Unity presentation layer
 and `tooling/`, not just `src/`:
 

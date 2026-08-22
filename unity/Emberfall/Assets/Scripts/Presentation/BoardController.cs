@@ -191,7 +191,7 @@ namespace Emberfall.Presentation
                 //
                 // Marking it live would mark the HAND card live: an equipped weapon is the same
                 // runtime CardInstance, with the same InstanceId, that was in hand a moment ago
-                // (CLAUDE.md, "What a weapon can and cannot do"). The departed-card sweep below
+                // (dev-docs/specs/card-schema.md, "What a weapon can and cannot do"). The sweep below
                 // would then never park it, nothing would destroy its presenter, and the weapon
                 // would sit in the hand fan for the rest of the match — GH #166, "Searing Quill
                 // remains in hand after use". The `_thisLive.Add(weapon.Id)` that did exactly that
@@ -202,7 +202,7 @@ namespace Emberfall.Presentation
                 // RETIREMENT TRIGGER: registering a presenter for the equipped weapon means adding
                 // a sync call back HERE, and it cannot be the old one — "keep the weapon view alive"
                 // and "destroy the hand view" are the same id and cannot both be one _thisLive
-                // entry. Whoever does it updates this comment and CLAUDE.md's weapon section.
+                // entry. Whoever does it updates this comment and the card-schema weapon section.
             }
 
             // Park presenters for cards that left hand and board — resolved at end of frame, once
