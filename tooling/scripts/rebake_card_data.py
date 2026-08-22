@@ -266,7 +266,7 @@ def step_gates(write, skip):
     """Replay the blocking content gates from CI Stage 6 against the rows as they stand.
 
     These verify and never regenerate, so --check and --write reach the same verdict; --write
-    only differs in that it may repair an art-name typo before re-asking 4b.
+    only differs in that it may repair an art-name typo before re-asking 3b.
     """
     banner("3/4  CONTENT GATES  (what CI Stage 6 will fail on)")
     if skip:
@@ -275,7 +275,7 @@ def step_gates(write, skip):
 
     failed = []
 
-    print("-- 4a  Emberfall.Tools.CardCi --")
+    print("-- 3a  Emberfall.Tools.CardCi --")
     code, _ = run([
         "dotnet", "run", "--project", str(CARD_CI_PROJECT), "-c", "Release",
         "--", str(CARD_DIR), str(ART_DIR),
@@ -288,16 +288,16 @@ def step_gates(write, skip):
             "C-series code is a named validation rule you can look up in CardValidator."
         )
 
-    print("\n-- 4b  audit_card_art_names.py --fail-missing-only --")
+    print("\n-- 3b  audit_card_art_names.py --fail-missing-only --")
     code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
     if code != 0:
         if repair_art_names(write):
-            print("\n-- re-running 4b after the rename --")
+            print("\n-- re-running 3b after the rename --")
             code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
         if code != 0:
             failed.append("art-names")
 
-    print("\n-- 4c  scan_unresolvable_trigger_selectors.py --")
+    print("\n-- 3c  scan_unresolvable_trigger_selectors.py --")
     code, _ = run([sys.executable, str(TRIGGER_SCAN)])
     if code != 0:
         failed.append("trigger-selectors")

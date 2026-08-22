@@ -4534,7 +4534,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "night_neutral_salvaged_golem",
+      "id": "night_salvaged_golem",
       "name": "Salvaged Golem",
       "type": "MINION",
       "cost": 4,
@@ -4574,7 +4574,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "night_neutral_bridge_warden",
+      "id": "night_bridge_warden",
       "name": "Bridge Warden",
       "type": "MINION",
       "cost": 5,

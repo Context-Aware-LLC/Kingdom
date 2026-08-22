@@ -83,7 +83,7 @@ fi
 
 if ! command -v python >/dev/null 2>&1; then
     echo "pre-commit: python not on PATH — skipping the card-derivation checks." >&2
-    echo "            Run tooling/scripts/rebake_card_definition_so_assets.py --check by hand." >&2
+    echo "            Run tooling/scripts/check_deck_pool_drift.py by hand." >&2
     exit 0
 fi
 

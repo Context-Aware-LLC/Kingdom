@@ -23,7 +23,7 @@
     "background": "A cool blue predawn street of pale rubble and receding scaffold poles, contrasting with the warm repairs and lantern core.",
     "notes": "Bulwark reads through width and planted stance. Make repair the identity; no pristine armor, humanoid knight, weapon, giant gate, heraldry, or magical shield bubble."
   },
-  "night_neutral_salvaged_golem": {
+  "night_salvaged_golem": {
     "subject": "A sturdy humanoid golem assembled from useful wreckage: one granite shoulder, one riveted iron shoulder, cedar support beams, and a bronze boiler chest lit by a warm amber core. It lifts a single broken lintel with both hands while its mismatched legs remain squarely planted.",
     "perspective": "Slight low-angle full-body three-quarter view with the golem, raised lintel, and both planted feet inside the middle 70%.",
     "background": "A deep cobalt-blue canvas screen and hazy teal work-yard shadow, separating the cool grey granite and iron silhouette while the warm cedar beams, bronze chest, and amber core remain distinct.",
@@ -35,7 +35,7 @@
     "background": "A cool blue-grey morning above half-rebuilt stone walls and thin silver mist, giving the warm banner immediate contrast.",
     "notes": "The banner must be plain with no text, crest, logo, sun symbol, or nation marker. No army, victory parade, throne, weapon flourish, or battlefield corpses."
   },
-  "night_neutral_bridge_warden": {
+  "night_bridge_warden": {
     "subject": "A broad human warden in layered iron-grey plates stands at the repaired center joint of a timber-and-stone bridge, holding a rectangular aged-bronze toll shield across the body. Moss-green ropes wrap the forearms, and a single warm lantern hangs beneath the bridge rail beside the planted stance.",
     "perspective": "Eye-level full-body frontal three-quarter view with the warden, shield, bridge joint, and both boots centered and unobscured.",
     "background": "A pale cold river gorge and blue-white morning mist open behind the dark armored figure, creating a clean silhouette.",

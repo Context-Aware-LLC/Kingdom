@@ -1,5 +1,18 @@
 [
-      {
+  {
+    "id": "stone_reclaimed_fortress",
+    "name": "Reclaimed Fortress",
+    "type": "SPELL",
+    "cost": 5,
+    "class": "STONEWARDEN",
+    "rarity": "EPIC",
+    "keywords": [],
+    "rules": [],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "stone_reclaimed_fortress"
+  },
+    {
     "id": "clock_nameless_bell",
     "name": "Nameless Bell",
     "type": "MINION",
@@ -9,7 +22,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "EPIC",
     "keywords": ["OVERWHELM"],
-   
+    "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "clock_nameless_bell"
@@ -139,7 +152,7 @@
     "artId": "restored_bulwark"
   },
   {
-    "id": "night_neutral_salvaged_golem",
+    "id": "night_salvaged_golem",
     "name": "Salvaged Golem",
     "type": "MINION",
     "cost": 4,
@@ -195,7 +208,7 @@
     "artId": "new_dawn_bannerman"
   },
   {
-    "id": "night_neutral_bridge_warden",
+    "id": "night_bridge_warden",
     "name": "Bridge Warden",
     "type": "MINION",
     "cost": 5,

@@ -70,6 +70,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a234e08b68ddfb4d9d27c6f12b3b5ca
+    m_Address: card_art/clock_nameless_bell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2c6cfd9d91bd4eb9b4dadf55ea4de435
     m_Address: card_art/tide_shoreline_pact
     m_ReadOnly: 0
@@ -367,6 +372,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d586fd6629144a4eb4a5c9bd8831b72d
     m_Address: card_art/grave_pact_of_mourning
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de011fda5b6957046a52990b8dc1d108
+    m_Address: card_art/jolly_portrait
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
