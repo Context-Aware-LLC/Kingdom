@@ -225,6 +225,15 @@
         "com.unity.test-framework": "1.1.33"
       }
     },
+    "com.unity.inputsystem": {
+      "version": "1.19.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.mathematics": {
       "version": "1.4.0",
       "depth": 2,
