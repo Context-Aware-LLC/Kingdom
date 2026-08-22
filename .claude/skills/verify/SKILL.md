@@ -47,6 +47,23 @@ before you report that work as done — a green cloud CI run tells you nothing a
    - If `workingTreeDirty` is true, mention which paths were dirty — the result is only about what's actually committed at that SHA.
    - If step 4 fixed the failure, say so and report the now-passing result. If step 4 escalated say that instead of re-stating the original failure as if nothing happened after it.
 
+## When the Editor is open and you cannot run the gate
+
+The gate's checks do not themselves need a dedicated Editor — only the wrapper does.
+`HeadlessVerify.RunAll` is a loop over plain statics (`A5WireVerify.Run`,
+`CardSetValidator.RunAndLog`, and the rest — read the file, do not trust a list here), and the only
+reason it needs its own Editor is the `EditorApplication.Exit()` on its last line. Call the statics
+individually through `unity command eval` — same `logMessageReceived` capture, no `Exit` — and you
+get a PASS/FAIL answer against the Editor that is already open.
+
+**Never `eval` `RunAll` itself: it will close the operator's Editor.**
+
+This is evidence, not a substitute. The gate runs them `-batchmode -nographics` on a cold domain
+after a forced reimport; an `eval` runs them in a warm graphical Editor, so a check that only fails
+on a cold domain still slips through. Use it to keep moving while the Editor is open; still run the
+real gate before a push. If `C:\claude-editor` is free (see its `EDITOR-LOCK.md`), prefer running
+the real gate there over `eval`-ing — but check what branch it is on first.
+
 ## What this is not
 
 A cached PASS is a reason to skip re-running the gate for the *same* question asked twice, not a reason to skip running it at all before a push — `tools/ci/README.md`'s "run this before every push" guidance for `unity-compile.ps1` still stands. This skill answers "what did the gate last say about this commit," not "is it safe to assume Unity still compiles" once new commits land.

@@ -177,55 +177,65 @@ even `--only`, via the temp index) — that one is about writes *during* the com
 about what was already sitting in the index before it. Both end with your name on someone else's
 file.
 
-**The Unity Editor is a single-writer resource — but only against `-batchmode`.** An open Editor
-holds `unity/Emberfall/Temp/UnityLockfile`, and anything spawning its own Editor blocks on it. That
-is what `tools/ci/unity-verify.ps1` does, so **the verify half of the gate still needs the Editor
-closed** and still reports the lock as an error rather than clearing it. A domain reload takes ~45 s
-and nothing else gets in during that window.
+## Unity: the Editor is a single-writer resource
 
-**But the eight checks themselves do not need a closed Editor — only the wrapper does.**
-`HeadlessVerify.RunAll` is a loop over eight plain statics (`A5WireVerify.Run`,
-`CardSetValidator.RunAndLog`, `UxmlIntegrityCheck.Check`, `CharacterRosterVerify.Check`,
-`PlayerAccountTools.SelfCheck`, `AddressablesGuard.Check`, `DeviceLayoutVerify.Check`,
-`InputGestureVerify.Run`); the *only* reason it needs a dedicated Editor is the
-`EditorApplication.Exit()` on its last line. Call them yourself through `unity command eval` — same
-`logMessageReceived` capture, no `Exit` — and you get the PASS/FAIL table against the Editor that is
-already open. **Never `eval` `RunAll` itself: it will close the operator's Editor.**
+**An open Editor holds `unity/Emberfall/Temp/UnityLockfile`, and anything spawning its own Editor
+blocks on it.** `tools/ci/unity-verify.ps1` does exactly that, so the verify half of the gate needs
+the Editor closed, and it reports the lock as an error rather than clearing it. Never clear it
+yourself.
 
-This is evidence, not a substitute. The gate runs them `-batchmode -nographics` on a cold domain
-after a forced reimport; an `eval` runs them in a warm graphical Editor, so a check that only fails
-on a cold domain still slips through. Use it to keep moving while the Editor is open; still run the
-real gate before a push. Verified 2026-08-21 (all eight PASS both ways).
+**Drive an already-open Editor instead of spawning one.** The Unity CLI reaches a running Editor
+through the project's `com.unity.pipeline` package, so it takes no lock and contends with nobody:
+`unity command menu --path "<menu item>"` replaces `Unity.exe -batchmode -executeMethod`, and every
+command takes `--json`. `unity pipeline list` is what diagnoses a connection failure; the
+`unity-cli` skill carries the rest, including the Safe Mode recovery loop.
 
-**Drive the open Editor instead of spawning one, whenever there is one.** The Unity CLI
-(`~/AppData/Local/Unity/bin/unity.exe`, not on PATH — call it by absolute path) talks to a running
-Editor over the project's `com.unity.pipeline` package, so it takes no lock and contends with
-nobody. `unity command menu --path "<menu item>"` replaces
-`Unity.exe -batchmode -executeMethod`, and every command takes `--json`.
-
-- **`unity status` lies when the Editor is busy.** Mid-compile it returns `STATUS_NO_INSTANCES` —
-  *"Open Unity and install the Pipeline package"* — with the package installed and the Editor open,
-  sending you to redo work you have already done. **`unity pipeline list` is the honest one**: it
-  reports `hasPipelinePackage`, `isRunning`, and `pipelineServer.isReachable` separately, which is
-  what actually distinguishes "not installed" from "still compiling".
-- **Compile results are structured and correctly typed.** `unity command recompile_status` returns
-  `failed` plus the error text, and `unity command console --level error` really does filter
-  errors. Verified 2026-08-20 against a deliberate break, and it is why the old MCP hazard here —
-  compile errors arriving typed `"Log"`, so a severity filter hid them — is gone rather than
-  merely undocumented. **`console` is a `command` subcommand, not a top-level one** — bare
-  `unity console` is `unknown command 'console'`, which reads like a missing feature rather
-  than a wrong invocation (CLI 0.5.0-exp.1, 2026-08-21).
-- **The Editor was not started with `-automated`**, and the Pipeline server says so on startup: a
-  modal dialog can stall the command channel. Relaunch with `-automated` before anything that can
-  raise one.
-- **UNTESTED: Safe Mode.** A project that *boots* with compile errors drops the Editor into Safe
-  Mode, where the Pipeline package does not load and the CLI cannot connect at all — it will look
-  like a connection fault, not a compile fault. Breaking a file in an *already running* Editor does
-  not reproduce this and is not evidence against it. If the CLI goes silent, run `unity pipeline
-  list` and suspect Safe Mode before anything else.
+**With two Editors open the CLI drives the WRONG one and labels it convincingly.** Measured
+2026-08-21: `unity pipeline list --json` reported exactly one instance, labelled with the
+WORKTREE's path, while evaluated code returned the MAIN COPY's `Application.dataPath`, and
+`--project-path` did not change it. **A path label is not evidence of which Editor you are
+driving** — return `Application.dataPath` and read it before any eval that writes, or a mutating
+eval aimed at your worktree lands silently in somebody else's project. `-batchmode -executeMethod`
+is exempt: there `-projectPath` is the target, not a hint.
 
 **RETIREMENT TRIGGER:** the Unity MCP relay and its two skills were removed 2026-08-20 in favour of
-the above; if an MCP path is ever reinstated, this section and `.claude/skills/` change together.
+the CLI; if an MCP path is ever reinstated, this section and `.claude/skills/` change together.
+
+## The shared headless Editor at `C:\claude-editor`, and its lock
+
+**Before you touch `C:\claude-editor` at all, read `C:\claude-editor\EDITOR-LOCK.md`.** Occupied
+by someone else → do not `cd` into it, do not `git -C` it, do not launch Unity on it, do not "just
+check something quickly". Editing that file's status block IS claiming and releasing it. Nothing
+else is authoritative — the brain pages `handoff/unity-editor` and `handoff/unity-editor-status`
+are pointers that say so themselves, because a lock read from two gbrain lanes returned two
+different statuses at the same moment.
+
+It is a permanent git worktree of this repo carrying its own warm Unity `Library/` (gitignored), so
+a session can run the compile gate, `HeadlessVerify`, a build or the Device Simulator **without
+contending for Sam's own Editor** — a different folder, not covered by this lock. For Claude
+sessions working directly with Sam; not for Paperclip agents, which take isolated worktrees.
+
+**Nothing keeps it current with `master`, and a stale gate run comes back GREEN.** It is one
+worktree on one branch, so a result from it is about whatever is checked out there. Read
+`git -C /c/claude-editor rev-parse --abbrev-ref HEAD` and how far behind it is before you believe
+anything it tells you.
+
+Three reasons the lock is not optional, all of which bite silently:
+
+1. **One worktree is one branch** — a second session switching branches underneath an occupant
+   destroys their run mid-flight.
+2. **`Temp/UnityLockfile` is per project folder** — one Editor or one batchmode run at a time.
+3. **Every Unity run rewrites tracked assets that are not yours** — `EditorBuildSettings.asset`,
+   `ShaderGraphSettings.asset`, the codecoverage `Settings.json`, sometimes a card `.meta` or the
+   URP globals. The damage arrives looking like your own diff.
+
+**Releasing is part of the task.** Revert Unity's collateral, confirm `productName` is still
+`Emberfall`, park the worktree off any feature branch, and set the block back to `VACANT`. A stale
+claim — OCCUPIED, no `Unity.exe` on that path, `since` older than 30 minutes — is fair to take; say
+so in the file when you do.
+
+**RETIREMENT TRIGGER:** if `C:\claude-editor` is deleted, moved, or stops carrying its own
+`Library/`, this section dies with it, and so do those two brain pointers.
 
 ## Ask the graph before you grep
 

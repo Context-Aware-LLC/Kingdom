@@ -183,3 +183,7 @@ node_modules/
 # Generated CANDIDATES still belong in art-pipeline/, which is ignored in full.
 # Added by code-review-graph
 .code-review-graph/
+
+# The shared-Editor lock (C:\claude-editor). Ephemeral state, never committed --
+# see CLAUDE.md "The shared headless Editor".
+EDITOR-LOCK.md
