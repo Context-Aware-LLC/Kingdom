@@ -120,76 +120,28 @@ git grep -n "RETIREMENT TRIGGER" -- src tooling tools unity
 **A claim with no retirement trigger and no expiry is fine.** Most of this file is that — a hazard
 that is simply true. Only pin the ones that a known, named change will invalidate.
 
-## Generated art lands in `art-pipeline/`
-`art-pipeline/` is gitignored in full intentionally
 
-**The default path is candidates-first.**
-`gen_card_art.py` drops candidates into `art-pipeline/card-art/<setId>/<art_file>/cand_<provider>_N.png` with a contact sheet per (setId, class), and a human picks before anything is promoted. Drafted briefs sit beside them as `draft.txt`, so art you like has its prompt next to it.
 
-**Candidates and drafts share one key: the `setId`.** A class-keyed candidate group used to live
-here, which put a card's `draft.txt` and its candidates in different directories for 92 of 260
-cards — the adjacency the candidates folder exists to provide, silently absent. Retired 2026-08-06.
-
-**Expansion at the directory level, class at the filename level (Sam, 2026-08-06):**
-`Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png`, and `<setId>/[<role>_]<name>.png` for
-NEUTRAL — **the absence of a class token is what means neutral.** `<role>` is `hero_power` or
-`token`. Class tokens are abbreviations that do not match their class names: STONEWARDEN is
-`stone`, TEMPEST is `storm`. **An `artId` IS the filename** — there is no `art/` namespace and no
-`art_` prefix; both were dropped because the namespace had one value across all 260 rows and so
-distinguished nothing. `ArtIds.ToFileName` stays a `Replace('/','_')` against a future namespaced
-id, but nothing today has a separator to flatten.
-
-**CORE is hero powers only — in the DATA as well as the art (Sam, 2026-08-15; this replaces the
-2026-08-08 rule, which was art-only and is now retired).** A card is `setId: CORE` if and only if
-it is a hero power. Nothing else may carry it.
-
-Under the old rule a card could be data-tagged `setId: CORE` while its art shipped under
-`Assets/Art/Cards/EMBERFALL/` — one card, two set answers, and the only thing reconciling them was
-a hard-coded exception in `tooling/scripts/audit_card_art_names.py`. On 2026-08-15 that split was
-closed by moving the data to match the art: 24 non-hero-power rows went `CORE` -> `EMBERFALL`, and
-their baked `CardDefinitionSO` assets moved from `Assets/Cards/CORE/` to `Assets/Cards/EMBERFALL/`.
-`Assets/Cards/CORE/` now holds hero powers only. **If you are here to add that exception back to
-`audit_card_art_names.py`, don't — check whether it is still reachable first.**
-
-The same ruling retired the `core_` id prefix. An id names its owner: `neutral_` for a NEUTRAL
-card, the class token otherwise. `core_` survives on no card, and a new one is a mistake — the
-prefix said "belongs to the CORE set", which is now true only of hero powers, and those are
-already prefixed `hero_power_`.
-
-**RETIREMENT TRIGGER:** if a non-hero-power card is ever legitimately tagged `setId: CORE` again,
-this paragraph and the `Assets/Cards/CORE/`-is-hero-powers-only claim both die with it.
-
-**The set folder decides which BUNDLE a file ships in, not its import settings.**
-`CardArtPostprocessor` keys on `Assets/Art/Cards/` — the root, one rule for every set — so import
-settings are identical wherever under it a file sits. What the `<setId>` folder does decide is
-Addressables group membership: `AddressablesSetup` builds one `CardArt_<setId>` group per folder
-found on disk. A file in the wrong set folder therefore **still renders correctly and still passes
-CardCi** — the address is a flat `card_art/<fileName>` with no set in it — while shipping in the
-wrong bundle. Nothing anywhere reports the mismatch between a row's `setId` and its art's folder;
-`tooling/scripts/audit_card_art_names.py` is the only thing that looks. Read the row's `setId`
-before copying.
-
-**`Assets/Art/UI/` subfolders are the opposite — purely organisational.** `EditorUiSpriteProvider`
-searches all of `Assets/Art/UI` recursively by sprite NAME, `AddressablesSetup` addresses that tree
-as `ui/<fileName>`, and the import rule keys on `Assets/Art/UI/` itself. Renaming a subfolder under
-it changes no address and no import setting. Do not reason from `Art/Cards/` to `Art/UI/`.
+## Two things about art files
 
 **Replacing existing art: overwrite the `.png` in place. Never delete the `.png` + `.meta` pair.**
-The `.meta` carries the guid the Addressables entry points at; deleting it mints a new one and silently orphans that entry. Overwriting keeps it. New art still needs its generated `.meta` committed — a separate and easy-to-forget step.
+The `.meta` carries the guid the Addressables entry points at; deleting it mints a new one and
+silently orphans that entry, with no error at any point. Overwriting keeps it. New art still needs
+its generated `.meta` committed — a separate and easy-to-forget step.
 
-**`art-pipeline/` is not load-bearing, and it is fully untracked (Sam, 2026-07-31, restated for the
-renamed folder 2026-08-06).** Every final version already lives under `Assets/`, so the whole folder
-could vanish and no build, test or asset would change. It is kept because it is good to look at.
+**The `<setId>` folder under `Assets/Art/Cards/` decides which BUNDLE a file ships in.**
+`AddressablesSetup` builds one `CardArt_<setId>` group per folder on disk, so a file under the
+wrong set folder still renders and still passes CI — the address is a flat `card_art/<fileName>`
+with no set in it — while shipping in the wrong bundle. CI runs `audit_card_art_names.py` with
+`--fail-missing-only`, which suppresses this exact finding; run it without the flag to see it.
+Read the row's `setId` before copying. (`Assets/Art/UI/` is the opposite — its subfolders are
+purely organisational. Do not reason from one to the other.)
 
-**What that changes: nothing there is a deliverable, and losing a candidate is not an incident** —
-do not treat it as recoverable state, do not audit it, do not raise a deletion as a finding.
-**What it does not change: still don't delete it.**
-"Not precious" is not "please remove." It is Sam's to clear when he wants the space. Deleting on his behalf remains outside your scope, and a re-roll still lands *beside* the previous candidate rather than on top of it — overwriting a set nobody has looked at yet is a different thing from clearing one he has.
+The naming convention itself, and everything that checks it, lives in that script's docstring.
 
 ## Never commit a changed `productName`
 
-**Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it and
-confirm `productName` is still exactly `Emberfall`.**
+**Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Emberfall`.**
 
 `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`, so that one
 string keys the player's **entire collection**. Rename the product and the game silently boots

@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """Audit card-art filenames against the class of the row that points at them.
 
-The convention (CLAUDE.md, "Expansion at the directory level, class at the filename level"):
+The convention (Sam, 2026-08-06) — expansion at the directory level, class at the
+filename level. This docstring is the spec; it left CLAUDE.md on 2026-08-22 to sit next
+to the only thing that checks it:
 
     Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png
     Assets/Art/Cards/<setId>/[<role>_]<name>.png            for NEUTRAL
+
+`<role>` is `hero_power` or `token`. An artId IS the filename — there is no `art/`
+namespace and no `art_` prefix; both were dropped because the namespace had one value
+across every row and so distinguished nothing. `ArtIds.ToFileName` stays a
+`Replace('/','_')` against a future namespaced id, but nothing today has a separator to
+flatten.
 
 **The absence of a class token is what means neutral**, so a neutral row carrying one is just as
 wrong as a classed row missing one. Class tokens are abbreviations that do not match their class
@@ -15,8 +23,8 @@ Three further checks, each for something no existing gate reports:
 * **Wrong set folder.** `AddressablesSetup` builds one `CardArt_<setId>` group per folder on disk,
   so a file under the wrong `<setId>/` ships in the wrong bundle. It still RENDERS — the address is
   a flat `card_art/<fileName>` with no set in it — and CardCi still passes, which is exactly why
-  nothing catches it. Exception (Sam, 2026-08-08): the CORE art folder holds hero powers only —
-  every other CORE-set card's art is expected under EMBERFALL, not CORE.
+  nothing catches it. CI runs this script with --fail-missing-only, which suppresses this
+  finding, so it is only ever seen by someone running the script deliberately.
 * **Orphan pngs.** A file no card row points at. CardCi only walks rows outward to art, so art with
   no row is invisible to it. This is how a rename leaves its own predecessor behind.
 * **Byte-identical duplicates.** Two names for one image, compared by SHA-256 rather than by size.
@@ -121,10 +129,13 @@ def main():
     misplaced, missing = [], []
     for file_name, card in all_rows:
         art, set_id = card["artId"], card.get("setId", "CORE")
-        # CORE (Sam, 2026-08-08): the CORE art folder holds hero powers only. Every other
-        # CORE-set card's art ships under the expansion that launched it (EMBERFALL) — CORE
-        # itself has no art bundle of its own beyond hero powers.
-        expected_folder = "EMBERFALL" if set_id == "CORE" and card.get("type") != "HERO_POWER" else set_id
+        # A row's art belongs under its own setId, with no exception. The 2026-08-08 rule
+        # carved one out for non-hero-power CORE rows, whose art shipped under EMBERFALL;
+        # Sam's 2026-08-15 ruling made setId CORE mean HERO_POWER and moved those 24 rows
+        # to EMBERFALL in the data, so the carve-out became unreachable and was removed.
+        # RETIREMENT TRIGGER: a legitimate non-hero-power CORE row needs it back here, and
+        # retires the CORE paragraph in dev-docs/specs/card-schema.md.
+        expected_folder = set_id
         folders = on_disk.get(art)
         if not folders:
             missing.append((card["id"], set_id, art))
