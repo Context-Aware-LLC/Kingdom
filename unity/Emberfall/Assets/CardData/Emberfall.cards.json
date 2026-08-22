@@ -4413,7 +4413,7 @@
     "id": "storm_hurricane",
     "name": "Hurricane",
     "type": "SPELL",
-    "cost": 4,
+    "cost": 5,
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
