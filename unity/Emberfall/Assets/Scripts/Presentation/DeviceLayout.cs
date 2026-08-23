@@ -28,8 +28,10 @@ namespace Emberfall.Presentation
     {
         /// <summary>
         /// Half the visible world height, and the authored orthographicSize of BoardCamera in
-        /// Board.unity and BoardNetworked.unity. DeviceLayoutVerify asserts the scenes agree —
-        /// a second copy of a board constant has gone stale on this project before.
+        /// BoardNetworked.unity — the only board scene that ships since the local match path was
+        /// deleted (66ab8294). DeviceLayoutVerify asserts this constant and that scene agree; it
+        /// used to compare two scenes to each other, because a second copy of a board constant
+        /// has gone stale on this project before, and now there is only one copy to guard.
         /// </summary>
         public const float DesignHalfHeight = 4.6f;
 

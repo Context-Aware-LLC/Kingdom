@@ -197,9 +197,12 @@ def main() -> int:
     # with "const SlotSpacing not found". Same value, new home; read it where it lives now.
     rowgeom = SCRIPTS / "BoardRowGeometry.cs"
 
-    ortho = yaml_scalar(SCENES / "Board.unity", "orthographic size", "camera orthographicSize")
-    ortho_net = yaml_scalar(SCENES / "BoardNetworked.unity", "orthographic size",
-                            "camera orthographicSize (networked)")
+    # Board.unity was deleted with the local match path (66ab8294); BoardNetworked.unity is the
+    # only board scene that ships, so there is no longer a second copy to disagree with. This
+    # script read both and hard-failed "source file not found: Board.unity" from the moment that
+    # scene went away. DeviceLayoutVerify.cs was updated at the time; this was not.
+    ortho = yaml_scalar(SCENES / "BoardNetworked.unity", "orthographic size",
+                        "camera orthographicSize")
     card_w = const(board, "CardW", "BoardController.CardW")
     card_h = const(board, "CardH", "BoardController.CardH")
     centre_y = const(fan, "CentreY", "HandFanLayout.CentreY")
@@ -231,11 +234,6 @@ def main() -> int:
     for label, value, prov in FOUND:
         print(f"  {label:<{w}}  {value:>14}   {prov}")
     print()
-    if ortho != ortho_net:
-        print(f"  !! Board.unity and BoardNetworked.unity disagree on ortho size "
-              f"({ortho} vs {ortho_net}) — the numbers below use {ortho}.")
-        print()
-
     # ── 2. the horizontal budget ────────────────────────────────────────────────
     design_h = ortho                      # half-height, world units
     elements = [
