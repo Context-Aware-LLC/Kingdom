@@ -98,6 +98,7 @@ namespace Emberfall.Editor
                     _cards.Add(EditableCard.FromDefinition(def));
             }
             _dirtyIds.Clear();
+            InvalidateAll();
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
         }
 
@@ -116,22 +117,53 @@ namespace Emberfall.Editor
 
         private ICardDatabase _liveDb;
 
-        /// <summary>Drops the cached pool. Anything that edits, adds or removes a row calls this.</summary>
-        private void InvalidateLiveDb() => _liveDb = null;
+        /// <summary>
+        /// Cached validation per card, because the library list draws a badge for EVERY row and
+        /// IMGUI repaints continuously — so an uncached badge means the full C-series plus the
+        /// content lint, for all 268 rows, many times a second while you sit still. That is why
+        /// typing in this window crawled.
+        /// </summary>
+        private readonly Dictionary<int, (ValidationReport core, ValidationReport lint)> _reports = new();
+
+        /// <summary>
+        /// Drops the cached pool and every cached report. For a STRUCTURAL change — a row added,
+        /// removed, reloaded, or moved between sets — since those change what every other row
+        /// resolves against.
+        /// </summary>
+        private void InvalidateAll()
+        {
+            _liveDb = null;
+            _reports.Clear();
+        }
+
+        /// <summary>
+        /// Drops one card's cached report after an edit to that card.
+        ///
+        /// <para><b>Deliberately does NOT re-check every other row</b>, which is what makes typing
+        /// cost one validation instead of 268. The staleness this buys is narrow and real: C12/C13
+        /// are the only checks that read another row, so toggling <c>collectible</c> on a token can
+        /// leave a stale badge on a card that summons it until something else invalidates. Validate
+        /// All is the authoritative sweep and reads from disk.</para>
+        /// </summary>
+        private void Invalidate(int cardId)
+        {
+            _liveDb = null;
+            _reports.Remove(cardId);
+        }
 
         private (ValidationReport core, ValidationReport lint) Validate(EditableCard card)
         {
+            if (_reports.TryGetValue(card.Id, out var cached)) return cached;
+
             var def = card.ToDefinition();
             var db = LiveDb();
-            return (_validator.Validate(def, db), _linter.Lint(def, _artCatalog, _guardrails, db));
+            var report = (_validator.Validate(def, db), _linter.Lint(def, _artCatalog, _guardrails, db));
+            _reports[card.Id] = report;
+            return report;
         }
 
         private void OnGUI()
         {
-            // One pool for this whole frame. Rebuilt every repaint rather than cached across them,
-            // so an edit is reflected on the next frame with nothing to remember to invalidate —
-            // the cheap correctness trade, since the cost being removed here is the SQUARE of this.
-            InvalidateLiveDb();
             DrawToolbar();
             EditorGUILayout.BeginHorizontal();
             DrawLibraryList();
@@ -297,7 +329,10 @@ namespace Emberfall.Editor
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
 
             if (EditorGUI.EndChangeCheck())
+            {
                 _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
+            }
 
             // Deliberately BETWEEN the two change checks, never inside one. Every control in this
             // block is a button, and a clicked button sets GUI.changed — inside a check, merely
@@ -342,7 +377,10 @@ namespace Emberfall.Editor
             DrawRules(card);
 
             if (EditorGUI.EndChangeCheck())
+            {
                 _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
+            }
 
             EditorGUILayout.Space();
             DrawValidationPanel(card);
@@ -438,7 +476,7 @@ namespace Emberfall.Editor
                     if (GUILayout.Button("▲", GUILayout.Width(24))) { Swap(card.Rules, i, i - 1); }
                 using (new EditorGUI.DisabledScope(i == card.Rules.Count - 1))
                     if (GUILayout.Button("▼", GUILayout.Width(24))) { Swap(card.Rules, i, i + 1); }
-                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Rules.RemoveAt(i); _dirtyIds.Add(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
+                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Rules.RemoveAt(i); _dirtyIds.Add(card.Id); Invalidate(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
                 EditorGUILayout.EndHorizontal();
 
                 rule.Id = EditorGUILayout.TextField("id", rule.Id);
@@ -471,6 +509,7 @@ namespace Emberfall.Editor
                 while (card.Rules.Any(rule => rule.Id == id)) id += "_new";
                 card.Rules.Add(new EditableRule { Id = id });
                 _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
             }
         }
 
@@ -577,6 +616,7 @@ namespace Emberfall.Editor
                 Name = "New Card",
             };
             _cards.Add(card);
+            InvalidateAll();
             _selected = _cards.Count - 1;
             _dirtyIds.Add(card.Id);
         }
@@ -588,6 +628,7 @@ namespace Emberfall.Editor
             clone.Id = NextIdInBand(clone.Type);
             clone.Handle = UniqueHandle(clone.Handle + "_copy");
             _cards.Insert(_selected + 1, clone);
+            InvalidateAll();
             _selected += 1;
             _dirtyIds.Add(clone.Id);
         }
@@ -607,6 +648,7 @@ namespace Emberfall.Editor
                 return;
 
             _cards.RemoveAt(_selected);
+            InvalidateAll();
             _dirtyIds.Remove(card.Id);
             _selected = Mathf.Min(_selected, _cards.Count - 1);
         }
