@@ -157,7 +157,7 @@ namespace Emberfall.Net.Server.Telemetry
                 w.Name("source"); w.Str(Source(e.Source));
                 w.Name("accountId"); w.Str(r.Account.Value);
                 w.Name("classId"); w.Str(r.Class.ToString());
-                w.Name("cardDefId"); w.Str(r.CardDefId);
+                w.Name("cardDefId"); w.I32(r.CardDefId);
                 w.Name("inDeck"); w.Bool(r.InDeck);
                 w.Name("drawnThisMatch"); w.Bool(r.DrawnThisMatch);
                 w.Name("matchWon"); w.Bool(r.MatchWon);
@@ -183,8 +183,8 @@ namespace Emberfall.Net.Server.Telemetry
             w.Name("result"); w.Str(Result(s.Result));
             w.Name("mulliganKept");
             w.BeginArray();
-            IReadOnlyList<string> kept = s.MulliganKept;
-            for (int i = 0; i < kept.Count; i++) w.Str(kept[i]);
+            IReadOnlyList<int> kept = s.MulliganKept;
+            for (int i = 0; i < kept.Count; i++) w.I32(kept[i]);
             w.EndArray();
             w.EndObject();
         }

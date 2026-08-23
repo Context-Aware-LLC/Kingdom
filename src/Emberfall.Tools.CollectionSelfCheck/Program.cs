@@ -239,7 +239,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
         private static List<CardDefinition> Ordered(IReadOnlyCollection<CardDefinition> defs)
         {
             var list = new List<CardDefinition>(defs);
-            list.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+            list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
         }
 

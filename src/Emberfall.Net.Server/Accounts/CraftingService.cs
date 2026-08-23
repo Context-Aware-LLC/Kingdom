@@ -53,7 +53,7 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public sealed class CraftOutcome
     {
-        public string CardId { get; }
+        public int CardId { get; }
 
         /// <summary>Shard balance after the call.</summary>
         public long Shards { get; }
@@ -68,7 +68,7 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public int ShardDelta { get; }
 
-        public CraftOutcome(string cardId, long shards, int copiesOwned, int shardDelta)
+        public CraftOutcome(int cardId, long shards, int copiesOwned, int shardDelta)
         {
             CardId = cardId;
             Shards = shards;
@@ -164,7 +164,7 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public async Task<RenderOutcome> RenderAsync(
             Account account,
-            string cardId,
+            int cardId,
             string serverTransactionId,
             CancellationToken ct = default)
         {
@@ -233,7 +233,7 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public async Task<ReduceOutcome> ReduceAsync(
             Account account,
-            string cardId,
+            int cardId,
             string serverTransactionId,
             CancellationToken ct = default)
         {
@@ -300,11 +300,11 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public async Task<(RenderOffer Render, ReduceOffer Reduce)> OffersAsync(
             Account account,
-            string cardId,
+            int cardId,
             CancellationToken ct = default)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
-            if (string.IsNullOrWhiteSpace(cardId)) throw new ArgumentException("A card id is required.", nameof(cardId));
+            if (cardId <= 0) throw new ArgumentOutOfRangeException(nameof(cardId), cardId, "A card id is required.");
 
             CardDefinition? def = Resolve(cardId);
             long shards = await _ledger.BalanceAsync(account.PlayerId, ShardValues.LedgerItem, ct).ConfigureAwait(false);
@@ -319,11 +319,11 @@ namespace Emberfall.Net.Server.Accounts
             return _ledger.BalanceAsync(account.PlayerId, ShardValues.LedgerItem, ct);
         }
 
-        private static void RequireCraftArguments(Account account, string cardId, string serverTransactionId)
+        private static void RequireCraftArguments(Account account, int cardId, string serverTransactionId)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
-            if (string.IsNullOrWhiteSpace(cardId))
-                throw new ArgumentException("A card id is required.", nameof(cardId));
+            if (cardId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(cardId), cardId, "A card id is required.");
             if (string.IsNullOrWhiteSpace(serverTransactionId))
                 throw new ArgumentException(
                     "A server-minted craft transaction id is required; it is the idempotency key.",
@@ -331,7 +331,7 @@ namespace Emberfall.Net.Server.Accounts
             EconomyAccountPolicy.RequireDurable(account);
         }
 
-        private CardDefinition? Resolve(string cardId)
+        private CardDefinition? Resolve(int cardId)
             => _cards.TryGet(cardId, out CardDefinition def) ? def : null;
 
         /// <summary>
@@ -352,7 +352,7 @@ namespace Emberfall.Net.Server.Accounts
             return false;
         }
 
-        private async Task<int> CopiesOwnedAsync(string playerId, string cardId, CancellationToken ct)
+        private async Task<int> CopiesOwnedAsync(string playerId, int cardId, CancellationToken ct)
         {
             long copies = await _ledger
                 .BalanceAsync(playerId, BoosterPackGrantService.CardItemPrefix + cardId, ct)
@@ -360,7 +360,7 @@ namespace Emberfall.Net.Server.Accounts
             return copies <= 0 ? 0 : (int)copies;
         }
 
-        private async Task<CraftOutcome> ProjectAsync(string playerId, string cardId, int shardDelta, CancellationToken ct)
+        private async Task<CraftOutcome> ProjectAsync(string playerId, int cardId, int shardDelta, CancellationToken ct)
         {
             long shards = await _ledger.BalanceAsync(playerId, ShardValues.LedgerItem, ct).ConfigureAwait(false);
             int owned = await CopiesOwnedAsync(playerId, cardId, ct).ConfigureAwait(false);

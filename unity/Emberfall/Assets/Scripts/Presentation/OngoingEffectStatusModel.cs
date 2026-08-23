@@ -40,10 +40,12 @@ namespace Emberfall.Presentation
             var rows = new List<OngoingEffectStatus>(state.OngoingEffects.Count);
             foreach (OngoingEffectInstance effect in state.OngoingEffects)
             {
+                // The number is the fallback only when the row is gone; it is not a name, so it
+                // is spelled out rather than passed off as one.
                 string sourceName = database.TryGet(effect.SourceDefinitionId,
                     out CardDefinition definition)
                     ? definition.Name
-                    : effect.SourceDefinitionId;
+                    : $"card {effect.SourceDefinitionId}";
                 string owner = effect.Controller == viewer ? "You" : "Opponent";
                 rows.Add(new OngoingEffectStatus(effect.Id, sourceName, owner,
                     RemainingText(effect)));

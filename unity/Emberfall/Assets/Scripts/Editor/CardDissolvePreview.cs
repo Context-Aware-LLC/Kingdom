@@ -42,7 +42,7 @@ namespace Emberfall.Editor
 
         // A minion with real illustration + frame chrome, so the flatten is exercised across art,
         // frame, gem, keyword icons and six TMP labels rather than a bare body quad.
-        private const string CardId = "ember_cinder_drake";
+        private const int CardId = 1003;   // ember_cinder_drake
 
         [MenuItem("Emberfall/Preview Card Dissolve (offscreen)")]
         public static void Render()
@@ -118,7 +118,7 @@ namespace Emberfall.Editor
             {
                 AddBackdrop(root.transform);
 
-                string[] ids     = { "ember_recruit", "ember_zealot", "ember_cinder_drake" };
+                int[] ids        = { 1001 /*ember_recruit*/, 1002 /*ember_zealot*/, 1003 /*ember_cinder_drake*/ };
                 float[]  amounts = { 0.2f, 0.45f, 0.7f };
 
                 for (int i = 0; i < ids.Length; i++)
@@ -144,7 +144,7 @@ namespace Emberfall.Editor
 
         // Drives BoardController itself: the same Initialize the game calls (minus anchors, input
         // and runner, all of which are optional), then the editor-only hook onto GetOrCreate.
-        private static CardPresenter BuildRealCard(Transform parent, string cardId = CardId, int instanceId = 1)
+        private static CardPresenter BuildRealCard(Transform parent, int cardId = CardId, int instanceId = 1)
         {
             var host = new GameObject("__PreviewBoardController");
             host.transform.SetParent(parent, false);

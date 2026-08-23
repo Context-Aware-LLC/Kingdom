@@ -55,7 +55,7 @@ namespace Emberfall.Tools.CardCi
 
             int errors = 0, warnings = 0;
             var allCards = new List<CardDefinition>();
-            var cardFileOf = new Dictionary<string, string>(); // defId -> source file (first seen)
+            var cardFileOf = new Dictionary<int, string>();    // defId -> source file (first seen)
 
             // ── Parse every row of every set file (per-row error context) ────────────
             foreach (var file in files)
@@ -104,7 +104,8 @@ namespace Emberfall.Tools.CardCi
                 var report = validator.Validate(def, db);
                 foreach (var issue in report.Issues)
                 {
-                    string where = $"{cardFileOf[def.Id]}:{def.Id}";
+                    // Handle as well as number: a CI line a human reads names the card.
+                    string where = $"{cardFileOf[def.Id]}:{def.Id} {def.Handle}";
                     if (issue.Severity == Severity.Error)
                     {
                         Console.Error.WriteLine($"ERROR {where}: {issue.Code} {issue.Field} — {issue.Message}");
@@ -176,7 +177,7 @@ namespace Emberfall.Tools.CardCi
                 foreach (var (kind, def, expected) in divergences
                              .OrderBy(d => d.Kind)
                              .ThenBy(d => cardFileOf[d.Def.Id], StringComparer.Ordinal)
-                             .ThenBy(d => d.Def.Id, StringComparer.Ordinal))
+                             .ThenBy(d => d.Def.Id))
                 {
                     Console.WriteLine($"{kind.ToString().ToUpperInvariant(),-13} {cardFileOf[def.Id]}:{def.Id}");
                     Console.WriteLine($"  authored   {Show(def.Text)}");
@@ -206,16 +207,16 @@ namespace Emberfall.Tools.CardCi
     /// <summary>Minimal ICardDatabase over the loaded library, for token-resolution checks (C12/C13).</summary>
     internal sealed class InMemoryCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _cards = new(StringComparer.Ordinal);
+        private readonly Dictionary<int, CardDefinition> _cards = new();
 
         public InMemoryCardDatabase(IEnumerable<CardDefinition> defs)
         {
             foreach (var d in defs) _cards[d.Id] = d; // last wins; C2 reports the duplicate separately
         }
 
-        public bool TryGet(string cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
+        public bool TryGet(int cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId) => _cards[cardId];
+        public CardDefinition Get(int cardId) => _cards[cardId];
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()
             => _cards.Values.Where(d => d.PoolEligible).ToArray();

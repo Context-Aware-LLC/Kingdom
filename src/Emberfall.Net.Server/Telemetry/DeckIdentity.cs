@@ -28,13 +28,17 @@ namespace Emberfall.Net.Server.Telemetry
         /// 128 bits, matching <c>AccountId</c>/<c>MatchId</c> so every id in a telemetry row is the
         /// same eyeball-comparable shape.
         /// </summary>
-        public static string HashOf(IReadOnlyList<string> cardIds)
+        public static string HashOf(IReadOnlyList<int> cardIds)
         {
-            var sorted = new List<string>(cardIds);
-            sorted.Sort(System.StringComparer.Ordinal);
+            // NUMERIC sort, so the digest of a given deck CHANGED with the numeric id migration —
+            // both because the ids are different tokens and because ordinal order over handles is
+            // not numeric order. Rows written before the migration carry the old digest and are not
+            // comparable to rows written after it.
+            var sorted = new List<int>(cardIds);
+            sorted.Sort();
 
             var joined = new StringBuilder();
-            foreach (string id in sorted) { joined.Append(id); joined.Append('\n'); }
+            foreach (int id in sorted) { joined.Append(id); joined.Append('\n'); }
 
             System.Span<byte> digest = stackalloc byte[32];
             SHA256.HashData(Encoding.UTF8.GetBytes(joined.ToString()), digest);

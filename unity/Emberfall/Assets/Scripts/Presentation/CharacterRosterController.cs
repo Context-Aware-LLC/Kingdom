@@ -214,7 +214,7 @@ namespace Emberfall.Presentation
 
         /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
         private string _pendingCardBackId = "";
-        private string _pendingShowcaseCardId = "";
+        private int _pendingShowcaseCardId;
 
         private void OnEnable()
         {
@@ -663,9 +663,9 @@ namespace Emberfall.Presentation
         /// </summary>
         private void FillHeroPower(CardClass heroClass)
         {
-            string powerId = HeroPowers.ForClass(heroClass);
+            int powerId = HeroPowers.ForClass(heroClass);
             CardDefinition power = null;
-            bool found = _db != null && !string.IsNullOrEmpty(powerId) && _db.TryGet(powerId, out power);
+            bool found = _db != null && powerId > 0 && _db.TryGet(powerId, out power);
 
             if (_createPowerBlock != null)
                 _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
@@ -1037,7 +1037,7 @@ namespace Emberfall.Presentation
             _deckImageGrid.Clear();
 
             CardDefinition current =
-                !string.IsNullOrEmpty(_pendingShowcaseCardId) && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
+                _pendingShowcaseCardId > 0 && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
                     ? picked
                     : ShowcaseOf(_menuDeck);
             foreach (DeckEntry entry in _menuDeck.Entries)
@@ -1251,7 +1251,7 @@ namespace Emberfall.Presentation
             _menuSiblingCount = 0;
             _menuQueueReady = false;
             _pendingCardBackId = "";
-            _pendingShowcaseCardId = "";
+            _pendingShowcaseCardId = 0;
             _deckPane = DeckPane.Menu;
         }
 
@@ -1726,7 +1726,7 @@ namespace Emberfall.Presentation
         /// card rather than reshuffling with the entry order.</summary>
         private CardDefinition ShowcaseOf(DeckList deck)
         {
-            if (!string.IsNullOrEmpty(deck.ShowcaseCardId)
+            if (deck.ShowcaseCardId > 0
                 && deck.CountOf(deck.ShowcaseCardId) > 0
                 && _db.TryGet(deck.ShowcaseCardId, out CardDefinition chosen))
                 return chosen;

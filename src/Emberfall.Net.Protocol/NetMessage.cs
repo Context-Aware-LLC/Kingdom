@@ -68,9 +68,9 @@ namespace Emberfall.Net.Protocol
     /// Emberfall.Core"). The server rebuilds a <c>DeckList</c> from these and revalidates it.</summary>
     public readonly struct DeckCardLine
     {
-        public readonly string CardId;
+        public readonly int CardId;
         public readonly int Count;
-        public DeckCardLine(string cardId, int count) { CardId = cardId; Count = count; }
+        public DeckCardLine(int cardId, int count) { CardId = cardId; Count = count; }
     }
 
     /// <summary>

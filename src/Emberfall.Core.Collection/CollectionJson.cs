@@ -112,7 +112,7 @@ namespace Emberfall.Core.Collection
                     w.WriteString("characterId", d.CharacterId);
                     w.WriteString("name", d.Name);
                     w.WriteString("cardBackId", d.CardBackId);
-                    w.WriteString("showcaseCardId", d.ShowcaseCardId);
+                    w.WriteNumber("showcaseCardId", d.ShowcaseCardId);
                     w.WriteStartArray("cards");
                     foreach (var e in d.Entries)
                     {
@@ -155,7 +155,7 @@ namespace Emberfall.Core.Collection
                     // as "the player never chose one" and renders identically. Not checked against a
                     // catalog — see DeckList.CardBackId for why an unknown back is not a read error.
                     CardBackId = Str(el, "cardBackId") ?? "",
-                    ShowcaseCardId = Str(el, "showcaseCardId") ?? "",
+                    ShowcaseCardId = OptCardId(el, "showcaseCardId"),
                 };
 
                 if (el.TryGetProperty("cards", out var cards) && cards.ValueKind == JsonValueKind.Array)
@@ -382,6 +382,15 @@ namespace Emberfall.Core.Collection
 
             return doc;
         }
+
+        /// <summary>
+        /// An OPTIONAL card id — 0 when absent, which is the "no showcase chosen" state. A string
+        /// here is a pre-migration file and is left to <see cref="ReqCardId"/> on the entries to
+        /// report, so a deck is never rejected twice for the same reason.
+        /// </summary>
+        private static int OptCardId(JsonElement el, string name)
+            => el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.Number
+               && v.TryGetInt32(out int id) ? id : 0;
 
         private static string? Str(JsonElement el, string name)
             => el.TryGetProperty(name, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;

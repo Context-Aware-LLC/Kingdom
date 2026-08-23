@@ -8,7 +8,8 @@ namespace Emberfall.Net.Protocol
     /// (design §6). Field order and structure mirror <c>GameStateSerializer</c> one-for-one:
     /// same seat order, same keyword sort (by enum int), same nullable conventions (JSON null
     /// stands in for the present-flag byte), same PendingChoice tail. Names are camelCase of the
-    /// C# members; InstanceId as "i&lt;n&gt;", PlayerId/MatchId/DefinitionId as bare strings.
+    /// C# members; InstanceId as "i&lt;n&gt;", PlayerId/MatchId as bare strings, DefinitionId as a
+    /// NUMBER — the wire carries the card id the same way the hash does.
     ///
     /// This is a SECOND walk over the same shape — the drift risk is closed by test, not
     /// discipline: the A2 bridge test (hash-preserving round-trip over the fixture corpus) and
@@ -88,7 +89,7 @@ namespace Emberfall.Net.Protocol
             w.Name("currentHealth"); w.I32(h.CurrentHealth);
             w.Name("maxHealth"); w.I32(h.MaxHealth);
             w.Name("armor"); w.I32(h.Armor);
-            w.Name("heroPowerId"); w.Str(h.HeroPowerId);
+            w.Name("heroPowerId"); w.I32(h.HeroPowerId);
             w.Name("effects"); WriteEffects(w, h.Effects);
             w.EndObject();
         }
@@ -126,7 +127,7 @@ namespace Emberfall.Net.Protocol
         {
             w.BeginObject();
             w.Name("id"); w.Str(WirePrimitives.InstanceToWire(c.Id));
-            w.Name("definitionId"); w.Str(c.DefinitionId);
+            w.Name("definitionId"); w.I32(c.DefinitionId);
             w.Name("controller"); w.Str(c.Controller.Value);
             w.Name("zone"); w.Str(c.Zone.ToString());
             w.Name("currentAttack"); w.I32(c.CurrentAttack);
@@ -181,7 +182,7 @@ namespace Emberfall.Net.Protocol
             // (OBL-3); the codec never re-sorts it.
             w.Name("options");
             w.BeginArray();
-            foreach (var o in pc.Options) w.Str(o);
+            foreach (var o in pc.Options) w.I32(o);
             w.EndArray();
             w.Name("choiceSequence"); w.U64(pc.ChoiceSequence);
             w.EndObject();
@@ -192,7 +193,7 @@ namespace Emberfall.Net.Protocol
             w.BeginObject();
             w.Name("id"); w.Str(WirePrimitives.InstanceToWire(effect.Id));
             w.Name("controller"); w.Str(effect.Controller.Value);
-            w.Name("sourceDefinitionId"); w.Str(effect.SourceDefinitionId);
+            w.Name("sourceDefinitionId"); w.I32(effect.SourceDefinitionId);
             // Authority snapshots need this key to resume deterministic execution. Projected
             // snapshots carry the empty sentinel because GameStateProjector never copies it.
             w.Name("ruleId"); w.Str(effect.RuleId);
@@ -324,7 +325,7 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "currentHealth", out int curHp, ref detail)) return false;
             if (!TryI32Field(obj, "maxHealth", out int maxHp, ref detail)) return false;
             if (!TryI32Field(obj, "armor", out int armor, ref detail)) return false;
-            if (!TryStrField(obj, "heroPowerId", out string hpId, ref detail)) return false;
+            if (!TryI32Field(obj, "heroPowerId", out int hpId, ref detail)) return false;
             hero = new HeroInstance(id, new PlayerId(controller), cls, maxHp)
             {
                 CurrentHealth = curHp,
@@ -372,7 +373,7 @@ namespace Emberfall.Net.Protocol
             card = null!;
             if (obj.Kind != JKind.Object) { detail = "card is not an object"; return false; }
             if (!TryInstanceField(obj, "id", out var id, ref detail)) return false;
-            if (!TryStrField(obj, "definitionId", out string defId, ref detail)) return false;
+            if (!TryI32Field(obj, "definitionId", out int defId, ref detail)) return false;
             if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
             if (!TryEnumField(obj, "zone", out Zone zone, ref detail)) return false;
             if (!TryI32Field(obj, "currentAttack", out int atk, ref detail)) return false;
@@ -468,7 +469,7 @@ namespace Emberfall.Net.Protocol
             };
             foreach (var item in optVal.Items!)
             {
-                if (!item.TryStr(out string o)) { detail = "bad option"; return false; }
+                if (!item.TryI32(out int o)) { detail = "bad option"; return false; }
                 result.Options.Add(o);
             }
             pc = result;
@@ -483,7 +484,7 @@ namespace Emberfall.Net.Protocol
             { detail = "ongoing effect is not an object"; return false; }
             if (!TryInstanceField(obj, "id", out InstanceId id, ref detail)) return false;
             if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
-            if (!TryStrField(obj, "sourceDefinitionId", out string definitionId, ref detail)) return false;
+            if (!TryI32Field(obj, "sourceDefinitionId", out int definitionId, ref detail)) return false;
             if (!TryStrField(obj, "ruleId", out string ruleId, ref detail)) return false;
             if (!TryEnumField(obj, "lifetime", out OngoingEffectLifetime lifetime, ref detail)) return false;
             if (!obj.TryGet("remainingUses", out JVal remainingVal))
@@ -496,7 +497,7 @@ namespace Emberfall.Net.Protocol
                 remainingUses = uses;
             }
 
-            if (string.IsNullOrWhiteSpace(definitionId))
+            if (definitionId <= 0)
             { detail = "empty sourceDefinitionId"; return false; }
             if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
             { detail = "permanent ongoing effect cannot carry remainingUses"; return false; }

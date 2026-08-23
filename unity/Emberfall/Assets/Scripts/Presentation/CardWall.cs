@@ -49,7 +49,7 @@ namespace Emberfall.Presentation
         private readonly VisualElement _grid;
         private readonly CardFaceBaker _baker;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
-        private readonly Dictionary<string, VisualElement> _tiles = new Dictionary<string, VisualElement>();
+        private readonly Dictionary<int, VisualElement> _tiles = new Dictionary<int, VisualElement>();
         private readonly List<CardDefinition> _visible = new List<CardDefinition>();
 
         private CardFilter _filter;                       // null = no constraint
@@ -186,7 +186,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>The tile for a card id, or null. For hosts that need to reach one directly.</summary>
-        public VisualElement TileOf(string cardId) =>
+        public VisualElement TileOf(int cardId) =>
             _tiles.TryGetValue(cardId, out var tile) ? tile : null;
 
         // ---- Query -> visible set -> DOM order ------------------------------------------------

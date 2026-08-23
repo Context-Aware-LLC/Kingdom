@@ -76,7 +76,7 @@ namespace Emberfall.Net.Protocol
                     w.EndArray();
                     break;
                 case UnearthChoiceIntent dc:
-                    w.Name("chosenCardId"); w.Str(dc.ChosenCardId);
+                    w.Name("chosenCardId"); w.I32(dc.ChosenCardId);
                     w.Name("choiceSequence"); w.U64(dc.ChoiceSequence);
                     break;
                     // EndTurn / Concede / AutoConfirm carry only $type + player.
@@ -164,7 +164,7 @@ namespace Emberfall.Net.Protocol
                     }
                 case UnearthChoice:
                     {
-                        if (!obj.TryGet("chosenCardId", out var ccVal) || !ccVal.TryStr(out string chosen))
+                        if (!obj.TryGet("chosenCardId", out var ccVal) || !ccVal.TryI32(out int chosen))
                         { detail = "missing chosenCardId"; return false; }
                         if (!obj.TryGet("choiceSequence", out var seqVal) ||
                             !seqVal.TryU64(out ulong choiceSequence))

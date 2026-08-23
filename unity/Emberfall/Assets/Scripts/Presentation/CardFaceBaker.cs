@@ -61,8 +61,8 @@ namespace Emberfall.Presentation
         // ONE live state for every card, constructed and never updated — see "AS PRINTED" above.
         private readonly CardLiveState _printed = new CardLiveState(new InstanceId(-1));
 
-        private readonly Dictionary<string, RenderTexture>      _cache   = new();
-        private readonly Dictionary<string, List<Action<Texture>>> _waiting = new();
+        private readonly Dictionary<int, RenderTexture>      _cache   = new();
+        private readonly Dictionary<int, List<Action<Texture>>> _waiting = new();
         private readonly Queue<CardDefinition> _queue = new();
 
         private bool _awaitingArt;   // the rig is bound and its art callback has not fired yet
@@ -110,8 +110,9 @@ namespace Emberfall.Presentation
         /// </summary>
         public void Bake(CardDefinition def, Action<Texture> onReady)
         {
-            // The cache is keyed by card id, so a row with no id has nowhere to live.
-            if (def == null || string.IsNullOrEmpty(def.Id)) { onReady?.Invoke(null); return; }
+            // The cache is keyed by card id, so a row with no id has nowhere to live. 0 is the
+            // no-id case now — no card is ever numbered 0, which is what makes it usable as one.
+            if (def == null || def.Id <= 0) { onReady?.Invoke(null); return; }
 
             if (_cache.TryGetValue(def.Id, out RenderTexture cached))
             {
@@ -257,7 +258,7 @@ namespace Emberfall.Presentation
                     if (LayerMask.NameToLayer(CardSnapshot.CaptureLayerName) < 0)
                         _captureFailed = true;
                     else
-                        Debug.LogWarning($"[CardFaceBaker] capture returned null for '{def.Id}' " +
+                        Debug.LogWarning($"[CardFaceBaker] capture returned null for '{def.Handle}' " +
                                          "(RT alloc failure — see above); tile will be blank.");
                 }
 
@@ -265,7 +266,7 @@ namespace Emberfall.Presentation
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[CardFaceBaker] '{def.Id}' failed after its art resolved; " +
+                Debug.LogError($"[CardFaceBaker] '{def.Handle}' failed after its art resolved; " +
                                $"its tile will be blank. {ex}");
                 Deliver(def.Id, null);   // no-op if Deliver above already ran
             }
@@ -277,7 +278,7 @@ namespace Emberfall.Presentation
             PumpQueue();
         }
 
-        private void Deliver(string cardId, Texture face)
+        private void Deliver(int cardId, Texture face)
         {
             if (!_waiting.TryGetValue(cardId, out List<Action<Texture>> list)) return;
             _waiting.Remove(cardId);

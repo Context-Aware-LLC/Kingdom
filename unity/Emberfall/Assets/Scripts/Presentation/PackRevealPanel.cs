@@ -123,7 +123,7 @@ namespace Emberfall.Presentation
             return card;
         }
 
-        private string CardName(string cardId)
+        private string CardName(int cardId)
         {
             try
             {
@@ -134,7 +134,9 @@ namespace Emberfall.Presentation
             {
                 UnityEngine.Debug.LogWarning($"[PackReveal] card names unavailable: {ex.GetType().Name}: {ex.Message}");
             }
-            return TokenText.Pretty(cardId);
+            // TokenText.Pretty turned a handle into a display name. A number has no prettier
+            // form, so the fallback says what it is rather than pretending to be a name.
+            return $"Card {cardId}";
         }
 
         private static string RarityClass(Rarity rarity) => rarity switch

@@ -50,7 +50,7 @@ namespace Emberfall.Editor
         public static void ValidateAllMenuItem() => CardSetValidator.RunAndLog();
 
         private readonly List<EditableCard> _cards = new List<EditableCard>();
-        private readonly HashSet<string> _dirtyIds = new HashSet<string>();
+        private readonly HashSet<int> _dirtyIds = new HashSet<int>();
         private int _selected = -1;
         private string _search = "";
         private Vector2 _listScroll, _editScroll;
@@ -133,8 +133,10 @@ namespace Emberfall.Editor
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _cards[i];
+                // Searches the HANDLE and the name — the two things a human can actually type.
+                // The number is shown but not searched; nobody remembers 1049.
                 if (!string.IsNullOrEmpty(_search)
-                    && card.Id.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
+                    && card.Handle.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
                     && card.Name.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
 
@@ -142,7 +144,7 @@ namespace Emberfall.Editor
                 string badge = BadgeFor(core, lint);
                 string dirtyMark = _dirtyIds.Contains(card.Id) ? "*" : "";
                 var style = i == _selected ? EditorStyles.helpBox : GUI.skin.label;
-                if (GUILayout.Button($"{badge} {card.Id}{dirtyMark}  ({card.Name})", style))
+                if (GUILayout.Button($"{badge} {card.Id} {card.Handle}{dirtyMark}  ({card.Name})", style))
                     _selected = i;
             }
             EditorGUILayout.EndScrollView();
@@ -248,7 +250,12 @@ namespace Emberfall.Editor
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.LabelField("Identity", EditorStyles.boldLabel);
-            card.Id = EditorGUILayout.TextField("id", card.Id);
+            // The id is PERMANENT and is shown, never typed. Editing it would repoint a key that
+            // saved decks, replays and telemetry already carry — the failure the whole identity
+            // model exists to make impossible. The handle beneath it is free to change.
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("id", card.Id);
+            card.Handle = EditorGUILayout.TextField("handle", card.Handle);
             card.Name = EditorGUILayout.TextField("name", card.Name);
             card.SetId = (SetId)EditorGUILayout.EnumPopup("setId", card.SetId);
             card.Collectible = EditorGUILayout.Toggle("collectible", card.Collectible);
@@ -447,7 +454,7 @@ namespace Emberfall.Editor
                 || rule.ActionKind == EditableRuleActionKind.AddToHand
                 || rule.ActionKind == EditableRuleActionKind.Equip
                 || rule.ActionKind == EditableRuleActionKind.Transform)
-                rule.CardId = EditorGUILayout.TextField("action.cardId", rule.CardId);
+                rule.CardId = EditorGUILayout.IntField("action.cardId", rule.CardId);
 
             if (rule.ActionKind == EditableRuleActionKind.GrantKeyword)
                 rule.Keyword = DrawCarrierKeywordPopup("action.keyword", rule.Keyword);
@@ -516,7 +523,12 @@ namespace Emberfall.Editor
 
         private void OnNew()
         {
-            var card = new EditableCard { Id = UniqueId("new_card"), Name = "New Card" };
+            var card = new EditableCard
+            {
+                Id = NextIdInBand(CardType.MINION),
+                Handle = UniqueHandle("new_card"),
+                Name = "New Card",
+            };
             _cards.Add(card);
             _selected = _cards.Count - 1;
             _dirtyIds.Add(card.Id);
@@ -526,7 +538,8 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var clone = _cards[_selected].Clone();
-            clone.Id = UniqueId(clone.Id + "_copy");
+            clone.Id = NextIdInBand(clone.Type);
+            clone.Handle = UniqueHandle(clone.Handle + "_copy");
             _cards.Insert(_selected + 1, clone);
             _selected += 1;
             _dirtyIds.Add(clone.Id);
@@ -536,7 +549,7 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var card = _cards[_selected];
-            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Id}'? This removes it from Emberfall.cards.json on next Save.", "Delete", "Cancel"))
+            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Handle}' (card {card.Id})? This removes it from Emberfall.cards.json on next Save.", "Delete", "Cancel"))
                 return;
 
             var referencedBy = _cards.Where(c => c.Rules.Any(rule => rule.ReferencedCardId == card.Id))
@@ -551,11 +564,39 @@ namespace Emberfall.Editor
             _selected = Mathf.Min(_selected, _cards.Count - 1);
         }
 
-        private string UniqueId(string baseId)
+        /// <summary>
+        /// The next free number in the band this card TYPE owns — HERO_POWER 1-50, WEAPON 51-150,
+        /// SPELL 151-1000, MINION 1001 and up. Mirrors CardValidator's C1B, which rejects a row
+        /// that lands outside its band.
+        ///
+        /// <para><b>Scoped to the rows this window has loaded</b>, which is every shipped set, so
+        /// it cannot hand out a number already in use. It is not a reservation: two authors
+        /// working at once would both be handed the same next number, and the duplicate surfaces
+        /// as C2 at validation rather than silently.</para>
+        /// </summary>
+        private int NextIdInBand(CardType type)
+        {
+            (int first, int last) = type switch
+            {
+                CardType.HERO_POWER => (1, 50),
+                CardType.WEAPON => (51, 150),
+                CardType.SPELL => (151, 1000),
+                _ => (1001, int.MaxValue),
+            };
+            int next = first;
+            foreach (var c in _cards)
+                if (c.Id >= first && c.Id <= last && c.Id >= next) next = c.Id + 1;
+            if (next > last)
+                Debug.LogError($"[CardAuthoring] the {type} band ({first}-{last}) is full. " +
+                               "Widen the band rather than spilling into the next one.");
+            return next;
+        }
+
+        private string UniqueHandle(string baseId)
         {
             string id = baseId;
             int n = 1;
-            while (_cards.Any(c => c.Id == id))
+            while (_cards.Any(c => c.Handle == id))
                 id = $"{baseId}_{n++}";
             return id;
         }

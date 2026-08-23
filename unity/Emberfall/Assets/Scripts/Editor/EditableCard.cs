@@ -12,7 +12,8 @@ namespace Emberfall.Editor
     /// </summary>
     public sealed class EditableCard
     {
-        public string Id = "";
+        public int Id;
+        public string Handle = "";
         public string Name = "";
         public CardType Type = CardType.MINION;
         public int Cost;
@@ -35,6 +36,7 @@ namespace Emberfall.Editor
         public static EditableCard FromDefinition(CardDefinition def) => new EditableCard
         {
             Id = def.Id,
+            Handle = def.Handle,
             Name = def.Name,
             Type = def.Type,
             Cost = def.Cost,
@@ -60,7 +62,7 @@ namespace Emberfall.Editor
         };
 
         public CardDefinition ToDefinition() => new CardDefinition(
-            id: Id, name: Name, type: Type, cost: Cost,
+            id: Id, handle: Handle, name: Name, type: Type, cost: Cost,
             attack: HasAttack ? Attack : (int?)null,
             health: HasHealth ? Health : (int?)null,
             durability: HasDurability ? Durability : (int?)null,
@@ -166,7 +168,7 @@ namespace Emberfall.Editor
         public int AttackDelta;
         public int HealthDelta;
         public int Count = 1;
-        public string CardId = "";
+        public int CardId;
         public Keyword Keyword;
         public ManaGainKind ManaKind = ManaGainKind.TEMPORARY;
         public EditableTarget Target = new EditableTarget();
@@ -182,12 +184,12 @@ namespace Emberfall.Editor
             || ActionKind == EditableRuleActionKind.Frost
             || ActionKind == EditableRuleActionKind.TakeControl;
 
-        public string ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
+        public int ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
             || ActionKind == EditableRuleActionKind.AddToHand
             || ActionKind == EditableRuleActionKind.Equip
             || ActionKind == EditableRuleActionKind.Transform
                 ? CardId
-                : "";
+                : 0;
 
         public static EditableRule FromDefinition(RuleDefinition rule)
         {

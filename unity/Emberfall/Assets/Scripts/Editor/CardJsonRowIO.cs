@@ -55,7 +55,8 @@ namespace Emberfall.Editor
             using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
             {
                 w.WriteStartObject();
-                w.WriteString("id", def.Id);
+                w.WriteNumber("id", def.Id);
+                w.WriteString("handle", def.Handle);
                 w.WriteString("name", def.Name);
                 w.WriteString("type", def.Type.ToString());
                 w.WriteNumber("cost", def.Cost);
@@ -167,13 +168,13 @@ namespace Emberfall.Editor
             else if (action is DestroyAction destroy) { Type(w, "DESTROY"); Target(w, destroy.Target); }
             else if (action is ReturnToHandAction returnToHand) { Type(w, "RETURN_TO_HAND"); Target(w, returnToHand.Target); }
             else if (action is SilenceAction silence) { Type(w, "SILENCE"); Target(w, silence.Target); }
-            else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteString("cardId", transform.CardId); Target(w, transform.Target); }
+            else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
             else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
             else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }
             else if (action is DrawAction draw) { Type(w, "DRAW"); Count(w, draw.Count); }
-            else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteString("cardId", summon.CardId); Count(w, summon.Count); }
-            else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteString("cardId", addToHand.CardId); Count(w, addToHand.Count); }
-            else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteString("cardId", equip.CardId); }
+            else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteNumber("cardId", summon.CardId); Count(w, summon.Count); }
+            else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteNumber("cardId", addToHand.CardId); Count(w, addToHand.Count); }
+            else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteNumber("cardId", equip.CardId); }
             else if (action is GainManaAction mana) { Type(w, "GAIN_MANA"); Amount(w, mana.Amount); w.WriteString("manaKind", mana.Kind.ToString()); }
             else if (action is BackdraftAction backdraft) { Type(w, "BACKDRAFT"); Amount(w, backdraft.Amount); }
             else if (action is UnearthAction unearth) { Type(w, "UNEARTH"); Count(w, unearth.Count); }

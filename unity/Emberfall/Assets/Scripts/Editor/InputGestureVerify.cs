@@ -23,13 +23,13 @@ namespace Emberfall.Editor
     /// </summary>
     public static class InputGestureVerify
     {
-        private const string Vanilla        = "c_vanilla";         // a minion with no chosen target
-        private const string TargetedSpell  = "c_targeted_spell";  // ON_CAST + ANY_CHARACTER
-        private const string TargetedMinion = "c_targeted_minion"; // ON_PLAY + ANY_CHARACTER
-        private const string PowerFree      = "hp_untargeted";     // hero power, no chosen target
-        private const string PowerAim       = "hp_targeted";       // hero power, ANY_CHARACTER
-        private const string FizzleMinion   = "c_fizzle_minion";   // ON_PLAY + ANY_FRIENDLY_MINION
-        private const string CostMinion     = "c_cost_minion";     // same, but target.cost = Required
+        private const int Vanilla       = 9001;   // a minion with no chosen target
+        private const int TargetedSpell = 9002;   // ON_CAST + ANY_CHARACTER
+        private const int TargetedMinion = 9003;   // ON_PLAY + ANY_CHARACTER
+        private const int PowerFree     = 41;   // hero power, no chosen target
+        private const int PowerAim      = 42;   // hero power, ANY_CHARACTER
+        private const int FizzleMinion  = 9004;   // ON_PLAY + ANY_FRIENDLY_MINION
+        private const int CostMinion    = 9005;   // same, but target.cost = Required
 
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
@@ -925,8 +925,8 @@ namespace Emberfall.Editor
             => new RuleDefinition(new RuleId(id), new TriggeredActivation(trigger), AlwaysCondition.Instance,
                 OneShotLifetime.Instance, new DamageAction(amount, new TargetSpec(selector, selection)));
 
-        private static CardDefinition Def(string id, CardType type, IReadOnlyList<RuleDefinition> rules)
-            => new CardDefinition(id, id, type, 1, 2, 3, null,
+        private static CardDefinition Def(int id, CardType type, IReadOnlyList<RuleDefinition> rules)
+            => new CardDefinition(id, $"verify_{id}", $"verify_{id}", type, 1, 2, 3, null,
                                   CardClass.NEUTRAL, Rarity.COMMON,
                                   System.Array.Empty<Keyword>(), rules,
                                   "", "", SetId.CORE, true, null, "");
