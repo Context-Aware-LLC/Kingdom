@@ -23,7 +23,10 @@
     align-items: center;
     justify-content: center;
     background-color: rgba(11, 14, 19, 0.94);
-    padding: var(--space-4);
+    /* No padding: this element carries .emb-bleed, and a class rule here ties
+       theme.uss on specificity and wins on sheet order, so the clearance would
+       never apply. Same defeat as #shop-overlay's padding, one specificity level
+       down. */
 }
 
 .reveal-overlay--hidden {

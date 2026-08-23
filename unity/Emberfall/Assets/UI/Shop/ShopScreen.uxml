@@ -34,7 +34,7 @@
         <!-- Styled by packreveal.uss, not shop.uss: the same tree is hosted by PackRevealScreen,
              and it borrowed `.shop-overlay` / `.shop-shell` until 2026-08-20 — which is what made
              it unhostable anywhere but here. -->
-        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden">
+        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden emb-bleed">
             <ui:VisualElement class="reveal-shell">
                 <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
                 <ui:Label name="reveal-summary" text="" class="reveal-summary"/>

@@ -38,7 +38,13 @@
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
     -unity-background-scale-mode: scale-and-crop;
-    padding: 0 var(--space-6) var(--space-6);
+    /* No padding here either, and this is the block that actually mattered. The
+       element carries .emb-bleed, whose `padding: var(--edge-safe)` comes from
+       theme.uss as a CLASS rule -- and `#shop-overlay` is an ID selector, so it
+       outranks the theme no matter what order the sheets load in. The padding
+       that used to live here (0 24 24) is why the store looked untouched on a
+       Pixel 5a after the clearance landed everywhere else: the Back button sat
+       under the front camera and the theme never got a say. */
 }
 
 .shop-shell {

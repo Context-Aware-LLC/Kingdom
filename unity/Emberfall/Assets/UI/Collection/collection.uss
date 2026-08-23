@@ -196,7 +196,12 @@
     bottom: 0;
     width: 34%;
     min-width: 420px;
-    padding: var(--space-5);
+    /* Three of this drawer's four sides ARE screen edges (top, right, bottom);
+       its left is interior, so it takes the ordinary gutter there. .emb-bleed
+       would pad all four by --edge-safe and leave 120px of usable column at the
+       420px minimum, which is why this uses the token directly instead of the
+       class. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS. */
+    padding: var(--edge-safe) var(--edge-safe) var(--edge-safe) var(--space-5);
     background-color: var(--surface-2);
     border-left-width: 2px;
     border-left-color: var(--accent);
@@ -550,12 +555,19 @@
     background-color: rgba(11, 14, 19, 0.82);
 }
 
+/* Inset from all four edges by --edge-safe rather than sized in percentages.
+   The old `left:10% top:8% width:80% height:84%` cleared a 2400px landscape by
+   240 and a 1080px portrait by 108 -- the same aspect drift that had the shard
+   counter landing somewhere different on every device. Offsets on all four sides
+   size it as well as place it, so it fills the safe area exactly and cannot
+   overflow the way `8% + --edge-safe + 84%` would. Declared in
+   audit_edge_safety.py's TOKEN_EXCEPTIONS. */
 .craft-modal {
     position: absolute;
-    left: 10%;
-    top: 8%;
-    width: 80%;
-    height: 84%;
+    left: var(--edge-safe);
+    top: var(--edge-safe);
+    right: var(--edge-safe);
+    bottom: var(--edge-safe);
     background-color: var(--surface-1);
     border-radius: var(--space-3);
     padding: var(--space-6);

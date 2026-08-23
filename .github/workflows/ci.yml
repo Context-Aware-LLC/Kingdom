@@ -266,6 +266,16 @@ jobs:
       - name: "Stage 6b · Art-id resolution check (tooling/scripts)"
         run: python3 tooling/scripts/audit_card_art_names.py --fail-missing-only
 
+      # Hardware edge clearance. A screen whose corner chrome never opts into --edge-safe
+      # renders correctly on a desktop, in the Editor, in the Device Simulator and on any
+      # phone with no cutout — it is wrong only on real hardware, in one orientation, for
+      # the person holding it. Nothing else in this pipeline can see that. Blocking because
+      # the two ways it has actually failed here were both silent: SafeAreaPanel writing
+      # inline styles that beat the stylesheet, and #shop-overlay's id-selector padding
+      # outranking the theme class. See the script's header for the five-pass shape.
+      - name: "Stage 6c · UI edge-clearance audit (tooling/scripts)"
+        run: python3 tooling/scripts/audit_edge_safety.py
+
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.
       # TWO local substitutes, and they are not interchangeable:

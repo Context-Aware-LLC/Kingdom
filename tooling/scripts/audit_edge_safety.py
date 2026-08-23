@@ -47,6 +47,7 @@ SHAPE: five passes, each consuming the one before it
   PASS 3  C#    -> the CODE-APPLIED   classes attached at runtime
   PASS 4  join  -> the VERDICT        1 classified by 2 and 3
   PASS 5  2+USS -> the POLICY         --edge-safe locality, .emb-edge placement
+  PASS 6  2+USS -> the SPECIFICITY    rules that would outrank the theme classes
 
 Each pass prints what it found and hands a value to the next, so a failure names
 the stage that produced it and no stage's output has to be taken on trust. Run it
@@ -69,6 +70,21 @@ ROOT_CLASS = 'emb-root'
 # Classes whose USS anchors to an edge but which are NOT screen chrome: they sit
 # inside a tile, a plate or a card, and taking --edge-safe would throw them off
 # their own parent. Each entry names the element that owns it.
+# Screen-level elements that legitimately spend --edge-safe THEMSELVES because
+# neither theme class expresses what they need. Unlike ELEMENT_INTERNAL these do
+# clear the edge -- they just cannot do it with `margin: var(--edge-safe)` or
+# `padding: var(--edge-safe)` on all four sides. Each entry says why, because
+# "the classes did not fit" is the excuse that would otherwise swallow every
+# element someone could not be bothered to tag.
+TOKEN_EXCEPTIONS = {
+    'deck-drawer':
+        'three of its four sides are screen edges and the fourth is interior; '
+        '.emb-bleed would pad all four and leave 120px of column at min-width 420',
+    'craft-modal':
+        'offsets on all four sides size it as well as place it; .emb-edge on top '
+        'of its old percentages overflowed (8% + 150 + 84% > 1080)',
+}
+
 ELEMENT_INTERNAL = {
     'deck-plate-star':
         'star on a deck plate; CharacterRosterController.cs parents it to the plate',
@@ -91,6 +107,21 @@ def _files(root, ext):
 
 def _short(p, marker):
     return p.split(marker)[-1]
+
+
+def _rule_body(path, cls):
+    m = re.search(r'^\.%s\s*\{([^}]*)\}' % re.escape(cls), _read(path), re.M)
+    return m.group(1) if m else ''
+
+
+def _owning_class(text, lineno):
+    """The class whose rule block contains 1-indexed `lineno`, or None."""
+    for m in re.finditer(r'(^[.#][\w\-]+(?:[.:][\w\-]+)*)[^{]*\{([^}]*)\}', text, re.M):
+        first = text[:m.start()].count('\n') + 1
+        last = text[:m.end()].count('\n') + 1
+        if first <= lineno <= last:
+            return m.group(1).lstrip('.#').split(':')[0].split('.')[0]
+    return None
 
 
 def _head(n, title):
@@ -218,6 +249,20 @@ def pass4_verdict(chrome, used, code):
             print('   %-42s %-24s %-9s %s'
                   % (where[:42], sel[:24], 'internal', ELEMENT_INTERNAL[cls][:34]))
             continue
+        if cls in TOKEN_EXCEPTIONS:
+            body = _rule_body(f, cls)
+            if '--edge-safe' not in body:
+                findings.append(
+                    '%s:%d  .%s is declared in TOKEN_EXCEPTIONS, which is a claim that it '
+                    'spends\n      --edge-safe itself, but its rule never mentions the '
+                    'token. Either use it or drop\n      the declaration.'
+                    % (_short(f, 'Assets/UI/'), line, cls))
+                print('   %-42s %-24s %-9s %s'
+                      % (where[:42], sel[:24], 'FAIL', 'declared exception, unused token'))
+            else:
+                print('   %-42s %-24s %-9s %s'
+                      % (where[:42], sel[:24], 'token', TOKEN_EXCEPTIONS[cls][:34]))
+            continue
         sites = used.get(cls, [])
         untagged = [s for s in sites
                     if EDGE_CLASS not in s[2] and BLEED_CLASS not in s[2]]
@@ -274,12 +319,17 @@ def pass5_policy(used, root_indent):
             where = '%s:%d' % (_short(f, 'Assets/UI/'), i)
             if f == THEME:
                 print('   %-42s ok    %s' % (where, line.strip()[:44]))
-            else:
-                print('   %-42s FAIL  restated outside theme.uss' % where)
-                findings.append(
-                    '%s:%d  --edge-safe is restated outside theme.uss. It has one home so '
-                    'retuning it\n      is one line; use .%s or .%s instead.'
-                    % (_short(f, 'Assets/UI/'), i, EDGE_CLASS, BLEED_CLASS))
+                continue
+            owner = _owning_class(text, i)
+            if owner in TOKEN_EXCEPTIONS:
+                print('   %-42s token .%s' % (where, owner))
+                continue
+            print('   %-42s FAIL  spent outside theme.uss, undeclared' % where)
+            findings.append(
+                '%s:%d  --edge-safe is spent outside theme.uss by .%s, which is not in '
+                'TOKEN_EXCEPTIONS.\n      Use .%s or .%s, or declare the exception with '
+                'the reason the classes do not fit.'
+                % (_short(f, 'Assets/UI/'), i, owner or '?', EDGE_CLASS, BLEED_CLASS))
 
     for f, line, classes, indent in sorted(used.get(EDGE_CLASS, [])):
         where = '%s:%d' % (_short(f, 'Assets/UI/'), line)
@@ -300,17 +350,105 @@ def pass5_policy(used, root_indent):
     return findings
 
 
+def pass6_specificity(used):
+    """The theme only wins if nothing outranks it, on the SAME property.
+
+    Both halves of this project's edge-clearance work were defeated this way
+    before the check existed. First SafeAreaPanel wrote `style.padding*` INLINE,
+    which beats any stylesheet. Then `#shop-overlay { padding: 0 24 24 }` -- an ID
+    selector, specificity (1,0,0) against .emb-bleed's (0,1,0) -- kept the store
+    flush to the screen edge while every other screen had cleared it. Neither
+    reported anything; the store simply looked untouched.
+
+    Two precision rules, both learned from this pass's own first run:
+
+      PROPERTY. .emb-edge sets MARGIN and .emb-bleed sets PADDING, so only the
+      matching property is a conflict. `.ms-gear { padding: 0 }` centres an icon
+      inside a button and has nothing to do with the margin that moves it.
+
+      TARGET. A selector targets its LAST simple selector, not its first.
+      `#shop-overlay .shop-shell { padding: 0 }` styles the shell; reading it as
+      a rule on the overlay reported four conflicts that were not there.
+    """
+    _head(6, 'SPECIFICITY - rules that would outrank the theme classes')
+    findings = []
+    prop_of = {EDGE_CLASS: 'margin', BLEED_CLASS: 'padding'}
+
+    targets = {}
+    for theme_cls, prop in prop_of.items():
+        for f, line, classes, _indent in used.get(theme_cls, []):
+            src = _read(f).split('\n')[line - 1]
+            nm = re.search(r'name="([^"]+)"', src)
+            key = (f, line)
+            entry = targets.setdefault(
+                key, {'name': nm.group(1) if nm else None, 'classes': classes, 'props': {}})
+            entry['props'][prop] = theme_cls
+
+    if not targets:
+        print('   (no element carries a theme class)')
+        return findings
+
+    for (uf, uline), t in sorted(targets.items()):
+        name = t['name']
+        others = [c for c in t['classes']
+                  if c not in (EDGE_CLASS, BLEED_CLASS, ROOT_CLASS)]
+        hits = []
+        for f in _files(UI, 'uss'):
+            if f == THEME:
+                continue
+            text = _read(f)
+            commented = _comment_lines(text)
+            for m in re.finditer(r'(^[^{}/][^{}]*?)\{([^}]*)\}', text, re.M):
+                sel, body = m.group(1).strip(), m.group(2)
+                first = text[:m.start()].count('\n') + 1
+                if first in commented or not sel:
+                    continue
+                # A selector targets its LAST simple selector.
+                last = re.split(r'[\s>]+', sel.split(',')[-1].strip())[-1]
+                key = last.lstrip('.#').split(':')[0].split('.')[0]
+                by_id = last.startswith('#') and name and key == name
+                by_cls = last.startswith('.') and key in others
+                if not (by_id or by_cls):
+                    continue
+                # Strip comments from the BODY too, not only whole commented
+                # rules: this pass flagged its own explanatory "No padding: ..."
+                # note as a declaration. Third precision bug this check found in
+                # itself, and the same lesson each time -- discussing a property
+                # is not setting one.
+                bare = re.sub(r'/\*.*?\*/', '', body, flags=re.S)
+                for prop, theme_cls in t['props'].items():
+                    if re.search(r'(^|;|\s)%s\s*:' % prop, bare):
+                        hits.append((f, first, sel, prop, theme_cls,
+                                     'id' if by_id else 'class'))
+        label = '%s:%d %s' % (_short(uf, 'Assets/UI/'), uline, name or '')
+        if not hits:
+            print('   %-52s ok    nothing outranks .%s'
+                  % (label[:52], '/.'.join(sorted(t['props'].values()))))
+            continue
+        for f, first, sel, prop, theme_cls, kind in hits:
+            print('   %-52s FAIL  %s sets %s' % (label[:52], sel[:20], prop))
+            findings.append(
+                '%s:%d  `%s` sets %s on an element carrying .%s (%s:%d).\n'
+                '      That %s selector outranks the theme, so `%s: var(--edge-safe)` '
+                'never applies and\n      nothing reports it. Remove the %s here, or drop '
+                '.%s and declare the element.'
+                % (_short(f, 'Assets/UI/'), first, sel, prop, theme_cls,
+                   _short(uf, 'Assets/UI/'), uline, kind, prop, prop, theme_cls))
+    return findings
+
+
 def main():
     chrome, bleed = pass1_risk_surface()
     used, root_indent = pass2_structure()
     code = pass3_code_applied()
     findings = pass4_verdict(chrome, used, code)
     findings += pass5_policy(used, root_indent)
+    findings += pass6_specificity(used)
 
     print('\n' + '=' * 104)
     print('%d edge-anchored chrome rule(s) | %d full-bleed layer(s) | '
-          '%d declared element-internal' % (len(chrome), len(bleed),
-                                            len(ELEMENT_INTERNAL)))
+          '%d element-internal | %d token exception(s)'
+          % (len(chrome), len(bleed), len(ELEMENT_INTERNAL), len(TOKEN_EXCEPTIONS)))
     if findings:
         print('\nFINDINGS (%d):\n' % len(findings))
         for x in findings:
