@@ -318,6 +318,14 @@ namespace Emberfall.Editor
             }
 
             var card = _cards[_selected];
+
+            // PINNED ABOVE THE SCROLL VIEW, not inside it. This panel used to sit at the very
+            // bottom of the pane, under Rules, so seeing what the validator found meant scrolling
+            // past every field on the card — which nobody does, which made a live check that runs
+            // on every edit effectively invisible (Sam, 2026-08-23: "I don't see the output from it
+            // anywhere"). A check nobody reads is the same as no check.
+            DrawValidationPanel(card);
+
             _editScroll = EditorGUILayout.BeginScrollView(_editScroll);
 
             // The face first: what the card SAYS, and the art it says it over. Everything below is
@@ -385,9 +393,6 @@ namespace Emberfall.Editor
                 _dirtyIds.Add(card.Id);
                 Invalidate(card.Id);
             }
-
-            EditorGUILayout.Space();
-            DrawValidationPanel(card);
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
@@ -593,20 +598,39 @@ namespace Emberfall.Editor
             (list[a], list[b]) = (list[b], list[a]);
         }
 
+        /// <summary>
+        /// What the validator and the linter say about the selected card, right now.
+        /// </summary>
+        /// <remarks>
+        /// Loud when there is something to say and nearly silent when there is not: a clean card
+        /// gets one grey line rather than a help box, because a permanent "Clean." panel at the top
+        /// of every card is exactly the kind of chrome a reader stops seeing — and then stops
+        /// seeing the errors that replace it.
+        /// </remarks>
         private void DrawValidationPanel(EditableCard card)
         {
             var (core, lint) = Validate(card);
-            EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
+            int errors = core.Issues.Count(i => i.Severity == Severity.Error);
+            int warnings = core.Issues.Count - errors + lint.Issues.Count;
 
-            foreach (var issue in core.Issues)
-                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}",
-                    issue.Severity == Severity.Error ? MessageType.Error : MessageType.Warning);
+            if (errors == 0 && warnings == 0)
+            {
+                EditorGUILayout.LabelField("● clean", EditorStyles.miniLabel);
+                return;
+            }
 
+            EditorGUILayout.LabelField(
+                errors > 0 ? $"✕ {errors} error(s), {warnings} warning(s)" : $"▲ {warnings} warning(s)",
+                EditorStyles.boldLabel);
+
+            // Errors first: a card with both is blocked by the errors, and reading the warnings
+            // first buries that.
+            foreach (var issue in core.Issues.Where(i => i.Severity == Severity.Error))
+                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Error);
+            foreach (var issue in core.Issues.Where(i => i.Severity != Severity.Error))
+                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Warning);
             foreach (var issue in lint.Issues)
                 EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Warning);
-
-            if (core.Ok && core.Issues.Count == 0 && lint.Issues.Count == 0)
-                EditorGUILayout.HelpBox("Clean.", MessageType.None);
         }
 
         // ── toolbar actions ──────────────────────────────────────────────────────
