@@ -101,7 +101,23 @@ namespace Emberfall.Editor
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
         }
 
-        private ICardDatabase LiveDb() => new InMemoryCardDatabase(_cards.Select(c => c.ToDefinition()));
+        /// <summary>
+        /// The pool every per-card check resolves against, built ONCE PER REPAINT rather than once
+        /// per card.
+        ///
+        /// <para><b>It used to be per call, and the library list calls it per row.</b> With no
+        /// search filter that was <c>_cards.Count</c> squared <c>ToDefinition()</c> calls and as
+        /// many dictionary builds on every single IMGUI frame — and IMGUI repaints continuously,
+        /// which is the same fact the art-preview cache above exists for. The cost also jumped the
+        /// moment this window started loading all three set files instead of one: 179 rows became
+        /// 268, and the work is quadratic, so it did not grow by half, it grew by 2.2x.</para>
+        /// </summary>
+        private ICardDatabase LiveDb() => _liveDb ??= new InMemoryCardDatabase(_cards.Select(c => c.ToDefinition()));
+
+        private ICardDatabase _liveDb;
+
+        /// <summary>Drops the cached pool. Anything that edits, adds or removes a row calls this.</summary>
+        private void InvalidateLiveDb() => _liveDb = null;
 
         private (ValidationReport core, ValidationReport lint) Validate(EditableCard card)
         {
@@ -112,6 +128,10 @@ namespace Emberfall.Editor
 
         private void OnGUI()
         {
+            // One pool for this whole frame. Rebuilt every repaint rather than cached across them,
+            // so an edit is reflected on the next frame with nothing to remember to invalidate —
+            // the cheap correctness trade, since the cost being removed here is the SQUARE of this.
+            InvalidateLiveDb();
             DrawToolbar();
             EditorGUILayout.BeginHorizontal();
             DrawLibraryList();
