@@ -109,7 +109,7 @@
     border-radius: var(--space-2);
     padding: var(--space-2) var(--space-4);
     margin-left: var(--space-2);
-    font-size: var(--type-h2);                   /* was --type-label 16px */
+    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
     -unity-font-style: bold;
 }
 
@@ -149,8 +149,10 @@
 }
 
 #shop-overlay .shop-close {
-    min-width: 140px;                            /* was 96 */
-    min-height: 88px;                            /* was --space-12 48 — under the touch floor */
+    /* 96dp wide, 48dp tall — 48 is Android's touch floor exactly. Were 140/88 to survive the
+       old reference-resolution scale. */
+    min-width: 96px;
+    min-height: var(--space-12);
     background-color: rgba(0, 0, 0, 0.55);
     border-width: 0;
     border-radius: 999px;

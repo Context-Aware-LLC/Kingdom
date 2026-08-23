@@ -78,7 +78,10 @@
     overflow: hidden;                            /* slats clip to the rounded group */
 }
 .mm-button {
-    font-size: 30px;                             /* was --type-h2 22px — ~1.3mm on a 420dpi phone */
+    font-size: var(--type-h2);                   /* 22dp. Was bumped to 30px on 2026-08-21 to
+                                                    survive the reference-resolution scale; the
+                                                    panels are physical-size now and the token
+                                                    lands at its stated size. */
     -unity-font-style: bold;
     color: var(--ink-1);
     background-color: rgba(30, 37, 48, 0);      /*fully transparent — backdrop shows straight through (styling base) */
@@ -87,7 +90,8 @@
     border-radius: 0;                            /* the group owns the shape, not the slat */
     border-top-width: 1px;                       /* groove between slats */
     border-top-color: rgba(11, 14, 19, 0.55);
-    height: 88px;                                /* was 64 — 3.9mm, under the touch floor (#233) */
+    height: 64px;                                /* 64dp — well over Android's 48dp touch floor.
+                                                    Was 88 to survive the old scale (#233). */
     margin-bottom: 0;                            /* slats touch */
     padding: 0 var(--space-6);
     letter-spacing: 1px;
@@ -118,7 +122,7 @@
                                                     .emb-edge in theme.uss; this is the gutter. */
     right: var(--space-6);
     min-width: 12%;
-    font-size: var(--type-h2);                   /* was --type-label 16px */
+    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
@@ -146,7 +150,7 @@
     padding: var(--space-2) var(--space-4);
 }
 .mm-identity__name {
-    font-size: var(--type-h2);                   /* was --type-label 16px */
+    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
     -unity-font-style: bold;
     color: var(--ink-1);
 }
@@ -307,7 +311,7 @@
     background-color: rgba(11, 14, 19, 0.96);
 }
 
-/* ---------- First-login sizing and typography (NOR-283, extended NOR-284) ----------
+/* ---------- First-login sizing (NOR-283, extended NOR-284) ----------
  * Every rule below is scoped to .mm-modal--onboard on purpose. It marks a modal that IS the first
  * launch — the sign-in gate, and the name/password prompt that follows it — on a phone held at arm's
  * length. The ordinary modals (rename, accounts) are things a player opens on top of a menu they can
@@ -319,8 +323,9 @@
  * for a desktop monitor; on a handset that reads as a small floating dialog on an empty screen rather
  * than the screen itself.
  *
- * Sized in percentages, not pixels: the panel settings scale to a 1920x1080 reference, so a fixed
- * width is a fixed FRACTION of a monitor and a much smaller one of a wide phone canvas.
+ * Sized in percentages, not pixels: the box should be a fraction of whatever canvas it lands on,
+ * which is the one thing a fixed pixel width cannot be. That is still true and is independent of
+ * how the panel scales — do not turn these back into pixels.
  * Do not fold these values back into .mm-modal__* — that would resize the rename and account modals.
  */
 .mm-modal--onboard .mm-modal__panel {
@@ -330,36 +335,24 @@
     padding: var(--space-12);
     border-radius: var(--space-4);
 }
-.mm-modal--onboard .mm-modal__title {
-    font-size: 46px;
-}
-.mm-modal--onboard .mm-modal__help {
-    font-size: 26px;
-    margin-top: var(--space-3);
-    margin-bottom: var(--space-8);
-}
-.mm-modal--onboard .mm-modal__field {
-    font-size: 30px;
-    margin-bottom: var(--space-3);
-}
-.mm-modal--onboard .mm-modal__field > .unity-base-text-field__input {
-    padding: var(--space-4);
-}
-.mm-modal--onboard .mm-modal__error {
-    font-size: 24px;
-    min-height: 30px;
-    margin-bottom: var(--space-6);
-}
-/* Touch targets, not pointer targets: 84px against a 1080-tall reference is roughly a fingertip on
- * a phone in landscape, where the 44px desktop height is about half of one. */
+/* TYPOGRAPHY IS DELIBERATELY ABSENT HERE, and its absence is the fix.
+ * Until 2026-08-23 this block also set a 46px title, 26px help, 30px fields, 24px errors and 28px
+ * buttons. Those were authored when the panels scaled to a 1920x1080 REFERENCE RESOLUTION, which on
+ * a handset delivered every base size at roughly half a millimetre; the overrides were the only
+ * thing making the gate readable. The panels are ConstantPhysicalSize at referenceDpi 160 now, so an
+ * authored pixel is one Android dp and the base .mm-modal__* scale arrives at the size it claims.
+ * Kept, the overrides multiplied a real scale a second time and the gate overflowed the screen.
+ * Add a size here only for a reason that survives that sentence. */
+
+/* Touch target, not a pointer target — the one size that does still need saying. The base 44px is a
+ * mouse height; Android's floor for a finger is 48dp, which at referenceDpi 160 is 48px. */
 .mm-modal--onboard .mm-modal__button {
-    font-size: 28px;
-    height: 84px;
-    padding: 0 var(--space-12);
-    margin-left: var(--space-4);
+    height: 48px;
 }
 /* The code is six characters the player is copying by eye off another screen. Wide tracking and a
- * larger face is the difference between reading it back once and reading it back three times. */
+ * larger face is the difference between reading it back once and reading it back three times.
+ * Must come after .mm-modal__field, which the code field also carries: equal specificity, so this
+ * rule wins only by being later in the file. Keep it below the modal block. */
 .mm-signin__code {
     font-size: var(--type-h1);
     letter-spacing: 8px;
@@ -367,13 +360,6 @@
 }
 .mm-signin__code > .unity-base-text-field__input {
     -unity-text-align: middle-center;
-}
-/* Must out-specify .mm-modal--onboard .mm-modal__field above, which would otherwise shrink the code
- * back to ordinary field size — the code field carries both classes. Equal specificity, so this
- * rule wins by coming later in the file; keep it below the onboard block. */
-.mm-modal--onboard .mm-signin__code {
-    font-size: 56px;
-    letter-spacing: 16px;
 }
 /* A text link, not a third button: resending is a recovery, and giving it a button's weight puts it
  * in competition with the thing the player should actually be doing. */
@@ -416,6 +402,6 @@
     left: var(--space-6);
 }
 .mm-version {
-    font-size: var(--type-label);                /* was --type-caption 14px — ~0.85mm */
+    font-size: var(--type-caption);              /* 14dp. Was --type-label to survive the old scale. */
     color: var(--ink-2);
 }
