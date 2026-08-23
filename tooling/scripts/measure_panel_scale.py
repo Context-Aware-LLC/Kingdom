@@ -8,12 +8,18 @@ Answers "what scale is the panel ACTUALLY running at on this device", which is
 not a thing the project can tell you from its own files: it depends on
 PanelSettings' scale mode, its reference dpi, and what Unity's Screen.dpi
 reports -- and Screen.dpi does NOT have to match the density Android
-advertises. On a Pixel 7 emulator at 420 dpi it reports ~397, so the predicted
-420/96 = 4.375x measured as 4.14x. Predicting it is how you get that wrong.
+advertises. On a Pixel 7 emulator advertising 420 dpi it reports ~418, close but not
+equal. Predicting it instead of measuring is how you get this wrong.
 
 .ms-gear is authored 44x44 and is the cleanest ruler on screen: a solid
---surface-2 rounded square on a dark backdrop, with a known authored size. Its
-rendered width divided by 44 IS the panel scale factor.
+--surface-2 rounded square on a dark backdrop, with a known authored size.
+
+MEASURE ITS BORDER BOX, NOT ITS FILL. UI Toolkit sizes border-box, so the
+authored 44 INCLUDES .ms-gear's 3px border on each side, and the --surface-2 run
+this script matches is the 38-unit fill inside it. Reading the fill and dividing
+by 44 under-reports the scale by about 14%: on 2026-08-22 that turned a real
+2.61x into a reported 4.14x at referenceDpi 96, and made Screen.dpi look like
+397 when it is ~418. Add both borders back before dividing.
 """
 import sys
 from PIL import Image
