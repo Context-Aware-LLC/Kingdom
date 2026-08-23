@@ -153,7 +153,39 @@ namespace Emberfall.Editor
         /// token can leave a stale badge on a card that summons it. Validate All is the
         /// authoritative sweep and reads from disk.</para>
         /// </summary>
-        private void Invalidate(int cardId) => _reports.Remove(cardId);
+        /// <summary>
+        /// Queues a card for revalidation shortly after the typing stops, rather than on the
+        /// keystroke itself (Sam, 2026-08-23: "I still don't think every keystroke is reasonable").
+        ///
+        /// <para>Held rather than dropped: the STALE report keeps rendering until the new one is
+        /// computed, so the panel does not flicker empty between keystrokes. What it costs is a
+        /// quarter second of a badge describing the previous keystroke, which is invisible while
+        /// you are still typing and gone by the time you look up.</para>
+        /// </summary>
+        private void Invalidate(int cardId)
+        {
+            _revalidateId = cardId;
+            _revalidateAt = EditorApplication.timeSinceStartup + RevalidateDelay;
+        }
+
+        private const double RevalidateDelay = 0.25;
+        private int _revalidateId = -1;
+        private double _revalidateAt;
+
+        /// <summary>Fires a queued revalidation once the delay is up. Called once per repaint.</summary>
+        private void TickRevalidate()
+        {
+            if (_revalidateId < 0) return;
+            if (EditorApplication.timeSinceStartup < _revalidateAt)
+            {
+                // IMGUI only repaints on input, and the whole point here is the moment input STOPS,
+                // so nothing else would wake this window to run the check.
+                Repaint();
+                return;
+            }
+            _reports.Remove(_revalidateId);
+            _revalidateId = -1;
+        }
 
         private (ValidationReport core, ValidationReport lint) Validate(EditableCard card)
         {
@@ -168,6 +200,7 @@ namespace Emberfall.Editor
 
         private void OnGUI()
         {
+            TickRevalidate();
             DrawToolbar();
             EditorGUILayout.BeginHorizontal();
             DrawLibraryList();
@@ -184,9 +217,27 @@ namespace Emberfall.Editor
             GUILayout.Space(8);
             if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
             if (GUILayout.Button("Validate All", EditorStyles.toolbarButton, GUILayout.Width(80))) CardSetValidator.RunAndLog();
+            // The selected card's state, beside the button that checks all of them, so it is on
+            // screen whatever the editor pane is scrolled to. The messages stay in the pinned panel
+            // — a toolbar can carry a verdict, not three sentences.
+            GUILayout.Space(8);
+            GUILayout.Label(SelectedStatus(), EditorStyles.miniLabel);
+
             GUILayout.FlexibleSpace();
             GUILayout.Label(_dirtyIds.Count > 0 ? $"● {_dirtyIds.Count} unsaved" : "saved", EditorStyles.miniLabel);
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>The selected card's verdict, for the toolbar. Empty when nothing is selected.</summary>
+        private string SelectedStatus()
+        {
+            if (_selected < 0 || _selected >= _cards.Count) return "";
+            var (core, lint) = Validate(_cards[_selected]);
+            int errors = core.Issues.Count(i => i.Severity == Severity.Error);
+            int warnings = core.Issues.Count - errors + lint.Issues.Count;
+            if (errors > 0) return $"✕ {errors} error{(errors == 1 ? "" : "s")}, {warnings} warning{(warnings == 1 ? "" : "s")}";
+            if (warnings > 0) return $"▲ {warnings} warning{(warnings == 1 ? "" : "s")}";
+            return "● clean";
         }
 
         private void DrawLibraryList()
