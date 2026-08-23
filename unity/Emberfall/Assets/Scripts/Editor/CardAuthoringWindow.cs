@@ -139,17 +139,21 @@ namespace Emberfall.Editor
         /// <summary>
         /// Drops one card's cached report after an edit to that card.
         ///
-        /// <para><b>Deliberately does NOT re-check every other row</b>, which is what makes typing
-        /// cost one validation instead of 268. The staleness this buys is narrow and real: C12/C13
-        /// are the only checks that read another row, so toggling <c>collectible</c> on a token can
-        /// leave a stale badge on a card that summons it until something else invalidates. Validate
-        /// All is the authoritative sweep and reads from disk.</para>
+        /// <para><b>Deliberately re-checks nothing else, and does not rebuild the pool.</b> A
+        /// keystroke therefore costs one validation and one lint — not 268 — and no allocation of
+        /// the pool at all.</para>
+        ///
+        /// <para>Keeping the pool is safe because a field edit cannot change its KEY SET: rows are
+        /// resolved by id, and the id stopped being editable when it became the permanent key. Only
+        /// adding, removing or reloading a row changes what ids exist, and those call
+        /// <see cref="InvalidateAll"/>.</para>
+        ///
+        /// <para>The staleness this buys is one thing wide, and it is the same thing the report
+        /// cache already accepts: C13 reads another row's <c>Collectible</c>, so toggling that on a
+        /// token can leave a stale badge on a card that summons it. Validate All is the
+        /// authoritative sweep and reads from disk.</para>
         /// </summary>
-        private void Invalidate(int cardId)
-        {
-            _liveDb = null;
-            _reports.Remove(cardId);
-        }
+        private void Invalidate(int cardId) => _reports.Remove(cardId);
 
         private (ValidationReport core, ValidationReport lint) Validate(EditableCard card)
         {
