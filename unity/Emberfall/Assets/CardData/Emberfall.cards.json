@@ -26,6 +26,7 @@
     "keywords": [
       "FERVOR"
     ],
+    "text": "Fervor.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -39,6 +40,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 3 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -56,7 +58,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -108,19 +111,21 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "tide_oracle"
   },
   {
-    "id": "tide_frost_ripple",
+    "id": "frost_ripple",
     "name": "Frost Ripple",
     "type": "SPELL",
     "cost": 3,
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to all enemy Beasts.",
     "rules": [
       {
         "id": "rule_1",
@@ -138,7 +143,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS",
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7",
             "filter": {
               "tribe": "BEAST"
             }
@@ -151,7 +157,7 @@
     "artId": "tide_frost_ripple"
   },
   {
-    "id": "tide_wave_caller",
+    "id": "wave_caller",
     "name": "Wave Caller",
     "type": "MINION",
     "cost": 4,
@@ -160,6 +166,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give an enemy minion -1/-2.",
     "rules": [
       {
         "id": "rule_1",
@@ -178,8 +185,8 @@
           "attack": -1,
           "health": -2,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": 1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -189,7 +196,7 @@
     "artId": "tide_wave_caller"
   },
   {
-    "id": "neutral_stone_sentry",
+    "id": "stone_sentry",
     "name": "Stone Sentry",
     "type": "MINION",
     "cost": 3,
@@ -200,6 +207,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -207,7 +215,7 @@
     "artId": "stone_sentry"
   },
   {
-    "id": "neutral_wandering_scout",
+    "id": "wandering_scout",
     "name": "Wandering Scout",
     "type": "MINION",
     "cost": 1,
@@ -218,6 +226,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -225,7 +234,7 @@
     "artId": "wandering_scout"
   },
   {
-    "id": "neutral_emberling",
+    "id": "core_emberling",
     "name": "Emberling Pup",
     "type": "MINION",
     "cost": 1,
@@ -236,6 +245,7 @@
     "keywords": [
       "FERVOR"
     ],
+    "text": "Fervor.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -243,7 +253,7 @@
     "artId": "emberling_pup"
   },
   {
-    "id": "neutral_stoneback_sentry",
+    "id": "core_stoneback",
     "name": "Stoneback Sentry",
     "type": "MINION",
     "cost": 2,
@@ -254,13 +264,14 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "stoneback_sentry"
   },
   {
-    "id": "neutral_hollow_acolyte",
+    "id": "core_hollow_acolyte",
     "name": "Hollow Acolyte",
     "type": "MINION",
     "cost": 3,
@@ -269,6 +280,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -293,7 +305,7 @@
     "artId": "hollow_acolyte"
   },
   {
-    "id": "neutral_lantern_bearer",
+    "id": "core_lantern_bearer",
     "name": "Grave Lantern-Bearer",
     "type": "MINION",
     "cost": 2,
@@ -302,6 +314,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Summon a 1/1 Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -327,7 +340,7 @@
     "artId": "neutral_lantern_bearer"
   },
   {
-    "id": "neutral_aegis_templar",
+    "id": "core_aegis_templar",
     "name": "Aegis Templar",
     "type": "MINION",
     "cost": 4,
@@ -338,13 +351,14 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "aegis_templar"
   },
   {
-    "id": "neutral_veilstalker",
+    "id": "core_veilstalker",
     "name": "Veilstalker",
     "type": "MINION",
     "cost": 3,
@@ -355,13 +369,14 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "veilstalker"
   },
   {
-    "id": "verdant_grove_mender",
+    "id": "core_grove_mender",
     "name": "Grove Mender",
     "type": "MINION",
     "cost": 4,
@@ -370,6 +385,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Restore 4 Health to a friendly character.",
     "rules": [
       {
         "id": "rule_1",
@@ -387,7 +403,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "ANY_FRIENDLY"
+            "selector": "ANY_FRIENDLY",
+            "selection": "1"
           }
         }
       }
@@ -397,7 +414,7 @@
     "artId": "verdant_grove_mender"
   },
   {
-    "id": "neutral_arclight_adept",
+    "id": "core_arclight_adept",
     "name": "Arclight Adept",
     "type": "MINION",
     "cost": 2,
@@ -408,13 +425,14 @@
     "keywords": [
       "ARCANE_SURGE"
     ],
+    "text": "Arcane Surge.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
     "artId": "arclight_adept"
   },
   {
-    "id": "neutral_bonehound",
+    "id": "core_bonehound",
     "name": "Ravenous Bonehound",
     "type": "MINION",
     "cost": 3,
@@ -425,6 +443,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
@@ -432,7 +451,7 @@
     "artId": "ravenous_bonehound"
   },
   {
-    "id": "neutral_throneless_king",
+    "id": "core_throneless_king",
     "name": "Throneless King",
     "type": "MINION",
     "cost": 6,
@@ -444,6 +463,7 @@
       "BULWARK",
       "REKINDLE"
     ],
+    "text": "Bulwark, Rekindle.",
     "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
@@ -473,6 +493,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 3 damage.",
     "rules": [
       {
         "id": "rule_1",
@@ -490,7 +511,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ANY_CHARACTER"
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
           }
         }
       }
@@ -509,6 +531,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -541,6 +564,7 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 3 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -558,7 +582,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -579,6 +604,7 @@
     "keywords": [
       "FERVOR"
     ],
+    "text": "Fervor. Deal 1 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -596,7 +622,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -614,6 +641,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -630,7 +658,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -647,6 +676,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Return a minion to its owner's hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -663,7 +693,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -682,6 +713,7 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Freeze all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -698,7 +730,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -719,6 +752,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -733,6 +767,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -764,6 +799,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Gain 1 Mana Crystal this turn only.",
     "rules": [
       {
         "id": "rule_1",
@@ -811,6 +847,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 1 damage.",
     "rules": [
       {
         "id": "rule_1",
@@ -828,7 +865,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ANY_CHARACTER"
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
           }
         }
       }
@@ -845,6 +883,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon a 1/2 Tide Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -877,6 +916,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Give a friendly minion Rekindle.",
     "rules": [
       {
         "id": "rule_1",
@@ -895,7 +935,7 @@
           "keyword": "REKINDLE",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -912,6 +952,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 3 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -929,7 +970,8 @@
           "type": "HEAL",
           "amount": 3,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -950,6 +992,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": false,
@@ -967,6 +1010,7 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle.",
     "rules": [],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -981,6 +1025,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Sacrifice a friendly minion: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -997,8 +1042,9 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -1009,7 +1055,7 @@
           "trigger": "ON_CAST"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1036,6 +1082,7 @@
     "keywords": [
       "LIFEDRAIN"
     ],
+    "text": "Lifedrain. Toll: Summon a 1/1 Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -1069,6 +1116,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion Rekindle.",
     "rules": [
       {
         "id": "rule_1",
@@ -1086,7 +1134,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "REKINDLE",
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -1105,6 +1154,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Sacrifice a friendly minion: Summon two 1/1 Wisps.",
     "rules": [
       {
         "id": "rule_1",
@@ -1121,8 +1171,9 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -1133,7 +1184,7 @@
           "trigger": "ON_PLAY"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1160,6 +1211,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1194,6 +1246,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Add a 1/1 Wisp to your hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -1231,6 +1284,7 @@
     "keywords": [
       "LIFEDRAIN"
     ],
+    "text": "Lifedrain. Toll: Summon two 1/1 Wisps.",
     "rules": [
       {
         "id": "rule_1",
@@ -1266,6 +1320,7 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Sacrifice a friendly minion: Summon two 1/1 Wisps and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1282,8 +1337,9 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -1294,7 +1350,7 @@
           "trigger": "ON_PLAY"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1312,7 +1368,7 @@
           "trigger": "ON_PLAY"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1338,6 +1394,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1355,7 +1412,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1374,6 +1432,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1410,6 +1469,7 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle. Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -1427,7 +1487,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -1445,6 +1506,7 @@
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 2 damage to all minions and restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1462,7 +1524,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ALL_MINIONS"
+            "selector": "ANY_MINION",
+            "selection": "14"
           }
         }
       },
@@ -1482,7 +1545,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1518,6 +1582,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Toll: Summon a 5/5 Revenant.",
     "rules": [
       {
         "id": "rule_1",
@@ -1555,6 +1620,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -1569,6 +1635,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Gain 1 empty Mana Crystal.",
     "rules": [
       {
         "id": "rule_1",
@@ -1605,6 +1672,7 @@
     "keywords": [
       "LIFEDRAIN"
     ],
+    "text": "Lifedrain.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1618,6 +1686,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Restore 6 Health to a friendly character.",
     "rules": [
       {
         "id": "rule_1",
@@ -1635,7 +1704,8 @@
           "type": "HEAL",
           "amount": 6,
           "target": {
-            "selector": "ANY_FRIENDLY"
+            "selector": "ANY_FRIENDLY",
+            "selection": "1"
           }
         }
       }
@@ -1656,6 +1726,7 @@
     "keywords": [
       "OVERWHELM"
     ],
+    "text": "Overwhelm.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -1672,6 +1743,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1707,6 +1779,7 @@
     "keywords": [
       "VANGUARD"
     ],
+    "text": "Vanguard.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1724,6 +1797,7 @@
     "keywords": [
       "OVERWHELM"
     ],
+    "text": "Overwhelm.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1742,6 +1816,7 @@
       "BULWARK",
       "OVERWHELM"
     ],
+    "text": "Bulwark, Overwhelm.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -1757,6 +1832,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Attack: Restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1774,7 +1850,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1791,6 +1868,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 4 Health.",
     "rules": [
       {
         "id": "rule_1",
@@ -1808,7 +1886,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "ANY_CHARACTER"
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
           }
         }
       }
@@ -1827,6 +1906,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1844,7 +1924,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1863,6 +1944,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -1880,7 +1962,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -1898,6 +1981,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion +2/+2 and Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -1917,6 +2001,7 @@
           "health": 2,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -1938,6 +2023,7 @@
           "keyword": "BULWARK",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -1957,6 +2043,7 @@
     "class": "VERDANT",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Summon two 1/2 Thorn Cubs.",
     "rules": [
       {
         "id": "rule_1",
@@ -1983,13 +2070,14 @@
     "artId": "verdant_thornfang_matron"
   },
   {
-    "id": "neutral_choking_vines",
+    "id": "core_choking_vines",
     "name": "Choking Vines",
     "type": "SPELL",
     "cost": 4,
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Destroy a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -2006,7 +2094,8 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2016,7 +2105,7 @@
     "artId": "choking_vines"
   },
   {
-    "id": "neutral_thistleguard_sprig",
+    "id": "core_thistleguard_sprig",
     "name": "Thistleguard Sprig",
     "type": "MINION",
     "cost": 2,
@@ -2027,6 +2116,7 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -2034,7 +2124,7 @@
     "artId": "thistleguard_sprig"
   },
   {
-    "id": "neutral_relic_bound_revenant",
+    "id": "relic_bound_revenant",
     "name": "Bound Revenant",
     "type": "MINION",
     "cost": 3,
@@ -2046,6 +2136,7 @@
       "BULWARK",
       "REKINDLE"
     ],
+    "text": "Bulwark, Rekindle.",
     "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
@@ -2053,7 +2144,7 @@
     "artId": "bound_revenant"
   },
   {
-    "id": "neutral_relic_corpse_cart",
+    "id": "relic_corpse_cart",
     "name": "Corpse Cart",
     "type": "MINION",
     "cost": 2,
@@ -2062,6 +2153,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon a 1/1 Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -2099,6 +2191,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "UNDEAD",
     "setId": "EMBERFALL",
@@ -2129,6 +2222,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 2 damage to your hero and draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -2146,7 +2240,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       },
@@ -2184,6 +2279,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2200,6 +2296,7 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -2232,6 +2329,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 4 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -2249,7 +2347,8 @@
           "type": "DAMAGE",
           "amount": 4,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2268,6 +2367,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -2284,7 +2384,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -2303,6 +2404,7 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 3 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -2320,7 +2422,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2342,6 +2445,7 @@
     "keywords": [
       "VANGUARD"
     ],
+    "text": "Vanguard.",
     "rules": [],
     "tribe": "DRAGON",
     "setId": "EMBERFALL",
@@ -2361,6 +2465,7 @@
       "BULWARK",
       "AEGIS"
     ],
+    "text": "Bulwark, Aegis.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2379,6 +2484,7 @@
     "keywords": [
       "LIFEDRAIN"
     ],
+    "text": "Lifedrain.",
     "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -2395,6 +2501,7 @@
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Return a minion to its owner's hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -2411,7 +2518,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2433,6 +2541,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Toll: Freeze all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -2449,7 +2558,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2467,6 +2577,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -2484,7 +2595,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2501,6 +2613,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -2548,6 +2661,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Give a friendly minion Shroud.",
     "rules": [
       {
         "id": "rule_1",
@@ -2566,7 +2680,7 @@
           "keyword": "SHROUD",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -2583,6 +2697,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon a 0/3 Stone Shard.",
     "rules": [
       {
         "id": "rule_1",
@@ -2619,6 +2734,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2633,6 +2749,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 1 damage twice to random enemies.",
     "rules": [
       {
         "id": "rule_1",
@@ -2651,8 +2768,7 @@
           "amount": 1,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM",
-            "binding": "first_hit"
+            "selection": "random: 1"
           }
         }
       },
@@ -2673,9 +2789,7 @@
           "amount": 1,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM",
-            "binding": "second_hit",
-            "distinctFrom": "first_hit"
+            "selection": "random: 1"
           }
         }
       }
@@ -2694,6 +2808,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -2728,6 +2843,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -2764,6 +2880,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -2778,6 +2895,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -2796,7 +2914,7 @@
           "amount": 2,
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -2815,6 +2933,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon a 1/1 Gear Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -2850,6 +2969,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly Constructs +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2868,8 +2988,8 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1,
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7",
             "filter": {
               "tribe": "CONSTRUCT"
             }
@@ -2892,6 +3012,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 2 damage.",
     "rules": [
       {
         "id": "rule_1",
@@ -2910,7 +3031,7 @@
           "amount": 2,
           "target": {
             "selector": "ANY_CHARACTER",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -2928,6 +3049,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly Constructs +2/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -2946,8 +3068,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1,
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7",
             "filter": {
               "tribe": "CONSTRUCT"
             }
@@ -2967,6 +3089,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Return a minion to its owner's hand and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -2984,7 +3107,7 @@
           "type": "RETURN_TO_HAND",
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       },
@@ -3020,6 +3143,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Toll: Draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -3057,6 +3181,7 @@
       "VANGUARD",
       "BULWARK"
     ],
+    "text": "Vanguard, Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3071,6 +3196,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Return all minions to hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -3087,8 +3213,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ALL_MINIONS",
-            "count": -1
+            "selector": "ANY_MINION",
+            "selection": "14"
           }
         }
       }
@@ -3110,6 +3236,7 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis. Draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -3144,6 +3271,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -3180,6 +3308,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud.",
     "rules": [],
     "tribe": "SPIRIT",
     "setId": "EMBERFALL",
@@ -3194,6 +3323,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -3212,7 +3342,7 @@
           "amount": 2,
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -3233,6 +3363,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -3251,6 +3382,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -3265,6 +3397,7 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Destroy a damaged minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -3282,7 +3415,7 @@
           "type": "DESTROY",
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER",
+            "selection": "1",
             "filter": {
               "damaged": true
             }
@@ -3306,6 +3439,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -3322,6 +3456,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion Shroud.",
     "rules": [
       {
         "id": "rule_1",
@@ -3340,7 +3475,7 @@
           "keyword": "SHROUD",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -3357,6 +3492,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly minions Shroud.",
     "rules": [
       {
         "id": "rule_1",
@@ -3374,8 +3510,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "SHROUD",
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3392,6 +3528,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Return a friendly minion to your hand: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -3408,9 +3545,9 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "required": true,
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -3421,7 +3558,7 @@
           "trigger": "ON_CAST"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -3444,6 +3581,7 @@
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Destroy a minion and give a random friendly minion Venom.",
     "rules": [
       {
         "id": "rule_1",
@@ -3461,7 +3599,7 @@
           "type": "DESTROY",
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       },
@@ -3481,8 +3619,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "VENOM",
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "chosenBy": "RANDOM"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "random: 1"
           }
         }
       }
@@ -3499,6 +3637,7 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Return all enemy minions to hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -3515,8 +3654,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3535,6 +3674,7 @@
     "class": "NIGHTVEIL",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 1 damage to all enemy minions and give all friendly minions Shroud.",
     "rules": [
       {
         "id": "rule_1",
@@ -3552,8 +3692,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -3573,8 +3713,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "SHROUD",
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3598,6 +3738,7 @@
       "SHROUD",
       "VENOM"
     ],
+    "text": "Shroud, Venom. Toll: Deal 4 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -3615,7 +3756,8 @@
           "type": "DAMAGE",
           "amount": 4,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -3637,6 +3779,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3651,6 +3794,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 1 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -3668,8 +3812,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3690,6 +3834,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3704,6 +3849,7 @@
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Give a friendly minion +0/+3.",
     "rules": [
       {
         "id": "rule_1",
@@ -3723,7 +3869,7 @@
           "health": 3,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -3744,6 +3890,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3758,6 +3905,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 3 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -3775,8 +3923,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3797,6 +3945,7 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3811,6 +3960,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly minions +0/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -3829,8 +3979,8 @@
           "attack": 0,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3851,6 +4001,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3865,6 +4016,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 2 damage to all enemy minions and give a random friendly minion +0/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -3882,8 +4034,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -3904,8 +4056,8 @@
           "attack": 0,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "chosenBy": "RANDOM"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "random: 1"
           }
         }
       }
@@ -3926,6 +4078,7 @@
     "keywords": [
       "VANGUARD"
     ],
+    "text": "Vanguard. Give all friendly minions +0/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -3944,8 +4097,8 @@
           "attack": 0,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -3968,6 +4121,7 @@
       "BULWARK",
       "OVERWHELM"
     ],
+    "text": "Bulwark, Overwhelm.",
     "rules": [],
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
@@ -3986,6 +4140,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Give all friendly minions Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -4003,8 +4158,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -4024,6 +4179,7 @@
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -4042,7 +4198,7 @@
           "keyword": "BULWARK",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       }
@@ -4063,6 +4219,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike.",
     "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -4077,6 +4234,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 3 damage to a minion and Backdraft 1.",
     "rules": [
       {
         "id": "rule_1",
@@ -4095,7 +4253,7 @@
           "amount": 3,
           "target": {
             "selector": "ANY_MINION",
-            "chosenBy": "PLAYER"
+            "selection": "1"
           }
         }
       },
@@ -4133,6 +4291,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike.",
     "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -4151,6 +4310,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -4165,6 +4325,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2, 1 and 1 damage each to a random enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -4183,7 +4344,7 @@
           "amount": 2,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       },
@@ -4204,7 +4365,7 @@
           "amount": 1,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       },
@@ -4225,7 +4386,7 @@
           "amount": 1,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       }
@@ -4242,6 +4403,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 4 damage to a random enemy and Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -4260,7 +4422,7 @@
           "amount": 4,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       },
@@ -4298,6 +4460,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike.",
     "rules": [],
     "tribe": "ELEMENTAL",
     "setId": "EMBERFALL",
@@ -4312,6 +4475,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 3 damage to a random enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -4330,7 +4494,7 @@
           "amount": 3,
           "target": {
             "selector": "ANY_ENEMY",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       }
@@ -4351,6 +4515,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "tribe": "BEAST",
     "setId": "EMBERFALL",
@@ -4365,6 +4530,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 2 damage to all enemy minions and Backdraft 1.",
     "rules": [
       {
         "id": "rule_1",
@@ -4382,8 +4548,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": -1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -4417,6 +4583,7 @@
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Give all friendly minions Doublestrike.",
     "rules": [
       {
         "id": "rule_1",
@@ -4434,8 +4601,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "DOUBLESTRIKE",
           "target": {
-            "selector": "FRIENDLY_MINIONS",
-            "count": -1
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -4452,6 +4619,7 @@
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 3 damage to all enemies and Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -4469,7 +4637,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       },
@@ -4508,6 +4677,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike. Deal 3 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -4525,7 +4695,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -4545,6 +4716,7 @@
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Attack: Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -4580,6 +4752,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4598,6 +4771,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4616,6 +4790,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4633,6 +4808,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4652,6 +4828,7 @@
       "SKIRMISH",
       "LIFEDRAIN"
     ],
+    "text": "Skirmish, Lifedrain.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4670,6 +4847,7 @@
     "keywords": [
       "ARCANE_SURGE"
     ],
+    "text": "Arcane Surge.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4687,6 +4865,7 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4703,6 +4882,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card. Toll: Summon a 1/1 Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -4757,6 +4937,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4775,6 +4956,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -4793,7 +4975,8 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -4815,6 +4998,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4849,6 +5033,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -4867,6 +5052,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish. Deal 1 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -4884,7 +5070,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -4901,6 +5088,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 5 damage to a minion and deal 2 damage to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -4918,7 +5106,8 @@
           "type": "DAMAGE",
           "amount": 5,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -4938,7 +5127,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -4957,6 +5147,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Backdraft 2.",
     "rules": [
       {
         "id": "rule_1",
@@ -4993,6 +5184,7 @@
     "keywords": [
       "VANGUARD"
     ],
+    "text": "Vanguard. Deal 2 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5010,7 +5202,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -5030,6 +5223,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Attack: Deal 1 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5047,7 +5241,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -5068,6 +5263,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5082,6 +5278,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 2 damage to all minions and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -5099,7 +5296,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ALL_MINIONS"
+            "selector": "ANY_MINION",
+            "selection": "14"
           }
         }
       },
@@ -5137,6 +5335,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5155,6 +5354,7 @@
     "keywords": [
       "FROST"
     ],
+    "text": "Freeze.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5171,6 +5371,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -5187,7 +5388,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -5205,6 +5407,7 @@
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Freeze a minion and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -5221,7 +5424,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -5259,6 +5463,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -5275,7 +5480,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -5296,6 +5502,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish. Return a minion to its owner's hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -5312,7 +5519,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -5332,8 +5540,10 @@
     "class": "TIDECALLER",
     "rarity": "LEGENDARY",
     "keywords": [
-      "AEGIS,BULWARK"
+      "AEGIS",
+      "BULWARK"
     ],
+    "text": "Aegis, Bulwark. Freeze 2 enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -5350,8 +5560,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "count": 2
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "2"
           }
         }
       }
@@ -5369,6 +5579,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Return all enemy minions to hand.",
     "rules": [
       {
         "id": "rule_1",
@@ -5385,7 +5596,8 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -5404,6 +5616,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -5420,7 +5633,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -5439,6 +5653,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -5475,6 +5690,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish. Toll: Restore 3 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5492,7 +5708,8 @@
           "type": "HEAL",
           "amount": 3,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -5515,6 +5732,7 @@
       "BULWARK",
       "AEGIS"
     ],
+    "text": "Bulwark, Aegis.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5529,6 +5747,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon three 1/1 Wisps.",
     "rules": [
       {
         "id": "rule_1",
@@ -5565,6 +5784,7 @@
     "keywords": [
       "VENOM"
     ],
+    "text": "Venom. Toll: Summon two 1/1 Wisps.",
     "rules": [
       {
         "id": "rule_1",
@@ -5598,6 +5818,7 @@
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -5616,7 +5837,8 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -5637,6 +5859,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Sacrifice a friendly minion: Restore 10 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5653,8 +5876,9 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -5665,7 +5889,7 @@
           "trigger": "ON_PLAY"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -5674,7 +5898,8 @@
           "type": "HEAL",
           "amount": 10,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -5697,6 +5922,7 @@
       "BULWARK",
       "VENOM"
     ],
+    "text": "Bulwark, Venom.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5715,6 +5941,7 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish. Restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5732,7 +5959,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -5754,6 +5982,7 @@
     "keywords": [
       "ARCANE_SURGE"
     ],
+    "text": "Arcane Surge.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5767,6 +5996,7 @@
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Restore 6 Health to a friendly character and give a friendly minion +2/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -5785,6 +6015,7 @@
           "amount": 6,
           "target": {
             "selector": "ANY_FRIENDLY",
+            "selection": "1",
             "binding": "heal_target"
           }
         }
@@ -5807,6 +6038,7 @@
           "health": 2,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "growth_target"
           }
         }
@@ -5829,6 +6061,7 @@
       "BULWARK",
       "OVERWHELM"
     ],
+    "text": "Bulwark, Overwhelm.",
     "rules": [],
     "setId": "EMBERFALL",
     "collectible": true,
@@ -5842,6 +6075,7 @@
     "class": "VERDANT",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 2 damage to all enemies and restore 4 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -5859,7 +6093,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       },
@@ -5879,7 +6114,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }

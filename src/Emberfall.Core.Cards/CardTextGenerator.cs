@@ -6,18 +6,160 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Cards
 {
+    /// <summary>The ways a card's authored text can disagree with the rules printed under it.</summary>
+    public enum CardTextDivergence
+    {
+        /// <summary>The authored sentence is exactly what these rules read as.</summary>
+        None,
+
+        /// <summary>The rules read as a sentence and the row carries none.</summary>
+        Missing,
+
+        /// <summary>The row carries a sentence and the rules read as nothing — text with no card behind it.</summary>
+        Orphaned,
+
+        /// <summary>Both exist and differ. Either the rules moved and the prose did not, or the reverse.</summary>
+        Stale,
+
+        /// <summary>The rules are a shape this renderer has no phrasing for, so nothing can be checked.</summary>
+        Unrenderable,
+    }
+
     /// <summary>
-    /// Deterministically renders the normalized rules that a card already owns into player-facing
-    /// text. Carrier keywords and normalized typed rules are the only inputs: trigger labels are
-    /// derived from rule activation, never duplicated as keyword data.
+    /// Deterministically renders the normalized rules a card owns into the player-facing text those
+    /// rules read as. Carrier keywords and normalized typed rules are the only inputs: trigger labels
+    /// are derived from rule activation, never duplicated as keyword data.
+    ///
+    /// <para><b>This is a CHECKER, not the display path (Sam, 2026-08-16).</b> What a card says is
+    /// <see cref="CardDefinition.Text"/> — authored on the row, and what every reader renders. This
+    /// type exists to answer one question about that field: does the sentence still describe the
+    /// rules? <see cref="Check"/> is the entry point the validator calls, and <c>C26</c> is where a
+    /// disagreement surfaces.</para>
+    ///
+    /// <para><b>Why the direction was reversed.</b> Generating the text failed silently — it always
+    /// emitted something, slightly wrong, and it shipped. Checking it fails loudly, at authoring
+    /// time, on the one card that is wrong. The blast radius is the whole argument: re-wording a
+    /// sentence here is a global policy binding on every card sharing the code path, which is why
+    /// the dated rulings below read as legislation. Under authored text they are preferences again,
+    /// and this file's job shrinks to holding the line that prose and rules agree.</para>
+    ///
+    /// <para>RETIREMENT TRIGGER: the parser. The reversal's end state is that rules are parsed FROM
+    /// the authored sentence, at which point round-tripping replaces this comparison, exact-match
+    /// stops being the definition of agreement, and this renderer's grammar becomes the parser's.
+    /// Whoever lands that parser retires <see cref="Check"/> and the C26 family with it.</para>
+    ///
+    /// <para><b>THE GRAMMAR IS ASYMMETRIC, and this is the first requirement recorded against it
+    /// (Sam, 2026-08-18): the parser accepts "next to" AND "beside" for adjacency.</b> Rendering
+    /// stays single-valued — one rule shape, one sentence, which is what makes the round trip an
+    /// oracle — while parsing is many-to-one and normalizes synonyms onto it. So a synonym costs the
+    /// parser an alternation and costs this renderer nothing; do NOT add a second output form here
+    /// to serve one. The canonical rendering remains "an adjacent minion" until Sam moves it.</para>
+    ///
+    /// <para><b>Do not generalise this into an alternatives policy (Sam, 2026-08-18, reason restated
+    /// 08-19). The reason is MERGE COST, not correctness</b> — "even though it probably wouldn't hurt
+    /// anything". This fork exists to land the effect model in the main project, so the target is the
+    /// simplest working version of the grammar, and every extra accepted phrase is surface a reviewer
+    /// over there has to take on. Adjacency's pair is what was asked for and is what ships; a scheme
+    /// for "alternatives per parameter" is not wanted before a parameter needs one.</para>
+    ///
+    /// <para><b>And note what that request WAS.</b> C26's comment names its own forcing function:
+    /// "the first author who genuinely needs to re-word a card is the forcing function for the
+    /// parser rather than someone waiving a warning." Asking for a second accepted wording is that
+    /// author arriving. Nothing is due today — no card needs the synonym yet — but the trigger has
+    /// fired once, and the next time it fires the answer is the parser, not a widened exact-match.</para>
     /// </summary>
     public static class CardTextGenerator
     {
-        /// <summary>Renders a complete card face from its carrier keywords and its typed rules.</summary>
-        public static string Generate(CardDefinition card)
+        /// <summary>
+        /// Checks a card's authored text against the sentence its rules read as, handing back the
+        /// expected rendering so a caller can show the author both halves of the disagreement.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Generate"/> throws on a rule shape it has no phrasing for — deliberately, since
+        /// silently rendering an unknown shape is the failure this whole direction exists to stop.
+        /// That is a finding about the card, not a crash the validator should propagate, so it is
+        /// caught here and reported as <see cref="CardTextDivergence.Unrenderable"/> against the row
+        /// that caused it. Such a row is already failing a C-series rule; this names it a second time
+        /// rather than taking the run down with a stack trace that does not say which card.
+        /// </remarks>
+        public static CardTextDivergence Check(CardDefinition card, ICardDatabase pool,
+            out string expected)
         {
             if (card == null) throw new ArgumentNullException(nameof(card));
 
+            try
+            {
+                expected = Generate(card, pool);
+            }
+            catch (NotSupportedException)
+            {
+                expected = "";
+                return CardTextDivergence.Unrenderable;
+            }
+
+            if (string.Equals(card.Text, expected, StringComparison.Ordinal))
+                return CardTextDivergence.None;
+            if (card.Text.Length == 0) return CardTextDivergence.Missing;
+            if (expected.Length == 0) return CardTextDivergence.Orphaned;
+            return CardTextDivergence.Stale;
+        }
+
+        /// <summary>Renders the card face these carrier keywords and typed rules read as.</summary>
+        /// <remarks>
+        /// <b>Not a display path.</b> A reader showing a card to a player reads
+        /// <see cref="CardDefinition.Text"/>; calling this instead re-derives the face at read time
+        /// and puts the pipeline back the way round the reversal took it out of.
+        /// </remarks>
+        /// <param name="pool">
+        /// Where a card NAMED by another card's sentence is looked up. A sentence naming a card
+        /// prints that card's own <c>Name</c> and stats, so the renderer cannot speak it from the
+        /// row in hand. Passing <see cref="NoPool.Instance"/> is legitimate and simply makes such a
+        /// sentence unrenderable rather than guessed — the same fail-closed shape
+        /// <see cref="CardNameIndex.Empty"/> gives the parser.
+        /// </param>
+        public static string Generate(CardDefinition card, ICardDatabase pool)
+        {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+
+            string band = CarrierBand(card);
+            var parts = new List<string>(1 + card.Rules.Count);
+            // Comma-separated and closed with a stop. Two separate jobs: the commas stop "Bulwark
+            // Lifedrain" reading as one two-word keyword, and the stop separates the band from the
+            // rules text that follows it. The trigger marker's colon used to do that second job —
+            // "Bulwark Herald: Draw a card." — and ON_PLAY prints no marker any more, which would
+            // have left "Bulwark Draw a card." Presentation emphasises each name on top of this.
+            if (band.Length > 0) parts.Add(band);
+            parts.AddRange(RenderRuleGroups(card.Rules, pool ?? NoPool.Instance));
+            return string.Join(" ", parts);
+        }
+
+        /// <summary>A pool that resolves nothing, so every card-naming sentence is unrenderable.</summary>
+        /// <remarks>
+        /// Not a convenience default on <see cref="Generate(CardDefinition, ICardDatabase)"/>: a
+        /// caller with no pool has to say so, because the failure it buys — a card silently losing
+        /// the clause that names another card — is exactly the kind this direction exists to stop.
+        /// </remarks>
+        public sealed class NoPool : ICardDatabase
+        {
+            public static readonly NoPool Instance = new NoPool();
+            private NoPool() { }
+            public bool TryGet(string cardId, out CardDefinition def) { def = null!; return false; }
+            public CardDefinition Get(string cardId)
+                => throw new KeyNotFoundException($"no card '{cardId}' — this renderer was given no pool.");
+            public IReadOnlyCollection<CardDefinition> AllCollectible() => Array.Empty<CardDefinition>();
+        }
+
+        /// <summary>
+        /// The leading carrier-keyword band, or "" when a card has none.
+        ///
+        /// <para>Internal because <see cref="CardTextParser"/> has to STRIP exactly what this
+        /// PRINTS. It was briefly reimplemented over there and got it wrong on 38 cards — reading
+        /// <c>KeywordSemantics.AuthoredName</c>, which is null for every keyword but FROST, instead
+        /// of the title-cased fallback <see cref="Name(Keyword)"/> applies. One implementation, so
+        /// the two halves cannot disagree again.</para>
+        /// </summary>
+        internal static string CarrierBand(CardDefinition card)
+        {
             var carriers = new List<string>(card.Keywords.Count);
             foreach (Keyword keyword in card.Keywords)
             {
@@ -26,16 +168,55 @@ namespace Emberfall.Core.Cards
                 if (KeywordSemantics.IsActionMarker(keyword)) continue;
                 carriers.Add(Name(keyword));
             }
-
-            var parts = new List<string>(1 + card.Rules.Count);
             // Comma-separated and closed with a stop. Two separate jobs: the commas stop "Bulwark
             // Lifedrain" reading as one two-word keyword, and the stop separates the band from the
-            // rules text that follows it. The trigger marker's colon used to do that second job —
-            // "Bulwark Herald: Draw a card." — and ON_PLAY prints no marker any more, which would
-            // have left "Bulwark Draw a card." Presentation emphasises each name on top of this.
-            if (carriers.Count > 0) parts.Add(string.Join(", ", carriers) + ".");
-            parts.AddRange(RenderRuleGroups(card.Rules));
-            return string.Join(" ", parts);
+            // rules text that follows it.
+            return carriers.Count == 0 ? "" : string.Join(", ", carriers) + ".";
+        }
+
+        /// <summary>How a keyword is spoken, for a parser that must match what was printed.</summary>
+        internal static string DescribeKeyword(Keyword keyword) => Name(keyword);
+
+        /// <summary>
+        /// How a card is spoken when another card's sentence names it — "1/1 Wisp" for the row
+        /// named Wisp. Exposed so <see cref="CardNameIndex"/> keys on exactly what gets printed.
+        ///
+        /// <para><b>This used to title-case the card's ID SLUG, and that was the defect</b> (fixed
+        /// 2026-08-22). It made ids load-bearing for card text — renaming one forced the authored
+        /// sentence to change with it, and it blocked the numeric immutable ids. Measured before
+        /// the change: the reach was 20 rows naming 8 distinct cards, not the 261 the migration
+        /// register estimated.</para>
+        ///
+        /// <para><b>A summoned minion prints its stats</b> (Sam, 2026-08-22) so the sentence says
+        /// what the player gets. Only a minion: a weapon is equipped and a spell goes to hand, and
+        /// neither reads as a body. Under the slug this fell out of whether whoever minted the id
+        /// happened to encode the stats — 4 of the 8 named cards printed them and 4 did not, for no
+        /// reason a reader could see. Now it is a rule.</para>
+        /// </summary>
+        internal static string DescribeCardName(CardDefinition named)
+        {
+            if (named == null) throw new ArgumentNullException(nameof(named));
+            if (string.IsNullOrWhiteSpace(named.Name))
+                throw Requires($"a Name on the card '{named.Id}' a sentence names");
+
+            return named.Type == CardType.MINION && named.Attack.HasValue && named.Health.HasValue
+                ? named.Attack.Value.ToString(CultureInfo.InvariantCulture) + "/" +
+                  named.Health.Value.ToString(CultureInfo.InvariantCulture) + " " + named.Name
+                : named.Name;
+        }
+
+        /// <summary>Resolves a named card through the pool, refusing rather than inventing a name.</summary>
+        /// <remarks>
+        /// An id the pool does not hold makes the sentence UNRENDERABLE, which C26 reports against
+        /// the row that names it. The alternative — falling back to the id slug — is the behaviour
+        /// this change removed, and it would come back silently on exactly the rows nobody checked.
+        /// </remarks>
+        private static string NamedCard(string cardId, ICardDatabase pool)
+        {
+            if (string.IsNullOrEmpty(cardId)) throw Requires("a card id to name");
+            if (pool == null || !pool.TryGet(cardId, out CardDefinition named))
+                throw Unsupported("naming the card", cardId + " — no such row in the pool given to the renderer");
+            return DescribeCardName(named);
         }
 
         /// <summary>Renders the rule half of a card face on its own, without any carrier keywords.</summary>
@@ -45,34 +226,53 @@ namespace Emberfall.Core.Cards
         /// way to print a card face. The friend declaration is in AssemblyInfo.cs — in code, because
         /// Unity never reads the .csproj.
         /// </remarks>
-        internal static string Generate(IReadOnlyList<RuleDefinition> rules)
+        internal static string Generate(IReadOnlyList<RuleDefinition> rules, ICardDatabase pool)
         {
             if (rules == null) throw new ArgumentNullException(nameof(rules));
-            return string.Join(" ", RenderRuleGroups(rules));
+            return string.Join(" ", RenderRuleGroups(rules, pool ?? NoPool.Instance));
         }
 
         /// <summary>Renders the rules as card-face lines, one per run of rules sharing a prefix.</summary>
         /// <remarks>
-        /// One line per RUN of consecutive rules sharing a trigger/condition/lifetime prefix, not one
-        /// line per rule — a Toll with three effects is one "Toll:", not "Toll:" printed three
-        /// times. Only adjacent rules merge, so an interleaved trigger (on-play, Toll, on-play)
-        /// still prints the marker each time it actually changes.
+        /// One line per RUN of consecutive rules sharing a trigger/cost/condition/lifetime prefix,
+        /// not one line per rule — a Toll with three effects is one "Toll:", not "Toll:" printed
+        /// three times. Only adjacent rules merge, so an interleaved trigger (on-play, Toll,
+        /// on-play) still prints the marker each time it actually changes.
+        ///
+        /// <para><b>A COST is a fourth prefix component and needed no new grouping machinery</b>
+        /// (Sam, 2026-08-22) — it is the same device as <c>Toll:</c>, a clause and a colon scoping
+        /// what follows. The cost rule prints no line of its own: its clause IS the prefix, and the
+        /// run beneath it is exactly the rules whose condition says the price was paid.</para>
         /// </remarks>
-        private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules)
+        private static List<string> RenderRuleGroups(IReadOnlyList<RuleDefinition> rules, ICardDatabase pool)
         {
             var lines = new List<string>();
             var groupActions = new List<RuleAction>();
             string groupPrefix = "";
+            string costPrefix = "";
 
             foreach (RuleDefinition rule in rules)
             {
                 if (rule == null) throw new ArgumentNullException(nameof(rules));
 
-                string prefix = TriggerMarker(rule.Activation) + ConditionPrefix(rule.Condition) +
-                    LifetimePrefix(rule.Lifetime);
+                if (CostOf(rule) != CostKind.None)
+                {
+                    // The cost opens a new clause, so whatever run was open is finished.
+                    if (groupActions.Count > 0)
+                    {
+                        lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
+                        groupActions.Clear();
+                    }
+                    costPrefix = CostPrefix(rule.Action, pool);
+                    continue;
+                }
+
+                string prefix = TriggerMarker(rule.Activation) +
+                    CostScope(rule.Condition, costPrefix) +
+                    ConditionPrefix(rule.Condition) + LifetimePrefix(rule.Lifetime);
                 if (groupActions.Count > 0 && prefix != groupPrefix)
                 {
-                    lines.Add(groupPrefix + JoinActions(groupActions));
+                    lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
                     groupActions.Clear();
                 }
 
@@ -81,9 +281,74 @@ namespace Emberfall.Core.Cards
             }
 
             if (groupActions.Count > 0)
-                lines.Add(groupPrefix + JoinActions(groupActions));
+                lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
             return lines;
         }
+
+        /// <summary>Joins a run's sentence onto its prefix.</summary>
+        /// <remarks>
+        /// <b>A prefix ending in a COMMA has not finished its sentence.</b> A trigger marker and a
+        /// cost both end in a colon, after which a capital is right; a condition or a lifetime clause
+        /// ends "While it is your turn, " and the effect continues that same sentence, so it takes
+        /// the lowercase treatment <see cref="JoinActions"/> already gives every clause but the
+        /// first — game vocabulary spared, so "…, Freeze a minion." keeps its capital.
+        ///
+        /// <para>Surfaced by the corpus's first ON_TURN_START card, which printed "While it is your
+        /// turn, Give this +1/+1." <c>LifetimePrefix</c>'s PERMANENT and FINITE clauses carry the
+        /// same comma and were wrong in the same way, unexercised because no card uses them.</para>
+        /// </remarks>
+        private static string Line(string prefix, string sentence)
+            => prefix.EndsWith(", ", StringComparison.Ordinal)
+                ? prefix + Decapitalize(sentence)
+                : prefix + sentence;
+
+        /// <summary>The cost a rule's own target declares, or <see cref="CostKind.None"/>.</summary>
+        private static CostKind CostOf(RuleDefinition rule)
+            => RuleSemantics.TargetOf(rule.Action)?.Cost ?? CostKind.None;
+
+        /// <summary>
+        /// The cost clause a gated rule sits beneath — <c>"Sacrifice a friendly minion: "</c>.
+        ///
+        /// <para>Refuses rather than printing nothing when a rule waits on a price no earlier rule
+        /// charges. The card would otherwise read as an unconditional effect while the runtime gate
+        /// held it shut forever, which is precisely the text-versus-behaviour divergence this
+        /// direction exists to delete. <c>CardValidator</c> C28 rejects the same shape first; this
+        /// is the renderer refusing to have a second opinion about it.</para>
+        /// </summary>
+        private static string CostScope(RuleCondition condition, string costPrefix)
+        {
+            if (!(condition is CostPaidCondition)) return "";
+            if (costPrefix.Length == 0)
+                throw Unsupported("condition", "COST_PAID with no cost rule before it");
+            return costPrefix;
+        }
+
+        /// <summary>
+        /// Renders a cost rule as the prefix scoping what follows it.
+        ///
+        /// <para><b>"You may" is the whole of the optional spelling</b> (Sam, 2026-08-22) and the
+        /// only thing separating a price you must pay from one you may decline. Everything else — the
+        /// verb, the noun phrase, the colon — is identical, which is what makes the pair read as one
+        /// grammatical device rather than two frames.</para>
+        /// </summary>
+        private static string CostPrefix(RuleAction action, ICardDatabase pool)
+        {
+            CostKind cost = RuleSemantics.TargetOf(action)?.Cost ?? CostKind.None;
+            if (cost == CostKind.None) throw Requires("a cost-bearing target to render a cost prefix");
+            string clause = Undot(RenderAction(action, pool));
+            return cost == CostKind.Optional
+                ? "You may " + Decapitalize(clause) + ": "
+                : clause + ": ";
+        }
+
+        /// <summary>How a cost prefix is spoken, for a parser that must match what was printed.</summary>
+        /// <remarks>
+        /// The same seam as <see cref="DescribeAction"/> and for the same reason: reimplementing
+        /// "clause, colon, and 'You may' when declinable" on the parser side would be the one fact
+        /// stated twice, and the pair would drift the first time either half moved.
+        /// </remarks>
+        internal static string DescribeCostPrefix(RuleAction action, ICardDatabase pool)
+            => CostPrefix(action, pool);
 
         /// <summary>Joins the effects sharing one marker into a single sentence.</summary>
         /// <remarks>
@@ -99,11 +364,11 @@ namespace Emberfall.Core.Cards
         /// and Freeze it." That is also what keeps CardTextStyling's case-sensitive match working on
         /// a keyword that is no longer at the front of a sentence.</para>
         /// </remarks>
-        private static string JoinActions(IReadOnlyList<RuleAction> group)
+        private static string JoinActions(IReadOnlyList<RuleAction> group, ICardDatabase pool)
         {
             if (group.Count == 0) throw Requires("at least one action to join");
 
-            IReadOnlyList<(string Text, TargetSpec? Target)> actions = RenderClauses(group);
+            IReadOnlyList<(string Text, TargetSpec? Target)> actions = RenderClauses(group, pool);
             if (actions.Count == 1) return actions[0].Text;
 
             var clauses = new List<string>(actions.Count);
@@ -146,7 +411,8 @@ namespace Emberfall.Core.Cards
         /// without "each" would claim a single character was struck three times, which is the
         /// rules change this phrasing exists to avoid making.</para>
         /// </summary>
-        private static IReadOnlyList<(string Text, TargetSpec? Target)> RenderClauses(IReadOnlyList<RuleAction> group)
+        private static IReadOnlyList<(string Text, TargetSpec? Target)> RenderClauses(IReadOnlyList<RuleAction> group,
+            ICardDatabase pool)
         {
             var clauses = new List<(string, TargetSpec?)>(group.Count);
 
@@ -192,7 +458,7 @@ namespace Emberfall.Core.Cards
                     continue;
                 }
 
-                clauses.Add((RenderAction(group[i]),
+                clauses.Add((RenderAction(group[i], pool),
                     group[i] is TargetedRuleAction targeted ? targeted.Target : null));
             }
 
@@ -221,7 +487,7 @@ namespace Emberfall.Core.Cards
             if (x.DistinctFrom.Length > 0 && x.Binding.Length == 0) return false;
 
             return string.Equals(x.Selector, y.Selector, StringComparison.Ordinal) &&
-                x.Count == y.Count && SameFilter(x.Filter, y.Filter);
+                x.Selection == y.Selection && SameFilter(x.Filter, y.Filter);
         }
 
         /// <summary>How many times one repeated hit lands.</summary>
@@ -269,7 +535,7 @@ namespace Emberfall.Core.Cards
             if (first.DistinctFrom.Length > 0 || second.DistinctFrom.Length > 0) return false;
 
             return string.Equals(first.Selector, second.Selector, StringComparison.Ordinal) &&
-                first.Count == second.Count && SameFilter(first.Filter, second.Filter);
+                first.Selection == second.Selection && SameFilter(first.Filter, second.Filter);
         }
 
         /// <summary>Compares filters by value — TargetFilterDef is a plain class, so the default
@@ -408,9 +674,18 @@ namespace Emberfall.Core.Cards
         private static string ConditionPrefix(RuleCondition condition)
         {
             if (condition is AlwaysCondition) return "";
+            // The cost clause itself is the prefix, and RenderRuleGroups is the only place that can
+            // build it — this condition names no cost, so on its own it has nothing to say.
+            if (condition is CostPaidCondition) return "";
             if (condition is TurnOwnerCondition turnOwner) return TurnOwnerPrefix(turnOwner.Owner);
             throw UnsupportedNode("condition", condition);
         }
+
+        /// <summary>How a condition is spoken, for a parser that must match what was printed.</summary>
+        /// <remarks>The same seam as <see cref="DescribeCostPrefix"/> and for the same reason: the
+        /// parser reads a condition back by rendering every candidate through this and keeping the
+        /// one that prints the clause it is looking at, so the two halves cannot drift.</remarks>
+        internal static string DescribeConditionPrefix(RuleCondition condition) => ConditionPrefix(condition);
 
         /// <summary>Maps a turn-owner condition to the clause naming whose turn it must be.</summary>
         private static string TurnOwnerPrefix(TurnOwner owner) => owner switch
@@ -435,30 +710,27 @@ namespace Emberfall.Core.Cards
         }
 
         /// <summary>Renders one typed action as a complete effect sentence.</summary>
-        private static string RenderAction(RuleAction action) => action switch
+        private static string RenderAction(RuleAction action, ICardDatabase pool) => action switch
         {
-            DamageAction a => $"Deal {a.Amount} damage to {Target(a.Target)}.",
-            HealAction a => $"Restore {a.Amount} Health to {Target(a.Target)}.",
-            ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            // Deliberately NOT a "Reinforce" marker, unlike its sibling action markers below.
-            // REINFORCE is a fixed +1/+1 with no timing of its own — BuffHandler hardcodes 1/1 and
-            // routes it through the same path as MODIFY_STATS — so the marker named a mechanic whose
-            // whole definition is shorter than the word, had no entry in the player-facing keyword
-            // glossary to look up, and sat next to the on-play marker it was routinely misread as a
-            // synonym for. Printing the stats says the same thing with no vocabulary to learn, and
-            // renders identically to an authored MODIFY_STATS +1/+1, which is what it already is.
+            DamageAction a => $"Deal {a.Amount} damage{To(a.Target)}.",
+            HealAction a => $"Restore {a.Amount} Health{To(a.Target)}.",
+            // Prints the stats rather than a marker word, unlike its sibling action markers below.
+            // A flat +1/+1 has a definition shorter than any word for it, needs no glossary entry,
+            // and cannot be misread as the on-play marker it would sit beside.
             //
-            // The target keeps saying "friendly" and must: nothing else on the line carries the
-            // allegiance restriction once the marker is gone. RequiresFriendlyTarget enforces it
-            // (RuleDefinition.cs), but enforcement is not what the player reads.
-            ReinforceAction a => $"Give {Target(a.Target)} +1/+1.",
+            // The selector is the ONLY thing on this line carrying allegiance, so a card that means
+            // friendly must say so through it. Sam, 2026-08-20: "Buffing the enemy board is never
+            // the intent, but it should still be possible... unless the card text specifically says
+            // 'a friendly minion'." The words ARE the restriction; C26 keeps them true to the
+            // selector underneath.
+            ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
             GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
-            DestroyAction a => $"Destroy {Target(a.Target)}.",
+            DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target)}.",
             // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
             // whose hand. Naming the owner works for one minion and for a board of them alike.
-            ReturnToHandAction a => $"Return {Target(a.Target)} to their owner's hand.",
+            ReturnToHandAction a => $"Return {Target(a.Target)} to {BounceDestination(a.Target)}.",
             SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target)}.",
-            TransformAction a => $"Transform {Target(a.Target)} into {Name(a.CardId)}.",
+            TransformAction a => $"Transform {Target(a.Target)} into {NamedCard(a.CardId, pool)}.",
             // Named through the keyword rather than spelled here, so the verb on the card and the
             // marker on a carrier of the same keyword cannot drift apart — KeywordSemantics
             // .AuthoredName is the one place the word is decided, and the tooltip reads the same
@@ -466,9 +738,9 @@ namespace Emberfall.Core.Cards
             FrostAction a => $"{Name(Keyword.FROST)} {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
-            SummonAction a => $"Summon {Copies(a.Count, Name(a.CardId))}.",
-            AddToHandAction a => $"Add {Copies(a.Count, Name(a.CardId))} to your hand.",
-            EquipAction a => $"Equip {Name(a.CardId)}.",
+            SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",
+            AddToHandAction a => $"Add {Copies(a.Count, NamedCard(a.CardId, pool))} to your hand.",
+            EquipAction a => $"Equip {NamedCard(a.CardId, pool)}.",
             GainManaAction a => Mana(a),
             // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
             BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
@@ -477,19 +749,153 @@ namespace Emberfall.Core.Cards
             _ => throw UnsupportedNode("action", action),
         };
 
+        /// <summary>
+        /// "Sacrifice" for your own minions, "Destroy" for anything else. One action either way —
+        /// the engine has a single <see cref="DestroyAction"/> and the word is chosen at print time.
+        ///
+        /// <para><b>Sam, 2026-08-22:</b> <i>"sacrifice is a choice, and thus can only apply to your
+        /// own minions. An enemy minion can only be destroyed."</i> So the word is keyed on the
+        /// target's SIDE, which is where volition lives — not on whether the pick is a cost. Those
+        /// two happen to coincide across the whole corpus today (every friendly destroy is a cost,
+        /// every unrestricted one is not), and keying on side is the rule that stays true if a card
+        /// ever separates them.</para>
+        ///
+        /// <para><c>ANY_MINION</c> reaches both boards, so it keeps "Destroy" — the player may well
+        /// pick an enemy, and a word promising otherwise would be a restriction the selector does
+        /// not carry.</para>
+        /// </summary>
+        private static string DestroyVerb(TargetSpec target)
+            => TargetQueries.TryGet(target.Selector, out TargetQuery query) &&
+               query.Side == TargetSide.Friendly
+                ? "Sacrifice"
+                : "Destroy";
+
+        /// <summary>
+        /// The <c>" to X"</c> of an effect whose target is a prepositional phrase — or nothing at
+        /// all, when naming the target would state a restriction that does not exist.
+        ///
+        /// <para><b>Sam, 2026-08-20:</b> <i>"a minion would not say 'deal two damage to a character'.
+        /// It would say 'deal two damage.' To me, there's no target restriction there. That damage
+        /// can be dealt to anything, including the minion itself, and if a player wants to do that,
+        /// I see no reason to prevent it."</i> The phrase was not describing a restriction, it was
+        /// describing the absence of one, at the cost of four words and a noun ("character") that
+        /// exists nowhere in the game's vocabulary except this sentence.</para>
+        ///
+        /// <para><b>Why it elides here and could not elide for a direct object.</b> The target of
+        /// DAMAGE and HEAL is the object of a preposition, and English drops an uninformative
+        /// prepositional phrase cleanly — "Deal 3 damage." is a whole sentence. A direct object
+        /// cannot go the same way: "Destroy." is not a sentence, so <c>DESTROY</c> keeps its noun
+        /// however unrestricted it is. That is a fact about the grammar, not a special case, and it
+        /// is why this helper is reachable from exactly the two arms that read prepositionally.</para>
+        ///
+        /// <para><b>The single pick is load-bearing.</b> Only an unrestricted pick of ONE says
+        /// nothing by naming its target; <c>all</c> over the same selector means hit everything, and
+        /// dropping its phrase would render the two as the same sentence. A filter or a
+        /// <c>distinctFrom</c> is a restriction by definition and keeps the phrase too.</para>
+        ///
+        /// <para>DISCHARGED 2026-08-22: this used to test the selector by NAME. It now reads the
+        /// query, so any selector that happens to be unrestricted qualifies without being listed —
+        /// which is what the criteria work was for.</para>
+        /// </summary>
+        private static string To(TargetSpec target)
+            => NarrowsNothing(target) ? "" : " to " + Target(target);
+
+        /// <summary>Whose hand a bounced card lands in.</summary>
+        /// <remarks>
+        /// <para><b>Read off the target's SIDE axis, not written per card.</b> The handler puts the
+        /// card in <c>Players[t.Seat]</c> — the CONTROLLER — so where it lands is already decided by
+        /// the same axis that decided which minions were reachable. One phrase per side, and the
+        /// number only matters where both sides are in play.</para>
+        ///
+        /// <para><b>Every card used to say "their owner's hand", and it was wrong twice.</b> The
+        /// engine has no owner: <c>CardInstance</c> carries only <c>Controller</c>, so a stolen
+        /// minion returns to whoever holds it now rather than to whoever built the deck. And
+        /// "their" agreed with nothing — "a minion" is singular. Sam ruled the phrase out on
+        /// 2026-08-22.</para>
+        /// </remarks>
+        private static string BounceDestination(TargetSpec target)
+        {
+            if (!TargetQueries.TryGet(target.Selector, out TargetQuery query))
+                throw Unsupported("target selector", target.Selector);
+            if (query.Side == TargetSide.Friendly) return "your hand";
+
+            // A sweep names no owner at all (Sam, 2026-08-22). Every card lands in the hand of
+            // whoever controls it, so on a sweep the possessive adds a word and settles nothing --
+            // and the both-sides plural it forced, "their owners' hands", was simply ugly.
+            if (query.Side == TargetSide.Enemy) return "hand";
+            return target.Selection.Count == 1 ? "its owner's hand" : "hand";
+        }
+
+        /// <summary>Whether naming this target would tell the reader anything they do not already know.</summary>
+        /// <remarks>
+        /// Derived from the QUERY, not from a selector name: a target narrows nothing when it admits
+        /// both sides, the whole board, and every kind of character on it, with no relation to the
+        /// source. Today that is <c>ANY_CHARACTER</c> and only <c>ANY_CHARACTER</c>, but nothing here
+        /// says so — a future unrestricted selector qualifies on its own merits.
+        ///
+        /// <para>The single pick stays load-bearing. Only an unrestricted pick of ONE says nothing by
+        /// naming its target; every candidate over the same selector means hit everything, and
+        /// dropping its phrase would render the two as the same sentence.</para>
+        /// </remarks>
+        private static bool NarrowsNothing(TargetSpec target)
+        {
+            if (target.Filter != null || target.DistinctFrom.Length != 0) return false;
+            if (!TargetSpec.IsPlayerChosen(target) || target.Selection.Count != 1) return false;
+            if (!TargetQueries.TryGet(target.Selector, out TargetQuery query)) return false;
+            return query.Side == TargetSide.Both
+                   && query.Zones == TargetZones.Board
+                   && query.Types == (TargetTypes.Hero | TargetTypes.Minion)
+                   && query.Relation == SourceRelation.Any;
+        }
+
+        /// <summary>
+        /// The noun phrase for a target spec, exposed so <see cref="CardTextParser"/> can invert the
+        /// renderer by GENERATING candidates and testing them against a sentence, rather than
+        /// hand-writing a second grammar that could drift from this one.
+        ///
+        /// <para>That is the whole reason this seam exists: an inverse table would be a second
+        /// statement of how a target is spoken, and the pair could disagree with nothing checking.
+        /// Generate-and-test cannot disagree, because there is only one renderer and the parser
+        /// calls it.</para>
+        /// </summary>
+        internal static string DescribeTarget(TargetSpec target) => Target(target);
+
+        /// <summary>
+        /// One typed action as its effect sentence, exposed for the same reason as
+        /// <see cref="DescribeTarget"/> — so <see cref="CardTextParser"/> can confirm a candidate it
+        /// built renders back to the sentence it was read from.
+        ///
+        /// <para><b>This is what makes the parser structurally unable to be wrong.</b> It does not
+        /// interpret a frame and trust its own reading; it proposes an action and asks the renderer
+        /// whether that action would print this sentence. A frame written carelessly therefore
+        /// produces a REFUSAL rather than a wrong rule, because the only thing that can turn a
+        /// candidate into a parse is this method agreeing byte for byte.</para>
+        /// </summary>
+        internal static string DescribeAction(RuleAction action, ICardDatabase pool)
+            => RenderAction(action, pool);
+
+        /// <summary>
+        /// A whole marker's worth of actions as the single sentence they print as — the conjunction,
+        /// the commas, the decapitalisation and the elided shared subject all included.
+        ///
+        /// <para>Exposed for the same reason as <see cref="DescribeAction"/>, and it is what lets the
+        /// parser read a conjunction without a theory of one: it proposes a LIST of actions and asks
+        /// whether that list would print this sentence. The elision is the hard part of the join and
+        /// this is the only thing that knows how it works, so asking it is the one way to invert it
+        /// that cannot drift.</para>
+        /// </summary>
+        internal static string DescribeActions(IReadOnlyList<RuleAction> group, ICardDatabase pool)
+            => JoinActions(group, pool);
+
         /// <summary>Renders a target spec as the noun phrase an effect sentence reads it as.</summary>
         private static string Target(TargetSpec target)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
-            // -1 is the authored "every candidate" sentinel; any other non-positive count is nonsense.
-            if (target.Count.HasValue && target.Count.Value <= 0 && target.Count.Value != -1)
-                throw Unsupported("target count", target.Count);
-
-            // Decided up front, not at the point of use, so an unrenderable choice policy is rejected
-            // even when the phrasing below turns out to suppress the word "random".
+            // No count check any more: a non-positive count has no spelling in TargetSelection, so
+            // nothing that parses can arrive here holding one.
             bool random = IsRandomlyChosen(target);
 
-            string description = Quantity(PhrasingFor(target.Selector), target.Count, random);
+            string description = Quantity(target, PhrasingFor(target.Selector));
             if (target.DistinctFrom.Length > 0)
             {
                 // Checked HERE and not inside Another(), because only the selector answers it — the
@@ -501,23 +907,19 @@ namespace Emberfall.Core.Cards
                 description = Another(description);
             }
             if (target.Filter != null) description = Filter(description, target.Filter);
-            // Only an explicit count of -1 still reads as "all" once random is accounted for, and
-            // there the pick is every candidate in random ORDER — so the word "random" would claim
-            // a narrowing that did not happen. Randomize() has no "all ..." case either, and used
-            // to fall through to a nonsense "random all X".
-            if (random && !description.StartsWith("all ", StringComparison.Ordinal))
-                description = Randomize(description);
+            // Unconditional: a random selection is never "every candidate", so a description
+            // beginning "all " cannot reach Randomize() and needs no guard here.
+            if (random) description = Randomize(description);
             return description;
         }
 
-        /// <summary>Whether a target is chosen at random, rejecting any choice policy with no phrasing.</summary>
-        private static bool IsRandomlyChosen(TargetSpec target) => target.ChosenBy switch
-        {
-            null => false,
-            TargetChosenBy.PLAYER => false,
-            TargetChosenBy.RANDOM => true,
-            _ => throw Unsupported("target choice", target.ChosenBy),
-        };
+        /// <summary>Whether a target is chosen at random.</summary>
+        /// <remarks>
+        /// This was a three-armed switch over a selection MODE, with a throwing default for an arm
+        /// that had no phrasing. There is nothing left to be exhaustive over: the marker is the
+        /// question, and its absence is answered by the count instead.
+        /// </remarks>
+        private static bool IsRandomlyChosen(TargetSpec target) => target.Selection.IsRandom;
 
         /// <summary>How one selector is spoken, and which form an unspecified count means.</summary>
         private readonly struct SelectorPhrasing
@@ -525,58 +927,62 @@ namespace Emberfall.Core.Cards
             public readonly string Singular;
             public readonly string Plural;
 
-            /// <summary>Whether an unspecified count means every candidate rather than exactly one.</summary>
-            public readonly bool DefaultsToAll;
-
-            /// <summary>Binds the two spoken forms of a selector to the one an absent count means.</summary>
-            public SelectorPhrasing(string singular, string plural, bool defaultsToAll)
+            /// <summary>Binds the two spoken forms of a selector.</summary>
+            public SelectorPhrasing(string singular, string plural)
             {
                 Singular = singular;
                 Plural = plural;
-                DefaultsToAll = defaultsToAll;
             }
         }
 
-        /// <summary>Phrases a selector that means ONE candidate unless an authored count widens it.</summary>
-        private static SelectorPhrasing One(string singular, string plural)
-            => new SelectorPhrasing(singular, plural, false);
+        /// <summary>
+        /// Whether a selector names a SET of things rather than one thing, so that "all" of it reads
+        /// as the plural. <b>Derived from the criteria, not declared per name</b> — it is exactly
+        /// "can this query ever produce more than one candidate", which is
+        /// <see cref="TargetQuery.IsUnique"/> negated.
+        ///
+        /// <para>It was a hand-kept flag on every phrasing until 2026-08-20, and it was WRONG on
+        /// seven of them — <c>ANY_MINION</c> was marked as naming one thing while resolving to every
+        /// minion on the board. Nothing caught it because each name of a redundant pair was only
+        /// ever authored with the selection mode its flag happened to suit, so the wrong branch had
+        /// no row to render. Collapsing the pairs is what made one name serve both modes and forced
+        /// the flag to mean what it says.</para>
+        /// </summary>
+        private static bool NamesASet(string selector) => !RuleActionCapabilities.IsUniqueSelector(selector);
 
-        /// <summary>Phrases a selector that means EVERY candidate unless an authored count narrows it.</summary>
-        private static SelectorPhrasing All(string singular, string plural)
-            => new SelectorPhrasing(singular, plural, true);
+        /// <summary>Phrases a selector.</summary>
+        private static SelectorPhrasing Say(string singular, string plural)
+            => new SelectorPhrasing(singular, plural);
 
         /// <summary>Maps a target selector to the words it is spoken with.</summary>
         private static SelectorPhrasing PhrasingFor(string selector) => selector switch
         {
-            "SELF" => One("this", "these"),
-            "TRIGGER_SOURCE" => One("the trigger source", "trigger sources"),
-            "ADJACENT" => All("an adjacent minion", "adjacent minions"),
-            "ALL_MINIONS" => All("a minion", "minions"),
-            "ANY_CHARACTER" => One("a character", "characters"),
-            "ANY_ENEMY" => One("an enemy character", "enemy characters"),
-            "ANY_FRIENDLY" => One("a friendly character", "friendly characters"),
-            "ANY_FRIENDLY_MINION" => One("a friendly minion", "friendly minions"),
-            "ANY_MINION" => One("a minion", "minions"),
-            "ENEMY_HERO" => One("the enemy hero", "enemy heroes"),
-            // "enemies", not "enemy characters" (Sam, 2026-08-13). ANY_ENEMY above keeps the longer
-            // noun because a single pick needs saying what KIND of thing was picked; a sweep of the
-            // whole side does not, and the short word is what fits the frame.
-            "ENEMY_CHARACTERS" => All("an enemy", "enemies"),
-            "ENEMY_MINIONS" => All("an enemy minion", "enemy minions"),
-            "FRIENDLY_HERO" => One("your hero", "friendly heroes"),
-            "FRIENDLY_MINIONS" => All("a friendly minion", "friendly minions"),
-            "OTHER_FRIENDLY_MINIONS" => All("another friendly minion", "other friendly minions"),
-            "FRIENDLY_WEAPON" => One("your weapon", "friendly weapons"),
-            "ENEMY_WEAPON" => One("the enemy weapon", "enemy weapons"),
-            "FRIENDLY_HAND" => All("a card in your hand", "cards in your hand"),
-            "ENEMY_HAND" => All("a card in the enemy hand", "cards in the enemy hand"),
-            "ANY_HAND_CARD" => One("a hand card", "hand cards"),
-            "FRIENDLY_DECK" => All("a card in your deck", "cards in your deck"),
-            "ENEMY_DECK" => All("a card in the enemy deck", "cards in the enemy deck"),
-            "ANY_DECK_CARD" => One("a deck card", "deck cards"),
-            "FRIENDLY_GRAVEYARD" => All("a card in your graveyard", "cards in your graveyard"),
-            "ENEMY_GRAVEYARD" => All("a card in the enemy graveyard", "cards in the enemy graveyard"),
-            "ANY_GRAVEYARD_CARD" => One("a graveyard card", "graveyard cards"),
+            "SELF" => Say("this", "these"),
+            "TRIGGER_SOURCE" => Say("the trigger source", "trigger sources"),
+            "ADJACENT" => Say("an adjacent minion", "adjacent minions"),
+            "ANY_CHARACTER" => Say("a character", "characters"),
+            // "enemies", not "enemy characters" (Sam, 2026-08-13). This name absorbed
+            // ENEMY_CHARACTERS on 2026-08-20 and took its wording with it, which is what the ruling
+            // asked for: the short word is the one that fits the frame.
+            "ANY_ENEMY" => Say("an enemy", "enemies"),
+            "ANY_FRIENDLY" => Say("a friendly character", "friendly characters"),
+            "ANY_FRIENDLY_MINION" => Say("a friendly minion", "friendly minions"),
+            "ANY_MINION" => Say("a minion", "minions"),
+            "ENEMY_HERO" => Say("the enemy hero", "enemy heroes"),
+            "ANY_ENEMY_MINION" => Say("an enemy minion", "enemy minions"),
+            "FRIENDLY_HERO" => Say("your hero", "friendly heroes"),
+            "OTHER_FRIENDLY_MINIONS" => Say("another friendly minion", "other friendly minions"),
+            "FRIENDLY_WEAPON" => Say("your weapon", "friendly weapons"),
+            "ENEMY_WEAPON" => Say("the enemy weapon", "enemy weapons"),
+            "FRIENDLY_HAND" => Say("a card in your hand", "cards in your hand"),
+            "ENEMY_HAND" => Say("a card in the enemy hand", "cards in the enemy hand"),
+            "ANY_HAND_CARD" => Say("a hand card", "hand cards"),
+            "FRIENDLY_DECK" => Say("a card in your deck", "cards in your deck"),
+            "ENEMY_DECK" => Say("a card in the enemy deck", "cards in the enemy deck"),
+            "ANY_DECK_CARD" => Say("a deck card", "deck cards"),
+            "FRIENDLY_GRAVEYARD" => Say("a card in your graveyard", "cards in your graveyard"),
+            "ENEMY_GRAVEYARD" => Say("a card in the enemy graveyard", "cards in the enemy graveyard"),
+            "ANY_GRAVEYARD_CARD" => Say("a graveyard card", "graveyard cards"),
             _ => throw Unsupported("target selector", selector),
         };
 
@@ -591,12 +997,12 @@ namespace Emberfall.Core.Cards
         /// that disagrees with the resolver is the bug the sibling comment on RequiredPlayerCount
         /// records already having shipped once.
         /// </remarks>
-        private static string Quantity(SelectorPhrasing phrasing, int? count, bool random)
+        private static string Quantity(TargetSpec target, SelectorPhrasing phrasing)
         {
-            if (count == -1 || (!count.HasValue && phrasing.DefaultsToAll && !random))
-                return "all " + phrasing.Plural;
-            if (!count.HasValue || count.Value == 1) return phrasing.Singular;
-            return count.Value + " " + phrasing.Plural;
+            if (target.IsEveryCandidate)
+                return NamesASet(target.Selector) ? "all " + phrasing.Plural : phrasing.Singular;
+            int count = target.Selection.Count;
+            return count == 1 ? phrasing.Singular : count + " " + phrasing.Plural;
         }
 
         /// <summary>Rewrites a description as its "not the one already chosen" form, for distinctFrom.</summary>
@@ -683,8 +1089,8 @@ namespace Emberfall.Core.Cards
         /// here in the same edit — a missing entry does not fail, it silently word-orders the
         /// adjective wrong ("your damaged other weapon").
         /// </remarks>
-        // "your other " was here until #143 deleted the branch that produced it. "all other " is now
-        // the only two-word entry, and it is what keeps the longest-first ordering load-bearing.
+        // "all other " is the only two-word entry, and it is what makes the longest-first ordering
+        // load-bearing: "all " would otherwise match first and word-order the adjective wrong.
         private static readonly string[] Determiners =
             { "all other ", "another ", "all ", "your ", "the " };
 
@@ -867,42 +1273,22 @@ namespace Emberfall.Core.Cards
             => KeywordSemantics.AuthoredName(keyword) ?? Name(keyword.ToString());
 
         /// <summary>Renders an identifier — card, token, tribe or keyword — as the words a player reads.</summary>
+        /// <summary>Title-cases an underscored ENUM name — "ARCANE_SURGE" to "Arcane Surge".</summary>
+        /// <remarks>
+        /// It used to double as the card-id speaker, which is why it carried namespace-word skipping
+        /// and an attack/health-pair rule. <see cref="DescribeCardName"/> reads the row instead as of
+        /// 2026-08-22, and that machinery went with it — an enum name has neither.
+        /// </remarks>
         private static string Name(string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier)) throw Requires("a non-empty identifier");
 
             string[] parts = identifier.Split(new[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
 
-            int start = 0;
-            while (start < parts.Length && IsIdNamespaceWord(parts[start])) start++;
-
-            // An attack/health pair (token_wisp_1_1) is the token's stats, not name words —
-            // render it as the "1/1 " prefix a real card would carry instead of leaking it as
-            // trailing digits. Nothing meaningful follows stats in an id: a word after the pair
-            // (token_revenant_5_5_bulwark) is a disambiguator for the id only, never part of the
-            // printed name, so the pair also ends the name — not just skips two segments.
-            int end = parts.Length;
-            string statPrefix = "";
-            for (int i = start; i + 1 < parts.Length; i++)
-            {
-                if (!int.TryParse(parts[i], out int attack) || !int.TryParse(parts[i + 1], out int health))
-                    continue;
-                statPrefix = attack + "/" + health + " ";
-                end = i;
-                break;
-            }
-
-            string name = TitleCase(parts, start, end);
+            string name = TitleCase(parts, 0, parts.Length);
             if (name.Length == 0) throw Requires("a readable identifier");
-            return statPrefix + name;
+            return name;
         }
-
-        /// <summary>
-        /// Whether an id segment is a namespace word a token/hero id is built from
-        /// (neutral_token_x for a token), never part of the printed name.
-        /// </summary>
-        private static bool IsIdNamespaceWord(string segment)
-            => segment == "token" || segment == "hero" || segment == "rekind";
 
         /// <summary>Joins the id segments in [start, end) into capitalised, space-separated words.</summary>
         private static string TitleCase(string[] parts, int start, int end)

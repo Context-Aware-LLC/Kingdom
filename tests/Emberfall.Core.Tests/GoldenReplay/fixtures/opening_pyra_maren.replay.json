@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 3,
+  "name": "opening_pyra_maren",
+  "engineContractVersion": "interfaces.v4",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0001",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "p0Deck": [
+    "ember_recruit",
+    "ember_zealot",
+    "ember_flame_bolt",
+    "ember_cinder_drake",
+    "ember_recruit",
+    "ember_zealot",
+    "ember_flame_bolt",
+    "ember_cinder_drake",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "p1Deck": [
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "seed": 1234567890123456789,
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "e24aea2cd9b214be7ede032c593b9d138337980a58a4395e91eda96d694e54cd",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "CardDrawn",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      }
+    ]
+  }
+}

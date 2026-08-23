@@ -6,15 +6,9 @@ WHERE THE PROMPT COMES FROM. Nothing here is invented. Each prompt is composed,
 in this order, from three sources on disk:
 
   1. STYLE   — dev-docs/specs/card-generation-prompt.md:36 (the mandatory global style prefix,
-               verbatim) plus §1's technical delivery rules. ONE PER PROVIDER:
-               STYLE_BLOCK for gemini (unchanged, silhouette-first, tuned to the
-               board's 137x194 px), STYLE_BLOCK_OPENAI for gpt-image-2, which
-               keeps every §1 delivery rule but releases the silhouette-only /
-               no-background-scene reading, because that path is chosen and paid
-               for to get the painterly detail. §2's negative list follows as an
+               verbatim) plus §1's technical delivery rules. §2's negative list follows as an
                "Avoid:" line, because neither image endpoint takes a
-               negative-prompt parameter. READ THE COMMENT ON STYLE_BLOCK_OPENAI
-               before changing any of it.
+               negative-prompt parameter.
   2. CLASS   — the house-look paragraph that opens the "Art prompts" section of
                dev-docs/specs/card-generation-prompt.md. Gravekeep = ash and ember,
                explicitly not Azeroth/WoW-adjacent; Verdant = this world's
@@ -22,11 +16,7 @@ in this order, from three sources on disk:
   3. CARD    — the per-card paragraph from that same fenced block, keyed by card
                id and paired with its row in card-drafts-<class>.json.
 
-Sources 2 and 3 are provider-independent — the class house look and the per-card
-subject go to both providers byte-identical — so a card re-rolled on the other
-provider is a controlled comparison of the two LOOKS, source 1 being the only
-thing that moved. The manifest stores provider + model + the exact prompt per
-generated image, so what a given file was actually asked for is always on disk.
+We use only gptImages2.0 for card art anything that indicates otherwise is stale
 
 SCALE IS THE CONSTRAINT, as everywhere else in this repo. A board card is
 137x194 px at ortho 4.6 on 1080p, and dev-docs/specs/card-generation-prompt.md:24 sets the bar at

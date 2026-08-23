@@ -103,7 +103,7 @@ namespace Emberfall.Presentation
             _hpLabel.text  = hero.CurrentHealth.ToString();
             _hpLabel.color = hero.CurrentHealth < hero.MaxHealth ? HpDamaged : HpFull;
 
-            _frosted = hero.IsFrosted;
+            _frosted = hero.IsFrosted();
             ApplyPlateTint();
         }
 

@@ -183,8 +183,8 @@ namespace Emberfall.Editor
             var byLength = new List<CardDefinition>(all);
             byLength.Sort((a, b) =>
             {
-                int la = a.Name.Length + CardTextGenerator.Generate(a).Length;
-                int lb = b.Name.Length + CardTextGenerator.Generate(b).Length;
+                int la = a.Name.Length + a.Text.Length;
+                int lb = b.Name.Length + b.Text.Length;
                 return la == lb ? string.CompareOrdinal(a.Id, b.Id) : lb.CompareTo(la);
             });
             foreach (CardDefinition d in byLength) Take(d);

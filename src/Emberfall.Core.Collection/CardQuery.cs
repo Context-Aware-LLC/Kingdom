@@ -129,7 +129,7 @@ namespace Emberfall.Core.Collection
         {
             var sb = new System.Text.StringBuilder();
             sb.Append(card.Name).Append('\n');
-            sb.Append(CardTextGenerator.Generate(card)).Append('\n');
+            sb.Append(card.Text).Append('\n');
             foreach (var kw in card.Keywords) sb.Append(kw).Append('\n');
             sb.Append(card.Type).Append('\n');
             sb.Append(card.Tribe ?? Tribe.NONE);

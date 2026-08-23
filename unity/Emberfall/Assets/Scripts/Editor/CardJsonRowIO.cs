@@ -77,6 +77,11 @@ namespace Emberfall.Editor
                 if (!string.IsNullOrEmpty(def.Tooltip)) w.WriteString("tooltip", def.Tooltip);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
 
+                // Authored rules text, written immediately ahead of the rules it describes. Omitted
+                // when empty for the same reason flavorText is: a vanilla card has no text, so a
+                // blank string would be a field standing in for nothing.
+                if (!string.IsNullOrEmpty(def.Text)) w.WriteString("text", def.Text);
+
                 w.WriteStartArray("rules");
                 foreach (var rule in def.Rules)
                 {
@@ -120,6 +125,8 @@ namespace Emberfall.Editor
                 w.WriteString("type", "TURN_OWNER");
                 w.WriteString("owner", turnOwner.Owner.ToString());
             }
+            else if (condition is CostPaidCondition)
+                w.WriteString("type", "COST_PAID");
             else
                 throw Unknown("condition", condition);
             w.WriteEndObject();
@@ -156,7 +163,6 @@ namespace Emberfall.Editor
                 w.WriteNumber("health", stats.HealthDelta);
                 Target(w, stats.Target);
             }
-            else if (action is ReinforceAction reinforce) { Type(w, "REINFORCE"); Target(w, reinforce.Target); }
             else if (action is GrantKeywordAction grant) { Type(w, "GRANT_KEYWORD"); w.WriteString("keyword", grant.Keyword.ToString()); Target(w, grant.Target); }
             else if (action is DestroyAction destroy) { Type(w, "DESTROY"); Target(w, destroy.Target); }
             else if (action is ReturnToHandAction returnToHand) { Type(w, "RETURN_TO_HAND"); Target(w, returnToHand.Target); }
@@ -184,8 +190,7 @@ namespace Emberfall.Editor
         {
             w.WriteStartObject("target");
             w.WriteString("selector", target.Selector);
-            if (target.ChosenBy is { } chosenBy) w.WriteString("chosenBy", chosenBy.ToString());
-            if (target.Count is { } count) w.WriteNumber("count", count);
+            w.WriteString("selection", target.Selection.ToString());
             if (target.Filter is { } filter)
             {
                 w.WriteStartObject("filter");
@@ -195,6 +200,12 @@ namespace Emberfall.Editor
             }
             if (!string.IsNullOrEmpty(target.Binding)) w.WriteString("binding", target.Binding);
             if (!string.IsNullOrEmpty(target.DistinctFrom)) w.WriteString("distinctFrom", target.DistinctFrom);
+            // Omitted when the pick is an ordinary effect, exactly as an absent filter is: "not a
+            // cost" is the default and a written CostKind.None would be a field standing in for
+            // nothing. Dropping it when it IS set is the bug this line exists to have fixed — the
+            // card kept its sentence and quietly became payable with nothing to pay.
+            if (target.Cost != CostKind.None)
+                w.WriteString("cost", target.Cost.ToString().ToLowerInvariant());
             w.WriteEndObject();
         }
 

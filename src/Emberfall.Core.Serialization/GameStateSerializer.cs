@@ -69,8 +69,26 @@ namespace Emberfall.Core.Serialization
             w.I32(h.MaxHealth);
             w.I32(h.Armor);
             w.Str(h.HeroPowerId);
-            w.Bool(h.IsFrosted); // added step 4 — hero frost state is determinism-relevant
-            w.Bool(h.FrostThawPending); // NOR-367 — persists across the opponent's turn, so it is hashed
+            WalkEffects(w, h.Effects);
+        }
+
+        /// <summary>
+        /// EXPERIMENT (effect-model fork). Application order IS the canonical order — unlike
+        /// <c>Keywords</c>, which needs a sort imposed because a set has no order of its own.
+        /// Replaces the separately-hashed <c>IsFrosted</c>/<c>FrostThawPending</c> pair: those are now
+        /// derived views of this list, and hashing a derivation alongside its source is exactly the
+        /// two-representations problem this list exists to remove.
+        /// </summary>
+        private static void WalkEffects(ICanonicalWriter w, List<EffectInstance> effects)
+        {
+            w.I32(effects.Count);
+            foreach (var e in effects)
+            {
+                w.Enum(e.Kind);
+                w.NullableI32(e.Source?.Value);
+                w.Enum(e.Scope);
+                w.I32(e.TurnsRemaining);
+            }
         }
 
         private static void WalkZone(ICanonicalWriter w, List<CardInstance> zone)
@@ -107,9 +125,9 @@ namespace Emberfall.Core.Serialization
                 w.Bool(e.IsAura);
             }
 
+            WalkEffects(w, c.Effects);
+
             w.Bool(c.HasAegisShield);
-            w.Bool(c.IsFrosted);
-            w.Bool(c.FrostThawPending); // NOR-367
             w.Bool(c.IsSilenced);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);

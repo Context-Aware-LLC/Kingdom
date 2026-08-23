@@ -15,15 +15,16 @@ namespace Emberfall.Core.Cards
     {
         private static readonly HashSet<string> CardProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-
+            // Exhaustive: RejectUnknownProperties throws on any property absent from this set, so a
+            // row carrying a retired one fails loudly instead of being silently ignored.
             "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "artId",
-            "flavorText", "tooltip", "factionId", "keywords", "rules", "_comment"
+            "flavorText", "tooltip", "factionId", "keywords", "text", "rules", "_comment"
         };
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "selector", "chosenBy", "count", "filter", "binding", "distinctFrom", "required"
+            "selector", "selection", "filter", "binding", "distinctFrom", "cost"
         };
 
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -69,6 +70,7 @@ namespace Emberfall.Core.Cards
             Tribe? tribe = TryEnum<Tribe>(el, "tribe");
             bool collectible = Bool(el, "collectible") ?? true;
             string artId = Str(el, "artId") ?? "";
+            string text = Str(el, "text") ?? "";
             string flavor = Str(el, "flavorText") ?? "";
             string tooltip = Str(el, "tooltip") ?? "";
             string faction = Str(el, "factionId") ?? "";
@@ -86,7 +88,7 @@ namespace Emberfall.Core.Cards
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
             }
             return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip);
+                keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip, text);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)
@@ -131,6 +133,9 @@ namespace Emberfall.Core.Cards
                 case "TURN_OWNER":
                     RejectUnknownProperties(element, "rule.condition", Set("type", "owner"));
                     return new TurnOwnerCondition(ReqEnum<TurnOwner>(element, "owner"));
+                case "COST_PAID":
+                    RejectUnknownProperties(element, "rule.condition", Set("type"));
+                    return CostPaidCondition.Instance;
                 default:
                     throw new FormatException($"Unknown rule condition type '{type}'.");
             }
@@ -174,9 +179,6 @@ namespace Emberfall.Core.Cards
                     return new ModifyStatsAction(
                         RequiredInt(element, "attack", "rule.action.attack"),
                         RequiredInt(element, "health", "rule.action.health"), TargetFromElement(element));
-                case "REINFORCE":
-                    Fields(element, type, "target");
-                    return new ReinforceAction(TargetFromElement(element));
                 case "GRANT_KEYWORD":
                     Fields(element, type, "keyword", "target");
                     return new GrantKeywordAction(ReqEnum<Keyword>(element, "keyword"), TargetFromElement(element));
@@ -290,12 +292,25 @@ namespace Emberfall.Core.Cards
                 }
                 filter = new TargetFilterDef(damaged, tribe);
             }
-            if (target.TryGetProperty("required", out var requiredValue) &&
-                requiredValue.ValueKind != JsonValueKind.True && requiredValue.ValueKind != JsonValueKind.False)
-                throw new FormatException("Card JSON target.required must be a boolean.");
-            return new TargetSpec(selector, TryEnum<TargetChosenBy>(target, "chosenBy"),
-                Int(target, "count"), filter, Str(target, "binding"), Str(target, "distinctFrom"),
-                Bool(target, "required") ?? false);
+            // A cost is spelled out rather than flagged: "required" and "optional" are two
+            // different cards, and a boolean would have to name one of them by its absence.
+            CostKind cost = CostKind.None;
+            if (target.TryGetProperty("cost", out var costValue))
+            {
+                if (costValue.ValueKind != JsonValueKind.String ||
+                    !Enum.TryParse(costValue.GetString(), ignoreCase: true, out cost) ||
+                    cost == CostKind.None)
+                    throw new FormatException(
+                        "Card JSON target.cost must be \"required\" or \"optional\".");
+            }
+            // Read last so a target that is wrong in two ways reports its selector first; the
+            // selector is what an author has to fix before the term even means anything.
+            string term = RequiredString(target, "selection", "target.selection");
+            if (!TargetSelection.TryParse(term, out TargetSelection selection))
+                throw new FormatException($"Card JSON target.selection '{term}' is not a selection " +
+                    "term. Write \"all\", \"player: N\" or \"random: N\", N being 1 or more.");
+            return new TargetSpec(selector, selection, filter, Str(target, "binding"),
+                Str(target, "distinctFrom"), cost);
         }
 
         private static void RejectUnknownProperties(JsonElement el, string schemaLevel, HashSet<string> allowed)

@@ -3,9 +3,10 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Cards
 {
     /// <summary>
-    /// Separates live carrier behavior from legacy enum slots retained for stable wire/hash ordinals.
-    /// BACKDRAFT, REINFORCE, and SILENCE are typed actions; their presentation markers are derived
-    /// from those actions and must never enter runtime keyword state.
+    /// Separates live carrier behavior from enum slots that hold a wire/hash ordinal and nothing else.
+    /// BACKDRAFT and SILENCE are typed actions whose presentation markers derive from those actions;
+    /// REINFORCE names nothing. All three answer the same way here — not carrier behavior, and never
+    /// admissible in runtime keyword state — which is the only question this class is asked.
     /// </summary>
     public static class KeywordSemantics
     {

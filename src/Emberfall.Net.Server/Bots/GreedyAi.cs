@@ -19,7 +19,7 @@ namespace Emberfall.Net.Server.Bots
     /// original could not (1) target, (2) equip-and-swing a weapon, or (3) use the hero power. That
     /// reads as a mild weakness until you notice it is not evenly distributed: EMBERWARD's removal is
     /// <c>ANY_CHARACTER</c> (ember_flame_bolt ×2, ember_scorch ×2) and its weapon is ember_cinder_lance ×2,
-    /// while TIDECALLER's tide_frost_ripple auto-resolves via <c>ENEMY_MINIONS</c> and deep_bargain just
+    /// while TIDECALLER's frost_ripple auto-resolves via <c>ANY_ENEMY_MINION</c> and deep_bargain just
     /// draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were, which
     /// produced a 72.5/27.5 split that was a harness artifact end to end. A driver's weaknesses have
     /// to fall symmetrically on the classes or the sample measures the driver, not the cards.</para>
@@ -99,7 +99,7 @@ namespace Emberfall.Net.Server.Bots
             int slot = ps.Board.Count;
 
             // Untargeted first. This covers minions, weapons, draw, and every effect whose selector
-            // the interpreter auto-resolves (ENEMY_MINIONS, ENEMY_HERO, SELF). Only the explicit-choice
+            // the interpreter auto-resolves (ANY_ENEMY_MINION, ENEMY_HERO, SELF). Only the explicit-choice
             // ANY_* selectors fall through, which is exactly the set that needs a target supplied.
             var bare = new PlayCardIntent(me, card.Id, slot, Array.Empty<TargetRef>());
             if (validator.CanExecute(state, bare, out _)) return bare;

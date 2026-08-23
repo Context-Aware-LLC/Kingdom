@@ -103,10 +103,11 @@ namespace Emberfall.Editor
                 if (rule.Action is GrantKeywordAction grant && auraKeywords.Contains(grant.Keyword))
                     Warn("E5-AURA-CAP", "rules", $"grants persistent aura keyword {grant.Keyword} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");
 
-            // E7: generated card text is the sole presentation text source.
-            string generatedText = CardTextGenerator.Generate(def);
-            if (generatedText.Length > 140)
-                Warn("E7-TEXT-LENGTH", "generatedText", "generated card text must be <=140 characters.");
+            // E7: the authored card text is the sole presentation text source. Length is a lint, not
+            // legality — C26 already holds the sentence against the rules; this is about the frame it
+            // has to fit inside.
+            if (def.Text.Length > 140)
+                Warn("E7-TEXT-LENGTH", "text", "card text must be <=140 characters.");
             if (def.FlavorText.Length > 160)
                 Warn("E7-TEXT-LENGTH", "flavorText", "flavorText must be <=160 characters.");
             if (def.Tooltip.Length > 40)

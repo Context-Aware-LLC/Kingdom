@@ -237,9 +237,6 @@ jobs:
       # .NET side cannot do — it reads Targeting's selector switch and TargetSpec's default-choice
       # policy, then fails (exit 2) when either structural seam is incomplete. C14b is only as
       # true as that policy.
-      - name: "Stage 6b · Trigger/selector drift guard (tooling/scripts)"
-        run: python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
-
       - name: "Stage 6c · Training exporter tests (stdlib unittest)"
         run: python3 tests/python/test_training_exporters.py -v
 

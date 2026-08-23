@@ -24,16 +24,17 @@ namespace Emberfall.Editor
     /// </summary>
     public sealed class CardAuthoringWindow : EditorWindow
     {
+        /// <summary>
+        /// The selector popup, taken from the engine rather than retyped. The class comment above
+        /// promises a designer cannot pick an unknown selector; a hand-kept copy of the names is
+        /// exactly how that promise breaks, and it had broken — this list still offered three names
+        /// the engine retired on 2026-08-20, so the popup could author a row the validator rejects.
+        /// The sibling keyword list below always derived from its enum; this now matches it.
+        /// </summary>
         private static readonly string[] SelectorOptions =
-        {
-            "(none)", "SELF", "FRIENDLY_MINIONS", "OTHER_FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ENEMY_CHARACTERS", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
-            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
-            "FRIENDLY_WEAPON", "ENEMY_WEAPON",
-            "FRIENDLY_HAND", "ENEMY_HAND", "ANY_HAND_CARD",
-            "FRIENDLY_DECK", "ENEMY_DECK", "ANY_DECK_CARD",
-            "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
-        };
+            new[] { "(none)" }
+                .Concat(TargetSpec.Selectors.OrderBy(n => n, StringComparer.Ordinal))
+                .ToArray();
 
         private static readonly Keyword[] CarrierKeywordOptions =
             Enum.GetValues(typeof(Keyword)).Cast<Keyword>()
@@ -276,7 +277,7 @@ namespace Emberfall.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("generatedText", CardTextGenerator.Generate(card.ToDefinition()), EditorStyles.wordWrappedLabel);
+            DrawCardText(card);
             card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
             card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
             card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
@@ -294,6 +295,49 @@ namespace Emberfall.Editor
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// The authored card face, plus what the rules under it read as when the two disagree.
+        /// </summary>
+        /// <remarks>
+        /// This field used to be a read-only <c>generatedText</c> label — the author watched the
+        /// sentence appear and could not touch it. Under the 2026-08-16 text-direction reversal the
+        /// text is the authored thing and the rendering is the check, so the two swap places: the
+        /// field is editable and the generator's output only appears when it disagrees.
+        ///
+        /// <para>The "use it" button is the whole ergonomics of the reversal for a NEW card: author
+        /// the rules, take the rendering as a first draft, then edit the prose freely. What it is
+        /// NOT is a sync button — pressing it on an existing card overwrites a sentence somebody
+        /// wrote, which is why it sits behind a visible disagreement rather than running on save.</para>
+        /// </remarks>
+        private void DrawCardText(EditableCard card)
+        {
+            card.Text = EditorGUILayout.TextField("text", card.Text);
+
+            var divergence = CardTextGenerator.Check(card.ToDefinition(), LiveDb(), out string expected);
+            if (divergence == CardTextDivergence.None) return;
+
+            if (divergence == CardTextDivergence.Unrenderable)
+            {
+                EditorGUILayout.HelpBox(
+                    "C26: these rules are a shape with no phrasing, so 'text' cannot be checked against them.",
+                    MessageType.Error);
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                divergence == CardTextDivergence.Orphaned
+                    ? "C26: this card has no keywords or rules, so it should carry no text."
+                    : $"C26: the rules read as \"{expected}\".",
+                MessageType.Error);
+
+            using (new EditorGUI.DisabledScope(divergence == CardTextDivergence.Orphaned))
+                if (GUILayout.Button("Use what the rules read as"))
+                {
+                    card.Text = expected;
+                    GUI.FocusControl(null);
+                }
         }
 
         private void DrawStatFields(EditableCard card)

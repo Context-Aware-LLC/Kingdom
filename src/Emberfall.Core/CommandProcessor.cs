@@ -281,24 +281,22 @@ namespace Emberfall.Core
 
             // The end-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE the seat
             // flip and the incoming StartTurnSequence, which resets SummonedThisTurn /
-            // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade. CheckWin
-            // is called explicitly because Drain only win-checks while its queue is non-empty (the same
-            // reason ApplyAttack pairs Drain with an explicit CheckWin).
+            // AttacksUsedThisTurn. Draining after that reset would let it stomp an in-flight cascade.
+            // Drain settles the game-end checkpoint itself, on every exit path (scheduling §3.2), so
+            // there is no longer a follow-up call for this site to remember.
             interp.Drain();
-            RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;
 
-            // Thaw (NOR-355 timing, NOR-367 two-step): frost costs a FULL turn, never a partial one.
-            // A freeze applied on Player A's turn holds through all of Player B's turn and clears when B
-            // ends here. The NOR-367 refinement: a unit frozen DURING its own turn (e.g. the warden's
-            // ON_DEATH trap on the attacker's board) must not thaw at the end of that same turn — it was
-            // already spending it. FrostThawPending is armed at frost-apply and cleared at the START of
-            // the frozen unit's own turn (StartTurnSequence), so a still-pending unit here was frozen
-            // this very turn: skip it and let it serve its next full turn. Only NOT-pending frost thaws.
+            // Expire turn-scoped effects on the ending player's own characters (NOR-355 timing).
+            // Frost costs a FULL turn, never a partial one: a freeze applied on Player A's turn holds
+            // through all of Player B's turn and clears when B ends here. The NOR-367 case — a unit
+            // frozen DURING its own turn by the warden's ON_DEATH — falls out of the scope arithmetic
+            // rather than needing a second flag: that instance was never aged by a turn START, so it
+            // still owes a turn here and survives to serve it.
             var activePs = state.Players[activeSeat];
-            if (!activePs.Hero.FrostThawPending) activePs.Hero.IsFrosted = false;
+            EffectList.ExpireControllerTurnEnd(activePs.Hero.Effects);
             foreach (var m in activePs.Board)
-                if (!m.FrostThawPending) m.IsFrosted = false;
+                EffectList.ExpireControllerTurnEnd(m.Effects);
 
             var nextSeat = activeSeat == 0 ? 1 : 0;
             state.ActivePlayer = state.Players[nextSeat].Id;
@@ -421,7 +419,15 @@ namespace Emberfall.Core
                     break;
             }
 
-            interp.Drain();   // resolve herald/cast, settle deaths + win, cascade tolls
+            // Resolve herald/cast, settle deaths, cascade tolls — AND the win check, which Drain now
+            // runs on every exit path rather than only inside its loop body (scheduling §3.2).
+            //
+            // DISCHARGES the LATENT hazard that stood here. The gap needed a hero at <=0 health
+            // BEFORE this drain, which nothing on this path produced — but any pre-drain hero-health
+            // mutation would have armed it silently: a self-damage play cost, fatigue charged at cast
+            // time, or ruling #3's damage-taken representation change. Adding one here is now safe,
+            // because settling the match stopped being this call site's job to remember.
+            interp.Drain();
         }
 
         private bool ValidateHeroPower(GameState state, HeroPowerIntent hp, out RejectReason? reason)
@@ -463,6 +469,9 @@ namespace Emberfall.Core
             CardDefinition definition = _db.Get(ps.Hero.HeroPowerId);
             interp.RaiseSelf(ps.Hero.Id, ps.Id, definition, EffectSourceKind.HeroPower,
                 currentCarrier: null, Trigger.ON_CAST, hp.Targets);
+            // Drain checkpoints deaths and game-end on every exit (scheduling §3.2), which discharges
+            // the LATENT hazard that stood here alongside ApplyPlayCard's: a hero power costing its
+            // owner life would have left a lethal unsettled. That no longer depends on this site.
             interp.Drain();
         }
 
@@ -486,14 +495,14 @@ namespace Emberfall.Core
             if (attacker.IsHero)
             {
                 if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
-                if (ps.Hero.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
+                if (ps.Hero.IsFrosted()) { reason = RejectReason.AttackerFrosted; return false; }
                 int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
                 if (ps.HeroAttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
             {
                 var m = attacker.Minion!;
-                if (m.IsFrosted) { reason = RejectReason.AttackerFrosted; return false; }
+                if (m.IsFrosted()) { reason = RejectReason.AttackerFrosted; return false; }
                 if (m.CurrentAttack <= 0) { reason = RejectReason.IllegalTarget; return false; }
                 bool hasFervor = m.Keywords.Contains(Keyword.FERVOR);
                 bool hasSkirmish = m.Keywords.Contains(Keyword.SKIRMISH);
@@ -600,11 +609,10 @@ namespace Emberfall.Core
                     RulesEngine.BreakWeapon(interp, seat);   // rattle enqueued; interp.Drain() below resolves it
             }
 
-            // Settle deaths, tolls, win-check.
-            // CheckWin is also called here because Drain only invokes it inside the effect-queue loop —
-            // direct combat damage to a hero leaves the queue empty, so the win check would be missed.
+            // Settle deaths, tolls, win-check. Direct combat damage to a hero leaves the effect queue
+            // empty — which is exactly the exit Drain used to leave unchecked, because the win check
+            // lived only inside its loop body. Drain now checkpoints on every exit (scheduling §3.2).
             interp.Drain();
-            RulesEngine.CheckWin(state, buf);
         }
 
         // ── Turn sequence (GDD §1b / ARCHITECTURE §5) ─────────────────────────────
@@ -630,18 +638,18 @@ namespace Emberfall.Core
             // Reset summoning sickness / attack budget / hero power. (Thaw itself runs at END of the
             // frozen player's turn in ApplyEndTurn — see the comment there for the FROST timing rationale.)
             //
-            // NOR-367 two-step thaw: clear FrostThawPending for the incoming player's own characters. A
-            // frost that is still pending at THIS start was applied during THIS player's previous own turn
-            // (the warden case); disarming it now means the frost the player carries into this turn — the
-            // full turn it costs them — will thaw normally when they end it. Frost applied on the opponent's
-            // turn is never pending on this seat, so this is a no-op for the ordinary enemy-freeze case.
+            // Age every turn-scoped effect on the incoming player's own characters. An instance applied
+            // during this player's PREVIOUS own turn (the warden case) is aged here rather than at the
+            // end of the turn it landed in, which is what makes frost cost the full turn it is carried
+            // into. Frost applied on the opponent's turn is aged at this same point, one turn earlier in
+            // its life — so both cases reach zero exactly when they have served a full turn.
             foreach (var m in ps.Board)
             {
                 m.SummonedThisTurn = false;
                 m.AttacksUsedThisTurn = 0;
-                m.FrostThawPending = false;
+                EffectList.TickControllerTurnStart(m.Effects);
             }
-            ps.Hero.FrostThawPending = false;
+            EffectList.TickControllerTurnStart(ps.Hero.Effects);
             ps.HeroPowerUsedThisTurn = false;
             ps.HeroAttacksUsedThisTurn = 0;
 
@@ -662,11 +670,10 @@ namespace Emberfall.Core
                 context: TriggerEventContext.ForIncomingTurn(player));
 
             // The start-of-turn cascade must FULLY settle — deaths, tolls, win-check — BEFORE
-            // DrawOne. CheckWin is called explicitly because Drain only win-checks while its queue is
-            // non-empty, and a start-of-turn toll that kills its own controller must end the match here
-            // rather than draw a card into a finished game.
+            // DrawOne: a start-of-turn toll that kills its own controller must end the match here
+            // rather than draw a card into a finished game. Drain checkpoints on every exit path
+            // (scheduling §3.2), so that settlement no longer depends on this site remembering.
             interp.Drain();
-            RulesEngine.CheckWin(state, buf);
             if (state.Outcome != MatchOutcome.InProgress) return;
 
             RulesEngine.DrawOne(state, seat, buf);

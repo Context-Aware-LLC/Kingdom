@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 3,
+  "name": "spell_cast_echo",
+  "engineContractVersion": "interfaces.v4",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0005",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "EMBERWARD",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "seed": 1618033988749894,
+  "p0Deck": [
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe"
+  ],
+  "p1Deck": [
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe",
+    "test_spell_cast_echo",
+    "test_spell_cast_probe"
+  ],
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i43",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i64",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i63",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "hero_power",
+      "player": "P0",
+      "targets": [
+        "i2"
+      ]
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i65",
+      "slot": 0,
+      "targets": []
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "1217cec8f74db2cca1a99f86364cd0959f5278114efe2ea0127925829ce78fff",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "CardDrawn",
+        "src": "i46",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "CardPlayed",
+        "src": "i43",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "TurnEnded",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 4,
+        "kind": "TurnStarted",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 5,
+        "kind": "CardDrawn",
+        "src": "i67",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 6,
+        "kind": "CardPlayed",
+        "src": "i64",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 7,
+        "kind": "DamageApplied",
+        "src": "i64",
+        "tgt": "i1",
+        "amt": 2,
+        "flags": "None"
+      },
+      {
+        "seq": 8,
+        "kind": "DamageApplied",
+        "src": "i43",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 9,
+        "kind": "CardPlayed",
+        "src": "i63",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 10,
+        "kind": "TurnEnded",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 11,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 12,
+        "kind": "CardDrawn",
+        "src": "i47",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 13,
+        "kind": "HeroPowerUsed",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 14,
+        "kind": "DamageApplied",
+        "src": "i1",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 15,
+        "kind": "TurnEnded",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 16,
+        "kind": "TurnStarted",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 17,
+        "kind": "CardDrawn",
+        "src": "i68",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 18,
+        "kind": "CardPlayed",
+        "src": "i65",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 19,
+        "kind": "DamageApplied",
+        "src": "i65",
+        "tgt": "i1",
+        "amt": 2,
+        "flags": "None"
+      },
+      {
+        "seq": 20,
+        "kind": "DamageApplied",
+        "src": "i63",
+        "tgt": "i1",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 21,
+        "kind": "DamageApplied",
+        "src": "i43",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      }
+    ]
+  }
+}

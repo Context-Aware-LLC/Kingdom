@@ -598,12 +598,13 @@ namespace Emberfall.Presentation
         /// exist yet (<c>FlavorText</c> is a wired but unpopulated schema field) and is tracked
         /// separately.
         ///
-        /// <para><b>The hero power block is DERIVED, never authored (NOR-291).</b> Its name is the
-        /// power card's own <c>Name</c> and its description is <see cref="CardTextGenerator"/> run
-        /// over that card's typed rules — the identical text the power shows on the board in a match.
-        /// No prose copy is stored anywhere, so a hero power that is later retuned changes its
-        /// description here in the same edit that changes its rules, and the two can never disagree.
-        /// A hand-written description would be a second copy of the rules with nothing comparing them.</para>
+        /// <para><b>The hero power block is READ OFF THE CARD, never written here (NOR-291).</b> Its
+        /// name is the power card's own <c>Name</c> and its description is that card's
+        /// <c>Text</c> — literally the same string the power shows on the board in a match. NOR-291's
+        /// point survives the 2026-08-16 text-direction reversal intact and is worth restating in the
+        /// new terms: the danger was ever a SECOND copy of the rules with nothing comparing them.
+        /// There is still exactly one copy; what changed is that it is authored rather than composed,
+        /// and CardValidator's C26 is now the thing comparing it to the rules.</para>
         ///
         /// <para>The power is shown on both passes. On pass 2 the class being inspected does NOT
         /// supply the character's power; the pass line above already says so explicitly.</para>
@@ -669,7 +670,7 @@ namespace Emberfall.Presentation
             if (_createPowerBlock != null)
                 _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
             if (_createPowerName != null) _createPowerName.text = found ? power.Name : "";
-            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextStyling.Style(CardTextGenerator.Generate(power)) : "";
+            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextStyling.Style(power.Text) : "";
         }
 
         /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the

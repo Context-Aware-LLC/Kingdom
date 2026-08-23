@@ -3,6 +3,37 @@ using System.Collections.Generic;
 namespace Emberfall.Core.Contracts
 {
     /// <summary>
+    /// How many things a zone can hold, per player.
+    ///
+    /// <para><b>These live in Contracts rather than beside the rules that enforce them</b> because
+    /// the card layer needs them too: the maximum number of candidates a selector can ever yield is
+    /// derived from its query plus these caps (<c>TargetQuery.MaxCandidates</c>), and that number is
+    /// what decides whether a card asks the player to choose. <c>Emberfall.Core.Cards</c> sits BELOW
+    /// <c>Emberfall.Core</c> and cannot see <c>MatchEngine</c>, so the cap either lives here or gets
+    /// written down twice.</para>
+    ///
+    /// <para><see cref="Emberfall.Core.MatchEngine"/> forwards to these; it does not restate them.
+    /// There is no deck or graveyard entry on purpose — a deck is bounded by DECKBUILDING, which is
+    /// not a runtime cap, and a graveyard only grows.</para>
+    /// </summary>
+    public static class ZoneCaps
+    {
+        /// <summary>Minions one player may have on the board at once.</summary>
+        public const int Board = 7;
+
+        /// <summary>Cards one player may hold at once.</summary>
+        public const int Hand = 10;
+
+        /// <summary>Heroes a player has. Named so the derivation reads as arithmetic, not as a literal.</summary>
+        public const int Hero = 1;
+
+        /// <summary>Weapons one player may have equipped at once.
+        /// RETIREMENT TRIGGER: a DUAL-WIELD system raises this, and <c>TargetQuery.IsUnique</c>
+        /// stops being true for the weapon zone at the same moment. Change both together.</summary>
+        public const int Weapon = 1;
+    }
+
+    /// <summary>
     /// The single authoritative truth of a match (dev-docs/architecture/system-overview.md:36). A plain serializable
     /// object graph with NO UnityEngine deps and NO floats. It mutates ONLY through
     /// <see cref="ICommandProcessor.Execute"/>. Declaration order here <b>should</b> track the
@@ -176,7 +207,7 @@ namespace Emberfall.Core.Contracts
     }
 
     /// <summary>Hero character. 30 HP; armor reserved for the future.</summary>
-    public sealed class HeroInstance
+    public sealed class HeroInstance : IEffectHost
     {
         public InstanceId Id;
         public PlayerId Controller;
@@ -185,12 +216,13 @@ namespace Emberfall.Core.Contracts
         public int MaxHealth;
         public int Armor;
         public string HeroPowerId = "";
-        public bool IsFrosted; // set by FROST verb; cleared at END of the controller's next turn (NOR-355/NOR-367)
-        /// <summary>NOR-367 two-step thaw: armed when frost is applied, cleared at the START of this
-        /// character's controller's turn. <c>ApplyEndTurn</c> thaws only frosted characters that are NOT
-        /// pending, so a unit frozen during its OWN turn still owes its next full turn. See the thaw and
-        /// StartTurnSequence comments in CommandProcessor.</summary>
-        public bool FrostThawPending;
+        /// <summary>EXPERIMENT (effect-model fork) — see <see cref="EffectInstance"/>.</summary>
+        public List<EffectInstance> Effects = new List<EffectInstance>();
+        /// <summary>Satisfies <see cref="IEffectHost"/> over the field above without changing how any
+        /// existing caller touches <c>Effects</c> — see <c>EffectHost.cs</c>. <c>IsFrosted</c> and
+        /// <c>FrostThawPending</c> moved off this class to <see cref="EffectHostExtensions"/>, written
+        /// once for both hosts instead of once each.</summary>
+        List<EffectInstance> IEffectHost.Effects => Effects;
 
         public HeroInstance(InstanceId id, PlayerId controller, CardClass @class, int maxHealth)
         {
@@ -206,7 +238,7 @@ namespace Emberfall.Core.Contracts
     /// Per-match mutable card state. Definitions are immutable; instances carry the runtime state
     /// (dev-docs/architecture/determinism-and-projection.md:10). All stats are <b>ints — never floats</b>.
     /// </summary>
-    public sealed class CardInstance
+    public sealed class CardInstance : IEffectHost
     {
         public InstanceId Id;
         public string DefinitionId = "";   // → ICardDatabase.Get(...)
@@ -221,12 +253,13 @@ namespace Emberfall.Core.Contracts
         public HashSet<Keyword> Keywords = new HashSet<Keyword>();
         public List<Enchantment> Enchantments = new List<Enchantment>();
         public bool HasAegisShield;
-        public bool IsFrosted;
-        /// <summary>NOR-367 two-step thaw: armed when frost is applied, cleared at the START of this
-        /// card's controller's turn. <c>ApplyEndTurn</c> thaws only frosted cards that are NOT pending, so
-        /// a minion frozen during its OWN turn (e.g. tide_hollowshell_warden's ON_DEATH) still owes its
-        /// next full turn instead of only the remainder of the turn it was already spending.</summary>
-        public bool FrostThawPending;
+        /// <summary>EXPERIMENT (effect-model fork) — see <see cref="EffectInstance"/>.</summary>
+        public List<EffectInstance> Effects = new List<EffectInstance>();
+        /// <summary>Satisfies <see cref="IEffectHost"/> over the field above without changing how any
+        /// existing caller touches <c>Effects</c> — see <c>EffectHost.cs</c>. <c>IsFrosted</c> and
+        /// <c>FrostThawPending</c> moved off this class to <see cref="EffectHostExtensions"/>, written
+        /// once for both hosts instead of once each.</summary>
+        List<EffectInstance> IEffectHost.Effects => Effects;
         /// <summary>True while this live permanent has had its printed and granted abilities removed.
         /// A zone-life reset clears this flag; it is canonical because it changes future resolution.</summary>
         public bool IsSilenced;

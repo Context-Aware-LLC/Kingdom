@@ -131,9 +131,15 @@ namespace Emberfall.Core
                 // sourceKeywords (CommandProcessor.cs:530), so it cannot carry Frost to the face.
                 if (HasKeyword(sourceKeywords, Keyword.FROST))
                 {
-                    // NOR-367: arm the two-step thaw alongside the frost flag (see FrostHandler).
-                    if (target.IsMinion) { target.Minion!.IsFrosted = true; target.Minion!.FrostThawPending = true; }
-                    else { target.Hero!.IsFrosted = true; target.Hero!.FrostThawPending = true; }
+                    // One turn-scoped instance, identical to the FROST action's (see FrostHandler).
+                    //
+                    // FIXED (2026-08-16, Phase 0.5 item 1): `source` is carried through as-is instead
+                    // of `source ?? default`. EffectInstance.Source is now InstanceId?, so a genuinely
+                    // absent source no longer aliases InstanceId(0) — the projector's redaction
+                    // sentinel — the way `?? default` used to. Full entry: EffectInstance's class doc.
+                    var frost = new EffectInstance(EffectKind.Frost, source,
+                        EffectScope.ControllerTurns, turnsRemaining: 1);
+                    EffectList.Apply(target.Host!.Effects, frost);
                     buf.Emit(GameEventKind.FrostApplied, source: source, target: target.Id);
                 }
             }

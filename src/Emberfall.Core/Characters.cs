@@ -28,6 +28,12 @@ namespace Emberfall.Core
         public bool IsMinion => Minion != null;
 
         public InstanceId Id => IsHero ? Hero!.Id : Minion!.Id;
+
+        /// <summary>Resolves to the one <see cref="IEffectHost"/> this character is, collapsing the
+        /// `if (IsMinion) … else if (IsHero) …` pair that used to precede every `.Effects` access on a
+        /// character of unknown kind (effect-model-fork.md Phase 0.5 item 3). Null only for a
+        /// default-constructed ref (neither field set).</summary>
+        public IEffectHost? Host => (IEffectHost?)Minion ?? Hero;
     }
 
     /// <summary>Resolving an <see cref="InstanceId"/> to the live character it names (heroes + both boards).</summary>

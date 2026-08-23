@@ -38,7 +38,7 @@ namespace Emberfall.Core
         private static void Apply(GameState state, ICardDatabase db, CardInstance source,
             ModifyStatsAction action)
         {
-            foreach (CardInstance target in Targets(state, source, action.Target))
+            foreach (CardInstance target in Targets(state, db, source, action))
             {
                 target.Enchantments.Add(new Enchantment
                 {
@@ -51,32 +51,30 @@ namespace Emberfall.Core
             }
         }
 
-        private static IEnumerable<CardInstance> Targets(GameState state, CardInstance source,
-            TargetSpec target)
+        /// <summary>
+        /// An aura's domain, resolved by <see cref="Targeting"/> — the same evaluator every other
+        /// effect uses, under the stricter subset <see cref="AuraCapabilities"/> admits.
+        ///
+        /// <para>This method used to be a second copy of the resolver: five selector names, their
+        /// own seat arithmetic, and its own hand-written adjacency. That is the duplication the
+        /// effect-model doc names outright, and the two copies were never checked against each
+        /// other — a name the gate accepted and this switch lacked fell through to an empty
+        /// sequence, producing an aura that validated and affected nobody, silently.</para>
+        ///
+        /// <para>Passing the ACTION matters: the capability relation is what excludes the hero from
+        /// a stat aura's domain, rather than this method excluding it by only ever having looked at
+        /// board lists. Candidate order changes from seat-absolute to controller-first, which is
+        /// unobservable here — each target receives its own enchantment and the order enchantments
+        /// land WITHIN one target is fixed by the source loop in <see cref="Recompute"/>, not by
+        /// this one.</para>
+        /// </summary>
+        private static IEnumerable<CardInstance> Targets(GameState state, ICardDatabase db,
+            CardInstance source, ModifyStatsAction action)
         {
-            int sourceSeat = state.SeatOf(source.Controller);
-            switch (target.Selector)
-            {
-                case "SELF":
-                    yield return source;
-                    yield break;
-                case "FRIENDLY_MINIONS":
-                    foreach (CardInstance card in state.Players[sourceSeat].Board) yield return card;
-                    yield break;
-                case "ENEMY_MINIONS":
-                    foreach (CardInstance card in state.Players[1 - sourceSeat].Board) yield return card;
-                    yield break;
-                case "ALL_MINIONS":
-                    foreach (CardInstance card in state.Players[0].Board) yield return card;
-                    foreach (CardInstance card in state.Players[1].Board) yield return card;
-                    yield break;
-                case "ADJACENT":
-                    var board = state.Players[sourceSeat].Board;
-                    int index = board.IndexOf(source);
-                    if (index > 0) yield return board[index - 1];
-                    if (index >= 0 && index + 1 < board.Count) yield return board[index + 1];
-                    yield break;
-            }
+            foreach (TargetCandidate candidate in Targeting.ResolutionCandidates(
+                         state, db, source.Controller, action.Target, action, source.Id))
+                if (candidate.Card != null)
+                    yield return candidate.Card;
         }
     }
 }

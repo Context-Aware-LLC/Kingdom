@@ -75,7 +75,7 @@ namespace Emberfall.Presentation
         {
             if (!ownerMayAct) return AttackReadiness.None;
 
-            bool eligible = !ci.IsFrosted
+            bool eligible = !ci.IsFrosted()
                 && ci.CurrentAttack > 0
                 && (!ci.SummonedThisTurn
                     || ci.Keywords.Contains(Keyword.FERVOR)
@@ -89,7 +89,7 @@ namespace Emberfall.Presentation
         {
             AuraSet a = AuraSet.None;
             if (ci.HasAegisShield)                            a |= AuraSet.Shield;
-            if (ci.IsFrosted)                                  a |= AuraSet.Frosted;
+            if (ci.IsFrosted())                                  a |= AuraSet.Frosted;
             if (ci.Keywords.Contains(Keyword.BULWARK))          a |= AuraSet.Bulwark;
             if (ci.Keywords.Contains(Keyword.SHROUD))        a |= AuraSet.Shroud;
             if (ci.Keywords.Contains(Keyword.ARCANE_SURGE))   a |= AuraSet.Glow;
