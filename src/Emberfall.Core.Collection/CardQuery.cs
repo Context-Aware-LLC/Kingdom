@@ -148,7 +148,7 @@ namespace Emberfall.Core.Collection
             // byte-stable across runs no matter how the pool was enumerated.
             int byName = string.CompareOrdinal(a.Name, b.Name);
             if (byName != 0) return byName;
-            return string.CompareOrdinal(a.Id, b.Id);
+            return a.Id.CompareTo(b.Id);
         }
 
         private static int KeyCompare(CardDefinition a, CardDefinition b, CardSortKey key) => key switch

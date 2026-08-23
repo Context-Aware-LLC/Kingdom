@@ -21,7 +21,7 @@ namespace Emberfall.Core
         public Zone Zone { get; }
 
         internal CharacterRef Character { get; }
-        internal string DefinitionId { get; }
+        internal int DefinitionId { get; }
         internal CardInstance? Card { get; }
         internal int Seat { get; }
         /// <summary>A character is the Board zone -- that is the whole definition, and the reason
@@ -36,14 +36,14 @@ namespace Emberfall.Core
         internal IEffectHost? Host => Character.Host;
 
         internal TargetCandidate(InstanceId instance, PlayerId controller,
-            Zone zone, CharacterRef character = default, string? definitionId = null,
+            Zone zone, CharacterRef character = default, int definitionId = 0,
             CardInstance? card = null, int seat = -1)
         {
             Instance = instance;
             Controller = controller;
             Zone = zone;
             Character = character;
-            DefinitionId = definitionId ?? "";
+            DefinitionId = definitionId;
             Card = card;
             Seat = seat;
         }
@@ -475,7 +475,7 @@ namespace Emberfall.Core
         /// </summary>
         private static bool ActionAllows(RuleAction action, TargetCandidate candidate, ICardDatabase db)
         {
-            if (candidate.DefinitionId.Length == 0)
+            if (candidate.DefinitionId <= 0)
                 return RuleActionCapabilities.Allows(action, candidate.Zone, null);
             return db.TryGet(candidate.DefinitionId, out CardDefinition def) &&
                    RuleActionCapabilities.Allows(action, candidate.Zone, def.Type);
@@ -502,7 +502,7 @@ namespace Emberfall.Core
             }
             if (filter.Tribe.HasValue)
             {
-                if (candidate.DefinitionId.Length == 0 ||
+                if (candidate.DefinitionId <= 0 ||
                     !db.TryGet(candidate.DefinitionId, out CardDefinition def) ||
                     def.Tribe != filter.Tribe.Value) return false;
             }
@@ -625,7 +625,7 @@ namespace Emberfall.Core
         /// </summary>
         private static bool TypeMatches(TargetQuery query, TargetCandidate candidate, ICardDatabase db)
         {
-            bool isCard = candidate.DefinitionId.Length != 0;
+            bool isCard = candidate.DefinitionId > 0;
             if (!isCard) return (query.Types & TargetTypes.Hero) != 0;
             if ((query.Types & TargetTypes.AnyCard) == TargetTypes.AnyCard) return true;
             return db.TryGet(candidate.DefinitionId, out CardDefinition def) &&
@@ -697,7 +697,7 @@ namespace Emberfall.Core
             {
                 PlayerId controller = state.Players[character.Seat].Id;
                 candidate = new TargetCandidate(id, controller,
-                    Zone.Board, character, character.IsMinion ? character.Minion!.DefinitionId : null,
+                    Zone.Board, character, character.IsMinion ? character.Minion!.DefinitionId : 0,
                     card: character.Minion, seat: character.Seat);
                 return true;
             }

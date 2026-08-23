@@ -139,8 +139,7 @@ namespace Emberfall.Core
             bool offered = false;
             for (int i = 0; i < pending.Options.Count; i++)
             {
-                if (string.Equals(pending.Options[i], choice.ChosenCardId,
-                        System.StringComparison.Ordinal))
+                if (pending.Options[i] == choice.ChosenCardId)
                 {
                     offered = true;
                     break;

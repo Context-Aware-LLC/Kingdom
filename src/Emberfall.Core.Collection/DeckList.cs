@@ -5,9 +5,9 @@ namespace Emberfall.Core.Collection
     /// <summary>One line of a decklist: a card definition id and how many copies (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).</summary>
     public readonly struct DeckEntry
     {
-        public readonly string CardId;
+        public readonly int CardId;
         public readonly int Count;
-        public DeckEntry(string cardId, int count) { CardId = cardId; Count = count; }
+        public DeckEntry(int cardId, int count) { CardId = cardId; Count = count; }
         public DeckEntry With(int count) => new DeckEntry(CardId, count);
     }
 
@@ -67,7 +67,7 @@ namespace Emberfall.Core.Collection
             }
         }
 
-        public int CountOf(string cardId)
+        public int CountOf(int cardId)
         {
             foreach (var e in Entries)
                 if (e.CardId == cardId) return e.Count;

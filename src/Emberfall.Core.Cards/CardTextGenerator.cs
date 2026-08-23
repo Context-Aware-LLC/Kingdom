@@ -143,8 +143,8 @@ namespace Emberfall.Core.Cards
         {
             public static readonly NoPool Instance = new NoPool();
             private NoPool() { }
-            public bool TryGet(string cardId, out CardDefinition def) { def = null!; return false; }
-            public CardDefinition Get(string cardId)
+            public bool TryGet(int cardId, out CardDefinition def) { def = null!; return false; }
+            public CardDefinition Get(int cardId)
                 => throw new KeyNotFoundException($"no card '{cardId}' — this renderer was given no pool.");
             public IReadOnlyCollection<CardDefinition> AllCollectible() => Array.Empty<CardDefinition>();
         }
@@ -211,11 +211,12 @@ namespace Emberfall.Core.Cards
         /// the row that names it. The alternative — falling back to the id slug — is the behaviour
         /// this change removed, and it would come back silently on exactly the rows nobody checked.
         /// </remarks>
-        private static string NamedCard(string cardId, ICardDatabase pool)
+        private static string NamedCard(int cardId, ICardDatabase pool)
         {
-            if (string.IsNullOrEmpty(cardId)) throw Requires("a card id to name");
+            if (cardId <= 0) throw Requires("a card id to name");
             if (pool == null || !pool.TryGet(cardId, out CardDefinition named))
-                throw Unsupported("naming the card", cardId + " — no such row in the pool given to the renderer");
+                throw Unsupported("naming the card",
+                    cardId + " — no such row in the pool given to the renderer");
             return DescribeCardName(named);
         }
 

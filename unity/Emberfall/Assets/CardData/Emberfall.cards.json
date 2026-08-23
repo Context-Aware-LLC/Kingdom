@@ -1,6 +1,7 @@
 [
   {
-    "id": "ember_recruit",
+    "id": 1001,
+    "handle": "ember_recruit",
     "name": "Ember Recruit",
     "type": "MINION",
     "cost": 1,
@@ -15,7 +16,8 @@
     "artId": "ember_recruit"
   },
   {
-    "id": "ember_zealot",
+    "id": 1002,
+    "handle": "ember_zealot",
     "name": "Ember Zealot",
     "type": "MINION",
     "cost": 2,
@@ -33,7 +35,8 @@
     "artId": "ember_zealot"
   },
   {
-    "id": "ember_flame_bolt",
+    "id": 151,
+    "handle": "ember_flame_bolt",
     "name": "Flame Bolt",
     "type": "SPELL",
     "cost": 1,
@@ -69,7 +72,8 @@
     "artId": "ember_flame_bolt"
   },
   {
-    "id": "ember_cinder_drake",
+    "id": 1003,
+    "handle": "ember_cinder_drake",
     "name": "Cinder Drake",
     "type": "MINION",
     "cost": 4,
@@ -85,7 +89,8 @@
     "artId": "ember_cinder_drake"
   },
   {
-    "id": "tide_initiate",
+    "id": 1004,
+    "handle": "tide_initiate",
     "name": "Tide Initiate",
     "type": "MINION",
     "cost": 1,
@@ -100,7 +105,8 @@
     "artId": "tide_initiate"
   },
   {
-    "id": "tide_oracle",
+    "id": 1005,
+    "handle": "tide_oracle",
     "name": "Tide Oracle",
     "type": "MINION",
     "cost": 3,
@@ -118,7 +124,8 @@
     "artId": "tide_oracle"
   },
   {
-    "id": "frost_ripple",
+    "id": 152,
+    "handle": "tide_frost_ripple",
     "name": "Frost Ripple",
     "type": "SPELL",
     "cost": 3,
@@ -157,7 +164,8 @@
     "artId": "tide_frost_ripple"
   },
   {
-    "id": "wave_caller",
+    "id": 1006,
+    "handle": "tide_wave_caller",
     "name": "Wave Caller",
     "type": "MINION",
     "cost": 4,
@@ -196,7 +204,8 @@
     "artId": "tide_wave_caller"
   },
   {
-    "id": "stone_sentry",
+    "id": 1007,
+    "handle": "neutral_stone_sentry",
     "name": "Stone Sentry",
     "type": "MINION",
     "cost": 3,
@@ -215,7 +224,8 @@
     "artId": "stone_sentry"
   },
   {
-    "id": "wandering_scout",
+    "id": 1008,
+    "handle": "neutral_wandering_scout",
     "name": "Wandering Scout",
     "type": "MINION",
     "cost": 1,
@@ -234,7 +244,8 @@
     "artId": "wandering_scout"
   },
   {
-    "id": "core_emberling",
+    "id": 1009,
+    "handle": "neutral_emberling_pup",
     "name": "Emberling Pup",
     "type": "MINION",
     "cost": 1,
@@ -253,7 +264,8 @@
     "artId": "emberling_pup"
   },
   {
-    "id": "core_stoneback",
+    "id": 1010,
+    "handle": "neutral_stoneback_sentry",
     "name": "Stoneback Sentry",
     "type": "MINION",
     "cost": 2,
@@ -271,7 +283,8 @@
     "artId": "stoneback_sentry"
   },
   {
-    "id": "core_hollow_acolyte",
+    "id": 1011,
+    "handle": "neutral_hollow_acolyte",
     "name": "Hollow Acolyte",
     "type": "MINION",
     "cost": 3,
@@ -305,7 +318,8 @@
     "artId": "hollow_acolyte"
   },
   {
-    "id": "core_lantern_bearer",
+    "id": 1012,
+    "handle": "neutral_lantern_bearer",
     "name": "Grave Lantern-Bearer",
     "type": "MINION",
     "cost": 2,
@@ -330,7 +344,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -340,7 +354,8 @@
     "artId": "neutral_lantern_bearer"
   },
   {
-    "id": "core_aegis_templar",
+    "id": 1013,
+    "handle": "neutral_aegis_templar",
     "name": "Aegis Templar",
     "type": "MINION",
     "cost": 4,
@@ -358,7 +373,8 @@
     "artId": "aegis_templar"
   },
   {
-    "id": "core_veilstalker",
+    "id": 1014,
+    "handle": "neutral_veilstalker",
     "name": "Veilstalker",
     "type": "MINION",
     "cost": 3,
@@ -376,7 +392,8 @@
     "artId": "veilstalker"
   },
   {
-    "id": "core_grove_mender",
+    "id": 1015,
+    "handle": "neutral_grove_mender",
     "name": "Grove Mender",
     "type": "MINION",
     "cost": 4,
@@ -414,7 +431,8 @@
     "artId": "verdant_grove_mender"
   },
   {
-    "id": "core_arclight_adept",
+    "id": 1016,
+    "handle": "neutral_arclight_adept",
     "name": "Arclight Adept",
     "type": "MINION",
     "cost": 2,
@@ -432,7 +450,8 @@
     "artId": "arclight_adept"
   },
   {
-    "id": "core_bonehound",
+    "id": 1017,
+    "handle": "neutral_bonehound",
     "name": "Ravenous Bonehound",
     "type": "MINION",
     "cost": 3,
@@ -451,7 +470,8 @@
     "artId": "ravenous_bonehound"
   },
   {
-    "id": "core_throneless_king",
+    "id": 1018,
+    "handle": "neutral_throneless_king",
     "name": "Throneless King",
     "type": "MINION",
     "cost": 6,
@@ -471,7 +491,8 @@
     "artId": "throneless_king"
   },
   {
-    "id": "ember_cinder_lance",
+    "id": 51,
+    "handle": "ember_cinder_lance",
     "name": "Cinder Lance",
     "type": "WEAPON",
     "cost": 1,
@@ -486,7 +507,8 @@
     "artId": "ember_cinder_lance"
   },
   {
-    "id": "ember_scorch",
+    "id": 153,
+    "handle": "ember_scorch",
     "name": "Scorch",
     "type": "SPELL",
     "cost": 2,
@@ -522,7 +544,8 @@
     "artId": "ember_scorch"
   },
   {
-    "id": "ember_overheat_golem",
+    "id": 1019,
+    "handle": "ember_overheat_golem",
     "name": "Overheat Golem",
     "type": "MINION",
     "cost": 3,
@@ -557,7 +580,8 @@
     "artId": "ember_overheat_golem"
   },
   {
-    "id": "ember_twin_flame",
+    "id": 154,
+    "handle": "ember_twin_flame",
     "name": "Twin Flame Strike",
     "type": "SPELL",
     "cost": 4,
@@ -593,7 +617,8 @@
     "artId": "ember_twin_flame_strike"
   },
   {
-    "id": "ember_pyras_wrath",
+    "id": 1020,
+    "handle": "ember_pyras_wrath",
     "name": "Pyra's Wrath",
     "type": "MINION",
     "cost": 7,
@@ -634,7 +659,8 @@
     "artId": "ember_pyras_wrath"
   },
   {
-    "id": "tide_frostbind",
+    "id": 155,
+    "handle": "tide_frostbind",
     "name": "Frostbind",
     "type": "SPELL",
     "cost": 1,
@@ -669,7 +695,8 @@
     "artId": "tide_frostbind"
   },
   {
-    "id": "tide_undertow",
+    "id": 156,
+    "handle": "tide_undertow",
     "name": "Undertow",
     "type": "SPELL",
     "cost": 2,
@@ -704,7 +731,8 @@
     "artId": "tide_undertow"
   },
   {
-    "id": "tide_siren",
+    "id": 1021,
+    "handle": "tide_siren",
     "name": "Hollow Tide Siren",
     "type": "MINION",
     "cost": 7,
@@ -741,7 +769,8 @@
     "artId": "tide_hollow_tide_siren"
   },
   {
-    "id": "tide_reefguard",
+    "id": 1022,
+    "handle": "tide_reefguard",
     "name": "Reefguard Wisp",
     "type": "MINION",
     "cost": 2,
@@ -760,7 +789,8 @@
     "artId": "tide_reefguard_wisp"
   },
   {
-    "id": "tide_deep_bargain",
+    "id": 157,
+    "handle": "tide_maerns_deep_bargain",
     "name": "Maren's Deep Bargain",
     "type": "SPELL",
     "cost": 3,
@@ -792,40 +822,8 @@
     "artId": "tide_marens_deep_bargain"
   },
   {
-    "id": "token_spark_coin",
-    "name": "The Spark",
-    "type": "SPELL",
-    "cost": 0,
-    "class": "NEUTRAL",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Gain 1 Mana Crystal this turn only.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "GAIN_MANA",
-          "amount": 1,
-          "manaKind": "TEMPORARY"
-        }
-      }
-    ],
-    "setId": "EMBERFALL",
-    "collectible": false,
-    "artId": "token_the_spark"
-  },
-  {
-    "id": "token_wisp_1_1",
+    "id": 1023,
+    "handle": "token_wisp_1_1",
     "name": "Wisp",
     "type": "MINION",
     "cost": 0,
@@ -840,148 +838,8 @@
     "artId": "token_wisp"
   },
   {
-    "id": "hero_power_searing_bolt",
-    "name": "Searing Bolt",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "EMBERWARD",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Deal 1 damage.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DAMAGE",
-          "amount": 1,
-          "target": {
-            "selector": "ANY_CHARACTER",
-            "selection": "1"
-          }
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "ember_hero_power_searing_bolt"
-  },
-  {
-    "id": "hero_power_tidal_ward",
-    "name": "Tidal Ward",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "TIDECALLER",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Summon a 1/2 Tide Wisp.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "SUMMON",
-          "cardId": "token_tide_wisp",
-          "count": 1
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "tide_hero_power_tidal_ward"
-  },
-  {
-    "id": "hero_power_toll_the_bell",
-    "name": "Toll the Bell",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "GRAVEKEEP",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Give a friendly minion Rekindle.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "GRANT_KEYWORD",
-          "keyword": "REKINDLE",
-          "target": {
-            "selector": "ANY_FRIENDLY_MINION",
-            "selection": "1"
-          }
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "grave_hero_power_toll_the_bell"
-  },
-  {
-    "id": "hero_power_quicken",
-    "name": "Quicken",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "VERDANT",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Restore 3 Health to your hero.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "HEAL",
-          "amount": 3,
-          "target": {
-            "selector": "FRIENDLY_HERO",
-            "selection": "1"
-          }
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "verdant_hero_power_quicken"
-  },
-  {
-    "id": "token_tide_wisp",
+    "id": 1024,
+    "handle": "token_tide_wisp",
     "name": "Tide Wisp",
     "type": "MINION",
     "cost": 0,
@@ -999,7 +857,8 @@
     "artId": "tide_token_wisp"
   },
   {
-    "id": "grave_gatewatch_whelp",
+    "id": 1025,
+    "handle": "grave_gatewatch_whelp",
     "name": "Gatewatch Whelp",
     "type": "MINION",
     "cost": 1,
@@ -1018,7 +877,8 @@
     "artId": "grave_gatewatch_whelp"
   },
   {
-    "id": "grave_last_rite",
+    "id": 159,
+    "handle": "grave_last_rite",
     "name": "Last Rite",
     "type": "SPELL",
     "cost": 1,
@@ -1071,7 +931,8 @@
     "artId": "grave_last_rite"
   },
   {
-    "id": "grave_sable_watcher",
+    "id": 1026,
+    "handle": "grave_sable_watcher",
     "name": "Sable Watcher",
     "type": "MINION",
     "cost": 2,
@@ -1098,7 +959,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -1109,7 +970,8 @@
     "artId": "grave_sable_watcher"
   },
   {
-    "id": "grave_sorrows_blessing",
+    "id": 160,
+    "handle": "grave_sorrows_blessing",
     "name": "Sorrow's Blessing",
     "type": "SPELL",
     "cost": 2,
@@ -1145,7 +1007,8 @@
     "artId": "grave_sorrows_blessing"
   },
   {
-    "id": "grave_charnel_priest",
+    "id": 1027,
+    "handle": "grave_charnel_priest",
     "name": "Charnel Priest",
     "type": "MINION",
     "cost": 3,
@@ -1191,7 +1054,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 2
         }
       }
@@ -1202,7 +1065,8 @@
     "artId": "grave_charnel_priest"
   },
   {
-    "id": "grave_ashen_archivist",
+    "id": 1028,
+    "handle": "grave_ashen_archivist",
     "name": "Ashen Archivist",
     "type": "MINION",
     "cost": 4,
@@ -1237,7 +1101,8 @@
     "artId": "grave_ashen_archivist"
   },
   {
-    "id": "grave_custodian",
+    "id": 1029,
+    "handle": "grave_custodian",
     "name": "Gravekeep Custodian",
     "type": "MINION",
     "cost": 4,
@@ -1262,7 +1127,7 @@
         },
         "action": {
           "type": "ADD_TO_HAND",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -1273,7 +1138,8 @@
     "artId": "grave_gravekeep_custodian"
   },
   {
-    "id": "grave_last_gate_warden",
+    "id": 1030,
+    "handle": "grave_last_gate_warden",
     "name": "Last Gate Warden",
     "type": "MINION",
     "cost": 5,
@@ -1300,7 +1166,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 2
         }
       }
@@ -1311,7 +1177,8 @@
     "artId": "grave_last_gate_warden"
   },
   {
-    "id": "grave_harrower_of_ash",
+    "id": 1031,
+    "handle": "grave_harrower_of_ash",
     "name": "Harrower of Ash",
     "type": "MINION",
     "cost": 6,
@@ -1357,7 +1224,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 2
         }
       },
@@ -1385,7 +1252,8 @@
     "artId": "grave_harrower_of_ash"
   },
   {
-    "id": "grave_bell_novice",
+    "id": 1032,
+    "handle": "grave_bell_novice",
     "name": "Bell Novice",
     "type": "MINION",
     "cost": 1,
@@ -1423,7 +1291,8 @@
     "artId": "grave_bell_novice"
   },
   {
-    "id": "grave_tollkeeper_moth",
+    "id": 1033,
+    "handle": "grave_tollkeeper_moth",
     "name": "Tollkeeper's Moth",
     "type": "MINION",
     "cost": 2,
@@ -1458,7 +1327,8 @@
     "artId": "grave_tollkeepers_moth"
   },
   {
-    "id": "grave_chained_revenant",
+    "id": 1034,
+    "handle": "grave_chained_revenant",
     "name": "Chained Revenant",
     "type": "MINION",
     "cost": 4,
@@ -1499,7 +1369,8 @@
     "artId": "grave_chained_revenant"
   },
   {
-    "id": "grave_wailing_chorus",
+    "id": 161,
+    "handle": "grave_wailing_chorus",
     "name": "Wailing Chorus",
     "type": "SPELL",
     "cost": 5,
@@ -1556,7 +1427,8 @@
     "artId": "grave_wailing_chorus"
   },
   {
-    "id": "grave_bell_maul",
+    "id": 52,
+    "handle": "grave_bell_maul",
     "name": "Grave Maul",
     "type": "WEAPON",
     "cost": 3,
@@ -1571,7 +1443,8 @@
     "artId": "grave_maul"
   },
   {
-    "id": "grave_sealed_gate_keeper",
+    "id": 1035,
+    "handle": "grave_sealed_gate_keeper",
     "name": "Sealed Gate Keeper",
     "type": "MINION",
     "cost": 6,
@@ -1598,7 +1471,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_revenant_5_5_bulwark",
+          "cardId": 1049,
           "count": 1
         }
       }
@@ -1609,7 +1482,8 @@
     "artId": "grave_keeper_of_the_sealed_gate"
   },
   {
-    "id": "verdant_thornback_cub",
+    "id": 1036,
+    "handle": "verdant_thornback_cub",
     "name": "Thornback Cub",
     "type": "MINION",
     "cost": 1,
@@ -1628,7 +1502,8 @@
     "artId": "verdant_thornback_cub"
   },
   {
-    "id": "verdant_seedling_rite",
+    "id": 162,
+    "handle": "verdant_seedling_rite",
     "name": "Seedling Rite",
     "type": "SPELL",
     "cost": 2,
@@ -1661,7 +1536,8 @@
     "artId": "verdant_seedling_rite"
   },
   {
-    "id": "verdant_bramblehide_guardian",
+    "id": 1037,
+    "handle": "verdant_bramblehide_guardian",
     "name": "Bramblehide Guardian",
     "type": "MINION",
     "cost": 3,
@@ -1679,7 +1555,8 @@
     "artId": "verdant_bramblehide_guardian"
   },
   {
-    "id": "verdant_menders_bloom",
+    "id": 163,
+    "handle": "verdant_menders_bloom",
     "name": "Mender's Bloom",
     "type": "SPELL",
     "cost": 3,
@@ -1715,7 +1592,8 @@
     "artId": "verdant_menders_bloom"
   },
   {
-    "id": "verdant_elderroot_colossus",
+    "id": 1038,
+    "handle": "verdant_elderroot_colossus",
     "name": "Elderroot Colossus",
     "type": "MINION",
     "cost": 4,
@@ -1734,7 +1612,8 @@
     "artId": "verdant_elderroot_colossus"
   },
   {
-    "id": "verdant_canopy_seer",
+    "id": 1039,
+    "handle": "verdant_canopy_seer",
     "name": "Canopy Seer",
     "type": "MINION",
     "cost": 4,
@@ -1768,7 +1647,8 @@
     "artId": "verdant_canopy_seer"
   },
   {
-    "id": "verdant_ironbark_elder",
+    "id": 1040,
+    "handle": "verdant_ironbark_elder",
     "name": "Ironbark Elder",
     "type": "MINION",
     "cost": 5,
@@ -1786,7 +1666,8 @@
     "artId": "verdant_ironbark_elder"
   },
   {
-    "id": "verdant_worldroot_behemoth",
+    "id": 1041,
+    "handle": "verdant_worldroot_behemoth",
     "name": "World-Root Behemoth",
     "type": "MINION",
     "cost": 6,
@@ -1804,7 +1685,8 @@
     "artId": "verdant_world_root_behemoth"
   },
   {
-    "id": "verdant_thalens_ancient",
+    "id": 1042,
+    "handle": "verdant_thalens_ancient",
     "name": "Thalen's Ancient",
     "type": "MINION",
     "cost": 7,
@@ -1823,7 +1705,8 @@
     "artId": "verdant_thalens_ancient"
   },
   {
-    "id": "verdant_grasping_thornvine",
+    "id": 53,
+    "handle": "verdant_grasping_thornvine",
     "name": "Grasping Thornvine",
     "type": "WEAPON",
     "cost": 3,
@@ -1861,7 +1744,8 @@
     "artId": "verdant_grasping_thornvine"
   },
   {
-    "id": "verdant_sapsurge",
+    "id": 164,
+    "handle": "verdant_sapsurge",
     "name": "Sapsurge",
     "type": "SPELL",
     "cost": 1,
@@ -1897,7 +1781,8 @@
     "artId": "verdant_sapsurge"
   },
   {
-    "id": "verdant_rootweaver",
+    "id": 1043,
+    "handle": "verdant_rootweaver",
     "name": "Rootweaver",
     "type": "MINION",
     "cost": 2,
@@ -1935,7 +1820,8 @@
     "artId": "verdant_rootweaver"
   },
   {
-    "id": "verdant_mosshide_stag",
+    "id": 1044,
+    "handle": "verdant_mosshide_stag",
     "name": "Mosshide Stag",
     "type": "MINION",
     "cost": 3,
@@ -1974,7 +1860,8 @@
     "artId": "verdant_mosshide_stag"
   },
   {
-    "id": "verdant_wild_bloom",
+    "id": 165,
+    "handle": "verdant_wild_bloom",
     "name": "Wild Bloom",
     "type": "SPELL",
     "cost": 3,
@@ -2034,7 +1921,8 @@
     "artId": "verdant_wild_bloom"
   },
   {
-    "id": "verdant_thornfang_matron",
+    "id": 1045,
+    "handle": "verdant_thornfang_matron",
     "name": "Thornfang Matron",
     "type": "MINION",
     "cost": 6,
@@ -2059,7 +1947,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_thorn_cub_1_2",
+          "cardId": 1050,
           "count": 2
         }
       }
@@ -2070,7 +1958,8 @@
     "artId": "verdant_thornfang_matron"
   },
   {
-    "id": "core_choking_vines",
+    "id": 166,
+    "handle": "core_choking_vines",
     "name": "Choking Vines",
     "type": "SPELL",
     "cost": 4,
@@ -2105,7 +1994,8 @@
     "artId": "choking_vines"
   },
   {
-    "id": "core_thistleguard_sprig",
+    "id": 1046,
+    "handle": "core_thistleguard_sprig",
     "name": "Thistleguard Sprig",
     "type": "MINION",
     "cost": 2,
@@ -2124,7 +2014,8 @@
     "artId": "thistleguard_sprig"
   },
   {
-    "id": "relic_bound_revenant",
+    "id": 1047,
+    "handle": "relic_bound_revenant",
     "name": "Bound Revenant",
     "type": "MINION",
     "cost": 3,
@@ -2144,7 +2035,8 @@
     "artId": "bound_revenant"
   },
   {
-    "id": "relic_corpse_cart",
+    "id": 1048,
+    "handle": "relic_corpse_cart",
     "name": "Corpse Cart",
     "type": "MINION",
     "cost": 2,
@@ -2169,7 +2061,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -2180,7 +2072,8 @@
     "artId": "corpse_cart"
   },
   {
-    "id": "token_revenant_5_5_bulwark",
+    "id": 1049,
+    "handle": "token_revenant_5_5_bulwark",
     "name": "Revenant",
     "type": "MINION",
     "cost": 0,
@@ -2199,7 +2092,8 @@
     "artId": "token_revenant"
   },
   {
-    "id": "token_thorn_cub_1_2",
+    "id": 1050,
+    "handle": "token_thorn_cub_1_2",
     "name": "Thorn Cub",
     "type": "MINION",
     "cost": 0,
@@ -2215,7 +2109,8 @@
     "artId": "token_thorn_cub"
   },
   {
-    "id": "ember_stoke_the_coals",
+    "id": 167,
+    "handle": "ember_stoke_the_coals",
     "name": "Stoke the Coals",
     "type": "SPELL",
     "cost": 2,
@@ -2268,7 +2163,8 @@
     "artId": "ember_stoke_the_coals"
   },
   {
-    "id": "ember_slagshell_bulwark",
+    "id": 1051,
+    "handle": "ember_slagshell_bulwark",
     "name": "Slagshell Bulwark",
     "type": "MINION",
     "cost": 4,
@@ -2287,7 +2183,8 @@
     "artId": "ember_slagshell_bulwark"
   },
   {
-    "id": "ember_forgeheart_colossus",
+    "id": 1052,
+    "handle": "ember_forgeheart_colossus",
     "name": "Forgeheart Colossus",
     "type": "MINION",
     "cost": 5,
@@ -2322,7 +2219,8 @@
     "artId": "ember_forgeheart_colossus"
   },
   {
-    "id": "tide_fathom_crush",
+    "id": 168,
+    "handle": "tide_fathom_crush",
     "name": "Fathom Crush",
     "type": "SPELL",
     "cost": 3,
@@ -2358,7 +2256,8 @@
     "artId": "tide_fathom_crush"
   },
   {
-    "id": "tide_deepfrost_spear",
+    "id": 54,
+    "handle": "tide_deepfrost_spear",
     "name": "Deepfrost Spear",
     "type": "WEAPON",
     "cost": 3,
@@ -2395,7 +2294,8 @@
     "artId": "tide_deepfrost_spear"
   },
   {
-    "id": "tide_glacial_leviathan",
+    "id": 1053,
+    "handle": "tide_glacial_leviathan",
     "name": "Glacial Leviathan",
     "type": "MINION",
     "cost": 7,
@@ -2434,7 +2334,8 @@
     "artId": "tide_glacierborn_leviathan"
   },
   {
-    "id": "ember_ashfall_wyrm",
+    "id": 1054,
+    "handle": "ember_ashfall_wyrm",
     "name": "Ashfall Wyrm",
     "type": "MINION",
     "cost": 6,
@@ -2453,7 +2354,8 @@
     "artId": "ember_ashfall_wyrm"
   },
   {
-    "id": "ember_kiln_warden",
+    "id": 1055,
+    "handle": "ember_kiln_warden",
     "name": "Kiln Warden",
     "type": "MINION",
     "cost": 5,
@@ -2473,7 +2375,8 @@
     "artId": "ember_kiln_warden"
   },
   {
-    "id": "ember_emberdrinker",
+    "id": 1056,
+    "handle": "ember_emberdrinker",
     "name": "Emberdrinker",
     "type": "MINION",
     "cost": 3,
@@ -2492,7 +2395,8 @@
     "artId": "ember_emberdrinker"
   },
   {
-    "id": "tide_drowned_titan",
+    "id": 1057,
+    "handle": "tide_drowned_titan",
     "name": "Drowned Titan",
     "type": "MINION",
     "cost": 6,
@@ -2530,7 +2434,8 @@
     "artId": "tide_drowned_titan"
   },
   {
-    "id": "tide_hollowshell_warden",
+    "id": 1058,
+    "handle": "tide_hollowshell_warden",
     "name": "Hollowshell Warden",
     "type": "MINION",
     "cost": 4,
@@ -2570,7 +2475,8 @@
     "artId": "tide_hollowshell_warden"
   },
   {
-    "id": "tide_hoarfrost_lash",
+    "id": 169,
+    "handle": "tide_hoarfrost_lash",
     "name": "Hoarfrost Lash",
     "type": "SPELL",
     "cost": 1,
@@ -2606,39 +2512,8 @@
     "artId": "tide_hoarfrost_lash"
   },
   {
-    "id": "hero_power_blueprint",
-    "name": "Blueprint",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "CLOCKWRIGHT",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Draw a card.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DRAW",
-          "count": 1
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "clock_hero_power_blueprint"
-  },
-  {
-    "id": "token_gear_wisp",
+    "id": 1059,
+    "handle": "token_gear_wisp",
     "name": "Gear Wisp",
     "type": "MINION",
     "cost": 0,
@@ -2654,76 +2529,8 @@
     "artId": "clock_token_gear_wisp"
   },
   {
-    "id": "hero_power_shadow_mark",
-    "name": "Shadow Mark",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "NIGHTVEIL",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Give a friendly minion Shroud.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "GRANT_KEYWORD",
-          "keyword": "SHROUD",
-          "target": {
-            "selector": "ANY_FRIENDLY_MINION",
-            "selection": "1"
-          }
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "night_hero_power_shadow_mark"
-  },
-  {
-    "id": "hero_power_earthwall",
-    "name": "Earthwall",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "STONEWARDEN",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Summon a 0/3 Stone Shard.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "SUMMON",
-          "cardId": "token_stone_shard",
-          "count": 1
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "stone_hero_power_earthwall"
-  },
-  {
-    "id": "token_stone_shard",
+    "id": 1060,
+    "handle": "token_stone_shard",
     "name": "Stone Shard",
     "type": "MINION",
     "cost": 0,
@@ -2742,64 +2549,8 @@
     "artId": "stone_token_shard"
   },
   {
-    "id": "hero_power_chain_spark",
-    "name": "Chain Spark",
-    "type": "HERO_POWER",
-    "cost": 2,
-    "class": "TEMPEST",
-    "rarity": "COMMON",
-    "keywords": [],
-    "text": "Deal 1 damage twice to random enemies.",
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DAMAGE",
-          "amount": 1,
-          "target": {
-            "selector": "ANY_ENEMY",
-            "selection": "random: 1"
-          }
-        }
-      },
-      {
-        "id": "rule_2",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "DAMAGE",
-          "amount": 1,
-          "target": {
-            "selector": "ANY_ENEMY",
-            "selection": "random: 1"
-          }
-        }
-      }
-    ],
-    "setId": "CORE",
-    "collectible": false,
-    "artId": "storm_hero_power_chain_spark"
-  },
-  {
-    "id": "clock_gear_imp",
+    "id": 1061,
+    "handle": "clock_gear_imp",
     "name": "Gear Imp",
     "type": "MINION",
     "cost": 1,
@@ -2834,7 +2585,8 @@
     "artId": "clock_gear_imp"
   },
   {
-    "id": "clock_bronze_frame",
+    "id": 1062,
+    "handle": "clock_bronze_frame",
     "name": "Bronze Frame",
     "type": "MINION",
     "cost": 2,
@@ -2869,7 +2621,8 @@
     "artId": "clock_bronze_frame"
   },
   {
-    "id": "clock_spring_coil",
+    "id": 1063,
+    "handle": "clock_spring_coil",
     "name": "Spring Coil",
     "type": "MINION",
     "cost": 3,
@@ -2888,7 +2641,8 @@
     "artId": "clock_spring_coil"
   },
   {
-    "id": "clock_snap_bolt",
+    "id": 170,
+    "handle": "clock_snap_bolt",
     "name": "Snap Bolt",
     "type": "SPELL",
     "cost": 1,
@@ -2924,7 +2678,8 @@
     "artId": "clock_snap_bolt"
   },
   {
-    "id": "clock_assembly_drone",
+    "id": 1064,
+    "handle": "clock_assembly_drone",
     "name": "Assembly Drone",
     "type": "MINION",
     "cost": 3,
@@ -2949,7 +2704,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_gear_wisp",
+          "cardId": 1059,
           "count": 1
         }
       }
@@ -2960,7 +2715,8 @@
     "artId": "clock_assembly_drone"
   },
   {
-    "id": "clock_overclocker",
+    "id": 1065,
+    "handle": "clock_overclocker",
     "name": "Overclocker",
     "type": "MINION",
     "cost": 3,
@@ -3003,7 +2759,8 @@
     "artId": "clock_overclocker"
   },
   {
-    "id": "clock_clockwork_sniper",
+    "id": 1066,
+    "handle": "clock_clockwork_sniper",
     "name": "Clockwork Sniper",
     "type": "MINION",
     "cost": 4,
@@ -3042,7 +2799,8 @@
     "artId": "clock_clockwork_sniper"
   },
   {
-    "id": "clock_gear_overhaul",
+    "id": 171,
+    "handle": "clock_gear_overhaul",
     "name": "Gear Overhaul",
     "type": "SPELL",
     "cost": 3,
@@ -3082,7 +2840,8 @@
     "artId": "clock_gear_overhaul"
   },
   {
-    "id": "clock_temporal_rewinder",
+    "id": 172,
+    "handle": "clock_temporal_rewinder",
     "name": "Temporal Rewinder",
     "type": "SPELL",
     "cost": 4,
@@ -3134,7 +2893,8 @@
     "artId": "clock_temporal_rewinder"
   },
   {
-    "id": "clock_modular_stalker",
+    "id": 1067,
+    "handle": "clock_modular_stalker",
     "name": "Modular Stalker",
     "type": "MINION",
     "cost": 4,
@@ -3169,7 +2929,8 @@
     "artId": "clock_modular_stalker"
   },
   {
-    "id": "clock_chrono_construct",
+    "id": 1068,
+    "handle": "clock_chrono_construct",
     "name": "Chrono Construct",
     "type": "MINION",
     "cost": 7,
@@ -3189,7 +2950,8 @@
     "artId": "clock_chrono_construct"
   },
   {
-    "id": "clock_mass_recall",
+    "id": 173,
+    "handle": "clock_mass_recall",
     "name": "Mass Recall",
     "type": "SPELL",
     "cost": 5,
@@ -3224,7 +2986,8 @@
     "artId": "clock_mass_recall"
   },
   {
-    "id": "clock_the_great_mechanism",
+    "id": 1069,
+    "handle": "clock_the_great_mechanism",
     "name": "The Mechanism",
     "tooltip": "The Great Mechanism",
     "type": "MINION",
@@ -3262,7 +3025,8 @@
     "artId": "clock_the_great_mechanism"
   },
   {
-    "id": "clock_mainspring_halberd",
+    "id": 55,
+    "handle": "clock_mainspring_halberd",
     "name": "Mainspring Halberd",
     "type": "WEAPON",
     "cost": 3,
@@ -3296,7 +3060,8 @@
     "artId": "clock_mainspring_halberd"
   },
   {
-    "id": "night_lurk_wisp",
+    "id": 1070,
+    "handle": "night_lurk_wisp",
     "name": "Lurk Wisp",
     "type": "MINION",
     "flavorText": "Did you see that?!",
@@ -3316,7 +3081,8 @@
     "artId": "night_lurk_wisp"
   },
   {
-    "id": "night_shadow_dart",
+    "id": 174,
+    "handle": "night_shadow_dart",
     "name": "Shadow Dart",
     "type": "SPELL",
     "cost": 1,
@@ -3352,7 +3118,8 @@
     "artId": "night_shadow_dart"
   },
   {
-    "id": "night_viper_fang",
+    "id": 1071,
+    "handle": "night_viper_fang",
     "name": "Viper Fang",
     "type": "MINION",
     "cost": 2,
@@ -3371,7 +3138,8 @@
     "artId": "night_viper_fang"
   },
   {
-    "id": "night_shadow_stalker",
+    "id": 1072,
+    "handle": "night_shadow_stalker",
     "name": "Shadow Stalker",
     "type": "MINION",
     "cost": 3,
@@ -3390,7 +3158,8 @@
     "artId": "night_shadow_stalker"
   },
   {
-    "id": "night_finish_the_job",
+    "id": 175,
+    "handle": "night_finish_the_job",
     "name": "Finish the Job",
     "type": "SPELL",
     "cost": 2,
@@ -3428,7 +3197,8 @@
     "artId": "night_finish_the_job"
   },
   {
-    "id": "night_venom_asp",
+    "id": 1073,
+    "handle": "night_venom_asp",
     "name": "Venom Asp",
     "type": "MINION",
     "cost": 3,
@@ -3447,7 +3217,8 @@
     "artId": "night_venom_asp"
   },
   {
-    "id": "night_shadow_blade",
+    "id": 56,
+    "handle": "night_shadow_blade",
     "name": "Shadow Blade",
     "type": "WEAPON",
     "cost": 3,
@@ -3485,7 +3256,8 @@
     "artId": "night_shadow_blade"
   },
   {
-    "id": "night_vanishing_act",
+    "id": 176,
+    "handle": "night_vanishing_act",
     "name": "Vanishing Act",
     "type": "SPELL",
     "cost": 3,
@@ -3521,7 +3293,8 @@
     "artId": "night_vanishing_act"
   },
   {
-    "id": "night_fade_out",
+    "id": 177,
+    "handle": "night_fade_out",
     "name": "Fade Out",
     "type": "SPELL",
     "cost": 3,
@@ -3574,7 +3347,8 @@
     "artId": "night_fade_out"
   },
   {
-    "id": "night_death_mark",
+    "id": 178,
+    "handle": "night_death_mark",
     "name": "Death Mark",
     "type": "SPELL",
     "cost": 4,
@@ -3630,7 +3404,8 @@
     "artId": "night_death_mark"
   },
   {
-    "id": "night_shadow_walk",
+    "id": 179,
+    "handle": "night_shadow_walk",
     "name": "Shadow Walk",
     "type": "SPELL",
     "cost": 5,
@@ -3665,7 +3440,8 @@
     "artId": "night_shadow_walk"
   },
   {
-    "id": "night_void_shriek",
+    "id": 1074,
+    "handle": "night_void_shriek",
     "name": "Void Shriek",
     "type": "MINION",
     "cost": 6,
@@ -3725,7 +3501,8 @@
     "artId": "night_void_shriek"
   },
   {
-    "id": "night_kira_blade_of_shadows",
+    "id": 1075,
+    "handle": "night_kira_blade_of_shadows",
     "name": "Kira",
     "type": "MINION",
     "tooltip": "Kira, Blade of Shadows",
@@ -3768,7 +3545,8 @@
     "artId": "night_kira_blade_of_shadows"
   },
   {
-    "id": "ward_pebble_sentinel",
+    "id": 1076,
+    "handle": "ward_pebble_sentinel",
     "name": "Pebble Sentinel",
     "type": "MINION",
     "cost": 1,
@@ -3787,7 +3565,8 @@
     "artId": "stone_pebble_sentinel"
   },
   {
-    "id": "ward_stone_throw",
+    "id": 180,
+    "handle": "ward_stone_throw",
     "name": "Stone Throw",
     "type": "SPELL",
     "cost": 1,
@@ -3823,7 +3602,8 @@
     "artId": "stone_throw"
   },
   {
-    "id": "ward_boulderhide",
+    "id": 1077,
+    "handle": "ward_boulderhide",
     "name": "Boulderhide",
     "type": "MINION",
     "cost": 2,
@@ -3842,7 +3622,8 @@
     "artId": "stone_boulderhide"
   },
   {
-    "id": "ward_earth_barrier",
+    "id": 181,
+    "handle": "ward_earth_barrier",
     "name": "Earth Barrier",
     "type": "SPELL",
     "cost": 2,
@@ -3879,7 +3660,8 @@
     "artId": "stone_earth_barrier"
   },
   {
-    "id": "ward_rock_golem",
+    "id": 1078,
+    "handle": "ward_rock_golem",
     "name": "Rock Golem",
     "type": "MINION",
     "cost": 3,
@@ -3898,7 +3680,8 @@
     "artId": "stone_rock_golem"
   },
   {
-    "id": "ward_stone_rain",
+    "id": 182,
+    "handle": "ward_stone_rain",
     "name": "Stone Rain",
     "type": "SPELL",
     "cost": 4,
@@ -3934,7 +3717,8 @@
     "artId": "stone_rain"
   },
   {
-    "id": "ward_granite_guardian",
+    "id": 1079,
+    "handle": "ward_granite_guardian",
     "name": "Granite Guardian",
     "type": "MINION",
     "cost": 4,
@@ -3953,7 +3737,8 @@
     "artId": "stone_granite_guardian"
   },
   {
-    "id": "ward_earthen_blessing",
+    "id": 183,
+    "handle": "ward_earthen_blessing",
     "name": "Earthen Blessing",
     "type": "SPELL",
     "cost": 2,
@@ -3990,7 +3775,8 @@
     "artId": "stone_earthen_blessing"
   },
   {
-    "id": "ward_living_monolith",
+    "id": 1080,
+    "handle": "ward_living_monolith",
     "name": "Living Monolith",
     "type": "MINION",
     "cost": 4,
@@ -4009,7 +3795,8 @@
     "artId": "stone_living_monolith"
   },
   {
-    "id": "ward_stomp",
+    "id": 184,
+    "handle": "ward_stomp",
     "name": "Stomp",
     "type": "SPELL",
     "cost": 3,
@@ -4067,7 +3854,8 @@
     "artId": "stone_stomp"
   },
   {
-    "id": "ward_siege_golem",
+    "id": 1081,
+    "handle": "ward_siege_golem",
     "name": "Siege Golem",
     "type": "MINION",
     "cost": 6,
@@ -4109,7 +3897,8 @@
     "artId": "stone_siege_golem"
   },
   {
-    "id": "ward_stone_colossus",
+    "id": 1082,
+    "handle": "ward_stone_colossus",
     "name": "Stone Colossus",
     "type": "MINION",
     "cost": 8,
@@ -4129,7 +3918,8 @@
     "artId": "stone_colossus"
   },
   {
-    "id": "ward_duras_the_ironmount",
+    "id": 1083,
+    "handle": "ward_duras_the_ironmount",
     "name": "Duras, the Ironmount",
     "type": "MINION",
     "cost": 8,
@@ -4170,7 +3960,8 @@
     "artId": "stone_duras_the_ironmount"
   },
   {
-    "id": "ward_earthwardens_maul",
+    "id": 57,
+    "handle": "ward_earthwardens_maul",
     "name": "Earthwarden's Maul",
     "type": "WEAPON",
     "cost": 3,
@@ -4208,7 +3999,8 @@
     "artId": "stone_earthwardens_maul"
   },
   {
-    "id": "storm_spark_imp",
+    "id": 1084,
+    "handle": "storm_spark_imp",
     "name": "Spark Imp",
     "type": "MINION",
     "cost": 1,
@@ -4227,7 +4019,8 @@
     "artId": "storm_spark_imp"
   },
   {
-    "id": "storm_lightning_bolt",
+    "id": 185,
+    "handle": "storm_lightning_bolt",
     "name": "Lightning Bolt",
     "type": "SPELL",
     "cost": 1,
@@ -4280,7 +4073,8 @@
     "artId": "storm_lightning_bolt"
   },
   {
-    "id": "storm_gust_sprite",
+    "id": 1085,
+    "handle": "storm_gust_sprite",
     "name": "Gust Sprite",
     "type": "MINION",
     "cost": 2,
@@ -4299,7 +4093,8 @@
     "artId": "storm_gust_sprite"
   },
   {
-    "id": "storm_wind_rider",
+    "id": 1086,
+    "handle": "storm_wind_rider",
     "name": "Wind Rider",
     "type": "MINION",
     "cost": 2,
@@ -4318,7 +4113,8 @@
     "artId": "storm_wind_rider"
   },
   {
-    "id": "storm_chain_lightning",
+    "id": 186,
+    "handle": "storm_chain_lightning",
     "name": "Chain Lightning",
     "type": "SPELL",
     "cost": 3,
@@ -4396,7 +4192,8 @@
     "artId": "storm_chain_lightning"
   },
   {
-    "id": "storm_crackle",
+    "id": 187,
+    "handle": "storm_crackle",
     "name": "Crackle",
     "type": "SPELL",
     "cost": 2,
@@ -4449,7 +4246,8 @@
     "artId": "storm_crackle"
   },
   {
-    "id": "storm_tempest_striker",
+    "id": 1087,
+    "handle": "storm_tempest_striker",
     "name": "Tempest Striker",
     "type": "MINION",
     "cost": 3,
@@ -4468,7 +4266,8 @@
     "artId": "storm_tempest_striker"
   },
   {
-    "id": "storm_static_shock",
+    "id": 188,
+    "handle": "storm_static_shock",
     "name": "Static Shock",
     "type": "SPELL",
     "cost": 2,
@@ -4504,7 +4303,8 @@
     "artId": "storm_static_shock"
   },
   {
-    "id": "storm_thunder_hoof",
+    "id": 1088,
+    "handle": "storm_thunder_hoof",
     "name": "Thunder Hoof",
     "type": "MINION",
     "cost": 4,
@@ -4523,7 +4323,8 @@
     "artId": "storm_thunder_hoof"
   },
   {
-    "id": "storm_static_discharge",
+    "id": 189,
+    "handle": "storm_static_discharge",
     "name": "Static Discharge",
     "type": "SPELL",
     "cost": 2,
@@ -4576,7 +4377,8 @@
     "artId": "storm_static_discharge"
   },
   {
-    "id": "storm_hurricane",
+    "id": 190,
+    "handle": "storm_hurricane",
     "name": "Hurricane",
     "type": "SPELL",
     "cost": 5,
@@ -4612,7 +4414,8 @@
     "artId": "storm_hurricane"
   },
   {
-    "id": "storm_lightning_storm",
+    "id": 191,
+    "handle": "storm_lightning_storm",
     "name": "Lightning Storm",
     "type": "SPELL",
     "cost": 4,
@@ -4665,7 +4468,8 @@
     "artId": "storm_lightning_storm"
   },
   {
-    "id": "storm_zael_of_the_struck_sky",
+    "id": 1089,
+    "handle": "storm_zael_of_the_struck_sky",
     "name": "Zael",
     "type": "MINION",
     "flavorText": "The sky split in half and fell onto us at the same time..",
@@ -4707,7 +4511,8 @@
     "artId": "storm_zael_of_the_struck_sky"
   },
   {
-    "id": "storm_galecleaver",
+    "id": 58,
+    "handle": "storm_galecleaver",
     "name": "Galecleaver",
     "type": "WEAPON",
     "cost": 1,
@@ -4741,7 +4546,8 @@
     "artId": "storm_galecleaver"
   },
   {
-    "id": "neutral_galewind_runner",
+    "id": 1090,
+    "handle": "neutral_galewind_runner",
     "name": "Galewind Runner",
     "type": "MINION",
     "cost": 2,
@@ -4760,7 +4566,8 @@
     "artId": "galewind_runner"
   },
   {
-    "id": "neutral_razorcoil_adder",
+    "id": 1091,
+    "handle": "neutral_razorcoil_adder",
     "name": "Razorcoil Adder",
     "type": "MINION",
     "cost": 2,
@@ -4779,7 +4586,8 @@
     "artId": "razorcoil_adder"
   },
   {
-    "id": "neutral_phantom_duelist",
+    "id": 1092,
+    "handle": "neutral_phantom_duelist",
     "name": "Phantom Duelist",
     "type": "MINION",
     "cost": 2,
@@ -4797,7 +4605,8 @@
     "artId": "phantom_duelist"
   },
   {
-    "id": "neutral_doublestrike_hawk",
+    "id": 1093,
+    "handle": "neutral_doublestrike_hawk",
     "name": "Doublestrike Hawk",
     "type": "MINION",
     "cost": 3,
@@ -4816,7 +4625,8 @@
     "artId": "doublestrike_hawk"
   },
   {
-    "id": "neutral_lifeclaw_bat",
+    "id": 1094,
+    "handle": "neutral_lifeclaw_bat",
     "name": "Lifeclaw Bat",
     "type": "MINION",
     "cost": 4,
@@ -4836,7 +4646,8 @@
     "artId": "lifeclaw_bat"
   },
   {
-    "id": "neutral_spellwarden",
+    "id": 1095,
+    "handle": "neutral_spellwarden",
     "name": "Spellwarden",
     "type": "MINION",
     "cost": 3,
@@ -4854,7 +4665,8 @@
     "artId": "spellwarden"
   },
   {
-    "id": "neutral_ironclad_bulwark",
+    "id": 1096,
+    "handle": "neutral_ironclad_bulwark",
     "name": "Ironclad Bulwark",
     "type": "MINION",
     "cost": 5,
@@ -4873,7 +4685,8 @@
     "artId": "ironclad_bulwark"
   },
   {
-    "id": "neutral_soulbound_revenant",
+    "id": 1097,
+    "handle": "neutral_soulbound_revenant",
     "name": "Soulbound Revenant",
     "type": "MINION",
     "cost": 3,
@@ -4915,7 +4728,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -4926,7 +4739,8 @@
     "artId": "soulbound_revenant"
   },
   {
-    "id": "neutral_venomscale_drake",
+    "id": 1098,
+    "handle": "neutral_venomscale_drake",
     "name": "Venomscale Drake",
     "type": "MINION",
     "cost": 6,
@@ -4945,7 +4759,8 @@
     "artId": "venomscale_drake"
   },
   {
-    "id": "neutral_duneborn_construct",
+    "id": 1099,
+    "handle": "neutral_duneborn_construct",
     "name": "Duneborn Construct",
     "type": "MINION",
     "cost": 4,
@@ -4987,7 +4802,8 @@
     "artId": "duneborn_construct"
   },
   {
-    "id": "neutral_bog_crawler",
+    "id": 1100,
+    "handle": "neutral_bog_crawler",
     "name": "Bog Crawler",
     "type": "MINION",
     "cost": 1,
@@ -5006,7 +4822,8 @@
     "artId": "bog_crawler"
   },
   {
-    "id": "neutral_searing_quill",
+    "id": 59,
+    "handle": "neutral_searing_quill",
     "name": "Searing Quill",
     "type": "WEAPON",
     "flavorText": "More powerful than a sword?",
@@ -5022,7 +4839,8 @@
     "artId": "searing_quill"
   },
   {
-    "id": "ember_blazewing",
+    "id": 1101,
+    "handle": "ember_blazewing",
     "name": "Blazewing",
     "type": "MINION",
     "cost": 3,
@@ -5041,7 +4859,8 @@
     "artId": "ember_blazewing"
   },
   {
-    "id": "ember_scalded_striker",
+    "id": 1102,
+    "handle": "ember_scalded_striker",
     "name": "Scalded Striker",
     "type": "MINION",
     "cost": 2,
@@ -5081,7 +4900,8 @@
     "artId": "ember_scalded_striker"
   },
   {
-    "id": "ember_fusillade",
+    "id": 192,
+    "handle": "ember_fusillade",
     "name": "Fusillade",
     "type": "SPELL",
     "cost": 3,
@@ -5138,7 +4958,8 @@
     "artId": "ember_fusillade"
   },
   {
-    "id": "ember_cinderplate_golem",
+    "id": 1103,
+    "handle": "ember_cinderplate_golem",
     "name": "Cinderplate Golem",
     "type": "MINION",
     "cost": 4,
@@ -5173,7 +4994,8 @@
     "artId": "ember_cinderplate_golem"
   },
   {
-    "id": "ember_vanguard_drake",
+    "id": 1104,
+    "handle": "ember_vanguard_drake",
     "name": "Vanguard Drake",
     "type": "MINION",
     "cost": 5,
@@ -5214,7 +5036,8 @@
     "artId": "ember_vanguard_drake"
   },
   {
-    "id": "ember_scorch_blade",
+    "id": 60,
+    "handle": "ember_scorch_blade",
     "name": "Scorch Blade",
     "type": "WEAPON",
     "cost": 3,
@@ -5252,7 +5075,8 @@
     "artId": "ember_scorch_blade"
   },
   {
-    "id": "ember_magmacore_warden",
+    "id": 1105,
+    "handle": "ember_magmacore_warden",
     "name": "Magmacore Warden",
     "type": "MINION",
     "cost": 6,
@@ -5271,7 +5095,8 @@
     "artId": "ember_magmacore_warden"
   },
   {
-    "id": "ember_heat_surge",
+    "id": 193,
+    "handle": "ember_heat_surge",
     "name": "Heat Surge",
     "type": "SPELL",
     "cost": 4,
@@ -5324,7 +5149,8 @@
     "artId": "ember_heat_surge"
   },
   {
-    "id": "tide_venomfin",
+    "id": 1106,
+    "handle": "tide_venomfin",
     "name": "Venomfin",
     "type": "MINION",
     "cost": 2,
@@ -5343,7 +5169,8 @@
     "artId": "tide_venomfin"
   },
   {
-    "id": "tide_frostwhisper",
+    "id": 1107,
+    "handle": "tide_frostwhisper",
     "name": "Frostwhisper",
     "type": "MINION",
     "cost": 3,
@@ -5362,7 +5189,8 @@
     "artId": "tide_frostwhisper"
   },
   {
-    "id": "tide_icescale_whelp",
+    "id": 1108,
+    "handle": "tide_icescale_whelp",
     "name": "Icescale Whelp",
     "type": "MINION",
     "cost": 2,
@@ -5400,7 +5228,8 @@
     "artId": "tide_icescale_whelp"
   },
   {
-    "id": "tide_glacial_echo",
+    "id": 194,
+    "handle": "tide_glacial_echo",
     "name": "Glacial Echo",
     "type": "SPELL",
     "cost": 2,
@@ -5452,7 +5281,8 @@
     "artId": "tide_glacial_echo"
   },
   {
-    "id": "tide_icecrown_herald",
+    "id": 1109,
+    "handle": "tide_icecrown_herald",
     "name": "Icecrown Herald",
     "type": "MINION",
     "cost": 5,
@@ -5491,7 +5321,8 @@
     "artId": "tide_icecrown_herald"
   },
   {
-    "id": "tide_abyssal_devourer",
+    "id": 1110,
+    "handle": "tide_abyssal_devourer",
     "name": "Abyssal Devourer",
     "type": "MINION",
     "cost": 6,
@@ -5531,7 +5362,8 @@
     "artId": "tide_abyssal_devourer"
   },
   {
-    "id": "tide_maren_avatar",
+    "id": 1111,
+    "handle": "tide_maren_avatar",
     "name": "Maren's Avatar",
     "type": "MINION",
     "cost": 7,
@@ -5572,7 +5404,8 @@
     "artId": "tide_marens_avatar"
   },
   {
-    "id": "tide_deep_channel",
+    "id": 195,
+    "handle": "tide_deep_channel",
     "name": "Deep Channel",
     "type": "SPELL",
     "cost": 4,
@@ -5607,7 +5440,8 @@
     "artId": "tide_deep_channel"
   },
   {
-    "id": "tide_coldsnap_knife",
+    "id": 61,
+    "handle": "tide_coldsnap_knife",
     "name": "Coldsnap Knife",
     "type": "WEAPON",
     "cost": 2,
@@ -5644,7 +5478,8 @@
     "artId": "tide_coldsnap_knife"
   },
   {
-    "id": "grave_deathweaver",
+    "id": 1112,
+    "handle": "grave_deathweaver",
     "name": "Deathweaver",
     "type": "MINION",
     "cost": 2,
@@ -5679,7 +5514,8 @@
     "artId": "grave_deathweaver"
   },
   {
-    "id": "grave_spectral_wolf",
+    "id": 1113,
+    "handle": "grave_spectral_wolf",
     "name": "Spectral Wolf",
     "type": "MINION",
     "cost": 3,
@@ -5720,7 +5556,8 @@
     "artId": "grave_spectral_wolf"
   },
   {
-    "id": "grave_boneshield_sentinel",
+    "id": 1114,
+    "handle": "grave_boneshield_sentinel",
     "name": "Boneshield Sentinel",
     "type": "MINION",
     "cost": 4,
@@ -5740,7 +5577,8 @@
     "artId": "grave_boneshield_sentinel"
   },
   {
-    "id": "grave_bone_horde",
+    "id": 196,
+    "handle": "grave_bone_horde",
     "name": "Bone Horde",
     "type": "SPELL",
     "cost": 3,
@@ -5763,7 +5601,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 3
         }
       }
@@ -5773,7 +5611,8 @@
     "artId": "grave_bone_horde"
   },
   {
-    "id": "grave_plague_bringer",
+    "id": 1115,
+    "handle": "grave_plague_bringer",
     "name": "Plague Bringer",
     "type": "MINION",
     "cost": 5,
@@ -5800,7 +5639,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 2
         }
       }
@@ -5811,7 +5650,8 @@
     "artId": "grave_plague_bringer"
   },
   {
-    "id": "grave_echoing_knell",
+    "id": 197,
+    "handle": "grave_echoing_knell",
     "name": "Echoing Knell",
     "type": "SPELL",
     "cost": 4,
@@ -5848,7 +5688,8 @@
     "artId": "grave_echoing_knell"
   },
   {
-    "id": "grave_warden_of_dusk",
+    "id": 1116,
+    "handle": "grave_warden_of_dusk",
     "name": "Warden of Dusk",
     "type": "MINION",
     "cost": 7,
@@ -5910,7 +5751,8 @@
     "artId": "grave_warden_of_dusk"
   },
   {
-    "id": "verdant_venomthorn",
+    "id": 1117,
+    "handle": "verdant_venomthorn",
     "name": "Venomthorn",
     "type": "MINION",
     "cost": 3,
@@ -5930,7 +5772,8 @@
     "artId": "verdant_venomthorn"
   },
   {
-    "id": "verdant_windroot_sprinter",
+    "id": 1118,
+    "handle": "verdant_windroot_sprinter",
     "name": "Windroot Sprinter",
     "type": "MINION",
     "cost": 3,
@@ -5971,7 +5814,8 @@
     "artId": "verdant_windroot_sprinter"
   },
   {
-    "id": "verdant_greatroot_speaker",
+    "id": 1119,
+    "handle": "verdant_greatroot_speaker",
     "name": "Greatroot Speaker",
     "type": "MINION",
     "cost": 5,
@@ -5989,7 +5833,8 @@
     "artId": "verdant_greatroot_speaker"
   },
   {
-    "id": "verdant_primal_mend",
+    "id": 198,
+    "handle": "verdant_primal_mend",
     "name": "Primal Mend",
     "type": "SPELL",
     "cost": 4,
@@ -6049,7 +5894,8 @@
     "artId": "verdant_primal_mend"
   },
   {
-    "id": "verdant_world_titan",
+    "id": 1120,
+    "handle": "verdant_world_titan",
     "name": "World-Titan",
     "type": "MINION",
     "cost": 9,
@@ -6068,7 +5914,8 @@
     "artId": "verdant_world_titan"
   },
   {
-    "id": "verdant_thorn_swarm",
+    "id": 199,
+    "handle": "verdant_thorn_swarm",
     "name": "Thorn Swarm",
     "type": "SPELL",
     "cost": 5,

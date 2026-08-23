@@ -668,7 +668,7 @@ namespace Emberfall.Core.Cards
             // rather than hides.
             if (!Verb("Summon ") && !Verb("Add ") && !Verb("Equip ") && !Verb("Transform ")) yield break;
 
-            foreach (string cardId in names.AllIds())
+            foreach (int cardId in names.AllIds())
             {
                 if (Verb("Equip ")) yield return new EquipAction(cardId);
 

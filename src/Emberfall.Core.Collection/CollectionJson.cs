@@ -117,7 +117,7 @@ namespace Emberfall.Core.Collection
                     foreach (var e in d.Entries)
                     {
                         w.WriteStartObject();
-                        w.WriteString("id", e.CardId);
+                        w.WriteNumber("id", e.CardId);
                         w.WriteNumber("count", e.Count);
                         w.WriteEndObject();
                     }
@@ -162,7 +162,7 @@ namespace Emberfall.Core.Collection
                 {
                     foreach (var c in cards.EnumerateArray())
                     {
-                        string cardId = Req(c, "id", DecksProperty, i);
+                        int cardId = ReqCardId(c, "id", DecksProperty, i);
                         int count = c.TryGetProperty("count", out var n) && n.ValueKind == JsonValueKind.Number
                             ? n.GetInt32()
                             : 0;
@@ -292,7 +292,7 @@ namespace Emberfall.Core.Collection
                 foreach (var row in owned.Entries())
                 {
                     w.WriteStartObject();
-                    w.WriteString("id", row.Key);
+                    w.WriteNumber("id", row.Key);
                     w.WriteNumber("copies", row.Value);
                     w.WriteEndObject();
                 }
@@ -321,7 +321,7 @@ namespace Emberfall.Core.Collection
             int i = 0;
             foreach (var el in rows.EnumerateArray())
             {
-                string cardId = Req(el, "id", OwnedCardsProperty, i);
+                int cardId = ReqCardId(el, "id", OwnedCardsProperty, i);
                 int copies = el.TryGetProperty("copies", out var n) && n.ValueKind == JsonValueKind.Number
                     ? n.GetInt32()
                     : 0;
@@ -385,6 +385,27 @@ namespace Emberfall.Core.Collection
 
         private static string? Str(JsonElement el, string name)
             => el.TryGetProperty(name, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
+
+        /// <summary>
+        /// Reads a card id out of a saved collection. Separate from <see cref="Req"/> because a
+        /// file written before the numeric migration carries a STRING here, and that has to say so
+        /// — a player's decks are the one place in this system a stale id is unrecoverable from
+        /// the repo, so the failure must name the migration rather than the token type.
+        /// </summary>
+        private static int ReqCardId(JsonElement el, string name, string section, int index)
+        {
+            if (!el.TryGetProperty(name, out var value))
+                throw new CollectionFormatException(
+                    $"{section}[{index}] is missing required '{name}'.");
+            if (value.ValueKind == JsonValueKind.String)
+                throw new CollectionFormatException(
+                    $"{section}[{index}].{name} = '{value.GetString()}' is a card HANDLE. This file " +
+                    "was saved before card ids became numbers and needs migrating.");
+            if (!value.TryGetInt32(out int id))
+                throw new CollectionFormatException(
+                    $"{section}[{index}].{name} is not a whole number.");
+            return id;
+        }
 
         private static string Req(JsonElement el, string name, string section, int index)
             => Str(el, name) ?? throw new CollectionFormatException(

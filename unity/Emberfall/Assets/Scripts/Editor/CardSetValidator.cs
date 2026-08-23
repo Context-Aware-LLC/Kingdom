@@ -15,6 +15,7 @@ namespace Emberfall.Editor
     {
         private static readonly string[] SetPaths =
         {
+            "Assets/CardData/Core.cards.json",
             CardJsonRowIO.DefaultEmberfallJsonPath,
             "Assets/CardData/Rekindling.cards.json",
         };

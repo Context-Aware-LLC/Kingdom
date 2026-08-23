@@ -13,8 +13,13 @@ namespace Emberfall.Presentation
     public static class CardDatabaseLoader
     {
         // All registered card-set Addressables addresses and their Editor fallback paths.
+        // ENUMERATED, not globbed — the server and CardCi scan the directory, this does not, so a
+        // new *.cards.json file is invisible to the CLIENT until it is listed here. Core carries
+        // the system cards (hero powers, the coin): rows that belong to no expansion because they
+        // never rotate.
         private static readonly (string address, string editorPath)[] CardSets =
         {
+            ("cards/Core.cards", "Assets/CardData/Core.cards.json"),
             ("cards/Emberfall.cards", "Assets/CardData/Emberfall.cards.json"),
             ("cards/Rekindling.cards", "Assets/CardData/Rekindling.cards.json"),
         };

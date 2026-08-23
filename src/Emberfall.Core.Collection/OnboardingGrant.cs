@@ -108,17 +108,17 @@ namespace Emberfall.Core.Collection
         /// rows that are <i>not</i> are hero powers and tokens, which are not collectible and were
         /// never ownable.</para>
         /// </summary>
-        public static IReadOnlyList<string> CommonGrant(ICardDatabase db)
+        public static IReadOnlyList<int> CommonGrant(ICardDatabase db)
         {
             if (db == null) throw new ArgumentNullException(nameof(db));
 
             var pack = StarterPack();
-            var ids = new List<string>();
+            var ids = new List<int>();
             foreach (var card in db.AllCollectible())
                 if (card != null && card.Rarity == Rarity.COMMON && pack.Contains(card.SetId))
                     ids.Add(card.Id);
 
-            ids.Sort(StringComparer.Ordinal);
+            ids.Sort();
             return ids;
         }
 
@@ -153,14 +153,14 @@ namespace Emberfall.Core.Collection
     public sealed class OnboardingGrantPlan
     {
         /// <summary>One copy of each, sorted by id.</summary>
-        public IReadOnlyList<string> CommonCardIds { get; }
+        public IReadOnlyList<int> CommonCardIds { get; }
 
         /// <summary>The starter packs, unopened. The caller supplies the seed and the pity state.</summary>
         public IReadOnlyList<BoosterPack> Packs { get; }
 
-        public OnboardingGrantPlan(IReadOnlyList<string> commonCardIds, IReadOnlyList<BoosterPack> packs)
+        public OnboardingGrantPlan(IReadOnlyList<int> commonCardIds, IReadOnlyList<BoosterPack> packs)
         {
-            CommonCardIds = commonCardIds ?? Array.Empty<string>();
+            CommonCardIds = commonCardIds ?? Array.Empty<int>();
             Packs = packs ?? Array.Empty<BoosterPack>();
         }
 

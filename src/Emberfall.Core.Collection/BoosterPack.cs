@@ -229,7 +229,7 @@ namespace Emberfall.Core.Collection
             foreach (var card in db.AllCollectible())
                 if (card != null && Contains(card.SetId)) pool.Add(card);
 
-            pool.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+            pool.Sort((a, b) => a.Id.CompareTo(b.Id));
             return pool;
         }
     }

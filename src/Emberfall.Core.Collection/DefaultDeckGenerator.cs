@@ -139,7 +139,7 @@ namespace Emberfall.Core.Collection
             if (character == null || db == null) return list;
             foreach (var def in db.AllCollectible())
                 if (character.AllowsClass(def.Class)) list.Add(def);
-            list.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));
+            list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
         }
 

@@ -17,7 +17,7 @@ namespace Emberfall.Core.Cards
         {
             // Exhaustive: RejectUnknownProperties throws on any property absent from this set, so a
             // row carrying a retired one fails loudly instead of being silently ignored.
-            "id", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
+            "id", "handle", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "artId",
             "flavorText", "tooltip", "factionId", "keywords", "text", "rules", "_comment"
         };
@@ -57,8 +57,16 @@ namespace Emberfall.Core.Cards
         {
             RejectUnknownProperties(el, "card", CardProperties);
 
-            string id = Str(el, "id") ?? throw new FormatException("Card row missing 'id'.");
-            string name = Str(el, "name") ?? id;
+            // 'id' is a NUMBER on a card row and a STRING on a rule row -- two different kinds of
+            // id that happen to share a property name. A row whose id still parses as a string is a
+            // pre-migration row, and saying so beats a JsonException about a token type.
+            int id = Int(el, "id") ?? throw new FormatException(
+                el.TryGetProperty("id", out var raw) && raw.ValueKind == JsonValueKind.String
+                    ? $"Card row 'id' is the string '{raw.GetString()}'. The numeric id is the key " +
+                      "now and the mnemonic moved to 'handle' -- run tooling/scripts/assign_numeric_card_ids.py."
+                    : "Card row missing 'id'.");
+            string handle = Str(el, "handle") ?? "";
+            string name = Str(el, "name") ?? handle;
             CardType type = ReqEnum<CardType>(el, "type");
             int cost = Int(el, "cost") ?? 0;
             int? attack = Int(el, "attack");
@@ -87,7 +95,7 @@ namespace Emberfall.Core.Cards
                     throw new FormatException("Card JSON rules must be an array.");
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
             }
-            return new CardDefinition(id, name, type, cost, attack, health, durability, cls, rarity,
+            return new CardDefinition(id, handle, name, type, cost, attack, health, durability, cls, rarity,
                 keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip, text);
         }
 
@@ -193,7 +201,7 @@ namespace Emberfall.Core.Cards
                     return new SilenceAction(TargetFromElement(element));
                 case "TRANSFORM":
                     Fields(element, type, "cardId", "target");
-                    return new TransformAction(RequiredString(element, "cardId", "rule.action.cardId"),
+                    return new TransformAction(RequiredCardId(element, "rule.action.cardId"),
                         TargetFromElement(element));
                 case "FROST":
                     Fields(element, type, "target");
@@ -206,13 +214,13 @@ namespace Emberfall.Core.Cards
                     return new DrawAction(Count(element));
                 case "SUMMON":
                     Fields(element, type, "cardId", "count");
-                    return new SummonAction(RequiredString(element, "cardId", "rule.action.cardId"), Count(element));
+                    return new SummonAction(RequiredCardId(element, "rule.action.cardId"), Count(element));
                 case "ADD_TO_HAND":
                     Fields(element, type, "cardId", "count");
-                    return new AddToHandAction(RequiredString(element, "cardId", "rule.action.cardId"), Count(element));
+                    return new AddToHandAction(RequiredCardId(element, "rule.action.cardId"), Count(element));
                 case "EQUIP":
                     Fields(element, type, "cardId");
-                    return new EquipAction(RequiredString(element, "cardId", "rule.action.cardId"));
+                    return new EquipAction(RequiredCardId(element, "rule.action.cardId"));
                 case "GAIN_MANA":
                     Fields(element, type, "amount", "manaKind");
                     return new GainManaAction(Amount(element), ReqEnum<ManaGainKind>(element, "manaKind"));
@@ -328,6 +336,25 @@ namespace Emberfall.Core.Cards
         // ── primitive readers ────────────────────────────────────────────────────
         private static string? Str(JsonElement el, string name)
             => el.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+
+        /// <summary>
+        /// Reads a card id a rule names. Separate from <see cref="RequiredString"/> because the
+        /// property is a NUMBER here and a string on the rule row itself — the same name, two
+        /// kinds of id — and because a row still carrying a handle needs to say so rather than
+        /// surface as a token-type mismatch.
+        /// </summary>
+        private static int RequiredCardId(JsonElement element, string field)
+        {
+            if (!element.TryGetProperty("cardId", out var value))
+                throw new FormatException($"{field} is required.");
+            if (value.ValueKind == JsonValueKind.String)
+                throw new FormatException(
+                    $"{field} is the string '{value.GetString()}'. A rule resolves a card by its " +
+                    "number now — run tooling/scripts/assign_numeric_card_ids.py.");
+            if (!value.TryGetInt32(out int id))
+                throw new FormatException($"{field} is not a whole number.");
+            return id;
+        }
 
         private static string RequiredString(JsonElement el, string name, string path)
         {

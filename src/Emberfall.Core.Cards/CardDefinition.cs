@@ -336,7 +336,38 @@ namespace Emberfall.Core.Cards
     /// </summary>
     public sealed class CardDefinition
     {
-        public string Id { get; }
+        /// <summary>
+        /// The permanent, meaningless key. <b>The only thing anything resolves against</b> — decks
+        /// on disk, the state hash, telemetry, replays, a rule naming another card.
+        ///
+        /// <para>Banded by type so a later set appends inside its own range and can never collide
+        /// with the next one: HERO_POWER 1-50, WEAPON 51-150, SPELL 151-1000, MINION 1001 and up.
+        /// Numbering starts at 1 and never at 0, because <c>default(int)</c> is 0 and a card id of
+        /// 0 is indistinguishable from an unset field at every boundary it crosses.</para>
+        ///
+        /// <para>Assigned once by <c>tooling/scripts/assign_numeric_card_ids.py</c>. A number is
+        /// permanent from the moment it ships and is never reused — see the retirement rule: a
+        /// withdrawn card keeps its row and stays resolvable rather than freeing its id.</para>
+        /// </summary>
+        public int Id { get; }
+
+        /// <summary>
+        /// The mnemonic name a human reads in a desync frame, a replay diff, a balance-corpus row
+        /// or a validator error — <c>ember_recruit</c> beats <c>1001</c> every time.
+        ///
+        /// <para><b>Nothing may resolve against this, and that is the whole condition that makes
+        /// it worth having</b> (Sam, 2026-08-15). Not filenames, not art lookup, not deck storage,
+        /// not telemetry, not fixtures. <b>The test is that you can change a handle and have
+        /// nothing break.</b> If changing one breaks something, it is a key wearing a costume and
+        /// the model collapses back to the problem it was built to delete. The dangerous version is
+        /// the halfway one: a handle that is "mostly cosmetic" that exactly one tool happens to key
+        /// on.</para>
+        ///
+        /// <para>Its precedent is <see cref="ArtId"/>, which already deliberately does not track
+        /// the card id and proved it on 2026-08-15 when a card was renamed and the art was not.</para>
+        /// </summary>
+        public string Handle { get; }
+
         public string Name { get; }
         public CardType Type { get; }
         public int Cost { get; }
@@ -383,7 +414,7 @@ namespace Emberfall.Core.Cards
         public bool PoolEligible => Collectible;
 
         public CardDefinition(
-            string id, string name, CardType type, int cost,
+            int id, string handle, string name, CardType type, int cost,
             int? attack, int? health, int? durability,
             CardClass @class, Rarity rarity,
             IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
@@ -392,6 +423,7 @@ namespace Emberfall.Core.Cards
             string text = "")
         {
             Id = id;
+            Handle = handle ?? "";
             Name = name;
             Type = type;
             Cost = cost;

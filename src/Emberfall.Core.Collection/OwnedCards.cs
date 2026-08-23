@@ -17,27 +17,27 @@ namespace Emberfall.Core.Collection
     public interface IOwnedCardCounts
     {
         /// <summary>Copies of this card the player owns. 0 for a card they have never seen.</summary>
-        int CopiesOwned(string cardId);
+        int CopiesOwned(int cardId);
     }
 
     /// <summary>The trivial dictionary-backed <see cref="IOwnedCardCounts"/> for tests, dev and projections.</summary>
     public sealed class OwnedCardCounts : IOwnedCardCounts
     {
-        private readonly Dictionary<string, int> _counts;
+        private readonly Dictionary<int, int> _counts;
 
-        public OwnedCardCounts() => _counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        public OwnedCardCounts() => _counts = new Dictionary<int, int>();
 
-        public OwnedCardCounts(IReadOnlyDictionary<string, int> counts)
+        public OwnedCardCounts(IReadOnlyDictionary<int, int> counts)
         {
-            _counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            _counts = new Dictionary<int, int>();
             if (counts != null)
                 foreach (var kv in counts) _counts[kv.Key] = kv.Value;
         }
 
-        public int CopiesOwned(string cardId)
-            => cardId != null && _counts.TryGetValue(cardId, out int n) ? n : 0;
+        public int CopiesOwned(int cardId)
+            => _counts.TryGetValue(cardId, out int n) ? n : 0;
 
-        public void Set(string cardId, int copies) => _counts[cardId] = copies;
+        public void Set(int cardId, int copies) => _counts[cardId] = copies;
 
         /// <summary>How many distinct card ids carry a recorded count — including any recorded as 0.</summary>
         public int RecordedCards => _counts.Count;
@@ -49,11 +49,13 @@ namespace Emberfall.Core.Collection
         /// collection file whose row order depends on the order packs happened to be opened produces a
         /// different diff on every save for no change in what the player owns.</para>
         /// </summary>
-        public IReadOnlyList<KeyValuePair<string, int>> Entries()
+        public IReadOnlyList<KeyValuePair<int, int>> Entries()
         {
-            var rows = new List<KeyValuePair<string, int>>(_counts.Count);
+            var rows = new List<KeyValuePair<int, int>>(_counts.Count);
             foreach (var kv in _counts) rows.Add(kv);
-            rows.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+            // NUMERIC ascending now, not ordinal over the spelling. The row order in a saved
+            // collection file therefore changes once on the first write after this migration.
+            rows.Sort((a, b) => a.Key.CompareTo(b.Key));
             return rows;
         }
     }
@@ -106,6 +108,6 @@ namespace Emberfall.Core.Collection
 
         private AllCardsOwnedCounts() { }
 
-        public int CopiesOwned(string cardId) => int.MaxValue;
+        public int CopiesOwned(int cardId) => int.MaxValue;
     }
 }

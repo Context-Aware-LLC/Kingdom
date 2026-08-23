@@ -118,7 +118,8 @@ namespace Emberfall.Core.Contracts
     {
         public InstanceId Id;
         public PlayerId Controller;
-        public string SourceDefinitionId = "";
+        /// <summary>The permanent numeric id of the card this effect came from — hash-canonical.</summary>
+        public int SourceDefinitionId;
         public OngoingEffectLifetime Lifetime;
         public int? RemainingUses;
 
@@ -129,12 +130,14 @@ namespace Emberfall.Core.Contracts
         public bool IsExpired => Lifetime != OngoingEffectLifetime.PERMANENT &&
             (!RemainingUses.HasValue || RemainingUses.Value <= 0);
 
-        public OngoingEffectInstance(InstanceId id, PlayerId controller, string sourceDefinitionId,
+        public OngoingEffectInstance(InstanceId id, PlayerId controller, int sourceDefinitionId,
             OngoingEffectLifetime lifetime, int? remainingUses)
         {
-            if (string.IsNullOrWhiteSpace(sourceDefinitionId))
-                throw new System.ArgumentException("An ongoing effect requires a source definition id.",
-                    nameof(sourceDefinitionId));
+            // > 0 rather than a null check: card ids start at 1, so 0 is an unset field wearing
+            // a value that looks set — the failure mode a string id could not have.
+            if (sourceDefinitionId <= 0)
+                throw new System.ArgumentOutOfRangeException(nameof(sourceDefinitionId),
+                    sourceDefinitionId, "An ongoing effect requires a source definition id.");
             if (!System.Enum.IsDefined(typeof(OngoingEffectLifetime), lifetime))
                 throw new System.ArgumentOutOfRangeException(nameof(lifetime), lifetime,
                     "Unknown ongoing-effect lifetime.");
@@ -156,22 +159,22 @@ namespace Emberfall.Core.Contracts
         }
 
         internal static OngoingEffectInstance CreateOneShot(InstanceId id, PlayerId controller,
-            string sourceDefinitionId, string ruleId)
+            int sourceDefinitionId, string ruleId)
             => Create(id, controller, sourceDefinitionId, ruleId,
                 OngoingEffectLifetime.ONE_SHOT, 1);
 
         internal static OngoingEffectInstance CreateFinite(InstanceId id, PlayerId controller,
-            string sourceDefinitionId, string ruleId, int uses)
+            int sourceDefinitionId, string ruleId, int uses)
             => Create(id, controller, sourceDefinitionId, ruleId,
                 OngoingEffectLifetime.FINITE, uses);
 
         internal static OngoingEffectInstance CreatePermanent(InstanceId id, PlayerId controller,
-            string sourceDefinitionId, string ruleId)
+            int sourceDefinitionId, string ruleId)
             => Create(id, controller, sourceDefinitionId, ruleId,
                 OngoingEffectLifetime.PERMANENT, null);
 
         internal static OngoingEffectInstance Create(InstanceId id, PlayerId controller,
-            string sourceDefinitionId, string ruleId, OngoingEffectLifetime lifetime,
+            int sourceDefinitionId, string ruleId, OngoingEffectLifetime lifetime,
             int? remainingUses)
         {
             if (string.IsNullOrWhiteSpace(ruleId))
@@ -215,7 +218,7 @@ namespace Emberfall.Core.Contracts
         public int CurrentHealth;
         public int MaxHealth;
         public int Armor;
-        public string HeroPowerId = "";
+        public int HeroPowerId;
         /// <summary>EXPERIMENT (effect-model fork) — see <see cref="EffectInstance"/>.</summary>
         public List<EffectInstance> Effects = new List<EffectInstance>();
         /// <summary>Satisfies <see cref="IEffectHost"/> over the field above without changing how any
@@ -241,7 +244,7 @@ namespace Emberfall.Core.Contracts
     public sealed class CardInstance : IEffectHost
     {
         public InstanceId Id;
-        public string DefinitionId = "";   // → ICardDatabase.Get(...)
+        public int DefinitionId;   // → ICardDatabase.Get(...)
         public PlayerId Controller;
         public Zone Zone;
         public int CurrentAttack;
@@ -268,7 +271,7 @@ namespace Emberfall.Core.Contracts
         public bool HasUsedRekindle;
         public int Position; // board slot
 
-        public CardInstance(InstanceId id, string definitionId, PlayerId controller)
+        public CardInstance(InstanceId id, int definitionId, PlayerId controller)
         {
             Id = id;
             DefinitionId = definitionId;
@@ -293,7 +296,7 @@ namespace Emberfall.Core.Contracts
         /// <summary>REDACTED — the hidden information. CardDefinition ids (candidates are never
         /// minted as instances). Phase-2 canonical population order = deterministic RNG roll order
         /// of the Unearth pool (OBL-3); no consumer may re-sort.</summary>
-        public List<string> Options = new List<string>();
+        public List<int> Options = new List<int>();
         /// <summary>REDACTED (default-deny; OBL-5 revisit). Deterministic resume/timer correlation id.</summary>
         public ulong ChoiceSequence;
     }

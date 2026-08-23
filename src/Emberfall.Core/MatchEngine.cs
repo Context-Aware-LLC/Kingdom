@@ -80,7 +80,7 @@ namespace Emberfall.Core
             return state;
         }
 
-        private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<string> deckList)
+        private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<int> deckList)
         {
             foreach (var cardId in deckList)
             {

@@ -130,7 +130,24 @@ namespace Emberfall.Core.Cards
         private PermanentLifetime() { }
     }
 
-    public abstract class RuleAction { private protected RuleAction() { } }
+    public abstract class RuleAction
+    {
+        private protected RuleAction() { }
+
+        /// <summary>
+        /// Guards a card id an action names. <b>This replaces a null check, and it is not the same
+        /// guard.</b> A string id could only be absent; a numeric one has a value that LOOKS
+        /// present and resolves to nothing — <c>default(int)</c> is 0, and 0 is below every band,
+        /// so an unset field would otherwise travel as far as the database lookup before failing
+        /// as "no card 0", naming neither the rule nor the row it came from.
+        /// </summary>
+        private protected static int Require(int cardId)
+            => cardId > 0
+                ? cardId
+                : throw new ArgumentOutOfRangeException(nameof(cardId),
+                    $"A rule action names card {cardId}. Card ids start at 1, so this is an unset " +
+                    "field rather than a card.");
+    }
 
     public abstract class TargetedRuleAction : RuleAction
     {
@@ -186,9 +203,9 @@ namespace Emberfall.Core.Cards
 
     public sealed class TransformAction : TargetedRuleAction
     {
-        public string CardId { get; }
-        public TransformAction(string cardId, TargetSpec target) : base(target)
-            => CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+        public int CardId { get; }
+        public TransformAction(int cardId, TargetSpec target) : base(target)
+            => CardId = Require(cardId);
     }
 
     public sealed class FrostAction : TargetedRuleAction
@@ -210,31 +227,31 @@ namespace Emberfall.Core.Cards
 
     public sealed class SummonAction : RuleAction
     {
-        public string CardId { get; }
+        public int CardId { get; }
         public int Count { get; }
-        public SummonAction(string cardId, int count)
+        public SummonAction(int cardId, int count)
         {
-            CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+            CardId = Require(cardId);
             Count = count;
         }
     }
 
     public sealed class AddToHandAction : RuleAction
     {
-        public string CardId { get; }
+        public int CardId { get; }
         public int Count { get; }
-        public AddToHandAction(string cardId, int count)
+        public AddToHandAction(int cardId, int count)
         {
-            CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+            CardId = Require(cardId);
             Count = count;
         }
     }
 
     public sealed class EquipAction : RuleAction
     {
-        public string CardId { get; }
-        public EquipAction(string cardId)
-            => CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+        public int CardId { get; }
+        public EquipAction(int cardId)
+            => CardId = Require(cardId);
     }
 
     public enum ManaGainKind { TEMPORARY, PERMANENT_FILLED, PERMANENT_EMPTY }

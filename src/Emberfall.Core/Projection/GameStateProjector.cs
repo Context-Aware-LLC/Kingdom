@@ -176,7 +176,10 @@ namespace Emberfall.Core.Projection
 
         /// <summary>The §5.2.1 card-back form: sentinel id, empty definition, zeroed stats.</summary>
         private static CardInstance Placeholder(PlayerId controller, Zone zone)
-            => new CardInstance(Sentinel, "", controller) { Zone = zone };
+            // 0, never a real id — the reason the bands start at 1. A hidden card is one whose
+            // definition the viewer may not learn, and it has to be UNRESOLVABLE rather than
+            // merely blank.
+            => new CardInstance(Sentinel, 0, controller) { Zone = zone };
 
         private static PendingChoice? ProjectPendingChoice(PendingChoice? pc, PlayerId viewer, int viewerSeat, ref int max)
         {

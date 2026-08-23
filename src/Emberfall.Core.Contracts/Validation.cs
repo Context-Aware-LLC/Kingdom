@@ -11,16 +11,25 @@ namespace Emberfall.Core.Contracts
         /// <summary>JSON-pointer-style path: "rules[2].action.cardId"; "" = card-level.</summary>
         public readonly string Field;
         public readonly string Message;
-        /// <summary>Owning card (batch validation context).</summary>
-        public readonly string CardId;
+        /// <summary>Owning card (batch validation context). The permanent numeric key.</summary>
+        public readonly int CardId;
 
-        public ValidationIssue(Severity severity, string code, string field, string message, string cardId)
+        /// <summary>
+        /// The owning card's mnemonic handle, carried so a report a HUMAN reads names
+        /// <c>ember_recruit</c> rather than <c>1001</c>. Nothing resolves against it — it travels
+        /// beside <see cref="CardId"/>, never instead of it.
+        /// </summary>
+        public readonly string CardHandle;
+
+        public ValidationIssue(Severity severity, string code, string field, string message,
+            int cardId, string cardHandle = "")
         {
             Severity = severity;
             Code = code;
             Field = field;
             Message = message;
             CardId = cardId;
+            CardHandle = cardHandle ?? "";
         }
     }
 

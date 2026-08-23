@@ -459,7 +459,7 @@ namespace Emberfall.Core
                 chooser.Hand.Count >= MatchEngine.HandCap)
                 return;
 
-            List<string> remaining = CanonicalEligiblePool(ctx.Db);
+            List<int> remaining = CanonicalEligiblePool(ctx.Db);
             if (remaining.Count == 0) return;
 
             int offerCount = System.Math.Min(action.Count, remaining.Count);
@@ -486,20 +486,21 @@ namespace Emberfall.Core
             ctx.Events.Emit(GameEventKind.UnearthOffered, source: ctx.Source.Identity);
         }
 
-        private static List<string> CanonicalEligiblePool(ICardDatabase db)
+        private static List<int> CanonicalEligiblePool(ICardDatabase db)
         {
-            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+            var ids = new HashSet<int>();
             foreach (CardDefinition definition in db.AllCollectible())
             {
                 // AllCollectible implementations promise PoolEligible rows, but this is a trust
                 // boundary for authoritative choice state, so enforce the gate again here.
-                if (definition != null && definition.PoolEligible &&
-                    !string.IsNullOrEmpty(definition.Id))
+                if (definition != null && definition.PoolEligible && definition.Id > 0)
                     ids.Add(definition.Id);
             }
 
-            var canonical = new List<string>(ids);
-            canonical.Sort(System.StringComparer.Ordinal);
+            // Sorted so the offered pool is the same list on both machines. The ORDER CHANGED
+            // when the key did: this is numeric order now, not the ordinal order of the handles.
+            var canonical = new List<int>(ids);
+            canonical.Sort();
             return canonical;
         }
     }

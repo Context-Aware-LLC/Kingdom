@@ -1,6 +1,7 @@
 [
   {
-    "id": "rekind_neutral_reclaimed_scout",
+    "id": 1121,
+    "handle": "neutral_reclaimed_scout",
     "name": "Reclaimed Scout",
     "type": "MINION",
     "cost": 1,
@@ -38,7 +39,8 @@
     "artId": "reclaimed_scout"
   },
   {
-    "id": "rekind_neutral_alliance_messenger",
+    "id": 1122,
+    "handle": "neutral_alliance_messenger",
     "name": "Alliance Messenger",
     "type": "MINION",
     "cost": 2,
@@ -73,7 +75,8 @@
     "tribe": "HUMAN"
   },
   {
-    "id": "rekind_neutral_restored_bulwark",
+    "id": 1123,
+    "handle": "neutral_restored_bulwark",
     "name": "Restored Bulwark",
     "type": "MINION",
     "cost": 3,
@@ -92,7 +95,8 @@
     "artId": "restored_bulwark"
   },
   {
-    "id": "rekind_neutral_salvaged_golem",
+    "id": 1124,
+    "handle": "neutral_salvaged_golem",
     "name": "Salvaged Golem",
     "type": "MINION",
     "cost": 4,
@@ -111,7 +115,8 @@
     "artId": "salvaged_golem"
   },
   {
-    "id": "rekind_neutral_bannerman",
+    "id": 1125,
+    "handle": "neutral_bannerman",
     "name": "New Dawn Bannerman",
     "type": "MINION",
     "cost": 4,
@@ -151,7 +156,8 @@
     "tribe": "HUMAN"
   },
   {
-    "id": "rekind_neutral_bridge_warden",
+    "id": 1126,
+    "handle": "neutral_bridge_warden",
     "name": "Bridge Warden",
     "type": "MINION",
     "cost": 5,
@@ -191,7 +197,8 @@
     "artId": "bridge_warden"
   },
   {
-    "id": "rekind_neutral_truce_pact",
+    "id": 200,
+    "handle": "neutral_truce_pact",
     "name": "Truce Pact",
     "type": "SPELL",
     "cost": 4,
@@ -228,7 +235,8 @@
     "artId": "truce_pact"
   },
   {
-    "id": "rekind_neutral_aric",
+    "id": 1127,
+    "handle": "neutral_aric",
     "name": "Aric",
     "type": "MINION",
     "flavorText": "First Among Equals",
@@ -289,7 +297,8 @@
     "artId": "aric_first_among_equals"
   },
   {
-    "id": "rekind_ember_vanguard_conscript",
+    "id": 1128,
+    "handle": "ember_vanguard_conscript",
     "name": "Vanguard Conscript",
     "type": "MINION",
     "cost": 1,
@@ -307,7 +316,8 @@
     "artId": "ember_vanguard_conscript"
   },
   {
-    "id": "rekind_ember_brazier_keeper",
+    "id": 1129,
+    "handle": "ember_brazier_keeper",
     "name": "Brazier Keeper",
     "type": "MINION",
     "cost": 2,
@@ -322,7 +332,8 @@
     "artId": "ember_brazier_keeper"
   },
   {
-    "id": "rekind_ember_forge_warden",
+    "id": 1130,
+    "handle": "ember_forge_warden",
     "name": "Forge Warden",
     "type": "MINION",
     "cost": 3,
@@ -360,7 +371,8 @@
     "artId": "ember_forge_warden"
   },
   {
-    "id": "clock_mechanical_essence",
+    "id": 1131,
+    "handle": "clock_mechanical_essence",
     "name": "Mechanical Essence",
     "type": "MINION",
     "cost": 3,
@@ -401,7 +413,8 @@
     "artId": "clock_mechanical_essence"
   },
   {
-    "id": "rekind_ember_reclaimed_fortress",
+    "id": 201,
+    "handle": "ember_reclaimed_fortress",
     "name": "Reclaimed Fortress",
     "type": "SPELL",
     "cost": 6,
@@ -437,7 +450,8 @@
     "artId": "stone_reclaimed_fortress"
   },
   {
-    "id": "clock_nameless_bell",
+    "id": 1132,
+    "handle": "clock_nameless_bell",
     "name": "Nameless Bell",
     "type": "MINION",
     "cost": 4,
@@ -455,7 +469,8 @@
     "artId": "clock_nameless_bell"
   },
   {
-    "id": "stone_heartstone_herald",
+    "id": 1133,
+    "handle": "stone_heartstone_herald",
     "name": "Heartstone Herald",
     "type": "MINION",
     "cost": 4,
@@ -493,7 +508,8 @@
     "artId": "stone_heartstone_herald"
   },
   {
-    "id": "rekind_ember_coalition_blazer",
+    "id": 1134,
+    "handle": "ember_coalition_blazer",
     "name": "Coalition Blazer",
     "type": "MINION",
     "cost": 4,
@@ -528,7 +544,8 @@
     "artId": "ember_coalition_blazer"
   },
   {
-    "id": "neutral_forge_striker",
+    "id": 1135,
+    "handle": "neutral_forge_striker",
     "name": "Forge Striker",
     "type": "MINION",
     "cost": 3,
@@ -553,7 +570,7 @@
         },
         "action": {
           "type": "EQUIP",
-          "cardId": "neutral_smithy_hammer"
+          "cardId": 62
         }
       }
     ],
@@ -562,7 +579,8 @@
     "artId": "neutral_forge_striker"
   },
   {
-    "id": "neutral_smithy_hammer",
+    "id": 62,
+    "handle": "neutral_smithy_hammer",
     "name": "Smithy Hammer",
     "type": "WEAPON",
     "cost": 2,
@@ -596,7 +614,8 @@
     "artId": "smithy_hammer"
   },
   {
-    "id": "verdant_seedling_guard",
+    "id": 1136,
+    "handle": "verdant_seedling_guard",
     "name": "Seedling Guard",
     "type": "MINION",
     "cost": 2,
@@ -637,7 +656,8 @@
     "artId": "verdant_seedling_guard"
   },
   {
-    "id": "rekind_ember_rekindled_flame",
+    "id": 202,
+    "handle": "ember_rekindled_flame",
     "name": "Rekindled Flame",
     "type": "SPELL",
     "cost": 3,
@@ -697,7 +717,8 @@
     "artId": "ember_rekindled_flame"
   },
   {
-    "id": "rekind_ember_pyre_commander",
+    "id": 1137,
+    "handle": "ember_pyre_commander",
     "name": "Pyre Commander",
     "type": "MINION",
     "cost": 5,
@@ -757,7 +778,8 @@
     "artId": "ember_pyre_commander"
   },
   {
-    "id": "ember_channeled_pyroclasm",
+    "id": 203,
+    "handle": "ember_channeled_pyroclasm",
     "name": "Channeled Pyroclasm",
     "type": "SPELL",
     "cost": 6,
@@ -814,7 +836,8 @@
     "artId": "ember_channeled_pyroclasm"
   },
   {
-    "id": "rekind_ember_general_kira",
+    "id": 1138,
+    "handle": "ember_general_kira",
     "name": "General Kira",
     "type": "MINION",
     "cost": 7,
@@ -877,7 +900,8 @@
     "artId": "ember_general_kira_flame_reunified"
   },
   {
-    "id": "rekind_tide_harbinger",
+    "id": 1139,
+    "handle": "tide_harbinger",
     "name": "Prophet of the Flood",
     "type": "MINION",
     "cost": 4,
@@ -896,7 +920,8 @@
     "artId": "tide_prophet_of_the_flood"
   },
   {
-    "id": "rekind_tide_saltshore_scout",
+    "id": 1140,
+    "handle": "tide_saltshore_scout",
     "name": "Saltshore Scout",
     "type": "MINION",
     "cost": 2,
@@ -934,7 +959,8 @@
     "tribe": "HUMAN"
   },
   {
-    "id": "rekind_tide_reef_reclaimer",
+    "id": 1141,
+    "handle": "tide_reef_reclaimer",
     "name": "Reef Reclaimer",
     "type": "MINION",
     "cost": 3,
@@ -953,7 +979,8 @@
     "artId": "tide_reef_reclaimer"
   },
   {
-    "id": "rekind_tide_channel_mender",
+    "id": 204,
+    "handle": "tide_channel_mender",
     "name": "Channel Mender",
     "type": "SPELL",
     "cost": 2,
@@ -1013,7 +1040,8 @@
     "artId": "tide_channel_mender"
   },
   {
-    "id": "rekind_tide_tidal_emissary",
+    "id": 1142,
+    "handle": "tide_tidal_emissary",
     "name": "Tidal Emissary",
     "type": "MINION",
     "cost": 4,
@@ -1050,7 +1078,8 @@
     "artId": "tide_tidal_emissary"
   },
   {
-    "id": "rekind_tide_shoreline_pact",
+    "id": 205,
+    "handle": "tide_shoreline_pact",
     "name": "Shoreline Pact",
     "type": "SPELL",
     "cost": 3,
@@ -1109,7 +1138,8 @@
     "artId": "tide_shoreline_pact"
   },
   {
-    "id": "rekind_tide_deepwater_alliance",
+    "id": 206,
+    "handle": "tide_deepwater_alliance",
     "name": "Deepwater Alliance",
     "type": "SPELL",
     "cost": 5,
@@ -1166,7 +1196,8 @@
     "artId": "tide_deepwater_alliance"
   },
   {
-    "id": "rekind_tide_marens_peacebroker",
+    "id": 1143,
+    "handle": "tide_marens_peacebroker",
     "name": "Maren's Peacebroker",
     "type": "MINION",
     "cost": 6,
@@ -1228,7 +1259,8 @@
     "artId": "tide_marens_peacebroker"
   },
   {
-    "id": "rekind_grave_memorial_wisp",
+    "id": 1144,
+    "handle": "grave_memorial_wisp",
     "name": "Memorial Wisp",
     "type": "MINION",
     "cost": 1,
@@ -1268,7 +1300,8 @@
     "artId": "grave_memorial_wisp"
   },
   {
-    "id": "rekind_grave_tomb_warden",
+    "id": 1145,
+    "handle": "grave_tomb_warden",
     "name": "Tomb Warden",
     "type": "MINION",
     "cost": 2,
@@ -1305,7 +1338,8 @@
     "artId": "grave_tomb_warden"
   },
   {
-    "id": "rekind_grave_last_honor",
+    "id": 207,
+    "handle": "grave_last_honor",
     "name": "Last Honor",
     "type": "SPELL",
     "cost": 2,
@@ -1358,7 +1392,8 @@
     "artId": "grave_last_honor"
   },
   {
-    "id": "rekind_grave_grave_builder",
+    "id": 1146,
+    "handle": "grave_grave_builder",
     "name": "Grave Builder",
     "type": "MINION",
     "cost": 3,
@@ -1383,7 +1418,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -1393,7 +1428,8 @@
     "artId": "grave_builder"
   },
   {
-    "id": "rekind_grave_pact_of_mourning",
+    "id": 208,
+    "handle": "grave_pact_of_mourning",
     "name": "Pact of Mourning",
     "type": "SPELL",
     "cost": 3,
@@ -1453,7 +1489,8 @@
     "artId": "grave_pact_of_mourning"
   },
   {
-    "id": "rekind_grave_risen_champion",
+    "id": 1147,
+    "handle": "grave_risen_champion",
     "name": "Risen Champion",
     "type": "MINION",
     "cost": 4,
@@ -1495,7 +1532,8 @@
     "artId": "grave_risen_champion"
   },
   {
-    "id": "rekind_grave_mass_rebirth",
+    "id": 209,
+    "handle": "grave_mass_rebirth",
     "name": "Mass Rebirth",
     "type": "SPELL",
     "cost": 5,
@@ -1531,7 +1569,8 @@
     "artId": "grave_mass_rebirth"
   },
   {
-    "id": "rekind_token_risen_guardian",
+    "id": 1148,
+    "handle": "token_risen_guardian",
     "name": "Risen Guardian",
     "type": "MINION",
     "cost": 0,
@@ -1547,7 +1586,8 @@
     "artId": "token_risen_guardian"
   },
   {
-    "id": "rekind_grave_caretaker_solen",
+    "id": 1149,
+    "handle": "grave_caretaker_solen",
     "name": "Caretaker Solen",
     "type": "MINION",
     "cost": 7,
@@ -1574,7 +1614,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "rekind_token_risen_guardian",
+          "cardId": 1148,
           "count": 2
         }
       }
@@ -1585,7 +1625,8 @@
     "artId": "grave_caretaker_solen"
   },
   {
-    "id": "rekind_verdant_sapling_tender",
+    "id": 1150,
+    "handle": "verdant_sapling_tender",
     "name": "Sapling Tender",
     "type": "MINION",
     "cost": 1,
@@ -1624,7 +1665,8 @@
     "artId": "verdant_sapling_tender"
   },
   {
-    "id": "rekind_verdant_thornsprout_cub",
+    "id": 1151,
+    "handle": "verdant_thornsprout_cub",
     "name": "Thornsprout Cub",
     "type": "MINION",
     "cost": 2,
@@ -1640,7 +1682,8 @@
     "artId": "verdant_thornsprout_cub"
   },
   {
-    "id": "rekind_verdant_rebloom_vine",
+    "id": 210,
+    "handle": "verdant_rebloom_vine",
     "name": "Rebloom Vine",
     "type": "SPELL",
     "cost": 2,
@@ -1700,7 +1743,8 @@
     "artId": "verdant_rebloom_vine"
   },
   {
-    "id": "rekind_verdant_overgrowth_dryad",
+    "id": 1152,
+    "handle": "verdant_overgrowth_dryad",
     "name": "Overgrowth Dryad",
     "type": "MINION",
     "cost": 4,
@@ -1738,7 +1782,8 @@
     "artId": "verdant_overgrowth_dryad"
   },
   {
-    "id": "rekind_verdant_blossoming_pact",
+    "id": 211,
+    "handle": "verdant_blossoming_pact",
     "name": "Blossoming Pact",
     "type": "SPELL",
     "cost": 3,
@@ -1796,7 +1841,8 @@
     "artId": "verdant_blossoming_pact"
   },
   {
-    "id": "rekind_verdant_rootswell_champion",
+    "id": 1153,
+    "handle": "verdant_rootswell_champion",
     "name": "Rootswell Champion",
     "type": "MINION",
     "cost": 4,
@@ -1837,7 +1883,8 @@
     "artId": "verdant_rootswell_champion"
   },
   {
-    "id": "rekind_verdant_wildbloom_surge",
+    "id": 212,
+    "handle": "verdant_wildbloom_surge",
     "name": "Wildbloom Surge",
     "type": "SPELL",
     "cost": 4,
@@ -1895,7 +1942,8 @@
     "artId": "verdant_wildbloom_surge"
   },
   {
-    "id": "rekind_verdant_praxis",
+    "id": 1154,
+    "handle": "verdant_praxis",
     "name": "Praxis, Seed of New Ages",
     "type": "MINION",
     "cost": 7,
@@ -1936,7 +1984,8 @@
     "artId": "verdant_praxis_seed_of_new_ages"
   },
   {
-    "id": "rekind_clock_repair_drone",
+    "id": 1155,
+    "handle": "clock_repair_drone",
     "name": "Repair Drone",
     "type": "MINION",
     "cost": 1,
@@ -1976,7 +2025,8 @@
     "artId": "clock_repair_drone"
   },
   {
-    "id": "rekind_clock_blueprint_archive",
+    "id": 1156,
+    "handle": "clock_blueprint_archive",
     "name": "Blueprint Archive",
     "type": "MINION",
     "cost": 2,
@@ -2010,7 +2060,8 @@
     "artId": "clock_blueprint_archive"
   },
   {
-    "id": "rekind_clock_tinkers_gambit",
+    "id": 213,
+    "handle": "clock_tinkers_gambit",
     "name": "Tinker's Gambit",
     "type": "SPELL",
     "cost": 2,
@@ -2063,7 +2114,8 @@
     "artId": "clock_tinkers_gambit"
   },
   {
-    "id": "rekind_clock_rebuilt_automaton",
+    "id": 1157,
+    "handle": "clock_rebuilt_automaton",
     "name": "Reconstructed Automaton",
     "type": "MINION",
     "cost": 3,
@@ -2082,7 +2134,8 @@
     "artId": "clock_reconstructed_automaton"
   },
   {
-    "id": "rekind_clock_assembly_line",
+    "id": 214,
+    "handle": "clock_assembly_line",
     "name": "Assembly Line",
     "type": "SPELL",
     "cost": 3,
@@ -2105,7 +2158,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_gear_wisp",
+          "cardId": 1059,
           "count": 2
         }
       },
@@ -2137,7 +2190,8 @@
     "artId": "clock_assembly_line"
   },
   {
-    "id": "rekind_clock_upgrade_protocol",
+    "id": 215,
+    "handle": "clock_upgrade_protocol",
     "name": "Upgrade Protocol",
     "type": "SPELL",
     "cost": 4,
@@ -2174,7 +2228,8 @@
     "artId": "clock_upgrade_protocol"
   },
   {
-    "id": "rekind_clock_masterwork_construct",
+    "id": 1158,
+    "handle": "clock_masterwork_construct",
     "name": "Masterwork Constructor",
     "type": "MINION",
     "cost": 6,
@@ -2199,7 +2254,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_gear_wisp",
+          "cardId": 1059,
           "count": 3
         }
       },
@@ -2232,7 +2287,8 @@
     "artId": "clock_masterwork_constructor"
   },
   {
-    "id": "rekind_clock_cogsworth",
+    "id": 1159,
+    "handle": "clock_cogsworth",
     "name": "Cogsworth, The Grand Rebuilder",
     "type": "MINION",
     "cost": 8,
@@ -2291,7 +2347,8 @@
     "artId": "clock_cogsworth_the_grand_rebuilder"
   },
   {
-    "id": "rekind_night_shadow_scout",
+    "id": 1160,
+    "handle": "night_shadow_scout",
     "name": "Shadow Scout",
     "type": "MINION",
     "cost": 3,
@@ -2309,7 +2366,8 @@
     "artId": "night_shadow_scout"
   },
   {
-    "id": "rekind_night_ink_viper",
+    "id": 1161,
+    "handle": "night_ink_viper",
     "name": "Ink Viper",
     "type": "MINION",
     "cost": 2,
@@ -2329,7 +2387,8 @@
     "artId": "night_ink_viper"
   },
   {
-    "id": "rekind_night_marked_for_death",
+    "id": 216,
+    "handle": "night_marked_for_death",
     "name": "Marked for Death",
     "type": "SPELL",
     "cost": 2,
@@ -2365,7 +2424,8 @@
     "artId": "night_marked_for_death"
   },
   {
-    "id": "rekind_night_veilborn_spy",
+    "id": 1162,
+    "handle": "night_veilborn_spy",
     "name": "Veilborn Spy",
     "type": "MINION",
     "cost": 3,
@@ -2405,7 +2465,8 @@
     "artId": "night_veilborn_spy"
   },
   {
-    "id": "rekind_night_contract_kill",
+    "id": 217,
+    "handle": "night_contract_kill",
     "name": "Contract Kill",
     "type": "SPELL",
     "cost": 4,
@@ -2457,7 +2518,8 @@
     "artId": "night_contract_kill"
   },
   {
-    "id": "rekind_night_network_operative",
+    "id": 1163,
+    "handle": "night_network_operative",
     "name": "Network Operative",
     "type": "MINION",
     "cost": 4,
@@ -2498,7 +2560,8 @@
     "artId": "night_network_operative"
   },
   {
-    "id": "rekind_night_double_agent",
+    "id": 1164,
+    "handle": "night_double_agent",
     "name": "Double Agent",
     "type": "MINION",
     "cost": 4,
@@ -2538,7 +2601,8 @@
     "artId": "night_double_agent"
   },
   {
-    "id": "rekind_night_seraphine",
+    "id": 1165,
+    "handle": "night_seraphine",
     "name": "Seraphine, Whisper Queen",
     "type": "MINION",
     "cost": 6,
@@ -2600,7 +2664,8 @@
     "artId": "night_seraphine_whisper_queen"
   },
   {
-    "id": "rekind_stone_stone_layer",
+    "id": 1166,
+    "handle": "stone_stone_layer",
     "name": "Stone Layer",
     "type": "MINION",
     "cost": 1,
@@ -2619,7 +2684,8 @@
     "artId": "stone_layer"
   },
   {
-    "id": "rekind_stone_quarry_worker",
+    "id": 1167,
+    "handle": "stone_quarry_worker",
     "name": "Stone Quarry Worker",
     "type": "MINION",
     "cost": 2,
@@ -2637,7 +2703,8 @@
     "artId": "stone_quarry_worker"
   },
   {
-    "id": "rekind_stone_earthen_rampart",
+    "id": 218,
+    "handle": "stone_earthen_rampart",
     "name": "Earthen Rampart",
     "type": "SPELL",
     "cost": 3,
@@ -2697,7 +2764,8 @@
     "artId": "stone_earthen_rampart"
   },
   {
-    "id": "rekind_stone_boulder_sentinel",
+    "id": 1168,
+    "handle": "stone_boulder_sentinel",
     "name": "Boulder Sentinel",
     "type": "MINION",
     "cost": 3,
@@ -2737,7 +2805,8 @@
     "artId": "stone_boulder_sentinel"
   },
   {
-    "id": "rekind_stone_iron_foundation",
+    "id": 219,
+    "handle": "stone_iron_foundation",
     "name": "Iron Foundation",
     "type": "SPELL",
     "cost": 3,
@@ -2795,7 +2864,8 @@
     "artId": "stone_iron_foundation"
   },
   {
-    "id": "rekind_stone_fortified_colossus",
+    "id": 1169,
+    "handle": "stone_fortified_colossus",
     "name": "Fortified Colossus",
     "type": "MINION",
     "cost": 5,
@@ -2813,7 +2883,8 @@
     "artId": "stone_fortified_colossus"
   },
   {
-    "id": "rekind_stone_unbreakable_wall",
+    "id": 1170,
+    "handle": "stone_unbreakable_wall",
     "name": "Unbreakable Wall",
     "type": "MINION",
     "cost": 6,
@@ -2832,7 +2903,8 @@
     "artId": "stone_unbreakable_wall"
   },
   {
-    "id": "rekind_stone_aldric",
+    "id": 1171,
+    "handle": "stone_aldric",
     "name": "Aldric, The Fortifier",
     "type": "MINION",
     "cost": 7,
@@ -2894,7 +2966,8 @@
     "artId": "stone_aldric_the_fortifier"
   },
   {
-    "id": "rekind_tempest_static_wisp",
+    "id": 1172,
+    "handle": "tempest_static_wisp",
     "name": "Static Wisp",
     "type": "MINION",
     "cost": 1,
@@ -2912,7 +2985,8 @@
     "artId": "storm_static_wisp"
   },
   {
-    "id": "rekind_tempest_chain_caller",
+    "id": 1173,
+    "handle": "tempest_chain_caller",
     "name": "Chain Caller",
     "type": "MINION",
     "cost": 2,
@@ -2950,7 +3024,8 @@
     "artId": "storm_chain_caller"
   },
   {
-    "id": "rekind_tempest_lightning_lash",
+    "id": 220,
+    "handle": "tempest_lightning_lash",
     "name": "Lightning Lash",
     "type": "SPELL",
     "cost": 2,
@@ -2986,7 +3061,8 @@
     "artId": "storm_lightning_lash"
   },
   {
-    "id": "rekind_tempest_storm_channeler",
+    "id": 1174,
+    "handle": "tempest_storm_channeler",
     "name": "Storm Channeler",
     "type": "MINION",
     "cost": 3,
@@ -3005,7 +3081,8 @@
     "tribe": "HUMAN"
   },
   {
-    "id": "rekind_tempest_voltaic_sentinel",
+    "id": 1175,
+    "handle": "tempest_voltaic_sentinel",
     "name": "Voltaic Sentinel",
     "type": "MINION",
     "cost": 4,
@@ -3046,7 +3123,8 @@
     "tribe": "HUMAN"
   },
   {
-    "id": "rekind_tempest_thunderstrike",
+    "id": 221,
+    "handle": "tempest_thunderstrike",
     "name": "Thunderstrike",
     "type": "SPELL",
     "cost": 3,
@@ -3103,7 +3181,8 @@
     "artId": "storm_thunderstrike"
   },
   {
-    "id": "rekind_tempest_stormcallers_pact",
+    "id": 222,
+    "handle": "tempest_stormcallers_pact",
     "name": "Stormcaller's Pact",
     "type": "SPELL",
     "cost": 6,
@@ -3161,7 +3240,8 @@
     "artId": "storm_stormcallers_pact"
   },
   {
-    "id": "rekind_tempest_vael",
+    "id": 1176,
+    "handle": "tempest_vael",
     "name": "Vael",
     "type": "MINION",
     "flavorText": "Herald of the Storm",

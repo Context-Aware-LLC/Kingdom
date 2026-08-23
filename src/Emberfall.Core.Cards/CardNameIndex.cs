@@ -10,7 +10,7 @@ namespace Emberfall.Core.Cards
     ///
     /// <para><b>Why a parser needs it at all.</b> Every other thing a sentence names is drawn from a
     /// closed vocabulary the parser can enumerate on the spot: selectors, selections, keywords,
-    /// numbers. A card id is not. "Summon a 1/1 Wisp." can only become <c>token_wisp_1_1</c> if
+    /// numbers. A card id is not. "Summon a 1/1 Wisp." can only become a card NUMBER if
     /// something knows that row exists, and <see cref="CardDefinition"/> alone does not — a card
     /// carries its own id, never the pool's.</para>
     ///
@@ -31,15 +31,15 @@ namespace Emberfall.Core.Cards
     /// </summary>
     public sealed class CardNameIndex : ICardDatabase
     {
-        private static readonly IReadOnlyList<string> None = Array.Empty<string>();
+        private static readonly IReadOnlyList<int> None = Array.Empty<int>();
 
-        private readonly Dictionary<string, List<string>> _byPrintedName =
-            new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, List<int>> _byPrintedName =
+            new Dictionary<string, List<int>>(StringComparer.Ordinal);
 
         // Also the POOL the renderer looks a named card up in. One object rather than two, because
         // a printed name and the row it was printed from disagreeing is the whole bug class here.
-        private readonly Dictionary<string, CardDefinition> _byId =
-            new Dictionary<string, CardDefinition>(StringComparer.Ordinal);
+        private readonly Dictionary<int, CardDefinition> _byId =
+            new Dictionary<int, CardDefinition>();
 
         /// <summary>An index over no cards. What a caller with no pool to offer passes, and what
         /// keeps every card-id sentence refused rather than guessed.</summary>
@@ -61,33 +61,33 @@ namespace Emberfall.Core.Cards
 
                 _byId[card.Id] = card;
 
-                if (!_byPrintedName.TryGetValue(printed, out List<string> ids))
-                    _byPrintedName[printed] = ids = new List<string>(1);
+                if (!_byPrintedName.TryGetValue(printed, out List<int> ids))
+                    _byPrintedName[printed] = ids = new List<int>(1);
                 if (!ids.Contains(card.Id)) ids.Add(card.Id);
             }
         }
 
         /// <summary>Every id that prints as this name — empty when none does, and more than one when
         /// the printed form cannot tell them apart.</summary>
-        public IReadOnlyList<string> Ids(string printedName)
-            => printedName != null && _byPrintedName.TryGetValue(printedName, out List<string> ids)
+        public IReadOnlyList<int> Ids(string printedName)
+            => printedName != null && _byPrintedName.TryGetValue(printedName, out List<int> ids)
                 ? ids
                 : None;
 
         /// <summary>Every id in the index, for a caller that must propose them all and let the
         /// re-render decide which one a sentence meant.</summary>
-        public IEnumerable<string> AllIds()
+        public IEnumerable<int> AllIds()
         {
-            foreach (KeyValuePair<string, List<string>> entry in _byPrintedName)
-                foreach (string id in entry.Value)
+            foreach (KeyValuePair<string, List<int>> entry in _byPrintedName)
+                foreach (int id in entry.Value)
                     yield return id;
         }
 
         /// <summary>Resolves a row by id, for the renderer speaking a card another card names.</summary>
-        public bool TryGet(string cardId, out CardDefinition def)
-            => _byId.TryGetValue(cardId ?? "", out def!);
+        public bool TryGet(int cardId, out CardDefinition def)
+            => _byId.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId) => _byId[cardId];
+        public CardDefinition Get(int cardId) => _byId[cardId];
 
         /// <summary>Every row eligible for a live card pool — <see cref="CardDefinition.PoolEligible"/>,
         /// never a re-derived predicate.</summary>
@@ -105,7 +105,7 @@ namespace Emberfall.Core.Cards
         public int CollidingNames()
         {
             int colliding = 0;
-            foreach (KeyValuePair<string, List<string>> entry in _byPrintedName)
+            foreach (KeyValuePair<string, List<int>> entry in _byPrintedName)
                 if (entry.Value.Count > 1) colliding++;
             return colliding;
         }

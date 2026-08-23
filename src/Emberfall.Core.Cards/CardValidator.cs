@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Emberfall.Core.Contracts;
@@ -57,13 +58,25 @@ namespace Emberfall.Core.Cards
         {
             var issues = new List<ValidationIssue>();
             void Err(string code, string field, string message) =>
-                issues.Add(new ValidationIssue(Severity.Error, code, field, message, def.Id));
+                issues.Add(new ValidationIssue(Severity.Error, code, field, message, def.Id, def.Handle));
             void Warn(string code, string field, string message) =>
-                issues.Add(new ValidationIssue(Severity.Warning, code, field, message, def.Id));
+                issues.Add(new ValidationIssue(Severity.Warning, code, field, message, def.Id, def.Handle));
 
-            // C1
-            if (string.IsNullOrEmpty(def.Id) || !IdPattern.IsMatch(def.Id))
-                Err("C1-ID-FORMAT", "id", "id must match ^[a-z0-9_]+$.");
+            // C1 — the FORMAT rule moved to the handle when the id became a number. It is still an
+            // error rather than a warning: the handle is what a human reads in every report this
+            // validator feeds, and a handle that does not look like the others is a handle nobody
+            // recognises as one.
+            if (string.IsNullOrEmpty(def.Handle) || !IdPattern.IsMatch(def.Handle))
+                Err("C1-HANDLE-FORMAT", "handle", "handle must match ^[a-z0-9_]+$.");
+
+            // C1B — the numeric id sits inside the band its type owns. This is the invariant the
+            // whole identity model rests on, and nothing else checks it: an id of 0 is an unset
+            // field wearing a valid-looking value, and an id in the wrong band silently spends a
+            // number another type will later want.
+            if (!InBand(def.Type, def.Id))
+                Err("C1B-ID-BAND", "id",
+                    $"id {def.Id} is outside the {def.Type} band {BandText(def.Type)}. " +
+                    "Ids are assigned by tooling/scripts/assign_numeric_card_ids.py and are permanent.");
 
             // C2 (id unique across the library) is deliberately NOT checked here: a single-card
             // Validate(def, db) call can't distinguish "db already contains THIS card" from "db
@@ -288,17 +301,19 @@ namespace Emberfall.Core.Cards
                     Err("C23-FINITE-USES", $"{prefix}.lifetime.uses",
                         "FINITE lifetime uses must be greater than zero.");
 
-                // C11-C13 — payload presence is structural in the typed action classes. String ids
-                // can still be empty in hand-built definitions, and referenced cards must resolve.
-                string? referencedCardId = ReferencedCardId(rule.Action);
+                // C11-C13 — payload presence is structural in the typed action classes. A
+                // hand-built definition can still carry an unset id, which since the id became a
+                // number means 0 rather than "" — a value that looks present. Referenced cards
+                // must resolve.
+                int? referencedCardId = ReferencedCardId(rule.Action);
                 if (referencedCardId != null)
                 {
-                    if (string.IsNullOrEmpty(referencedCardId))
+                    if (referencedCardId.Value <= 0)
                         Err("C11-PAYLOAD-REQUIRED", $"{prefix}.action.cardId",
                             $"{actionName} requires action.cardId.");
-                    else if (db is null || !db.TryGet(referencedCardId, out var token))
+                    else if (db is null || !db.TryGet(referencedCardId.Value, out var token))
                         Err("C12-TOKEN-UNRESOLVED", $"{prefix}.action.cardId",
-                            $"'{referencedCardId}' does not resolve in the card database.");
+                            $"card {referencedCardId} does not resolve in the card database.");
                     else if (rule.Action is SummonAction && token.Collectible)
                         Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.action.cardId",
                             $"SUMMON token '{referencedCardId}' is collectible:true — tokens are usually collectible:false.");
@@ -494,7 +509,7 @@ namespace Emberfall.Core.Cards
             return new ValidationReport(ok, issues);
         }
 
-        private static string? ReferencedCardId(RuleAction action)
+        private static int? ReferencedCardId(RuleAction action)
         {
             switch (action)
             {
@@ -541,12 +556,15 @@ namespace Emberfall.Core.Cards
         /// </summary>
         public static IReadOnlyList<ValidationIssue> CheckDuplicateIds(IEnumerable<CardDefinition> all)
         {
-            var seen = new Dictionary<string, int>();
+            var seen = new Dictionary<int, int>();
+            var handles = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var def in all)
             {
-                if (string.IsNullOrEmpty(def.Id)) continue;
                 seen.TryGetValue(def.Id, out int count);
                 seen[def.Id] = count + 1;
+                if (def.Handle.Length == 0) continue;
+                handles.TryGetValue(def.Handle, out int hcount);
+                handles[def.Handle] = hcount + 1;
             }
 
             var issues = new List<ValidationIssue>();
@@ -554,9 +572,41 @@ namespace Emberfall.Core.Cards
             {
                 if (seen.TryGetValue(def.Id, out int count) && count > 1)
                     issues.Add(new ValidationIssue(Severity.Error, "C2-ID-DUPLICATE", "id",
-                        $"id '{def.Id}' appears {count} times in the card set.", def.Id));
+                        $"id {def.Id} appears {count} times in the card set.", def.Id, def.Handle));
+
+                // A duplicate HANDLE is a warning and not an error, and the asymmetry is the model
+                // stated out loud: two rows sharing a number are the same card to everything that
+                // resolves one, while two rows sharing a handle are merely two rows a human cannot
+                // tell apart in a log. Promoting this to an error would make the handle a key.
+                if (def.Handle.Length > 0 && handles.TryGetValue(def.Handle, out int hcount) && hcount > 1)
+                    issues.Add(new ValidationIssue(Severity.Warning, "C2B-HANDLE-DUPLICATE", "handle",
+                        $"handle '{def.Handle}' appears {hcount} times. Nothing resolves against a " +
+                        "handle, so this breaks no lookup — it makes two rows unreadable apart.",
+                        def.Id, def.Handle));
             }
             return issues;
         }
+
+        /// <summary>
+        /// The band each card type owns, and the reason a card id is never 0: <c>default(int)</c>
+        /// is 0, so an id of 0 is indistinguishable from a field nobody set.
+        /// </summary>
+        private static bool InBand(CardType type, int id) => type switch
+        {
+            CardType.HERO_POWER => id >= 1 && id <= 50,
+            CardType.WEAPON => id >= 51 && id <= 150,
+            CardType.SPELL => id >= 151 && id <= 1000,
+            CardType.MINION => id >= 1001,
+            _ => id > 0,
+        };
+
+        private static string BandText(CardType type) => type switch
+        {
+            CardType.HERO_POWER => "1-50",
+            CardType.WEAPON => "51-150",
+            CardType.SPELL => "151-1000",
+            CardType.MINION => "1001 and up",
+            _ => "1 and up",
+        };
     }
 }
