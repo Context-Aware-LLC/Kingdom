@@ -447,7 +447,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_reclaimed_fortress"
+    "artId": "warden_reclaimed_fortress"
   },
   {
     "id": 1132,
@@ -470,7 +470,7 @@
   },
   {
     "id": 1133,
-    "handle": "stone_heartstone_herald",
+    "handle": "warden_heartstone_herald",
     "name": "Heartstone Herald",
     "type": "MINION",
     "cost": 4,
@@ -505,7 +505,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_heartstone_herald"
+    "artId": "warden_heartstone_herald"
   },
   {
     "id": 1134,
@@ -2665,7 +2665,7 @@
   },
   {
     "id": 1166,
-    "handle": "stone_stone_layer",
+    "handle": "warden_stone_layer",
     "name": "Stone Layer",
     "type": "MINION",
     "cost": 1,
@@ -2685,7 +2685,7 @@
   },
   {
     "id": 1167,
-    "handle": "stone_quarry_worker",
+    "handle": "warden_quarry_worker",
     "name": "Stone Quarry Worker",
     "type": "MINION",
     "cost": 2,
@@ -2700,11 +2700,11 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_quarry_worker"
+    "artId": "warden_quarry_worker"
   },
   {
     "id": 218,
-    "handle": "stone_earthen_rampart",
+    "handle": "warden_earthen_rampart",
     "name": "Earthen Rampart",
     "type": "SPELL",
     "cost": 3,
@@ -2761,11 +2761,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_earthen_rampart"
+    "artId": "warden_earthen_rampart"
   },
   {
     "id": 1168,
-    "handle": "stone_boulder_sentinel",
+    "handle": "warden_boulder_sentinel",
     "name": "Boulder Sentinel",
     "type": "MINION",
     "cost": 3,
@@ -2802,11 +2802,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_boulder_sentinel"
+    "artId": "warden_boulder_sentinel"
   },
   {
     "id": 219,
-    "handle": "stone_iron_foundation",
+    "handle": "warden_iron_foundation",
     "name": "Iron Foundation",
     "type": "SPELL",
     "cost": 3,
@@ -2861,11 +2861,11 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_iron_foundation"
+    "artId": "warden_iron_foundation"
   },
   {
     "id": 1169,
-    "handle": "stone_fortified_colossus",
+    "handle": "warden_fortified_colossus",
     "name": "Fortified Colossus",
     "type": "MINION",
     "cost": 5,
@@ -2880,11 +2880,11 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_fortified_colossus"
+    "artId": "warden_fortified_colossus"
   },
   {
     "id": 1170,
-    "handle": "stone_unbreakable_wall",
+    "handle": "warden_unbreakable_wall",
     "name": "Unbreakable Wall",
     "type": "MINION",
     "cost": 6,
@@ -2900,11 +2900,11 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "stone_unbreakable_wall"
+    "artId": "warden_unbreakable_wall"
   },
   {
     "id": 1171,
-    "handle": "stone_aldric",
+    "handle": "warden_aldric",
     "name": "Aldric, The Fortifier",
     "type": "MINION",
     "cost": 7,
@@ -2963,7 +2963,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "stone_aldric_the_fortifier"
+    "artId": "warden_aldric_the_fortifier"
   },
   {
     "id": 1172,

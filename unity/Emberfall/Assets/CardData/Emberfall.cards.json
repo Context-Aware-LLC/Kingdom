@@ -2988,7 +2988,7 @@
   {
     "id": 1069,
     "handle": "clock_the_great_mechanism",
-    "name": "The Mechanism",
+    "name": "The Great Mechanism",
     "tooltip": "The Great Mechanism",
     "type": "MINION",
     "cost": 8,
@@ -3546,7 +3546,7 @@
   },
   {
     "id": 1076,
-    "handle": "ward_pebble_sentinel",
+    "handle": "warden_pebble_sentinel",
     "name": "Pebble Sentinel",
     "type": "MINION",
     "cost": 1,
@@ -3562,11 +3562,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_pebble_sentinel"
+    "artId": "warden_pebble_sentinel"
   },
   {
     "id": 180,
-    "handle": "ward_stone_throw",
+    "handle": "warden_stone_throw",
     "name": "Stone Throw",
     "type": "SPELL",
     "cost": 1,
@@ -3603,7 +3603,7 @@
   },
   {
     "id": 1077,
-    "handle": "ward_boulderhide",
+    "handle": "warden_boulderhide",
     "name": "Boulderhide",
     "type": "MINION",
     "cost": 2,
@@ -3619,11 +3619,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_boulderhide"
+    "artId": "warden_boulderhide"
   },
   {
     "id": 181,
-    "handle": "ward_earth_barrier",
+    "handle": "warden_earth_barrier",
     "name": "Earth Barrier",
     "type": "SPELL",
     "cost": 2,
@@ -3657,11 +3657,11 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_earth_barrier"
+    "artId": "warden_earth_barrier"
   },
   {
     "id": 1078,
-    "handle": "ward_rock_golem",
+    "handle": "warden_rock_golem",
     "name": "Rock Golem",
     "type": "MINION",
     "cost": 3,
@@ -3677,11 +3677,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_rock_golem"
+    "artId": "warden_rock_golem"
   },
   {
     "id": 182,
-    "handle": "ward_stone_rain",
+    "handle": "warden_stone_rain",
     "name": "Stone Rain",
     "type": "SPELL",
     "cost": 4,
@@ -3718,7 +3718,7 @@
   },
   {
     "id": 1079,
-    "handle": "ward_granite_guardian",
+    "handle": "warden_granite_guardian",
     "name": "Granite Guardian",
     "type": "MINION",
     "cost": 4,
@@ -3734,11 +3734,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_granite_guardian"
+    "artId": "warden_granite_guardian"
   },
   {
     "id": 183,
-    "handle": "ward_earthen_blessing",
+    "handle": "warden_earthen_blessing",
     "name": "Earthen Blessing",
     "type": "SPELL",
     "cost": 2,
@@ -3772,11 +3772,11 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_earthen_blessing"
+    "artId": "warden_earthen_blessing"
   },
   {
     "id": 1080,
-    "handle": "ward_living_monolith",
+    "handle": "warden_living_monolith",
     "name": "Living Monolith",
     "type": "MINION",
     "cost": 4,
@@ -3792,11 +3792,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_living_monolith"
+    "artId": "warden_living_monolith"
   },
   {
     "id": 184,
-    "handle": "ward_stomp",
+    "handle": "warden_stomp",
     "name": "Stomp",
     "type": "SPELL",
     "cost": 3,
@@ -3851,11 +3851,11 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_stomp"
+    "artId": "warden_stomp"
   },
   {
     "id": 1081,
-    "handle": "ward_siege_golem",
+    "handle": "warden_siege_golem",
     "name": "Siege Golem",
     "type": "MINION",
     "cost": 6,
@@ -3894,11 +3894,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_siege_golem"
+    "artId": "warden_siege_golem"
   },
   {
     "id": 1082,
-    "handle": "ward_stone_colossus",
+    "handle": "warden_stone_colossus",
     "name": "Stone Colossus",
     "type": "MINION",
     "cost": 8,
@@ -3919,7 +3919,7 @@
   },
   {
     "id": 1083,
-    "handle": "ward_duras_the_ironmount",
+    "handle": "warden_duras_the_ironmount",
     "name": "Duras, the Ironmount",
     "type": "MINION",
     "cost": 8,
@@ -3957,11 +3957,11 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_duras_the_ironmount"
+    "artId": "warden_duras_the_ironmount"
   },
   {
     "id": 57,
-    "handle": "ward_earthwardens_maul",
+    "handle": "warden_earthwardens_maul",
     "name": "Earthwarden's Maul",
     "type": "WEAPON",
     "cost": 3,
@@ -3996,7 +3996,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "stone_earthwardens_maul"
+    "artId": "warden_earthwardens_maul"
   },
   {
     "id": 1084,
