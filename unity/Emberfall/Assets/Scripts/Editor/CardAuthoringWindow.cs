@@ -153,7 +153,15 @@ namespace Emberfall.Editor
                 string badge = BadgeFor(core, lint);
                 string dirtyMark = _dirtyIds.Contains(card.Id) ? "*" : "";
                 var style = i == _selected ? EditorStyles.helpBox : GUI.skin.label;
-                if (GUILayout.Button($"{badge} {card.Id} {card.Handle}{dirtyMark}  ({card.Name})", style))
+                // The display NAME alone (Sam, 2026-08-23). The number and the handle are both
+                // identifiers, and neither is what a designer scanning this list is looking for —
+                // they are on the row itself, under Identity, once a card is selected.
+                //
+                // Two rows CAN print the same name and this list cannot tell them apart; that is
+                // the same lossiness CardNameIndex reports rather than resolves. Search still
+                // matches the handle, so a duplicate name stays reachable by typing the handle
+                // even though the handle is no longer shown.
+                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark}", style))
                     _selected = i;
             }
             EditorGUILayout.EndScrollView();
