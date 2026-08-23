@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "ActionSet",
+    "maps": [
+        {
+            "name": "ScreenActions",
+            "id": "2021dff8-02aa-46ea-8c76-f5538175bb06",
+            "actions": [
+                {
+                    "name": "Press",
+                    "type": "Button",
+                    "id": "43091a44-abe9-4ded-9f19-f2a8b682a0d0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Position",
+                    "type": "PassThrough",
+                    "id": "39845723-041a-4fe4-9f5e-f077d50ae5e1",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "6aa6a880-ad71-4d9a-8e08-d8a404f02398",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Press",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ffa9d0f7-07dc-4a53-8382-1cf76febc4bd",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Position",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

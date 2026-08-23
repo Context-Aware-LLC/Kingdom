@@ -3,6 +3,7 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Emberfall.Presentation
 {
@@ -58,7 +59,21 @@ namespace Emberfall.Presentation
         private Quaternion    _sourceRestLocalRot;
         private bool          _sourceIsOwnHero;
 
-        private readonly PointerSampler _pointer = new PointerSampler();
+        private PointerSampler _pointer;
+
+        private PointerSampler EnsurePointer() => _pointer ??= new PointerSampler();
+
+        private void Awake() => EnsurePointer();
+
+        private void OnEnable() => EnsurePointer().Enable();
+
+        private void OnDisable()
+        {
+            if (_gesture != Gesture.None) CancelGesture();
+            _pointer?.Disable();
+        }
+
+        private void OnDestroy() => _pointer?.Dispose();
 
         private GameState          _currentState;
         private HotSeatInput       _p0Input;
@@ -118,7 +133,7 @@ namespace Emberfall.Presentation
         /// <summary>EDITOR/TEST ONLY: access the pointer sampler for headless frame injection
         /// (EF-048 InputGestureVerify). Allows the test harness to script a press/drag/release
         /// sequence without running the Update loop or touching Input.</summary>
-        public PointerSampler Pointer => _pointer;
+        public PointerSampler Pointer => EnsurePointer();
 
         public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
                          ICommandValidator validator = null)
@@ -158,7 +173,7 @@ namespace Emberfall.Presentation
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) CancelGesture();
+            if (Keyboard.current?.escapeKey.wasPressedThisFrame == true) CancelGesture();
 
             // Sample unconditionally: the sampler tracks press/release EDGES, so skipping frames
             // makes it miss the transition it exists to report.
@@ -595,7 +610,8 @@ namespace Emberfall.Presentation
             if (_currentState.Phase != TurnPhase.Main) return;
             if (_currentState.ActivePlayer != _p0Id) return;
 
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+            if (Keyboard.current?.enterKey.wasPressedThisFrame == true
+                || Keyboard.current?.spaceKey.wasPressedThisFrame == true)
             {
                 CancelGesture();
                 Submit(new EndTurnIntent(_p0Id));

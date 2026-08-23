@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Emberfall.Presentation
 {
@@ -75,9 +76,13 @@ namespace Emberfall.Presentation
             _pressActive = true;
             _pressCard   = t.CardId;
             // A real touch is the only thing that arms the hold — see HoverRevealModel for why a
-            // mouse press must not. Input.touchCount is the discriminator, because Unity synthesises
-            // the same OnMouseDown for both.
-            var kind = Input.touchCount > 0
+            // mouse press must not. The unified pointer stream deliberately does not carry which
+            // device is driving it, so this asks the touchscreen directly; the fallback keeps
+            // reveal-only modes working without a router.
+            bool touchActive = _router != null
+                ? _router.Pointer.HasActiveTouch
+                : Touchscreen.current?.primaryTouch.press.isPressed == true;
+            var kind = touchActive
                 ? HoverRevealModel.PointerKind.Touch
                 : HoverRevealModel.PointerKind.Mouse;
             _model.PointerDown(t.CardId, kind, Time.unscaledTime);
@@ -113,7 +118,10 @@ namespace Emberfall.Presentation
             Sync();
         }
 
-        private static bool PointerHeld() => Input.touchCount > 0 || Input.GetMouseButton(0);
+        private bool PointerHeld()
+            => _router != null
+                ? _router.Pointer.IsPressed
+                : Pointer.current?.press.isPressed == true;
 
         // The press that became a read was already dispatched to InputRouter by
         // ClickableCard.OnMouseDown, so the card is now sitting selected — primed to be played by

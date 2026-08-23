@@ -13,7 +13,8 @@
     "Emberfall.Net.Protocol",
     "Unity.TextMeshPro",
     "Unity.Addressables",
-    "Unity.ResourceManager"
+    "Unity.ResourceManager",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
