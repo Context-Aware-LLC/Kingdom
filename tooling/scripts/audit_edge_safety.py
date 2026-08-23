@@ -7,9 +7,12 @@ beneath a Pixel 5a's front camera and could not be seen or pressed.
 
 `theme.uss` holds the whole policy in three declarations:
 
-    --edge-safe: 150px;
+    --edge-safe: <n>px;
     .emb-edge  { margin:  var(--edge-safe); }   -- chrome anchored to a screen edge
     .emb-bleed { padding: var(--edge-safe); }   -- a layer that PAINTS to the edge
+
+The value is deliberately not repeated here -- PASS 5 prints the live one, and a
+number copied into a docstring is a number that goes stale silently.
 
 MARGIN for chrome, not padding, and that is not a style preference. Measured in
 Play Mode 2026-08-21: a parent padding of 136 moved the identity plate, the
@@ -309,6 +312,31 @@ def pass5_policy(used, root_indent):
     """
     _head(5, 'POLICY - --edge-safe locality, and .%s placement' % EDGE_CLASS)
     findings = []
+
+    # (0) The two theme classes must still BE something. Every other pass in this
+    # script checks that elements opt IN to the mechanism; none of them check that
+    # the mechanism has a body. Comment out .emb-edge and .emb-bleed in theme.uss
+    # and passes 1-6 all still say ok -- the elements carry the class, the class
+    # just no longer does anything -- so the gate reports PASS on a screen with
+    # zero clearance. Measured on effect-model-merge, 2026-08-23: both rules
+    # commented out, audit exit 0. _rule_body() cannot catch this on its own
+    # because its ^\. anchor simply misses a `/* .emb-edge {` and returns ''.
+    theme_text = _read(THEME)
+    theme_commented = _comment_lines(theme_text)
+    for cls in (EDGE_CLASS, BLEED_CLASS):
+        m = re.search(r'^\.%s\s*\{([^}]*)\}' % re.escape(cls), theme_text, re.M)
+        live = m and (theme_text[:m.start()].count('\n') + 1) not in theme_commented
+        if live and '--edge-safe' in m.group(1):
+            print('   %-42s ok    .%s spends --edge-safe' % (_short(THEME, 'Assets/UI/'), cls))
+            continue
+        state = 'commented out' if m is None else 'does not spend --edge-safe'
+        print('   %-42s FAIL  .%s %s' % (_short(THEME, 'Assets/UI/'), cls, state))
+        findings.append(
+            'theme.uss  .%s %s, so every element carrying it gets NO clearance.\n'
+            '      The rest of this audit checks that elements opt IN to the mechanism; it '
+            'cannot\n      see that the mechanism is gone. Restore the rule, or delete the '
+            'class from the\n      %d element(s) that carry it and retire this gate.'
+            % (cls, state, len(used.get(cls, []))))
 
     for f in _files(UI, 'uss'):
         text = _read(f)
