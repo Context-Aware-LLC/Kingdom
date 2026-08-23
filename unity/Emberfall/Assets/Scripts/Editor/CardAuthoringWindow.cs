@@ -264,6 +264,28 @@ namespace Emberfall.Editor
             var card = _cards[_selected];
             _editScroll = EditorGUILayout.BeginScrollView(_editScroll);
 
+            // The face first: what the card SAYS, and the art it says it over. Everything below is
+            // the machinery behind it. Authoring reads top-down as a result, and the text field —
+            // the authored source of the rules since the 2026-08-16 reversal — is no longer the
+            // last thing on the page.
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
+            DrawCardText(card);
+            card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
+            card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
+            card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
+
+            if (EditorGUI.EndChangeCheck())
+                _dirtyIds.Add(card.Id);
+
+            // Deliberately BETWEEN the two change checks, never inside one. Every control in this
+            // block is a button, and a clicked button sets GUI.changed — inside a check, merely
+            // pinging the art in the Project window would mark the card unsaved. That is why the
+            // pane runs two checks rather than one: the split is where this block sits.
+            DrawArtPreview(card);
+
+            EditorGUILayout.Space();
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.LabelField("Identity", EditorStyles.boldLabel);
@@ -299,20 +321,8 @@ namespace Emberfall.Editor
             EditorGUILayout.LabelField("Rules", EditorStyles.boldLabel);
             DrawRules(card);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
-            DrawCardText(card);
-            card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
-            card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
-            card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
-
             if (EditorGUI.EndChangeCheck())
                 _dirtyIds.Add(card.Id);
-
-            // Deliberately OUTSIDE the change check above. Every control in this block is a button,
-            // and a clicked button sets GUI.changed — inside the check, merely pinging the art in
-            // the Project window would mark the card unsaved.
-            DrawArtPreview(card);
 
             EditorGUILayout.Space();
             DrawValidationPanel(card);
