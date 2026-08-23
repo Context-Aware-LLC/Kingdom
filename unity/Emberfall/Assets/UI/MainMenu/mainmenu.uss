@@ -196,6 +196,9 @@
  */
 .mm-modal {
     position: absolute;
+    /* These four are not decoration. Without them the backdrop shrink-wraps its panel and sits at
+       its STATIC position, so it stops covering the menu AND the two modals stack on each other at
+       the same spot instead of each filling the screen in turn. Measured 2026-08-23. */
     top: 0;
     left: 0;
     right: 0;
@@ -210,6 +213,10 @@
 .mm-modal__panel {
     width: 520px;
     max-width: 90%;
+    /* The panel may never be taller than the screen it is centred in. A flex child that overflows a
+       justify-content:center parent overflows EQUALLY at both ends, so the first field goes off the
+       TOP edge with no way to reach it — that is what hid the sign-in email field. */
+    max-height: 100%;
     background-color: var(--surface-1);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -329,10 +336,15 @@
  * Do not fold these values back into .mm-modal__* — that would resize the rename and account modals.
  */
 .mm-modal--onboard .mm-modal__panel {
-    width: 62%;
-    min-width: 640px;
+    width: 72%;
+    min-width: 480px;
     max-width: 92%;
-    padding: var(--space-12);
+    /* HEIGHT is the scarce axis here, not width. The panels are ConstantPhysicalSize at
+       referenceDpi 160, so a 1080-tall landscape handset gives roughly 414dp of panel height, and
+       the email step stacks title, help, field, error, actions, "or" and the Google button into it.
+       48dp of padding at each end spent a quarter of that budget on nothing. Vertical padding is
+       --space-6; the horizontal stays --space-12, where there is room to spare. */
+    padding: var(--space-6) var(--space-12);
     border-radius: var(--space-4);
 }
 /* TYPOGRAPHY IS DELIBERATELY ABSENT HERE, and its absence is the fix.
@@ -348,6 +360,61 @@
  * mouse height; Android's floor for a finger is 48dp, which at referenceDpi 160 is 48px. */
 .mm-modal--onboard .mm-modal__button {
     height: 48px;
+}
+/* ---------- Pitch / form columns ----------
+ * A COLUMN BY DEFAULT. Both first-login modals wrap their contents in .mm-modal__columns, and in
+ * the ordinary (rename, account) case that wrapper does nothing at all — a 520px dialog has no
+ * width to give away, and two 236px columns would wrap the title onto three lines.
+ */
+.mm-modal__columns {
+    flex-direction: column;
+}
+.mm-modal__pitch,
+.mm-modal__form {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+}
+
+/* A ROW only when the modal IS the first login. Landscape is wide and short, and these two modals
+ * are the only ones that have to fit a whole flow into it.
+ *
+ * Measured on the Pixel-class emulator 2026-08-23 (1080x2400 at density 420 = a 914x411dp panel
+ * canvas). As one column BOTH overflowed and BOTH lost the control that ends the step:
+ *   - the gate put "or" and the Google button below the fold;
+ *   - the name modal clipped the second password field and pushed Continue off the screen
+ *     entirely, with no scroll to reach it. That one was a dead end, not a cosmetic problem.
+ * In both cases the right half of the panel was empty space beside a two-line help paragraph.
+ * Splitting the pitch from the form spends the axis that had room: the gate lands near 276dp and
+ * the name modal near 358dp, against 411 available.
+ */
+.mm-modal--onboard .mm-modal__columns {
+    flex-direction: row;
+    align-items: flex-start;
+}
+.mm-modal--onboard .mm-modal__pitch {
+    padding-right: var(--space-8);
+}
+/* 24dp under every help paragraph was a desktop rhythm. The name modal carries TWO of them and
+ * needs the 24 back. */
+.mm-modal--onboard .mm-modal__help {
+    margin-bottom: var(--space-3);
+}
+
+/* Neither first-login modal may strand the control that ends the step, so both panels are
+ * ScrollViews (MainMenuScreen.uxml) and an overflow becomes a scroll rather than content off the
+ * edge. That is the SAFETY NET, not the layout: if either of these ever needs to scroll on a phone
+ * held in landscape, the fix is above this rule, not here. The
+   panel is a ScrollView (MainMenuScreen.uxml) so that an overflow becomes a scroll instead of
+   content off the top of the screen — the failure mode above. Scrollers hidden per the project's
+   no-visible-scrollbars rule; touch-drag and wheel still scroll. */
+#signin-panel .unity-scroller,
+#signin-panel .unity-scroll-view__vertical-scroller,
+#signin-panel .unity-scroll-view__horizontal-scroller,
+#name-panel .unity-scroller,
+#name-panel .unity-scroll-view__vertical-scroller,
+#name-panel .unity-scroll-view__horizontal-scroller {
+    display: none;
 }
 /* The code is six characters the player is copying by eye off another screen. Wide tracking and a
  * larger face is the difference between reading it back once and reading it back three times.

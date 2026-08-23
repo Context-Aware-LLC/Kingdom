@@ -45,6 +45,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 361d1e44f342b58459b738cdbeb5e3ce
+    m_Address: ui/Orb_Confluence
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 467ef0cab3a3404db7b6336508fe1b72
     m_Address: ui/socket_stat
     m_ReadOnly: 0
@@ -135,6 +140,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87810fcee28764547b60b5eee0696b9d
+    m_Address: ui/splash_orb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91c4e6f72a1b43deb490ef0c6e2d5a13
     m_Address: ui/ui_button_primary_ember
     m_ReadOnly: 0
@@ -152,11 +162,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: af42c3d0e69b4e5d98a5117cb2bca812
-    m_Address: ui/ui_panel_recessed_slate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -192,6 +197,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d252c8982ccae1f43bf65ea2d9c3de73
     m_Address: materials/M_CardBody
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d437c6ef0fc4b5e40aaadce80f5be658
+    m_Address: ui/ui_panel_recessed_slate
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

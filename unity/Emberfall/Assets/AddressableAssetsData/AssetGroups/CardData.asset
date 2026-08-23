@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9a8f90a12db0274dbb833d7ddfa3a12
+    m_Address: cards/Core.cards
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d589f565b02729a4d8ec50898d4c1d86
     m_Address: cards/Emberfall.cards
     m_ReadOnly: 0

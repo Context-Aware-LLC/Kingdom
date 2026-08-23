@@ -241,7 +241,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8d1f6efd455d42d1bbc139c4cc5e29bf
-    m_Address: card_art/ember_reclaimed_fortress
+    m_Address: card_art/stone_reclaimed_fortress
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

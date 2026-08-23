@@ -30,11 +30,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e238995714e50c2419f388ca4871f7c3
-    m_Address: backgrounds/jolly_green_screen
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f5faf20d654764b46a4a98052737144b
     m_Address: backgrounds/CollectionPlate_Vault
     m_ReadOnly: 0

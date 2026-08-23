@@ -29,6 +29,7 @@ namespace Emberfall.Editor
         const string OrbsRoot = "Assets/Art/Orbs/";
         const string UiRoot = "Assets/Art/UI/";
         const string VfxRoot = "Assets/Art/VFX/Textures/";
+        const string IconsRoot = "Assets/Art/Icons/";
 
         /// <summary>
         /// LEAF DIRECTORY NAME = DECLARED TREATMENT, wherever the folder sits (Sam, 2026-08-06).
@@ -82,6 +83,7 @@ namespace Emberfall.Editor
             if (path.StartsWith(OrbsRoot)) { ApplyOrb(importer); return; }
             if (path.StartsWith(UiRoot)) { ApplyUiAtlas(importer); return; }
             if (path.StartsWith(VfxRoot)) { ApplyVfxMap(importer); return; }
+            if (path.StartsWith(IconsRoot)) { ApplyUiAtlas(importer); return; }
 
             // NO SILENT DEFAULTS. An unmatched texture used to fall through this method
             // untouched, importing with whatever Unity guessed and reporting nothing — which is

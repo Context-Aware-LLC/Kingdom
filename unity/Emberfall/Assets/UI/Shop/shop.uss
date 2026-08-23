@@ -24,6 +24,53 @@
     display: none;
 }
 
+
+.chrome-button {
+    min-height: 56px;
+    padding: 12px 30px;
+    border-width: 0;
+    border-radius: 0;
+    color: var(--ink-1);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.chrome-button--primary {
+    background-color: rgba(16, 13, 10, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    -unity-slice-scale: 0.5px;
+    color: rgb(250, 230, 193);
+}
+.chrome-button--secondary {
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+}
+ 
+.chrome-button:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(205, 211, 220);
+}
+.chrome-button:disabled {
+    opacity: 0.42;
+}
+.chrome-button {
+    min-height: 56px;
+    height: 56px;
+    padding: 12px 30px;
+
+}
 /* The store uses the same plate-and-scrim language as Collection: illustrated space is the page,
  * and controls sit on dark translucent surfaces instead of inside a second generic modal.
  *
@@ -116,11 +163,13 @@
 .shop-wallet__balance--gold {
     border-left-width: 3px;
     border-left-color: var(--accent);
+    background-image: url("/Assets/Art/Icons/gold_icon.png");
 }
 
 .shop-wallet__balance--gems {
     border-left-width: 3px;
     border-left-color: var(--mana);
+    background-image: url("/Assets/Art/Icons/crystal_icon.png");
 }
 
 #shop-overlay .shop-wallet__balance {
