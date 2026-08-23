@@ -291,16 +291,17 @@ namespace Emberfall.Presentation
             ApplyAuras();
         }
 
-        // Rules text band. Presentation is derived from the immutable card definition,
-        // so trigger markers are never carried as duplicate keyword data.
+        // Rules text band. The face is READ, never re-derived: card text is authored and the rules
+        // come off it, so rendering CardTextGenerator here at display time would run the pipeline
+        // backwards. CardCi's divergence check is what keeps the authored text honest.
         private void ApplyBodyText()
         {
             if (bodyLabel == null) return;
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
-            string generatedText = CardTextGenerator.Generate(_def);
-            bodyLabel.text = CardTextStyling.Style(generatedText);
-            bodyLabel.gameObject.SetActive(generatedText.Length > 0);
+            string rulesText = _def.Text;
+            bodyLabel.text = CardTextStyling.Style(rulesText);
+            bodyLabel.gameObject.SetActive(rulesText.Length > 0);
         }
 
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's

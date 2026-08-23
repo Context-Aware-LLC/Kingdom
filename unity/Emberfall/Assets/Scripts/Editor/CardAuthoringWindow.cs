@@ -471,11 +471,17 @@ namespace Emberfall.Editor
             target.Selector = SelectorOptions[EditorGUILayout.Popup(
                 "action.target.selector", selectorIndex, SelectorOptions)];
 
-            target.HasChosenBy = EditorGUILayout.Toggle("target has chosenBy", target.HasChosenBy);
-            if (target.HasChosenBy)
-                target.ChosenBy = (TargetChosenBy)EditorGUILayout.EnumPopup("target.chosenBy", target.ChosenBy);
-            target.HasCount = EditorGUILayout.Toggle("target has count", target.HasCount);
-            if (target.HasCount) target.Count = EditorGUILayout.IntField("target.count", target.Count);
+            // One selection term, always written — there is no "has a selection" toggle, because a
+            // count of the selector's own maximum IS "every candidate". Who chooses follows from
+            // the pair: random rolls, otherwise the controller picks, unless the count has reached
+            // the maximum and nobody picks. C27 rejects the one shape this lets you type but the
+            // model deliberately cannot say — an automatic finite count.
+            target.SelectionCount = Mathf.Max(1,
+                EditorGUILayout.IntField("target.selection count", target.SelectionCount));
+            target.RandomSelection = EditorGUILayout.Toggle("target.selection random", target.RandomSelection);
+            // Authored, not derived: whether this pick is the card's price is the one thing no
+            // sentence can be read back to recover.
+            target.Cost = (CostKind)EditorGUILayout.EnumPopup("target.cost", target.Cost);
             target.HasDamagedFilter = EditorGUILayout.Toggle("filter has damaged", target.HasDamagedFilter);
             if (target.HasDamagedFilter) target.Damaged = EditorGUILayout.Toggle("filter.damaged", target.Damaged);
             target.HasTribeFilter = EditorGUILayout.Toggle("filter has tribe", target.HasTribeFilter);
