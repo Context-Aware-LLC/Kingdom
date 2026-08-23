@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Shop;
@@ -35,6 +37,13 @@ namespace Emberfall.Presentation
         private LoadingOverlay _loading;
 
         private Label _identityName;
+        private VisualElement _identityShowcase;
+        private Label _identityDeck;
+
+        private ICardDatabase _db;
+        private IArtProvider _art;
+        private IUiSpriteProvider _uiSprites;
+
         private Label _shardBalance;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
@@ -106,6 +115,14 @@ namespace Emberfall.Presentation
                 FinishBootstrap();
                 return;
             }
+
+            try { _db = CardDatabaseLoader.Load(); }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MainMenu] card database unavailable — showcase art will not load: {ex.Message}");
+            }
+            _art = new AddressableArtProvider();
+            _uiSprites = CardBackCatalog.NewProvider();
 
             RefreshIdentity();
             BeginFirstRun();
@@ -205,6 +222,10 @@ namespace Emberfall.Presentation
         private void BindIdentity()
         {
             _identityName = _root.Q<Label>("identity-name");
+            _identityShowcase = _root.Q<VisualElement>("identity-showcase");
+            _identityDeck = _root.Q<Label>("identity-deck");
+            // Hidden until a character+deck is resolved; shown in RefreshIdentity when one exists.
+            SetVisible(_identityShowcase, false);
         }
 
         private void SetIdentity(string name)
@@ -299,9 +320,9 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Redraw the plate from disk. Counts come off the real stores rather than being tracked
-        /// incrementally — the numbers are then correct after any write, including ones this screen
-        /// did not make.
+        /// Redraw the plate from disk. The name comes off the profile; the character and deck sub-line
+        /// resolves from last-played, falling back to the first roster character and its default deck
+        /// (NOR-289, Sam 2026-08-23).
         /// </summary>
         private void RefreshIdentity()
         {
@@ -310,6 +331,90 @@ namespace Emberfall.Presentation
             // "Unnamed player" rather than an invented default: a saved default is indistinguishable
             // from a chosen name, and the prompt would never fire again (PlayerAccount.DisplayNameOr).
             SetIdentity(_account.DisplayNameOr("Unnamed player"));
+
+            IReadOnlyList<Character> roster = _account.Roster();
+            if (roster.Count == 0)
+            {
+                SetDeckLine("No characters yet — open Collection");
+                SetVisible(_identityShowcase, false);
+                return;
+            }
+
+            IReadOnlyList<DeckList> decks = _account.Decks();
+
+            // Primary: last character and deck actually submitted into a match.
+            Character character = CharacterQuery.ById(roster, _account.LastPlayedCharacterId);
+            DeckList deck = FindDeckById(decks, _account.LastPlayedDeckId);
+
+            // Fallback: first roster character and its default deck (or any deck it owns).
+            if (character == null || deck == null)
+            {
+                character = roster[0];
+                deck = CharacterQuery.DefaultDeckOf(character, decks)
+                    ?? FindFirstDeckFor(character.Id, decks);
+            }
+
+            SetDeckLine(deck != null
+                ? $"{character.Name} · {deck.Name}"
+                : character.Name);
+
+            if (deck != null)
+            {
+                SetVisible(_identityShowcase, true);
+                LoadShowcaseArt(deck);
+            }
+            else
+            {
+                SetVisible(_identityShowcase, false);
+            }
+        }
+
+        private void SetDeckLine(string text)
+        {
+            if (_identityDeck != null) _identityDeck.text = text;
+        }
+
+        /// <summary>
+        /// Paint the deck's showcase card art onto the identity plate. Applies the card back
+        /// immediately as a synchronous fallback, then overwrites with the card art once the
+        /// Addressables load completes. Pattern mirrors CharacterRosterController.ShowcaseArt.
+        /// </summary>
+        private void LoadShowcaseArt(DeckList deck)
+        {
+            if (_identityShowcase == null) return;
+
+            if (_uiSprites != null)
+            {
+                Sprite back = CardBackCatalog.SpriteFor(deck.CardBackId, _uiSprites);
+                if (back != null)
+                    _identityShowcase.style.backgroundImage = new StyleBackground(back);
+            }
+
+            if (_db == null || _art == null || string.IsNullOrEmpty(deck.ShowcaseCardId)) return;
+            if (!_db.TryGet(deck.ShowcaseCardId, out CardDefinition showcase)) return;
+            if (string.IsNullOrEmpty(showcase.ArtId)) return;
+
+            _art.LoadArt(showcase.ArtId, sprite =>
+            {
+                if (sprite != null && _identityShowcase != null)
+                    _identityShowcase.style.backgroundImage = new StyleBackground(sprite);
+            });
+        }
+
+        private static DeckList FindDeckById(IReadOnlyList<DeckList> decks, string id)
+        {
+            if (string.IsNullOrEmpty(id) || decks == null) return null;
+            foreach (DeckList d in decks)
+                if (d?.Id == id) return d;
+            return null;
+        }
+
+        private static DeckList FindFirstDeckFor(string characterId, IReadOnlyList<DeckList> decks)
+        {
+            if (string.IsNullOrEmpty(characterId) || decks == null) return null;
+            foreach (DeckList d in decks)
+                if (d?.CharacterId == characterId) return d;
+            return null;
         }
 
         // ── Name modal ──────────────────────────────────────────────────────────────────

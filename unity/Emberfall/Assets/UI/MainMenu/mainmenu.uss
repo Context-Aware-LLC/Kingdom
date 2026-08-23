@@ -134,25 +134,45 @@
 }
 
 /* ---------- Identity plate ----------
- * Top-left: who you are on this device. It was a Button while renaming was its one affordance;
- * names are permanent now (NOR-287), so it is a plain VisualElement with no hover state —
- * nothing about it should read as pressable.
+ * Top-left: who you are on this device, with your active character and deck. It was a Button
+ * while renaming was its one affordance; names are permanent now (NOR-287), so it is a plain
+ * VisualElement with no hover state — nothing about it should read as pressable.
+ * Row layout: showcase image left, name+deck text stack right (NOR-289).
  */
 .mm-identity {
     position: absolute;
     top: var(--space-6);                         /* clearance is .emb-edge's, not this rule's */
     left: var(--space-6);
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     background-color: rgba(20, 25, 34, 0.55);
     border-width: 1px;
     border-color: rgba(11, 14, 19, 0.7);
     border-radius: var(--space-2);
     padding: var(--space-2) var(--space-4);
 }
+.mm-identity__showcase {
+    width: 72px;
+    height: 90px;
+    border-radius: var(--space-1);
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: rgba(11, 14, 19, 0.55);
+    flex-shrink: 0;
+    margin-right: var(--space-3);
+}
+.mm-identity__text {
+    flex-direction: column;
+    align-items: flex-start;
+}
 .mm-identity__name {
     font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
     -unity-font-style: bold;
     color: var(--ink-1);
+}
+.mm-identity__deck {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-top: var(--space-1);
 }
 
 /* ---------- Account switcher rows ---------- */
