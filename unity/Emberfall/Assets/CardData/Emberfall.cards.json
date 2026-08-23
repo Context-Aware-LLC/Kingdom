@@ -3562,7 +3562,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_pebble_sentinel"
+    "artId": "stone_pebble_sentinel"
   },
   {
     "id": 180,
@@ -3619,7 +3619,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_boulderhide"
+    "artId": "stone_boulderhide"
   },
   {
     "id": 181,
@@ -3657,7 +3657,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_earth_barrier"
+    "artId": "stone_earth_barrier"
   },
   {
     "id": 1078,
@@ -3677,7 +3677,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_rock_golem"
+    "artId": "stone_rock_golem"
   },
   {
     "id": 182,
@@ -3734,7 +3734,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_granite_guardian"
+    "artId": "stone_granite_guardian"
   },
   {
     "id": 183,
@@ -3772,7 +3772,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_earthen_blessing"
+    "artId": "stone_earthen_blessing"
   },
   {
     "id": 1080,
@@ -3792,7 +3792,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_living_monolith"
+    "artId": "stone_living_monolith"
   },
   {
     "id": 184,
@@ -3851,7 +3851,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_stomp"
+    "artId": "stone_stomp"
   },
   {
     "id": 1081,
@@ -3894,7 +3894,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_siege_golem"
+    "artId": "stone_siege_golem"
   },
   {
     "id": 1082,
@@ -3957,7 +3957,7 @@
     "tribe": "CONSTRUCT",
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_duras_the_ironmount"
+    "artId": "stone_duras_the_ironmount"
   },
   {
     "id": 57,
@@ -3996,7 +3996,7 @@
     ],
     "setId": "EMBERFALL",
     "collectible": true,
-    "artId": "warden_earthwardens_maul"
+    "artId": "stone_earthwardens_maul"
   },
   {
     "id": 1084,

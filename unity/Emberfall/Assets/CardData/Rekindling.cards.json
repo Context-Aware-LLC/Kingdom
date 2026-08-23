@@ -447,7 +447,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_reclaimed_fortress"
+    "artId": "stone_reclaimed_fortress"
   },
   {
     "id": 1132,
@@ -505,7 +505,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_heartstone_herald"
+    "artId": "stone_heartstone_herald"
   },
   {
     "id": 1134,
@@ -2700,7 +2700,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_quarry_worker"
+    "artId": "stone_quarry_worker"
   },
   {
     "id": 218,
@@ -2761,7 +2761,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_earthen_rampart"
+    "artId": "stone_earthen_rampart"
   },
   {
     "id": 1168,
@@ -2802,7 +2802,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_boulder_sentinel"
+    "artId": "stone_boulder_sentinel"
   },
   {
     "id": 219,
@@ -2861,7 +2861,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_iron_foundation"
+    "artId": "stone_iron_foundation"
   },
   {
     "id": 1169,
@@ -2880,7 +2880,7 @@
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_fortified_colossus"
+    "artId": "stone_fortified_colossus"
   },
   {
     "id": 1170,
@@ -2900,7 +2900,7 @@
     "setId": "REKINDLING",
     "collectible": true,
     "tribe": "CONSTRUCT",
-    "artId": "warden_unbreakable_wall"
+    "artId": "stone_unbreakable_wall"
   },
   {
     "id": 1171,
@@ -2963,7 +2963,7 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "warden_aldric_the_fortifier"
+    "artId": "stone_aldric_the_fortifier"
   },
   {
     "id": 1172,

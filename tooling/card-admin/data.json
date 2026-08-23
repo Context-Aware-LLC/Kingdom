@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 268,
+  "totalCards": 259,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,12 +22,12 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 268,
+    "total": 259,
     "typeSplit": {
       "MINION": 176,
-      "SPELL": 72,
+      "SPELL": 71,
       "WEAPON": 12,
-      "HERO_POWER": 8
+      "HERO_POWER": 0
     },
     "keywordFrequency": {
       "BULWARK": 45,
@@ -45,20 +45,20 @@
       "FROST": 1
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 63,
+      "ANY_FRIENDLY_MINION": 61,
       "ANY_MINION": 27,
-      "ANY_ENEMY": 22,
-      "FRIENDLY_HERO": 21,
+      "ANY_ENEMY": 20,
       "ANY_ENEMY_MINION": 20,
+      "FRIENDLY_HERO": 20,
       "ENEMY_HERO": 7,
       "ANY_FRIENDLY": 5,
-      "ANY_CHARACTER": 4,
+      "ANY_CHARACTER": 3,
       "SELF": 2
     },
     "costDistribution": {
-      "0": 8,
+      "0": 7,
       "1": 30,
-      "2": 61,
+      "2": 53,
       "3": 64,
       "4": 47,
       "5": 19,
@@ -68,7 +68,7 @@
       "9": 1
     },
     "rarityBreakdown": {
-      "COMMON": 123,
+      "COMMON": 114,
       "RARE": 87,
       "EPIC": 40,
       "LEGENDARY": 18
@@ -109,12 +109,12 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 26,
+      "total": 25,
       "typeSplit": {
         "MINION": 17,
         "SPELL": 7,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 3,
@@ -132,7 +132,7 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 4,
+        "2": 3,
         "3": 8,
         "4": 5,
         "5": 1,
@@ -141,7 +141,7 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 10,
         "RARE": 9,
         "EPIC": 4,
         "LEGENDARY": 2
@@ -170,12 +170,12 @@
       }
     },
     "EMBERWARD": {
-      "total": 32,
+      "total": 31,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 8,
         "WEAPON": 2,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 3,
@@ -191,12 +191,12 @@
         "ENEMY_HERO": 5,
         "ANY_ENEMY_MINION": 3,
         "ANY_FRIENDLY_MINION": 3,
-        "ANY_CHARACTER": 2,
-        "FRIENDLY_HERO": 2
+        "FRIENDLY_HERO": 2,
+        "ANY_CHARACTER": 1
       },
       "costDistribution": {
         "1": 4,
-        "2": 6,
+        "2": 5,
         "3": 7,
         "4": 6,
         "5": 4,
@@ -205,7 +205,7 @@
       },
       "rarityBreakdown": {
         "RARE": 13,
-        "COMMON": 11,
+        "COMMON": 10,
         "EPIC": 6,
         "LEGENDARY": 2
       },
@@ -234,12 +234,12 @@
       }
     },
     "GRAVEKEEP": {
-      "total": 31,
+      "total": 30,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 8,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 5,
@@ -250,13 +250,13 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 13,
+        "ANY_FRIENDLY_MINION": 12,
         "FRIENDLY_HERO": 4,
         "ANY_MINION": 2
       },
       "costDistribution": {
         "1": 4,
-        "2": 7,
+        "2": 6,
         "3": 6,
         "4": 6,
         "5": 4,
@@ -264,7 +264,7 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 12,
+        "COMMON": 11,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -295,10 +295,10 @@
       }
     },
     "NEUTRAL": {
-      "total": 40,
+      "total": 39,
       "typeSplit": {
         "MINION": 35,
-        "SPELL": 3,
+        "SPELL": 2,
         "WEAPON": 2,
         "HERO_POWER": 0
       },
@@ -320,7 +320,7 @@
         "ANY_MINION": 1
       },
       "costDistribution": {
-        "0": 5,
+        "0": 4,
         "1": 4,
         "2": 11,
         "3": 10,
@@ -330,7 +330,7 @@
         "7": 1
       },
       "rarityBreakdown": {
-        "COMMON": 27,
+        "COMMON": 26,
         "RARE": 7,
         "EPIC": 4,
         "LEGENDARY": 2
@@ -362,12 +362,12 @@
       }
     },
     "NIGHTVEIL": {
-      "total": 24,
+      "total": 23,
       "typeSplit": {
         "MINION": 14,
         "SPELL": 8,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "SHROUD": 9,
@@ -375,7 +375,7 @@
         "BULWARK": 2
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 9,
+        "ANY_FRIENDLY_MINION": 8,
         "ANY_MINION": 5,
         "ANY_ENEMY": 2,
         "ANY_ENEMY_MINION": 2,
@@ -384,14 +384,14 @@
       },
       "costDistribution": {
         "1": 2,
-        "2": 5,
+        "2": 4,
         "3": 7,
         "4": 5,
         "5": 2,
         "6": 3
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 10,
         "RARE": 8,
         "EPIC": 3,
         "LEGENDARY": 2
@@ -418,12 +418,12 @@
       }
     },
     "STONEWARDEN": {
-      "total": 26,
+      "total": 25,
       "typeSplit": {
         "MINION": 16,
         "SPELL": 8,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 11,
@@ -440,7 +440,7 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 5,
+        "2": 4,
         "3": 6,
         "4": 4,
         "5": 1,
@@ -449,7 +449,7 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 10,
         "RARE": 9,
         "EPIC": 4,
         "LEGENDARY": 2
@@ -480,12 +480,12 @@
       }
     },
     "TEMPEST": {
-      "total": 23,
+      "total": 22,
       "typeSplit": {
         "MINION": 11,
         "SPELL": 10,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "DOUBLESTRIKE": 5,
@@ -494,7 +494,7 @@
         "BULWARK": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY": 12,
+        "ANY_ENEMY": 10,
         "ANY_ENEMY_MINION": 3,
         "ANY_FRIENDLY_MINION": 2,
         "ANY_MINION": 2,
@@ -502,7 +502,7 @@
       },
       "costDistribution": {
         "1": 4,
-        "2": 8,
+        "2": 7,
         "3": 4,
         "4": 3,
         "5": 1,
@@ -510,7 +510,7 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 10,
+        "COMMON": 9,
         "RARE": 8,
         "EPIC": 3,
         "LEGENDARY": 2
@@ -537,12 +537,12 @@
       }
     },
     "TIDECALLER": {
-      "total": 34,
+      "total": 33,
       "typeSplit": {
         "MINION": 20,
         "SPELL": 11,
         "WEAPON": 2,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 7,
@@ -563,7 +563,7 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 9,
+        "2": 8,
         "3": 8,
         "4": 5,
         "5": 2,
@@ -571,7 +571,7 @@
         "7": 3
       },
       "rarityBreakdown": {
-        "COMMON": 16,
+        "COMMON": 15,
         "RARE": 11,
         "EPIC": 5,
         "LEGENDARY": 2
@@ -603,12 +603,12 @@
       }
     },
     "VERDANT": {
-      "total": 32,
+      "total": 31,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 9,
         "WEAPON": 1,
-        "HERO_POWER": 1
+        "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 5,
@@ -622,7 +622,7 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "FRIENDLY_HERO": 10,
+        "FRIENDLY_HERO": 9,
         "ANY_FRIENDLY_MINION": 7,
         "ANY_FRIENDLY": 4,
         "ANY_CHARACTER": 1,
@@ -632,7 +632,7 @@
       },
       "costDistribution": {
         "1": 3,
-        "2": 6,
+        "2": 5,
         "3": 8,
         "4": 7,
         "5": 3,
@@ -641,7 +641,7 @@
         "9": 1
       },
       "rarityBreakdown": {
-        "COMMON": 14,
+        "COMMON": 13,
         "RARE": 11,
         "EPIC": 5,
         "LEGENDARY": 2
@@ -676,7 +676,7 @@
   },
   "cards": [
     {
-      "id": "ember_recruit",
+      "id": 1001,
       "name": "Ember Recruit",
       "type": "MINION",
       "cost": 1,
@@ -694,7 +694,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_zealot",
+      "id": 1002,
       "name": "Ember Zealot",
       "type": "MINION",
       "cost": 2,
@@ -714,7 +714,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_flame_bolt",
+      "id": 151,
       "name": "Flame Bolt",
       "type": "SPELL",
       "cost": 1,
@@ -734,7 +734,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_cinder_drake",
+      "id": 1003,
       "name": "Cinder Drake",
       "type": "MINION",
       "cost": 4,
@@ -752,7 +752,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_initiate",
+      "id": 1004,
       "name": "Tide Initiate",
       "type": "MINION",
       "cost": 1,
@@ -770,7 +770,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_oracle",
+      "id": 1005,
       "name": "Tide Oracle",
       "type": "MINION",
       "cost": 3,
@@ -790,7 +790,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "frost_ripple",
+      "id": 152,
       "name": "Frost Ripple",
       "type": "SPELL",
       "cost": 3,
@@ -810,7 +810,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "wave_caller",
+      "id": 1006,
       "name": "Wave Caller",
       "type": "MINION",
       "cost": 4,
@@ -830,7 +830,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "stone_sentry",
+      "id": 1007,
       "name": "Stone Sentry",
       "type": "MINION",
       "cost": 3,
@@ -850,7 +850,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "wandering_scout",
+      "id": 1008,
       "name": "Wandering Scout",
       "type": "MINION",
       "cost": 1,
@@ -870,7 +870,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_emberling",
+      "id": 1009,
       "name": "Emberling Pup",
       "type": "MINION",
       "cost": 1,
@@ -890,7 +890,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_stoneback",
+      "id": 1010,
       "name": "Stoneback Sentry",
       "type": "MINION",
       "cost": 2,
@@ -910,7 +910,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_hollow_acolyte",
+      "id": 1011,
       "name": "Hollow Acolyte",
       "type": "MINION",
       "cost": 3,
@@ -928,7 +928,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_lantern_bearer",
+      "id": 1012,
       "name": "Grave Lantern-Bearer",
       "type": "MINION",
       "cost": 2,
@@ -946,7 +946,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_aegis_templar",
+      "id": 1013,
       "name": "Aegis Templar",
       "type": "MINION",
       "cost": 4,
@@ -966,7 +966,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_veilstalker",
+      "id": 1014,
       "name": "Veilstalker",
       "type": "MINION",
       "cost": 3,
@@ -986,7 +986,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_grove_mender",
+      "id": 1015,
       "name": "Grove Mender",
       "type": "MINION",
       "cost": 4,
@@ -1006,7 +1006,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_arclight_adept",
+      "id": 1016,
       "name": "Arclight Adept",
       "type": "MINION",
       "cost": 2,
@@ -1026,7 +1026,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_bonehound",
+      "id": 1017,
       "name": "Ravenous Bonehound",
       "type": "MINION",
       "cost": 3,
@@ -1046,7 +1046,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_throneless_king",
+      "id": 1018,
       "name": "Throneless King",
       "type": "MINION",
       "cost": 6,
@@ -1067,7 +1067,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_cinder_lance",
+      "id": 51,
       "name": "Cinder Lance",
       "type": "WEAPON",
       "cost": 1,
@@ -1085,7 +1085,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_scorch",
+      "id": 153,
       "name": "Scorch",
       "type": "SPELL",
       "cost": 2,
@@ -1105,7 +1105,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_overheat_golem",
+      "id": 1019,
       "name": "Overheat Golem",
       "type": "MINION",
       "cost": 3,
@@ -1123,7 +1123,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_twin_flame",
+      "id": 154,
       "name": "Twin Flame Strike",
       "type": "SPELL",
       "cost": 4,
@@ -1143,7 +1143,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_pyras_wrath",
+      "id": 1020,
       "name": "Pyra's Wrath",
       "type": "MINION",
       "cost": 7,
@@ -1165,7 +1165,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_frostbind",
+      "id": 155,
       "name": "Frostbind",
       "type": "SPELL",
       "cost": 1,
@@ -1185,7 +1185,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_undertow",
+      "id": 156,
       "name": "Undertow",
       "type": "SPELL",
       "cost": 2,
@@ -1205,7 +1205,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_siren",
+      "id": 1021,
       "name": "Hollow Tide Siren",
       "type": "MINION",
       "cost": 7,
@@ -1225,7 +1225,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_reefguard",
+      "id": 1022,
       "name": "Reefguard Wisp",
       "type": "MINION",
       "cost": 2,
@@ -1245,7 +1245,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_deep_bargain",
+      "id": 157,
       "name": "Maren's Deep Bargain",
       "type": "SPELL",
       "cost": 3,
@@ -1263,25 +1263,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "token_spark_coin",
-      "name": "The Spark",
-      "type": "SPELL",
-      "cost": 0,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "NEUTRAL",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "EMBERFALL",
-      "collectible": false,
-      "artId": "token_the_spark",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "token_wisp_1_1",
+      "id": 1023,
       "name": "Wisp",
       "type": "MINION",
       "cost": 0,
@@ -1299,85 +1281,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "hero_power_searing_bolt",
-      "name": "Searing Bolt",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "EMBERWARD",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_CHARACTER"
-      ],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "ember_hero_power_searing_bolt",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "hero_power_tidal_ward",
-      "name": "Tidal Ward",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "TIDECALLER",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "tide_hero_power_tidal_ward",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "hero_power_toll_the_bell",
-      "name": "Toll the Bell",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "GRAVEKEEP",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_FRIENDLY_MINION"
-      ],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "grave_hero_power_toll_the_bell",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "hero_power_quicken",
-      "name": "Quicken",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "VERDANT",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "FRIENDLY_HERO"
-      ],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "verdant_hero_power_quicken",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "token_tide_wisp",
+      "id": 1024,
       "name": "Tide Wisp",
       "type": "MINION",
       "cost": 0,
@@ -1397,7 +1301,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_gatewatch_whelp",
+      "id": 1025,
       "name": "Gatewatch Whelp",
       "type": "MINION",
       "cost": 1,
@@ -1417,7 +1321,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_last_rite",
+      "id": 159,
       "name": "Last Rite",
       "type": "SPELL",
       "cost": 1,
@@ -1437,7 +1341,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_sable_watcher",
+      "id": 1026,
       "name": "Sable Watcher",
       "type": "MINION",
       "cost": 2,
@@ -1457,7 +1361,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_sorrows_blessing",
+      "id": 160,
       "name": "Sorrow's Blessing",
       "type": "SPELL",
       "cost": 2,
@@ -1477,7 +1381,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_charnel_priest",
+      "id": 1027,
       "name": "Charnel Priest",
       "type": "MINION",
       "cost": 3,
@@ -1497,7 +1401,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_ashen_archivist",
+      "id": 1028,
       "name": "Ashen Archivist",
       "type": "MINION",
       "cost": 4,
@@ -1515,7 +1419,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_custodian",
+      "id": 1029,
       "name": "Gravekeep Custodian",
       "type": "MINION",
       "cost": 4,
@@ -1533,7 +1437,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_last_gate_warden",
+      "id": 1030,
       "name": "Last Gate Warden",
       "type": "MINION",
       "cost": 5,
@@ -1553,7 +1457,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_harrower_of_ash",
+      "id": 1031,
       "name": "Harrower of Ash",
       "type": "MINION",
       "cost": 6,
@@ -1573,7 +1477,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_bell_novice",
+      "id": 1032,
       "name": "Bell Novice",
       "type": "MINION",
       "cost": 1,
@@ -1593,7 +1497,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_tollkeeper_moth",
+      "id": 1033,
       "name": "Tollkeeper's Moth",
       "type": "MINION",
       "cost": 2,
@@ -1611,7 +1515,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_chained_revenant",
+      "id": 1034,
       "name": "Chained Revenant",
       "type": "MINION",
       "cost": 4,
@@ -1633,7 +1537,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_wailing_chorus",
+      "id": 161,
       "name": "Wailing Chorus",
       "type": "SPELL",
       "cost": 5,
@@ -1654,7 +1558,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_bell_maul",
+      "id": 52,
       "name": "Grave Maul",
       "type": "WEAPON",
       "cost": 3,
@@ -1672,7 +1576,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_sealed_gate_keeper",
+      "id": 1035,
       "name": "Sealed Gate Keeper",
       "type": "MINION",
       "cost": 6,
@@ -1692,7 +1596,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_thornback_cub",
+      "id": 1036,
       "name": "Thornback Cub",
       "type": "MINION",
       "cost": 1,
@@ -1712,7 +1616,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_seedling_rite",
+      "id": 162,
       "name": "Seedling Rite",
       "type": "SPELL",
       "cost": 2,
@@ -1730,7 +1634,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_bramblehide_guardian",
+      "id": 1037,
       "name": "Bramblehide Guardian",
       "type": "MINION",
       "cost": 3,
@@ -1750,7 +1654,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_menders_bloom",
+      "id": 163,
       "name": "Mender's Bloom",
       "type": "SPELL",
       "cost": 3,
@@ -1770,7 +1674,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_elderroot_colossus",
+      "id": 1038,
       "name": "Elderroot Colossus",
       "type": "MINION",
       "cost": 4,
@@ -1790,7 +1694,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_canopy_seer",
+      "id": 1039,
       "name": "Canopy Seer",
       "type": "MINION",
       "cost": 4,
@@ -1808,7 +1712,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_ironbark_elder",
+      "id": 1040,
       "name": "Ironbark Elder",
       "type": "MINION",
       "cost": 5,
@@ -1828,7 +1732,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_worldroot_behemoth",
+      "id": 1041,
       "name": "World-Root Behemoth",
       "type": "MINION",
       "cost": 6,
@@ -1848,7 +1752,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_thalens_ancient",
+      "id": 1042,
       "name": "Thalen's Ancient",
       "type": "MINION",
       "cost": 7,
@@ -1869,7 +1773,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_grasping_thornvine",
+      "id": 53,
       "name": "Grasping Thornvine",
       "type": "WEAPON",
       "cost": 3,
@@ -1889,7 +1793,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_sapsurge",
+      "id": 164,
       "name": "Sapsurge",
       "type": "SPELL",
       "cost": 1,
@@ -1909,7 +1813,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_rootweaver",
+      "id": 1043,
       "name": "Rootweaver",
       "type": "MINION",
       "cost": 2,
@@ -1929,7 +1833,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_mosshide_stag",
+      "id": 1044,
       "name": "Mosshide Stag",
       "type": "MINION",
       "cost": 3,
@@ -1949,7 +1853,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_wild_bloom",
+      "id": 165,
       "name": "Wild Bloom",
       "type": "SPELL",
       "cost": 3,
@@ -1970,7 +1874,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_thornfang_matron",
+      "id": 1045,
       "name": "Thornfang Matron",
       "type": "MINION",
       "cost": 6,
@@ -1988,7 +1892,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_choking_vines",
+      "id": 166,
       "name": "Choking Vines",
       "type": "SPELL",
       "cost": 4,
@@ -2008,7 +1912,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "core_thistleguard_sprig",
+      "id": 1046,
       "name": "Thistleguard Sprig",
       "type": "MINION",
       "cost": 2,
@@ -2028,7 +1932,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "relic_bound_revenant",
+      "id": 1047,
       "name": "Bound Revenant",
       "type": "MINION",
       "cost": 3,
@@ -2049,7 +1953,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "relic_corpse_cart",
+      "id": 1048,
       "name": "Corpse Cart",
       "type": "MINION",
       "cost": 2,
@@ -2067,7 +1971,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "token_revenant_5_5_bulwark",
+      "id": 1049,
       "name": "Revenant",
       "type": "MINION",
       "cost": 0,
@@ -2087,7 +1991,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "token_thorn_cub_1_2",
+      "id": 1050,
       "name": "Thorn Cub",
       "type": "MINION",
       "cost": 0,
@@ -2105,7 +2009,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_stoke_the_coals",
+      "id": 167,
       "name": "Stoke the Coals",
       "type": "SPELL",
       "cost": 2,
@@ -2125,7 +2029,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_slagshell_bulwark",
+      "id": 1051,
       "name": "Slagshell Bulwark",
       "type": "MINION",
       "cost": 4,
@@ -2145,7 +2049,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_forgeheart_colossus",
+      "id": 1052,
       "name": "Forgeheart Colossus",
       "type": "MINION",
       "cost": 5,
@@ -2163,7 +2067,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_fathom_crush",
+      "id": 168,
       "name": "Fathom Crush",
       "type": "SPELL",
       "cost": 3,
@@ -2183,7 +2087,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_deepfrost_spear",
+      "id": 54,
       "name": "Deepfrost Spear",
       "type": "WEAPON",
       "cost": 3,
@@ -2203,7 +2107,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_glacial_leviathan",
+      "id": 1053,
       "name": "Glacial Leviathan",
       "type": "MINION",
       "cost": 7,
@@ -2223,7 +2127,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_ashfall_wyrm",
+      "id": 1054,
       "name": "Ashfall Wyrm",
       "type": "MINION",
       "cost": 6,
@@ -2243,7 +2147,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_kiln_warden",
+      "id": 1055,
       "name": "Kiln Warden",
       "type": "MINION",
       "cost": 5,
@@ -2264,7 +2168,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_emberdrinker",
+      "id": 1056,
       "name": "Emberdrinker",
       "type": "MINION",
       "cost": 3,
@@ -2284,7 +2188,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_drowned_titan",
+      "id": 1057,
       "name": "Drowned Titan",
       "type": "MINION",
       "cost": 6,
@@ -2304,7 +2208,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_hollowshell_warden",
+      "id": 1058,
       "name": "Hollowshell Warden",
       "type": "MINION",
       "cost": 4,
@@ -2326,7 +2230,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_hoarfrost_lash",
+      "id": 169,
       "name": "Hoarfrost Lash",
       "type": "SPELL",
       "cost": 1,
@@ -2346,25 +2250,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "hero_power_blueprint",
-      "name": "Blueprint",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "CLOCKWRIGHT",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "clock_hero_power_blueprint",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "token_gear_wisp",
+      "id": 1059,
       "name": "Gear Wisp",
       "type": "MINION",
       "cost": 0,
@@ -2382,45 +2268,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "hero_power_shadow_mark",
-      "name": "Shadow Mark",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "NIGHTVEIL",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_FRIENDLY_MINION"
-      ],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "night_hero_power_shadow_mark",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "hero_power_earthwall",
-      "name": "Earthwall",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "STONEWARDEN",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "stone_hero_power_earthwall",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "token_stone_shard",
+      "id": 1060,
       "name": "Stone Shard",
       "type": "MINION",
       "cost": 0,
@@ -2440,28 +2288,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "hero_power_chain_spark",
-      "name": "Chain Spark",
-      "type": "HERO_POWER",
-      "cost": 2,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "TEMPEST",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_ENEMY",
-        "ANY_ENEMY"
-      ],
-      "tribe": null,
-      "setId": "CORE",
-      "collectible": false,
-      "artId": "storm_hero_power_chain_spark",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": "clock_gear_imp",
+      "id": 1061,
       "name": "Gear Imp",
       "type": "MINION",
       "cost": 1,
@@ -2479,7 +2306,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_bronze_frame",
+      "id": 1062,
       "name": "Bronze Frame",
       "type": "MINION",
       "cost": 2,
@@ -2497,7 +2324,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_spring_coil",
+      "id": 1063,
       "name": "Spring Coil",
       "type": "MINION",
       "cost": 3,
@@ -2517,7 +2344,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_snap_bolt",
+      "id": 170,
       "name": "Snap Bolt",
       "type": "SPELL",
       "cost": 1,
@@ -2537,7 +2364,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_assembly_drone",
+      "id": 1064,
       "name": "Assembly Drone",
       "type": "MINION",
       "cost": 3,
@@ -2555,7 +2382,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_overclocker",
+      "id": 1065,
       "name": "Overclocker",
       "type": "MINION",
       "cost": 3,
@@ -2575,7 +2402,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_clockwork_sniper",
+      "id": 1066,
       "name": "Clockwork Sniper",
       "type": "MINION",
       "cost": 4,
@@ -2595,7 +2422,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_gear_overhaul",
+      "id": 171,
       "name": "Gear Overhaul",
       "type": "SPELL",
       "cost": 3,
@@ -2615,7 +2442,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_temporal_rewinder",
+      "id": 172,
       "name": "Temporal Rewinder",
       "type": "SPELL",
       "cost": 4,
@@ -2635,7 +2462,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_modular_stalker",
+      "id": 1067,
       "name": "Modular Stalker",
       "type": "MINION",
       "cost": 4,
@@ -2653,7 +2480,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_chrono_construct",
+      "id": 1068,
       "name": "Chrono Construct",
       "type": "MINION",
       "cost": 7,
@@ -2674,7 +2501,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_mass_recall",
+      "id": 173,
       "name": "Mass Recall",
       "type": "SPELL",
       "cost": 5,
@@ -2694,8 +2521,8 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_the_great_mechanism",
-      "name": "The Mechanism",
+      "id": 1069,
+      "name": "The Great Mechanism",
       "type": "MINION",
       "cost": 8,
       "attack": 6,
@@ -2714,7 +2541,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "clock_mainspring_halberd",
+      "id": 55,
       "name": "Mainspring Halberd",
       "type": "WEAPON",
       "cost": 3,
@@ -2732,7 +2559,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_lurk_wisp",
+      "id": 1070,
       "name": "Lurk Wisp",
       "type": "MINION",
       "cost": 1,
@@ -2752,7 +2579,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_shadow_dart",
+      "id": 174,
       "name": "Shadow Dart",
       "type": "SPELL",
       "cost": 1,
@@ -2772,7 +2599,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_viper_fang",
+      "id": 1071,
       "name": "Viper Fang",
       "type": "MINION",
       "cost": 2,
@@ -2792,7 +2619,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_shadow_stalker",
+      "id": 1072,
       "name": "Shadow Stalker",
       "type": "MINION",
       "cost": 3,
@@ -2812,7 +2639,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_finish_the_job",
+      "id": 175,
       "name": "Finish the Job",
       "type": "SPELL",
       "cost": 2,
@@ -2832,7 +2659,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_venom_asp",
+      "id": 1073,
       "name": "Venom Asp",
       "type": "MINION",
       "cost": 3,
@@ -2852,7 +2679,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_shadow_blade",
+      "id": 56,
       "name": "Shadow Blade",
       "type": "WEAPON",
       "cost": 3,
@@ -2872,7 +2699,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_vanishing_act",
+      "id": 176,
       "name": "Vanishing Act",
       "type": "SPELL",
       "cost": 3,
@@ -2892,7 +2719,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_fade_out",
+      "id": 177,
       "name": "Fade Out",
       "type": "SPELL",
       "cost": 3,
@@ -2912,7 +2739,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_death_mark",
+      "id": 178,
       "name": "Death Mark",
       "type": "SPELL",
       "cost": 4,
@@ -2933,7 +2760,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_shadow_walk",
+      "id": 179,
       "name": "Shadow Walk",
       "type": "SPELL",
       "cost": 5,
@@ -2953,7 +2780,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_void_shriek",
+      "id": 1074,
       "name": "Void Shriek",
       "type": "MINION",
       "cost": 6,
@@ -2974,7 +2801,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "night_kira_blade_of_shadows",
+      "id": 1075,
       "name": "Kira",
       "type": "MINION",
       "cost": 6,
@@ -2997,7 +2824,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_pebble_sentinel",
+      "id": 1076,
       "name": "Pebble Sentinel",
       "type": "MINION",
       "cost": 1,
@@ -3017,7 +2844,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_stone_throw",
+      "id": 180,
       "name": "Stone Throw",
       "type": "SPELL",
       "cost": 1,
@@ -3037,7 +2864,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_boulderhide",
+      "id": 1077,
       "name": "Boulderhide",
       "type": "MINION",
       "cost": 2,
@@ -3057,7 +2884,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_earth_barrier",
+      "id": 181,
       "name": "Earth Barrier",
       "type": "SPELL",
       "cost": 2,
@@ -3077,7 +2904,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_rock_golem",
+      "id": 1078,
       "name": "Rock Golem",
       "type": "MINION",
       "cost": 3,
@@ -3097,7 +2924,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_stone_rain",
+      "id": 182,
       "name": "Stone Rain",
       "type": "SPELL",
       "cost": 4,
@@ -3117,7 +2944,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_granite_guardian",
+      "id": 1079,
       "name": "Granite Guardian",
       "type": "MINION",
       "cost": 4,
@@ -3137,7 +2964,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_earthen_blessing",
+      "id": 183,
       "name": "Earthen Blessing",
       "type": "SPELL",
       "cost": 2,
@@ -3157,7 +2984,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_living_monolith",
+      "id": 1080,
       "name": "Living Monolith",
       "type": "MINION",
       "cost": 4,
@@ -3177,7 +3004,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_stomp",
+      "id": 184,
       "name": "Stomp",
       "type": "SPELL",
       "cost": 3,
@@ -3198,7 +3025,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_siege_golem",
+      "id": 1081,
       "name": "Siege Golem",
       "type": "MINION",
       "cost": 6,
@@ -3220,7 +3047,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_stone_colossus",
+      "id": 1082,
       "name": "Stone Colossus",
       "type": "MINION",
       "cost": 8,
@@ -3241,7 +3068,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_duras_the_ironmount",
+      "id": 1083,
       "name": "Duras, the Ironmount",
       "type": "MINION",
       "cost": 8,
@@ -3263,7 +3090,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ward_earthwardens_maul",
+      "id": 57,
       "name": "Earthwarden's Maul",
       "type": "WEAPON",
       "cost": 3,
@@ -3283,7 +3110,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_spark_imp",
+      "id": 1084,
       "name": "Spark Imp",
       "type": "MINION",
       "cost": 1,
@@ -3303,7 +3130,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_lightning_bolt",
+      "id": 185,
       "name": "Lightning Bolt",
       "type": "SPELL",
       "cost": 1,
@@ -3323,7 +3150,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_gust_sprite",
+      "id": 1085,
       "name": "Gust Sprite",
       "type": "MINION",
       "cost": 2,
@@ -3343,7 +3170,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_wind_rider",
+      "id": 1086,
       "name": "Wind Rider",
       "type": "MINION",
       "cost": 2,
@@ -3363,7 +3190,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_chain_lightning",
+      "id": 186,
       "name": "Chain Lightning",
       "type": "SPELL",
       "cost": 3,
@@ -3385,7 +3212,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_crackle",
+      "id": 187,
       "name": "Crackle",
       "type": "SPELL",
       "cost": 2,
@@ -3405,7 +3232,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_tempest_striker",
+      "id": 1087,
       "name": "Tempest Striker",
       "type": "MINION",
       "cost": 3,
@@ -3425,7 +3252,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_static_shock",
+      "id": 188,
       "name": "Static Shock",
       "type": "SPELL",
       "cost": 2,
@@ -3445,7 +3272,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_thunder_hoof",
+      "id": 1088,
       "name": "Thunder Hoof",
       "type": "MINION",
       "cost": 4,
@@ -3465,7 +3292,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_static_discharge",
+      "id": 189,
       "name": "Static Discharge",
       "type": "SPELL",
       "cost": 2,
@@ -3485,7 +3312,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_hurricane",
+      "id": 190,
       "name": "Hurricane",
       "type": "SPELL",
       "cost": 5,
@@ -3505,7 +3332,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_lightning_storm",
+      "id": 191,
       "name": "Lightning Storm",
       "type": "SPELL",
       "cost": 4,
@@ -3525,7 +3352,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_zael_of_the_struck_sky",
+      "id": 1089,
       "name": "Zael",
       "type": "MINION",
       "cost": 7,
@@ -3547,7 +3374,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "storm_galecleaver",
+      "id": 58,
       "name": "Galecleaver",
       "type": "WEAPON",
       "cost": 1,
@@ -3565,7 +3392,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_galewind_runner",
+      "id": 1090,
       "name": "Galewind Runner",
       "type": "MINION",
       "cost": 2,
@@ -3585,7 +3412,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_razorcoil_adder",
+      "id": 1091,
       "name": "Razorcoil Adder",
       "type": "MINION",
       "cost": 2,
@@ -3605,7 +3432,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_phantom_duelist",
+      "id": 1092,
       "name": "Phantom Duelist",
       "type": "MINION",
       "cost": 2,
@@ -3625,7 +3452,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_doublestrike_hawk",
+      "id": 1093,
       "name": "Doublestrike Hawk",
       "type": "MINION",
       "cost": 3,
@@ -3645,7 +3472,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_lifeclaw_bat",
+      "id": 1094,
       "name": "Lifeclaw Bat",
       "type": "MINION",
       "cost": 4,
@@ -3666,7 +3493,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_spellwarden",
+      "id": 1095,
       "name": "Spellwarden",
       "type": "MINION",
       "cost": 3,
@@ -3686,7 +3513,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_ironclad_bulwark",
+      "id": 1096,
       "name": "Ironclad Bulwark",
       "type": "MINION",
       "cost": 5,
@@ -3706,7 +3533,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_soulbound_revenant",
+      "id": 1097,
       "name": "Soulbound Revenant",
       "type": "MINION",
       "cost": 3,
@@ -3724,7 +3551,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_venomscale_drake",
+      "id": 1098,
       "name": "Venomscale Drake",
       "type": "MINION",
       "cost": 6,
@@ -3744,7 +3571,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_duneborn_construct",
+      "id": 1099,
       "name": "Duneborn Construct",
       "type": "MINION",
       "cost": 4,
@@ -3766,7 +3593,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_bog_crawler",
+      "id": 1100,
       "name": "Bog Crawler",
       "type": "MINION",
       "cost": 1,
@@ -3786,7 +3613,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "neutral_searing_quill",
+      "id": 59,
       "name": "Searing Quill",
       "type": "WEAPON",
       "cost": 2,
@@ -3804,7 +3631,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_blazewing",
+      "id": 1101,
       "name": "Blazewing",
       "type": "MINION",
       "cost": 3,
@@ -3824,7 +3651,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_scalded_striker",
+      "id": 1102,
       "name": "Scalded Striker",
       "type": "MINION",
       "cost": 2,
@@ -3846,7 +3673,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_fusillade",
+      "id": 192,
       "name": "Fusillade",
       "type": "SPELL",
       "cost": 3,
@@ -3867,7 +3694,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_cinderplate_golem",
+      "id": 1103,
       "name": "Cinderplate Golem",
       "type": "MINION",
       "cost": 4,
@@ -3885,7 +3712,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_vanguard_drake",
+      "id": 1104,
       "name": "Vanguard Drake",
       "type": "MINION",
       "cost": 5,
@@ -3907,7 +3734,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_scorch_blade",
+      "id": 60,
       "name": "Scorch Blade",
       "type": "WEAPON",
       "cost": 3,
@@ -3927,7 +3754,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_magmacore_warden",
+      "id": 1105,
       "name": "Magmacore Warden",
       "type": "MINION",
       "cost": 6,
@@ -3947,7 +3774,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "ember_heat_surge",
+      "id": 193,
       "name": "Heat Surge",
       "type": "SPELL",
       "cost": 4,
@@ -3967,7 +3794,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_venomfin",
+      "id": 1106,
       "name": "Venomfin",
       "type": "MINION",
       "cost": 2,
@@ -3987,7 +3814,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_frostwhisper",
+      "id": 1107,
       "name": "Frostwhisper",
       "type": "MINION",
       "cost": 3,
@@ -4007,7 +3834,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_icescale_whelp",
+      "id": 1108,
       "name": "Icescale Whelp",
       "type": "MINION",
       "cost": 2,
@@ -4027,7 +3854,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_glacial_echo",
+      "id": 194,
       "name": "Glacial Echo",
       "type": "SPELL",
       "cost": 2,
@@ -4047,7 +3874,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_icecrown_herald",
+      "id": 1109,
       "name": "Icecrown Herald",
       "type": "MINION",
       "cost": 5,
@@ -4069,7 +3896,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_abyssal_devourer",
+      "id": 1110,
       "name": "Abyssal Devourer",
       "type": "MINION",
       "cost": 6,
@@ -4091,7 +3918,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_maren_avatar",
+      "id": 1111,
       "name": "Maren's Avatar",
       "type": "MINION",
       "cost": 7,
@@ -4114,7 +3941,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_deep_channel",
+      "id": 195,
       "name": "Deep Channel",
       "type": "SPELL",
       "cost": 4,
@@ -4134,7 +3961,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "tide_coldsnap_knife",
+      "id": 61,
       "name": "Coldsnap Knife",
       "type": "WEAPON",
       "cost": 2,
@@ -4154,7 +3981,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_deathweaver",
+      "id": 1112,
       "name": "Deathweaver",
       "type": "MINION",
       "cost": 2,
@@ -4172,7 +3999,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_spectral_wolf",
+      "id": 1113,
       "name": "Spectral Wolf",
       "type": "MINION",
       "cost": 3,
@@ -4194,7 +4021,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_boneshield_sentinel",
+      "id": 1114,
       "name": "Boneshield Sentinel",
       "type": "MINION",
       "cost": 4,
@@ -4215,7 +4042,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_bone_horde",
+      "id": 196,
       "name": "Bone Horde",
       "type": "SPELL",
       "cost": 3,
@@ -4233,7 +4060,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_plague_bringer",
+      "id": 1115,
       "name": "Plague Bringer",
       "type": "MINION",
       "cost": 5,
@@ -4253,7 +4080,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_echoing_knell",
+      "id": 197,
       "name": "Echoing Knell",
       "type": "SPELL",
       "cost": 4,
@@ -4273,7 +4100,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "grave_warden_of_dusk",
+      "id": 1116,
       "name": "Warden of Dusk",
       "type": "MINION",
       "cost": 7,
@@ -4296,7 +4123,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_venomthorn",
+      "id": 1117,
       "name": "Venomthorn",
       "type": "MINION",
       "cost": 3,
@@ -4317,7 +4144,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_windroot_sprinter",
+      "id": 1118,
       "name": "Windroot Sprinter",
       "type": "MINION",
       "cost": 3,
@@ -4339,7 +4166,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_greatroot_speaker",
+      "id": 1119,
       "name": "Greatroot Speaker",
       "type": "MINION",
       "cost": 5,
@@ -4359,7 +4186,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_primal_mend",
+      "id": 198,
       "name": "Primal Mend",
       "type": "SPELL",
       "cost": 4,
@@ -4380,7 +4207,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_world_titan",
+      "id": 1120,
       "name": "World-Titan",
       "type": "MINION",
       "cost": 9,
@@ -4401,7 +4228,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "verdant_thorn_swarm",
+      "id": 199,
       "name": "Thorn Swarm",
       "type": "SPELL",
       "cost": 5,
@@ -4422,7 +4249,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": "rekind_neutral_reclaimed_scout",
+      "id": 1121,
       "name": "Reclaimed Scout",
       "type": "MINION",
       "cost": 1,
@@ -4442,7 +4269,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_alliance_messenger",
+      "id": 1122,
       "name": "Alliance Messenger",
       "type": "MINION",
       "cost": 2,
@@ -4460,7 +4287,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_restored_bulwark",
+      "id": 1123,
       "name": "Restored Bulwark",
       "type": "MINION",
       "cost": 3,
@@ -4480,7 +4307,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_salvaged_golem",
+      "id": 1124,
       "name": "Salvaged Golem",
       "type": "MINION",
       "cost": 4,
@@ -4500,7 +4327,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_bannerman",
+      "id": 1125,
       "name": "New Dawn Bannerman",
       "type": "MINION",
       "cost": 4,
@@ -4520,7 +4347,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_bridge_warden",
+      "id": 1126,
       "name": "Bridge Warden",
       "type": "MINION",
       "cost": 5,
@@ -4542,7 +4369,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_truce_pact",
+      "id": 200,
       "name": "Truce Pact",
       "type": "SPELL",
       "cost": 4,
@@ -4562,7 +4389,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_neutral_aric",
+      "id": 1127,
       "name": "Aric",
       "type": "MINION",
       "cost": 7,
@@ -4583,7 +4410,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_vanguard_conscript",
+      "id": 1128,
       "name": "Vanguard Conscript",
       "type": "MINION",
       "cost": 1,
@@ -4603,7 +4430,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_brazier_keeper",
+      "id": 1129,
       "name": "Brazier Keeper",
       "type": "MINION",
       "cost": 2,
@@ -4621,7 +4448,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_forge_warden",
+      "id": 1130,
       "name": "Forge Warden",
       "type": "MINION",
       "cost": 3,
@@ -4641,7 +4468,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "clock_mechanical_essence",
+      "id": 1131,
       "name": "Mechanical Essence",
       "type": "MINION",
       "cost": 3,
@@ -4661,7 +4488,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_reclaimed_fortress",
+      "id": 201,
       "name": "Reclaimed Fortress",
       "type": "SPELL",
       "cost": 6,
@@ -4681,7 +4508,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "clock_nameless_bell",
+      "id": 1132,
       "name": "Nameless Bell",
       "type": "MINION",
       "cost": 4,
@@ -4701,7 +4528,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "stone_heartstone_herald",
+      "id": 1133,
       "name": "Heartstone Herald",
       "type": "MINION",
       "cost": 4,
@@ -4721,7 +4548,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_coalition_blazer",
+      "id": 1134,
       "name": "Coalition Blazer",
       "type": "MINION",
       "cost": 4,
@@ -4739,7 +4566,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "neutral_forge_striker",
+      "id": 1135,
       "name": "Forge Striker",
       "type": "MINION",
       "cost": 3,
@@ -4757,7 +4584,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "neutral_smithy_hammer",
+      "id": 62,
       "name": "Smithy Hammer",
       "type": "WEAPON",
       "cost": 2,
@@ -4775,7 +4602,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "verdant_seedling_guard",
+      "id": 1136,
       "name": "Seedling Guard",
       "type": "MINION",
       "cost": 2,
@@ -4797,7 +4624,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_rekindled_flame",
+      "id": 202,
       "name": "Rekindled Flame",
       "type": "SPELL",
       "cost": 3,
@@ -4818,7 +4645,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_pyre_commander",
+      "id": 1137,
       "name": "Pyre Commander",
       "type": "MINION",
       "cost": 5,
@@ -4839,7 +4666,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "ember_channeled_pyroclasm",
+      "id": 203,
       "name": "Channeled Pyroclasm",
       "type": "SPELL",
       "cost": 6,
@@ -4860,7 +4687,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_ember_general_kira",
+      "id": 1138,
       "name": "General Kira",
       "type": "MINION",
       "cost": 7,
@@ -4883,7 +4710,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_harbinger",
+      "id": 1139,
       "name": "Prophet of the Flood",
       "type": "MINION",
       "cost": 4,
@@ -4903,7 +4730,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_saltshore_scout",
+      "id": 1140,
       "name": "Saltshore Scout",
       "type": "MINION",
       "cost": 2,
@@ -4923,7 +4750,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_reef_reclaimer",
+      "id": 1141,
       "name": "Reef Reclaimer",
       "type": "MINION",
       "cost": 3,
@@ -4943,7 +4770,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_channel_mender",
+      "id": 204,
       "name": "Channel Mender",
       "type": "SPELL",
       "cost": 2,
@@ -4964,7 +4791,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_tidal_emissary",
+      "id": 1142,
       "name": "Tidal Emissary",
       "type": "MINION",
       "cost": 4,
@@ -4984,7 +4811,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_shoreline_pact",
+      "id": 205,
       "name": "Shoreline Pact",
       "type": "SPELL",
       "cost": 3,
@@ -5005,7 +4832,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_deepwater_alliance",
+      "id": 206,
       "name": "Deepwater Alliance",
       "type": "SPELL",
       "cost": 5,
@@ -5026,7 +4853,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tide_marens_peacebroker",
+      "id": 1143,
       "name": "Maren's Peacebroker",
       "type": "MINION",
       "cost": 6,
@@ -5049,7 +4876,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_memorial_wisp",
+      "id": 1144,
       "name": "Memorial Wisp",
       "type": "MINION",
       "cost": 1,
@@ -5069,7 +4896,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_tomb_warden",
+      "id": 1145,
       "name": "Tomb Warden",
       "type": "MINION",
       "cost": 2,
@@ -5089,7 +4916,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_last_honor",
+      "id": 207,
       "name": "Last Honor",
       "type": "SPELL",
       "cost": 2,
@@ -5109,7 +4936,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_grave_builder",
+      "id": 1146,
       "name": "Grave Builder",
       "type": "MINION",
       "cost": 3,
@@ -5127,7 +4954,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_pact_of_mourning",
+      "id": 208,
       "name": "Pact of Mourning",
       "type": "SPELL",
       "cost": 3,
@@ -5148,7 +4975,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_risen_champion",
+      "id": 1147,
       "name": "Risen Champion",
       "type": "MINION",
       "cost": 4,
@@ -5170,7 +4997,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_mass_rebirth",
+      "id": 209,
       "name": "Mass Rebirth",
       "type": "SPELL",
       "cost": 5,
@@ -5190,7 +5017,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_token_risen_guardian",
+      "id": 1148,
       "name": "Risen Guardian",
       "type": "MINION",
       "cost": 0,
@@ -5208,7 +5035,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_grave_caretaker_solen",
+      "id": 1149,
       "name": "Caretaker Solen",
       "type": "MINION",
       "cost": 7,
@@ -5228,7 +5055,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_sapling_tender",
+      "id": 1150,
       "name": "Sapling Tender",
       "type": "MINION",
       "cost": 1,
@@ -5248,7 +5075,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_thornsprout_cub",
+      "id": 1151,
       "name": "Thornsprout Cub",
       "type": "MINION",
       "cost": 2,
@@ -5266,7 +5093,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_rebloom_vine",
+      "id": 210,
       "name": "Rebloom Vine",
       "type": "SPELL",
       "cost": 2,
@@ -5287,7 +5114,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_overgrowth_dryad",
+      "id": 1152,
       "name": "Overgrowth Dryad",
       "type": "MINION",
       "cost": 4,
@@ -5307,7 +5134,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_blossoming_pact",
+      "id": 211,
       "name": "Blossoming Pact",
       "type": "SPELL",
       "cost": 3,
@@ -5328,7 +5155,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_rootswell_champion",
+      "id": 1153,
       "name": "Rootswell Champion",
       "type": "MINION",
       "cost": 4,
@@ -5350,7 +5177,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_wildbloom_surge",
+      "id": 212,
       "name": "Wildbloom Surge",
       "type": "SPELL",
       "cost": 4,
@@ -5371,7 +5198,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_verdant_praxis",
+      "id": 1154,
       "name": "Praxis, Seed of New Ages",
       "type": "MINION",
       "cost": 7,
@@ -5394,7 +5221,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_repair_drone",
+      "id": 1155,
       "name": "Repair Drone",
       "type": "MINION",
       "cost": 1,
@@ -5414,7 +5241,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_blueprint_archive",
+      "id": 1156,
       "name": "Blueprint Archive",
       "type": "MINION",
       "cost": 2,
@@ -5432,7 +5259,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_tinkers_gambit",
+      "id": 213,
       "name": "Tinker's Gambit",
       "type": "SPELL",
       "cost": 2,
@@ -5452,7 +5279,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_rebuilt_automaton",
+      "id": 1157,
       "name": "Reconstructed Automaton",
       "type": "MINION",
       "cost": 3,
@@ -5472,7 +5299,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_assembly_line",
+      "id": 214,
       "name": "Assembly Line",
       "type": "SPELL",
       "cost": 3,
@@ -5492,7 +5319,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_upgrade_protocol",
+      "id": 215,
       "name": "Upgrade Protocol",
       "type": "SPELL",
       "cost": 4,
@@ -5512,7 +5339,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_masterwork_construct",
+      "id": 1158,
       "name": "Masterwork Constructor",
       "type": "MINION",
       "cost": 6,
@@ -5532,7 +5359,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_clock_cogsworth",
+      "id": 1159,
       "name": "Cogsworth, The Grand Rebuilder",
       "type": "MINION",
       "cost": 8,
@@ -5554,7 +5381,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_shadow_scout",
+      "id": 1160,
       "name": "Shadow Scout",
       "type": "MINION",
       "cost": 3,
@@ -5574,7 +5401,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_ink_viper",
+      "id": 1161,
       "name": "Ink Viper",
       "type": "MINION",
       "cost": 2,
@@ -5595,7 +5422,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_marked_for_death",
+      "id": 216,
       "name": "Marked for Death",
       "type": "SPELL",
       "cost": 2,
@@ -5615,7 +5442,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_veilborn_spy",
+      "id": 1162,
       "name": "Veilborn Spy",
       "type": "MINION",
       "cost": 3,
@@ -5637,7 +5464,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_contract_kill",
+      "id": 217,
       "name": "Contract Kill",
       "type": "SPELL",
       "cost": 4,
@@ -5657,7 +5484,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_network_operative",
+      "id": 1163,
       "name": "Network Operative",
       "type": "MINION",
       "cost": 4,
@@ -5679,7 +5506,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_double_agent",
+      "id": 1164,
       "name": "Double Agent",
       "type": "MINION",
       "cost": 4,
@@ -5701,7 +5528,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_night_seraphine",
+      "id": 1165,
       "name": "Seraphine, Whisper Queen",
       "type": "MINION",
       "cost": 6,
@@ -5724,7 +5551,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_stone_layer",
+      "id": 1166,
       "name": "Stone Layer",
       "type": "MINION",
       "cost": 1,
@@ -5744,7 +5571,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_quarry_worker",
+      "id": 1167,
       "name": "Stone Quarry Worker",
       "type": "MINION",
       "cost": 2,
@@ -5764,7 +5591,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_earthen_rampart",
+      "id": 218,
       "name": "Earthen Rampart",
       "type": "SPELL",
       "cost": 3,
@@ -5785,7 +5612,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_boulder_sentinel",
+      "id": 1168,
       "name": "Boulder Sentinel",
       "type": "MINION",
       "cost": 3,
@@ -5807,7 +5634,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_iron_foundation",
+      "id": 219,
       "name": "Iron Foundation",
       "type": "SPELL",
       "cost": 3,
@@ -5828,7 +5655,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_fortified_colossus",
+      "id": 1169,
       "name": "Fortified Colossus",
       "type": "MINION",
       "cost": 5,
@@ -5848,7 +5675,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_unbreakable_wall",
+      "id": 1170,
       "name": "Unbreakable Wall",
       "type": "MINION",
       "cost": 6,
@@ -5868,7 +5695,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_stone_aldric",
+      "id": 1171,
       "name": "Aldric, The Fortifier",
       "type": "MINION",
       "cost": 7,
@@ -5891,7 +5718,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_static_wisp",
+      "id": 1172,
       "name": "Static Wisp",
       "type": "MINION",
       "cost": 1,
@@ -5911,7 +5738,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_chain_caller",
+      "id": 1173,
       "name": "Chain Caller",
       "type": "MINION",
       "cost": 2,
@@ -5931,7 +5758,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_lightning_lash",
+      "id": 220,
       "name": "Lightning Lash",
       "type": "SPELL",
       "cost": 2,
@@ -5951,7 +5778,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_storm_channeler",
+      "id": 1174,
       "name": "Storm Channeler",
       "type": "MINION",
       "cost": 3,
@@ -5971,7 +5798,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_voltaic_sentinel",
+      "id": 1175,
       "name": "Voltaic Sentinel",
       "type": "MINION",
       "cost": 4,
@@ -5993,7 +5820,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_thunderstrike",
+      "id": 221,
       "name": "Thunderstrike",
       "type": "SPELL",
       "cost": 3,
@@ -6014,7 +5841,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_stormcallers_pact",
+      "id": 222,
       "name": "Stormcaller's Pact",
       "type": "SPELL",
       "cost": 6,
@@ -6035,7 +5862,7 @@
       "sourceFile": "Rekindling.cards.json"
     },
     {
-      "id": "rekind_tempest_vael",
+      "id": 1176,
       "name": "Vael",
       "type": "MINION",
       "cost": 7,
