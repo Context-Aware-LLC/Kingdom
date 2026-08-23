@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using Emberfall.Core.Cards;
+using Emberfall.Core.Contracts;
 
 namespace Emberfall.Editor
 {
@@ -21,6 +22,34 @@ namespace Emberfall.Editor
         // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
         // Addressables group at address "cards/Emberfall.cards".
         public const string DefaultEmberfallJsonPath = "Assets/CardData/Emberfall.cards.json";
+
+        /// <summary>
+        /// The file a row belongs in, decided by its <see cref="SetId"/> rather than by where it
+        /// happened to be loaded from. So changing a card's set MOVES it, and the filing cannot
+        /// drift from the row the way it does when a tool remembers a path.
+        ///
+        /// <para><b>This is the one list that says which set files exist.</b> Two other places
+        /// enumerate them and one globs: the server and CardCi scan the directory, while
+        /// <c>CardDatabaseLoader</c> (the client) and <c>CardSetValidator</c> list them. A new set
+        /// means editing those enumerations too — the server finding a file the client cannot is
+        /// exactly how a build ships without its hero powers.</para>
+        /// </summary>
+        public static string PathForSet(SetId set) => set switch
+        {
+            SetId.CORE => "Assets/CardData/Core.cards.json",
+            SetId.EMBERFALL => DefaultEmberfallJsonPath,
+            SetId.REKINDLING => "Assets/CardData/Rekindling.cards.json",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(set), set,
+                "No card-data file is defined for this set."),
+        };
+
+        /// <summary>Every set file, in load order.</summary>
+        public static IReadOnlyList<string> AllSetPaths()
+        {
+            var paths = new List<string>();
+            foreach (SetId set in System.Enum.GetValues(typeof(SetId))) paths.Add(PathForSet(set));
+            return paths;
+        }
 
         /// <summary>Loads every row as (parsed definition, verbatim source JSON for that row).</summary>
         public static IReadOnlyList<(CardDefinition def, string json)> LoadRows(string path)

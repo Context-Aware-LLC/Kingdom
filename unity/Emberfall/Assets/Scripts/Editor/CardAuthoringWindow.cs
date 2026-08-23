@@ -13,7 +13,7 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Card Authoring EditorWindow (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B, dev-docs/pipelines/card-authoring-and-import.md:9). Edits the
-    /// canonical JSON row (Emberfall.cards.json today — see CardJsonRowIO), never the baked SO directly.
+    /// canonical JSON rows across every set file (see CardJsonRowIO.PathForSet), never a derived copy.
     /// Every enum control is a real C# enum popup (EnumPopup/Toggle), so a designer cannot type an
     /// unknown verb/keyword/selector — invalid effects are structurally unrepresentable in the UI.
     ///
@@ -86,8 +86,17 @@ namespace Emberfall.Editor
         private void LoadAll()
         {
             _cards.Clear();
-            foreach (var (def, _) in CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultEmberfallJsonPath))
-                _cards.Add(EditableCard.FromDefinition(def));
+            // EVERY set file, not just Emberfall. Loading one file made this window wrong in two
+            // ways at once, both silent: LiveDb() could not resolve a rule naming a card from
+            // another set (reported as C12-TOKEN-UNRESOLVED against a card that is fine), and
+            // NextIdInBand scanned 179 of 268 rows, so the id it minted collided with an existing
+            // card in EVERY band — measured 2026-08-23, the moment CORE split out.
+            foreach (string path in CardJsonRowIO.AllSetPaths())
+            {
+                if (!File.Exists(path)) { Debug.LogWarning($"[CardAuthoring] missing set file: {path}"); continue; }
+                foreach (var (def, _) in CardJsonRowIO.LoadRows(path))
+                    _cards.Add(EditableCard.FromDefinition(def));
+            }
             _dirtyIds.Clear();
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
         }
@@ -549,7 +558,7 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var card = _cards[_selected];
-            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Handle}' (card {card.Id})? This removes it from Emberfall.cards.json on next Save.", "Delete", "Cancel"))
+            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Handle}' (card {card.Id})? This removes it from its set file on next Save.", "Delete", "Cancel"))
                 return;
 
             var referencedBy = _cards.Where(c => c.Rules.Any(rule => rule.ReferencedCardId == card.Id))
@@ -601,10 +610,31 @@ namespace Emberfall.Editor
             return id;
         }
 
+        /// <summary>
+        /// Writes every loaded row back to the file its <see cref="SetId"/> names — so a card whose
+        /// set changed MOVES between files, and a new card is filed by what it says it is rather
+        /// than by which file the window happened to open.
+        ///
+        /// <para><b>Writes each set file whole, from what is in memory.</b> Any set file this
+        /// window did not load would therefore be TRUNCATED, which is why LoadAll reads all of them
+        /// and warns rather than skipping quietly.</para>
+        /// </summary>
         private void SaveAll()
         {
-            var defs = _cards.Select(c => c.ToDefinition()).ToList();
-            CardJsonRowIO.SaveRows(CardJsonRowIO.DefaultEmberfallJsonPath, defs);
+            var bySet = new Dictionary<SetId, List<CardDefinition>>();
+            foreach (var card in _cards)
+            {
+                CardDefinition def = card.ToDefinition();
+                if (!bySet.TryGetValue(def.SetId, out var rows)) bySet[def.SetId] = rows = new List<CardDefinition>();
+                rows.Add(def);
+            }
+
+            foreach (SetId set in System.Enum.GetValues(typeof(SetId)))
+            {
+                bySet.TryGetValue(set, out var rows);
+                CardJsonRowIO.SaveRows(CardJsonRowIO.PathForSet(set), rows ?? new List<CardDefinition>());
+            }
+
             AssetDatabase.Refresh();
             _dirtyIds.Clear();
         }
