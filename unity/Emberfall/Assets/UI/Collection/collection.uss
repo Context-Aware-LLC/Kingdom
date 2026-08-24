@@ -607,6 +607,22 @@
     border-width: 1px;
     border-color: var(--surface-3);
 }
+.craft-illustration,
+.craft-illustration-scrim {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+}
+.craft-illustration {
+    background-image: url("/Assets/Art/Backgrounds/CraftingForge_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+    opacity: 0.82;
+}
+.craft-illustration-scrim {
+    background-color: rgba(5, 8, 12, 0.48);
+}
 
 .craft-head {
     flex-direction: row;
