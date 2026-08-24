@@ -6,7 +6,15 @@ filename level. This docstring is the spec; it left CLAUDE.md on 2026-08-22 to s
 to the only thing that checks it:
 
     Assets/Art/Cards/<setId>/<classToken>[_<role>]_<name>.png
-    Assets/Art/Cards/<setId>/[<role>_]<name>.png            for NEUTRAL
+
+NEUTRAL is a classToken like any other -- `neutral_stone_sentry`, `neutral_token_wisp` -- since
+Sam's 2026-08-24 ruling. It was previously spelled by ABSENCE (a neutral artId was just the card
+name), which made neutral the one class you identify by what is NOT there, and it read as
+ambiguous exactly where it mattered: `stone_sentry` is the NEUTRAL card "Stone Sentry", and this
+script called it a STONEWARDEN mismatch for as long as the check existed. The row was always
+right and the rule was the problem. Within the neutrals the prefixed rows were the outliers;
+across the corpus the bare ones were, and the corpus is what a reader holds in their head.
+tooling/scripts/migrate_neutral_art_prefix.py did the migration.
 
 `<role>` is `hero_power` or `token`. An artId IS the filename — there is no `art/`
 namespace and no `art_` prefix; both were dropped because the namespace had one value
@@ -14,9 +22,10 @@ across every row and so distinguished nothing. `ArtIds.ToFileName` stays a
 `Replace('/','_')` against a future namespaced id, but nothing today has a separator to
 flatten.
 
-**The absence of a class token is what means neutral**, so a neutral row carrying one is just as
-wrong as a classed row missing one. Class tokens are abbreviations that do not match their class
-names, so this derives the map from the data rather than hardcoding it, and prints what it derived.
+Every row carries a class token, so a missing one is as wrong as the wrong one. Class tokens are
+abbreviations that do not match their class names, so this derives the map from the data rather
+than hardcoding it, and prints what it derived -- except NEUTRAL, which is pinned as a constant
+because "the dominant leading segment" cannot bootstrap a token that is being introduced.
 
 Three further checks, each for something no existing gate reports:
 
@@ -56,7 +65,6 @@ import collections
 import hashlib
 import json
 import pathlib
-import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -65,6 +73,13 @@ ART_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 
 ROLES = ("hero_power", "token")
 
+# NEUTRAL is a class token like any other (Sam, 2026-08-24). It used to be spelled by ABSENCE --
+# a neutral artId was just the card name -- which made neutral the one class you identify by what
+# is not there, and it read as ambiguous exactly where it mattered: `stone_sentry` is the NEUTRAL
+# card "Stone Sentry", and this check called it a STONEWARDEN mismatch for as long as it existed.
+# Within the neutrals the prefixed rows were the outliers; across the corpus the bare ones were.
+NEUTRAL_TOKEN = "neutral"
+
 
 def rows():
     for path in sorted(CARD_DIR.glob("*.cards.json")):
@@ -72,27 +87,6 @@ def rows():
         cards = doc["cards"] if isinstance(doc, dict) and "cards" in doc else doc
         for card in cards:
             yield path.name, card
-
-
-def name_slug(name):
-    """The card's NAME as an artId would spell it: lowercase, non-alphanumerics to underscores."""
-    return "_".join(re.findall(r"[a-z0-9]+", (name or "").lower()))
-
-
-def name_explains(card, art):
-    """Whether a NEUTRAL row's leading segment is just the first word of its NAME.
-
-    A neutral artId is the name with NO class token in front of it -- the absence IS the signal.
-    So "Stone Sentry" is `stone_sentry`, whose leading segment collides with STONEWARDEN's token
-    by coincidence of English. Row 1007 was reported as a mismatch on exactly that for as long as
-    this check has existed, and the row was always right; row 1010 "Stoneback Sentry" escaped only
-    because its first word happens not to be a token.
-
-    The test that separates them is whether the artId is ALREADY the name. If it is, nothing was
-    prefixed and there is no class token to carry. A genuinely mis-tokened neutral -- name
-    "Sentry", artId `stone_sentry` -- still fails, because `sentry` != `stone_sentry`.
-    """
-    return art == name_slug(card.get("name"))
 
 
 def first_segment(art_id):
@@ -132,6 +126,7 @@ def main():
         token_of[cls] = token
         total = sum(c for _, c in counts)
         print(f"  {cls:<12} -> {token:<8} ({n}/{total} rows)")
+    token_of["NEUTRAL"] = NEUTRAL_TOKEN
     known_tokens = {t: c for c, t in token_of.items()}
     print()
 
@@ -142,11 +137,11 @@ def main():
         art = card["artId"]
         seg = first_segment(art)
         owner = known_tokens.get(seg)          # class this leading token belongs to, if any
-        expected = token_of.get(cls)           # None for NEUTRAL
+        expected = token_of.get(cls)           # NEUTRAL included, pinned above
 
-        if cls == "NEUTRAL" and owner is not None and not name_explains(card, art):
+        if cls == "NEUTRAL" and seg != NEUTRAL_TOKEN:
             findings.append((card["id"], cls, set_id, art,
-                             f"NEUTRAL row carries the {owner} class token '{seg}'"))
+                             f"NEUTRAL row must lead with '{NEUTRAL_TOKEN}_' (has '{seg}')"))
         elif cls != "NEUTRAL" and owner != cls:
             if owner is None:
                 findings.append((card["id"], cls, set_id, art,

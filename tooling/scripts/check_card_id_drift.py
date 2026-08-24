@@ -124,15 +124,35 @@ def main():
         for field in moved:
             print(f"  ~ {cid}.{field}: {before[field]!r} -> {after[field]!r}")
 
-    if removed or changed:
+    # A REMOVED id and a CHANGED field are not the same failure and must not share a verdict.
+    # A saved deck stores the numeric id and nothing else, so only a removal can strand one.
+    # Renaming an artId -- 38 of them on 2026-08-24, when NEUTRAL gained its class token --
+    # touches the art pipeline and the card face, and no save anywhere. Printing "repair every
+    # decks.json" for that sends someone into player save data after a problem that is not
+    # there, which is worse than saying nothing.
+    if removed:
         print()
         print("CARD_ID_DRIFT=FAIL")
         print(
-            "A removed or repointed id breaks saved decks that no test can see. If this was\n"
-            "deliberate, repair the save data in the same change:\n"
+            "A REMOVED id breaks saved decks that no test can see. If this was deliberate,\n"
+            "repair the save data in the same change:\n"
             "  - every decks.json under %LOCALAPPDATA%\\..\\LocalLow\\<company>\\<product>\\<guid>\\\n"
             "  - then re-run this check with the renames applied.\n"
             "Card ids are permanent by ruling (gh#86, 2026-08-07): retire a card, never repoint it."
+        )
+        return 1
+
+    if changed:
+        fields = sorted({f for cid in changed
+                         for f in IDENTITY_FIELDS
+                         if identity(base[cid])[f] != identity(work[cid])[f]})
+        print()
+        print("CARD_ID_DRIFT=CHANGED  (no id was removed; no saved deck is affected)")
+        print(
+            f"Fields moved: {', '.join(fields)}.\n"
+            "Every id still resolves, so decks.json needs nothing. What these DO stale is the\n"
+            "derived artifacts -- run rebake_card_data.py, and audit_card_art_names.py\n"
+            "--check-seeds if an artId moved, since the seed corpus is keyed by it."
         )
         return 1
 

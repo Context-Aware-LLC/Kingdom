@@ -5,19 +5,19 @@
     "background": "A cool blue ocean with gentle lapping waves beside a flooded beach settlement framed by jungle and distant cliffs, kept subordinate to the warm-cloaked hermit.",
     "notes": "Do not dress the hermit in teal or blue; background villagers remain small and subordinate. Scraped from the draft brief this card was generated from (tide_prophet_of_the_flood)."
   },
-  "reclaimed_scout": {
+  "neutral_reclaimed_scout": {
     "subject": "A young settlement scout in a patched stone-grey coat steps through a newly cleared archway, carrying a short aged-bronze spyglass and a bundle of moss-green survey stakes. One warm lantern hangs low at the hip while a salvaged shoulder plate bears visible hammer dents but no emblem.",
     "perspective": "Eye-level full-body three-quarter view with the scout's complete silhouette, spyglass, and forward step centered inside the middle 70%.",
     "background": "A pale blue-grey dawn over roofless ruins and cool mist, separating the warm lantern and bronze tools from the open setting.",
     "notes": "Keep the scout practical and lightly equipped, with no bow, military uniform, readable map, banner, heroic pose, or distant crowd."
   },
-  "alliance_messenger": {
+  "neutral_alliance_messenger": {
     "subject": "A road-worn courier leans into a steady run, one hand protecting a sealed bronze message tube strapped across a moss-green sash while the other steadies a lantern-amber signal pennant folded tightly around its staff. The figure wears mixed settlement leathers repaired with two visibly different stitching styles.",
     "perspective": "Low side-on three-quarter action view with the entire running courier, sealed tube, and folded pennant contained in the central composition.",
     "background": "A cool rain-washed causeway between dark grey ruins under a pale sky, opposing the warm bronze tube and amber cloth.",
     "notes": "The pennant stays folded and carries no emblem or text. No horse, army, open letter, sprinting crowd, royal costume, or combat scene."
   },
-  "restored_bulwark": {
+  "neutral_restored_bulwark": {
     "subject": "A repaired settlement barricade construct stands on two blocky feet, its broad stone-grey shield face pieced together with aged-bronze straps, fresh pale mortar, and one mismatched mossy slab. A warm lantern core glows through the carefully mended central seam as it braces across a narrow road.",
     "perspective": "Low frontal three-quarter view with the full repaired construct, both feet, and patchwork shield face centered and clearly readable.",
     "background": "A cool blue predawn street of pale rubble and receding scaffold poles, contrasting with the warm repairs and lantern core.",
@@ -29,7 +29,7 @@
     "background": "A deep cobalt-blue canvas screen and hazy teal work-yard shadow, separating the cool grey granite and iron silhouette while the warm cedar beams, bronze chest, and amber core remain distinct.",
     "notes": "Bulwark is conveyed by load-bearing strength. No junk pile silhouette, giant size, weapon, extra workers, glowing runes, wheels, or chaotic scrap spikes."
   },
-  "new_dawn_bannerman": {
+  "neutral_new_dawn_bannerman": {
     "subject": "A weathered settlement standard-bearer plants a tall repaired pole into fresh earth while unfurling a broad sun-faded cloth of warm lantern amber edged in moss green. The bearer wears practical stone-grey armor made from joined pieces and looks back toward unseen arrivals with a steady open posture.",
     "perspective": "Low full-body three-quarter portrait with the bearer, entire plain banner, and planted pole centered while the cloth remains inside the frame.",
     "background": "A cool blue-grey morning above half-rebuilt stone walls and thin silver mist, giving the warm banner immediate contrast.",
@@ -41,19 +41,19 @@
     "background": "A pale cold river gorge and blue-white morning mist open behind the dark armored figure, creating a clean silhouette.",
     "notes": "Bulwark is quiet control of the crossing. No spear, enemy, castle gate, giant bridge panorama, readable toll sign, crest, or aggressive lunge."
   },
-  "truce_pact": {
+  "neutral_truce_pact": {
     "subject": "Two differently armored hands meet over a cracked foundation stone: one in char-black forge leather and one in cool iron-grey mail, both gripping the same plain aged-bronze mason's clamp as it closes a repaired seam. A small warm lantern flame reflects equally on both wrists.",
     "perspective": "Tight top-down three-quarter close view with the joined hands, bronze clamp, and closing stone seam centered as one simple gesture.",
     "background": "A muted cool slate worktable with pale dust and soft blue shadow, allowing the warm skin, leather, bronze, and lantern reflection to separate.",
     "notes": "Show cooperation through the shared tool, not a handshake alone. No treaty text, signatures, flags, logos, crowd, weapons, magical aura, or political symbols."
   },
-  "aric_first_among_equals": {
+  "neutral_aric_first_among_equals": {
     "subject": "Aric is a mature settlement leader in weathered stone-grey scale armor and a moss-green cloak, standing at ground level in the center of a circular rebuilding table rather than above it. One bare hand steadies a rough foundation model while seven mismatched bronze tools point inward around him, and a warm lantern illuminates every place equally.",
     "perspective": "Medium eye-level three-quarter group-implied portrait focused on Aric and the circular table, with only cropped hands and tools of allies at the edges.",
     "background": "A cool open-roof council hall of pale ruined stone under blue evening light, contrasting with the central amber lantern and bronze tools.",
     "notes": "Aric must read as first among equals, not king: no throne, crown, raised dais, banner, readable plans, army, halo, or ornate regalia."
   },
-  "token_risen_guardian": {
+  "neutral_token_risen_guardian": {
     "subject": "A human-sized guardian rises from a memorial mound in intact iron-grey armor wrapped with clean bone-white funerary bands, lifting a broad bronze-bound forearm to shield the grave marker behind it. Pale green-gold grave-light gathers at the joints while packed earth falls in restrained clumps from one knee.",
     "perspective": "Low full-body three-quarter view with the guardian's complete rising silhouette, shielding arm, and grave marker centered inside the frame.",
     "background": "A warm amber sunrise across a quiet ochre memorial field, separating the cool armor and green-gold light from the hopeful setting.",
@@ -401,12 +401,6 @@
     "background": "A warm ember-orange sky above a pale ochre plateau, silhouetting the dark elemental while preserving the two bright strike paths.",
     "notes": "Doublestrike is two arm arcs in one action. Keep the two frightened watchkeepers tiny and subordinate to Vael. No giant titan scale, weapon, crown, wings, army, full tornado body, or duplicate of Zael's upright storm-lord pose."
   },
-  "night_toxin_blade": {
-    "subject": "A short single-edged dagger shown whole and in near-profile: a blade-silver blade with a hollow fuller running its full length, the fuller carrying a slow toxic-lime fluid that beads and hangs at the point. The grip is wrapped in shadow-black cord under a bone-white pommel cap, with a thin midnight purple-grey guard.",
-    "perspective": "Near-orthographic profile, long lens, the entire weapon inside the frame and tilted only slightly off vertical, dead-centred.",
-    "background": "A flat warm amber-brown ground with a soft ochre falloff and no scene at all, so the cold silver and the toxic lime separate cleanly at icon size.",
-    "notes": "The object alone: no hand, no wielder, no ground plane, no scene. Compact, never a long corner-to-corner diagonal. Whole weapon in frame with nothing that matters outside the inner 60 percent."
-  },
   "storm_overcharge": {
     "subject": "A storm-tap lever of tarnished storm-silver and charcoal iron is slammed hard past its final notch by two gauntleted hands, and an electric gold-white arc jumps the opened coil and races up both forearms. The coil housing glows white along its seam and the gauntlet plates are already scorched soot-black across the knuckles.",
     "perspective": "Tight close three-quarter on the lever and the two hands, camera at the height of the mechanism, the arc filling the upper third.",
@@ -424,42 +418,6 @@
     "perspective": "Wide slightly low three-quarter across the courtyard, framed so the whole braided strike and its outermost thunder-ring sit inside the image.",
     "background": "A warm amber-lit settlement wall and its scaffolding beyond the courtyard, lit torches and thin warm ember-snow, kept far lower in value than the strike.",
     "notes": "The storm itself is the subject: no hero, caster, or named figure anywhere in frame. Keep it a strike on ONE courtyard, not a burning city and not a landscape-wide apocalypse."
-  },
-  "night_shadow_slip": {
-    "subject": "A figure caught mid-dissolve: the near half still solid in shadow-black leather and blade-silver buckles, the far half already unravelling into midnight purple-grey shadow-smoke that streams sideways and stops at a hard vanishing edge, leaving a faint bone-white outline where the body was.",
-    "perspective": "Medium three-quarter at close eye level, framed so the dissolving edge runs through the centre of the image.",
-    "background": "A warm amber torchlit alley of half-rebuilt brick and fresh timber scaffold, its light still falling on the patch of ground where the figure no longer is.",
-    "notes": "The disappearance is the subject, and the torchlight landing on empty ground is what sells it. No face detail, no portal, no swirling magic circle, no second figure."
-  },
-  "night_venom_lash": {
-    "subject": "A long braided lash of shadow-black cord tipped with blade-silver barbs snaps taut through the frame, flinging a spray of discrete toxic-lime venom droplets off its length. The barbs are already wet and the droplets hang bright and separate against the dark.",
-    "perspective": "Medium close with the camera near the arc of the lash so it reads as one continuous S-curve across the frame, the barbed tip nearest the viewer.",
-    "background": "A warm ochre and lantern-amber rebuilt wall, low in value and warm so the lime spray separates hard from it.",
-    "notes": "The lash and its spray only: no wielder, no victim, no corpse. Keep the venom as bright discrete droplets, never a green fog or a haze."
-  },
-  "stone_rubble_toss": {
-    "subject": "A single fist-sized chunk of granite-grey masonry with a rusted-bronze wall cramp still pinned through it, caught in flight just after release and trailing pale quartz dust with two smaller fragments tumbling behind. The mass and the spin read plainly on it.",
-    "perspective": "Tight close three-quarter tracking alongside the stone at its own height, with motion blur only in the background and the stone itself sharp.",
-    "background": "A warm ochre and ember-orange dusk sky above a half-rebuilt wall, kept warm and bright so the cold grey stone reads dark against it.",
-    "notes": "ONE thrown chunk, fist-sized, plus two small fragments - not a boulder and not an avalanche. No thrower, no arm or hand in frame, no impact and no crater."
-  },
-  "stone_wardens_vow": {
-    "subject": "A warden's gauntlet of rusted bronze and iron-black presses a flat granite-grey oath-stone into a half-repaired wall, and pale quartz light runs out from under the palm along every mortar seam in both directions, stitching the courses together. Moss-green creeps into the newly lit seams.",
-    "perspective": "Tight three-quarter close on the gauntlet and the oath-stone, the lit seams running out of frame to both sides.",
-    "background": "Warm lantern-amber and ember-orange torchlight falling on the timber scaffold standing against the wall.",
-    "notes": "A vow made by one hand on stone, not a shouted rally: a single gesture. No face, no full figure, no banner, no crowd, and no written runes or lettering of any kind."
-  },
-  "clock_gear_cache": {
-    "subject": "A hinged brass-cornered strongbox stands flipped open on a workbench, its felt-lined trays packed with graded polished-brass gears, tarnished-copper mainsprings and tightly rolled parchment-amber blueprints. Two of the blueprint rolls have been lifted clear of the tray and stand proud of the box, arc-blue light waking along their cut edges.",
-    "perspective": "Close top-down three-quarter over the open box, the box filling most of the frame with the two lifted rolls nearest the camera.",
-    "background": "A deep cool slate-blue workshop shadow going nearly black at the corners, so the warm brass and parchment amber carry all of the light.",
-    "notes": "TWO items lifted clear of the rest is the read. No hands, no figure, no coins or treasure hoard, and no lettering or diagrams legible on the blueprints."
-  },
-  "clock_refraction_module": {
-    "subject": "A palm-sized module of oiled steel and polished brass with a stacked pale-quartz prism at its heart is snapped into a socket and locking home. One thin arc-blue beam enters it and leaves as three brighter parallel beams, each fanning wider and hotter than the single beam that went in.",
-    "perspective": "Tight three-quarter close on the module seated in its socket, the input beam entering at the left edge and the three output beams running off the right.",
-    "background": "A deep cool slate-blue interior falling off to near-black, so the brass body and the arc-blue beams both separate.",
-    "notes": "One beam in, THREE brighter out - the multiplication is the entire idea. No hands, no figure, no rainbow spectrum, no shattered glass."
   },
   "storm_crackling_sprite": {
     "subject": "A small elemental sprite no bigger than a hand lantern: a tight knot of electric gold-white arc-light with two distinct crackling limbs that mirror each other exactly, storm-silver motes orbiting a dense charcoal core.",
@@ -485,6 +443,24 @@
     "background": "A warm amber lantern-lit gate and its scaffolding below and behind, held low in value and warm against the cold figure.",
     "notes": "Two parallel traces from the horn. Substantial but localized: the wind bends banners and scaffold cloth, it does not level the gate. No wings."
   },
+  "night_toxin_blade": {
+    "subject": "A short single-edged dagger shown whole and in near-profile: a blade-silver blade with a hollow fuller running its full length, the fuller carrying a slow toxic-lime fluid that beads and hangs at the point. The grip is wrapped in shadow-black cord under a bone-white pommel cap, with a thin midnight purple-grey guard.",
+    "perspective": "Near-orthographic profile, long lens, the entire weapon inside the frame and tilted only slightly off vertical, dead-centred.",
+    "background": "A flat warm amber-brown ground with a soft ochre falloff and no scene at all, so the cold silver and the toxic lime separate cleanly at icon size.",
+    "notes": "The object alone: no hand, no wielder, no ground plane, no scene. Compact, never a long corner-to-corner diagonal. Whole weapon in frame with nothing that matters outside the inner 60 percent."
+  },
+  "night_shadow_slip": {
+    "subject": "A figure caught mid-dissolve: the near half still solid in shadow-black leather and blade-silver buckles, the far half already unravelling into midnight purple-grey shadow-smoke that streams sideways and stops at a hard vanishing edge, leaving a faint bone-white outline where the body was.",
+    "perspective": "Medium three-quarter at close eye level, framed so the dissolving edge runs through the centre of the image.",
+    "background": "A warm amber torchlit alley of half-rebuilt brick and fresh timber scaffold, its light still falling on the patch of ground where the figure no longer is.",
+    "notes": "The disappearance is the subject, and the torchlight landing on empty ground is what sells it. No face detail, no portal, no swirling magic circle, no second figure."
+  },
+  "night_venom_lash": {
+    "subject": "A long braided lash of shadow-black cord tipped with blade-silver barbs snaps taut through the frame, flinging a spray of discrete toxic-lime venom droplets off its length. The barbs are already wet and the droplets hang bright and separate against the dark.",
+    "perspective": "Medium close with the camera near the arc of the lash so it reads as one continuous S-curve across the frame, the barbed tip nearest the viewer.",
+    "background": "A warm ochre and lantern-amber rebuilt wall, low in value and warm so the lime spray separates hard from it.",
+    "notes": "The lash and its spray only: no wielder, no victim, no corpse. Keep the venom as bright discrete droplets, never a green fog or a haze."
+  },
   "night_dusk_imp": {
     "subject": "A small spirit imp the size of a house cat, hunched and grinning, its body midnight purple-grey and shadow-black with edges that fade off into smoke instead of ending. Two toxic-lime pinpricks serve as eyes and a thin bone-white ribcage shows faintly through the dark.",
     "perspective": "Close eye level with the imp centred and small, crouched on a broken stone step.",
@@ -509,6 +485,18 @@
     "background": "A warm amber lantern-lit rebuilt square behind the lit half, dimming to nothing behind the dark half.",
     "notes": "The card is the MOMENT of nightfall crossing a person, and that division is the whole idea. Sizable but not a giant. No face detail on the dark half, no glow inside the hood, no decorative smoke swirls added on top."
   },
+  "stone_rubble_toss": {
+    "subject": "A single fist-sized chunk of granite-grey masonry with a rusted-bronze wall cramp still pinned through it, caught in flight just after release and trailing pale quartz dust with two smaller fragments tumbling behind. The mass and the spin read plainly on it.",
+    "perspective": "Tight close three-quarter tracking alongside the stone at its own height, with motion blur only in the background and the stone itself sharp.",
+    "background": "A warm ochre and ember-orange dusk sky above a half-rebuilt wall, kept warm and bright so the cold grey stone reads dark against it.",
+    "notes": "ONE thrown chunk, fist-sized, plus two small fragments - not a boulder and not an avalanche. No thrower, no arm or hand in frame, no impact and no crater."
+  },
+  "stone_wardens_vow": {
+    "subject": "A warden's gauntlet of rusted bronze and iron-black presses a flat granite-grey oath-stone into a half-repaired wall, and pale quartz light runs out from under the palm along every mortar seam in both directions, stitching the courses together. Moss-green creeps into the newly lit seams.",
+    "perspective": "Tight three-quarter close on the gauntlet and the oath-stone, the lit seams running out of frame to both sides.",
+    "background": "Warm lantern-amber and ember-orange torchlight falling on the timber scaffold standing against the wall.",
+    "notes": "A vow made by one hand on stone, not a shouted rally: a single gesture. No face, no full figure, no banner, no crowd, and no written runes or lettering of any kind."
+  },
   "stone_ironclad_grunt": {
     "subject": "A squat construct barely taller than a person's waist, built from mismatched granite-grey blocks bound in rusted-bronze straps, holding a broad iron-black slab shield twice the width of its own body and planted immovably in front of it. Moss-green fills the joints and a dull pale-quartz core shows at the chest seam.",
     "perspective": "Low eye-level three-quarter with the camera close to the ground so the planted shield fills the lower half of the frame.",
@@ -526,6 +514,18 @@
     "perspective": "Wide low three-quarter from ground level so the behemoth towers, its whole head inside the frame, with one or two small warm-lit figures at its feet purely for scale.",
     "background": "A warm ember-orange dusk sky and lantern-amber torches along the scaffolded wall behind it.",
     "notes": "Genuinely large, but still one creature on one street rather than a landscape event. The quartz seams glow only faintly. No face detail, no roar, no swung weapon."
+  },
+  "clock_gear_cache": {
+    "subject": "A hinged brass-cornered strongbox stands flipped open on a workbench, its felt-lined trays packed with graded polished-brass gears, tarnished-copper mainsprings and tightly rolled parchment-amber blueprints. Two of the blueprint rolls have been lifted clear of the tray and stand proud of the box, arc-blue light waking along their cut edges.",
+    "perspective": "Close top-down three-quarter over the open box, the box filling most of the frame with the two lifted rolls nearest the camera.",
+    "background": "A deep cool slate-blue workshop shadow going nearly black at the corners, so the warm brass and parchment amber carry all of the light.",
+    "notes": "TWO items lifted clear of the rest is the read. No hands, no figure, no coins or treasure hoard, and no lettering or diagrams legible on the blueprints."
+  },
+  "clock_refraction_module": {
+    "subject": "A palm-sized module of oiled steel and polished brass with a stacked pale-quartz prism at its heart is snapped into a socket and locking home. One thin arc-blue beam enters it and leaves as three brighter parallel beams, each fanning wider and hotter than the single beam that went in.",
+    "perspective": "Tight three-quarter close on the module seated in its socket, the input beam entering at the left edge and the three output beams running off the right.",
+    "background": "A deep cool slate-blue interior falling off to near-black, so the brass body and the arc-blue beams both separate.",
+    "notes": "One beam in, THREE brighter out - the multiplication is the entire idea. No hands, no figure, no rainbow spectrum, no shattered glass."
   },
   "clock_ticking_automaton": {
     "subject": "A knee-high automaton on three stubby legs: a tarnished-copper barrel body with one exposed polished-brass escapement wheel ticking away at the front and a small arc-blue core glowing through its grille. A single dented oiled-steel arm is raised in a small, businesslike guard.",

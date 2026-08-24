@@ -12,7 +12,7 @@
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "reclaimed_scout",
+    "artId": "neutral_reclaimed_scout",
     "text": "Restore 1 Health to your hero.",
     "rules": [
       {
@@ -52,7 +52,7 @@
     "tribe": "HUMAN",
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "alliance_messenger",
+    "artId": "neutral_alliance_messenger",
     "text": "Draw a card.",
     "rules": [
       {
@@ -90,7 +90,7 @@
     "tribe": "CONSTRUCT",
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "restored_bulwark",
+    "artId": "neutral_restored_bulwark",
     "text": "Bulwark.",
     "rules": []
   },
@@ -128,7 +128,7 @@
     "tribe": "HUMAN",
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "new_dawn_bannerman",
+    "artId": "neutral_new_dawn_bannerman",
     "text": "Give all friendly minions +1/+1.",
     "rules": [
       {
@@ -208,7 +208,7 @@
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "truce_pact",
+    "artId": "neutral_truce_pact",
     "text": "Give all friendly minions +2/+2.",
     "rules": [
       {
@@ -248,7 +248,7 @@
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "aric_first_among_equals",
+    "artId": "neutral_aric_first_among_equals",
     "flavorText": "First Among Equals",
     "text": "Give all friendly minions +2/+2 and restore 5 Health to your hero.",
     "rules": [
@@ -592,7 +592,7 @@
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": false,
-    "artId": "smithy_hammer",
+    "artId": "neutral_smithy_hammer",
     "text": "Attack: Gain 2 Armor.",
     "rules": [
       {
@@ -1583,7 +1583,7 @@
     "tribe": "UNDEAD",
     "setId": "REKINDLING",
     "collectible": false,
-    "artId": "token_risen_guardian",
+    "artId": "neutral_token_risen_guardian",
     "rules": []
   },
   {
