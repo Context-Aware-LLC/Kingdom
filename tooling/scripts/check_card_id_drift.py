@@ -38,23 +38,41 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CARD_FILES = (
-    "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
-    "unity/Emberfall/Assets/CardData/Rekindling.cards.json",
-)
+CARD_DATA_DIR = "unity/Emberfall/Assets/CardData"
+
+
+def card_files(rev=None):
+    """Every set file, by GLOB.
+
+    A hardcoded pair sat here until 2026-08-24 and silently stopped covering CORE the day it became
+    its own set file: a check that never looks at a file cannot report drift in it, and reports
+    nothing, which reads exactly like a pass. The server globs this directory for the same reason.
+    """
+    if rev is None:
+        return sorted(
+            f"{CARD_DATA_DIR}/{p.name}"
+            for p in (ROOT / CARD_DATA_DIR).glob("*.cards.json")
+        )
+    listing = subprocess.check_output(
+        ["git", "ls-tree", "--name-only", rev, f"{CARD_DATA_DIR}/"],
+        cwd=str(ROOT), text=True, encoding="utf-8",
+    )
+    return sorted(p for p in listing.splitlines() if p.endswith(".cards.json"))
+
+
 IDENTITY_FIELDS = ("name", "artId", "type", "class", "rarity", "setId", "tribe", "collectible")
 
 
 def load_working():
     rows = []
-    for rel in CARD_FILES:
+    for rel in card_files():
         rows.extend(json.loads((ROOT / rel).read_text(encoding="utf-8")))
     return {row["id"]: row for row in rows}
 
 
 def load_base(rev):
     rows = []
-    for rel in CARD_FILES:
+    for rel in card_files(rev):
         try:
             blob = subprocess.check_output(
                 ["git", "show", f"{rev}:{rel}"], cwd=str(ROOT), text=True, encoding="utf-8"

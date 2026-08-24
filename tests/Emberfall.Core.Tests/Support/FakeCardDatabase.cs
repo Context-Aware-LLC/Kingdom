@@ -10,7 +10,7 @@ namespace Emberfall.Core.Tests.Support
     /// </summary>
     public sealed class FakeCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _cache = new();
+        private readonly Dictionary<int, CardDefinition> _cache = new();
 
         /// <summary>
         /// Declare every equipped weapon on a board as a WEAPON row.
@@ -33,12 +33,13 @@ namespace Emberfall.Core.Tests.Support
                 CardInstance? weapon = state.Players[seat].Weapon;
                 if (weapon == null) continue;
                 Register(new CardDefinition(
-                    id: weapon.DefinitionId, name: weapon.DefinitionId, type: CardType.WEAPON, cost: 1,
+                    id: weapon.DefinitionId, handle: $"w{weapon.DefinitionId}",
+                    name: $"w{weapon.DefinitionId}", type: CardType.WEAPON, cost: 1,
                     attack: 1, health: null, durability: weapon.CurrentDurability ?? 1,
                     @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                     keywords: System.Array.Empty<Keyword>(),
                     rules: System.Array.Empty<RuleDefinition>(),
-                    flavorText: "", artId: weapon.DefinitionId, setId: SetId.CORE,
+                    flavorText: "", artId: $"w{weapon.DefinitionId}", setId: SetId.CORE,
                     collectible: true, tribe: null, factionId: ""));
             }
             return this;
@@ -51,22 +52,22 @@ namespace Emberfall.Core.Tests.Support
             return this;
         }
 
-        public bool TryGet(string cardId, out CardDefinition def)
+        public bool TryGet(int cardId, out CardDefinition def)
         {
             def = Get(cardId);
             return true;
         }
 
-        public CardDefinition Get(string cardId)
+        public CardDefinition Get(int cardId)
         {
             if (!_cache.TryGetValue(cardId, out var d))
             {
                 d = new CardDefinition(
-                    id: cardId, name: cardId, type: CardType.MINION, cost: 1,
+                    id: cardId, handle: $"c{cardId}", name: $"c{cardId}", type: CardType.MINION, cost: 1,
                     attack: 1, health: 1, durability: null,
                     @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                     keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
-                    flavorText: "", artId: "art/" + cardId, setId: SetId.CORE,
+                    flavorText: "", artId: $"art/c{cardId}", setId: SetId.CORE,
                     collectible: true, tribe: null, factionId: "");
                 _cache[cardId] = d;
             }
@@ -75,11 +76,15 @@ namespace Emberfall.Core.Tests.Support
 
         public IReadOnlyCollection<CardDefinition> AllCollectible() => System.Array.Empty<CardDefinition>();
 
-        /// <summary>A fixed slice deck of <paramref name="n"/> distinct card ids (deterministic, ordered).</summary>
-        public static List<string> Deck(string prefix, int n)
+        /// <summary>
+        /// A fixed slice deck of <paramref name="n"/> distinct card ids (deterministic, ordered),
+        /// counting up from <paramref name="first"/>. Callers pass an id in the MINION band (1001+)
+        /// unless the fixture is about some other type.
+        /// </summary>
+        public static List<int> Deck(int first, int n)
         {
-            var list = new List<string>(n);
-            for (int i = 0; i < n; i++) list.Add($"{prefix}_{i:00}");
+            var list = new List<int>(n);
+            for (int i = 0; i < n; i++) list.Add(first + i);
             return list;
         }
     }

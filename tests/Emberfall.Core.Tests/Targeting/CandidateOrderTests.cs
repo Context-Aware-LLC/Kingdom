@@ -207,7 +207,7 @@ namespace Emberfall.Core.Tests.Targeting
         private static CardInstance Card(ref int nextId, PlayerId controller, Zone zone, string prefix)
         {
             int id = nextId++;
-            return new CardInstance(new InstanceId(id), $"{prefix}_{id:00}", controller)
+            return new CardInstance(new InstanceId(id), FixtureCard.Id($"{prefix}_{id:00}"), controller)
             {
                 Zone = zone,
                 CurrentAttack = 1,

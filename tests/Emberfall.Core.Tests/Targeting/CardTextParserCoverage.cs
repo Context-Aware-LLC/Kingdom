@@ -53,9 +53,9 @@ namespace Emberfall.Core.Tests.Targeting
         {
             List<CardDefinition> cards = ShippedRuleCards();
             var names = new CardNameIndex(CorpusBehaviourSweep.ShippedCards());
-            var derived = new List<string>();
-            var wrong = new List<string>();
-            var refused = new List<(string Card, string Reason)>();
+            var derived = new List<int>();
+            var wrong = new List<int>();
+            var refused = new List<(int Card, string Reason)>();
 
             foreach (CardDefinition card in cards)
             {
@@ -83,12 +83,12 @@ namespace Emberfall.Core.Tests.Targeting
                 }
                 catch (Exception e)
                 {
-                    wrong.Add($"{card.Id}: parsed rules do not render — <{e.GetType().Name}> {e.Message}");
+                    wrong.Add(FixtureCard.Id($"{card.Id}: parsed rules do not render — <{e.GetType().Name}> {e.Message}"));
                     continue;
                 }
 
                 if (string.Equals(rerendered, card.Text, StringComparison.Ordinal)) derived.Add(card.Id);
-                else wrong.Add($"{card.Id}\n      authored  \"{card.Text}\"\n      derived   \"{rerendered}\"");
+                else wrong.Add(FixtureCard.Id($"{card.Id}\n      authored  \"{card.Text}\"\n      derived   \"{rerendered}\""));
             }
 
             TestContext.Out.WriteLine($"card-name index: colliding printed names = {names.CollidingNames()}");
@@ -117,8 +117,8 @@ namespace Emberfall.Core.Tests.Targeting
             }
         }
 
-        private static void Report(int total, List<string> derived, List<string> wrong,
-            List<(string Card, string Reason)> refused)
+        private static void Report(int total, List<int> derived, List<int> wrong,
+            List<(int Card, string Reason)> refused)
         {
             var report = new List<string>
             {
@@ -137,7 +137,7 @@ namespace Emberfall.Core.Tests.Targeting
             }
 
             report.Add("refusals by reason — this is the work queue, most common first:");
-            foreach (IGrouping<string, (string Card, string Reason)> group in refused
+            foreach (IGrouping<string, (int Card, string Reason)> group in refused
                          .GroupBy(r => Generalise(r.Reason))
                          .OrderByDescending(g => g.Count())
                          .ThenBy(g => g.Key, StringComparer.Ordinal))
@@ -153,7 +153,7 @@ namespace Emberfall.Core.Tests.Targeting
             // when picking the next frame to add.
             File.WriteAllLines(Path.Combine(RepoPaths.RepoRoot, "card-text-parser-refusals.txt"),
                 refused.OrderBy(r => Generalise(r.Reason), StringComparer.Ordinal)
-                    .ThenBy(r => r.Card, StringComparer.Ordinal)
+                    .ThenBy(r => r.Card)
                     .Select(r => Generalise(r.Reason) + "  |  " + r.Card + "  |  " + r.Reason));
 
             TestContext.Out.WriteLine(text);
@@ -172,7 +172,7 @@ namespace Emberfall.Core.Tests.Targeting
 
         private static CardDefinition Rebuilt(CardDefinition card, IReadOnlyList<RuleDefinition> rules)
             => new CardDefinition(
-                id: card.Id, name: card.Name, type: card.Type, cost: card.Cost,
+                id: card.Id, handle: card.Handle, name: card.Name, type: card.Type, cost: card.Cost,
                 attack: card.Attack, health: card.Health, durability: card.Durability,
                 @class: card.Class, rarity: card.Rarity,
                 keywords: card.Keywords, rules: rules,

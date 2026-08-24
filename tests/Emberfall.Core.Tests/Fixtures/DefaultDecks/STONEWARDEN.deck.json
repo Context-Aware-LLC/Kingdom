@@ -1,0 +1,113 @@
+{
+  "primaryClass": "STONEWARDEN",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-STONEWARDEN",
+  "deckId": "fixture-deck-STONEWARDEN",
+  "seed": 64159285255,
+  "entries": [
+    {
+      "id": 51,
+      "count": 1
+    },
+    {
+      "id": 57,
+      "count": 1
+    },
+    {
+      "id": 60,
+      "count": 2
+    },
+    {
+      "id": 153,
+      "count": 2
+    },
+    {
+      "id": 167,
+      "count": 1
+    },
+    {
+      "id": 181,
+      "count": 1
+    },
+    {
+      "id": 183,
+      "count": 1
+    },
+    {
+      "id": 184,
+      "count": 2
+    },
+    {
+      "id": 1007,
+      "count": 1
+    },
+    {
+      "id": 1008,
+      "count": 1
+    },
+    {
+      "id": 1012,
+      "count": 1
+    },
+    {
+      "id": 1013,
+      "count": 1
+    },
+    {
+      "id": 1014,
+      "count": 2
+    },
+    {
+      "id": 1018,
+      "count": 1
+    },
+    {
+      "id": 1047,
+      "count": 1
+    },
+    {
+      "id": 1048,
+      "count": 1
+    },
+    {
+      "id": 1056,
+      "count": 1
+    },
+    {
+      "id": 1091,
+      "count": 1
+    },
+    {
+      "id": 1093,
+      "count": 1
+    },
+    {
+      "id": 1095,
+      "count": 1
+    },
+    {
+      "id": 1101,
+      "count": 1
+    },
+    {
+      "id": 1102,
+      "count": 1
+    },
+    {
+      "id": 1105,
+      "count": 1
+    },
+    {
+      "id": 1129,
+      "count": 1
+    },
+    {
+      "id": 1134,
+      "count": 1
+    },
+    {
+      "id": 1168,
+      "count": 1
+    }
+  ]
+}

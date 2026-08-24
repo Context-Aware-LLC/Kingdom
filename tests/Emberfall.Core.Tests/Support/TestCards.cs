@@ -36,7 +36,7 @@ namespace Emberfall.Core.Tests.Support
         /// <summary>Gives a synthetic row an explicit sentence, for a fixture that cares which one.</summary>
         public static CardDefinition Authored(CardDefinition def, string text)
             => new CardDefinition(
-                id: def.Id, name: def.Name, type: def.Type, cost: def.Cost,
+                id: def.Id, handle: def.Handle, name: def.Name, type: def.Type, cost: def.Cost,
                 attack: def.Attack, health: def.Health, durability: def.Durability,
                 @class: def.Class, rarity: def.Rarity,
                 keywords: def.Keywords, rules: def.Rules,

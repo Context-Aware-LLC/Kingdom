@@ -1,0 +1,105 @@
+{
+  "primaryClass": "CLOCKWRIGHT",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-CLOCKWRIGHT",
+  "deckId": "fixture-deck-CLOCKWRIGHT",
+  "seed": 64159285253,
+  "entries": [
+    {
+      "id": 55,
+      "count": 1
+    },
+    {
+      "id": 60,
+      "count": 1
+    },
+    {
+      "id": 166,
+      "count": 1
+    },
+    {
+      "id": 167,
+      "count": 1
+    },
+    {
+      "id": 171,
+      "count": 1
+    },
+    {
+      "id": 172,
+      "count": 2
+    },
+    {
+      "id": 213,
+      "count": 1
+    },
+    {
+      "id": 1008,
+      "count": 1
+    },
+    {
+      "id": 1010,
+      "count": 1
+    },
+    {
+      "id": 1016,
+      "count": 1
+    },
+    {
+      "id": 1017,
+      "count": 1
+    },
+    {
+      "id": 1019,
+      "count": 2
+    },
+    {
+      "id": 1055,
+      "count": 1
+    },
+    {
+      "id": 1056,
+      "count": 2
+    },
+    {
+      "id": 1091,
+      "count": 1
+    },
+    {
+      "id": 1092,
+      "count": 1
+    },
+    {
+      "id": 1097,
+      "count": 1
+    },
+    {
+      "id": 1100,
+      "count": 1
+    },
+    {
+      "id": 1101,
+      "count": 1
+    },
+    {
+      "id": 1104,
+      "count": 1
+    },
+    {
+      "id": 1121,
+      "count": 2
+    },
+    {
+      "id": 1122,
+      "count": 2
+    },
+    {
+      "id": 1128,
+      "count": 2
+    },
+    {
+      "id": 1157,
+      "count": 1
+    }
+  ]
+}

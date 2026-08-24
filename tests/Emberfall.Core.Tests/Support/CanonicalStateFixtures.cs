@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
+using Emberfall.Core.Tests.Support;
 
 namespace Emberfall.Core.Tests.Support
 {
@@ -82,7 +83,7 @@ namespace Emberfall.Core.Tests.Support
             // OngoingEffectInstance (the seeded finite observer)
             ["OngoingEffectInstance.Id"] = s => Ongoing(s).Id = new InstanceId(81),
             ["OngoingEffectInstance.Controller"] = s => Ongoing(s).Controller = s.Players[1].Id,
-            ["OngoingEffectInstance.SourceDefinitionId"] = s => Ongoing(s).SourceDefinitionId = "ongoing_other",
+            ["OngoingEffectInstance.SourceDefinitionId"] = s => Ongoing(s).SourceDefinitionId = FixtureCard.Id("ongoing_other"),
             ["OngoingEffectInstance.RuleId"] = s => Ongoing(s).RuleId = "other_rule",
             ["OngoingEffectInstance.Lifetime"] = s =>
             {
@@ -96,7 +97,7 @@ namespace Emberfall.Core.Tests.Support
             ["PendingChoice.Chooser"] = s => s.PendingChoice!.Chooser = s.Players[1].Id,
             ["PendingChoice.Kind"] = s => s.PendingChoice!.Kind = (PendingChoiceKind)1,   // no second member yet (Q1: Unearth-only); the cast perturbs the canonical int
             ["PendingChoice.Source"] = s => s.PendingChoice!.Source = new InstanceId(70),
-            ["PendingChoice.Options"] = s => s.PendingChoice!.Options.Add("disc_seed_extra"),
+            ["PendingChoice.Options"] = s => s.PendingChoice!.Options.Add(FixtureCard.Id("disc_seed_extra")),
             ["PendingChoice.ChoiceSequence"] = s => s.PendingChoice!.ChoiceSequence++,
 
             // PlayerState (seat 0)
@@ -124,13 +125,13 @@ namespace Emberfall.Core.Tests.Support
             ["HeroInstance.CurrentHealth"] = s => s.Players[0].Hero.CurrentHealth--,
             ["HeroInstance.MaxHealth"] = s => s.Players[0].Hero.MaxHealth++,
             ["HeroInstance.Armor"] = s => s.Players[0].Hero.Armor += 3,
-            ["HeroInstance.HeroPowerId"] = s => s.Players[0].Hero.HeroPowerId = "hp_other",
+            ["HeroInstance.HeroPowerId"] = s => s.Players[0].Hero.HeroPowerId = 2,  // hp_other
             ["HeroInstance.Effects"] = s => s.Players[0].Hero.Effects.Add(
                 new EffectInstance(EffectKind.Frost, new InstanceId(64), EffectScope.ControllerTurns, 1)),
 
             // CardInstance (the seeded hand card — has durability, keywords, enchantment)
             ["CardInstance.Id"] = s => HandCard(s).Id = new InstanceId(88),
-            ["CardInstance.DefinitionId"] = s => HandCard(s).DefinitionId = "card_other",
+            ["CardInstance.DefinitionId"] = s => HandCard(s).DefinitionId = FixtureCard.Id("card_other"),
             ["CardInstance.Controller"] = s => HandCard(s).Controller = s.Players[1].Id,
             ["CardInstance.Zone"] = s => HandCard(s).Zone = Zone.Graveyard,
             ["CardInstance.CurrentAttack"] = s => HandCard(s).CurrentAttack++,
@@ -179,7 +180,7 @@ namespace Emberfall.Core.Tests.Support
 
         public static CardInstance MakeCard(int id, PlayerId controller, Zone zone)
         {
-            var c = new CardInstance(new InstanceId(id), $"card_seed_{id}", controller)
+            var c = new CardInstance(new InstanceId(id), FixtureCard.Id($"card_seed_{id}"), controller)
             {
                 Zone = zone,
                 CurrentAttack = 2,
@@ -199,11 +200,11 @@ namespace Emberfall.Core.Tests.Support
             {
                 CurrentHealth = 27,
                 Armor = 2,
-                HeroPowerId = "hp_ember",
+                HeroPowerId = 1,  // hp_ember
             });
             var p1Hero = new HeroInstance(new InstanceId(1), p1Id, CardClass.TIDECALLER, 30)
             {
-                HeroPowerId = "hp_tide",
+                HeroPowerId = 2,  // hp_tide
             };
             p1Hero.Effects.Add(new EffectInstance(
                 EffectKind.Frost, new InstanceId(0), EffectScope.ControllerTurns, 1));
@@ -232,7 +233,7 @@ namespace Emberfall.Core.Tests.Support
             p0.Board.Add(boardCard);
             p0.Graveyard.Add(MakeCard(6, p0Id, Zone.Graveyard));
             p0.Weapon = MakeCard(7, p0Id, Zone.Weapon);
-            p0.Weapon.DefinitionId = "weapon_seed";
+            p0.Weapon.DefinitionId = FixtureCard.Id("weapon_seed");
             p0.Weapon.CurrentAttack = 3;
             p0.Weapon.CurrentDurability = 2;
             p0.Weapon.Keywords.Add(Keyword.LIFEDRAIN);
@@ -267,11 +268,11 @@ namespace Emberfall.Core.Tests.Support
                 Chooser = p0Id,
                 Kind = PendingChoiceKind.Unearth,
                 Source = new InstanceId(5),
-                Options = { "disc_seed_a", "disc_seed_b" },
+                Options = { FixtureCard.Id("disc_seed_a"), FixtureCard.Id("disc_seed_b") },
                 ChoiceSequence = 11,
             };
             s.OngoingEffects.Add(OngoingEffectInstance.CreateFinite(new InstanceId(9), p0Id,
-                "ongoing_seed", "turn_end_echo", 2));
+                FixtureCard.Id("ongoing_seed"), "turn_end_echo", 2));
             return s;
         }
 

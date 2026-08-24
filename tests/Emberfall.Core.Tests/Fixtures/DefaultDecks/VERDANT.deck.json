@@ -1,0 +1,121 @@
+{
+  "primaryClass": "VERDANT",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-VERDANT",
+  "deckId": "fixture-deck-VERDANT",
+  "seed": 64159285252,
+  "entries": [
+    {
+      "id": 51,
+      "count": 1
+    },
+    {
+      "id": 53,
+      "count": 1
+    },
+    {
+      "id": 151,
+      "count": 1
+    },
+    {
+      "id": 154,
+      "count": 1
+    },
+    {
+      "id": 167,
+      "count": 1
+    },
+    {
+      "id": 211,
+      "count": 2
+    },
+    {
+      "id": 1001,
+      "count": 1
+    },
+    {
+      "id": 1007,
+      "count": 1
+    },
+    {
+      "id": 1010,
+      "count": 1
+    },
+    {
+      "id": 1011,
+      "count": 1
+    },
+    {
+      "id": 1019,
+      "count": 1
+    },
+    {
+      "id": 1038,
+      "count": 1
+    },
+    {
+      "id": 1039,
+      "count": 1
+    },
+    {
+      "id": 1040,
+      "count": 1
+    },
+    {
+      "id": 1048,
+      "count": 1
+    },
+    {
+      "id": 1055,
+      "count": 2
+    },
+    {
+      "id": 1099,
+      "count": 1
+    },
+    {
+      "id": 1104,
+      "count": 1
+    },
+    {
+      "id": 1105,
+      "count": 1
+    },
+    {
+      "id": 1117,
+      "count": 1
+    },
+    {
+      "id": 1121,
+      "count": 1
+    },
+    {
+      "id": 1123,
+      "count": 1
+    },
+    {
+      "id": 1128,
+      "count": 1
+    },
+    {
+      "id": 1129,
+      "count": 1
+    },
+    {
+      "id": 1136,
+      "count": 1
+    },
+    {
+      "id": 1138,
+      "count": 1
+    },
+    {
+      "id": 1150,
+      "count": 1
+    },
+    {
+      "id": 1151,
+      "count": 1
+    }
+  ]
+}

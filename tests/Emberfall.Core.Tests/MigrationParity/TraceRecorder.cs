@@ -113,7 +113,7 @@ namespace Emberfall.Core.Tests.MigrationParity
                 s.PendingChoice.Options.Count.ToString(CultureInfo.InvariantCulture)));
             for (int i = 0; i < s.PendingChoice.Options.Count; i++)
                 tokens.Add(new TraceToken("choice.option[" + i.ToString(CultureInfo.InvariantCulture) + "]",
-                    TokenKind.Scalar, s.PendingChoice.Options[i]));
+                    TokenKind.Scalar, s.PendingChoice.Options[i].ToString(CultureInfo.InvariantCulture)));
         }
 
         private static TraceToken IdToken(string path, InstanceId? id)

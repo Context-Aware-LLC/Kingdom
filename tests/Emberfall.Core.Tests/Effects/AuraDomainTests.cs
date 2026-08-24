@@ -161,8 +161,8 @@ namespace Emberfall.Core.Tests.Effects
             var p1 = new PlayerState(p1Id, new HeroInstance(new InstanceId(nextId++), p1Id, CardClass.TIDECALLER, 30));
 
             var db = new FakeCardDatabase();
-            const string plainId = "aura_plain_minion";
-            const string sourceId = "aura_source_minion";
+            int plainId = FixtureCard.Id("aura_plain_minion");
+            int sourceId = FixtureCard.Id("aura_source_minion");
 
             db.Register(Minion(plainId, System.Array.Empty<RuleDefinition>()));
             db.Register(Minion(sourceId, new[] { AuraRule(selector) }));
@@ -191,13 +191,13 @@ namespace Emberfall.Core.Tests.Effects
             return (state, db);
         }
 
-        private static CardDefinition Minion(string id, IReadOnlyList<RuleDefinition> rules)
+        private static CardDefinition Minion(int id, IReadOnlyList<RuleDefinition> rules)
             => TestCards.Authored(new CardDefinition(
-                id: id, name: id, type: CardType.MINION, cost: 1,
+                id: id, handle: FixtureCard.Handle(id), name: FixtureCard.Handle(id), type: CardType.MINION, cost: 1,
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: System.Array.Empty<Keyword>(), rules: rules,
-                flavorText: "", artId: id, setId: SetId.CORE,
+                flavorText: "", artId: FixtureCard.Handle(id), setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: ""));
     }
 }

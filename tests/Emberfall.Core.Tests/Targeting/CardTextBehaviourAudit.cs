@@ -36,15 +36,21 @@ namespace Emberfall.Core.Tests.Targeting
     [TestFixture]
     public sealed class CardTextBehaviourAudit
     {
-        private static readonly string[] Sample =
+        private static readonly int[] Sample =
         {
-            "hero_power_searing_bolt", "hero_power_quicken", "clock_clockwork_sniper",
-            "rekind_tempest_chain_caller", "rekind_tempest_vael", "night_kira_blade_of_shadows",
-            "tide_hollowshell_warden", "core_grove_mender", "rekind_grave_memorial_wisp",
-            "ember_scorch", "rekind_night_marked_for_death", "tide_frostbind",
-            "tide_glacial_echo", "rekind_tide_deepwater_alliance", "night_death_mark",
-            "verdant_sapsurge", "ward_stomp", "clock_mass_recall",
-            "ember_scorch_blade", "verdant_grasping_thornvine",
+            1,        // hero_power_searing_bolt
+            4,        // hero_power_quicken
+            1066,     // clock_clockwork_sniper
+            1075,     // night_kira_blade_of_shadows
+            1058,     // tide_hollowshell_warden
+            153,      // ember_scorch
+            155,      // tide_frostbind
+            194,      // tide_glacial_echo
+            178,      // night_death_mark
+            164,      // verdant_sapsurge
+            173,      // clock_mass_recall
+            60,       // ember_scorch_blade
+            53,       // verdant_grasping_thornvine
         };
 
         [Test]
@@ -54,7 +60,7 @@ namespace Emberfall.Core.Tests.Targeting
             var report = new List<string>();
             int reported = 0;
 
-            foreach (string cardId in Sample)
+            foreach (int cardId in Sample)
             {
                 report.Add(new string('-', 96));
                 try { report.AddRange(AuditOne(db, cardId)); }
@@ -70,7 +76,7 @@ namespace Emberfall.Core.Tests.Targeting
                 "every sampled card must produce a report entry, including the ones that fail");
         }
 
-        private static IReadOnlyList<string> AuditOne(ICardDatabase db, string cardId)
+        private static IReadOnlyList<string> AuditOne(ICardDatabase db, int cardId)
         {
             CardDefinition card = db.Get(cardId);
             var lines = new List<string> { $"{cardId}   [{card.Type}]", $"  SAYS   : {card.Text}" };
@@ -230,7 +236,7 @@ namespace Emberfall.Core.Tests.Targeting
         private static ICardDatabase ShippedCards()
         {
             var defs = new List<CardDefinition>();
-            foreach (string file in new[] { "Emberfall.cards.json", "Rekindling.cards.json" })
+            foreach (string file in new[] { "Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json" })
                 defs.AddRange(CardJson.DeserializeArray(File.ReadAllText(Path.Combine(
                     RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file))));
 
@@ -241,19 +247,19 @@ namespace Emberfall.Core.Tests.Targeting
             // would put effects in the report that no sampled card caused.
             for (int i = 0; i < 64; i++)
             {
-                defs.Add(Filler($"dummy_{i:00}", CardType.MINION));
-                defs.Add(Filler($"dummy_w{i:00}", CardType.WEAPON));
+                defs.Add(Filler(FixtureCard.Id($"dummy_{i:00}"), CardType.MINION));
+                defs.Add(Filler(FixtureCard.Id($"dummy_w{i:00}"), CardType.WEAPON));
             }
             return new JsonCardDatabase(defs);
         }
 
-        private static CardDefinition Filler(string id, CardType type) => new CardDefinition(
-            id: id, name: id, type: type, cost: 1,
+        private static CardDefinition Filler(int id, CardType type) => new CardDefinition(
+            id: id, handle: FixtureCard.Handle(id), name: FixtureCard.Handle(id), type: type, cost: 1,
             attack: 2, health: type == CardType.MINION ? 4 : (int?)null,
             durability: type == CardType.WEAPON ? 2 : (int?)null,
             @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
             keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-            flavorText: "", artId: id, setId: SetId.CORE,
+            flavorText: "", artId: FixtureCard.Handle(id), setId: SetId.CORE,
             collectible: false, tribe: null, factionId: "");
 
         /// <summary>
@@ -277,7 +283,7 @@ namespace Emberfall.Core.Tests.Targeting
                 for (int i = 0; i < 3; i++)
                 {
                     int id = next++;
-                    player.Board.Add(new CardInstance(new InstanceId(id), $"dummy_{id:00}", player.Id)
+                    player.Board.Add(new CardInstance(new InstanceId(id), FixtureCard.Id($"dummy_{id:00}"), player.Id)
                     {
                         Zone = Zone.Board,
                         Position = i,
@@ -288,15 +294,15 @@ namespace Emberfall.Core.Tests.Targeting
                 }
 
                 int wid = next++;
-                player.Weapon = new CardInstance(new InstanceId(wid), $"dummy_w{wid:00}", player.Id)
+                player.Weapon = new CardInstance(new InstanceId(wid), FixtureCard.Id($"dummy_w{wid:00}"), player.Id)
                 { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
 
                 for (int i = 0; i < 2; i++)
                 {
                     int h = next++, d = next++, g = next++;
-                    player.Hand.Add(new CardInstance(new InstanceId(h), $"dummy_{h:00}", player.Id) { Zone = Zone.Hand });
-                    player.Deck.Add(new CardInstance(new InstanceId(d), $"dummy_{d:00}", player.Id) { Zone = Zone.Deck });
-                    player.Graveyard.Add(new CardInstance(new InstanceId(g), $"dummy_{g:00}", player.Id) { Zone = Zone.Graveyard });
+                    player.Hand.Add(new CardInstance(new InstanceId(h), FixtureCard.Id($"dummy_{h:00}"), player.Id) { Zone = Zone.Hand });
+                    player.Deck.Add(new CardInstance(new InstanceId(d), FixtureCard.Id($"dummy_{d:00}"), player.Id) { Zone = Zone.Deck });
+                    player.Graveyard.Add(new CardInstance(new InstanceId(g), FixtureCard.Id($"dummy_{g:00}"), player.Id) { Zone = Zone.Graveyard });
                 }
             }
 

@@ -199,10 +199,9 @@ namespace Emberfall.Core.Tests.Targeting
         [Test]
         public void A_cost_on_an_observer_trigger_is_rejected()
         {
-            var cost = new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION",
-                TargetSelection.Of(1), cost: CostKind.Required));
+            var cost = new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1), cost: CostKind.Required));
             var card = TestCards.Authored(new CardDefinition(
-                id: "t_toll_cost", name: "Toll Cost", type: CardType.MINION, cost: 3,
+                id: FixtureCard.Id("t_toll_cost"), handle: "t_toll_cost", name: "Toll Cost", type: CardType.MINION, cost: 3,
                 attack: 2, health: 2, @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 durability: null,
                 keywords: System.Array.Empty<Keyword>(),
@@ -285,7 +284,7 @@ namespace Emberfall.Core.Tests.Targeting
         private static CardDefinition Card(IReadOnlyList<RuleDefinition> rules,
             CardType type = CardType.MINION)
             => TestCards.Authored(new CardDefinition(
-                id: "t_cost_card", name: "Cost Card", type: type, cost: 3,
+                id: FixtureCard.Id("t_cost_card"), handle: "t_cost_card", name: "Cost Card", type: type, cost: 3,
                 attack: type == CardType.MINION ? 2 : (int?)null,
                 health: type == CardType.MINION ? 2 : (int?)null,
                 durability: null,
@@ -326,7 +325,7 @@ namespace Emberfall.Core.Tests.Targeting
             };
 
             PlayerState player = state.Players[0];
-            var fodder = new CardInstance(state.NextInstanceId(), "t_fodder", p0)
+            var fodder = new CardInstance(state.NextInstanceId(), FixtureCard.Id("t_fodder"), p0)
             { Zone = Zone.Board, Position = 0, CurrentAttack = 1, CurrentHealth = 1, MaxHealth = 1 };
             player.Board.Add(fodder);
 
@@ -335,7 +334,7 @@ namespace Emberfall.Core.Tests.Targeting
             player.Board.Add(carrier);
 
             for (int i = 0; i < 3; i++)
-                player.Deck.Add(new CardInstance(state.NextInstanceId(), "t_deck", p0) { Zone = Zone.Deck });
+                player.Deck.Add(new CardInstance(state.NextInstanceId(), FixtureCard.Id("t_deck"), p0) { Zone = Zone.Deck });
 
             return (state, db, carrier);
         }

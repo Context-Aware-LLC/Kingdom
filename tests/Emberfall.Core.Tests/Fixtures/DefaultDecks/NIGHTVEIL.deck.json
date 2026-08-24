@@ -1,0 +1,121 @@
+{
+  "primaryClass": "NIGHTVEIL",
+  "secondaryClass": "EMBERWARD",
+  "characterId": "fixture-char-NIGHTVEIL",
+  "deckId": "fixture-deck-NIGHTVEIL",
+  "seed": 64159285254,
+  "entries": [
+    {
+      "id": 151,
+      "count": 1
+    },
+    {
+      "id": 153,
+      "count": 1
+    },
+    {
+      "id": 167,
+      "count": 1
+    },
+    {
+      "id": 177,
+      "count": 1
+    },
+    {
+      "id": 192,
+      "count": 1
+    },
+    {
+      "id": 193,
+      "count": 1
+    },
+    {
+      "id": 1002,
+      "count": 1
+    },
+    {
+      "id": 1007,
+      "count": 1
+    },
+    {
+      "id": 1009,
+      "count": 1
+    },
+    {
+      "id": 1011,
+      "count": 1
+    },
+    {
+      "id": 1014,
+      "count": 1
+    },
+    {
+      "id": 1018,
+      "count": 1
+    },
+    {
+      "id": 1046,
+      "count": 1
+    },
+    {
+      "id": 1051,
+      "count": 1
+    },
+    {
+      "id": 1052,
+      "count": 1
+    },
+    {
+      "id": 1056,
+      "count": 1
+    },
+    {
+      "id": 1073,
+      "count": 2
+    },
+    {
+      "id": 1075,
+      "count": 1
+    },
+    {
+      "id": 1092,
+      "count": 1
+    },
+    {
+      "id": 1093,
+      "count": 2
+    },
+    {
+      "id": 1096,
+      "count": 1
+    },
+    {
+      "id": 1099,
+      "count": 1
+    },
+    {
+      "id": 1100,
+      "count": 1
+    },
+    {
+      "id": 1102,
+      "count": 1
+    },
+    {
+      "id": 1122,
+      "count": 1
+    },
+    {
+      "id": 1124,
+      "count": 1
+    },
+    {
+      "id": 1129,
+      "count": 1
+    },
+    {
+      "id": 1137,
+      "count": 1
+    }
+  ]
+}

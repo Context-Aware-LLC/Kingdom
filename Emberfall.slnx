@@ -20,5 +20,9 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
+    <Project Path="tests/Emberfall.Net.Client.Tests/Emberfall.Net.Client.Tests.csproj" />
+    <Project Path="tests/Emberfall.Net.Protocol.Tests/Emberfall.Net.Protocol.Tests.csproj" />
+    <Project Path="tests/Emberfall.Net.Server.Tests/Emberfall.Net.Server.Tests.csproj" />
+    <Project Path="tests/Emberfall.Training.Corpus.Tests/Emberfall.Training.Corpus.Tests.csproj" />
   </Folder>
 </Solution>

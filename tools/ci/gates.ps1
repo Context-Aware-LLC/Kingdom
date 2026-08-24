@@ -79,15 +79,29 @@ if (-not $Quick) {
 # something for a PR. Run it by hand as `bash tools/ci/rebaseline-guard.sh origin/master` when
 # you have touched a golden fixture.
 
-# Stages 2, 3, 3b, 4, 5 and Nightly ran the .NET test suites. Those suites were ARCHIVED OUT of the
-# repo 2026-08-18 (Sam's ruling) to C:\Users\User\Documents\emberfall-test-archive — 1250 tests that
-# were scaffolding for agent-authored changes and had become a bigger failure surface than the code.
-# Nothing here comes back until something actually breaks and an archived test would have caught it;
-# then that ONE test returns. See the archive's README.
+# Stage 2 — the .NET test suites.
 #
-# What still runs below is the part that was never in tests/ and carries the real weight: CardCi
-# validates every row of every card set, NetSoak plays live networked matches and asserts zero
-# resyncs, and the drift guard, format, stylelint and warnings-as-errors are all untouched.
+# Archived out 2026-08-18, brought BACK 2026-08-24 at Sam's direction, minus the card-authoring block
+# (`CardValidation/`, plus the Unity authoring model the old csproj compiled in). Five projects,
+# 1467 tests. The archive at C:\Users\User\Documents\emberfall-test-archive is history now, not the
+# live copy.
+#
+# ADVISORY, and that flag is the reason to read this. 23 tests fail on the day they returned, and
+# none of them is a migration artefact — they are the effect-model fork and the numeric card id
+# disagreeing with behaviour the suite was written against in July. Blocking on them would block
+# every merge on work nobody has scheduled.
+#
+# RETIREMENT TRIGGER: when `dotnet test Emberfall.slnx` is green, drop the LASTEXITCODE reset below
+# so the stage can fail the run — and cut the same flag out of ci.yml's Stage 2, which carries a
+# copy of this note.
+Invoke-Stage 'Stage 2 · .NET test suites (ADVISORY — see note above)' {
+    dotnet test Emberfall.slnx -c Release --no-build --nologo
+    $global:LASTEXITCODE = 0
+}
+
+# What runs below was never in tests/ and carries weight the suite does not: CardCi validates every
+# row of every card set, NetSoak plays live networked matches and asserts zero resyncs, and the
+# drift guard, format, stylelint and warnings-as-errors are all untouched.
 
 Invoke-Stage 'Stage 5b · Networked AI soak' {
     dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
