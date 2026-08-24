@@ -191,6 +191,7 @@ namespace Emberfall.Presentation
             foreach (CardClass c in PairableClasses)
                 _heroGrid.Add(BuildHeroTile(c));
 
+            _heroSolvePasses = 0;
             QueueHeroGridLayout();
         }
 
@@ -213,6 +214,23 @@ namespace Emberfall.Presentation
         private const float RowSafetyMargin = 2f;
 
         private bool _heroLayoutQueued;
+
+        /// <summary>One-shot latch so the zero-box warning cannot spam a geometry callback.</summary>
+        private bool _warnedZeroBox;
+
+        /// <summary>One-shot latch for the solve log.</summary>
+        private bool _loggedSolve;
+
+        /// <summary>
+        /// Hard cap on re-solves between rebuilds. Idempotent writes stop the common loop, but not
+        /// one that ALTERNATES between two shapes — each pass would differ from the last, so each
+        /// would legitimately write, and the relayout would never end. An unbounded relayout does
+        /// not just break the screen: the UI thread stops yielding and the whole device locks up.
+        /// Eight passes is far more than a converging solve needs (it settles in one or two).
+        /// </summary>
+        private const int MaxHeroSolvePasses = 8;
+
+        private int _heroSolvePasses;
 
         /// <summary>
         /// Deferred because the trigger is the grid's own GeometryChangedEvent, which the layout
@@ -242,6 +260,14 @@ namespace Emberfall.Presentation
         private void LayoutHeroGrid()
         {
             if (_heroGrid == null) return;
+            if (++_heroSolvePasses > MaxHeroSolvePasses)
+            {
+                if (_heroSolvePasses == MaxHeroSolvePasses + 1)
+                    Debug.LogWarning($"[CharacterCreate] hero grid solve did not converge in "
+                                     + $"{MaxHeroSolvePasses} passes — freezing the current sizes. "
+                                     + "The layout is oscillating; the last solve log above has the numbers.");
+                return;
+            }
 
             // Width comes from the PARENT, never from the grid. This method writes the grid's own
             // width, so measuring the grid would feed its output back into its input and walk the
@@ -249,7 +275,28 @@ namespace Emberfall.Presentation
             VisualElement box = _heroGrid.parent ?? _heroGrid;
             float availableWidth = box.resolvedStyle.width - RowSafetyMargin;
             float availableHeight = _heroGrid.resolvedStyle.height - RowSafetyMargin;
-            if (availableWidth <= 0f || availableHeight <= 0f) return;
+            if (availableWidth <= 0f || availableHeight <= 0f)
+            {
+                // A zero box is NORMAL for the first frame or two, before the panel has laid out —
+                // which is why this returns rather than complains. But if it is still zero once the
+                // screen is up, the grid is inside a chain with no height and the symptom on device
+                // is "the portraits are missing and nothing is tappable": the tiles keep a
+                // zero-width portrait while the name and the absolutely-positioned badge still
+                // paint, and a zero-size tile cannot be tapped. Nothing else reports it, so say it
+                // ONCE. Cost 2026-08-23: the scene's root class had no flex-grow: 1 and this
+                // returned in silence, above the fallback below that would have warned.
+                if (!_warnedZeroBox)
+                {
+                    _warnedZeroBox = true;
+                    Debug.LogWarning(
+                        $"[CharacterCreate] hero grid has a zero box ({availableWidth:F0}x" +
+                        $"{availableHeight:F0}dp) — nothing can be sized. Normal for the first "
+                        + "frame; if the portraits stay missing, an ancestor is not filling the "
+                        + "panel (check .character-create-screen's flex-grow).");
+                }
+                return;
+            }
+            _warnedZeroBox = false;
 
             int tiles = 0;
             VisualElement sample = null;
@@ -289,21 +336,68 @@ namespace Emberfall.Presentation
                 side = candidate;
                 columns = c;
             }
-            if (side <= 0f) return;
+            // NEVER return with the tiles unsized. An early exit here is worse than any size this
+            // could write: the tiles keep their stylesheet dimensions, .hero-grid wraps them on
+            // WIDTH at desktop size, and the grid's `overflow: hidden` clips whatever does not fit
+            // — so the screen shows FEWER heroes than a cramped-but-solved layout would, which
+            // reads as the solve having made things worse rather than as it having been skipped.
+            // Measured 2026-08-23 in the modal this screen replaced: restoring the edge clearance
+            // took enough height that every candidate went negative and 8 tiles fell back to a
+            // clipped 4x2 (#250).
+            if (side <= 0f)
+            {
+                columns = tiles;
+                side = Mathf.Max(availableWidth / tiles - gutter - chrome, MinHeroSide);
+                Debug.LogWarning(
+                    $"[CharacterCreate] hero grid: no column count fits {availableWidth:F0}x" +
+                    $"{availableHeight:F0}dp for {tiles} tiles ({gutter + chrome + HeroNameBand:F1}dp " +
+                    $"of chrome per row). Falling back to one row at {side:F0}dp.");
+            }
 
-            // Pin the wrap to the shape that was solved for. Without this the grid is free to seat
-            // a different number of tiles per row than the solve assumed — and that is precisely
-            // the failure documented above the constants.
-            _heroGrid.style.width = columns * (side + chrome + gutter) + RowSafetyMargin;
+            // One-shot, and it earns its place: every failure of this solve so far has been
+            // INVISIBLE in the log. A tiny `side` is not zero, so neither the zero-box guard above
+            // nor the no-fit fallback fires, and the screen just renders portraits too small to
+            // see or tap while the fixed-size badge still paints — which reads as "the art is
+            // missing", naming nothing. These numbers say immediately whether the grid is being
+            // starved of height and by how much.
+            if (!_loggedSolve)
+            {
+                _loggedSolve = true;
+                Debug.Log($"[CharacterCreate] hero grid solve: box={availableWidth:F0}x{availableHeight:F0}dp " +
+                          $"tiles={tiles} -> columns={columns} side={side:F1}dp " +
+                          $"(measured chrome/row={gutter + chrome + HeroNameBand:F1}dp)");
+            }
+
+            // EVERY WRITE BELOW IS IDEMPOTENT, and that is what stops this from looping forever.
+            // This method runs from .hero-grid's own GeometryChangedEvent and then WRITES that
+            // element's width — so an unconditional write re-fires the event that called it. In
+            // the modal this happened to settle, because the dialog pinned the width and the
+            // second pass computed the same number, producing no geometry change. Nothing
+            // guarantees that in a scene whose root is flex-grow: 1, and an oscillating solve is
+            // an unbounded relayout: the UI thread never yields and the DEVICE stops responding,
+            // not just the screen. Skipping a write that would not change anything makes
+            // termination structural rather than lucky.
+            //
+            // The width also pins the wrap to the shape that was solved for — without it the grid
+            // is free to seat a different number of tiles per row than the solve assumed, which is
+            // the 7+1 failure described above the constants. It uses the MEASURED gutter/chrome,
+            // not the authored constants, for the reason given there.
+            float gridWidth = columns * (side + chrome + gutter) + RowSafetyMargin;
+            if (!Mathf.Approximately(_heroGrid.resolvedStyle.width, gridWidth))
+                _heroGrid.style.width = gridWidth;
             _heroGrid.style.alignSelf = Align.Center;
 
+            float tileWidth = side + chrome;
             foreach (VisualElement child in _heroGrid.Children())
             {
                 if (!child.ClassListContains("hero-tile")) continue;
-                child.style.width = side + chrome;
+                if (!Mathf.Approximately(child.resolvedStyle.width, tileWidth))
+                    child.style.width = tileWidth;
 
                 VisualElement art = child.Q<VisualElement>(className: "hero-tile-art");
                 if (art == null) continue;
+                if (Mathf.Approximately(art.resolvedStyle.width, side)
+                    && Mathf.Approximately(art.resolvedStyle.height, side)) continue;
                 art.style.width = side;
                 art.style.height = side;   // square: the whole point of the pass
             }
