@@ -363,7 +363,12 @@ def load_cards() -> list[dict]:
                 body = (head + " " + body).strip()
             cards.append(
                 {
-                    "id": cid,
+                    # The ART KEY, not the design row's own id. `cid` still reads the prompts
+                    # corpus below, which is that corpus's own spelling; everything downstream
+                    # of here -- the manifest, --card, the results map -- joins on artId.
+                    "id": art_file(row["artId"]),
+                    "handle": row.get("handle", ""),
+                    "cardId": row.get("cardId", ""),
                     "name": row["name"],
                     "artId": row["artId"],
                     "file": art_file(row["artId"]),
@@ -431,8 +436,9 @@ def load_seed_cards() -> list[dict]:
 
     cards: list[dict] = []
     for row in rows:
-        # Seeds are keyed by HANDLE; the row's id is a number. See gen_card_prompt_briefs.
-        seed = seeds.get(row["handle"])
+        # Seeds are keyed by ARTID -- the art system's own permanent key. See
+        # gen_card_prompt_briefs.art_key for why it is not the handle.
+        seed = seeds.get(briefs.art_key(row))
         if not seed:
             continue
         cls = row.get("class", "NEUTRAL").lower()
@@ -465,7 +471,9 @@ def load_seed_cards() -> list[dict]:
 
         cards.append(
             {
-                "id": row["handle"],
+                "id": briefs.art_key(row),
+                "handle": row.get("handle", ""),
+                "cardId": row.get("id", ""),
                 "name": row["name"],
                 "artId": row["artId"],
                 "file": art_file(row["artId"]),
@@ -912,8 +920,14 @@ def main() -> int:
     spec = PROVIDERS[provider]
     candidates = spec["candidates"] if args.candidates is None else args.candidates
 
-    if not DESIGN.is_dir():
-        print(f"docs design dir not found: {DESIGN}  (set EMBERFALL_DOCS)", file=sys.stderr)
+    # Only the docs/design path needs this. --from-seeds reads tooling/card-art-seeds/ instead
+    # and never opens DESIGN, but the guard sat above the branch and refused the run anyway --
+    # so --from-seeds was unusable in this repo, which HAS no docs/design tree, and said the
+    # opposite of why. It is the seed corpus that is the live source; the prose corpus is the
+    # one that may legitimately be absent.
+    if not args.from_seeds and not DESIGN.is_dir():
+        print(f"docs design dir not found: {DESIGN}  (set EMBERFALL_DOCS). "
+              f"--from-seeds does not need it.", file=sys.stderr)
         return 2
 
     try:
@@ -937,10 +951,19 @@ def main() -> int:
             return 2
         cards = [c for c in cards if c["class"] == args.cls]
     if args.card:
-        wanted = set(args.card)
-        unknown = wanted - {c["id"] for c in cards}
+        # Accept whatever the caller has to hand. Cards are keyed by artId now, but a human
+        # typing --card knows the card by its handle, and a caller reading a row has a number.
+        alias = {}
+        for c in cards:
+            alias[c["id"]] = c["id"]
+            for extra in (c.get("handle"), str(c.get("cardId", ""))):
+                if extra:
+                    alias.setdefault(extra, c["id"])
+        wanted = {alias[w] for w in args.card if w in alias}
+        unknown = [w for w in args.card if w not in alias]
         if unknown:
-            print(f"unknown card id(s): {', '.join(sorted(unknown))}", file=sys.stderr)
+            print(f"unknown card id(s): {', '.join(sorted(unknown))} "
+                  f"(accepts artId, handle or numeric id)", file=sys.stderr)
             return 2
         cards = [c for c in cards if c["id"] in wanted]
     if not cards:

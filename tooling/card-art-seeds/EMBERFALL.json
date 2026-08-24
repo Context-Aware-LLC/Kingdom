@@ -77,31 +77,31 @@
     "background": "A warm amber memorial workshop with dark cedar shelves, softly blurred candle niches, and muted ember-glow, providing warm value contrast behind the cool bone and iron subject.",
     "notes": "Toll and card draw read through the snapped soul-thread releasing one blank parchment strip. No writing, symbols, extra cards, spider anatomy, giant loom, weapon, gore, or explosive magic."
   },
-  "neutral_bog_crawler": {
+  "bog_crawler": {
     "subject": "A small low-slung marsh beast with a broad wedge-shaped head, six quick jointed legs, a bronze-brown plated back, mossy ridges, and two bright lantern-amber eyes. It scrambles out of shallow water toward the viewer, flinging one tight fan of droplets while its full compact body remains readable; the creature feels ancient, weathered, and adapted to ruined wetlands.",
     "perspective": "Very low eye-level three-quarter view just above the waterline, with the crawler's complete silhouette centered and its forward motion aimed slightly across the frame rather than directly into camera.",
     "background": "A cool blue-grey twilight bog among half-submerged foundation stones, pale reeds, and thin silver mist, providing muted value and temperature contrast behind the warm bronze-brown beast.",
     "notes": "Skirmish reads as one quick local lunge. Keep it dog-sized at most, with no giant monster scale, no venom spray, no swarm, and no catastrophic splash."
   },
-  "neutral_doublestrike_hawk": {
+  "doublestrike_hawk": {
     "subject": "A large natural hawk with stone-grey flight feathers, warm bronze-brown shoulders, pale cream throat, and sharp lantern-amber eyes banking hard above a ruined watch road. One powerful downstroke creates two closely spaced translucent feather-traces behind each wing, communicating a rapid second beat while remaining unmistakably one bird. Its talons are tucked and its body is controlled rather than attacking prey.",
     "perspective": "Dynamic close three-quarter flight view from slightly below, with the hawk's full wingspan, tail, head, and both paired wingbeat traces contained inside the middle composition.",
     "background": "A cool overcast blue-grey sky above weathered stone towers and muted green hills, with a narrow shaft of pale light separating the warm bird from the subdued landscape.",
     "notes": "Doublestrike is shown only by the paired wingbeat traces, never a second hawk. Keep it a large real hawk rather than a giant eagle, with no rider, prey, lightning, tornado, attack gore, or flock."
   },
-  "neutral_galewind_runner": {
+  "galewind_runner": {
     "subject": "A lean dog-sized cliff beast with long springing legs, weathered stone-grey hide, a moss-dark mane, and two swept-back ear-fins edged in aged bronze. It races along a broken causeway with its body stretched through one quick stride, kicking up a narrow ribbon of dust and loose grass while the ear-fins flatten into the wind. The animal is agile and practical rather than magical or majestic.",
     "perspective": "Low side-on three-quarter action view with the runner's complete silhouette and all four feet readable inside the central composition, leaving clear margin ahead of its stride.",
     "background": "A cool pale-blue dawn over muted ruined walls and distant grey hills, with soft crosswind mist and no storm; the warm bronze ear edges and lantern-amber eye stand out against the restrained setting.",
     "notes": "Skirmish reads through one fast local sprint. Keep it dog-sized and grounded, with no wings, rider, lightning, tornado, herd, giant leap, or battlefield-wide wind effect."
   },
-  "neutral_phantom_duelist": {
+  "phantom_duelist": {
     "subject": "A solitary human-sized duelist in a weathered grey travel coat, tarnished bronze half-mask, and plain iron rapier, standing in a restrained side-on guard. The trailing edge of the coat and one boot dissolve into a thin veil of translucent dust and mist, making the figure seem half-present without turning into a glowing apparition. The posture is precise and wary, not triumphant.",
     "perspective": "Eye-level full-body three-quarter portrait with the complete rapier and fading silhouette centered safely inside the frame and ample negative space around the guard pose.",
     "background": "A pale blue moonlit courtyard of cool weathered stone, low silver fog, and one distant warm lantern, creating quiet value contrast around the grey-and-bronze figure.",
     "notes": "Shroud reads through only the vanishing coat edge and foot. Show no opponent, attack impact, skull face, giant spectral aura, dramatic spell circle, text, crest, or heroic victory pose."
   },
-  "neutral_razorcoil_adder": {
+  "razorcoil_adder": {
     "subject": "A forearm-length adder wound into one tight spring-like coil on a cracked stone. Its overlapping charcoal-grey scales have thin aged-bronze cutting edges, a moss-green stripe runs beneath the spine, and one small lantern-amber eye fixes on the viewer. A single clear venom bead hangs from one short ivory fang as the head rises only a few inches above the coil.",
     "perspective": "Close low three-quarter portrait with the entire compact coil, raised head, fang, and tail tip centered and fully visible, using nearby gravel for unmistakable small scale.",
     "background": "A cool blue-grey ruin floor at twilight with pale fog, soft slate masonry, and sparse dead grass, kept muted so the bronze-edged coil and amber eye read immediately.",
@@ -251,97 +251,97 @@
     "background": "An open stretch of pale blue-grey dawn mist over chalky ground, cool and understated, with no dense green foliage behind the beast. The spare, high-key setting cleanly separates the warm russet-root and fern-gold body.",
     "notes": "Palette priority: pale blue-grey and chalk background; warm russet, fern-gold, and muted olive subject; a faint honey-gold healing glow trails from its footfalls. Restore 2 Health to your hero on play, so the glow stays small and easy to miss, not a spectacle."
   },
-  "ward_boulderhide": {
+  "stone_boulderhide": {
     "subject": "A squat four-legged stone guardian shaped like a stubborn pack animal, built from overlapping rounded granite plates that form a natural armored hide. Its small head is tucked safely behind high shoulder boulders; two pale quartz eyes glow beneath the brow. Rusted bronze bands brace the joints and sparse moss settles in sheltered seams. It plants itself sideways across a damaged doorway as a living bulwark. Make it sturdy and defensive rather than aggressive, compact rather than massive, with no weapon and no humanoid armor.",
     "perspective": "Eye-level three-quarter view, centered on a low broad silhouette with all four planted feet visible.",
     "background": "A narrow ruined gate passage warmed by amber lanterns and dusty dusk light, soft enough to separate the cool grey construct.",
     "notes": "Scraped from the draft brief this card was generated from (stone_boulderhide)."
   },
-  "ward_duras_the_ironmount": {
+  "stone_duras_the_ironmount": {
     "subject": "Duras is a colossal living fortress-construct built from interlocked iron-grey granite slabs, with a mountain-like torso, battlement-shaped shoulders, and thick rusted-bronze braces holding the stone together. Pale quartz veins form a restrained inner glow across the chest and under a severe cliff-brow; sparse moss gathers only in protected cracks. Both immense fists are planted on the broken causeway as his arched forearms form a sheltering gate around the viewer, visually granting protection without showing other characters. His anatomy should feel architectural and original rather than like a human enlarged in stone. One clear subject, calm and unyielding; no handheld weapon, no castle on his back, no writing or carved runes.",
     "perspective": "Heroic ground-level frontal view with a slight upward tilt, emphasizing a mountain-wide shoulder line and two planted fists while keeping the face and chest centered.",
     "background": "A shattered fortress causeway under a luminous ember-red dawn, with warm dusty orange atmosphere and tiny distant masonry; the cool iron-grey colossus reads as one dark, immovable mass against the bright horizon.",
     "notes": "Scraped from the draft brief this card was generated from (stone_duras_the_ironmount)."
   },
-  "ward_earth_barrier": {
+  "stone_earth_barrier": {
     "subject": "A waist-high crescent of interlocking granite slabs pushes up through cracked cobbles in one tight protective arc. Pale quartz veins join the slabs like natural mortar, and a few mossy roots cinch them together. The barrier itself is the sole focal subject; behind it, only the indistinct lower silhouette of one protected traveler may be implied through dust, never becoming a competing figure. Show fresh earth at the base and a restrained halo of pale stone-light.",
     "perspective": "Close low-angle view of a compact crescent wall rising in the center, with its protective curve clearly readable.",
     "background": "A warm ember-lit alley of scorched plaster and dark timber, pushed into soft focus behind the cool pale barrier.",
     "notes": "No fortress wall, no enormous magical dome, and no violent eruption. Scraped from the draft brief this card was generated from (stone_earth_barrier)."
   },
-  "ward_granite_guardian": {
+  "stone_granite_guardian": {
     "subject": "A sturdy Stonewarden construct stands squarely in one gatehouse doorway, about one-and-a-half times human height—broad enough to block the entrance, but nowhere near a colossus. Its body is assembled from practical granite slabs with iron-black joints, two rusted bronze shoulder clamps, narrow pale-quartz eyes, and small patches of moss in old seams. Both thick forearms are held across the opening in a simple defensive posture, with no separate shield or weapon. Its feet remain fully visible and firmly planted on ordinary flagstones. Calm, durable, and workmanlike rather than legendary.",
     "perspective": "Straight eye-level view from several paces away, showing the complete doorway-sized guardian and clear planted stance without a heroic low-angle exaggeration.",
     "background": "A modest rebuilt gatehouse lit by warm amber lanterns at dusk, with simple ochre plaster and timber behind the cool grey construct.",
     "notes": "No battlement shoulders, mountain anatomy, glowing chest core, raised fortress wall, debris explosion, tiny people for scale, or dramatic skyline. Scraped from the draft brief this card was generated from (stone_granite_guardian)."
   },
-  "ward_pebble_sentinel": {
+  "stone_pebble_sentinel": {
     "subject": "A knee-high defensive construct assembled from five rounded granite fieldstones, with two broad pebble arms locked together like a tiny barricade. A narrow rusted-bronze band holds its torso stones in place, pale quartz eyes glow beneath a slab-like brow, and small patches of moss soften the joints. It plants its short feet stubbornly between two fallen wall blocks, protective and immovable despite its humble size.",
     "perspective": "Low close three-quarter view at the construct's eye level, with its complete compact silhouette centered and obvious scale cues from loose masonry and a discarded iron nail nearby.",
     "background": "A ruined watch-post doorway lit by warm amber lantern light and sparse drifting embers, with dark timber and softly blurred ochre stone behind the cool granite subject.",
     "notes": "Bulwark reads through the locked-arm stance and planted feet. Keep it knee-high, endearing but not cute, with no giant proportions, attack pose, weapon, or explosive magic."
   },
-  "ward_rock_golem": {
+  "stone_rock_golem": {
     "subject": "A workmanlike humanoid golem assembled from angular quarry blocks, roughly twice a person's width but only modestly taller than a doorway. It braces in a patient guarding stance with broad forearms held together like a shield. Its face is a simple iron-black inset plate with two pale quartz eyes; rusted bronze clamps hold the shoulders and knees, and thin moss marks its age. Keep the design plain, practical, and visibly less imposing than a granite guardian or siege golem.",
     "perspective": "Slight low-angle full-body portrait, centered, with both feet and the complete head safely inside the central frame area.",
     "background": "A warm dim quarry workshop at dusk with amber braziers, weathered timber braces, and muted clay walls.",
     "notes": "No weapon, no ornate armor, no colossal scale, and no roaring pose. Scraped from the draft brief this card was generated from (stone_rock_golem)."
   },
-  "ward_siege_golem": {
+  "stone_siege_golem": {
     "subject": "A purpose-built Stonewarden siege golem advances through a shattered gate: squat, broad, and brutally functional, made from interlocking granite blocks bound by iron-black pivots and rusted bronze hoops. One shoulder and forearm fuse into a massive wedge-shaped breaching shield, while the opposite hand presses into the earth and sends a pale quartz reinforcement pulse through its own cracked armor. Its low head is tucked safely behind the shield, with two small quartz eyes under a slab brow. Unlike Duras, it is a finite battlefield engine rather than a living fortress—heavy enough to hold a breach, compact enough to fit through one. Sparse moss in old seams, no rider, no handheld weapon, no wheels, no castle on its back, no carved writing or runes.",
     "perspective": "Low three-quarter view from just outside a breached gate, showing its wedge-shaped shield shoulder and planted stance as one broad silhouette.",
     "background": "A warm smoke-filled fortress breach under amber-orange afternoon light, with distant burning dust and softened brickwork; the cool granite golem remains the dark foreground mass.",
     "notes": "Scraped from the draft brief this card was generated from (stone_siege_golem)."
   },
-  "ward_stone_throw": {
+  "stone_throw": {
     "subject": "A compact volley of five fist-sized granite stones skips outward in one low, fan-shaped sweep across the courtyard, launched by a barely visible shove of earth from a cracked paving stone. Make the leading stone the clear focal subject, with pale quartz chips and thin moss seams catching the light. The action suggests a modest defensive spell striking several nearby foes without showing any enemies. Keep the effect physical and weighty: dust puffs, two short impact chips, no explosion, no giant boulder, no caster, and no battlefield-wide destruction.",
     "perspective": "Low three-quarter view at cobblestone height, close enough that the thrown stones make a readable sweeping arc while the source remains centered.",
     "background": "A warm, dim amber-lit ruin courtyard with charred timber and muted ember glow, kept soft and subordinate behind the cool granite projectiles.",
     "notes": "Scraped from the draft brief this card was generated from (stone_throw)."
   },
-  "token_revenant_5_5_bulwark": {
+  "token_revenant": {
     "subject": "A broad undead gate guardian stands behind a slab-shaped relic shield, its iron-grey funeral armor bound with heavy bronze chains and pale burial linen. Sickly green-gold grave-light burns through the visor and along one planted boot as the revenant braces the shield against an unseen impact.",
     "perspective": "Low full-body three-quarter view with the revenant's complete shield, helmet, and planted stance centered inside the middle 70%.",
     "background": "A warm amber-lit ruined gate with dusty ochre stone and distant braziers, separating the cold iron and bone-white guardian from the setting.",
     "notes": "Bulwark is the dominant read. Keep it one human-sized undead guardian, not a giant, king, skeleton crowd, or duplicate of Bound Revenant."
   },
-  "token_thorn_cub_1_2": {
+  "token_thorn_cub": {
     "subject": "A fox-sized quadruped cub grown from braided cedar-brown roots, with two broad leaf ears, a fresh green sprout-tail, and a short ridge of soft honey-gold thorns protecting its shoulders. It plants its forepaws on a cracked stone and peers forward with curious amber sap eyes.",
     "perspective": "Low close three-quarter portrait at the cub's eye level with its whole small body and sprout-tail centered and readable.",
     "background": "A cool blue-grey ruin floor in soft morning mist, providing clean value and temperature contrast behind the warm wood and fresh green growth.",
     "notes": "Keep it unmistakably young and fox-sized, with no antlers, armor, giant fangs, roaring pose, extra cubs, or dense foliage obscuring the silhouette."
   },
-  "neutral_spellwarden": {
+  "spellwarden": {
     "subject": "A weathered settlement scholar in a stone-grey coat raises a round aged-bronze warding plate as three small arcane sparks spiral into a restrained amber knot above its blank center. A moss-green sash and practical satchel mark a traveling keeper of dangerous magic rather than a robed wizard.",
     "perspective": "Eye-level waist-up three-quarter portrait with the scholar, bronze plate, and compact spark knot centered and the hand gesture clearly visible.",
     "background": "A pale cool-blue archive ruin with blurred shelves and broken masonry, opposing the warm bronze and amber focal light.",
     "notes": "Arcane Surge reads as gathered energy, not a blast. No readable glyphs, spellbook text, ornate staff, hooded cultist, giant aura, or extra figures."
   },
-  "neutral_ironclad_bulwark": {
+  "ironclad_bulwark": {
     "subject": "A squat ironclad settlement construct braces behind two overlapping riveted shield plates, its body built from iron-black boiler sections, aged-bronze hinges, and a single warm lantern-amber core. A pale translucent aegis sheen hugs only the forward plates while its broad feet bite into the road.",
     "perspective": "Low frontal three-quarter view with both shield plates, glowing core, and planted feet forming one compact centered silhouette.",
     "background": "A pale cold-grey causeway under thin blue mist, making the near-black iron mass and warm core read clearly.",
     "notes": "Bulwark and Aegis should read together without a magical bubble. No weapon, humanoid knight, castle-scale body, cannon, spikes, or attack pose."
   },
-  "neutral_soulbound_revenant": {
+  "soulbound_revenant": {
     "subject": "A slender revenant in torn stone-grey traveling clothes kneels beside a cracked bronze soul-lantern, one translucent bone-white hand tethered to its warm amber flame by a single taut green-gold filament. Its bowed iron mask and still posture suggest obligation rather than aggression.",
     "perspective": "Eye-level medium three-quarter view with the kneeling revenant, lantern, and complete tether line centered inside the frame.",
     "background": "A cool moon-blue roadside shrine of weathered stone and sparse silver mist, contrasting with the lantern's warm focal glow.",
     "notes": "One revenant and one lantern only. No chains around the whole body, screaming ghost, skull swarm, graveyard battle, or duplicate of the larger bulwark token."
   },
-  "neutral_venomscale_drake": {
+  "venomscale_drake": {
     "subject": "A lean hound-sized drake crouches along a broken aqueduct, its overlapping slate-grey scales edged in moss green and its throat pouch glowing a restrained toxic lime. One clear venom bead gathers at a short ivory fang while, below the parapet, one tiny ochre-clad aqueduct worker drops a pale bucket and scrambles away from the creature.",
     "perspective": "Low side-on three-quarter portrait with the drake's complete head-to-tail silhouette, folded wings, and venom bead centered and unobscured.",
     "background": "A warm dusty coral sunset over pale ruined arches, opposing the cool slate body and toxic-green throat.",
     "notes": "Venom is one bead, not a spray. Keep the fleeing worker tiny and subordinate and the drake's folded bronze-brown wings fully readable. No giant dragon scale, fire breath, rider, hoard, extra heads, or airborne attack."
   },
-  "neutral_duneborn_construct": {
+  "duneborn_construct": {
     "subject": "A broad four-legged construct rises from wind-packed sand, built around a dark iron frame clad in sun-bleached sandstone plates and held by aged-bronze straps. Its wedge-shaped front slab lowers into a defensive brace while a small amber furnace-eye glows beneath the overhang.",
     "perspective": "Low full-body three-quarter view near sand level with all four feet, front slab, and compact pack-animal silhouette visible in the center.",
     "background": "A cool indigo predawn desert with blue-violet dunes and a pale horizon, separating the warm sandstone and bronze body.",
     "notes": "Bulwark reads through the lowered slab. No humanoid golem, pyramid, giant statue, weapon, sand tornado, carved text, or decorative runes."
   },
-  "neutral_searing_quill": {
+  "searing_quill": {
     "subject": "A single long bronze-and-ivory writing quill lies diagonally above a dark stone tablet, its feather burned to ember-red filaments and its sharpened metal nib glowing molten orange. One curling line of heat scorches the tablet surface without forming any letter or symbol.",
     "perspective": "Tight top-down three-quarter close view with the entire quill, hot nib, and short scorch trail centered inside the middle 70%.",
     "background": "A cool charcoal-grey scribe's bench with pale ash dust and muted blue shadow, maximizing contrast around the ember-red feather and molten nib.",
@@ -389,7 +389,7 @@
     "background": "A cold pale-quartz mountain face under a thin, near-white sky — high in value and drained of colour — so the deep green canopy and sap-gold trunk read as one dark silhouette against it.",
     "notes": "This is the Verdant legendary and should be the most commanding shape in the class: Bulwark through the immovable rooted trailing leg, Overwhelm through the wall shearing away. One creature only — do not paint Thalen Greenmantle himself, and do not fill the frame with forest."
   },
-  "verdant_worldroot_behemoth": {
+  "verdant_world_root_behemoth": {
     "subject": "A four-legged behemoth about the size of a war elephant, its whole body a knotted mass of pale enormous roots torn up from far underground, dark wet earth still packed between them and shedding as it moves. Its head is low and blunt with no eyes, ringed by a collar of broken root-tips like tusks. It is mid-charge, shouldering straight through the trunk of a dead tree that splinters across its chest, hind legs still dragging fresh soil up out of the ground behind it.",
     "perspective": "Side-on three-quarter charging view at head height, the full body length inside the frame with the splintering trunk crossing low, so the motion reads left-to-right at a glance.",
     "background": "Cold pale blue-grey rainfall over flat drowned ground, low in contrast and desaturated, so the warm root-brown bulk and the dark packed earth are the only solid mass in the frame.",
@@ -401,7 +401,7 @@
     "background": "A cold pale-grey dawn haze filling the space beyond the branches, flat and near-white, silhouetting the green mantle and cedar limbs with no second layer of foliage behind them.",
     "notes": "Drawing a card reads as the split seed and its one thread of light — keep it small and quiet. No glowing eyes, no visionary imagery, no runes, no floating cards, and no forest depth behind the branch; the emptiness is what makes the silhouette read at board size."
   },
-  "ward_earthwardens_maul": {
+  "stone_earthwardens_maul": {
     "subject": "A short, brutally heavy warhammer shown whole: a squared block of granite bound in rusted bronze bands for a head, on a full-length iron-black haft running down to a banded butt cap, the haft roughly two and a half times the height of the head so the thing reads as a weapon a warden actually swings. The striking face is chipped and pale where it has been used, moss has taken hold in the seams of the bronze and in the pitting along one flat, and a vein of pale quartz runs through the stone and catches the light.",
     "perspective": "Set WELL BACK and shot with a long lens — near-orthographic, minimal perspective falloff, the maul presented close to its true side profile with NO foreshortening. The ENTIRE weapon is in frame, head AND full-length haft down to its butt cap, standing roughly upright and filling most of the circle's height. Nothing is cropped and nothing is truncated.",
     "background": "A dim, warm amber field — low ember-glow in hazy dark air, no setting and no ground — opposing the cold granite grey, iron-black and moss-green of the weapon itself.",

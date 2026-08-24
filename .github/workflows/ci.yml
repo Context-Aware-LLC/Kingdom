@@ -268,8 +268,13 @@ jobs:
       # than a placeholder. --fail-missing-only scopes the gate to artId resolution only; class-token
       # and set-folder findings are reported but do not block the build (they need Unity-Editor
       # intervention to rename PNGs without breaking Addressables guids).
+      #
+      # --check-seeds blocks too, and unlike the findings above it needs no Editor: a seed key
+      # that matches no row's artId is hand-authored art direction that every consumer looks up
+      # and quietly misses, so the card generates on placeholder direction with no symptom. 18
+      # sat stranded from a handle rename until 2026-08-24.
       - name: "Stage 6b · Art-id resolution check (tooling/scripts)"
-        run: python3 tooling/scripts/audit_card_art_names.py --fail-missing-only
+        run: python3 tooling/scripts/audit_card_art_names.py --fail-missing-only --check-seeds
 
       # Hardware edge clearance. A screen whose corner chrome never opts into --edge-safe
       # renders correctly on a desktop, in the Editor, in the Device Simulator and on any

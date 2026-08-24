@@ -31,10 +31,21 @@ Three further checks, each for something no existing gate reports:
   An orphan that duplicates a live file is a leftover; an orphan that duplicates nothing may be the
   only copy of something.
 
+* **Stranded seeds** (--check-seeds). A key under tooling/card-art-seeds/ matching no row's
+  artId. Seeds are hand-authored art direction, and every consumer of them is a dict lookup that
+  MISSES SILENTLY: the card reads as unseeded, generates on placeholder direction, and nothing
+  anywhere says so. That is how 18 of them sat stranded from 2026-08-15 to 2026-08-24, when the
+  TEMPEST and STONEWARDEN handle renames moved the key they were stored under. The seeds are
+  keyed by artId now, for exactly that reason — see gen_card_prompt_briefs.art_key.
+
 **Never deletes anything.** Orphans are reported, never removed — that call is Sam's.
 
 Exit 1 if any mismatch is found. Orphans and duplicates are reported but do NOT fail the run: they
 are bookkeeping, not breakage.
+
+--check-seeds is opt-in but BLOCKING when passed, including alongside --fail-missing-only: unlike
+a class-token or set-folder finding it needs no Unity Editor to fix, so there is no reason to
+downgrade it to advisory. CI and rebake_card_data.py both pass it.
 
 Pass --fail-missing-only to restrict the exit-1 condition to artIds with no matching file on disk
 (useful in CI when class-token mismatches are pre-existing and need Unity-Editor intervention to
@@ -76,6 +87,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--fail-missing-only", action="store_true",
                         help="exit 1 only when artIds have no matching file; do not fail on class-token or set-folder issues")
+    parser.add_argument("--check-seeds", action="store_true",
+                        help="also report seed keys under tooling/card-art-seeds/ that match no "
+                             "row's artId. ALWAYS contributes to the exit code when passed, "
+                             "including under --fail-missing-only.")
     args = parser.parse_args()
 
     all_rows = [(f, c) for f, c in rows() if c.get("artId")]
@@ -198,9 +213,36 @@ def main():
                 status = "unique image — the only copy"
             print(f"{stem + '.png':<38} {on_disk[stem][0]:<12} {status}")
 
+    stranded = []
+    if args.check_seeds:
+        # WHY THIS EXISTS. Seeds are hand-authored art direction keyed by artId. They used to be
+        # keyed by HANDLE, and when the TEMPEST and STONEWARDEN handles were renamed
+        # (tempest_/storm_, warden_/stone_) 18 seeds stopped matching any row at once. Nothing
+        # reported it: the cards simply read as unseeded and generated on placeholder direction.
+        # `stone_earthwardens_maul` was one of them and had to be redrawn by hand.
+        #
+        # A key that matches no artId is that failure, and it is invisible everywhere else --
+        # every consumer does a dict lookup that quietly misses.
+        seed_dir = ROOT / "tooling" / "card-art-seeds"
+        known = {card["artId"] for _, card in all_rows}
+        for fp in sorted(seed_dir.glob("*.json")):
+            for key in json.loads(fp.read_text(encoding="utf-8")):
+                if key not in known:
+                    stranded.append((key, fp.name))
+
+        print()
+        print(f"seed keys matching no row's artId : {len(stranded)}")
+        if stranded:
+            print()
+            print("STRANDED SEEDS — hand-authored direction no consumer can find (BLOCKING)")
+            print(f"{'seed key':<40} file")
+            print("-" * 72)
+            for key, fname in stranded:
+                print(f"{key:<40} {fname}")
+
     if args.fail_missing_only:
-        return 1 if missing else 0
-    return 1 if (findings or misplaced or missing) else 0
+        return 1 if (missing or stranded) else 0
+    return 1 if (findings or misplaced or missing or stranded) else 0
 
 
 if __name__ == "__main__":

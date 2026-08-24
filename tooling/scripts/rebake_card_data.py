@@ -26,7 +26,8 @@ art therefore resolved to nothing. Step 2 replays the three blocking gates from
 .github/workflows/ci.yml Stage 6 so the failure lands here instead of on the runner:
 
   2a. Emberfall.Tools.CardCi          — rows parse; C-series validation
-  2b. audit_card_art_names.py         — every artId resolves to a png (--fail-missing-only)
+  2b. audit_card_art_names.py         — every artId resolves to a png, and every seed key
+                                        resolves to a row (--fail-missing-only --check-seeds)
 
 They VERIFY and never write, so they behave identically under --check and --write. A gate
 failure is a real defect rather than staleness: it exits 2, not 1. `--skip-gates` exists for
@@ -154,8 +155,12 @@ def step_gates(write, skip):
             "C-series code is a named validation rule you can look up in CardValidator."
         )
 
-    print("\n-- 2b  audit_card_art_names.py --fail-missing-only --")
-    code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
+    # --check-seeds rides along with the gate run rather than being a separate step: a stranded
+    # seed is caused by exactly the thing this stage already watches (an artId or a handle
+    # moving), and it is the one art failure with NO visible symptom -- the card just reads as
+    # unseeded and generates on placeholder direction. 18 seeds sat stranded until 2026-08-24.
+    print("\n-- 2b  audit_card_art_names.py --fail-missing-only --check-seeds --")
+    code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only", "--check-seeds"])
     if code != 0:
         # The auto-rename that used to run here went with df309c46, which deleted
         # repair_art_names/art_name_repairs and left this call standing -- so every 2b failure
