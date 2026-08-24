@@ -27,11 +27,18 @@ namespace Emberfall.Core.Tests.Collection
         private const int Draws = 1_000_000;
         private const int TolerancePermille = 3;
 
-        // The brief's numbers, transcribed independently of the shipped table.
-        private const int BriefCommon = 715;      // 71.5%
-        private const int BriefRare = 230;        // 23%
-        private const int BriefEpic = 45;         // 4.5%
-        private const int BriefLegendary = 10;    // 1%
+        // The ratified numbers, transcribed independently of the shipped table so that re-pricing
+        // the economy cannot happen silently — every other assertion here reads PackRarityOdds and
+        // would follow a retune without complaint.
+        //
+        // RETUNED by Sam 2026-08-20, from the NOR-109 brief's 715/230/45/10, and confirmed
+        // 2026-08-24 as the canonical baseline. Epic was the lever: at 4.5% a player broadened too
+        // slowly across a 27-card epic tier while epic pity kept forcing slots onto the handful
+        // they already held. The 7.5pp it and Rare gained came off Common.
+        private const int BriefCommon = 640;      // 64%
+        private const int BriefRare = 265;        // 26.5%
+        private const int BriefEpic = 80;         // 8%
+        private const int BriefLegendary = 15;    // 1.5%
 
         [Test]
         public void Rarity_Draw_Matches_The_Published_Odds_Within_Tolerance()

@@ -72,8 +72,8 @@ namespace Emberfall.Core.Tests.Projection
                 ["MaxHealth"] = "PUBLIC",
                 ["Armor"] = "PUBLIC",
                 ["HeroPowerId"] = "PUBLIC",
-                ["IsFrosted"] = "PUBLIC",
-                ["FrostThawPending"] = "PUBLIC (NOR-367 two-step thaw bookkeeping)",
+                ["Effects"] = "PUBLIC list; each effect's Source is REDACTED to the sentinel "
+                    + "unless that source is visible to the viewer (GameStateProjector.CloneEffects)",
             },
             [typeof(CardInstance)] = new()
             {
@@ -88,8 +88,8 @@ namespace Emberfall.Core.Tests.Projection
                 ["Keywords"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["Enchantments"] = "PUBLIC in visible zones (empty in card-backs)",
                 ["HasAegisShield"] = "PUBLIC in visible zones (false in card-backs)",
-                ["IsFrosted"] = "PUBLIC in visible zones (false in card-backs)",
-                ["FrostThawPending"] = "PUBLIC in visible zones (false in card-backs) — NOR-367 two-step thaw",
+                ["Effects"] = "PUBLIC list in visible zones (empty in card-backs); each effect's "
+                    + "Source is REDACTED to the sentinel unless that source is visible to the viewer",
                 ["IsSilenced"] = "PUBLIC in visible zones (false in card-backs)",
                 ["SummonedThisTurn"] = "PUBLIC in visible zones (false in card-backs)",
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",
