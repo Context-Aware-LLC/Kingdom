@@ -152,20 +152,28 @@ jobs:
       # tools/ci/gates.ps1. It never produced a true positive and could not: the regression it
       # guarded is already closed by a closed enum plus a fail-shut validator.
 
-      # ── Stages 2, 3, 3b, 4, 5 — REMOVED 2026-08-18 ─────────────────────────────
-      # Every one of these ran a .NET test suite, and those suites were archived out of the repo
-      # (Sam's ruling) to C:\Users\User\Documents\emberfall-test-archive. 1250 tests that existed as
-      # scaffolding for agent-authored changes and had grown into a larger failure surface than the
-      # code they guarded. Nothing returns until a real break happens and an archived test would
-      # have caught it — then that one test comes back, alone.
+      # ── Stage 2 — .NET test suites (ADVISORY, restored 2026-08-24) ─────────────
       #
-      # DO NOT re-add a `dotnet test` step here without the test projects also returning to
-      # Emberfall.slnx; there is nothing for the filters to match, and a filter that matches zero
-      # tests exits 0, which would make this workflow green for the wrong reason.
+      # Archived out 2026-08-18, brought back at Sam's direction on 2026-08-24 minus the
+      # card-authoring block (`CardValidation/`, plus the Unity authoring model the old csproj
+      # compiled in). Five projects, 1467 tests, all five registered in Emberfall.slnx — which
+      # matters, because a `dotnet test` that matches zero tests exits 0 and would make this job
+      # green for the wrong reason.
       #
+      # `continue-on-error` is why this is worth reading. 23 tests fail on the day they returned,
+      # and none of them is a migration artefact: they are the effect-model fork and the numeric
+      # card id disagreeing with behaviour the suite was written against in July. Blocking on them
+      # would block every merge on work nobody has scheduled.
+      #
+      # RETIREMENT TRIGGER: when the run is green, delete `continue-on-error` here and cut the same
+      # flag from `tools/ci/gates.ps1`'s Stage 2, which carries a copy of this note.
+      - name: "Stage 2 · .NET test suites (ADVISORY)"
+        continue-on-error: true
+        run: dotnet test Emberfall.slnx -c Release --no-build --nologo
+
       # The weight-bearing checks were never in tests/ and still run below: CardCi validates every
       # row of every card set, and the NetSoak soak plays live networked matches asserting zero
-      # resyncs — which is also what now covers the determinism question Stage 5 used to.
+      # resyncs — which is also what covers the determinism question Stage 5 used to.
 
       # ── Stage 5b — Networked AI soak (ADVISORY as of NOR-189, was BLOCKING/EF-077) ─────
       #

@@ -215,7 +215,7 @@ namespace Emberfall.Core.Tests.Targeting
         /// output is read by a human.</para>
         /// </summary>
         private static string TypeAxis(TargetCandidate candidate, ICardDatabase db)
-            => candidate.DefinitionId.Length == 0
+            => candidate.DefinitionId == 0
                 ? TargetTypes.Hero.ToString()
                 : TargetAxes.OfCard(db.Get(candidate.DefinitionId).Type).ToString();
 
@@ -265,7 +265,7 @@ namespace Emberfall.Core.Tests.Targeting
         private static CardInstance Card(ref int nextId, PlayerId controller, Zone zone)
         {
             int id = nextId++;
-            return new CardInstance(new InstanceId(id), $"c_{id:00}", controller)
+            return new CardInstance(new InstanceId(id), FixtureCard.Id($"c_{id:00}"), controller)
             {
                 Zone = zone,
                 CurrentAttack = 1,

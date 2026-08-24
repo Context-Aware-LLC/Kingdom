@@ -23,7 +23,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         /// silently baked against. Reads default to these so no existing hash moves (C-G1-7).
         /// </summary>
         public const int DefaultHeroMaxHealth = 30;
-        public const string DefaultSparkTokenId = "token_spark_coin";
+        public const int DefaultSparkTokenId = 158;   // token_spark_coin
 
         public int SchemaVersion = 1;
         public string Name = "";
@@ -34,8 +34,8 @@ namespace Emberfall.Core.Tests.GoldenReplay
         public PlayerId P1;
         public CardClass P0Class;
         public CardClass P1Class;
-        public List<string> P0Deck = new();
-        public List<string> P1Deck = new();
+        public List<int> P0Deck = new();
+        public List<int> P1Deck = new();
         public ulong Seed;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
         /// so a fixture that does not record them cannot honestly claim its inputs reproduce its hash.
         /// </summary>
         public int HeroMaxHealth = DefaultHeroMaxHealth;
-        public string SparkTokenId = DefaultSparkTokenId;
+        public int SparkTokenId = DefaultSparkTokenId;
 
         public List<PlayerIntent> Intents = new();
 
@@ -82,10 +82,11 @@ namespace Emberfall.Core.Tests.GoldenReplay
                 // Default on read (C-G1-7): absent → the v1 implicit value, so v1 hashes are stable.
                 HeroMaxHealth = root.TryGetProperty("heroMaxHealth", out var hp) && hp.ValueKind == JsonValueKind.Number
                     ? hp.GetInt32() : DefaultHeroMaxHealth,
-                SparkTokenId = Opt(root, "sparkTokenId") ?? DefaultSparkTokenId,
+                SparkTokenId = root.TryGetProperty("sparkTokenId", out var spark) && spark.ValueKind == JsonValueKind.Number
+                    ? spark.GetInt32() : DefaultSparkTokenId,
             };
-            foreach (var c in root.GetProperty("p0Deck").EnumerateArray()) fx.P0Deck.Add(c.GetString()!);
-            foreach (var c in root.GetProperty("p1Deck").EnumerateArray()) fx.P1Deck.Add(c.GetString()!);
+            foreach (var c in root.GetProperty("p0Deck").EnumerateArray()) fx.P0Deck.Add(c.GetInt32());
+            foreach (var c in root.GetProperty("p1Deck").EnumerateArray()) fx.P1Deck.Add(c.GetInt32());
             foreach (var it in root.GetProperty("intents").EnumerateArray()) fx.Intents.Add(ParseIntent(it));
 
             if (root.TryGetProperty("expected", out var exp) && exp.ValueKind == JsonValueKind.Object)
@@ -150,7 +151,7 @@ namespace Emberfall.Core.Tests.GoldenReplay
                     }
                 case "unearth_choice":
                     return new UnearthChoiceIntent(player,
-                        el.GetProperty("chosenCardId").GetString()!,
+                        el.GetProperty("chosenCardId").GetInt32(),
                         el.GetProperty("choiceSequence").GetUInt64());
                 default:
                     throw new NotSupportedException($"Intent tag '{tag}' not supported by the golden-replay harness.");

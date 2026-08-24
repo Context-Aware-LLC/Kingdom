@@ -263,7 +263,7 @@ namespace Emberfall.Net.Server.Telemetry
         private static void BuildSeat(string mid, string seat, JsonElement s, List<NpgsqlBatchCommand> into)
         {
             var kept = new List<string>();
-            foreach (var e in s.GetProperty("mulliganKept").EnumerateArray()) kept.Add(e.GetString()!);
+            foreach (var e in s.GetProperty("mulliganKept").EnumerateArray()) kept.Add(CardId(e));
             into.Add(Cmd(
                 "insert into match_seat (match_id, seat, account_id, class_id, deck_id, deck_hash, result, mulligan_kept) " +
                 "values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict (match_id, seat) do nothing",
@@ -308,7 +308,7 @@ namespace Emberfall.Net.Server.Telemetry
                 P(NpgsqlDbType.Text, Str(r, "matchId")), P(NpgsqlDbType.Text, Str(r, "env")),
                 P(NpgsqlDbType.Text, Str(r, "source")), P(NpgsqlDbType.TimestampTz, Ts(r, "endedAtUtc")),
                 P(NpgsqlDbType.Text, Str(r, "accountId")), P(NpgsqlDbType.Text, Str(r, "classId")),
-                P(NpgsqlDbType.Text, Str(r, "cardDefId")), P(NpgsqlDbType.Boolean, r.GetProperty("inDeck").GetBoolean()),
+                P(NpgsqlDbType.Text, CardId(r.GetProperty("cardDefId"))), P(NpgsqlDbType.Boolean, r.GetProperty("inDeck").GetBoolean()),
                 P(NpgsqlDbType.Boolean, r.GetProperty("drawnThisMatch").GetBoolean()),
                 P(NpgsqlDbType.Boolean, r.GetProperty("matchWon").GetBoolean()),
                 P(NpgsqlDbType.Boolean, r.GetProperty("keptInMulligan").GetBoolean()),
@@ -317,6 +317,29 @@ namespace Emberfall.Net.Server.Telemetry
 
         // ── small helpers ────────────────────────────────────────────────────────────────────────────
         private static string Str(JsonElement e, string name) => e.GetProperty(name).GetString()!;
+
+        /// <summary>
+        /// A card id off the wire, as the string the telemetry tables key on.
+        ///
+        /// <para><b>The sink writes a NUMBER and these columns are <c>text</c>.</b> Before the
+        /// numeric card id landed both ends were strings and this conversion did not exist; after it,
+        /// <c>JsonlTelemetrySink</c> emitted <c>cardDefId</c> as an int while the drain still called
+        /// <c>GetString()</c>, so every <c>card_seen</c> line the sink wrote was rejected as poison
+        /// and no per-card telemetry reached the database at all. Nothing said so — a poisoned line
+        /// is counted and dropped, not raised.</para>
+        ///
+        /// <para><b>Numeric-shaped ids are still accepted as strings</b> so a line written by a
+        /// build from before the migration drains rather than poisoning the batch on replay.</para>
+        ///
+        /// <para>OPEN, and Sam's call: <c>card_def_id</c> is part of <c>card_seen</c>'s primary key,
+        /// so narrowing it from <c>text</c> to <c>integer</c> is a migration on live telemetry
+        /// rather than an edit here. Until that is decided the id is stored in its decimal form,
+        /// which sorts differently from the number but joins identically.</para>
+        /// </summary>
+        private static string CardId(JsonElement e) =>
+            e.ValueKind == JsonValueKind.Number
+                ? e.GetInt32().ToString(CultureInfo.InvariantCulture)
+                : e.GetString()!;
 
         private static DateTime Ts(JsonElement e, string name) =>
             DateTimeOffset.Parse(e.GetProperty(name).GetString()!, CultureInfo.InvariantCulture,

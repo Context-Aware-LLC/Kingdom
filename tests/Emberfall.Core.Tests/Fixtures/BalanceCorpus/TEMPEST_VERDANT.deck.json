@@ -1,0 +1,85 @@
+{
+  "primaryClass": "TEMPEST",
+  "secondaryClass": "VERDANT",
+  "characterId": "balance-char-TEMPEST-VERDANT",
+  "deckId": "balance-deck-TEMPEST-VERDANT",
+  "seed": 0,
+  "entries": [
+    {
+      "id": "storm_static_wisp",
+      "count": 2
+    },
+    {
+      "id": "storm_lightning_bolt",
+      "count": 2
+    },
+    {
+      "id": "storm_spark_imp",
+      "count": 2
+    },
+    {
+      "id": "verdant_sapsurge",
+      "count": 1
+    },
+    {
+      "id": "storm_crackle",
+      "count": 2
+    },
+    {
+      "id": "storm_gust_sprite",
+      "count": 2
+    },
+    {
+      "id": "storm_wind_rider",
+      "count": 2
+    },
+    {
+      "id": "verdant_rootweaver",
+      "count": 2
+    },
+    {
+      "id": "storm_chain_lightning",
+      "count": 2
+    },
+    {
+      "id": "storm_tempest_striker",
+      "count": 2
+    },
+    {
+      "id": "verdant_menders_bloom",
+      "count": 1
+    },
+    {
+      "id": "verdant_windroot_sprinter",
+      "count": 2
+    },
+    {
+      "id": "verdant_wildbloom_surge",
+      "count": 1
+    },
+    {
+      "id": "storm_hurricane",
+      "count": 1
+    },
+    {
+      "id": "storm_thunder_hoof",
+      "count": 2
+    },
+    {
+      "id": "verdant_elderroot_colossus",
+      "count": 1
+    },
+    {
+      "id": "storm_stormcallers_pact",
+      "count": 1
+    },
+    {
+      "id": "verdant_thorn_swarm",
+      "count": 1
+    },
+    {
+      "id": "storm_zael_of_the_struck_sky",
+      "count": 1
+    }
+  ]
+}

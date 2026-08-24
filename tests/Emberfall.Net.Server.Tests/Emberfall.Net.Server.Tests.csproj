@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Net.Server.Tests — the B1 session-core tests (dev-docs/quality/testing-and-ci.md:22),
+    hard-blocking via the existing CI category stages (Unit/Contract). Includes the named
+    state-sync §7.2 enforcement set: out-of-turn rejection, seq monotonicity (+reset on
+    reconnect), rate-limit trip + recovery-via-snapshot, reconnect token seat-binding
+    rejection, oversized-payload drop, and the load-bearing client-AutoConfirm refusal.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Emberfall.Core.Contracts\Emberfall.Core.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Core.Serialization\Emberfall.Core.Serialization.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Core\Emberfall.Core.csproj" />
+    <!-- EF-071: the deck-submission tests build Character/DeckList/DefaultDeckGenerator directly. -->
+    <ProjectReference Include="..\..\src\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
+    <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
+    <ProjectReference Include="..\Emberfall.Core.Tests\Emberfall.Core.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

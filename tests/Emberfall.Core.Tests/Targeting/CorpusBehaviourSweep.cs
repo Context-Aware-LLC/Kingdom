@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.Targeting
             var tally = new SortedDictionary<string, int>(StringComparer.Ordinal);
             int ran = 0, unrunnable = 0;
 
-            foreach (CardDefinition card in cards.OrderBy(c => c.Id, StringComparer.Ordinal))
+            foreach (CardDefinition card in cards.OrderBy(c => c.Id))
             {
                 if (card.Rules.Count == 0) continue;
                 try
@@ -285,7 +285,7 @@ namespace Emberfall.Core.Tests.Targeting
         internal static List<CardDefinition> ShippedCards()
         {
             var defs = new List<CardDefinition>();
-            foreach (string file in new[] { "Emberfall.cards.json", "Rekindling.cards.json" })
+            foreach (string file in new[] { "Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json" })
                 defs.AddRange(CardJson.DeserializeArray(File.ReadAllText(Path.Combine(
                     RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file))));
             return defs;
@@ -303,19 +303,19 @@ namespace Emberfall.Core.Tests.Targeting
             for (int i = 0; i < 64; i++)
             {
                 foreach (Tribe tribe in Tribes)
-                    yield return Filler($"dummy_{tribe}_{i:00}", CardType.MINION, tribe);
-                yield return Filler($"dummy_{i:00}", CardType.MINION);
-                yield return Filler($"dummy_w{i:00}", CardType.WEAPON);
+                    yield return Filler(FixtureCard.Id($"dummy_{tribe}_{i:00}"), CardType.MINION, tribe);
+                yield return Filler(FixtureCard.Id($"dummy_{i:00}"), CardType.MINION);
+                yield return Filler(FixtureCard.Id($"dummy_w{i:00}"), CardType.WEAPON);
             }
         }
 
-        private static CardDefinition Filler(string id, CardType type, Tribe? tribe = null) => new CardDefinition(
-            id: id, name: id, type: type, cost: 1,
+        private static CardDefinition Filler(int id, CardType type, Tribe? tribe = null) => new CardDefinition(
+            id: id, handle: FixtureCard.Handle(id), name: FixtureCard.Handle(id), type: type, cost: 1,
             attack: 2, health: type == CardType.MINION ? 4 : (int?)null,
             durability: type == CardType.WEAPON ? 2 : (int?)null,
             @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
             keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-            flavorText: "", artId: id, setId: SetId.CORE,
+            flavorText: "", artId: FixtureCard.Handle(id), setId: SetId.CORE,
             collectible: false, tribe: tribe, factionId: "");
 
         private static GameState Board()
@@ -339,21 +339,21 @@ namespace Emberfall.Core.Tests.Targeting
                     // Tribed on purpose: a tribe FILTER matches nothing on a board of untribed
                     // fillers, which reads as "this card can never do anything" and is really
                     // "this board has none of what it asked for".
-                    player.Board.Add(new CardInstance(new InstanceId(id), $"dummy_{Tribes[i % Tribes.Length]}_{id:00}", player.Id)
+                    player.Board.Add(new CardInstance(new InstanceId(id), FixtureCard.Id($"dummy_{Tribes[i % Tribes.Length]}_{id:00}"), player.Id)
                     {
                         Zone = Zone.Board, Position = i,
                         CurrentAttack = 2, MaxHealth = 4, CurrentHealth = i == 0 ? 2 : 4,
                     });
                 }
                 int wid = next++;
-                player.Weapon = new CardInstance(new InstanceId(wid), $"dummy_w{wid:00}", player.Id)
+                player.Weapon = new CardInstance(new InstanceId(wid), FixtureCard.Id($"dummy_w{wid:00}"), player.Id)
                 { Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2 };
                 for (int i = 0; i < 3; i++)
                 {
                     int h = next++, d = next++, g = next++;
-                    player.Hand.Add(new CardInstance(new InstanceId(h), $"dummy_{h:00}", player.Id) { Zone = Zone.Hand });
-                    player.Deck.Add(new CardInstance(new InstanceId(d), $"dummy_{d:00}", player.Id) { Zone = Zone.Deck });
-                    player.Graveyard.Add(new CardInstance(new InstanceId(g), $"dummy_{g:00}", player.Id) { Zone = Zone.Graveyard });
+                    player.Hand.Add(new CardInstance(new InstanceId(h), FixtureCard.Id($"dummy_{h:00}"), player.Id) { Zone = Zone.Hand });
+                    player.Deck.Add(new CardInstance(new InstanceId(d), FixtureCard.Id($"dummy_{d:00}"), player.Id) { Zone = Zone.Deck });
+                    player.Graveyard.Add(new CardInstance(new InstanceId(g), FixtureCard.Id($"dummy_{g:00}"), player.Id) { Zone = Zone.Graveyard });
                 }
             }
 
