@@ -5,19 +5,19 @@
     "background": "A cool blue ocean with gentle lapping waves beside a flooded beach settlement framed by jungle and distant cliffs, kept subordinate to the warm-cloaked hermit.",
     "notes": "Do not dress the hermit in teal or blue; background villagers remain small and subordinate. Scraped from the draft brief this card was generated from (tide_prophet_of_the_flood)."
   },
-  "neutral_reclaimed_scout": {
+  "reclaimed_scout": {
     "subject": "A young settlement scout in a patched stone-grey coat steps through a newly cleared archway, carrying a short aged-bronze spyglass and a bundle of moss-green survey stakes. One warm lantern hangs low at the hip while a salvaged shoulder plate bears visible hammer dents but no emblem.",
     "perspective": "Eye-level full-body three-quarter view with the scout's complete silhouette, spyglass, and forward step centered inside the middle 70%.",
     "background": "A pale blue-grey dawn over roofless ruins and cool mist, separating the warm lantern and bronze tools from the open setting.",
     "notes": "Keep the scout practical and lightly equipped, with no bow, military uniform, readable map, banner, heroic pose, or distant crowd."
   },
-  "neutral_alliance_messenger": {
+  "alliance_messenger": {
     "subject": "A road-worn courier leans into a steady run, one hand protecting a sealed bronze message tube strapped across a moss-green sash while the other steadies a lantern-amber signal pennant folded tightly around its staff. The figure wears mixed settlement leathers repaired with two visibly different stitching styles.",
     "perspective": "Low side-on three-quarter action view with the entire running courier, sealed tube, and folded pennant contained in the central composition.",
     "background": "A cool rain-washed causeway between dark grey ruins under a pale sky, opposing the warm bronze tube and amber cloth.",
     "notes": "The pennant stays folded and carries no emblem or text. No horse, army, open letter, sprinting crowd, royal costume, or combat scene."
   },
-  "neutral_restored_bulwark": {
+  "restored_bulwark": {
     "subject": "A repaired settlement barricade construct stands on two blocky feet, its broad stone-grey shield face pieced together with aged-bronze straps, fresh pale mortar, and one mismatched mossy slab. A warm lantern core glows through the carefully mended central seam as it braces across a narrow road.",
     "perspective": "Low frontal three-quarter view with the full repaired construct, both feet, and patchwork shield face centered and clearly readable.",
     "background": "A cool blue predawn street of pale rubble and receding scaffold poles, contrasting with the warm repairs and lantern core.",
@@ -29,7 +29,7 @@
     "background": "A deep cobalt-blue canvas screen and hazy teal work-yard shadow, separating the cool grey granite and iron silhouette while the warm cedar beams, bronze chest, and amber core remain distinct.",
     "notes": "Bulwark is conveyed by load-bearing strength. No junk pile silhouette, giant size, weapon, extra workers, glowing runes, wheels, or chaotic scrap spikes."
   },
-  "neutral_bannerman": {
+  "new_dawn_bannerman": {
     "subject": "A weathered settlement standard-bearer plants a tall repaired pole into fresh earth while unfurling a broad sun-faded cloth of warm lantern amber edged in moss green. The bearer wears practical stone-grey armor made from joined pieces and looks back toward unseen arrivals with a steady open posture.",
     "perspective": "Low full-body three-quarter portrait with the bearer, entire plain banner, and planted pole centered while the cloth remains inside the frame.",
     "background": "A cool blue-grey morning above half-rebuilt stone walls and thin silver mist, giving the warm banner immediate contrast.",
@@ -41,13 +41,13 @@
     "background": "A pale cold river gorge and blue-white morning mist open behind the dark armored figure, creating a clean silhouette.",
     "notes": "Bulwark is quiet control of the crossing. No spear, enemy, castle gate, giant bridge panorama, readable toll sign, crest, or aggressive lunge."
   },
-  "neutral_truce_pact": {
+  "truce_pact": {
     "subject": "Two differently armored hands meet over a cracked foundation stone: one in char-black forge leather and one in cool iron-grey mail, both gripping the same plain aged-bronze mason's clamp as it closes a repaired seam. A small warm lantern flame reflects equally on both wrists.",
     "perspective": "Tight top-down three-quarter close view with the joined hands, bronze clamp, and closing stone seam centered as one simple gesture.",
     "background": "A muted cool slate worktable with pale dust and soft blue shadow, allowing the warm skin, leather, bronze, and lantern reflection to separate.",
     "notes": "Show cooperation through the shared tool, not a handshake alone. No treaty text, signatures, flags, logos, crowd, weapons, magical aura, or political symbols."
   },
-  "neutral_aric": {
+  "aric_first_among_equals": {
     "subject": "Aric is a mature settlement leader in weathered stone-grey scale armor and a moss-green cloak, standing at ground level in the center of a circular rebuilding table rather than above it. One bare hand steadies a rough foundation model while seven mismatched bronze tools point inward around him, and a warm lantern illuminates every place equally.",
     "perspective": "Medium eye-level three-quarter group-implied portrait focused on Aric and the circular table, with only cropped hands and tools of allies at the edges.",
     "background": "A cool open-roof council hall of pale ruined stone under blue evening light, contrasting with the central amber lantern and bronze tools.",
@@ -77,7 +77,7 @@
     "background": "A cold slate-blue workshop entrance and pale ash haze beyond the forge, separating the warm armor edges and furnace light.",
     "notes": "Protective craftsperson, not berserker. No hammer swing, anvil explosion, towering golem scale, ornate knight heraldry, crowd, or volcanic setting."
   },
-  "ember_reclaimed_fortress": {
+  "stone_reclaimed_fortress": {
     "subject": "A broken black-stone gatehouse is being made defensible again as molten-orange forge seams join three major cracks and heavy bronze braces clamp the arch in place. A controlled line of ember-red light travels upward from a portable brazier to the repaired keystone.",
     "perspective": "Low wide three-quarter view focused on the single repaired gate arch, with its keystone, braces, and complete heated seam inside the middle 70%.",
     "background": "A cold pale-blue dawn sky and blue-grey distant rubble, providing clean contrast behind the char-black masonry and warm repair lines.",
@@ -101,7 +101,7 @@
     "background": "A pale cold-grey ridge under blue evening clouds, with distant rebuilding lights blurred and subordinate behind the warm focal pair.",
     "notes": "No army, banner, readable insignia, throne, giant bonfire, sword flourish, roaring expression, or battlefield destruction."
   },
-  "ember_general_kira": {
+  "ember_general_kira_flame_reunified": {
     "subject": "General Kira stands as a tall adult woman formed partly from disciplined flame, her human face framed by ember-red hair that joins a compact molten-orange mantle rather than a wild blaze. Reforged char-black armor combines several repaired traditions with gold seams, and she holds a broken command blade whose two halves have just fused into one bright edge.",
     "perspective": "Low medium-full three-quarter hero portrait with Kira's face, reforged blade, and complete flame mantle centered inside the middle 70%.",
     "background": "A cold blue-grey assembly courtyard after rain, with pale steam and dark stone creating strong contrast around her warm unified form.",
@@ -167,7 +167,7 @@
     "background": "A warm amber-lit memorial alcove of ochre stone fading into soft shadow, with the pale cloth and green-gold filament remaining distinct.",
     "notes": "Honor, not gore or triumph. No corpse, readable inscription, weapon display, wreath, flag, crowd, skull pile, or dramatic resurrection."
   },
-  "grave_grave_builder": {
+  "grave_builder": {
     "subject": "A patient mason in iron-grey work armor sets a single pale memorial stone into fresh earth using a compact funerary-bronze level, while a bone-white moth perches on the tool and green-gold grave-light fills the foundation seam. Heavy gloves, a chain belt, and squared posture make the work practical and solemn.",
     "perspective": "Eye-level medium-full three-quarter view with the mason, memorial stone, bronze tool, and glowing foundation seam centered and readable.",
     "background": "A cool indigo morning cemetery under silver mist, with a distant warm lantern softened behind the darker worker.",
@@ -239,7 +239,7 @@
     "background": "A cool blue-grey colonnade in deep shade, opposing the warm pollen and vivid green surge while keeping the silhouette uncluttered.",
     "notes": "No caster, creatures, giant flowers, whole forest, tornado, explosion, text-like vine patterns, or frame-filling pollen cloud."
   },
-  "verdant_praxis": {
+  "verdant_praxis_seed_of_new_ages": {
     "subject": "Praxis is a colossal but finite guardian grown around an ancient honey-gold seed core, with a broad cedar-root torso, forest-green canopy shoulders, and one massive arm forming a living wall while the other drives new roots through shattered foundations. Pale new-growth leaves crown the joints, signaling a future age rather than old decay.",
     "perspective": "Low dramatic three-quarter view showing Praxis from rooted base to canopy head, with the seed core and both distinct arms inside the middle 70%.",
     "background": "A warm ember-red sunrise over open ruins, silhouetting the dark green and cedar mass while the honey-gold core remains the focal light.",
@@ -263,7 +263,7 @@
     "background": "A warm parchment-amber workbench fading into soft shadow, opposing the cool steel hand and blue active socket.",
     "notes": "Chance is mechanical uncertainty, not casino imagery. No dice, cards, coins, readable odds, text, faces, gambling table, or explosive failure."
   },
-  "clock_rebuilt_automaton": {
+  "clock_reconstructed_automaton": {
     "subject": "A sturdy humanoid automaton stands with one broad forearm locked across its chest, visibly rebuilt from a polished-brass upper body, tarnished-copper replacement hip, and oiled-steel legs joined by fresh rivet lines. An arc-blue core shines steadily behind a new square protective grille.",
     "perspective": "Low full-body three-quarter portrait with the complete mismatched automaton, guarding forearm, core grille, and both feet centered.",
     "background": "A warm amber-lit salvage workshop of pale timber and parchment dust, separating the cool steel limbs and blue core.",
@@ -287,13 +287,13 @@
     "background": "A warm dark-amber repair mat with subtle parchment texture, contrasting with the cool steel upgrade and blue electrical pulse.",
     "notes": "No readable blueprint, diagrams, humanoid patient, giant explosion, magical rune circle, weapon, or scattered scrap."
   },
-  "clock_masterwork_construct": {
+  "clock_masterwork_constructor": {
     "subject": "A tall six-armed construction automaton of polished brass and oiled steel stands within a timber frame, each hand performing one distinct task: holding a beam, setting a rivet, tensioning wire, measuring a joint, steadying a brace, and guiding an arc-blue plumb light. Its narrow torso and tripod base keep the complex silhouette organized.",
     "perspective": "Low medium-full three-quarter view with all six arms, tripod base, and central plumb light readable inside the frame.",
     "background": "A cool pale-blue open sky seen through the warm timber structure, separating the brass figure without dark visual clutter.",
     "notes": "One constructor only. No spider body, weapon arms, extra workers, readable plans, city panorama, giant scale, or tangled arm overlap."
   },
-  "clock_cogsworth": {
+  "clock_cogsworth_the_grand_rebuilder": {
     "subject": "Cogsworth is a massive broad-backed rebuilding construct with a dignified brass mask, iron-grey load-bearing limbs, and a cathedral-like copper repair gantry folded across the shoulders. He kneels over a shattered civic arch, lifting its keystone with one hand while four precise tool fingers rebuild the foundation beneath it; an arc-blue core glows behind a heavy protective grille.",
     "perspective": "Low dramatic three-quarter view with Cogsworth's masked head, protected core, kneeling base, keystone hand, and rebuilding hand all centered.",
     "background": "A warm coral-and-amber sunrise across pale settlement ruins, opposing the cool steel mass and arc-blue core.",
@@ -341,7 +341,7 @@
     "background": "One doorway opens to warm amber lamplight and the other to cool blue-black shadow, giving each side of the cloak an opposing ground.",
     "notes": "One person only, not twins or a mirror clone. No readable insignia, two faces, poison, dagger fight, split-screen line, crowd, or theatrical stage pose."
   },
-  "night_seraphine": {
+  "night_seraphine_whisper_queen": {
     "subject": "Seraphine is an adult woman seated sideways on a plain stone council chair, her midnight-purple mantle dissolving into thin whisper-like ribbons that reach four empty positions around a circular table. A blade-silver veil frames her composed face, and one toxic-lime earring provides the only vivid accent as her raised finger stills the room.",
     "perspective": "Eye-level medium-full three-quarter portrait with Seraphine's face, raised finger, complete chair, and four restrained shadow ribbons centered.",
     "background": "A warm amber council chamber of aged ochre stone and low candles, contrasting with her cool dark silhouette.",
@@ -371,7 +371,7 @@
     "background": "A warm muted terracotta wall and amber dust haze, maximizing contrast around the cold cyan and gold-white electrical curve.",
     "notes": "No wielder, victim, giant bolt, chain links, multiple lashes, explosion, text, or lightning filling the entire frame."
   },
-  "storm_storm_channeler": {
+  "storm_channeler": {
     "subject": "A grounded Tempest adept kneels between two iron-black lightning rods, guiding a broad cyan current from one gold-white palm through a storm-silver chest harness and into a cracked settlement battery. Thin double-traces at the elbows show rising power while the body remains calm and controlled.",
     "perspective": "Low medium-full three-quarter view with the channeler, both rods, chest harness, and battery connection centered and clearly separated.",
     "background": "A warm copper-orange repair shelter with ochre canvas and amber work lights, opposing the cool electrical subject.",
@@ -395,7 +395,7 @@
     "background": "A warm coral-and-amber twilight sky with thin ochre cloud, providing maximum contrast behind the cool apparatus and black core.",
     "notes": "No readable oath, full casters, lightning storm, giant portal, tornado, flags, creature face in the cloud, or overlapping extra staffs."
   },
-  "storm_vael": {
+  "storm_vael_the_stormbringer": {
     "subject": "Vael is a powerful humanoid elemental formed from a compact charcoal thunderhead wrapped in layered storm-silver armor ribbons, lunging forward with two distinct gold-white arm arcs that strike on opposite sides of one centered cyan core. Below the calm mask-like face, two tiny ochre-clad watchkeepers recoil behind a broken parapet as the dark elemental bears down on them.",
     "perspective": "Low dynamic medium-full three-quarter view with Vael's face, cyan core, complete lunging torso, and both separated arm arcs inside the middle 70%.",
     "background": "A warm ember-orange sky above a pale ochre plateau, silhouetting the dark elemental while preserving the two bright strike paths.",

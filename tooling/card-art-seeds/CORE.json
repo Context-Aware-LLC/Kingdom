@@ -1,35 +1,35 @@
 {
-  "hero_power_blueprint": {
+  "clock_hero_power_blueprint": {
     "subject": "One warm parchment blueprint forms a compact amber disk beneath a single dark-steel drafting compass, whose two legs frame one simple arc-blue gear outline. The sheet, compass, and one blue line read together as a bold centered emblem rather than a busy workbench scene.",
     "perspective": "Straight overhead macro view with the blueprint-and-compass emblem centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A deep cool-charcoal field with only hazy iron texture far behind it, separating the warm amber parchment, dark compass, and bright arc-blue line.",
     "notes": "Hero power art must read at icon size. No table, loose components, extra gears, tools, readable labels, numerals, hands, finished construct, or detail outside the central circle."
   },
-  "token_gear_wisp": {
+  "clock_token_gear_wisp": {
     "subject": "A palm-sized Gear Wisp formed from three mismatched brass cogs orbiting a bright arc-blue core, with two tiny copper stabilizer fins and a loose coil spring trailing like a tail. It hovers with a slight mechanical wobble, newly assembled and useful rather than cute or animal-like.",
     "perspective": "Close eye-level three-quarter portrait with the entire small wisp centered and loose negative space around its clean circular silhouette.",
     "background": "A dark oiled-steel parts drawer and cool slate workshop wall, softly blurred so the warm brass and arc-blue core read at mobile size.",
     "notes": "Keep it visibly smaller and simpler than Assembly Drone: no limbs, face, swarm, tools, text, or large machinery."
   },
-  "hero_power_shadow_mark": {
+  "night_hero_power_shadow_mark": {
     "subject": "One round disk of shadow-black sealing wax bears a broad blade-silver crescent impression and one toxic-lime pinprick at its center, with a thin midnight-purple smoke halo hugging the rim. The high-contrast seal reads as one physical icon with a clean circular silhouette.",
     "perspective": "Straight overhead macro view with the complete wax seal centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A warm amber-brown leather field with soft golden haze, providing strong temperature and value contrast behind the black wax and cold silver.",
     "notes": "Hero power art must read at icon size. No glove, letters, runes, target reticle, skull icon, blood, victim, readable contract, UI symbol, or detail outside the central circle."
   },
-  "hero_power_earthwall": {
+  "stone_hero_power_earthwall": {
     "subject": "One compact crescent wall built from three interlocking cool-grey granite slabs rises from a narrow base, its iron-black feet wedged together and two pale-quartz seams glowing where the stones lock. One rusted-bronze brace makes the single barrier feel old, repaired, and immovable.",
     "perspective": "Low frontal three-quarter icon view with the complete crescent barrier centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A warm ember-orange dusk over a softly blurred ruined road, separating the cool grey stone wall from the horizon.",
     "notes": "Hero power art must read at icon size. No defender, castle, giant cliff, explosive eruption, carved writing, projectile, or detail outside the central circle; this is one local protective wall."
   },
-  "token_stone_shard": {
+  "stone_token_shard": {
     "subject": "A knee-high wedge of dark granite stands upright on two broad rubble feet, its front face naturally split into a shield-like plane with one pale-quartz eye glowing from a narrow crack. A rusted-bronze staple binds a broken corner and a tuft of moss grows from the rear seam.",
     "perspective": "Close low eye-level portrait with the entire small shard construct, both feet, and repaired corner clearly contained in the central frame.",
     "background": "A warm lantern-lit mason's yard of ochre dust and blurred timber braces, opposing the shard's cool iron-grey mass.",
     "notes": "Bulwark reads through the broad planted wedge. Keep it smaller and more primitive than Pebble Sentinel, with no arms, weapon, mouth, or giant scale."
   },
-  "hero_power_chain_spark": {
+  "storm_hero_power_chain_spark": {
     "subject": "One palm-sized storm-silver double-ring conductor holds a bright cyan spark across its open center, leaving one sharp gold-white zigzag between the joined rings. The compact device and spark read together as one controlled circular emblem, not a full lightning storm.",
     "perspective": "Straight-on macro icon view with the complete double-ring conductor centered inside an imagined circular socket, all detail inside the middle 55%, and all four corners empty.",
     "background": "A deep charcoal field with soft hazy violet-grey vapor, maximizing value contrast around the storm-silver rings and cyan-gold spark.",

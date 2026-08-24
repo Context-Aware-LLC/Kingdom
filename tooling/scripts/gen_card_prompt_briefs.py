@@ -108,6 +108,56 @@ def art_file(card):
     return card["artId"].replace("/", "_")
 
 
+def art_key(card):
+    """THE key the art pipeline joins on: the row's artId. Import it; do not re-derive it.
+
+    This used to be the HANDLE, in every script in this directory, and that was the bug that
+    outlived all the others. `CardDefinition.Handle` says outright that nothing may resolve
+    against it (Sam, 2026-08-15) -- "the test is that you can change a handle and have nothing
+    break" -- and the art pipeline was the halfway version that comment warns about.
+
+    It broke exactly as promised. TEMPEST and STONEWARDEN are the two classes whose handle
+    token differs from their art token (`tempest_`/`storm_`, `warden_`/`stone_`), so renaming
+    those handles orphaned 18 hand-authored seeds at a stroke: the cards read as UNSEEDED and
+    every generation ran on placeholder direction, with no error at any point. Two of the
+    casualties were `stone_earthwardens_maul` and `stone_duras_the_ironmount`, whose art had to
+    be redone by hand on 2026-08-24.
+
+    artId is the right key because it is already the art system's own permanent identifier and
+    already deliberately does not track the card id -- see art_file above. A handle rename can
+    no longer strand direction, because no art file, seed or brief is keyed on a handle.
+
+    RETIREMENT TRIGGER: if the seed corpus is ever rekeyed off artId, this function and
+    art_key_index below move with it, and so does the orphan check in
+    tooling/scripts/audit_card_art_names.py --check-seeds, which is the only thing that would
+    otherwise notice.
+    """
+    return card["artId"]
+
+
+def art_key_index(cards):
+    """{token -> artId} accepting an artId, a handle, or a stringified numeric id.
+
+    Only for reading LEGACY handle-keyed inputs that are not ours to rewrite -- the prose
+    prompts under docs/design/card-drafts-*.md, the scraped art-pipeline/**/draft.txt, and a
+    --card argument typed by a human who knows the card by its handle. Everything the pipeline
+    itself writes is keyed by art_key. Never use this to key new data.
+
+    A handle that collides with another row's artId would be ambiguous; artId wins, because it
+    is the canonical key and the collision would mean the handle is the stale spelling.
+    """
+    index = {}
+    for card in cards:
+        if not card.get("artId"):
+            continue
+        key = art_key(card)
+        index.setdefault(str(card.get("id")), key)
+        if card.get("handle"):
+            index.setdefault(card["handle"], key)
+        index[key] = key          # last, and unconditional: artId always wins a collision
+    return index
+
+
 def delivery_block(card):
     """Build the one canonical editor/generation destination for a card.
 
@@ -201,13 +251,17 @@ def load_cards(set_id, class_filter=None, card_ids=None):
         cards.extend(json.loads(fp.read_text(encoding="utf-8")))
     cards = [c for c in cards if c.get("setId") == set_id and c.get("collectible", True)]
     if card_ids:
-        # HANDLE, not id. The id became a NUMBER (numeric-card-id migration) while every seed
-        # file, every --card argument and every prompt manifest still speaks the handle. Matching
-        # on "id" silently selected nothing and made every seed unreachable, so an entire batch
-        # came back on placeholder direction with no error anywhere. Accept a numeric id too, as
-        # a string, so a caller reading the row does not get a silent empty set either.
-        wanted = {str(w) for w in card_ids}
-        cards = [c for c in cards if c["handle"] in wanted or str(c["id"]) in wanted]
+        # --card takes whatever the caller has to hand -- artId, handle or numeric id -- and
+        # resolves all three to the art key. Matching on "id" alone silently selected nothing
+        # once the id became a NUMBER, and matching on handle alone broke the moment a handle
+        # was renamed; art_key_index is the one place that ambiguity is settled.
+        index = art_key_index(cards)
+        wanted = {index[str(w)] for w in card_ids if str(w) in index}
+        unknown = [str(w) for w in card_ids if str(w) not in index]
+        if unknown:
+            raise SystemExit(f"--card: no row matches {', '.join(unknown)} "
+                             f"(accepts artId, handle or numeric id)")
+        cards = [c for c in cards if art_key(c) in wanted]
     if class_filter:
         cards = [c for c in cards if c.get("class", "").upper() == class_filter.upper()]
     return cards
@@ -408,7 +462,7 @@ def main():
         print("No matching cards found.", file=sys.stderr)
         sys.exit(1)
 
-    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(c["handle"])) for c in cards]
+    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(art_key(c))) for c in cards]
     output = "\n\n---\n\n".join(briefs) + "\n"
 
     if args.out:

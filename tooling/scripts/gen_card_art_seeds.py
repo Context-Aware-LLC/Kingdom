@@ -439,18 +439,22 @@ def main() -> int:
         return 2
 
     rows = load_rows()
-    # KEYED BY HANDLE, everywhere in this file. Seed files, docs/design prose prompts and
-    # draft.txt all speak the handle; the row's `id` became a NUMBER in the numeric-card-id
-    # migration. Keying on it made `seeded` match nothing, so every already-seeded card looked
-    # unseeded and a run would have re-drafted all of them and written the results under a
-    # second, numeric key space alongside the real one.
-    rows_by_id = {c["handle"]: c for c in rows}
+    # KEYED BY ARTID, everywhere in this file -- briefs.art_key. It was the HANDLE, and a
+    # handle rename then orphaned 18 hand-authored seeds silently: the cards read as unseeded
+    # and would have been re-drafted over direction that still existed. See briefs.art_key.
+    #
+    # The two LEGACY inputs below still speak the handle and are not ours to rewrite -- the
+    # docs/design prose corpus and the scraped draft.txt files -- so both are translated
+    # through briefs.art_key_index on the way in, and nothing downstream sees a handle.
+    rows_by_id = {briefs.art_key(c): c for c in rows if c.get("artId")}
+    to_art = briefs.art_key_index(rows)
     seeds_by_set = load_all_seeds()
     seeded = {cid for entries in seeds_by_set.values() for cid in entries}
     class_descriptors = briefs.load_class_descriptors()
-    prose = load_prose_prompts() if args.scrape else {}
+    prose = {to_art[k]: v for k, v in load_prose_prompts().items()
+             if k in to_art} if args.scrape else {}
 
-    targets = [c for c in rows if c["handle"] not in seeded]
+    targets = [c for c in rows if c.get("artId") and briefs.art_key(c) not in seeded]
     if args.set_id:
         targets = [c for c in targets if c.get("setId", "EMBERFALL") == args.set_id]
     if args.only_missing_art:
@@ -465,7 +469,10 @@ def main() -> int:
     from_drafts = {}
     if args.from_drafts:
         scraped, skipped = load_draft_seeds()
-        in_scope = {c["handle"] for c in targets}
+        in_scope = {briefs.art_key(c) for c in targets}
+        # draft.txt names the card by handle; translate before the scope test, or every
+        # scraped draft for a renamed card is silently discarded as out of scope.
+        scraped = {to_art[k]: v for k, v in scraped.items() if k in to_art}
         from_drafts = {cid: s for cid, s in scraped.items() if cid in in_scope}
         print(f"stage 0 FROM-DRAFTS: {len(scraped)} draft.txt parsed "
               f"({skipped} unusable), {len(from_drafts)} of them unseeded and in scope")
@@ -474,10 +481,10 @@ def main() -> int:
             seeds_by_set.setdefault(set_id, {})[cid] = seed
             written[set_id] += 1
         seeded |= set(from_drafts)
-        targets = [c for c in targets if c["handle"] not in from_drafts]
+        targets = [c for c in targets if briefs.art_key(c) not in from_drafts]
 
-    scrape_t = [c for c in targets if c["handle"] in prose] if args.scrape else []
-    draft_t = [c for c in targets if c["handle"] not in prose] if args.draft else []
+    scrape_t = [c for c in targets if briefs.art_key(c) in prose] if args.scrape else []
+    draft_t = [c for c in targets if briefs.art_key(c) not in prose] if args.draft else []
 
     print(f"cards: {len(rows)}   seeded now: {len(seeded)}   still unseeded in scope: {len(targets)}")
     print(f"  stage 1 SCRAPE (a hand-authored prompt exists): {len(scrape_t)}")
@@ -506,10 +513,11 @@ def main() -> int:
             raw, err = call_model(req, args.provider, model, key)
             seed, perr = parse_seed(raw) if not err else (None, err)
             if seed is None:
-                failures.append((card["handle"], card["name"], perr))
+                failures.append((briefs.art_key(card), card["name"], perr))
                 print(f"  [{stage}] FAIL {card['name']}: {perr}", flush=True)
             else:
-                seeds_by_set.setdefault(set_id, {})[card["handle"]] = seed
+                # ART KEY. Writing a new seed under the handle is what stranded the last 18.
+                seeds_by_set.setdefault(set_id, {})[briefs.art_key(card)] = seed
                 written[set_id] += 1
                 print(f"  [{stage}] ok   {card['name']}: {seed['subject'][:74]}", flush=True)
             n += 1
@@ -517,7 +525,7 @@ def main() -> int:
 
     if scrape_t:
         run("scrape", scrape_t,
-            lambda c, w, ex: scrape_request(c, prose[c["handle"]], ex))
+            lambda c, w, ex: scrape_request(c, prose[briefs.art_key(c)], ex))
     if draft_t and (not args.dry_run or not scrape_t):
         run("draft", draft_t,
             lambda c, w, ex: draft_request(
