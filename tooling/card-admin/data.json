@@ -38,8 +38,8 @@
       "OVERWHELM": 8,
       "REKINDLE": 8,
       "DOUBLESTRIKE": 7,
+      "LIFEDRAIN": 6,
       "VANGUARD": 6,
-      "LIFEDRAIN": 5,
       "ARCANE_SURGE": 4,
       "FERVOR": 4,
       "FROST": 1
@@ -372,7 +372,8 @@
       "keywordFrequency": {
         "SHROUD": 9,
         "VENOM": 4,
-        "BULWARK": 2
+        "BULWARK": 2,
+        "LIFEDRAIN": 1
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 8,
@@ -4323,7 +4324,7 @@
       "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "salvaged_golem",
+      "artId": "night_salvaged_golem",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4357,7 +4358,8 @@
       "class": "NIGHTVEIL",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "BULWARK",
+        "LIFEDRAIN"
       ],
       "selectors": [
         "FRIENDLY_HERO"
@@ -4365,7 +4367,7 @@
       "tribe": null,
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "bridge_warden",
+      "artId": "night_bridge_warden",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -4390,7 +4392,7 @@
     },
     {
       "id": 1127,
-      "name": "Aric",
+      "name": "Aric, First Among Many",
       "type": "MINION",
       "cost": 7,
       "attack": 5,

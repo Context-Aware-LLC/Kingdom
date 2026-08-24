@@ -166,7 +166,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 589465957629420f83d47c86f3beaeb5
-    m_Address: card_art/salvaged_golem
+    m_Address: card_art/night_salvaged_golem
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -176,7 +176,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 597eb746cff04cdfbcaf1f2a32c6797e
-    m_Address: card_art/bridge_warden
+    m_Address: card_art/night_bridge_warden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
