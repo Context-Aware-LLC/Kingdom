@@ -33,15 +33,21 @@ namespace Emberfall.Net.Protocol.Tests
 
             // The one domain split between the two walks: the hash walk writes enums as raw ints
             // (total over all bit patterns); the wire writes MEMBER NAMES and strictly refuses
-            // undefined members on decode (hostile-enum defense, design §5). The shared
-            // PendingChoice.Kind mutation casts to an UNDEFINED member — no second member exists
-            // until Phase 2's §7 tail-append — so the wire's correct behavior is a typed refusal,
-            // not a round-trip. (Kind's wire coverage is proven by the other PendingChoice.*
-            // mutations — the reader requires 'kind' to parse them at all.)
-            if (key == "PendingChoice.Kind")
+            // undefined members on decode (hostile-enum defense, design §5).
+            //
+            // A SINGLE-MEMBER enum therefore has no round-trippable mutation: the only way to
+            // perturb its canonical int is to cast past the one member it defines, and the wire's
+            // correct answer to that is a typed refusal. Both entries below are that shape --
+            // PendingChoiceKind and EffectKind each define exactly one member today. Each one's
+            // wire coverage is proven by its SIBLING mutations, which the reader cannot parse at
+            // all without first reading a valid 'kind'.
+            //
+            // This is a list, not a taxonomy: an enum leaves it the moment it gains a second
+            // member, and both enums carry a RETIREMENT TRIGGER saying so at their declaration.
+            if (key == "PendingChoice.Kind" || key == "EffectInstance.Kind")
             {
                 Assert.That(decoded.Ok, Is.False,
-                    "an undefined enum member silently crossed the wire — strict enum parse regressed.");
+                    $"{key}: an undefined enum member silently crossed the wire — strict enum parse regressed.");
                 Assert.That(decoded.Error, Is.EqualTo(ProtocolError.BadField));
                 return;
             }

@@ -14,6 +14,12 @@ namespace Emberfall.Core.Contracts
     /// </summary>
     public enum EffectKind
     {
+        // RETIREMENT TRIGGER: adding a second member here ends this enum's carve-out in
+        // WireMutationSweepTests.Mutated_Field_Survives_The_Wire. While only one member exists the
+        // "EffectInstance.Kind" mutation can only cast past it, so the wire's correct answer is a
+        // typed refusal rather than a round-trip, and the sweep asserts the refusal. With a second
+        // member the mutation becomes a real round-trip: drop "EffectInstance.Kind" from that
+        // branch in the same commit, or the sweep will demand a failure the wire no longer produces.
         /// <summary>Cannot act. Migrated off <c>IsFrosted</c> + <c>FrostThawPending</c>.</summary>
         Frost = 0,
     }

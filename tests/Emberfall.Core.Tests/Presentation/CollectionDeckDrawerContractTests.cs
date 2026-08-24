@@ -49,6 +49,7 @@ namespace Emberfall.Core.Tests.Presentation
                 .Single(element => (string?)element.Attribute("name") == "root");
             XElement queryBar = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-bar");
+            XElement toolbar = screenRoot.Elements().First();
 
             Assert.Multiple(() =>
             {
@@ -58,16 +59,33 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(uxml, Does.Not.Contain("name=\"collection-header\""));
                 Assert.That(uxml, Does.Not.Contain("name=\"collection-count\""));
                 Assert.That(uxml, Does.Not.Contain("text=\"Collection\""));
-                Assert.That((string?)screenRoot.Elements().First().Attribute("name"),
-                    Is.EqualTo("query-bar"), "The query bar should slide into the header's old space.");
-                Assert.That(queryBar.Descendants().Any(element =>
+                // Navigation sits in a PERSISTENT toolbar in the header's old space; the query bar
+                // became a slide-out panel behind `query-toggle` and is no longer always on screen.
+                // Decks and Back cannot live inside it -- a dismissable panel is not a place to put
+                // the only way off the screen.
+                Assert.That((string?)toolbar.Attribute("class"),
+                    Does.Contain("col-query-toolbar"),
+                    "The always-visible toolbar should occupy the header's old space.");
+                Assert.That(toolbar.Descendants().Any(element =>
                     (string?)element.Attribute("name") == "decks-button"), Is.True,
-                    "Decks belongs inside the query bar once the header is removed.");
-                Assert.That(queryBar.Descendants().Any(element =>
+                    "Decks belongs in the persistent toolbar, not the dismissable query panel.");
+                Assert.That(toolbar.Descendants().Any(element =>
                     (string?)element.Attribute("name") == "back-button"), Is.True,
-                    "Back belongs inside the query bar once the header is removed.");
+                    "Back belongs in the persistent toolbar, not the dismissable query panel.");
+                Assert.That(toolbar.Descendants().Any(element =>
+                    (string?)element.Attribute("name") == "query-toggle"), Is.True,
+                    "The toolbar is what opens the query panel.");
+                Assert.That(queryBar.Descendants().Any(element =>
+                    (string?)element.Attribute("name") == "query-close"), Is.True,
+                    "A panel that slides out needs its own way back.");
                 Assert.That(uxml, Does.Contain("name=\"collection-empty\""));
-                Assert.That(uxml, Does.Contain("name=\"deck-drawer\" class=\"deck-drawer\""));
+
+                // Matched on the class LIST, not the whole attribute. Pinning the exact string
+                // `class="deck-drawer"` broke the moment the drawer took the shared chrome-panel
+                // styling, which says nothing about whether the drawer still exists.
+                Assert.That((string?)document.Descendants().Single(element =>
+                    (string?)element.Attribute("name") == "deck-drawer").Attribute("class"),
+                    Does.Contain("deck-drawer"));
                 Assert.That(uxml, Does.Contain("name=\"deck-chooser-list\""));
                 Assert.That(uxml, Does.Contain("name=\"deck-editor\""));
                 Assert.That(uxml, Does.Contain("name=\"manage-decks-button\""));

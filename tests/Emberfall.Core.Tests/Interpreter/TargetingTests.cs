@@ -83,14 +83,20 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Candidate_Union_Covers_Hand_Deck_Graveyard_And_Weapon()
         {
-            var db = new FakeCardDatabase().Register(Minion(FixtureCard.Id("construct"), Tribe.CONSTRUCT));
+            var db = new FakeCardDatabase()
+                .Register(Minion(FixtureCard.Id("construct"), Tribe.CONSTRUCT))
+                .Register(Weapon(FixtureCard.Id("blade")));
             var state = State();
             CardDefinition def = db.Get(FixtureCard.Id("construct"));
             CardInstance hand = ZoneCard(state, 0, def, Zone.Hand);
             CardInstance deck = ZoneCard(state, 0, def, Zone.Deck);
             CardInstance grave = ZoneCard(state, 0, def, Zone.Graveyard);
+
+            // A real WEAPON row, not the minion above. FRIENDLY_WEAPON is a zone AND a type since
+            // the fork split them, and the type is read off the definition -- so a minion sitting
+            // in the weapon slot is no longer a weapon target, which is the correct answer.
             state.Players[0].Weapon = new CardInstance(
-                state.NextInstanceId(), def.Id, state.Players[0].Id)
+                state.NextInstanceId(), FixtureCard.Id("blade"), state.Players[0].Id)
             {
                 Zone = Zone.Weapon,
                 CurrentAttack = 1,
@@ -519,8 +525,12 @@ namespace Emberfall.Core.Tests.Interpreter
         [TestCase("ANY_MINION")]
         public void Automatic_OnPlay_Selectors_Include_Their_Own_Newly_Entered_Body(string selector)
         {
+            // AllOf, not Of(1). `Of(1)` is the CONTROLLER picking one, and this test sends no
+            // targets, so it measured nothing -- the sweep this asserts is the one nobody chooses.
+            // The distinction had no spelling before the fork, where a bare `new TargetSpec(sel)`
+            // silently meant "the player picks one"; it does now, so it has to be said out loud.
             var buffRule = TestRules.Rule("on_play_self_buff", Trigger.ON_PLAY,
-                new ModifyStatsAction(1, 1, new TargetSpec(selector, TargetSelection.Of(1))));
+                new ModifyStatsAction(1, 1, new TargetSpec(selector, TargetSelection.AllOf(selector))));
             var herald = Minion(FixtureCard.Id("herald"), buffRule);
             var db = new FakeCardDatabase().Register(herald);
             var state = State();

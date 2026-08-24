@@ -57,8 +57,13 @@ namespace Emberfall.Core.Tests.Interpreter
             };
             state.Players[1].Weapon = weapon;
 
+            // NO target ref. A side has at most one weapon, so `Of(1)` on ENEMY_WEAPON already names
+            // every candidate the selector can yield -- nobody is choosing, and the card refuses an
+            // unsolicited pick. Contrast the minion sibling, where the board holds several and the
+            // same `Of(1)` is a real choice. This is the fork's static maximum doing its job, not a
+            // special case for weapons.
             CommandResult result = new CommandProcessor(db).Execute(state,
-                new PlayCardIntent(P0, spellCard.Id, 0, new[] { new TargetRef(weapon.Id) }));
+                new PlayCardIntent(P0, spellCard.Id, 0, System.Array.Empty<TargetRef>()));
 
             Assert.That(result.Accepted, Is.True);
             Assert.That(state.Players[1].Weapon, Is.Null);
