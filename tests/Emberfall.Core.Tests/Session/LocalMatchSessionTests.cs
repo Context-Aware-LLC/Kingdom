@@ -88,9 +88,9 @@ namespace Emberfall.Core.Tests.Session
             var (p0, p1) = NewSessions(0xA4B0UL);
             Assert.That(p0.Current.Players[0].Hand, Is.Not.Empty);
             foreach (var c in p0.Current.Players[0].Hand)
-                Assert.That(c.DefinitionId, Is.Not.Empty);
+                Assert.That(c.DefinitionId, Is.Not.Zero);
             foreach (var c in p1.Current.Players[1].Hand)
-                Assert.That(c.DefinitionId, Is.Not.Empty);
+                Assert.That(c.DefinitionId, Is.Not.Zero);
         }
 
         // ── reject semantics ─────────────────────────────────────────────────────
