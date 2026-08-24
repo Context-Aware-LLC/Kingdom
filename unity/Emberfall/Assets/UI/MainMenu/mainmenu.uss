@@ -22,7 +22,9 @@
     -unity-background-scale-mode: scale-and-crop;
     align-items: center;
     justify-content: center;
-    padding: var(--space-12);
+    /* 24dp each side, not --space-12's 48dp: 96dp of a 411dp landscape panel went to padding
+       alone. Edge clearance is NOT this padding's job -- that is .emb-edge on the chrome. */
+    padding: var(--space-6);
 }
 
 /* Boot state: hidden until MainMenuController.RevealMenu() runs (LoadingOverlay covers frame 0
@@ -48,7 +50,10 @@
 /* ---------- Brand ---------- */
 .mm-brand {
     align-items: center;
-    margin-bottom: var(--space-16);
+    /* 24dp, not --space-16's 64dp. 64 was authored when the panel scaled by pixel count and the
+       column had far more vertical room; at referenceDpi 160 it was 64 of the 411dp the whole
+       screen gets. See the budget note on .mm-menu (#249). */
+    margin-bottom: var(--space-6);
 }
 .mm-wordmark {
     font-size: 72px;
@@ -72,6 +77,16 @@
 .mm-menu {
     align-items: stretch;
     min-width: 300px;
+    /* flex-shrink:0 IS LOAD-BEARING, and its absence deleted two buttons from the front door.
+       At referenceDpi 160 a 1080-tall landscape panel is 411dp. The column asked for ~432dp
+       (96 padding + ~112 brand + 64 brand margin + 4 slats x 64), so this group -- the only
+       shrinkable thing in the column -- absorbed the whole ~117dp overflow, and `overflow: hidden`
+       below then clipped the last two slats to nothing. Store and Leaderboards were in the UXML,
+       wired in the controller, laid out, and invisible, with no warning anywhere. Measured on a
+       Pixel 5a, 2026-08-23 (#249).
+       The padding and brand margin below were cut in the same change to make the column fit;
+       whoever grows either one back must re-check that four slats still fit in 411dp. */
+    flex-shrink: 0;
     border-width: 1px;
     border-color: rgba(11, 14, 19, 0.35);        /* dark inscribed edge — reads as carved, not glowing */
     border-radius: var(--space-3);
@@ -90,8 +105,11 @@
     border-radius: 0;                            /* the group owns the shape, not the slat */
     border-top-width: 1px;                       /* groove between slats */
     border-top-color: rgba(11, 14, 19, 0.55);
-    height: 64px;                                /* 64dp — well over Android's 48dp touch floor.
-                                                    Was 88 to survive the old scale (#233). */
+    height: 56px;                                /* 56dp — still 8dp over Android's 48dp touch floor.
+                                                    88 -> 64 when the scale was corrected (#233);
+                                                    64 -> 56 to close the last 32dp of the 117dp
+                                                    landscape overflow that was eating two slats
+                                                    (#249). Do not go below 48. */
     margin-bottom: 0;                            /* slats touch */
     padding: 0 var(--space-6);
     letter-spacing: 1px;
