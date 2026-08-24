@@ -77,31 +77,31 @@
     "background": "A warm amber memorial workshop with dark cedar shelves, softly blurred candle niches, and muted ember-glow, providing warm value contrast behind the cool bone and iron subject.",
     "notes": "Toll and card draw read through the snapped soul-thread releasing one blank parchment strip. No writing, symbols, extra cards, spider anatomy, giant loom, weapon, gore, or explosive magic."
   },
-  "bog_crawler": {
+  "neutral_bog_crawler": {
     "subject": "A small low-slung marsh beast with a broad wedge-shaped head, six quick jointed legs, a bronze-brown plated back, mossy ridges, and two bright lantern-amber eyes. It scrambles out of shallow water toward the viewer, flinging one tight fan of droplets while its full compact body remains readable; the creature feels ancient, weathered, and adapted to ruined wetlands.",
     "perspective": "Very low eye-level three-quarter view just above the waterline, with the crawler's complete silhouette centered and its forward motion aimed slightly across the frame rather than directly into camera.",
     "background": "A cool blue-grey twilight bog among half-submerged foundation stones, pale reeds, and thin silver mist, providing muted value and temperature contrast behind the warm bronze-brown beast.",
     "notes": "Skirmish reads as one quick local lunge. Keep it dog-sized at most, with no giant monster scale, no venom spray, no swarm, and no catastrophic splash."
   },
-  "doublestrike_hawk": {
+  "neutral_doublestrike_hawk": {
     "subject": "A large natural hawk with stone-grey flight feathers, warm bronze-brown shoulders, pale cream throat, and sharp lantern-amber eyes banking hard above a ruined watch road. One powerful downstroke creates two closely spaced translucent feather-traces behind each wing, communicating a rapid second beat while remaining unmistakably one bird. Its talons are tucked and its body is controlled rather than attacking prey.",
     "perspective": "Dynamic close three-quarter flight view from slightly below, with the hawk's full wingspan, tail, head, and both paired wingbeat traces contained inside the middle composition.",
     "background": "A cool overcast blue-grey sky above weathered stone towers and muted green hills, with a narrow shaft of pale light separating the warm bird from the subdued landscape.",
     "notes": "Doublestrike is shown only by the paired wingbeat traces, never a second hawk. Keep it a large real hawk rather than a giant eagle, with no rider, prey, lightning, tornado, attack gore, or flock."
   },
-  "galewind_runner": {
+  "neutral_galewind_runner": {
     "subject": "A lean dog-sized cliff beast with long springing legs, weathered stone-grey hide, a moss-dark mane, and two swept-back ear-fins edged in aged bronze. It races along a broken causeway with its body stretched through one quick stride, kicking up a narrow ribbon of dust and loose grass while the ear-fins flatten into the wind. The animal is agile and practical rather than magical or majestic.",
     "perspective": "Low side-on three-quarter action view with the runner's complete silhouette and all four feet readable inside the central composition, leaving clear margin ahead of its stride.",
     "background": "A cool pale-blue dawn over muted ruined walls and distant grey hills, with soft crosswind mist and no storm; the warm bronze ear edges and lantern-amber eye stand out against the restrained setting.",
     "notes": "Skirmish reads through one fast local sprint. Keep it dog-sized and grounded, with no wings, rider, lightning, tornado, herd, giant leap, or battlefield-wide wind effect."
   },
-  "phantom_duelist": {
+  "neutral_phantom_duelist": {
     "subject": "A solitary human-sized duelist in a weathered grey travel coat, tarnished bronze half-mask, and plain iron rapier, standing in a restrained side-on guard. The trailing edge of the coat and one boot dissolve into a thin veil of translucent dust and mist, making the figure seem half-present without turning into a glowing apparition. The posture is precise and wary, not triumphant.",
     "perspective": "Eye-level full-body three-quarter portrait with the complete rapier and fading silhouette centered safely inside the frame and ample negative space around the guard pose.",
     "background": "A pale blue moonlit courtyard of cool weathered stone, low silver fog, and one distant warm lantern, creating quiet value contrast around the grey-and-bronze figure.",
     "notes": "Shroud reads through only the vanishing coat edge and foot. Show no opponent, attack impact, skull face, giant spectral aura, dramatic spell circle, text, crest, or heroic victory pose."
   },
-  "razorcoil_adder": {
+  "neutral_razorcoil_adder": {
     "subject": "A forearm-length adder wound into one tight spring-like coil on a cracked stone. Its overlapping charcoal-grey scales have thin aged-bronze cutting edges, a moss-green stripe runs beneath the spine, and one small lantern-amber eye fixes on the viewer. A single clear venom bead hangs from one short ivory fang as the head rises only a few inches above the coil.",
     "perspective": "Close low three-quarter portrait with the entire compact coil, raised head, fang, and tail tip centered and fully visible, using nearby gravel for unmistakable small scale.",
     "background": "A cool blue-grey ruin floor at twilight with pale fog, soft slate masonry, and sparse dead grass, kept muted so the bronze-edged coil and amber eye read immediately.",
@@ -299,49 +299,49 @@
     "background": "A warm, dim amber-lit ruin courtyard with charred timber and muted ember glow, kept soft and subordinate behind the cool granite projectiles.",
     "notes": "Scraped from the draft brief this card was generated from (stone_throw)."
   },
-  "token_revenant": {
+  "neutral_token_revenant": {
     "subject": "A broad undead gate guardian stands behind a slab-shaped relic shield, its iron-grey funeral armor bound with heavy bronze chains and pale burial linen. Sickly green-gold grave-light burns through the visor and along one planted boot as the revenant braces the shield against an unseen impact.",
     "perspective": "Low full-body three-quarter view with the revenant's complete shield, helmet, and planted stance centered inside the middle 70%.",
     "background": "A warm amber-lit ruined gate with dusty ochre stone and distant braziers, separating the cold iron and bone-white guardian from the setting.",
     "notes": "Bulwark is the dominant read. Keep it one human-sized undead guardian, not a giant, king, skeleton crowd, or duplicate of Bound Revenant."
   },
-  "token_thorn_cub": {
+  "neutral_token_thorn_cub": {
     "subject": "A fox-sized quadruped cub grown from braided cedar-brown roots, with two broad leaf ears, a fresh green sprout-tail, and a short ridge of soft honey-gold thorns protecting its shoulders. It plants its forepaws on a cracked stone and peers forward with curious amber sap eyes.",
     "perspective": "Low close three-quarter portrait at the cub's eye level with its whole small body and sprout-tail centered and readable.",
     "background": "A cool blue-grey ruin floor in soft morning mist, providing clean value and temperature contrast behind the warm wood and fresh green growth.",
     "notes": "Keep it unmistakably young and fox-sized, with no antlers, armor, giant fangs, roaring pose, extra cubs, or dense foliage obscuring the silhouette."
   },
-  "spellwarden": {
+  "neutral_spellwarden": {
     "subject": "A weathered settlement scholar in a stone-grey coat raises a round aged-bronze warding plate as three small arcane sparks spiral into a restrained amber knot above its blank center. A moss-green sash and practical satchel mark a traveling keeper of dangerous magic rather than a robed wizard.",
     "perspective": "Eye-level waist-up three-quarter portrait with the scholar, bronze plate, and compact spark knot centered and the hand gesture clearly visible.",
     "background": "A pale cool-blue archive ruin with blurred shelves and broken masonry, opposing the warm bronze and amber focal light.",
     "notes": "Arcane Surge reads as gathered energy, not a blast. No readable glyphs, spellbook text, ornate staff, hooded cultist, giant aura, or extra figures."
   },
-  "ironclad_bulwark": {
+  "neutral_ironclad_bulwark": {
     "subject": "A squat ironclad settlement construct braces behind two overlapping riveted shield plates, its body built from iron-black boiler sections, aged-bronze hinges, and a single warm lantern-amber core. A pale translucent aegis sheen hugs only the forward plates while its broad feet bite into the road.",
     "perspective": "Low frontal three-quarter view with both shield plates, glowing core, and planted feet forming one compact centered silhouette.",
     "background": "A pale cold-grey causeway under thin blue mist, making the near-black iron mass and warm core read clearly.",
     "notes": "Bulwark and Aegis should read together without a magical bubble. No weapon, humanoid knight, castle-scale body, cannon, spikes, or attack pose."
   },
-  "soulbound_revenant": {
+  "neutral_soulbound_revenant": {
     "subject": "A slender revenant in torn stone-grey traveling clothes kneels beside a cracked bronze soul-lantern, one translucent bone-white hand tethered to its warm amber flame by a single taut green-gold filament. Its bowed iron mask and still posture suggest obligation rather than aggression.",
     "perspective": "Eye-level medium three-quarter view with the kneeling revenant, lantern, and complete tether line centered inside the frame.",
     "background": "A cool moon-blue roadside shrine of weathered stone and sparse silver mist, contrasting with the lantern's warm focal glow.",
     "notes": "One revenant and one lantern only. No chains around the whole body, screaming ghost, skull swarm, graveyard battle, or duplicate of the larger bulwark token."
   },
-  "venomscale_drake": {
+  "neutral_venomscale_drake": {
     "subject": "A lean hound-sized drake crouches along a broken aqueduct, its overlapping slate-grey scales edged in moss green and its throat pouch glowing a restrained toxic lime. One clear venom bead gathers at a short ivory fang while, below the parapet, one tiny ochre-clad aqueduct worker drops a pale bucket and scrambles away from the creature.",
     "perspective": "Low side-on three-quarter portrait with the drake's complete head-to-tail silhouette, folded wings, and venom bead centered and unobscured.",
     "background": "A warm dusty coral sunset over pale ruined arches, opposing the cool slate body and toxic-green throat.",
     "notes": "Venom is one bead, not a spray. Keep the fleeing worker tiny and subordinate and the drake's folded bronze-brown wings fully readable. No giant dragon scale, fire breath, rider, hoard, extra heads, or airborne attack."
   },
-  "duneborn_construct": {
+  "neutral_duneborn_construct": {
     "subject": "A broad four-legged construct rises from wind-packed sand, built around a dark iron frame clad in sun-bleached sandstone plates and held by aged-bronze straps. Its wedge-shaped front slab lowers into a defensive brace while a small amber furnace-eye glows beneath the overhang.",
     "perspective": "Low full-body three-quarter view near sand level with all four feet, front slab, and compact pack-animal silhouette visible in the center.",
     "background": "A cool indigo predawn desert with blue-violet dunes and a pale horizon, separating the warm sandstone and bronze body.",
     "notes": "Bulwark reads through the lowered slab. No humanoid golem, pyramid, giant statue, weapon, sand tornado, carved text, or decorative runes."
   },
-  "searing_quill": {
+  "neutral_searing_quill": {
     "subject": "A single long bronze-and-ivory writing quill lies diagonally above a dark stone tablet, its feather burned to ember-red filaments and its sharpened metal nib glowing molten orange. One curling line of heat scorches the tablet surface without forming any letter or symbol.",
     "perspective": "Tight top-down three-quarter close view with the entire quill, hot nib, and short scorch trail centered inside the middle 70%.",
     "background": "A cool charcoal-grey scribe's bench with pale ash dust and muted blue shadow, maximizing contrast around the ember-red feather and molten nib.",
