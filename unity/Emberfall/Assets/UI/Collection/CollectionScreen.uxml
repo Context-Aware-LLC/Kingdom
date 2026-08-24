@@ -72,11 +72,11 @@
                 </ui:VisualElement>
                 <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
-            <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
+            <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser chrome-panel chrome-panel--recessed">
                 <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
                 <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
             </ui:ScrollView>
-            <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden">
+            <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden chrome-panel chrome-panel--recessed">
                 <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
                 <ui:VisualElement class="deck-editor__identity">
                     <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>

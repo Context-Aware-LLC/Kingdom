@@ -357,11 +357,29 @@
     border-width: 0;
     border-left-width: 6px;
     border-left-color: var(--class-neutral);
-    border-radius: var(--space-2);
-    background-color: var(--surface-3);
+    border-radius: 0;
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
     color: var(--ink-1);
     font-size: var(--type-body);
     -unity-text-align: middle-left;
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.deck-choice:hover,
+.deck-choice:focus {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.deck-choice:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(196, 204, 214);
 }
 .deck-editor {
     flex-grow: 1;
@@ -525,6 +543,11 @@
     padding: 24px;
     border-left-width: 0;
     background-color: rgba(18, 23, 31, 0.98);
+}
+.deck-chooser.chrome-panel--recessed,
+.deck-editor.chrome-panel--recessed {
+    padding: var(--space-4);
+    background-color: rgba(8, 12, 18, 0.92);
 }
 
 .chrome-button {
