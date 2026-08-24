@@ -16,7 +16,7 @@
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
     -unity-background-scale-mode: scale-and-crop;
-    /* No top inset: the query bar is anchored to the top bound of the plate. The other three sides
+    /* No top inset: the compact toolbar is anchored to the top bound of the plate. The other three sides
      * keep theirs, so the wall and the class strip stay inset from the edges as before. */
     padding: 0 var(--space-6) var(--space-6);
 }
@@ -49,28 +49,61 @@
     background-color: var(--accent);
     -unity-font-style: bold;
 }
+.col-button--filters {
+    min-width: 120px;
+}
+.col-button--filters-on {
+    color: var(--accent);
+}
 
-/* Query bar 
- * Sits on its own scrim rather than directly on the vault plate: the controls are small text on a
- * busy, high-contrast painting, and the braziers run straight through where the chips sit.
+/* Query toolbar + top drawer
+ * The wall keeps one compact action row in normal flow. The query itself is an overlay declared
+ * after the wall in UXML, so opening it does not relayout the fixed-size card tiles.
  */
-.col-query {
-    background-color: rgba(0, 0, 0, 0.45);
-    /* Square at the top, rounded below: the bar meets the top bound flush rather than reading as a
-     * floating pill pushed into the corner. Restore `border-radius: var(--space-2)` to undo. */
-    border-radius: 0 0 var(--space-2) var(--space-2);
-    padding: var(--space-3);
-    margin-bottom: var(--space-4);
-    /* Never let the wall shrink the bar away (#160 non-render, deckbuild). The body below is
-     * flex-grow:1 and its flex-basis is the wall's content height — the full pairing pool in
-     * deckbuild is ~90 tall tiles, so that basis overflows the column and the root distributes
-     * negative space by shrinking every child. Yoga (UI Toolkit's layout engine) does NOT floor a
-     * flex item at its content size the way CSS `min-height:auto` does, so with the default
-     * flex-shrink:1 the bar collapses to zero height and vanishes — only in deckbuild, because
-     * browse's owned-scope wall is short enough to leave non-negative free space. Pinning
-     * flex-shrink:0 reserves the bar's height; the body absorbs the shrink and its ScrollView
-     * scrolls, which is the intended behaviour. Browse is unchanged: its bar was never shrunk. */
+.col-query-toolbar {
+    flex-direction: row;
+    align-items: center;
+    min-height: 56px;
     flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    border-radius: 0 0 var(--space-2) var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-4);
+}
+.col-query {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-4) var(--space-6);
+    background-color: rgba(8, 12, 18, 0.98);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--accent);
+    translate: 0 -105%;
+    opacity: 0;
+    transition-property: translate, opacity;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+}
+.col-query--open {
+    translate: 0 0;
+    opacity: 1;
+}
+.col-query-drawer-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+}
+.col-query-drawer-title {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
+.col-query-drawer-header > .col-button {
+    min-height: 40px;
+    height: 40px;
+    padding: 0 var(--space-4);
 }
 .col-query-row {
     flex-direction: row;
@@ -89,8 +122,8 @@
     flex-grow: 1;
 }
 .col-query-actions .col-button {
-    min-height: 32px;
-    height: 32px;
+    min-height: 44px;
+    height: 44px;
     padding: 0 var(--space-4);
 }
 .col-query-actions .col-button--decks {
@@ -112,7 +145,60 @@
 .col-chip-row {
     flex-direction: row;
     flex-wrap: wrap;
-    margin-bottom: var(--space-1);
+    flex-grow: 1;
+}
+.col-chip-group {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+.col-chip-group__label {
+    width: 72px;
+    flex-shrink: 0;
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+.collection .db-chip {
+    min-height: 44px;
+    height: 44px;
+    padding: 0 var(--space-4);
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.42px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
+    color: var(--ink-2);
+    transition-property: -unity-background-image-tint-color, color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.collection .db-chip:hover,
+.collection .db-chip:focus {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    color: var(--ink-1);
+}
+.collection .db-chip:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(196, 204, 214);
+}
+.collection .db-chip.db-chip--on {
+    background-color: rgba(16, 13, 10, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    -unity-slice-scale: 0.42px;
+    -unity-background-image-tint-color: rgb(255, 239, 211);
+    color: rgb(250, 230, 193);
+}
+.collection .db-chip:disabled {
+    opacity: 0.42;
 }
 
 /* ---------- Active-deck pairing + cost chip sizing (#160) ----------
@@ -144,8 +230,8 @@
 /* Cost chips are single glyphs (0..6, 7+): a narrow centred square, not a label-width pill. The
  * side padding on .db-chip would otherwise stretch a one-character chip absurdly wide. */
 .collection--editing #query-costs .db-chip {
-    min-width: 32px;
-    width: 32px;
+    min-width: 44px;
+    width: 44px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
@@ -271,11 +357,29 @@
     border-width: 0;
     border-left-width: 6px;
     border-left-color: var(--class-neutral);
-    border-radius: var(--space-2);
-    background-color: var(--surface-3);
+    border-radius: 0;
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
     color: var(--ink-1);
     font-size: var(--type-body);
     -unity-text-align: middle-left;
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.deck-choice:hover,
+.deck-choice:focus {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.deck-choice:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(196, 204, 214);
 }
 .deck-editor {
     flex-grow: 1;
@@ -440,6 +544,11 @@
     border-left-width: 0;
     background-color: rgba(18, 23, 31, 0.98);
 }
+.deck-chooser.chrome-panel--recessed,
+.deck-editor.chrome-panel--recessed {
+    padding: var(--space-4);
+    background-color: rgba(8, 12, 18, 0.92);
+}
 
 .chrome-button {
     min-height: 44px;
@@ -484,8 +593,8 @@
     opacity: 0.42;
 }
 .col-query-actions .chrome-button {
-    min-height: 40px;
-    height: 40px;
+    min-height: 44px;
+    height: 44px;
     padding: 0 20px;
 }
 .deck-drawer__back.chrome-button {
@@ -573,6 +682,22 @@
     padding: var(--space-6);
     border-width: 1px;
     border-color: var(--surface-3);
+}
+.craft-illustration,
+.craft-illustration-scrim {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+}
+.craft-illustration {
+    background-image: url("/Assets/Art/Backgrounds/CraftingForge_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+    opacity: 0.82;
+}
+.craft-illustration-scrim {
+    background-color: rgba(5, 8, 12, 0.48);
 }
 
 .craft-head {
@@ -737,4 +862,28 @@
 .craft-action--ghost:disabled {
     background-color: rgba(0, 0, 0, 0);
     color: var(--ink-2);
+}
+
+.craft-modal.chrome-panel--outer {
+    background-color: rgba(18, 23, 31, 0.98);
+    border-width: 0;
+    border-radius: 0;
+}
+.craft-half.chrome-panel--recessed {
+    background-color: rgba(8, 12, 18, 0.9);
+    border-radius: 0;
+}
+.craft-action.chrome-button {
+    border-width: 0;
+    border-radius: 0;
+}
+.craft-action.chrome-button--primary,
+.craft-action.chrome-button--primary:hover {
+    background-color: rgba(16, 13, 10, 0.98);
+    color: rgb(250, 230, 193);
+}
+.craft-action.chrome-button--secondary,
+.craft-action.chrome-button--secondary:hover {
+    background-color: rgba(21, 28, 38, 0.98);
+    color: var(--ink-1);
 }
