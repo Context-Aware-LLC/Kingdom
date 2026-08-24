@@ -3,27 +3,43 @@
 These project rules apply to every agent working in this repository. Role-specific instructions
 may narrow an agent's scope or forbid publishing; when they do, follow the stricter rule.
 
+Before choosing a workspace or integration path, identify the execution mode:
+
+- **Interactive** — Sam is directly participating in the conversation, assigning the work, and
+  available to answer a question or approve an integration step.
+- **Autonomous** — the work came from Paperclip, an issue queue, a scheduled/background run, or
+  another harness where Sam is not actively participating.
+
+Do not apply autonomous handoff rules to an interactive session. The ability to ask Sam is a
+meaningful control boundary, not an implementation detail.
+
 ## Which workspace a task runs in
 
-Two workspaces exist and they are not interchangeable. **Isolated is the default and needs no
-justification; shared is an exception that does.**
+Two workspaces exist and they are not interchangeable. The correct default depends on the
+execution mode.
 
-| Task | Workspace | Why this is not a judgement call |
+| Task | Workspace | Why |
 | --- | --- | --- |
-| Needs the Unity Editor seat | **shared** | The seat is one machine-wide Editor pointed at one checkout. A second worktree does not mint a second seat, and the Editor rewrites URP settings across sibling worktrees. |
-| Anything else | **isolated** | Its own `git worktree` under the configured parent, cut from `origin/master`, on its own branch, reaped automatically when the issue closes. |
+| Interactive task with no competing writer or overlapping dirty state | **operator checkout** | Sam can see the work where they are already working and can resolve branch or integration decisions in the conversation. |
+| Interactive task whose requested branch cannot be created safely in the operator checkout | **isolated** | Preserve unrelated local changes or active work. Tell Sam immediately which worktree and branch are being used; do not let the alternate path surface only at handoff. |
+| Autonomous task that does not need the Unity Editor seat | **isolated** | Its own `git worktree` under the configured parent, cut from `origin/master`, on its own branch, and reaped automatically when the issue closes. |
+| Task explicitly granted the Unity Editor seat | **operator checkout** | The seat is one machine-wide Editor pointed at one checkout. A second worktree does not mint a second seat, and the Editor rewrites URP settings across sibling worktrees. |
 
 **Isolated** means work only in the dedicated worktree supplied for the assigned issue; never in
 the operator's primary checkout. It is a full checkout — every path in the repo is present.
 
-**Shared** means the operator's primary checkout, with no isolation of any kind. Two things follow,
-and both are load-bearing:
+**Operator checkout** means the operator's primary checkout, with no isolation of any kind. Two
+things follow, and both are load-bearing:
 
 - **One agent at a time.** Concurrent shared runs land in the same directory and overwrite each
   other. The damage surfaces later as unexplained flakiness that does not look like contention.
-- **It leaves a `cleanup_failed` record every time.** There is no workspace to reap — the path is
-  the operator's own checkout — so the run's bookkeeping never resolves and the operator clears it
-  by hand. Shared is not free; spend it only for the Unity seat.
+- **Inspect before changing branches.** Preserve unrelated edits already present. If the requested
+  branch operation would disturb them, use an isolated worktree and explain that choice before
+  implementation begins.
+
+An autonomous harness run in the operator checkout still leaves a `cleanup_failed` record because
+there is no workspace to reap. That bookkeeping concern applies to autonomous runs; it does not
+turn a direct interactive session with Sam into an autonomous run.
 
 RETIREMENT TRIGGER: this table assumes an isolated worktree is a FULL checkout. It was sparse until
 2026-08-10 (`src tests tooling unity tools .github`), which silently made `art/`, `docs/`,
@@ -43,14 +59,25 @@ execution-workspace policy, this table is wrong and the excluded paths become a 
 
 ## Branch and integration contract
 
-- One ticket, one merge. A branch is scoped to the issue that created it and must not accumulate
-  follow-on tickets.
+- For autonomous work, one ticket means one branch and one merge. Do not accumulate follow-on
+  tickets on the same branch. In an interactive session, keep the branch scoped to the work Sam is
+  directing and ask if a follow-on would materially broaden it.
 - Name an agent-owned branch `agent/<issue-id>-<short-slug>` unless the execution harness has
   already assigned a branch. Never switch, rename, or re-point a harness-owned branch.
 - Rebase onto `origin/master` before every push: `git fetch origin` followed by
   `git rebase origin/master`.
-- Push the issue branch and open a pull request against `master`. Never merge the pull request,
-  push directly to `master`, or force-push a shared branch. The merge is Sam's checkpoint.
+- **Autonomous:** push the issue branch and open a pull request against `master`. Never merge it;
+  the pull request is Sam's checkpoint.
+- **Interactive:** Git integration is implementation plumbing, not a user checkpoint. Sam grants
+  standing authorization to create or reuse an appropriate branch, commit, rebase or merge, push
+  to the branch's upstream (including `master`), open and merge a pull request, and update the
+  operator checkout after verification. Do not ask Sam to choose or approve routine Git steps, and
+  do not leave completed work sitting only on a branch or in an open pull request. Use the safest
+  normal integration route available and report the result. Ask only when the target is genuinely
+  ambiguous, integration conflicts with unrelated work, or the necessary operation is destructive
+  or difficult to recover.
+- Autonomous work must never push directly to `master` or force-push a shared branch. Interactive
+  standing authorization does not include force-pushing over unrelated history.
 - If role-specific instructions forbid pushing or opening a pull request, hand the local commit to
   the named lead. That lead owns the rebase, branch publication, and mandatory pull request before
   integration.
