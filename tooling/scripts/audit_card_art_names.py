@@ -56,6 +56,7 @@ import collections
 import hashlib
 import json
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -71,6 +72,27 @@ def rows():
         cards = doc["cards"] if isinstance(doc, dict) and "cards" in doc else doc
         for card in cards:
             yield path.name, card
+
+
+def name_slug(name):
+    """The card's NAME as an artId would spell it: lowercase, non-alphanumerics to underscores."""
+    return "_".join(re.findall(r"[a-z0-9]+", (name or "").lower()))
+
+
+def name_explains(card, art):
+    """Whether a NEUTRAL row's leading segment is just the first word of its NAME.
+
+    A neutral artId is the name with NO class token in front of it -- the absence IS the signal.
+    So "Stone Sentry" is `stone_sentry`, whose leading segment collides with STONEWARDEN's token
+    by coincidence of English. Row 1007 was reported as a mismatch on exactly that for as long as
+    this check has existed, and the row was always right; row 1010 "Stoneback Sentry" escaped only
+    because its first word happens not to be a token.
+
+    The test that separates them is whether the artId is ALREADY the name. If it is, nothing was
+    prefixed and there is no class token to carry. A genuinely mis-tokened neutral -- name
+    "Sentry", artId `stone_sentry` -- still fails, because `sentry` != `stone_sentry`.
+    """
+    return art == name_slug(card.get("name"))
 
 
 def first_segment(art_id):
@@ -122,7 +144,7 @@ def main():
         owner = known_tokens.get(seg)          # class this leading token belongs to, if any
         expected = token_of.get(cls)           # None for NEUTRAL
 
-        if cls == "NEUTRAL" and owner is not None:
+        if cls == "NEUTRAL" and owner is not None and not name_explains(card, art):
             findings.append((card["id"], cls, set_id, art,
                              f"NEUTRAL row carries the {owner} class token '{seg}'"))
         elif cls != "NEUTRAL" and owner != cls:
