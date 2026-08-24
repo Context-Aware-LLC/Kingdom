@@ -12,16 +12,32 @@
        Not part of the 4px spacing run above -- it is not a design rhythm, it is a
        hardware clearance, and it is deliberately blunt.
 
-       The Pixel 5a's front camera eats 136px of the long edge in landscape. 150 clears
-       it with room to spare, on EVERY edge, which is the point: Unity's Screen.safeArea
-       reported that cutout on the LEFT while both Android's mAppBounds and Sam's own eyes
-       put it on the RIGHT (2026-08-21). Rather than resolve that disagreement and depend
-       on the answer, sit far enough in that the side does not matter. A static margin
-       that is right on every device beats a computed inset that is right on some.
+       THE UNIT CHANGED UNDER THIS NUMBER, and that is the whole story of its history.
+       Authored as 150 when the panels scaled by pixel count, so 150 authored px was about
+       150 DEVICE px and cleared the cutout. At referenceDpi 160 one authored px is one dp,
+       so 150 became 150dp = 394 device px -- 73% of a 1080-tall landscape screen (#243).
 
-       RETIREMENT TRIGGER: if a device with a deeper cutout than 136px is ever supported,
-       this number moves. It is the only place it is written down. */
-    --edge-safe: 50px;
+       52 is the measured value, not an estimate. Read off a Pixel 5a over USB, 2026-08-23:
+
+           ROTATION_90 : nonDecorInsets=[136,0][0,63]   <- 136 device px on the LEFT
+           ROTATION_270: nonDecorInsets=[0,0][136,63]   <- 136 device px on the RIGHT
+
+       136 device px / 2.625 px per dp = 51.8dp, so 52 clears it and 50 does not (50dp is
+       131 device px, five short). Note the side FLIPS with rotation direction, which is why
+       this is spent on every edge rather than the one the API happens to name: Unity's
+       Screen.safeArea reported the cutout on the LEFT while Android's mAppBounds and Sam's
+       own eyes put it on the RIGHT (2026-08-21). Sit far enough in that the side stops
+       mattering. A static margin right on every device beats a computed inset right on some.
+
+       These two classes were commented out on effect-model-merge and restored 2026-08-23.
+       While they were dead, `character-create` -- which carries .emb-bleed -- ran edge to
+       edge, putting "Choose your hero" under the status bar and Cancel under the gesture
+       bar. The classes are not decoration; they are the only thing insetting that modal.
+
+       RETIREMENT TRIGGER: if a device with a cutout deeper than 136 device px is supported,
+       or referenceDpi moves off 160, recompute this. It is the only place it is written
+       down, and tooling/scripts/audit_edge_safety.py fails if either class loses its body. */
+    --edge-safe: 52px;
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;
@@ -72,16 +88,16 @@
    Applied per element rather than to every child of .emb-root, because a flow
    child in a column would take the clearance on its TOP and BOTTOM too, and
    three of those on a 1080-unit panel eats the screen. */
-/* .emb-edge {
+.emb-edge {
     margin: var(--edge-safe);
-} */
+}
 
 /* A layer that must PAINT to the panel edge — a scrim, a modal backdrop — spans
    the panel and insets its own CONTENT instead. This is why one class serves both
    the bare scrims and the modal containers: paint to the edge, keep content in. */
-/* .emb-bleed {
+.emb-bleed {
     padding: var(--edge-safe);
-} */
+}
 
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);
