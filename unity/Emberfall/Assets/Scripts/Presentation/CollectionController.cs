@@ -107,6 +107,8 @@ namespace Emberfall.Presentation
         private VisualElement _scopeRow;
         private Button _scopeOwnedButton;
         private Button _scopeAllButton;
+        private VisualElement _queryDrawer;
+        private Button _queryToggleButton;
         private VisualElement _drawer;
         private ScrollView _deckChooser;
         private VisualElement _deckChooserList;
@@ -116,6 +118,7 @@ namespace Emberfall.Presentation
         private Label _drawerSubtitle;
         private Label _deckCharacterName;
         private Label _deckName;
+        private bool _queryDrawerOpen;
         private bool _drawerOpen;
         private bool _scopeBeforeEditing;
         private readonly HashSet<CardClass> _classesBeforeEditing = new HashSet<CardClass>();
@@ -322,6 +325,8 @@ namespace Emberfall.Presentation
             _scopeRow            = _root.Q<VisualElement>("scope-row");
             _scopeOwnedButton    = _root.Q<Button>("scope-owned");
             _scopeAllButton      = _root.Q<Button>("scope-all");
+            _queryDrawer         = _root.Q<VisualElement>("query-bar");
+            _queryToggleButton   = _root.Q<Button>("query-toggle");
             _drawer              = _root.Q<VisualElement>("deck-drawer");
             _deckChooser         = _root.Q<ScrollView>("deck-chooser");
             _deckChooserList     = _root.Q<VisualElement>("deck-chooser-list");
@@ -1054,9 +1059,14 @@ namespace Emberfall.Presentation
 
         // ---- Chrome (buttons) ----
         //
-        // One persistent Back: dismiss and save the transient drawer first, leave Collection second.
+        // One persistent Back: dismiss the top query drawer, then the deck drawer, then leave Collection.
         private void WireChrome()
         {
+            SetQueryDrawerOpen(false);
+            _queryToggleButton?.RegisterCallback<ClickEvent>(_ =>
+                SetQueryDrawerOpen(!_queryDrawerOpen));
+            _root.Q<Button>("query-close")?.RegisterCallback<ClickEvent>(_ =>
+                SetQueryDrawerOpen(false));
             _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
             _root.Q<Button>("deck-drawer-close")?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
@@ -1066,12 +1076,29 @@ namespace Emberfall.Presentation
 
         private void HandleBack()
         {
+            if (_queryDrawerOpen)
+            {
+                SetQueryDrawerOpen(false);
+                return;
+            }
+
             if (_drawerOpen)
             {
                 CloseDeckDrawer();
                 return;
             }
             Exit();
+        }
+
+        private void SetQueryDrawerOpen(bool open)
+        {
+            if (_queryDrawer == null) return;
+
+            _queryDrawerOpen = open;
+            _queryDrawer.EnableInClassList("col-query--open", open);
+            _queryDrawer.pickingMode = open ? PickingMode.Position : PickingMode.Ignore;
+            _queryDrawer.SetEnabled(open);
+            _queryToggleButton?.EnableInClassList("col-button--filters-on", open);
         }
 
         private void Exit()
