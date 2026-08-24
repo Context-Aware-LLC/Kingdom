@@ -3,10 +3,10 @@
     <Style src="project://database/Assets/UI/Deckbuilder/deckbuilder.uss?fileID=7433441132597879392&amp;guid=256848a7b7f34ec47b8b83dae3a72e79&amp;type=3#deckbuilder"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
-        <ui:VisualElement class="col-query-toolbar">
+        <ui:VisualElement class="col-query-toolbar chrome-panel chrome-panel--outer">
             <ui:Button name="query-toggle" text="Filters" class="col-button col-button--filters chrome-button chrome-button--primary"/>
             <ui:VisualElement class="col-query-actions">
-                <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--primary"/>
+                <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
                 <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -29,7 +29,7 @@
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query">
+        <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:VisualElement class="col-query-drawer-header">
                 <ui:Label text="Filter &amp; sort" class="col-query-drawer-title"/>
                 <ui:Button name="query-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
@@ -51,9 +51,18 @@
                     <ui:Button name="scope-all" text="All" class="db-chip"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="query-rarities" class="col-chip-row"/>
-            <ui:VisualElement name="query-types" class="col-chip-row"/>
-            <ui:VisualElement name="query-costs" class="col-chip-row"/>
+            <ui:VisualElement class="col-chip-group">
+                <ui:Label text="Rarity" class="col-chip-group__label"/>
+                <ui:VisualElement name="query-rarities" class="col-chip-row"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="col-chip-group">
+                <ui:Label text="Type" class="col-chip-group__label"/>
+                <ui:VisualElement name="query-types" class="col-chip-row"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="col-chip-group">
+                <ui:Label text="Cost" class="col-chip-group__label"/>
+                <ui:VisualElement name="query-costs" class="col-chip-row"/>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="deck-drawer" class="deck-drawer chrome-panel chrome-panel--outer">
             <ui:VisualElement class="deck-drawer__header">

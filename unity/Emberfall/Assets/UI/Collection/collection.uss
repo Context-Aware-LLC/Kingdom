@@ -122,8 +122,8 @@
     flex-grow: 1;
 }
 .col-query-actions .col-button {
-    min-height: 40px;
-    height: 40px;
+    min-height: 44px;
+    height: 44px;
     padding: 0 var(--space-4);
 }
 .col-query-actions .col-button--decks {
@@ -145,7 +145,60 @@
 .col-chip-row {
     flex-direction: row;
     flex-wrap: wrap;
-    margin-bottom: var(--space-1);
+    flex-grow: 1;
+}
+.col-chip-group {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-2);
+}
+.col-chip-group__label {
+    width: 72px;
+    flex-shrink: 0;
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+.collection .db-chip {
+    min-height: 44px;
+    height: 44px;
+    padding: 0 var(--space-4);
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(21, 28, 38, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.42px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
+    color: var(--ink-2);
+    transition-property: -unity-background-image-tint-color, color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.collection .db-chip:hover,
+.collection .db-chip:focus {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    color: var(--ink-1);
+}
+.collection .db-chip:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(196, 204, 214);
+}
+.collection .db-chip.db-chip--on {
+    background-color: rgba(16, 13, 10, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    -unity-slice-scale: 0.42px;
+    -unity-background-image-tint-color: rgb(255, 239, 211);
+    color: rgb(250, 230, 193);
+}
+.collection .db-chip:disabled {
+    opacity: 0.42;
 }
 
 /* ---------- Active-deck pairing + cost chip sizing (#160) ----------
@@ -177,8 +230,8 @@
 /* Cost chips are single glyphs (0..6, 7+): a narrow centred square, not a label-width pill. The
  * side padding on .db-chip would otherwise stretch a one-character chip absurdly wide. */
 .collection--editing #query-costs .db-chip {
-    min-width: 32px;
-    width: 32px;
+    min-width: 44px;
+    width: 44px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
@@ -517,8 +570,8 @@
     opacity: 0.42;
 }
 .col-query-actions .chrome-button {
-    min-height: 40px;
-    height: 40px;
+    min-height: 44px;
+    height: 44px;
     padding: 0 20px;
 }
 .deck-drawer__back.chrome-button {
