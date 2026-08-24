@@ -771,3 +771,27 @@
     background-color: rgba(0, 0, 0, 0);
     color: var(--ink-2);
 }
+
+.craft-modal.chrome-panel--outer {
+    background-color: rgba(18, 23, 31, 0.98);
+    border-width: 0;
+    border-radius: 0;
+}
+.craft-half.chrome-panel--recessed {
+    background-color: rgba(8, 12, 18, 0.9);
+    border-radius: 0;
+}
+.craft-action.chrome-button {
+    border-width: 0;
+    border-radius: 0;
+}
+.craft-action.chrome-button--primary,
+.craft-action.chrome-button--primary:hover {
+    background-color: rgba(16, 13, 10, 0.98);
+    color: rgb(250, 230, 193);
+}
+.craft-action.chrome-button--secondary,
+.craft-action.chrome-button--secondary:hover {
+    background-color: rgba(21, 28, 38, 0.98);
+    color: var(--ink-1);
+}

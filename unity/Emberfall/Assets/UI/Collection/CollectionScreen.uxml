@@ -99,7 +99,7 @@
         -->
         <ui:VisualElement name="craft-scrim" class="craft-scrim emb-bleed" />
 
-        <ui:VisualElement name="craft-modal" class="craft-modal">
+        <ui:VisualElement name="craft-modal" class="craft-modal chrome-panel chrome-panel--outer">
 
             <ui:VisualElement class="craft-head">
                 <ui:VisualElement class="craft-heading">
@@ -110,7 +110,7 @@
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value" />
                     <ui:Label text="shards" class="craft-wallet-word" />
                 </ui:VisualElement>
-                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost" />
+                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary" />
             </ui:VisualElement>
 
             <ui:VisualElement class="craft-body">
@@ -126,7 +126,7 @@
                      is marked dead by CraftModal and still states its price and its reason. -->
                 <ui:VisualElement class="craft-halves">
 
-                    <ui:VisualElement name="craft-render-half" class="craft-half">
+                    <ui:VisualElement name="craft-render-half" class="craft-half chrome-panel chrome-panel--recessed">
                         <ui:Label text="Render" class="craft-half-title" />
                         <ui:Label text="Spend shards to make this card." class="craft-half-blurb" />
                         <ui:VisualElement class="craft-price">
@@ -134,10 +134,10 @@
                             <ui:Label text="shards" class="craft-price-word" />
                         </ui:VisualElement>
                         <ui:Label name="craft-render-note" text="" class="craft-half-note" />
-                        <ui:Button name="craft-render-button" text="Render" class="craft-action" />
+                        <ui:Button name="craft-render-button" text="Render" class="craft-action chrome-button chrome-button--primary" />
                     </ui:VisualElement>
 
-                    <ui:VisualElement name="craft-reduce-half" class="craft-half">
+                    <ui:VisualElement name="craft-reduce-half" class="craft-half chrome-panel chrome-panel--recessed">
                         <ui:Label text="Reduce" class="craft-half-title" />
                         <ui:Label text="Break a copy down for shards." class="craft-half-blurb" />
                         <ui:VisualElement class="craft-price">
@@ -145,7 +145,7 @@
                             <ui:Label text="shards" class="craft-price-word" />
                         </ui:VisualElement>
                         <ui:Label name="craft-reduce-note" text="" class="craft-half-note" />
-                        <ui:Button name="craft-reduce-button" text="Reduce" class="craft-action craft-action--ghost" />
+                        <ui:Button name="craft-reduce-button" text="Reduce" class="craft-action craft-action--ghost chrome-button chrome-button--secondary" />
                     </ui:VisualElement>
 
                 </ui:VisualElement>
