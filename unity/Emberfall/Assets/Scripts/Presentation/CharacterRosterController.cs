@@ -756,8 +756,12 @@ namespace Emberfall.Presentation
                 Character created = _account.CreateCharacterWithoutDeck(name.Normalized, primary, secondary);
                 Debug.Log($"[CharacterRoster] created character id={created.Id} " +
                           $"pairing={created.PrimaryClass}/{created.SecondaryClass} (no deck)");
+                DeckList newDeck = _account.CreateDeck(created, _db, UnusedDeckName(created), StarterDeck.Blank);
+                created.DefaultDeckId = newDeck.Id;
+                _account.Save(created);
+                Debug.Log($"[CharacterRoster] created blank deck '{newDeck.Name}' for {created.Name}; opening deck builder.");
                 CloseCreateFlow();
-                RebuildRoster();
+                OpenDeckForEdit(created.Id, newDeck.Id);
             }
             catch (ArgumentException ex)
             {
