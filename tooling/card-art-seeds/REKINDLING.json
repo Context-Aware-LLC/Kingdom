@@ -400,5 +400,149 @@
     "perspective": "Low dynamic medium-full three-quarter view with Vael's face, cyan core, complete lunging torso, and both separated arm arcs inside the middle 70%.",
     "background": "A warm ember-orange sky above a pale ochre plateau, silhouetting the dark elemental while preserving the two bright strike paths.",
     "notes": "Doublestrike is two arm arcs in one action. Keep the two frightened watchkeepers tiny and subordinate to Vael. No giant titan scale, weapon, crown, wings, army, full tornado body, or duplicate of Zael's upright storm-lord pose."
+  },
+  "night_toxin_blade": {
+    "subject": "A short single-edged dagger shown whole and in near-profile: a blade-silver blade with a hollow fuller running its full length, the fuller carrying a slow toxic-lime fluid that beads and hangs at the point. The grip is wrapped in shadow-black cord under a bone-white pommel cap, with a thin midnight purple-grey guard.",
+    "perspective": "Near-orthographic profile, long lens, the entire weapon inside the frame and tilted only slightly off vertical, dead-centred.",
+    "background": "A flat warm amber-brown ground with a soft ochre falloff and no scene at all, so the cold silver and the toxic lime separate cleanly at icon size.",
+    "notes": "The object alone: no hand, no wielder, no ground plane, no scene. Compact, never a long corner-to-corner diagonal. Whole weapon in frame with nothing that matters outside the inner 60 percent."
+  },
+  "storm_overcharge": {
+    "subject": "A storm-tap lever of tarnished storm-silver and charcoal iron is slammed hard past its final notch by two gauntleted hands, and an electric gold-white arc jumps the opened coil and races up both forearms. The coil housing glows white along its seam and the gauntlet plates are already scorched soot-black across the knuckles.",
+    "perspective": "Tight close three-quarter on the lever and the two hands, camera at the height of the mechanism, the arc filling the upper third.",
+    "background": "A warm rust-brown and lantern-amber workshop wall of half-rebuilt brick and fresh timber scaffold, kept dim and warm so the cold arc-white separates hard from it.",
+    "notes": "The cost of the overdraw must be visible in the scorching, not celebrated. No face, no full figure, no bolt in the sky, no gauge markings or numerals."
+  },
+  "storm_arc_flash": {
+    "subject": "One flat sheet of electric gold-white arc-light snaps horizontally across a rain-slick rebuilt street at knee height, thin charcoal thunder-rings blooming where it passes. Storm-silver sparks skitter off the wet cobbles and every standing puddle flares cyan for the instant the sheet crosses it.",
+    "perspective": "Low wide eye-level looking straight down the street so the flash reads as one long horizontal band across the whole frame.",
+    "background": "Warm ochre and rust-brown terraced house fronts with lit torches and timber scaffolding, held dull and warm behind the cold flash.",
+    "notes": "A brief WIDE flash, thin and fast and shallow, never one thick heroic bolt and never a landscape catastrophe. No figures, no crater, no burning buildings."
+  },
+  "storm_tempest_fury": {
+    "subject": "A descending column of stormcloud-black drops four separate electric gold-white bolts at once into a rebuilt courtyard, the bolts braided with cyan double-traces and ringed by expanding charcoal thunder-rings. The strike points burn white and the courtyard flagstones are lifting.",
+    "perspective": "Wide slightly low three-quarter across the courtyard, framed so the whole braided strike and its outermost thunder-ring sit inside the image.",
+    "background": "A warm amber-lit settlement wall and its scaffolding beyond the courtyard, lit torches and thin warm ember-snow, kept far lower in value than the strike.",
+    "notes": "The storm itself is the subject: no hero, caster, or named figure anywhere in frame. Keep it a strike on ONE courtyard, not a burning city and not a landscape-wide apocalypse."
+  },
+  "night_shadow_slip": {
+    "subject": "A figure caught mid-dissolve: the near half still solid in shadow-black leather and blade-silver buckles, the far half already unravelling into midnight purple-grey shadow-smoke that streams sideways and stops at a hard vanishing edge, leaving a faint bone-white outline where the body was.",
+    "perspective": "Medium three-quarter at close eye level, framed so the dissolving edge runs through the centre of the image.",
+    "background": "A warm amber torchlit alley of half-rebuilt brick and fresh timber scaffold, its light still falling on the patch of ground where the figure no longer is.",
+    "notes": "The disappearance is the subject, and the torchlight landing on empty ground is what sells it. No face detail, no portal, no swirling magic circle, no second figure."
+  },
+  "night_venom_lash": {
+    "subject": "A long braided lash of shadow-black cord tipped with blade-silver barbs snaps taut through the frame, flinging a spray of discrete toxic-lime venom droplets off its length. The barbs are already wet and the droplets hang bright and separate against the dark.",
+    "perspective": "Medium close with the camera near the arc of the lash so it reads as one continuous S-curve across the frame, the barbed tip nearest the viewer.",
+    "background": "A warm ochre and lantern-amber rebuilt wall, low in value and warm so the lime spray separates hard from it.",
+    "notes": "The lash and its spray only: no wielder, no victim, no corpse. Keep the venom as bright discrete droplets, never a green fog or a haze."
+  },
+  "stone_rubble_toss": {
+    "subject": "A single fist-sized chunk of granite-grey masonry with a rusted-bronze wall cramp still pinned through it, caught in flight just after release and trailing pale quartz dust with two smaller fragments tumbling behind. The mass and the spin read plainly on it.",
+    "perspective": "Tight close three-quarter tracking alongside the stone at its own height, with motion blur only in the background and the stone itself sharp.",
+    "background": "A warm ochre and ember-orange dusk sky above a half-rebuilt wall, kept warm and bright so the cold grey stone reads dark against it.",
+    "notes": "ONE thrown chunk, fist-sized, plus two small fragments - not a boulder and not an avalanche. No thrower, no arm or hand in frame, no impact and no crater."
+  },
+  "stone_wardens_vow": {
+    "subject": "A warden's gauntlet of rusted bronze and iron-black presses a flat granite-grey oath-stone into a half-repaired wall, and pale quartz light runs out from under the palm along every mortar seam in both directions, stitching the courses together. Moss-green creeps into the newly lit seams.",
+    "perspective": "Tight three-quarter close on the gauntlet and the oath-stone, the lit seams running out of frame to both sides.",
+    "background": "Warm lantern-amber and ember-orange torchlight falling on the timber scaffold standing against the wall.",
+    "notes": "A vow made by one hand on stone, not a shouted rally: a single gesture. No face, no full figure, no banner, no crowd, and no written runes or lettering of any kind."
+  },
+  "clock_gear_cache": {
+    "subject": "A hinged brass-cornered strongbox stands flipped open on a workbench, its felt-lined trays packed with graded polished-brass gears, tarnished-copper mainsprings and tightly rolled parchment-amber blueprints. Two of the blueprint rolls have been lifted clear of the tray and stand proud of the box, arc-blue light waking along their cut edges.",
+    "perspective": "Close top-down three-quarter over the open box, the box filling most of the frame with the two lifted rolls nearest the camera.",
+    "background": "A deep cool slate-blue workshop shadow going nearly black at the corners, so the warm brass and parchment amber carry all of the light.",
+    "notes": "TWO items lifted clear of the rest is the read. No hands, no figure, no coins or treasure hoard, and no lettering or diagrams legible on the blueprints."
+  },
+  "clock_refraction_module": {
+    "subject": "A palm-sized module of oiled steel and polished brass with a stacked pale-quartz prism at its heart is snapped into a socket and locking home. One thin arc-blue beam enters it and leaves as three brighter parallel beams, each fanning wider and hotter than the single beam that went in.",
+    "perspective": "Tight three-quarter close on the module seated in its socket, the input beam entering at the left edge and the three output beams running off the right.",
+    "background": "A deep cool slate-blue interior falling off to near-black, so the brass body and the arc-blue beams both separate.",
+    "notes": "One beam in, THREE brighter out - the multiplication is the entire idea. No hands, no figure, no rainbow spectrum, no shattered glass."
+  },
+  "storm_crackling_sprite": {
+    "subject": "A small elemental sprite no bigger than a hand lantern: a tight knot of electric gold-white arc-light with two distinct crackling limbs that mirror each other exactly, storm-silver motes orbiting a dense charcoal core.",
+    "perspective": "Close eye-level with the sprite centered and small enough that a hand's width of the setting reads clearly around it.",
+    "background": "The warm rust-brown timber and lantern-amber of a newly rebuilt fence post at dusk, softly out of focus.",
+    "notes": "Lantern-sized, not a giant. The two mirrored limbs are the point. No face, no wings, no towering elemental."
+  },
+  "storm_stormbound_imp": {
+    "subject": "A cat-sized storm imp with a lean charcoal-black body wrapped in three loose storm-silver binding rings that spit sparks where they touch it, one clawed hand flicking a small cyan arc away from itself as it perches.",
+    "perspective": "Close low three-quarter with the imp perched on a broken stone cornice, filling most of the frame height.",
+    "background": "A warm ochre rebuilt roofline under torchlight, thin warm ember-snow drifting, kept dim.",
+    "notes": "Cat-sized and mischievous rather than menacing; the flicked arc is a spark, not a bolt. No spread wings, no giant."
+  },
+  "storm_bolt_rider": {
+    "subject": "A lean rider crouched low along a single forking bolt as though it were a mount, wrapped in a streaming storm-silver wind-scarf and charcoal leathers, both hands gripping the fork exactly where it splits into two parallel traces of electric gold-white.",
+    "perspective": "Medium three-quarter from slightly below, the rider and the near half of the bolt filling the frame while the trailing motion runs off behind.",
+    "background": "A warm dusk ochre sky over rebuilt rooftops and scaffolding, thin warm ember-snow, kept low in value.",
+    "notes": "The bolt is the mount and it must visibly FORK into two. Human-scale, no horse, no chariot, no wings."
+  },
+  "storm_gale_herald": {
+    "subject": "A tall herald of compacted stormcloud and storm-silver plate stands with robes streaming hard in one direction, raising a long charcoal-and-cyan storm horn from which two parallel gold-white arc-traces spiral outward ahead of the wind. The face stays storm-shadowed under the hood.",
+    "perspective": "Medium three-quarter from slightly below on a rebuilt gate walkway, the herald large in frame from the knees up with the whole head inside the image.",
+    "background": "A warm amber lantern-lit gate and its scaffolding below and behind, held low in value and warm against the cold figure.",
+    "notes": "Two parallel traces from the horn. Substantial but localized: the wind bends banners and scaffold cloth, it does not level the gate. No wings."
+  },
+  "night_dusk_imp": {
+    "subject": "A small spirit imp the size of a house cat, hunched and grinning, its body midnight purple-grey and shadow-black with edges that fade off into smoke instead of ending. Two toxic-lime pinpricks serve as eyes and a thin bone-white ribcage shows faintly through the dark.",
+    "perspective": "Close eye level with the imp centred and small, crouched on a broken stone step.",
+    "background": "The warm amber glow of a campfire falling across rebuilt timber and rubble at dusk.",
+    "notes": "House-cat sized. The edges must VANISH rather than terminate - that is the whole read. No wings, no horns longer than a thumb, no demon-lord scale."
+  },
+  "night_poison_wisp": {
+    "subject": "A single drifting wisp about the size of a melon: a bone-white spirit flame around a toxic-lime core, trailing one thin ribbon of shadow-black smoke and shedding slow lime droplets that leave small pitted burns where they land.",
+    "perspective": "Close eye level with the wisp centred, hovering just above a rebuilt stone sill, two or three droplets caught mid-fall beneath it.",
+    "background": "A warm rust-brown and lantern-amber timber wall, softly out of focus.",
+    "notes": "Melon-sized and weightless. The pitted burn marks are how the venom reads. No face, no limbs, and exactly ONE wisp - never a swarm."
+  },
+  "night_shadow_recon": {
+    "subject": "A lean scout in a shadow-black wrap and midnight purple-grey half-cloak crouches on a rooftop edge, one blade-silver hooked knife reversed in a low grip, sighting down at something below. The trailing side of the cloak and the trailing arm dissolve into shadow-smoke rather than ending.",
+    "perspective": "Medium three-quarter from slightly below the rooftop edge, the figure large in frame with the whole head inside the image.",
+    "background": "A warm amber lantern-lit settlement street far below with scaffolding and lit torches, kept small, warm and low in value.",
+    "notes": "The dissolving trailing edge is the read. Human scale, exactly one figure. No glowing eyes, no bow, no heroically billowing cape."
+  },
+  "night_nightfall_rogue": {
+    "subject": "A tall rogue mid-stride exactly where the daylight ends: the leading half of the body still lit in warm bone-white, everything behind the stride line gone shadow-black and unresolved. Twin blade-silver knives are held low, a thin toxic-lime line of venom along each edge.",
+    "perspective": "Medium-wide three-quarter at eye level with the figure crossing the frame and the lit-to-unlit division running vertically through them.",
+    "background": "A warm amber lantern-lit rebuilt square behind the lit half, dimming to nothing behind the dark half.",
+    "notes": "The card is the MOMENT of nightfall crossing a person, and that division is the whole idea. Sizable but not a giant. No face detail on the dark half, no glow inside the hood, no decorative smoke swirls added on top."
+  },
+  "stone_ironclad_grunt": {
+    "subject": "A squat construct barely taller than a person's waist, built from mismatched granite-grey blocks bound in rusted-bronze straps, holding a broad iron-black slab shield twice the width of its own body and planted immovably in front of it. Moss-green fills the joints and a dull pale-quartz core shows at the chest seam.",
+    "perspective": "Low eye-level three-quarter with the camera close to the ground so the planted shield fills the lower half of the frame.",
+    "background": "A warm ember-orange dusk over a rebuilt gate lane with lit torches, kept low in value.",
+    "notes": "Waist-height and stocky, never a titan. Cheap and rough: mismatched blocks, visible repairs, no ornament. The shield does the talking. No weapon and no face."
+  },
+  "stone_fortress_keeper": {
+    "subject": "A broad keeper in granite-grey plate and a rusted-bronze gorget stands in a gateway with both hands braced under a raised iron-black portcullis bar, taking its entire weight. Pale quartz veins light along the doorposts under the strain and moss-green runs across the lower stones.",
+    "perspective": "Medium three-quarter from slightly below inside the gateway, the keeper large in frame from the thighs up with the whole head inside the image.",
+    "background": "Warm amber lantern light and a firelit rebuilt courtyard visible through the gate behind them.",
+    "notes": "Holding, never swinging - the read is one person taking a load so others can pass. Human scale. No sword, no shouting, no siege army in view."
+  },
+  "stone_granite_behemoth": {
+    "subject": "A hulking behemoth three times a person's height, its body whole slabs of granite-grey shot through with faintly lit pale quartz seams and bound at every joint by rusted-bronze bands, moss-green thick across its shoulders. It steps down through a rebuilt barricade and the timbers splinter under one foot.",
+    "perspective": "Wide low three-quarter from ground level so the behemoth towers, its whole head inside the frame, with one or two small warm-lit figures at its feet purely for scale.",
+    "background": "A warm ember-orange dusk sky and lantern-amber torches along the scaffolded wall behind it.",
+    "notes": "Genuinely large, but still one creature on one street rather than a landscape event. The quartz seams glow only faintly. No face detail, no roar, no swung weapon."
+  },
+  "clock_ticking_automaton": {
+    "subject": "A knee-high automaton on three stubby legs: a tarnished-copper barrel body with one exposed polished-brass escapement wheel ticking away at the front and a small arc-blue core glowing through its grille. A single dented oiled-steel arm is raised in a small, businesslike guard.",
+    "perspective": "Close low eye level three-quarter with the camera near the floor, the automaton centred and small enough that the floor reads around it.",
+    "background": "A deep cool slate-blue workshop floor in shadow with near-black corners.",
+    "notes": "Knee-high, cheap and visibly dented, earnest rather than menacing. The exposed escapement is the ticking. No weapon, no face, no glowing eyes."
+  },
+  "clock_clockwork_knight": {
+    "subject": "A human-height knight built as a clock: oiled-steel plate over an open polished-brass chest cavity where a mainspring and two counter-rotating gear trains are plainly visible turning, tarnished-copper joints, and an arc-blue core burning behind the ribs. It stands squared with a plain steel longsword point-down and both hands resting on the pommel.",
+    "perspective": "Medium three-quarter at eye level with the knight framed from mid-thigh up and the whole head inside the image.",
+    "background": "A deep cool slate-blue hall receding to near-black.",
+    "notes": "The open, visibly working chest is what makes it clockwork rather than a suit of armour - keep those gears legible at small size. Human scale. No cape, no heraldry, no face, no glowing eyes."
+  },
+  "clock_grand_artificer": {
+    "subject": "A tall construct artificer of polished brass and oiled steel whose torso is an open workshop frame of nested gear trains, six delicate tarnished-copper manipulator arms working at once around a parchment-amber blueprint clamped across its chest. Two small arc-blue gear wisps have just spun free of its hands and hover beside it.",
+    "perspective": "Medium three-quarter from slightly below, the artificer large in frame from the waist up with the whole head and both wisps inside the image.",
+    "background": "A deep cool slate-blue workshop falling off to near-black, letting the warm brass catch all the light.",
+    "notes": "Exactly two small wisps - they are its work, not a swarm. The artificer is ITSELF a construct, not a person in a coat. Sizable but not a giant, and no legible lettering on the blueprint."
   }
 }
