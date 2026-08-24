@@ -30,7 +30,12 @@ namespace Emberfall.Core.Tests.CardBehavior
             var db = new PoolDatabase(new[] { z, held, c, b, notCollectible, a, c });
             var (state, processor, source) = Ready(db, count: 5, seed: 1UL);
             var expectedRng = new DeterministicRandom(1UL);
+            // Sorted, because the canonical pool is NUMERIC order. It used to be the ordinal order
+            // of the handles, where "a","b","c","z" was already canonical and the sort was invisible
+            // -- the numeric card id moved it and left this list quietly modelling the old key.
+            // ActionHandlers.CanonicalEligiblePool carries the same note.
             var remaining = FixtureCard.Ids("a", "b", "c", "z");
+            remaining.Sort();
             var expected = new List<int>();
             while (remaining.Count > 0)
             {
@@ -45,7 +50,11 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(result.Accepted, Is.True, result.Reason?.ToString());
             Assert.That(state.PendingChoice, Is.Not.Null);
             Assert.That(state.PendingChoice!.Options, Is.EqualTo(expected));
-            Assert.That(state.PendingChoice.Options, Is.EqualTo(FixtureCard.Ids("b", "c", "a", "z")),
+            // The point of this line is that nothing SORTS the sample after rolling it. Spelling
+            // the winning order out by mnemonic restated `expected` and pinned a permutation that
+            // the id change alone could invalidate; asserting it is not ascending says the actual
+            // claim, and the fixed seed keeps it deterministic.
+            Assert.That(state.PendingChoice.Options, Is.Not.Ordered.Ascending,
                 "sample order is the RNG roll order, not a post-sample sort");
             Assert.That(state.PendingChoice.Options.Distinct().Count(),
                 Is.EqualTo(state.PendingChoice.Options.Count));

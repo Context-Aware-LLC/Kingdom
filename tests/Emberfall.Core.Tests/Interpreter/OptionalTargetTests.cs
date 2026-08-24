@@ -172,8 +172,13 @@ namespace Emberfall.Core.Tests.Interpreter
         [Test]
         public void Required_Target_Keeps_A_Minion_Unplayable_With_Nothing_To_Sacrifice()
         {
+            // cost: Required is what makes this a PRICE rather than an effect, and it is the whole
+            // subject of this pair. Under the fizzle ruling a minion is played and its effect
+            // fizzles; only a declared cost opts back out of that. The term used to be implied by
+            // the sentence -- the fork made it an authored axis, so it has to be written.
             var priest = Card(FixtureCard.Id("priest"), CardType.MINION, TestRules.Rule("r1", Trigger.ON_PLAY,
-                new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1)))));
+                new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1),
+                    cost: CostKind.Required))));
             var db = new FakeCardDatabase().Register(priest);
             var state = State();
             CardInstance inHand = Hand(state, 0, priest);
@@ -190,7 +195,8 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             var body = Card(FixtureCard.Id("body"), CardType.MINION);
             var priest = Card(FixtureCard.Id("priest"), CardType.MINION, TestRules.Rule("r1", Trigger.ON_PLAY,
-                new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1)))));
+                new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1),
+                    cost: CostKind.Required))));
             var db = new FakeCardDatabase().Register(body).Register(priest);
             var state = State();
             CardInstance fodder = Board(state, 0, body);

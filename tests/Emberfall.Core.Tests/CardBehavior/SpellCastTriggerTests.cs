@@ -29,9 +29,16 @@ namespace Emberfall.Core.Tests.CardBehavior
 
         // ── card scaffolding ──────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Every fixture here wants a SWEEP -- nothing in this file models the controller picking a
+        /// target, and none of these intents carry one. <c>Of(1)</c> means the controller picks, so
+        /// the two ANY_MINION bolts were refused as IllegalTarget before they could sweep anything;
+        /// on ENEMY_HERO it happened to be the same thing, since one is already that selector's
+        /// maximum. AllOf says the intended term for both.
+        /// </summary>
         private static RuleDefinition Damage(Trigger trigger, int amount, string selector)
             => TestRules.Rule("rule_1", trigger,
-                new DamageAction(amount, new TargetSpec(selector, TargetSelection.Of(1))));
+                new DamageAction(amount, new TargetSpec(selector, TargetSelection.AllOf(selector))));
 
         private static CardDefinition Minion(int id, int health, RuleDefinition[] rules)
             => new CardDefinition(

@@ -305,6 +305,9 @@ namespace Emberfall.Core.Contracts
     /// tail-append when a real mechanic lands (Unearth-only per the 2026-07-15 ruling, Q1).</summary>
     public enum PendingChoiceKind
     {
+        // RETIREMENT TRIGGER: adding a second member here ends this enum's carve-out in
+        // WireMutationSweepTests.Mutated_Field_Survives_The_Wire — see the identical note on
+        // EffectKind. Drop "PendingChoice.Kind" from that branch in the same commit.
         Unearth = 0,
     }
 

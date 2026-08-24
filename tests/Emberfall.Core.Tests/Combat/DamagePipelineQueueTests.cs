@@ -74,8 +74,16 @@ namespace Emberfall.Core.Tests.Combat
             return ci;
         }
 
-        private static RuleDefinition Damage(Trigger trigger, int amount, string? selector = null)
-            => TestRules.Rule("rule_1", trigger, TestRules.Damage(trigger, amount, TargetSelection.Of(1), selector));
+        /// <summary>
+        /// <paramref name="selection"/> defaults to <c>Of(1)</c>, which on the unique selectors used
+        /// here (ENEMY_HERO) is the same as naming every candidate -- nobody chooses. On a selector
+        /// that can yield more than one it is the CONTROLLER choosing, and a reaction trigger has no
+        /// controller to ask, so the effect resolves to nothing. Say AllOf for those.
+        /// </summary>
+        private static RuleDefinition Damage(Trigger trigger, int amount, string? selector = null,
+            TargetSelection? selection = null)
+            => TestRules.Rule("rule_1", trigger,
+                TestRules.Damage(trigger, amount, selection ?? TargetSelection.Of(1), selector));
 
         private static CardDefinition Minion(int id, int atk, int hp, IReadOnlyList<RuleDefinition>? rules = null,
             IReadOnlyList<Keyword>? keywords = null)
@@ -156,7 +164,8 @@ namespace Emberfall.Core.Tests.Combat
             var db = new FakeCardDatabase()
                 .Register(Spell(FixtureCard.Id("poke"), Damage(Trigger.ON_CAST, amount: 1)))
                 .Register(Minion(FixtureCard.Id("echo"), 1, 200,
-                    rules: new[] { Damage(Trigger.ON_DAMAGED, amount: 1, selector: "ANY_ENEMY_MINION") }));
+                    rules: new[] { Damage(Trigger.ON_DAMAGED, amount: 1, selector: "ANY_ENEMY_MINION",
+                        selection: TargetSelection.AllOf("ANY_ENEMY_MINION")) }));
             var s = MainPhase();
             var x = Board(s, 0, db.Get(FixtureCard.Id("echo")));
             var y = Board(s, 1, db.Get(FixtureCard.Id("echo")));

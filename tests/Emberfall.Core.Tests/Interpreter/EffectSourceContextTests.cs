@@ -204,10 +204,18 @@ namespace Emberfall.Core.Tests.Interpreter
             ValidationReport weaponReport = new CardValidator().Validate(weapon, db);
             ValidationReport minionReport = new CardValidator().Validate(invalidMinion, db);
 
+            // Both halves ask about C21 BY CODE rather than about the report as a whole. A synthetic
+            // fixture row cannot be Ok and never could: FixtureCard mints above 1_000_000 to stay
+            // clear of shipped ids, which puts it outside every per-type band C1B enforces, and it
+            // carries rules with no authored text, which is C26. Neither says anything about the
+            // trigger capability this test exists to pin, and asserting Ok made those two unrelated
+            // rules able to fail it -- which is exactly what they did.
             Assert.Multiple(() =>
             {
-                Assert.That(weaponReport.Ok, Is.True,
-                    "a capability enumerated at runtime must also be accepted by validation");
+                Assert.That(weaponReport.Issues.Any(i =>
+                    i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.False,
+                    "a capability enumerated at runtime must also be accepted by validation; got: " +
+                    string.Join(", ", weaponReport.Issues.Select(i => i.Code + " " + i.Message)));
                 Assert.That(minionReport.Issues.Any(i =>
                     i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.True,
                     "a capability rejected at runtime must also be rejected by validation");

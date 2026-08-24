@@ -202,7 +202,11 @@ namespace Emberfall.Core.Tests.Collection
                 {
                     string name = kw.ToString();
                     bool inName = c.Name.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
-                    bool inRules = CardTextGenerator.Generate(c, CardTextGenerator.NoPool.Instance).IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
+                    // c.Text -- the AUTHORED field -- because that is the one the haystack searches.
+                    // This used to render the rules through CardTextGenerator against NoPool, which
+                    // measured a string the search never reads and threw outright on the first live
+                    // card whose rule NAMES another card: NoPool refuses to resolve one, on purpose.
+                    bool inRules = c.Text.IndexOf(name, StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!inName && !inRules) { found = c; chosen = kw; break; }
                 }
             Assume.That(found, Is.Not.Null, "every keyworded card also spells the keyword in its name/rules.");
@@ -241,11 +245,18 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(CardQuery.Search(pool, new CardFilter { Text = "cinder" }).Count, Is.EqualTo(1),
                 "the name IS searched, so the same card is reachable by a name token.");
             Assert.That(CardQuery.Search(pool, new CardFilter { Text = "damage" }).Count, Is.EqualTo(1),
-                "the rules ARE searched.");
+                "the authored rules text IS searched.");
         }
 
         /// <summary>A minimal spell for the synthetic exclusion test — only the searched fields vary.</summary>
-        private static CardDefinition Card(int id, string name, string flavorText)
+        /// <summary>
+        /// Authors <c>text</c> as well as the rule. The haystack searches the AUTHORED text field,
+        /// not text generated from the rules, so a card carrying a DamageAction and an empty `text`
+        /// is unreachable by "damage" -- and is also a card that cannot ship, since C26-TEXT-MISSING
+        /// rejects rules with no authored text. Leaving it blank modelled a state the corpus forbids.
+        /// </summary>
+        private static CardDefinition Card(int id, string name, string flavorText,
+            string text = "Deal 2 damage to the enemy hero.")
             => new CardDefinition(id, FixtureCard.Handle(id), name, CardType.SPELL, cost: 1, attack: null, health: null, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 keywords: Array.Empty<Keyword>(), rules: new[]
@@ -255,7 +266,7 @@ namespace Emberfall.Core.Tests.Collection
                         new DamageAction(2, new TargetSpec("ENEMY_HERO", TargetSelection.Of(1))))
                 },
                 flavorText: flavorText, artId: "", setId: SetId.CORE,
-                collectible: true, tribe: null, factionId: "");
+                collectible: true, tribe: null, factionId: "", tooltip: "", text: text);
 
         // ── sort ──────────────────────────────────────────────────────────────────
 

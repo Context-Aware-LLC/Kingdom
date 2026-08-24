@@ -25,8 +25,14 @@ namespace Emberfall.Core.Tests.Projection
         {
             var p0 = new PlayerId("P0");
             var p1 = new PlayerId("P1");
-            var hero0 = new HeroInstance(new InstanceId(1), p0, CardClass.EMBERWARD, 30) { HeroPowerId = 1 };  // hp_bolt
-            var hero1 = new HeroInstance(new InstanceId(2), p1, CardClass.TIDECALLER, 30) { HeroPowerId = 1 };  // hp_bolt
+            // The id is MINTED, never written. This was the literal 1 with a `// hp_bolt` comment
+            // beside it -- a leftover of the string-handle era, where `HeroPowerId = "hp_bolt"`
+            // actually named the fixture. 1 matches nothing, and FakeCardDatabase fabricates a
+            // rule-less MINION row for an id it was not handed, so the hero power fired and did
+            // nothing rather than failing. The comment was the only thing still claiming it worked.
+            int hpBolt = FixtureCard.Id("hp_bolt");
+            var hero0 = new HeroInstance(new InstanceId(1), p0, CardClass.EMBERWARD, 30) { HeroPowerId = hpBolt };
+            var hero1 = new HeroInstance(new InstanceId(2), p1, CardClass.TIDECALLER, 30) { HeroPowerId = hpBolt };
             var s = new GameState(new MatchId("M"), new DeterministicRandom(42UL),
                 new PlayerState(p0, hero0), new PlayerState(p1, hero1))
             {

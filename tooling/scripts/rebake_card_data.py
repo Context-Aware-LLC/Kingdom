@@ -157,11 +157,12 @@ def step_gates(write, skip):
     print("\n-- 2b  audit_card_art_names.py --fail-missing-only --")
     code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
     if code != 0:
-        if repair_art_names(write):
-            print("\n-- re-running 2b after the rename --")
-            code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
-        if code != 0:
-            failed.append("art-names")
+        # The auto-rename that used to run here went with df309c46, which deleted
+        # repair_art_names/art_name_repairs and left this call standing -- so every 2b failure
+        # died with a NameError instead of reporting the failure it had just found. The audit
+        # above still names every unresolvable artId; renaming is manual now, and the .meta moves
+        # with the .png in the same breath (see the art rules in CLAUDE.md).
+        failed.append("art-names")
 
     if failed:
         print(f"\nGATES FAILED: {', '.join(failed)}")
