@@ -19,6 +19,7 @@ namespace Emberfall.Editor
         private const string ScenePath = "Assets/Scenes/BoardNetworked.unity";
         private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
         private const string RosterScenePath = "Assets/Scenes/CharacterRoster.unity";
+        private const string CreateScenePath = "Assets/Scenes/CharacterCreate.unity";
         // Collection IS the deckbuilder (#154). There is no separate deckbuilder scene to list.
         private const string CollectionScenePath = "Assets/Scenes/Collection.unity";
         // The store left MainMenu for a scene of its own on 2026-08-20. Listing it here is what
@@ -232,7 +233,7 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Build/Sync Scene List (fixes Editor scene nav)")]
         public static void SyncSceneList()
         {
-            string[] paths = { MenuScenePath, ScenePath, RosterScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath };
+            string[] paths = { MenuScenePath, ScenePath, RosterScenePath, CreateScenePath, CollectionScenePath, ShopScenePath, PackRevealScenePath };
             var entries = new EditorBuildSettingsScene[paths.Length];
             for (int i = 0; i < paths.Length; i++)
                 entries[i] = new EditorBuildSettingsScene(paths[i], enabled: true);

@@ -1,0 +1,79 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="../Common/theme.uss" />
+    <Style src="../CharacterRoster/character-roster.uss" />
+    <!--
+      Character creation, as a SCENE (Sam, 2026-08-23). It was three views inside a
+      `.delete-modal` overlay in CharacterRosterScreen.uxml until then. Same call the Store
+      got on 2026-08-20 and for the same reason: it is full-screen, opaque and a destination,
+      so the overlay was hosting rather than design.
+
+      WHAT THE MOVE ACTUALLY BUYS is vertical room, and that is not cosmetic. As a modal the
+      flow sat inside THREE nested paddings on a 411dp landscape panel — .emb-bleed's 52dp
+      hardware clearance per edge on the modal, plus .delete-dialog's 24dp design gutter per
+      edge, plus the screen's own. ~152dp of 411 was gone before the title drew, which is what
+      pushed the pass title under the status bar, Cancel under the gesture bar, and drove
+      LayoutHeroGrid's column solve to find no fitting shape at all. Here the root IS the
+      panel: one .emb-bleed for the hardware clearance and nothing nested inside it.
+
+      The three views are siblings, shown one at a time by CharacterCreateController. They keep
+      their element names so the controller's queries and every USS rule in character-roster.uss
+      (hero-grid, hero-tile, hero-detail-*, hero-power-*, delete-title, delete-actions,
+      roster-button, create-*) apply unchanged. Restyling them here would be a second source of
+      truth for the same widgets.
+    -->
+    <ui:VisualElement name="root" class="emb-root character-create-screen emb-bleed">
+
+        <!-- GRID: one portrait per real class. Pass-specific title/help above it. -->
+        <ui:VisualElement name="create-grid-view">
+            <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
+            <ui:Label name="create-pass-help" text="" class="create-help" />
+            <ui:VisualElement name="create-hero-grid" class="hero-grid" />
+            <ui:VisualElement class="delete-actions">
+                <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost emb-back" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- DETAIL: a single hero's traits + hero power. The copy blocks are RESERVED BUT
+             EMPTY (NOR-278): FlavorText and hero-power descriptions are unpopulated schema
+             fields, and authoring that copy is out of scope. The layout space is held. -->
+        <ui:VisualElement name="create-detail-view">
+            <ui:VisualElement class="hero-detail-head">
+                <ui:VisualElement name="create-detail-portrait" class="hero-detail-portrait" />
+                <ui:VisualElement class="hero-detail-headings">
+                    <ui:Label name="create-detail-name" text="" class="delete-title" />
+                    <ui:Label name="create-detail-pass" text="" class="hero-detail-pass" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="create-detail-bullets" class="hero-detail-bullets" />
+            <!-- The hero power block is filled from the class's HERO_POWER card (NOR-291):
+                 the name is the card's own, the description is generated from its typed
+                 rules, so it is the same text the power shows in a match and cannot drift
+                 from what the power actually does. The caption is static. -->
+            <ui:VisualElement name="create-power-block" class="hero-power-block">
+                <ui:Label text="Hero Power" class="hero-power-caption" />
+                <ui:Label name="create-power-name" text="" class="hero-power-name" />
+                <ui:Label name="create-power-desc" text="" class="hero-power-desc" />
+            </ui:VisualElement>
+            <ui:VisualElement class="delete-actions">
+                <ui:Button name="create-detail-back" text="Back" class="roster-button roster-button--ghost emb-back" />
+                <ui:Button name="create-detail-select" text="Select" class="roster-button roster-button--cta" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- CONFIRM: reached automatically once both classes are picked. Carries the ONE
+             text field in the whole flow — the character's name — validated by
+             PlayerName.Check, the same predicate the server's MatchGate enforces on the
+             wire (VULN-002). "Change something" drops the secondary pick only. -->
+        <ui:VisualElement name="create-confirm-view">
+            <ui:Label text="Ready to build" class="delete-title" />
+            <ui:Label name="create-confirm-summary" text="" class="create-help" />
+            <ui:TextField name="create-name-field" label="Name" max-length="16" class="roster-field" />
+            <ui:Label name="create-name-error" text="" class="create-error" />
+            <ui:VisualElement class="delete-actions">
+                <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
+                <ui:Button name="create-continue" text="Create Character" class="roster-button roster-button--cta" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
