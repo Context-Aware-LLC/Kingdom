@@ -63,7 +63,7 @@
 .col-query-toolbar {
     flex-direction: row;
     align-items: center;
-    min-height: 56px;
+    min-width: 150px;
     flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0.45);
     border-radius: 0 0 var(--space-2) var(--space-2);
@@ -436,7 +436,7 @@
     flex-shrink: 0;
 }
 .class-tab_art {
-    width: 70px;
+    width: 130px;
     flex-grow: 1;
     flex-basis: 0;
     border-radius: 28px 0 0 28px;
