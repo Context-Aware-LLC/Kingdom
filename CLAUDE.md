@@ -83,9 +83,17 @@ and the client and server disagree about a state neither can prove wrong.
 
 **Do not go looking for a rebaseline guard, a pinned digest or a golden fixture to satisfy. They do
 not exist.** `a9eaa0e3` (2026-08-18) archived the .NET test suites out of the repo and the fixtures
-went with them; `Emberfall.slnx` carries no test project, and `ci.yml` says in a comment not to
-re-add `dotnet test` until they return. Stage 4's `DeterminismGate` survives and bans
-non-deterministic APIs — floats, `System.Random`, local time — but it pins no digest.
+went with them, and `ci.yml` says in a comment not to re-add `dotnet test` until they return.
+Stage 4's `DeterminismGate` survives and bans non-deterministic APIs — floats, `System.Random`,
+local time — but it pins no digest.
+
+**`tests/Emberfall.Core.Tests` and its `Emberfall.slnx` entry came BACK with `7c7596da` (the
+effect-model fork), and the project DOES NOT COMPILE** — measured 2026-08-23,
+`dotnet build tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj` = **98 `error CS`**, all of
+them the numeric card id: `ICardDatabase` keys on `int` now, `CardDefinition` gained `handle`, and
+every fixture still speaks `string`. So the conclusion above is unchanged and the reason for it is
+not — there is still no gate to turn green, but it is now debt rather than a deliberate absence.
+Nothing runs it: `ci.yml` does not, and a green CI says nothing about it.
 
 **That absence is deliberate and it is Sam's ruling** (2026-08-23): with one developer and no live
 players, a golden fixture guards against a desync that cannot happen, and re-pinning one is a cost
@@ -93,8 +101,10 @@ with no payer. Fixtures get calculated closer to release. Until then a state-sha
 review and a build, and **the reviewer is the only guard** — so read the three sites, do not go
 hunting for a gate to turn green.
 
-**RETIREMENT TRIGGER:** the first golden fixture recalculated for release, or the first test project
-added back to `Emberfall.slnx`, ends this section.
+**RETIREMENT TRIGGER:** the first golden fixture recalculated for release, or the first `dotnet test`
+run that COMPILES, ends this section. ("A test project added back to `Emberfall.slnx`" was the old
+trigger; it fired in `7c7596da` and nothing discharged it, which is how the paragraph above spent
+five days claiming the file was not there.)
 
 ## Player-facing input consults the vulnerability index
 

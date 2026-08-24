@@ -364,12 +364,16 @@ namespace Emberfall.Core.Cards
         /// capitalised mid-sentence the way card games print a keyword — "Deal 2 damage to a minion
         /// and Freeze it." That is also what keeps CardTextStyling's case-sensitive match working on
         /// a keyword that is no longer at the front of a sentence.</para>
+        ///
+        /// <para><b>A standalone keyword clause opens the sentence</b> (Sam, 2026-08-23), whatever
+        /// order the rules are authored in — see <see cref="VocabularyFirst"/>.</para>
         /// </remarks>
         private static string JoinActions(IReadOnlyList<RuleAction> group, ICardDatabase pool)
         {
             if (group.Count == 0) throw Requires("at least one action to join");
 
-            IReadOnlyList<(string Text, TargetSpec? Target)> actions = RenderClauses(group, pool);
+            IReadOnlyList<(string Text, TargetSpec? Target)> actions =
+                RenderClauses(VocabularyFirst(group, pool), pool);
             if (actions.Count == 1) return actions[0].Text;
 
             var clauses = new List<string>(actions.Count);
@@ -398,6 +402,59 @@ namespace Emberfall.Core.Cards
                 sentence.Append(i == 0 ? clauses[i] : Decapitalize(clauses[i]));
             }
             return sentence.Append('.').ToString();
+        }
+
+        /// <summary>
+        /// Moves a run's standalone keyword clauses to the front of it — "Backdraft 1 and deal 3
+        /// damage to a minion", never "Deal 3 damage to a minion and Backdraft 1".
+        ///
+        /// <para><b>The highlighted word leads (Sam, 2026-08-23.)</b> The engine used to slave the
+        /// sentence to the order the rules happened to be authored in, so putting the keyword first
+        /// on the face meant re-authoring the rules to match — which is the tail wagging the dog,
+        /// since a next-turn crystal lock and an immediate damage roll do not interact and nothing
+        /// about the card decided that order in the first place. The canonical rendering decides it
+        /// now, and the rule list is free to say whatever the resolver needs.</para>
+        ///
+        /// <para><b>Only a clause that names no target moves</b>, which today is Backdraft and
+        /// Unearth. A keyword that takes one — Freeze, Silence — is part of the target grammar:
+        /// <see cref="DropSharedOpening"/> elides a repeated noun phrase by shared opening words, so
+        /// hoisting "Freeze a minion" out of "Deal 2 damage to a minion and Freeze it" would print
+        /// the minion twice to buy the capital letter. Reordering is stable and this returns
+        /// <paramref name="group"/> untouched when there is nothing to hoist, so a run that is
+        /// already keyword-first — or has no keyword clause at all — renders exactly as before.</para>
+        /// </summary>
+        private static IReadOnlyList<RuleAction> VocabularyFirst(IReadOnlyList<RuleAction> group,
+            ICardDatabase pool)
+        {
+            if (group.Count < 2) return group;
+
+            var led = new List<RuleAction>(group.Count);
+            var rest = new List<RuleAction>(group.Count);
+            foreach (RuleAction action in group)
+            {
+                // Rendered rather than type-tested: EmphasisVocabulary is derived from the enums, so
+                // a keyword or a label added there leads a sentence without anyone editing a list
+                // here. A shape this renderer cannot print throws in the same place it would have
+                // thrown below, which Check reports as Unrenderable against the row.
+                if (!(action is TargetedRuleAction) && OpensWithVocabulary(RenderAction(action, pool)))
+                    led.Add(action);
+                else
+                    rest.Add(action);
+            }
+
+            if (led.Count == 0 || rest.Count == 0) return group;
+            led.AddRange(rest);
+            return led;
+        }
+
+        /// <summary>Whether a clause's opening word is one the game capitalises.</summary>
+        private static bool OpensWithVocabulary(string clause)
+        {
+            int end = clause.IndexOf(' ');
+            string first = Undot(end < 0 ? clause : clause.Substring(0, end));
+            foreach (string word in EmphasisVocabulary())
+                if (string.Equals(word, first, StringComparison.Ordinal)) return true;
+            return false;
         }
 
         /// <summary>
@@ -570,13 +627,9 @@ namespace Emberfall.Core.Cards
 
         /// <summary>Lowercases a clause's opening word unless it is a word the game capitalises.</summary>
         private static string Decapitalize(string clause)
-        {
-            int end = clause.IndexOf(' ');
-            string first = end < 0 ? clause : clause.Substring(0, end);
-            foreach (string word in EmphasisVocabulary())
-                if (string.Equals(word, first, StringComparison.Ordinal)) return clause;
-            return char.ToLowerInvariant(clause[0]) + clause.Substring(1);
-        }
+            => OpensWithVocabulary(clause)
+                ? clause
+                : char.ToLowerInvariant(clause[0]) + clause.Substring(1);
 
         /// <summary>The label an aura's rules are printed under.</summary>
         public const string AuraLabel = "Aura";
