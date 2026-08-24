@@ -90,15 +90,6 @@
       },
       "url": "https://packages.unity.com"
     },
-    "com.unity.addressables.android": {
-      "version": "file:com.unity.addressables.android",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {
-        "com.unity.modules.androidjni": "1.0.0",
-        "com.unity.addressables": "2.3.16"
-      }
-    },
     "com.unity.ai.inference": {
       "version": "2.6.1",
       "depth": 0,

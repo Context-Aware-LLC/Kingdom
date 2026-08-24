@@ -341,8 +341,11 @@ namespace Emberfall.Core.Tests.Targeting
                     // "this board has none of what it asked for".
                     player.Board.Add(new CardInstance(new InstanceId(id), FixtureCard.Id($"dummy_{Tribes[i % Tribes.Length]}_{id:00}"), player.Id)
                     {
-                        Zone = Zone.Board, Position = i,
-                        CurrentAttack = 2, MaxHealth = 4, CurrentHealth = i == 0 ? 2 : 4,
+                        Zone = Zone.Board,
+                        Position = i,
+                        CurrentAttack = 2,
+                        MaxHealth = 4,
+                        CurrentHealth = i == 0 ? 2 : 4,
                     });
                 }
                 int wid = next++;

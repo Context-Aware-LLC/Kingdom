@@ -3,7 +3,7 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 259,
+  "totalCards": 284,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,22 +22,22 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 259,
+    "total": 284,
     "typeSplit": {
-      "MINION": 176,
-      "SPELL": 71,
-      "WEAPON": 12,
+      "MINION": 190,
+      "SPELL": 80,
+      "WEAPON": 14,
       "HERO_POWER": 0
     },
     "keywordFrequency": {
-      "BULWARK": 45,
-      "SKIRMISH": 13,
-      "SHROUD": 11,
+      "BULWARK": 47,
+      "SKIRMISH": 15,
+      "SHROUD": 14,
+      "DOUBLESTRIKE": 10,
+      "VENOM": 10,
       "AEGIS": 9,
-      "VENOM": 9,
-      "OVERWHELM": 8,
+      "OVERWHELM": 9,
       "REKINDLE": 8,
-      "DOUBLESTRIKE": 7,
       "LIFEDRAIN": 6,
       "VANGUARD": 6,
       "ARCANE_SURGE": 4,
@@ -45,63 +45,63 @@
       "FROST": 1
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 61,
-      "ANY_MINION": 27,
-      "ANY_ENEMY": 20,
-      "ANY_ENEMY_MINION": 20,
-      "FRIENDLY_HERO": 20,
-      "ENEMY_HERO": 7,
+      "ANY_FRIENDLY_MINION": 66,
+      "ANY_MINION": 28,
+      "ANY_ENEMY_MINION": 24,
+      "ANY_ENEMY": 22,
+      "FRIENDLY_HERO": 22,
+      "ENEMY_HERO": 9,
       "ANY_FRIENDLY": 5,
       "ANY_CHARACTER": 3,
       "SELF": 2
     },
     "costDistribution": {
       "0": 7,
-      "1": 30,
-      "2": 53,
-      "3": 64,
-      "4": 47,
-      "5": 19,
-      "6": 20,
+      "1": 35,
+      "2": 58,
+      "3": 70,
+      "4": 51,
+      "5": 23,
+      "6": 21,
       "7": 14,
       "8": 4,
       "9": 1
     },
     "rarityBreakdown": {
-      "COMMON": 114,
-      "RARE": 87,
-      "EPIC": 40,
+      "COMMON": 126,
+      "RARE": 96,
+      "EPIC": 44,
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
-      "CONSTRUCT": 38,
+      "CONSTRUCT": 42,
       "BEAST": 24,
       "UNDEAD": 21,
-      "ELEMENTAL": 15,
-      "SPIRIT": 11,
+      "ELEMENTAL": 19,
+      "SPIRIT": 13,
       "HUMAN": 6,
       "DRAGON": 5
     },
-    "minionCount": 176,
+    "minionCount": 190,
     "attackDistribution": {
       "0": 5,
-      "1": 33,
-      "2": 47,
-      "3": 39,
-      "4": 17,
+      "1": 36,
+      "2": 50,
+      "3": 42,
+      "4": 21,
       "5": 17,
       "6": 14,
-      "7": 3,
+      "7": 4,
       "10": 1
     },
     "healthDistribution": {
-      "1": 22,
-      "2": 32,
-      "3": 29,
-      "4": 34,
-      "5": 27,
-      "6": 15,
-      "7": 8,
+      "1": 24,
+      "2": 34,
+      "3": 31,
+      "4": 37,
+      "5": 29,
+      "6": 17,
+      "7": 9,
       "8": 6,
       "10": 2,
       "12": 1
@@ -109,62 +109,62 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 25,
+      "total": 30,
       "typeSplit": {
-        "MINION": 17,
-        "SPELL": 7,
+        "MINION": 20,
+        "SPELL": 9,
         "WEAPON": 1,
         "HERO_POWER": 0
       },
       "keywordFrequency": {
         "BULWARK": 3,
+        "SKIRMISH": 2,
         "AEGIS": 1,
         "OVERWHELM": 1,
-        "SKIRMISH": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 8,
+        "ANY_FRIENDLY_MINION": 9,
         "ANY_MINION": 3,
         "ANY_CHARACTER": 1,
         "SELF": 1
       },
       "costDistribution": {
         "0": 1,
-        "1": 3,
+        "1": 4,
         "2": 3,
-        "3": 8,
-        "4": 5,
-        "5": 1,
+        "3": 9,
+        "4": 7,
+        "5": 2,
         "6": 1,
         "7": 1,
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 10,
-        "RARE": 9,
-        "EPIC": 4,
+        "COMMON": 12,
+        "RARE": 11,
+        "EPIC": 5,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 15
+        "CONSTRUCT": 18
       },
-      "minionCount": 17,
+      "minionCount": 20,
       "attackDistribution": {
-        "1": 5,
+        "1": 6,
         "2": 3,
         "3": 4,
-        "4": 1,
+        "4": 3,
         "5": 1,
         "6": 3
       },
       "healthDistribution": {
         "1": 2,
         "2": 3,
-        "3": 4,
-        "4": 4,
+        "3": 5,
+        "4": 5,
         "5": 1,
-        "6": 1,
+        "6": 2,
         "7": 1,
         "8": 1
       }
@@ -362,178 +362,181 @@
       }
     },
     "NIGHTVEIL": {
-      "total": 23,
+      "total": 30,
       "typeSplit": {
-        "MINION": 14,
-        "SPELL": 8,
-        "WEAPON": 1,
+        "MINION": 18,
+        "SPELL": 10,
+        "WEAPON": 2,
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "SHROUD": 9,
-        "VENOM": 4,
+        "SHROUD": 12,
+        "VENOM": 5,
         "BULWARK": 2,
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 8,
+        "ANY_FRIENDLY_MINION": 10,
+        "ANY_ENEMY_MINION": 5,
         "ANY_MINION": 5,
         "ANY_ENEMY": 2,
-        "ANY_ENEMY_MINION": 2,
-        "ENEMY_HERO": 1,
+        "ENEMY_HERO": 2,
         "FRIENDLY_HERO": 1
       },
       "costDistribution": {
-        "1": 2,
-        "2": 4,
-        "3": 7,
-        "4": 5,
-        "5": 2,
+        "1": 3,
+        "2": 6,
+        "3": 9,
+        "4": 6,
+        "5": 3,
         "6": 3
       },
       "rarityBreakdown": {
-        "COMMON": 10,
-        "RARE": 8,
-        "EPIC": 3,
+        "COMMON": 13,
+        "RARE": 11,
+        "EPIC": 4,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
+        "SPIRIT": 5,
         "BEAST": 4,
-        "SPIRIT": 3,
         "CONSTRUCT": 1
       },
-      "minionCount": 14,
+      "minionCount": 18,
       "attackDistribution": {
-        "1": 1,
-        "2": 4,
-        "3": 4,
-        "4": 3,
+        "1": 2,
+        "2": 5,
+        "3": 5,
+        "4": 4,
         "5": 2
       },
       "healthDistribution": {
-        "1": 3,
+        "1": 4,
         "2": 2,
-        "3": 3,
-        "4": 3,
-        "5": 3
+        "3": 4,
+        "4": 4,
+        "5": 4
       }
     },
     "STONEWARDEN": {
-      "total": 25,
+      "total": 30,
       "typeSplit": {
-        "MINION": 16,
-        "SPELL": 8,
+        "MINION": 19,
+        "SPELL": 10,
         "WEAPON": 1,
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "BULWARK": 11,
-        "OVERWHELM": 2,
+        "BULWARK": 13,
+        "OVERWHELM": 3,
         "AEGIS": 1,
         "REKINDLE": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 13,
+        "ANY_FRIENDLY_MINION": 15,
+        "FRIENDLY_HERO": 4,
         "ANY_ENEMY_MINION": 3,
-        "FRIENDLY_HERO": 2
+        "ANY_MINION": 1
       },
       "costDistribution": {
         "0": 1,
-        "1": 3,
-        "2": 4,
-        "3": 6,
-        "4": 4,
+        "1": 4,
+        "2": 5,
+        "3": 7,
+        "4": 5,
         "5": 1,
-        "6": 3,
+        "6": 4,
         "7": 1,
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 10,
-        "RARE": 9,
-        "EPIC": 4,
+        "COMMON": 13,
+        "RARE": 10,
+        "EPIC": 5,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 11
+        "CONSTRUCT": 12
       },
-      "minionCount": 16,
+      "minionCount": 19,
       "attackDistribution": {
         "0": 3,
-        "1": 2,
+        "1": 3,
         "2": 4,
-        "3": 3,
+        "3": 4,
         "4": 1,
         "5": 2,
-        "6": 1
+        "6": 1,
+        "7": 1
       },
       "healthDistribution": {
         "2": 1,
         "3": 2,
-        "4": 3,
+        "4": 4,
         "5": 1,
-        "6": 2,
-        "7": 2,
+        "6": 3,
+        "7": 3,
         "8": 3,
         "10": 1,
         "12": 1
       }
     },
     "TEMPEST": {
-      "total": 22,
+      "total": 30,
       "typeSplit": {
-        "MINION": 11,
-        "SPELL": 10,
-        "WEAPON": 1,
+        "MINION": 15,
+        "SPELL": 13,
+        "WEAPON": 2,
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "DOUBLESTRIKE": 5,
-        "SKIRMISH": 3,
+        "DOUBLESTRIKE": 8,
+        "SKIRMISH": 4,
         "ARCANE_SURGE": 1,
         "BULWARK": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY": 10,
-        "ANY_ENEMY_MINION": 3,
+        "ANY_ENEMY": 12,
+        "ANY_ENEMY_MINION": 4,
         "ANY_FRIENDLY_MINION": 2,
         "ANY_MINION": 2,
-        "ENEMY_HERO": 1
+        "ENEMY_HERO": 2
       },
       "costDistribution": {
-        "1": 4,
-        "2": 7,
-        "3": 4,
+        "1": 6,
+        "2": 9,
+        "3": 6,
         "4": 3,
-        "5": 1,
+        "5": 3,
         "6": 1,
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 9,
-        "RARE": 8,
-        "EPIC": 3,
+        "COMMON": 13,
+        "RARE": 11,
+        "EPIC": 4,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "ELEMENTAL": 6,
+        "ELEMENTAL": 10,
         "HUMAN": 2,
         "BEAST": 1
       },
-      "minionCount": 11,
+      "minionCount": 15,
       "attackDistribution": {
         "1": 2,
-        "2": 3,
-        "3": 4,
+        "2": 5,
+        "3": 5,
+        "4": 1,
         "6": 2
       },
       "healthDistribution": {
-        "1": 2,
-        "2": 3,
+        "1": 3,
+        "2": 5,
         "3": 1,
         "4": 1,
-        "5": 3,
+        "5": 4,
         "6": 1
       }
     },
@@ -5883,6 +5886,509 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_vael_the_stormbringer",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1177,
+      "name": "Crackling Sprite",
+      "type": "MINION",
+      "cost": 1,
+      "attack": 2,
+      "health": 1,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "COMMON",
+      "keywords": [
+        "DOUBLESTRIKE"
+      ],
+      "selectors": [],
+      "tribe": "ELEMENTAL",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_crackling_sprite",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1178,
+      "name": "Stormbound Imp",
+      "type": "MINION",
+      "cost": 2,
+      "attack": 2,
+      "health": 2,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "COMMON",
+      "keywords": [
+        "SKIRMISH"
+      ],
+      "selectors": [
+        "ANY_ENEMY"
+      ],
+      "tribe": "ELEMENTAL",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_stormbound_imp",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1179,
+      "name": "Bolt Rider",
+      "type": "MINION",
+      "cost": 3,
+      "attack": 3,
+      "health": 2,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "RARE",
+      "keywords": [
+        "DOUBLESTRIKE"
+      ],
+      "selectors": [],
+      "tribe": "ELEMENTAL",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_bolt_rider",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1180,
+      "name": "Gale Herald",
+      "type": "MINION",
+      "cost": 5,
+      "attack": 4,
+      "health": 5,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "RARE",
+      "keywords": [
+        "DOUBLESTRIKE"
+      ],
+      "selectors": [
+        "ENEMY_HERO"
+      ],
+      "tribe": "ELEMENTAL",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_gale_herald",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 223,
+      "name": "Overcharge",
+      "type": "SPELL",
+      "cost": 1,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_overcharge",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 224,
+      "name": "Arc Flash",
+      "type": "SPELL",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_arc_flash",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 225,
+      "name": "Tempest's Fury",
+      "type": "SPELL",
+      "cost": 5,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_tempest_fury",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 63,
+      "name": "Tempest Maul",
+      "type": "WEAPON",
+      "cost": 3,
+      "attack": 3,
+      "health": null,
+      "durability": 2,
+      "class": "TEMPEST",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "storm_tempest_maul",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1181,
+      "name": "Dusk Imp",
+      "type": "MINION",
+      "cost": 1,
+      "attack": 1,
+      "health": 1,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "COMMON",
+      "keywords": [
+        "SHROUD"
+      ],
+      "selectors": [],
+      "tribe": "SPIRIT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_dusk_imp",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1182,
+      "name": "Poison Wisp",
+      "type": "MINION",
+      "cost": 3,
+      "attack": 2,
+      "health": 3,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "COMMON",
+      "keywords": [
+        "VENOM"
+      ],
+      "selectors": [],
+      "tribe": "SPIRIT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_poison_wisp",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1183,
+      "name": "Shadow Recon",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 3,
+      "health": 4,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "RARE",
+      "keywords": [
+        "SHROUD"
+      ],
+      "selectors": [
+        "ANY_ENEMY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_shadow_recon",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1184,
+      "name": "Nightfall Rogue",
+      "type": "MINION",
+      "cost": 5,
+      "attack": 4,
+      "health": 5,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "EPIC",
+      "keywords": [
+        "SHROUD"
+      ],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_nightfall_rogue",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 226,
+      "name": "Shadow Slip",
+      "type": "SPELL",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_shadow_slip",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 227,
+      "name": "Venom Lash",
+      "type": "SPELL",
+      "cost": 3,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY_MINION",
+        "ENEMY_HERO"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_venom_lash",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 64,
+      "name": "Toxin Blade",
+      "type": "WEAPON",
+      "cost": 2,
+      "attack": 2,
+      "health": null,
+      "durability": 2,
+      "class": "NIGHTVEIL",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION",
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_toxin_blade",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1185,
+      "name": "Ironclad Grunt",
+      "type": "MINION",
+      "cost": 2,
+      "attack": 1,
+      "health": 4,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "COMMON",
+      "keywords": [
+        "BULWARK"
+      ],
+      "selectors": [],
+      "tribe": "CONSTRUCT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_ironclad_grunt",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1186,
+      "name": "Fortress Keeper",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 3,
+      "health": 6,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "RARE",
+      "keywords": [
+        "BULWARK"
+      ],
+      "selectors": [
+        "FRIENDLY_HERO"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_fortress_keeper",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1187,
+      "name": "Granite Behemoth",
+      "type": "MINION",
+      "cost": 6,
+      "attack": 7,
+      "health": 7,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "EPIC",
+      "keywords": [
+        "OVERWHELM"
+      ],
+      "selectors": [
+        "FRIENDLY_HERO"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_granite_behemoth",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 228,
+      "name": "Rubble Toss",
+      "type": "SPELL",
+      "cost": 1,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_rubble_toss",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 229,
+      "name": "Warden's Vow",
+      "type": "SPELL",
+      "cost": 3,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION",
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_wardens_vow",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1188,
+      "name": "Ticking Automaton",
+      "type": "MINION",
+      "cost": 1,
+      "attack": 1,
+      "health": 3,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "COMMON",
+      "keywords": [
+        "SKIRMISH"
+      ],
+      "selectors": [],
+      "tribe": "CONSTRUCT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_ticking_automaton",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1189,
+      "name": "Clockwork Knight",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 4,
+      "health": 4,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [],
+      "tribe": "CONSTRUCT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_clockwork_knight",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1190,
+      "name": "Grand Artificer",
+      "type": "MINION",
+      "cost": 5,
+      "attack": 4,
+      "health": 6,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [],
+      "tribe": "CONSTRUCT",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_grand_artificer",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 230,
+      "name": "Gear Cache",
+      "type": "SPELL",
+      "cost": 3,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_gear_cache",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 231,
+      "name": "Refraction Module",
+      "type": "SPELL",
+      "cost": 4,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_refraction_module",
       "sourceFile": "Rekindling.cards.json"
     }
   ]

@@ -472,7 +472,11 @@
     background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     color: var(--ink-2);
-    font-size: 24px;
+    font-size: var(--type-caption);              /* 14dp. Below the 16dp .mm-modal__button so the
+                                                  * recovery reads as subordinate to the CTA. Was a
+                                                  * bare 24px from the old reference-resolution
+                                                  * scale, which made it the LARGEST text in the
+                                                  * step. */
     align-self: flex-end;
     padding: var(--space-4) 0 0 0;
     margin-top: var(--space-2);
@@ -483,9 +487,11 @@
 .mm-signin__resend:disabled {
     color: var(--surface-3);
 }
+/* A separator label between two buttons, so it sits ON the button's own size (--type-label) and
+ * separates by colour and weight instead — --ink-2 and unbold against the CTA's --ink-1 bold. */
 .mm-signin__or {
     color: var(--ink-2);
-    font-size: 20px;
+    font-size: var(--type-label);
     align-self: center;
     padding: var(--space-4) 0 var(--space-2) 0;
 }
