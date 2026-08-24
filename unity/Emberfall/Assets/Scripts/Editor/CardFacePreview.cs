@@ -61,12 +61,12 @@ namespace Emberfall.Editor
         /// rather than skipped: a typo'd id and a row that failed to merge look identical
         /// otherwise, and the second one is the failure this is meant to catch.
         /// </summary>
-        public static void RenderIds(IEnumerable<string> cardIds, string stem)
+        public static void RenderIds(IEnumerable<int> cardIds, string stem)
         {
             ICardDatabase db = CardDatabaseLoader.Load();
             var spread = new List<CardDefinition>();
-            var missing = new List<string>();
-            foreach (string id in cardIds)
+            var missing = new List<int>();
+            foreach (int id in cardIds)
             {
                 if (db.TryGet(id, out CardDefinition def)) spread.Add(def);
                 else                                       missing.Add(id);
@@ -90,7 +90,7 @@ namespace Emberfall.Editor
             // Pixels are lifted out of each face inside the bake callback, because the faces are
             // RenderTextures owned by the baker and the baker is destroyed in the finally below.
             var faces = new List<Color[]>(spread.Count);
-            var ids   = new List<string>(spread.Count);
+            var ids   = new List<int>(spread.Count);
 
             var host = new GameObject("__CardFacePreviewHost");
             CardFaceBaker baker = null;
@@ -150,10 +150,10 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Preview Card Faces — EMBERWARD/TIDECALLER batch (offscreen)")]
         public static void RenderEmberwardTidecaller() => RenderIds(new[]
         {
-            "ember_stoke_the_coals",  "ember_emberdrinker",     "ember_slagshell_bulwark",
-            "ember_kiln_warden",      "ember_forgeheart_colossus", "ember_ashfall_wyrm",
-            "tide_hoarfrost_lash",    "tide_fathom_crush",      "tide_deepfrost_spear",
-            "tide_hollowshell_warden","tide_drowned_titan",     "tide_glacial_leviathan",
+             167 /*ember_stoke_the_coals*/,  1056 /*ember_emberdrinker*/,     1051 /*ember_slagshell_bulwark*/,
+            1055 /*ember_kiln_warden*/,      1052 /*ember_forgeheart_colossus*/, 1054 /*ember_ashfall_wyrm*/,
+             169 /*tide_hoarfrost_lash*/,     168 /*tide_fathom_crush*/,        54 /*tide_deepfrost_spear*/,
+            1058 /*tide_hollowshell_warden*/,1057 /*tide_drowned_titan*/,     1053 /*tide_glacial_leviathan*/,
         }, "card_faces_emberward_tidecaller");
 
         // ── Spread ──────────────────────────────────────────────────────────────────
@@ -161,10 +161,10 @@ namespace Emberfall.Editor
         private static List<CardDefinition> PickSpread(ICardDatabase db)
         {
             var all = new List<CardDefinition>(db.AllCollectible());
-            all.Sort((a, b) => string.CompareOrdinal(a.Id, b.Id));   // deterministic across runs
+            all.Sort((a, b) => a.Id.CompareTo(b.Id));   // deterministic across runs
 
             var picked = new List<CardDefinition>();
-            var seen   = new HashSet<string>();
+            var seen   = new HashSet<int>();
 
             void Take(CardDefinition d)
             {
@@ -183,9 +183,9 @@ namespace Emberfall.Editor
             var byLength = new List<CardDefinition>(all);
             byLength.Sort((a, b) =>
             {
-                int la = a.Name.Length + CardTextGenerator.Generate(a).Length;
-                int lb = b.Name.Length + CardTextGenerator.Generate(b).Length;
-                return la == lb ? string.CompareOrdinal(a.Id, b.Id) : lb.CompareTo(la);
+                int la = a.Name.Length + a.Text.Length;
+                int lb = b.Name.Length + b.Text.Length;
+                return la == lb ? a.Id.CompareTo(b.Id) : lb.CompareTo(la);
             });
             foreach (CardDefinition d in byLength) Take(d);
 

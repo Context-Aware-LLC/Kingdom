@@ -15,8 +15,10 @@ namespace Emberfall.Core
     {
         public const int FirstPlayerHandSize = 3;
         public const int SecondPlayerHandSize = 4;
-        public const int HandCap = 10;
-        public const int BoardCap = 7;
+        // Forwarded, never restated: Emberfall.Core.Cards derives selector cardinality from the
+        // same caps and cannot see this class. See ZoneCaps for why they live in Contracts.
+        public const int HandCap = ZoneCaps.Hand;
+        public const int BoardCap = ZoneCaps.Board;
         public const int MaxMana = 10;
 
         /// <summary>
@@ -78,7 +80,7 @@ namespace Emberfall.Core
             return state;
         }
 
-        private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<string> deckList)
+        private static void BuildDeck(GameState state, PlayerState ps, IReadOnlyList<int> deckList)
         {
             foreach (var cardId in deckList)
             {

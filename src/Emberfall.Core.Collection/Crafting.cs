@@ -191,11 +191,11 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>Rarity lookup then the <c>CardDefinition</c> overload; unknown ids refuse.</summary>
-        public static RenderOffer OfferRender(string cardId, ICardDatabase db, int copiesOwned, long shardBalance)
+        public static RenderOffer OfferRender(int cardId, ICardDatabase db, int copiesOwned, long shardBalance)
             => OfferRender(Resolve(cardId, db), copiesOwned, shardBalance);
 
         /// <summary>Rarity lookup then the <c>CardDefinition</c> overload; unknown ids refuse.</summary>
-        public static ReduceOffer OfferReduce(string cardId, ICardDatabase db, int copiesOwned)
+        public static ReduceOffer OfferReduce(int cardId, ICardDatabase db, int copiesOwned)
             => OfferReduce(Resolve(cardId, db), copiesOwned);
 
         /// <summary>
@@ -210,11 +210,11 @@ namespace Emberfall.Core.Collection
         /// <para>Stored order, like <see cref="DeckQuery.BoundTo"/>. Card-database free: this is a
         /// count against a decklist and needs no rarity.</para>
         /// </summary>
-        public static IReadOnlyList<DeckCardUsage> DeckImpact(string cardId, int copiesAfter,
+        public static IReadOnlyList<DeckCardUsage> DeckImpact(int cardId, int copiesAfter,
                                                               IEnumerable<DeckList>? decks)
         {
             var rows = new List<DeckCardUsage>();
-            if (decks == null || string.IsNullOrEmpty(cardId)) return rows;
+            if (decks == null || cardId <= 0) return rows;
             if (copiesAfter < 0) copiesAfter = 0;
 
             foreach (DeckList deck in decks)
@@ -227,7 +227,7 @@ namespace Emberfall.Core.Collection
             return rows;
         }
 
-        private static CardDefinition? Resolve(string cardId, ICardDatabase db)
-            => !string.IsNullOrEmpty(cardId) && db != null && db.TryGet(cardId, out CardDefinition def) ? def : null;
+        private static CardDefinition? Resolve(int cardId, ICardDatabase db)
+            => cardId > 0 && db != null && db.TryGet(cardId, out CardDefinition def) ? def : null;
     }
 }

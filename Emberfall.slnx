@@ -18,5 +18,7 @@
     <Project Path="src/Emberfall.Tools.StoreReconcile/Emberfall.Tools.StoreReconcile.csproj" />
     <Project Path="src/Emberfall.Training.Corpus/Emberfall.Training.Corpus.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj" />
+  </Folder>
 </Solution>

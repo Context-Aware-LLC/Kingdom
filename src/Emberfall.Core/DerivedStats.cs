@@ -8,12 +8,11 @@ namespace Emberfall.Core
     /// The derived-stat layer (EF-017a). A card's live stats are a FUNCTION of its printed base and
     /// its <see cref="CardInstance.Enchantments"/> list — not an accumulator that effects add into.
     ///
-    /// <para><b>Why this exists.</b> Before EF-017a, <c>BuffHandler</c> baked <c>CurrentAttack += atk</c>
-    /// destructively and the <see cref="Enchantment"/> it wrote alongside was never read back. An effect
-    /// that needed to UNAPPLY itself — an aura whose source leaves the board — had nothing to subtract,
-    /// because the contribution had already been melted into the total. Recomputing from the list makes
-    /// removal the same operation as application: drop the entries, recompute. <see cref="RemoveBySource"/>
-    /// is that operation, and it is what makes <see cref="Enchantment.Source"/> load-bearing.</para>
+    /// <para><b>Why this exists.</b> An effect that must UNAPPLY itself — an aura whose source leaves
+    /// the board — has nothing to subtract if contributions are accumulated destructively into the
+    /// total. Recomputing from the <see cref="Enchantment"/> list makes removal the same operation as
+    /// application: drop the entries, recompute. <see cref="RemoveBySource"/> is that operation, and it
+    /// is what makes <see cref="Enchantment.Source"/> load-bearing.</para>
     ///
     /// <para><b>Base stats are read from the <see cref="CardDefinition"/>, not stored on the instance.</b>
     /// <c>DefinitionId</c> already names the printed form, and every reset site in the engine already held
@@ -118,8 +117,7 @@ namespace Emberfall.Core
             ApplyStats(c, def, damageTaken);
 
             c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
-            c.IsFrosted = false;
-            c.FrostThawPending = false; // NOR-367: pending is only meaningful while frosted
+            EffectList.Remove(c.Effects, EffectKind.Frost);
             c.IsSilenced = false;
         }
 
@@ -141,8 +139,7 @@ namespace Emberfall.Core
             c.Keywords.Clear();
             ApplyStats(c, def, damageTaken);
             c.HasAegisShield = false;
-            c.IsFrosted = false;
-            c.FrostThawPending = false; // NOR-367: pending is only meaningful while frosted
+            EffectList.Remove(c.Effects, EffectKind.Frost);
             c.IsSilenced = true;
         }
 

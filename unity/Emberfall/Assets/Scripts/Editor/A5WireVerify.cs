@@ -21,7 +21,7 @@ namespace Emberfall.Editor
             var p1Id = new PlayerId("p1");
             var p0 = new PlayerState(p0Id, new HeroInstance(new InstanceId(1), p0Id, CardClass.EMBERWARD, 30));
             var p1 = new PlayerState(p1Id, new HeroInstance(new InstanceId(2), p1Id, CardClass.TIDECALLER, 30));
-            var hand = new CardInstance(new InstanceId(3), "card_x", p0Id)
+            var hand = new CardInstance(new InstanceId(3), 9020, p0Id)
             {
                 Zone = Zone.Hand,
                 CurrentAttack = 2,

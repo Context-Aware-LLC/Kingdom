@@ -505,11 +505,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 85a7bbe4a822b91468c54eef9929ad33
-    m_Address: card_art/token_the_spark
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 85ffd97f0098cb4419dbd838c512401e
     m_Address: card_art/ember_stoke_the_coals
     m_ReadOnly: 0

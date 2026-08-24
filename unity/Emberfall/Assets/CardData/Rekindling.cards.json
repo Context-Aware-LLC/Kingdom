@@ -1,91 +1,7 @@
 [
   {
-    "id": "stone_reclaimed_fortress",
-    "name": "Reclaimed Fortress",
-    "type": "SPELL",
-    "cost": 6,
-    "class": "STONEWARDEN",
-    "rarity": "EPIC",
-    "keywords": [],
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_CAST"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "GRANT_KEYWORD",
-          "keyword": "AEGIS",
-          "target": {
-            "selector": "FRIENDLY_MINIONS"
-          }
-        }
-      }
-    ],
-    "setId": "REKINDLING",
-    "collectible": true,
-    "artId": "stone_reclaimed_fortress"
-  },
-    {
-    "id": "clock_nameless_bell",
-    "name": "Nameless Bell",
-    "type": "MINION",
-    "cost": 4,
-    "attack": 6,
-    "health": 5,
-    "class": "CLOCKWRIGHT",
-    "rarity": "EPIC",
-    "keywords": ["OVERWHELM"],
-    "rules": [],
-    "setId": "REKINDLING",
-    "collectible": true,
-    "artId": "clock_nameless_bell"
-  },
-    {
-    "id": "stone_heartstone_herald",
-    "name": "Heartstone Herald",
-    "type": "MINION",
-    "cost": 4,
-    "attack": 2,
-    "health": 6,
-    "class": "STONEWARDEN",
-    "rarity": "RARE",
-    "keywords": [],
-    "rules": [
-      {
-        "id": "rule_1",
-        "activation": {
-          "type": "TRIGGERED",
-          "trigger": "ON_PLAY"
-        },
-        "condition": {
-          "type": "ALWAYS"
-        },
-        "lifetime": {
-          "type": "ONE_SHOT"
-        },
-        "action": {
-          "type": "HEAL",
-          "amount": 1,
-          "target": {
-            "selector": "FRIENDLY_HERO"
-          }
-        }
-      }
-    ],
-    "setId": "REKINDLING",
-    "collectible": true,
-    "artId": "stone_heartstone_herald"
-  },
-  {
-    "id": "neutral_reclaimed_scout",
+    "id": 1121,
+    "handle": "neutral_reclaimed_scout",
     "name": "Reclaimed Scout",
     "type": "MINION",
     "cost": 1,
@@ -94,6 +10,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 1 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -111,7 +28,8 @@
           "type": "HEAL",
           "amount": 1,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -121,16 +39,17 @@
     "artId": "reclaimed_scout"
   },
   {
-    "id": "neutral_alliance_messenger",
+    "id": 1122,
+    "handle": "neutral_alliance_messenger",
     "name": "Alliance Messenger",
     "type": "MINION",
-    "tribe": "HUMAN",
     "cost": 2,
     "attack": 2,
     "health": 2,
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -152,10 +71,12 @@
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "alliance_messenger"
+    "artId": "alliance_messenger",
+    "tribe": "HUMAN"
   },
   {
-    "id": "neutral_restored_bulwark",
+    "id": 1123,
+    "handle": "neutral_restored_bulwark",
     "name": "Restored Bulwark",
     "type": "MINION",
     "cost": 3,
@@ -166,6 +87,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -173,7 +95,8 @@
     "artId": "restored_bulwark"
   },
   {
-    "id": "night_salvaged_golem",
+    "id": 1124,
+    "handle": "neutral_salvaged_golem",
     "name": "Salvaged Golem",
     "type": "MINION",
     "cost": 4,
@@ -184,6 +107,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -191,16 +115,17 @@
     "artId": "salvaged_golem"
   },
   {
-    "id": "neutral_bannerman",
+    "id": 1125,
+    "handle": "neutral_bannerman",
     "name": "New Dawn Bannerman",
     "type": "MINION",
-    "tribe": "HUMAN",
     "cost": 4,
     "attack": 3,
     "health": 5,
     "class": "NEUTRAL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -219,17 +144,20 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "new_dawn_bannerman"
+    "artId": "new_dawn_bannerman",
+    "tribe": "HUMAN"
   },
   {
-    "id": "night_bridge_warden",
+    "id": 1126,
+    "handle": "neutral_bridge_warden",
     "name": "Bridge Warden",
     "type": "MINION",
     "cost": 5,
@@ -240,6 +168,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Restore 4 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -257,7 +186,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -267,13 +197,15 @@
     "artId": "bridge_warden"
   },
   {
-    "id": "neutral_truce_pact",
+    "id": 200,
+    "handle": "neutral_truce_pact",
     "name": "Truce Pact",
     "type": "SPELL",
     "cost": 4,
     "class": "NEUTRAL",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Give all friendly minions +2/+2.",
     "rules": [
       {
         "id": "rule_1",
@@ -292,7 +224,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -302,7 +235,8 @@
     "artId": "truce_pact"
   },
   {
-    "id": "neutral_aric",
+    "id": 1127,
+    "handle": "neutral_aric",
     "name": "Aric",
     "type": "MINION",
     "flavorText": "First Among Equals",
@@ -312,6 +246,7 @@
     "class": "NEUTRAL",
     "rarity": "LEGENDARY",
     "keywords": [],
+    "text": "Give all friendly minions +2/+2 and restore 5 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -330,7 +265,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -350,7 +286,8 @@
           "type": "HEAL",
           "amount": 5,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -360,7 +297,8 @@
     "artId": "aric_first_among_equals"
   },
   {
-    "id": "ember_vanguard_conscript",
+    "id": 1128,
+    "handle": "ember_vanguard_conscript",
     "name": "Vanguard Conscript",
     "type": "MINION",
     "cost": 1,
@@ -371,13 +309,15 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "ember_vanguard_conscript"
   },
   {
-    "id": "ember_brazier_keeper",
+    "id": 1129,
+    "handle": "ember_brazier_keeper",
     "name": "Brazier Keeper",
     "type": "MINION",
     "cost": 2,
@@ -392,7 +332,8 @@
     "artId": "ember_brazier_keeper"
   },
   {
-    "id": "ember_forge_warden",
+    "id": 1130,
+    "handle": "ember_forge_warden",
     "name": "Forge Warden",
     "type": "MINION",
     "cost": 3,
@@ -401,6 +342,7 @@
     "class": "EMBERWARD",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -418,7 +360,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -428,7 +371,8 @@
     "artId": "ember_forge_warden"
   },
   {
-    "id": "clock_mechanical_essence",
+    "id": 1131,
+    "handle": "clock_mechanical_essence",
     "name": "Mechanical Essence",
     "type": "MINION",
     "cost": 3,
@@ -437,7 +381,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
-    "tribe": "CONSTRUCT",
+    "text": "Turn Start: While it is your turn, give this +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -457,17 +401,115 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "SELF"
+            "selector": "SELF",
+            "selection": "1"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
+    "tribe": "CONSTRUCT",
     "artId": "clock_mechanical_essence"
   },
   {
-    "id": "ember_coalition_blazer",
+    "id": 201,
+    "handle": "ember_reclaimed_fortress",
+    "name": "Reclaimed Fortress",
+    "type": "SPELL",
+    "cost": 6,
+    "class": "STONEWARDEN",
+    "rarity": "EPIC",
+    "keywords": [],
+    "text": "Give all friendly minions Aegis.",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GRANT_KEYWORD",
+          "keyword": "AEGIS",
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
+          }
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "stone_reclaimed_fortress"
+  },
+  {
+    "id": 1132,
+    "handle": "clock_nameless_bell",
+    "name": "Nameless Bell",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 6,
+    "health": 5,
+    "class": "CLOCKWRIGHT",
+    "rarity": "EPIC",
+    "keywords": [
+      "OVERWHELM"
+    ],
+    "text": "Overwhelm.",
+    "rules": [],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "clock_nameless_bell"
+  },
+  {
+    "id": 1133,
+    "handle": "warden_heartstone_herald",
+    "name": "Heartstone Herald",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 2,
+    "health": 6,
+    "class": "STONEWARDEN",
+    "rarity": "RARE",
+    "keywords": [],
+    "text": "Restore 1 Health to your hero.",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 1,
+          "target": {
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ],
+    "setId": "REKINDLING",
+    "collectible": true,
+    "artId": "stone_heartstone_herald"
+  },
+  {
+    "id": 1134,
+    "handle": "ember_coalition_blazer",
     "name": "Coalition Blazer",
     "type": "MINION",
     "cost": 4,
@@ -476,6 +518,7 @@
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Backdraft 1.",
     "rules": [
       {
         "id": "rule_1",
@@ -501,7 +544,8 @@
     "artId": "ember_coalition_blazer"
   },
   {
-    "id": "neutral_forge_striker",
+    "id": 1135,
+    "handle": "neutral_forge_striker",
     "name": "Forge Striker",
     "type": "MINION",
     "cost": 3,
@@ -510,6 +554,7 @@
     "class": "NEUTRAL",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Equip Smithy Hammer.",
     "rules": [
       {
         "id": "rule_1",
@@ -525,7 +570,7 @@
         },
         "action": {
           "type": "EQUIP",
-          "cardId": "neutral_smithy_hammer"
+          "cardId": 62
         }
       }
     ],
@@ -534,7 +579,8 @@
     "artId": "neutral_forge_striker"
   },
   {
-    "id": "neutral_smithy_hammer",
+    "id": 62,
+    "handle": "neutral_smithy_hammer",
     "name": "Smithy Hammer",
     "type": "WEAPON",
     "cost": 2,
@@ -543,6 +589,7 @@
     "class": "NEUTRAL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Attack: Gain 2 Armor.",
     "rules": [
       {
         "id": "rule_1",
@@ -567,7 +614,8 @@
     "artId": "smithy_hammer"
   },
   {
-    "id": "verdant_seedling_guard",
+    "id": 1136,
+    "handle": "verdant_seedling_guard",
     "name": "Seedling Guard",
     "type": "MINION",
     "cost": 2,
@@ -578,6 +626,7 @@
     "keywords": [
       "AEGIS"
     ],
+    "text": "Aegis. Healed: Give this +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -596,7 +645,8 @@
           "attack": 1,
           "health": 1,
           "target": {
-            "selector": "SELF"
+            "selector": "SELF",
+            "selection": "1"
           }
         }
       }
@@ -606,13 +656,15 @@
     "artId": "verdant_seedling_guard"
   },
   {
-    "id": "ember_rekindled_flame",
+    "id": 202,
+    "handle": "ember_rekindled_flame",
     "name": "Rekindled Flame",
     "type": "SPELL",
     "cost": 3,
     "class": "EMBERWARD",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 4 damage to a minion and give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -631,6 +683,7 @@
           "amount": 4,
           "target": {
             "selector": "ANY_MINION",
+            "selection": "1",
             "binding": "damage_target"
           }
         }
@@ -648,10 +701,13 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "binding": "reinforce_target"
+            "selection": "1",
+            "binding": "stats_target"
           }
         }
       }
@@ -661,7 +717,8 @@
     "artId": "ember_rekindled_flame"
   },
   {
-    "id": "ember_pyre_commander",
+    "id": 1137,
+    "handle": "ember_pyre_commander",
     "name": "Pyre Commander",
     "type": "MINION",
     "cost": 5,
@@ -670,6 +727,7 @@
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 1 damage to all enemy minions and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -687,7 +745,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -704,9 +763,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -716,13 +778,15 @@
     "artId": "ember_pyre_commander"
   },
   {
-    "id": "ember_channeled_pyroclasm",
+    "id": 203,
+    "handle": "ember_channeled_pyroclasm",
     "name": "Channeled Pyroclasm",
     "type": "SPELL",
     "cost": 6,
     "class": "EMBERWARD",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 6 damage to an enemy minion and deal 2 damage to the enemy hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -740,9 +804,8 @@
           "type": "DAMAGE",
           "amount": 6,
           "target": {
-            "selector": "ENEMY_MINIONS",
-            "chosenBy": "PLAYER",
-            "count": 1
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -762,21 +825,21 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "ember_channeled_pyroclasm",
-    "flavorText": ""
+    "artId": "ember_channeled_pyroclasm"
   },
   {
-    "id": "ember_general_kira",
+    "id": 1138,
+    "handle": "ember_general_kira",
     "name": "General Kira",
     "type": "MINION",
-    "flavorText": "Flame Reunified",
     "cost": 7,
     "attack": 6,
     "health": 6,
@@ -785,6 +848,7 @@
     "keywords": [
       "FERVOR"
     ],
+    "text": "Fervor. Deal 3 damage to the enemy hero and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -802,7 +866,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_HERO"
+            "selector": "ENEMY_HERO",
+            "selection": "1"
           }
         }
       },
@@ -819,9 +884,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -832,7 +900,8 @@
     "artId": "ember_general_kira_flame_reunified"
   },
   {
-    "id": "tide_prophet_of_the_flood",
+    "id": 1139,
+    "handle": "tide_harbinger",
     "name": "Prophet of the Flood",
     "type": "MINION",
     "cost": 4,
@@ -843,6 +912,7 @@
     "keywords": [
       "VANGUARD"
     ],
+    "text": "Vanguard.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -850,15 +920,17 @@
     "artId": "tide_prophet_of_the_flood"
   },
   {
-    "id": "tide_saltshore_scout",
+    "id": 1140,
+    "handle": "tide_saltshore_scout",
     "name": "Saltshore Scout",
     "type": "MINION",
-    "tribe": "HUMAN",    "cost": 2,
+    "cost": 2,
     "attack": 2,
     "health": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -875,17 +947,20 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "tide_saltshore_scout"
+    "artId": "tide_saltshore_scout",
+    "tribe": "HUMAN"
   },
   {
-    "id": "tide_reef_reclaimer",
+    "id": 1141,
+    "handle": "tide_reef_reclaimer",
     "name": "Reef Reclaimer",
     "type": "MINION",
     "cost": 3,
@@ -896,6 +971,7 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -903,13 +979,15 @@
     "artId": "tide_reef_reclaimer"
   },
   {
-    "id": "tide_channel_mender",
+    "id": 204,
+    "handle": "tide_channel_mender",
     "name": "Channel Mender",
     "type": "SPELL",
     "cost": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 4 Health to a friendly character and give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -928,6 +1006,7 @@
           "amount": 4,
           "target": {
             "selector": "ANY_FRIENDLY",
+            "selection": "1",
             "binding": "heal_target"
           }
         }
@@ -945,10 +1024,13 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "binding": "reinforce_target"
+            "selection": "1",
+            "binding": "stats_target"
           }
         }
       }
@@ -958,7 +1040,8 @@
     "artId": "tide_channel_mender"
   },
   {
-    "id": "tide_tidal_emissary",
+    "id": 1142,
+    "handle": "tide_tidal_emissary",
     "name": "Tidal Emissary",
     "type": "MINION",
     "cost": 4,
@@ -967,6 +1050,7 @@
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Freeze an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -984,7 +1068,7 @@
           "type": "FROST",
           "target": {
             "selector": "ANY_ENEMY",
-            "binding": "frost_target"
+            "selection": "1"
           }
         }
       }
@@ -994,13 +1078,15 @@
     "artId": "tide_tidal_emissary"
   },
   {
-    "id": "tide_shoreline_pact",
+    "id": 205,
+    "handle": "tide_shoreline_pact",
     "name": "Shoreline Pact",
     "type": "SPELL",
     "cost": 3,
     "class": "TIDECALLER",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Return a minion to its owner's hand and give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1018,6 +1104,7 @@
           "type": "RETURN_TO_HAND",
           "target": {
             "selector": "ANY_MINION",
+            "selection": "1",
             "binding": "bounce_target"
           }
         }
@@ -1035,10 +1122,13 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "binding": "reinforce_target"
+            "selection": "1",
+            "binding": "stats_target"
           }
         }
       }
@@ -1048,13 +1138,15 @@
     "artId": "tide_shoreline_pact"
   },
   {
-    "id": "tide_deepwater_alliance",
+    "id": 206,
+    "handle": "tide_deepwater_alliance",
     "name": "Deepwater Alliance",
     "type": "SPELL",
     "cost": 5,
     "class": "TIDECALLER",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Freeze all enemy minions and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1071,7 +1163,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -1088,9 +1181,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -1100,7 +1196,8 @@
     "artId": "tide_deepwater_alliance"
   },
   {
-    "id": "tide_marens_peacebroker",
+    "id": 1143,
+    "handle": "tide_marens_peacebroker",
     "name": "Maren's Peacebroker",
     "type": "MINION",
     "cost": 6,
@@ -1111,6 +1208,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Freeze all enemy minions and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1127,7 +1225,8 @@
         "action": {
           "type": "FROST",
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -1144,9 +1243,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -1157,7 +1259,8 @@
     "artId": "tide_marens_peacebroker"
   },
   {
-    "id": "grave_memorial_wisp",
+    "id": 1144,
+    "handle": "grave_memorial_wisp",
     "name": "Memorial Wisp",
     "type": "MINION",
     "cost": 1,
@@ -1166,6 +1269,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Toll: Give a random friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1180,10 +1284,12 @@
           "type": "SOURCE_BOUND"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "chosenBy": "RANDOM"
+            "selection": "random: 1"
           }
         }
       }
@@ -1194,7 +1300,8 @@
     "artId": "grave_memorial_wisp"
   },
   {
-    "id": "grave_tomb_warden",
+    "id": 1145,
+    "handle": "grave_tomb_warden",
     "name": "Tomb Warden",
     "type": "MINION",
     "cost": 2,
@@ -1205,6 +1312,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Toll: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1230,13 +1338,15 @@
     "artId": "grave_tomb_warden"
   },
   {
-    "id": "grave_last_honor",
+    "id": 207,
+    "handle": "grave_last_honor",
     "name": "Last Honor",
     "type": "SPELL",
     "cost": 2,
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Sacrifice a friendly minion: Draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -1253,8 +1363,9 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -1265,7 +1376,7 @@
           "trigger": "ON_CAST"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1281,7 +1392,8 @@
     "artId": "grave_last_honor"
   },
   {
-    "id": "grave_grave_builder",
+    "id": 1146,
+    "handle": "grave_grave_builder",
     "name": "Grave Builder",
     "type": "MINION",
     "cost": 3,
@@ -1290,6 +1402,7 @@
     "class": "GRAVEKEEP",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Summon a 1/1 Wisp.",
     "rules": [
       {
         "id": "rule_1",
@@ -1305,7 +1418,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_wisp_1_1",
+          "cardId": 1023,
           "count": 1
         }
       }
@@ -1315,13 +1428,15 @@
     "artId": "grave_builder"
   },
   {
-    "id": "grave_pact_of_mourning",
+    "id": 208,
+    "handle": "grave_pact_of_mourning",
     "name": "Pact of Mourning",
     "type": "SPELL",
     "cost": 3,
     "class": "GRAVEKEEP",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion Rekindle and +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1340,6 +1455,7 @@
           "keyword": "REKINDLE",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -1357,9 +1473,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -1370,7 +1489,8 @@
     "artId": "grave_pact_of_mourning"
   },
   {
-    "id": "grave_risen_champion",
+    "id": 1147,
+    "handle": "grave_risen_champion",
     "name": "Risen Champion",
     "type": "MINION",
     "cost": 4,
@@ -1381,6 +1501,7 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle. Give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1395,9 +1516,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -1408,13 +1532,15 @@
     "artId": "grave_risen_champion"
   },
   {
-    "id": "grave_mass_rebirth",
+    "id": 209,
+    "handle": "grave_mass_rebirth",
     "name": "Mass Rebirth",
     "type": "SPELL",
     "cost": 5,
     "class": "GRAVEKEEP",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Give all friendly minions Rekindle.",
     "rules": [
       {
         "id": "rule_1",
@@ -1432,7 +1558,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "REKINDLE",
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -1442,7 +1569,8 @@
     "artId": "grave_mass_rebirth"
   },
   {
-    "id": "token_risen_guardian",
+    "id": 1148,
+    "handle": "token_risen_guardian",
     "name": "Risen Guardian",
     "type": "MINION",
     "cost": 0,
@@ -1458,7 +1586,8 @@
     "artId": "token_risen_guardian"
   },
   {
-    "id": "grave_caretaker_solen",
+    "id": 1149,
+    "handle": "grave_caretaker_solen",
     "name": "Caretaker Solen",
     "type": "MINION",
     "cost": 7,
@@ -1469,6 +1598,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Toll: Summon two 3/3 Risen Guardians.",
     "rules": [
       {
         "id": "rule_1",
@@ -1484,7 +1614,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_risen_guardian",
+          "cardId": 1148,
           "count": 2
         }
       }
@@ -1495,7 +1625,8 @@
     "artId": "grave_caretaker_solen"
   },
   {
-    "id": "verdant_sapling_tender",
+    "id": 1150,
+    "handle": "verdant_sapling_tender",
     "name": "Sapling Tender",
     "type": "MINION",
     "cost": 1,
@@ -1504,6 +1635,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 1 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1521,7 +1653,8 @@
           "type": "HEAL",
           "amount": 1,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1532,9 +1665,10 @@
     "artId": "verdant_sapling_tender"
   },
   {
-    "id": "verdant_thornsprout_cub",
+    "id": 1151,
+    "handle": "verdant_thornsprout_cub",
     "name": "Thornsprout Cub",
-    "type": "MINION", 
+    "type": "MINION",
     "cost": 2,
     "attack": 2,
     "health": 3,
@@ -1548,13 +1682,15 @@
     "artId": "verdant_thornsprout_cub"
   },
   {
-    "id": "verdant_rebloom_vine",
+    "id": 210,
+    "handle": "verdant_rebloom_vine",
     "name": "Rebloom Vine",
     "type": "SPELL",
     "cost": 2,
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 3 Health to a friendly character and give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1573,6 +1709,7 @@
           "amount": 3,
           "target": {
             "selector": "ANY_FRIENDLY",
+            "selection": "1",
             "binding": "heal_target"
           }
         }
@@ -1590,10 +1727,13 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
-            "binding": "reinforce_target"
+            "selection": "1",
+            "binding": "stats_target"
           }
         }
       }
@@ -1603,7 +1743,8 @@
     "artId": "verdant_rebloom_vine"
   },
   {
-    "id": "verdant_overgrowth_dryad",
+    "id": 1152,
+    "handle": "verdant_overgrowth_dryad",
     "name": "Overgrowth Dryad",
     "type": "MINION",
     "cost": 4,
@@ -1612,6 +1753,7 @@
     "class": "VERDANT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Restore 3 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1629,7 +1771,8 @@
           "type": "HEAL",
           "amount": 3,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1639,13 +1782,15 @@
     "artId": "verdant_overgrowth_dryad"
   },
   {
-    "id": "verdant_blossoming_pact",
+    "id": 211,
+    "handle": "verdant_blossoming_pact",
     "name": "Blossoming Pact",
     "type": "SPELL",
     "cost": 3,
     "class": "VERDANT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion +2/+2 and restore 3 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1664,7 +1809,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -1684,7 +1830,8 @@
           "type": "HEAL",
           "amount": 3,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1694,7 +1841,8 @@
     "artId": "verdant_blossoming_pact"
   },
   {
-    "id": "verdant_rootswell_champion",
+    "id": 1153,
+    "handle": "verdant_rootswell_champion",
     "name": "Rootswell Champion",
     "type": "MINION",
     "cost": 4,
@@ -1705,6 +1853,7 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle. Give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1719,9 +1868,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -1731,13 +1883,15 @@
     "artId": "verdant_rootswell_champion"
   },
   {
-    "id": "verdant_wildbloom_surge",
+    "id": 212,
+    "handle": "verdant_wildbloom_surge",
     "name": "Wildbloom Surge",
     "type": "SPELL",
     "cost": 4,
     "class": "VERDANT",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Give all friendly minions +1/+1 and restore 4 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1752,9 +1906,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -1774,7 +1931,8 @@
           "type": "HEAL",
           "amount": 4,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1784,7 +1942,8 @@
     "artId": "verdant_wildbloom_surge"
   },
   {
-    "id": "verdant_praxis",
+    "id": 1154,
+    "handle": "verdant_praxis",
     "name": "Praxis, Seed of New Ages",
     "type": "MINION",
     "cost": 7,
@@ -1796,6 +1955,7 @@
       "BULWARK",
       "OVERWHELM"
     ],
+    "text": "Bulwark, Overwhelm. Restore 8 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -1813,7 +1973,8 @@
           "type": "HEAL",
           "amount": 8,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -1823,7 +1984,8 @@
     "artId": "verdant_praxis_seed_of_new_ages"
   },
   {
-    "id": "clock_repair_drone",
+    "id": 1155,
+    "handle": "clock_repair_drone",
     "name": "Repair Drone",
     "type": "MINION",
     "cost": 1,
@@ -1832,6 +1994,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1846,9 +2009,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -1859,7 +2025,8 @@
     "artId": "clock_repair_drone"
   },
   {
-    "id": "clock_blueprint_archive",
+    "id": 1156,
+    "handle": "clock_blueprint_archive",
     "name": "Blueprint Archive",
     "type": "MINION",
     "cost": 2,
@@ -1868,6 +2035,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1892,13 +2060,15 @@
     "artId": "clock_blueprint_archive"
   },
   {
-    "id": "clock_tinkers_gambit",
+    "id": 213,
+    "handle": "clock_tinkers_gambit",
     "name": "Tinker's Gambit",
     "type": "SPELL",
     "cost": 2,
     "class": "CLOCKWRIGHT",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Return a friendly minion to your hand: Draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -1915,8 +2085,9 @@
         "action": {
           "type": "RETURN_TO_HAND",
           "target": {
-            "required": true,
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
+            "cost": "required"
           }
         }
       },
@@ -1927,7 +2098,7 @@
           "trigger": "ON_CAST"
         },
         "condition": {
-          "type": "ALWAYS"
+          "type": "COST_PAID"
         },
         "lifetime": {
           "type": "ONE_SHOT"
@@ -1943,7 +2114,8 @@
     "artId": "clock_tinkers_gambit"
   },
   {
-    "id": "clock_rebuilt_automaton",
+    "id": 1157,
+    "handle": "clock_rebuilt_automaton",
     "name": "Reconstructed Automaton",
     "type": "MINION",
     "cost": 3,
@@ -1954,6 +2126,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -1961,13 +2134,15 @@
     "artId": "clock_reconstructed_automaton"
   },
   {
-    "id": "clock_assembly_line",
+    "id": 214,
+    "handle": "clock_assembly_line",
     "name": "Assembly Line",
     "type": "SPELL",
     "cost": 3,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Summon two 1/1 Gear Wisps and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -1983,7 +2158,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_gear_wisp",
+          "cardId": 1059,
           "count": 2
         }
       },
@@ -2000,9 +2175,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2012,13 +2190,15 @@
     "artId": "clock_assembly_line"
   },
   {
-    "id": "clock_upgrade_protocol",
+    "id": 215,
+    "handle": "clock_upgrade_protocol",
     "name": "Upgrade Protocol",
     "type": "SPELL",
     "cost": 4,
     "class": "CLOCKWRIGHT",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give a friendly minion +5/+5.",
     "rules": [
       {
         "id": "rule_1",
@@ -2037,7 +2217,8 @@
           "attack": 5,
           "health": 5,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2047,7 +2228,8 @@
     "artId": "clock_upgrade_protocol"
   },
   {
-    "id": "clock_masterwork_construct",
+    "id": 1158,
+    "handle": "clock_masterwork_construct",
     "name": "Masterwork Constructor",
     "type": "MINION",
     "cost": 6,
@@ -2056,6 +2238,7 @@
     "class": "CLOCKWRIGHT",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Summon three 1/1 Gear Wisps and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2071,7 +2254,7 @@
         },
         "action": {
           "type": "SUMMON",
-          "cardId": "token_gear_wisp",
+          "cardId": 1059,
           "count": 3
         }
       },
@@ -2088,9 +2271,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2101,7 +2287,8 @@
     "artId": "clock_masterwork_constructor"
   },
   {
-    "id": "clock_cogsworth",
+    "id": 1159,
+    "handle": "clock_cogsworth",
     "name": "Cogsworth, The Grand Rebuilder",
     "type": "MINION",
     "cost": 8,
@@ -2112,6 +2299,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Give all friendly minions +2/+2 and draw 2 cards.",
     "rules": [
       {
         "id": "rule_1",
@@ -2130,7 +2318,8 @@
           "attack": 2,
           "health": 2,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -2158,7 +2347,8 @@
     "artId": "clock_cogsworth_the_grand_rebuilder"
   },
   {
-    "id": "night_shadow_scout",
+    "id": 1160,
+    "handle": "night_shadow_scout",
     "name": "Shadow Scout",
     "type": "MINION",
     "cost": 3,
@@ -2169,13 +2359,15 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "night_shadow_scout"
   },
   {
-    "id": "night_ink_viper",
+    "id": 1161,
+    "handle": "night_ink_viper",
     "name": "Ink Viper",
     "type": "MINION",
     "cost": 2,
@@ -2187,6 +2379,7 @@
       "VENOM",
       "SHROUD"
     ],
+    "text": "Venom, Shroud.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -2194,13 +2387,15 @@
     "artId": "night_ink_viper"
   },
   {
-    "id": "night_marked_for_death",
+    "id": 216,
+    "handle": "night_marked_for_death",
     "name": "Marked for Death",
     "type": "SPELL",
     "cost": 2,
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 3 damage to an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -2218,7 +2413,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -2228,7 +2424,8 @@
     "artId": "night_marked_for_death"
   },
   {
-    "id": "night_veilborn_spy",
+    "id": 1162,
+    "handle": "night_veilborn_spy",
     "name": "Veilborn Spy",
     "type": "MINION",
     "cost": 3,
@@ -2239,6 +2436,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud. Deal 2 damage to a minion.",
     "rules": [
       {
         "id": "rule_1",
@@ -2256,7 +2454,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2266,13 +2465,15 @@
     "artId": "night_veilborn_spy"
   },
   {
-    "id": "night_contract_kill",
+    "id": 217,
+    "handle": "night_contract_kill",
     "name": "Contract Kill",
     "type": "SPELL",
     "cost": 4,
     "class": "NIGHTVEIL",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Destroy a minion and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -2289,7 +2490,8 @@
         "action": {
           "type": "DESTROY",
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -2316,7 +2518,8 @@
     "artId": "night_contract_kill"
   },
   {
-    "id": "night_network_operative",
+    "id": 1163,
+    "handle": "night_network_operative",
     "name": "Network Operative",
     "type": "MINION",
     "cost": 4,
@@ -2327,6 +2530,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud. Give a friendly minion +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2341,9 +2545,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "ANY_FRIENDLY_MINION"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1"
           }
         }
       }
@@ -2353,7 +2560,8 @@
     "artId": "night_network_operative"
   },
   {
-    "id": "night_double_agent",
+    "id": 1164,
+    "handle": "night_double_agent",
     "name": "Double Agent",
     "type": "MINION",
     "cost": 4,
@@ -2364,6 +2572,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud. Toll: Deal 3 damage to all enemies.",
     "rules": [
       {
         "id": "rule_1",
@@ -2381,7 +2590,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       }
@@ -2391,7 +2601,8 @@
     "artId": "night_double_agent"
   },
   {
-    "id": "night_seraphine",
+    "id": 1165,
+    "handle": "night_seraphine",
     "name": "Seraphine, Whisper Queen",
     "type": "MINION",
     "cost": 6,
@@ -2402,6 +2613,7 @@
     "keywords": [
       "SHROUD"
     ],
+    "text": "Shroud. Give all friendly minions Shroud and +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2419,7 +2631,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "SHROUD",
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -2436,9 +2649,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2448,7 +2664,8 @@
     "artId": "night_seraphine_whisper_queen"
   },
   {
-    "id": "ward_stone_layer",
+    "id": 1166,
+    "handle": "warden_stone_layer",
     "name": "Stone Layer",
     "type": "MINION",
     "cost": 1,
@@ -2459,6 +2676,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -2466,7 +2684,8 @@
     "artId": "stone_layer"
   },
   {
-    "id": "ward_quarry_worker",
+    "id": 1167,
+    "handle": "warden_quarry_worker",
     "name": "Stone Quarry Worker",
     "type": "MINION",
     "cost": 2,
@@ -2477,19 +2696,22 @@
     "keywords": [
       "REKINDLE"
     ],
+    "text": "Rekindle.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "stone_quarry_worker"
   },
   {
-    "id": "ward_earthen_rampart",
+    "id": 218,
+    "handle": "warden_earthen_rampart",
     "name": "Earthen Rampart",
     "type": "SPELL",
     "cost": 3,
     "class": "STONEWARDEN",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Give a friendly minion +0/+4 and Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -2509,6 +2731,7 @@
           "health": 4,
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -2530,6 +2753,7 @@
           "keyword": "BULWARK",
           "target": {
             "selector": "ANY_FRIENDLY_MINION",
+            "selection": "1",
             "binding": "target"
           }
         }
@@ -2540,7 +2764,8 @@
     "artId": "stone_earthen_rampart"
   },
   {
-    "id": "ward_boulder_sentinel",
+    "id": 1168,
+    "handle": "warden_boulder_sentinel",
     "name": "Boulder Sentinel",
     "type": "MINION",
     "cost": 3,
@@ -2551,6 +2776,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Restore 2 Health to your hero.",
     "rules": [
       {
         "id": "rule_1",
@@ -2568,7 +2794,8 @@
           "type": "HEAL",
           "amount": 2,
           "target": {
-            "selector": "FRIENDLY_HERO"
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
           }
         }
       }
@@ -2578,13 +2805,15 @@
     "artId": "stone_boulder_sentinel"
   },
   {
-    "id": "ward_iron_foundation",
+    "id": 219,
+    "handle": "warden_iron_foundation",
     "name": "Iron Foundation",
     "type": "SPELL",
     "cost": 3,
     "class": "STONEWARDEN",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Give all friendly minions +1/+1 and Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -2599,9 +2828,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -2621,7 +2853,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2631,7 +2864,8 @@
     "artId": "stone_iron_foundation"
   },
   {
-    "id": "ward_fortified_colossus",
+    "id": 1169,
+    "handle": "warden_fortified_colossus",
     "name": "Fortified Colossus",
     "type": "MINION",
     "cost": 5,
@@ -2642,13 +2876,15 @@
     "keywords": [
       "OVERWHELM"
     ],
+    "text": "Overwhelm.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "stone_fortified_colossus"
   },
   {
-    "id": "ward_unbreakable_wall",
+    "id": 1170,
+    "handle": "warden_unbreakable_wall",
     "name": "Unbreakable Wall",
     "type": "MINION",
     "cost": 6,
@@ -2659,6 +2895,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -2666,7 +2903,8 @@
     "artId": "stone_unbreakable_wall"
   },
   {
-    "id": "ward_aldric",
+    "id": 1171,
+    "handle": "warden_aldric",
     "name": "Aldric, The Fortifier",
     "type": "MINION",
     "cost": 7,
@@ -2677,6 +2915,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Give all friendly minions +1/+1 and Bulwark.",
     "rules": [
       {
         "id": "rule_1",
@@ -2691,9 +2930,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       },
@@ -2713,7 +2955,8 @@
           "type": "GRANT_KEYWORD",
           "keyword": "BULWARK",
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2723,7 +2966,8 @@
     "artId": "stone_aldric_the_fortifier"
   },
   {
-    "id": "storm_static_wisp",
+    "id": 1172,
+    "handle": "tempest_static_wisp",
     "name": "Static Wisp",
     "type": "MINION",
     "cost": 1,
@@ -2734,13 +2978,15 @@
     "keywords": [
       "SKIRMISH"
     ],
+    "text": "Skirmish.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "storm_static_wisp"
   },
   {
-    "id": "storm_chain_caller",
+    "id": 1173,
+    "handle": "tempest_chain_caller",
     "name": "Chain Caller",
     "type": "MINION",
     "cost": 2,
@@ -2749,6 +2995,7 @@
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 1 damage to an enemy.",
     "rules": [
       {
         "id": "rule_1",
@@ -2766,7 +3013,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ANY_ENEMY"
+            "selector": "ANY_ENEMY",
+            "selection": "1"
           }
         }
       }
@@ -2776,13 +3024,15 @@
     "artId": "storm_chain_caller"
   },
   {
-    "id": "storm_lightning_lash",
+    "id": 220,
+    "handle": "tempest_lightning_lash",
     "name": "Lightning Lash",
     "type": "SPELL",
     "cost": 2,
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
+    "text": "Deal 2 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -2800,7 +3050,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2810,10 +3061,10 @@
     "artId": "storm_lightning_lash"
   },
   {
-    "id": "storm_storm_channeler",
+    "id": 1174,
+    "handle": "tempest_storm_channeler",
     "name": "Storm Channeler",
     "type": "MINION",
-    "tribe": "HUMAN",
     "cost": 3,
     "attack": 2,
     "health": 4,
@@ -2822,16 +3073,18 @@
     "keywords": [
       "ARCANE_SURGE"
     ],
+    "text": "Arcane Surge.",
     "rules": [],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "storm_channeler"
+    "artId": "storm_channeler",
+    "tribe": "HUMAN"
   },
   {
-    "id": "storm_voltaic_sentinel",
+    "id": 1175,
+    "handle": "tempest_voltaic_sentinel",
     "name": "Voltaic Sentinel",
     "type": "MINION",
-    "tribe": "",
     "cost": 4,
     "attack": 3,
     "health": 5,
@@ -2840,6 +3093,7 @@
     "keywords": [
       "BULWARK"
     ],
+    "text": "Bulwark. Toll: Deal 2 damage to all enemies.",
     "rules": [
       {
         "id": "rule_1",
@@ -2857,23 +3111,27 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       }
     ],
     "setId": "REKINDLING",
     "collectible": true,
-    "artId": "storm_voltaic_sentinel"
+    "artId": "storm_voltaic_sentinel",
+    "tribe": "HUMAN"
   },
   {
-    "id": "storm_thunderstrike",
+    "id": 221,
+    "handle": "tempest_thunderstrike",
     "name": "Thunderstrike",
     "type": "SPELL",
     "cost": 3,
     "class": "TEMPEST",
     "rarity": "RARE",
     "keywords": [],
+    "text": "Deal 3 damage to a minion and deal 1 damage to all enemy minions.",
     "rules": [
       {
         "id": "rule_1",
@@ -2891,7 +3149,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ANY_MINION"
+            "selector": "ANY_MINION",
+            "selection": "1"
           }
         }
       },
@@ -2911,7 +3170,8 @@
           "type": "DAMAGE",
           "amount": 1,
           "target": {
-            "selector": "ENEMY_MINIONS"
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2921,13 +3181,15 @@
     "artId": "storm_thunderstrike"
   },
   {
-    "id": "storm_stormcallers_pact",
+    "id": 222,
+    "handle": "tempest_stormcallers_pact",
     "name": "Stormcaller's Pact",
     "type": "SPELL",
     "cost": 6,
     "class": "TEMPEST",
     "rarity": "EPIC",
     "keywords": [],
+    "text": "Deal 3 damage to all enemies and give all friendly minions +1/+1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2945,7 +3207,8 @@
           "type": "DAMAGE",
           "amount": 3,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       },
@@ -2962,9 +3225,12 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "REINFORCE",
+          "type": "MODIFY_STATS",
+          "attack": 1,
+          "health": 1,
           "target": {
-            "selector": "FRIENDLY_MINIONS"
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
           }
         }
       }
@@ -2974,7 +3240,8 @@
     "artId": "storm_stormcallers_pact"
   },
   {
-    "id": "storm_vael",
+    "id": 1176,
+    "handle": "tempest_vael",
     "name": "Vael",
     "type": "MINION",
     "flavorText": "Herald of the Storm",
@@ -2986,6 +3253,7 @@
     "keywords": [
       "DOUBLESTRIKE"
     ],
+    "text": "Doublestrike. Deal 2 damage to all enemies.",
     "rules": [
       {
         "id": "rule_1",
@@ -3003,7 +3271,8 @@
           "type": "DAMAGE",
           "amount": 2,
           "target": {
-            "selector": "ENEMY_CHARACTERS"
+            "selector": "ANY_ENEMY",
+            "selection": "8"
           }
         }
       }

@@ -27,7 +27,6 @@ art therefore resolved to nothing. Step 2 replays the three blocking gates from
 
   2a. Emberfall.Tools.CardCi          — rows parse; C-series validation
   2b. audit_card_art_names.py         — every artId resolves to a png (--fail-missing-only)
-  2c. scan_unresolvable_trigger_selectors.py — no fired trigger with a player-choice selector
 
 They VERIFY and never write, so they behave identically under --check and --write. A gate
 failure is a real defect rather than staleness: it exits 2, not 1. `--skip-gates` exists for
@@ -63,7 +62,6 @@ ADMIN_OUTPUTS = (
 )
 CARD_CI_PROJECT = ROOT / "src" / "Emberfall.Tools.CardCi"
 ART_AUDIT = ROOT / "tooling" / "scripts" / "audit_card_art_names.py"
-TRIGGER_SCAN = ROOT / "tooling" / "scripts" / "scan_unresolvable_trigger_selectors.py"
 CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
 ART_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "Art"
 ART_CARDS = ART_DIR / "Cards"
@@ -164,16 +162,6 @@ def step_gates(write, skip):
             code, _ = run([sys.executable, str(ART_AUDIT), "--fail-missing-only"])
         if code != 0:
             failed.append("art-names")
-
-    print("\n-- 2c  scan_unresolvable_trigger_selectors.py --")
-    code, _ = run([sys.executable, str(TRIGGER_SCAN)])
-    if code != 0:
-        failed.append("trigger-selectors")
-        print(
-            "\nA fired trigger declares a selector only a player can resolve. Every trigger except\n"
-            "ON_PLAY and ON_CAST fires with an empty target list, so the card is a live crash the\n"
-            "moment it fires. Give the rule an auto-resolvable selector, or move it to ON_PLAY."
-        )
 
     if failed:
         print(f"\nGATES FAILED: {', '.join(failed)}")

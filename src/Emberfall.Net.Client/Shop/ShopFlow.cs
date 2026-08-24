@@ -31,14 +31,14 @@ namespace Emberfall.Net.Client.Shop
     /// </summary>
     public readonly struct PackCardAward
     {
-        public string CardId { get; }
+        public int CardId { get; }
         public Rarity Rarity { get; }
         public PackUpgradeReason Upgrade { get; }
 
-        public PackCardAward(string cardId, Rarity rarity, PackUpgradeReason upgrade)
+        public PackCardAward(int cardId, Rarity rarity, PackUpgradeReason upgrade)
         {
-            if (string.IsNullOrWhiteSpace(cardId))
-                throw new ArgumentException("Card id is required.", nameof(cardId));
+            if (cardId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(cardId), cardId, "Card id is required.");
 
             CardId = cardId;
             Rarity = rarity;

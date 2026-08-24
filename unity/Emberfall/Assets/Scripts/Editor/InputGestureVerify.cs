@@ -23,13 +23,13 @@ namespace Emberfall.Editor
     /// </summary>
     public static class InputGestureVerify
     {
-        private const string Vanilla        = "c_vanilla";         // a minion with no chosen target
-        private const string TargetedSpell  = "c_targeted_spell";  // ON_CAST + ANY_CHARACTER
-        private const string TargetedMinion = "c_targeted_minion"; // ON_PLAY + ANY_CHARACTER
-        private const string PowerFree      = "hp_untargeted";     // hero power, no chosen target
-        private const string PowerAim       = "hp_targeted";       // hero power, ANY_CHARACTER
-        private const string FizzleMinion   = "c_fizzle_minion";   // ON_PLAY + ANY_FRIENDLY_MINION
-        private const string CostMinion     = "c_cost_minion";     // same, but target.required
+        private const int Vanilla       = 9001;   // a minion with no chosen target
+        private const int TargetedSpell = 9002;   // ON_CAST + ANY_CHARACTER
+        private const int TargetedMinion = 9003;   // ON_PLAY + ANY_CHARACTER
+        private const int PowerFree     = 41;   // hero power, no chosen target
+        private const int PowerAim      = 42;   // hero power, ANY_CHARACTER
+        private const int FizzleMinion  = 9004;   // ON_PLAY + ANY_FRIENDLY_MINION
+        private const int CostMinion    = 9005;   // same, but target.cost = Required
 
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
@@ -879,28 +879,33 @@ namespace Emberfall.Editor
         {
             var anyCharacter = new[]
             {
-                Rule("battlecry_damage", Trigger.ON_PLAY, 3, "ANY_CHARACTER"),
+                Rule("battlecry_damage", Trigger.ON_PLAY, 3, "ANY_CHARACTER", TargetSelection.Of(1)),
             };
             var anyCharacterCast = new[]
             {
-                Rule("cast_damage", Trigger.ON_CAST, 1, "ANY_CHARACTER"),
+                Rule("cast_damage", Trigger.ON_CAST, 1, "ANY_CHARACTER", TargetSelection.Of(1)),
             };
             var selfHeal = new[]
             {
-                Rule("hero_power_damage", Trigger.ON_CAST, 1, "ENEMY_HERO"),
+                Rule("hero_power_damage", Trigger.ON_CAST, 1, "ENEMY_HERO", TargetSelection.Of(1)),
             };
 
             var friendlyReinforce = new[]
             {
                 new RuleDefinition(new RuleId("herald_reinforce"), new TriggeredActivation(Trigger.ON_PLAY),
                     AlwaysCondition.Instance, OneShotLifetime.Instance,
-                    new ReinforceAction(new TargetSpec("ANY_FRIENDLY_MINION"))),
+                    new ModifyStatsAction(1, 1, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1)))),
             };
+            // A cost that buys nothing, which C28-COST-UNBOUGHT would reject on a real row. This
+            // database is hand-built and never validated, and the gesture under test is whether a
+            // required pick is DEMANDED rather than what it pays for — adding a gated sibling would
+            // change the prompt this fixture exists to exercise.
             var friendlySacrifice = new[]
             {
                 new RuleDefinition(new RuleId("herald_sacrifice"), new TriggeredActivation(Trigger.ON_PLAY),
                     AlwaysCondition.Instance, OneShotLifetime.Instance,
-                    new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", required: true))),
+                    new DestroyAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1),
+                        cost: CostKind.Required))),
             };
 
             return new InMemoryCardDatabase(new[]
@@ -915,12 +920,13 @@ namespace Emberfall.Editor
             });
         }
 
-        private static RuleDefinition Rule(string id, Trigger trigger, int amount, string selector)
+        private static RuleDefinition Rule(string id, Trigger trigger, int amount, string selector,
+            TargetSelection selection)
             => new RuleDefinition(new RuleId(id), new TriggeredActivation(trigger), AlwaysCondition.Instance,
-                OneShotLifetime.Instance, new DamageAction(amount, new TargetSpec(selector)));
+                OneShotLifetime.Instance, new DamageAction(amount, new TargetSpec(selector, selection)));
 
-        private static CardDefinition Def(string id, CardType type, IReadOnlyList<RuleDefinition> rules)
-            => new CardDefinition(id, id, type, 1, 2, 3, null,
+        private static CardDefinition Def(int id, CardType type, IReadOnlyList<RuleDefinition> rules)
+            => new CardDefinition(id, $"verify_{id}", $"verify_{id}", type, 1, 2, 3, null,
                                   CardClass.NEUTRAL, Rarity.COMMON,
                                   System.Array.Empty<Keyword>(), rules,
                                   "", "", SetId.CORE, true, null, "");

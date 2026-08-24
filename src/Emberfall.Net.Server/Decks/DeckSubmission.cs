@@ -13,9 +13,9 @@ namespace Emberfall.Net.Server.Decks
     public readonly struct SeatDeck
     {
         public readonly CardClass HeroClass;
-        public readonly IReadOnlyList<string> Deck;
+        public readonly IReadOnlyList<int> Deck;
 
-        public SeatDeck(CardClass heroClass, IReadOnlyList<string> deck)
+        public SeatDeck(CardClass heroClass, IReadOnlyList<int> deck)
         {
             HeroClass = heroClass;
             Deck = deck;
@@ -87,12 +87,12 @@ namespace Emberfall.Net.Server.Decks
             // DeckValidator checks the copy cap per Entry, so two entries of the same id (each within the
             // cap) would otherwise sum past it undetected — the deckbuilder never emits that, but the wire
             // is not the deckbuilder. Merging here closes that bypass without touching the shared predicate.
-            var summed = new Dictionary<string, int>(System.StringComparer.Ordinal);
-            var order = new List<string>();
+            var summed = new Dictionary<int, int>();
+            var order = new List<int>();
             foreach (var line in msg.Cards)
             {
                 if (line.Count < 1)
-                    return DeckSubmissionResult.Rejected($"Non-positive copy count for '{line.CardId}'.");
+                    return DeckSubmissionResult.Rejected($"Non-positive copy count for card {line.CardId}.");
                 if (!summed.TryGetValue(line.CardId, out int have)) order.Add(line.CardId);
                 summed[line.CardId] = have + line.Count;
             }
@@ -108,7 +108,7 @@ namespace Emberfall.Net.Server.Decks
             // Expand to the pre-shuffle ordered list MatchSetup wants (BeginMatch shuffles with the seed,
             // so this order feeds determinism, not fairness). The hero — and its hero power — is the
             // PRIMARY class (dual-class ruling: exactly one hero power, from the primary).
-            var ordered = new List<string>(DeckValidator.DeckSize);
+            var ordered = new List<int>(DeckValidator.DeckSize);
             foreach (var id in order)
                 for (int i = 0; i < summed[id]; i++) ordered.Add(id);
 

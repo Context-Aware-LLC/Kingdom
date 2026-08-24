@@ -11,7 +11,7 @@ namespace Emberfall.Data
     /// </summary>
     public sealed class JsonCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _cards = new Dictionary<string, CardDefinition>();
+        private readonly Dictionary<int, CardDefinition> _cards = new Dictionary<int, CardDefinition>();
 
         public JsonCardDatabase(string json)
         {
@@ -27,14 +27,14 @@ namespace Emberfall.Data
                     _cards[def.Id] = def;
         }
 
-        public bool TryGet(string cardId, out CardDefinition def) =>
+        public bool TryGet(int cardId, out CardDefinition def) =>
             _cards.TryGetValue(cardId, out def);
 
-        public CardDefinition Get(string cardId)
+        public CardDefinition Get(int cardId)
         {
             if (!_cards.TryGetValue(cardId, out var def))
                 throw new System.Collections.Generic.KeyNotFoundException(
-                    $"Card '{cardId}' not found in database.");
+                    $"Card {cardId} not found in database.");
             return def;
         }
 

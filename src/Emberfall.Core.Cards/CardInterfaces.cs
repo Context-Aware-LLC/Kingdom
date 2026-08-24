@@ -13,8 +13,8 @@ namespace Emberfall.Core.Contracts
     /// </summary>
     public interface ICardDatabase
     {
-        bool TryGet(string cardId, out Cards.CardDefinition def);
-        Cards.CardDefinition Get(string cardId);
+        bool TryGet(int cardId, out Cards.CardDefinition def);
+        Cards.CardDefinition Get(int cardId);
 
         /// <summary>
         /// Every row eligible for a live card pool. <b>The contract is

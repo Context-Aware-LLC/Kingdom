@@ -21,21 +21,20 @@ namespace Emberfall.Core.Cards
     /// <summary>A stable reference to one authored rule on one immutable definition.</summary>
     public readonly struct RuleRef : IEquatable<RuleRef>
     {
-        public string DefinitionId { get; }
+        public int DefinitionId { get; }
         public RuleId RuleId { get; }
 
-        public RuleRef(string definitionId, RuleId ruleId)
+        public RuleRef(int definitionId, RuleId ruleId)
         {
-            if (string.IsNullOrWhiteSpace(definitionId))
-                throw new ArgumentException("A rule reference requires a definition id.",
-                    nameof(definitionId));
+            if (definitionId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(definitionId), definitionId,
+                    "A rule reference requires a definition id.");
             DefinitionId = definitionId;
             RuleId = ruleId;
         }
 
         public bool Equals(RuleRef other)
-            => string.Equals(DefinitionId, other.DefinitionId, StringComparison.Ordinal) &&
-               RuleId.Equals(other.RuleId);
+            => DefinitionId == other.DefinitionId && RuleId.Equals(other.RuleId);
 
         public override bool Equals(object? obj) => obj is RuleRef other && Equals(other);
 
@@ -43,13 +42,11 @@ namespace Emberfall.Core.Cards
         {
             unchecked
             {
-                return ((DefinitionId == null
-                    ? 0
-                    : StringComparer.Ordinal.GetHashCode(DefinitionId)) * 397) ^ RuleId.GetHashCode();
+                return (DefinitionId * 397) ^ RuleId.GetHashCode();
             }
         }
 
-        public override string ToString() => $"{DefinitionId ?? "<null>"}/{RuleId}";
+        public override string ToString() => $"{DefinitionId}/{RuleId}";
         public static bool operator ==(RuleRef left, RuleRef right) => left.Equals(right);
         public static bool operator !=(RuleRef left, RuleRef right) => !left.Equals(right);
     }

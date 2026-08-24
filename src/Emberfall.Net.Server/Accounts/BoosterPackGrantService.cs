@@ -254,14 +254,17 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         private static OwnedCardCounts ProjectOwnership(IReadOnlyList<EntitlementGrant> history, string excludeTxnPrefix)
         {
-            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            var counts = new Dictionary<int, int>();
             for (int i = 0; i < history.Count; i++)
             {
                 var row = history[i];
                 if (row.Item == null || !row.Item.StartsWith(CardItemPrefix, StringComparison.Ordinal)) continue;
                 if (row.ExternalTxnId != null && row.ExternalTxnId.StartsWith(excludeTxnPrefix, StringComparison.Ordinal)) continue;
 
-                string cardId = row.Item.Substring(CardItemPrefix.Length);
+                // The ledger item is "card:<number>". A row whose suffix is not a number is a
+                // pre-migration grant carrying a handle; it is SKIPPED rather than guessed at, so a
+                // stale row cannot silently award a different card than it recorded.
+                if (!int.TryParse(row.Item.Substring(CardItemPrefix.Length), out int cardId)) continue;
                 counts[cardId] = (counts.TryGetValue(cardId, out int n) ? n : 0) + (int)row.Qty;
             }
             return new OwnedCardCounts(counts);
@@ -293,15 +296,15 @@ namespace Emberfall.Net.Server.Accounts
                 // is no shard-row arm here and no card id to recover out of a grant's source string.
                 if (row.Item != null && row.Item.StartsWith(CardItemPrefix, StringComparison.Ordinal))
                 {
-                    string cardId = row.Item.Substring(CardItemPrefix.Length);
+                    if (!int.TryParse(row.Item.Substring(CardItemPrefix.Length), out int cardId)) continue;
                     awards.Add(new PackSlotAward(cardId, RarityOf(cardId), PackUpgrade.None));
                 }
             }
             return awards;
         }
 
-        private Rarity RarityOf(string cardId)
-            => !string.IsNullOrEmpty(cardId) && _cards.TryGet(cardId, out CardDefinition def) ? def.Rarity : Rarity.COMMON;
+        private Rarity RarityOf(int cardId)
+            => cardId > 0 && _cards.TryGet(cardId, out CardDefinition def) ? def.Rarity : Rarity.COMMON;
 
         // DupeSource / DupeCardIdFromSource lived here to attribute a shard row to the card that
         // dissolved into it. A pack no longer dissolves anything (Sam, 2026-08-12), so a pack open writes

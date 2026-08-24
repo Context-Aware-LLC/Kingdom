@@ -108,21 +108,32 @@ namespace Emberfall.Core
             InstanceId? triggerSource = null)
         {
             PlayerId firstPlayer = context.IncomingTurnPlayer ?? _state.ActivePlayer;
-            TriggerEventContext eventContext = triggerSource.HasValue
+
+            // ONE context, built once, used at BOTH gates (docs/effect-model-scheduling.md §5).
+            // Two gates exist on purpose — §1's "reconsider, not act" rule needs the dequeue-time
+            // re-check — but they must read the SAME environment. This previously qualified each
+            // subscriber against `context` and enqueued `eventContext`, so a condition reading the
+            // trigger source could pass one gate and fail the other.
+            //
+            // Reassigning the parameter rather than introducing a second name is the fix: it takes
+            // the un-augmented context out of scope entirely, so the two gates below cannot drift
+            // apart again without someone deliberately reconstructing it.
+            context = triggerSource.HasValue
                 ? context.WithTriggerSource(triggerSource.Value)
                 : context;
+
             EffectSourceContext? previous = null;
             var bindings = new TargetBindingContext();
             foreach (EffectSourceContext source in OrderedTriggerSources.Snapshot(
                          _state, _db, firstPlayer, trigger))
             {
                 if (excluded != null && source.Identity == excluded.Id) continue;
-                if (!ConditionEvaluator.Holds(source, context)) continue;
+                if (!ConditionEvaluator.Holds(source, context, bindings)) continue;
                 if (previous == null || previous.Identity != source.Identity ||
                     previous.Kind != source.Kind)
                     bindings = new TargetBindingContext();
                 _queue.Enqueue(new QueuedEffect(source, System.Array.Empty<TargetRef>(), bindings,
-                    eventContext));
+                    context));
                 previous = source;
             }
         }
@@ -140,7 +151,7 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(qe.Source, qe.TriggerEvent))
+                if (!ConditionEvaluator.Holds(qe.Source, qe.TriggerEvent, qe.Bindings))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -151,9 +162,21 @@ namespace Emberfall.Core
                 if (_state.Outcome != MatchOutcome.InProgress)
                 {
                     _queue.Clear();
-                    return;
+                    return;   // checkpoint already ran on this path
                 }
             }
+
+            // The checkpoint sequence is a property of the DRAIN, not of the caller
+            // (docs/effect-model-scheduling.md §3.2) — it runs on EVERY exit, never as something six
+            // call sites each remember. This covers the two exits the loop body could not: an empty
+            // queue at the loop top, and a `break` on the resolution cap.
+            //
+            // Only the game-end half is repeated here, and that is deliberate rather than partial:
+            // deaths are already settled on both of those paths — the empty-queue exit is preceded by
+            // the entry DeathCheck, and the cap `break` fires BEFORE ResolveOne, so nothing has died
+            // since the previous iteration's DeathCheck. Adding a redundant board scan would be a
+            // second full pass over a hash-canonical engine for no state change.
+            RulesEngine.CheckWin(_state, _buf);
         }
 
         private void ResolveOne(QueuedEffect qe)
@@ -293,13 +316,25 @@ namespace Emberfall.Core
         }
     }
 
-    /// <summary>Pure condition gate evaluated immediately before a queued effect resolves.</summary>
+    /// <summary>
+    /// Pure condition gate evaluated immediately before a queued effect resolves.
+    ///
+    /// <para><b>Still pure, and the bindings argument does not change that</b> — it reads what the
+    /// play has already recorded and writes nothing. A cost is paid by the cost RULE resolving, one
+    /// dequeue earlier; this only asks whether it did.</para>
+    /// </summary>
     internal static class ConditionEvaluator
     {
-        public static bool Holds(EffectSourceContext source, TriggerEventContext context)
+        public static bool Holds(EffectSourceContext source, TriggerEventContext context,
+            TargetBindingContext? bindings = null)
         {
             switch (source.Rule.Condition)
             {
+                case CostPaidCondition _:
+                    // Fail closed with no binding context: a gate whose cost cannot be observed has
+                    // not seen a cost paid. The observer snapshot is the caller that has none, and
+                    // C28 keeps costs off observer triggers precisely so that is unreachable.
+                    return bindings != null && bindings.CostPaid;
                 case AlwaysCondition _:
                     return RuleSemantics.TriggerOf(source.Rule) != Trigger.ON_TURN_START;
                 case TurnOwnerCondition condition:

@@ -160,8 +160,8 @@ namespace Emberfall.Presentation
 
         private void SetWalletUnavailable()
         {
-            if (_gold != null) _gold.text = "Gold  —";
-            if (_gems != null) _gems.text = "Gems  —";
+            if (_gold != null) _gold.text = "";
+            if (_gems != null) _gems.text = "";
         }
 
         private void RenderPacks(IReadOnlyList<PackOffer> offers, WalletBalances? wallet)

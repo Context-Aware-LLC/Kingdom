@@ -101,7 +101,7 @@ namespace Emberfall.Net.Protocol
                     foreach (var line in m.Cards)
                     {
                         w.BeginObject();
-                        w.Name("cardId"); w.Str(line.CardId);
+                        w.Name("cardId"); w.I32(line.CardId);
                         w.Name("count"); w.I32(line.Count);
                         w.EndObject();
                     }
@@ -346,7 +346,7 @@ namespace Emberfall.Net.Protocol
             foreach (var item in cardsVal.Items)
             {
                 if (item.Kind != JKind.Object
-                    || !item.TryGet("cardId", out var idVal) || !idVal.TryStr(out string cardId)
+                    || !item.TryGet("cardId", out var idVal) || !idVal.TryI32(out int cardId)
                     || !item.TryGet("count", out var cntVal) || !cntVal.TryI32(out int count))
                     return DecodeResult.Fail(ProtocolError.BadField, "bad deck 'cards' entry", matchId, seq);
                 cards.Add(new DeckCardLine(cardId, count));

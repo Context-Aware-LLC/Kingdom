@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 3,
+  "name": "on_heal_wardsong",
+  "engineContractVersion": "interfaces.v4",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0007",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "TIDECALLER",
+  "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "seed": 2718281828459045,
+  "p0Deck": [
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong"
+  ],
+  "p1Deck": [
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong",
+    "test_heal_salve",
+    "frost_ripple",
+    "test_heal_wardsong"
+  ],
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i23",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i26",
+      "slot": 1,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P0"
+    },
+    {
+      "$type": "play_card",
+      "player": "P1",
+      "card": "i34",
+      "slot": 0,
+      "targets": []
+    },
+    {
+      "$type": "end_turn",
+      "player": "P1"
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i28",
+      "slot": 2,
+      "targets": []
+    },
+    {
+      "$type": "play_card",
+      "player": "P0",
+      "card": "i24",
+      "slot": 0,
+      "targets": []
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "8bc325de721b80cd66eca27eec5a546da4ee0df33f31fbc7474c685e1433997c",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "CardDrawn",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "CardPlayed",
+        "src": "i23",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "TurnEnded",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 4,
+        "kind": "TurnStarted",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 5,
+        "kind": "CardDrawn",
+        "src": "i37",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 6,
+        "kind": "TurnEnded",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 7,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 8,
+        "kind": "CardDrawn",
+        "src": "i27",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 9,
+        "kind": "CardPlayed",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 10,
+        "kind": "TurnEnded",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 11,
+        "kind": "TurnStarted",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 12,
+        "kind": "CardDrawn",
+        "src": "i38",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 13,
+        "kind": "CardPlayed",
+        "src": "i34",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 14,
+        "kind": "DamageApplied",
+        "src": "i34",
+        "tgt": "i23",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 15,
+        "kind": "DamageApplied",
+        "src": "i34",
+        "tgt": "i26",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 16,
+        "kind": "TurnEnded",
+        "src": "i2",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 17,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 18,
+        "kind": "CardDrawn",
+        "src": "i28",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 19,
+        "kind": "CardPlayed",
+        "src": "i28",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 20,
+        "kind": "CardPlayed",
+        "src": "i24",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 21,
+        "kind": "HealthRestored",
+        "src": "i24",
+        "tgt": "i23",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 22,
+        "kind": "HealthRestored",
+        "src": "i24",
+        "tgt": "i26",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 23,
+        "kind": "DamageApplied",
+        "src": "i23",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      },
+      {
+        "seq": 24,
+        "kind": "DamageApplied",
+        "src": "i26",
+        "tgt": "i2",
+        "amt": 1,
+        "flags": "None"
+      }
+    ]
+  }
+}

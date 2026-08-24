@@ -86,7 +86,7 @@ namespace Emberfall.Core.Collection
         /// (card-id permanence, github issue #86), so L6 must never be reachable as a way of saying "not
         /// in this format". If a format axis ever lands it is a rule of its own, not a term in here.</para>
         /// </summary>
-        public static int CopyLimit(Rarity rarity, IOwnedCardCounts? owned, string cardId)
+        public static int CopyLimit(Rarity rarity, IOwnedCardCounts? owned, int cardId)
         {
             int max = MaxCopies(rarity);
             if (owned == null) return max;

@@ -2,11 +2,13 @@
 #
 # Keep the artifacts derived from the canonical card rows from separating from them.
 #
-# A hand-edit to unity/Emberfall/Assets/CardData/*.cards.json silently staleness two things, and
-# NOTHING in Unity notices: there is no ScriptedImporter, the CardDefinitionSO bake only happens
-# on the Card Authoring window's Bake / Bake All buttons, and `Emberfall/Validate All Cards`
-# reads the rows without ever opening Assets/Cards. Both were found red on 2026-08-11, a day
-# after the balance edit that opened them.
+# A hand-edit to unity/Emberfall/Assets/CardData/*.cards.json silently stales what is generated
+# from those rows, and NOTHING in Unity notices. Found red on 2026-08-11, a day after the balance
+# edit that opened it.
+#
+# It used to guard a second artifact too — the baked CardDefinitionSO assets under Assets/Cards,
+# reachable only from the Card Authoring window's Bake buttons. That whole path was deleted on
+# 2026-08-22: nothing read it at runtime and it belonged to no Addressables group.
 #
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # THIS HOOK MUTATES NOTHING. It does not run `git add`, and it does not write to the working

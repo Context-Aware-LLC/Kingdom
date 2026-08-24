@@ -24,17 +24,27 @@ namespace Emberfall.Core.Contracts
 
     public enum SetId { CORE, EMBERFALL, REKINDLING }
 
+    /// <summary>
+    /// Card tribes. HUMAN is appended rather than inserted: it arrived with main's tribe pass and
+    /// appending keeps every existing ordinal where it was. Tribe is a CardDefinition field and
+    /// reaches no canonical state — GameStateSerializer never walks it — so unlike Keyword this
+    /// enum is not hash-canonical and carries no rebaseline cost.
+    /// </summary>
     public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN }
 
     /// <summary>
     /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized
-    /// rule activation and deliberately have no enum member. SILENCE, BACKDRAFT, and REINFORCE remain
-    /// reserved legacy slots for ordinal compatibility, but authoring/runtime semantics treat them as
-    /// action-derived markers rather than carrier behavior. Numeric values after removed slots are explicit
-    /// so their wire spelling/ordering cannot drift.
-    /// implemented. ECHO was formally cut by M2 decision 2 (zero implementation, zero cards);
-    /// this is a hash-canonical change (GameStateHasher sorts keyword sets by enum int), executed
-    /// with the golden-replay gate as witness per hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md tier b.
+    /// rule activation and deliberately have no enum member.
+    ///
+    /// <para>SILENCE, BACKDRAFT and REINFORCE are not carrier behavior and must never enter keyword
+    /// state — SILENCE and BACKDRAFT because typed actions derive their markers, REINFORCE because it
+    /// names nothing at all. Numeric values are explicit so a member's wire spelling cannot drift.</para>
+    ///
+    /// <para><b>Do not renumber in this fork.</b> The hasher sorts keyword sets by enum int and writes
+    /// that int into the digest, so changing a value moves every digest holding more than one keyword.
+    /// Tidying the dead slots away is scheduled POST-MIGRATION, in the main project, where the
+    /// golden-replay gate can witness the rebaseline — that gate does not run here. See the migration
+    /// document (Sam, 2026-08-20).</para>
     /// </summary>
     public enum Keyword
     {
@@ -224,7 +234,7 @@ namespace Emberfall.Core.Contracts
     /// <summary>Only <see cref="Error"/> blocks a bake; Warning/Info are advisory.</summary>
     public enum Severity { Error, Warning, Info }
 
-    // NOTE: the former `AuraKind` enum was deleted here (M2, decisions/ADR-0006, condition C-G0-3).
-    // It was dead code — no source consumer ever bound to it. Persistent aura state is presentation-
-    // side `AuraSet` flags on ICardLiveState (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1), which is what shipped.
+    // Persistent aura state is presentation-side `AuraSet` flags on ICardLiveState
+    // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1),
+    // not an enum in this file.
 }

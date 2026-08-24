@@ -46,13 +46,13 @@ namespace Emberfall.Core.Collection
     /// </remarks>
     public readonly struct PackSlotAward
     {
-        public readonly string CardId;
+        public readonly int CardId;
         public readonly Rarity Rarity;
 
         /// <summary>Which guarantee, if any, set this slot's rarity rather than the dice.</summary>
         public readonly PackUpgrade Upgrade;
 
-        public PackSlotAward(string cardId, Rarity rarity, PackUpgrade upgrade)
+        public PackSlotAward(int cardId, Rarity rarity, PackUpgrade upgrade)
         {
             CardId = cardId;
             Rarity = rarity;
@@ -200,7 +200,7 @@ namespace Emberfall.Core.Collection
             // NOR-109 §6's original all-or-nothing preference stays commented out below. This weighted
             // form supersedes it; that block is kept only as the record of what the hard version was.
             var awards = new List<PackSlotAward>(pack.CardCount);
-            var awardedThisPack = new Dictionary<string, int>(StringComparer.Ordinal);
+            var awardedThisPack = new Dictionary<int, int>();
 
             for (int i = 0; i < pack.CardCount; i++)
             {
@@ -245,7 +245,7 @@ namespace Emberfall.Core.Collection
                 //   awards.Add(new PackSlotAward(picked.Id, rarity, upgrades[i]));
                 //
                 // and above the loop:
-                //   var awardedThisPack = new Dictionary<string, int>(StringComparer.Ordinal);
+                //   var awardedThisPack = new Dictionary<int, int>();
             }
 
             var after = pity.AfterPack(ToRarityList(rarities));
@@ -409,7 +409,7 @@ namespace Emberfall.Core.Collection
         /// cannot approach overflow.</para>
         /// </summary>
         private static CardDefinition PickWeighted(IReadOnlyList<CardDefinition> candidates, Rarity rarity,
-                                                   IOwnedCardCounts owned, Dictionary<string, int> awardedThisPack,
+                                                   IOwnedCardCounts owned, Dictionary<int, int> awardedThisPack,
                                                    DeterministicRandom rng)
         {
             int cap = DeckValidator.MaxCopies(rarity);
@@ -453,7 +453,7 @@ namespace Emberfall.Core.Collection
         /// thing the slot can be, and it is still a card, because a pack converts nothing to shards.</para>
         /// </summary>
         private static IReadOnlyList<CardDefinition> LegendaryEligible(
-            List<CardDefinition> candidates, IOwnedCardCounts owned, Dictionary<string, int> awardedThisPack)
+            List<CardDefinition> candidates, IOwnedCardCounts owned, Dictionary<int, int> awardedThisPack)
         {
             int limit = DeckValidator.MaxCopies(Rarity.LEGENDARY);
 
@@ -476,10 +476,10 @@ namespace Emberfall.Core.Collection
         /// means an unauthenticated or unprojected caller gets the old uniform draw rather than a
         /// silently skewed one.</para>
         /// </summary>
-        private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<string, int> thisPack, string cardId)
+        private static int EffectiveOwned(IOwnedCardCounts owned, Dictionary<int, int> thisPack, int cardId)
             => (owned != null ? owned.CopiesOwned(cardId) : 0) + EffectiveOwnedDelta(thisPack, cardId);
 
-        private static int EffectiveOwnedDelta(Dictionary<string, int> thisPack, string cardId)
+        private static int EffectiveOwnedDelta(Dictionary<int, int> thisPack, int cardId)
             => thisPack.TryGetValue(cardId, out int n) ? n : 0;
 
         private static IReadOnlyList<Rarity> ToRarityList(Rarity[] rarities)

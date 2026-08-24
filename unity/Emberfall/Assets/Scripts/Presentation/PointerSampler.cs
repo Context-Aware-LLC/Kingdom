@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using Emberfall.Presentation.Input;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Emberfall.Presentation
 {
@@ -31,149 +35,164 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// Collapses mouse and touch into ONE press/drag/release stream (EF-048). Everything above this
-    /// class is input-model-agnostic: <see cref="InputRouter"/> never asks whether it is being driven
-    /// by a finger or a mouse, which is what lets desktop drag and Android tap-and-hold-drag be the
-    /// same code path rather than two machines that drift.
+    /// Turns the <c>ScreenActions</c> map into ONE press/drag/release stream (EF-048). Everything
+    /// above this class is input-model-agnostic: <see cref="InputRouter"/> never asks whether it is
+    /// being driven by a finger or a mouse, which is what lets desktop drag and Android
+    /// tap-and-hold-drag be the same code path rather than two machines that drift.
     ///
-    /// <para>THE REASON THIS IS NOT JUST <c>Input.GetMouseButton*</c>: legacy Unity input does
-    /// synthesise mouse events from touches (<c>Input.simulateMouseWithTouches</c>, on by default on
-    /// Android) — which is why the old <c>OnMouseDown</c> click machine appeared to work on a phone.
-    /// What it does NOT give you is a stable per-finger identity across a drag, and the synthetic
-    /// mouse-up can land a frame AFTER <c>touchCount</c> returns to zero. Reading both streams
-    /// naively therefore double-fires the end of every touch gesture.</para>
+    /// <para>THERE IS ONLY ONE STREAM, AND THAT IS THE WHOLE POINT. <c>ScreenActions/Press</c> and
+    /// <c>ScreenActions/Position</c> bind to <c>&lt;Pointer&gt;</c>, which resolves to mouse, pen,
+    /// or the touchscreen's primary touch — whichever is actually present. Do not add a parallel
+    /// <c>EnhancedTouch</c> or <c>Touchscreen</c> read to "also handle touch": that device is
+    /// already in this stream, so a second reader double-fires the end of every touch gesture, and
+    /// the suppression logic needed to undo that is what this class used to be made of.</para>
     ///
-    /// <para>So: while any touch is live, the mouse stream is ignored outright, and the frames
-    /// immediately after a touch ends swallow the synthetic mouse tail.</para>
+    /// <para>A second finger landing mid-drag cannot hijack the gesture, because
+    /// <c>&lt;Pointer&gt;/press</c> follows <c>primaryTouch</c> and primary stays with the finger
+    /// that started it until that finger lifts.</para>
     ///
-    /// <para>For testing: <see cref="QueueSyntheticFrame"/> allows the Editor test harness to feed a
-    /// scripted frame sequence, overriding Input readings for headless gesture verification.</para>
+    /// <para>For testing: <see cref="QueueSyntheticFrames"/> allows the Editor test harness to feed
+    /// a scripted frame sequence, overriding action readings for headless gesture verification.</para>
     /// </summary>
-    public sealed class PointerSampler
+    public sealed class PointerSampler : IDisposable
     {
-        private int     _fingerId = -1;      // -1 = not tracking a finger
         private Vector2 _last;
-        private bool    _mouseSuppressed;    // a touch owned the pointer; ignore the synthetic tail
-        private bool    _pendingMouseRelease;// down+up arrived in the SAME frame (fast click)
+        private bool    _pendingRelease;   // down+up arrived in the SAME frame (fast click or tap)
+        private bool    _gestureActive;    // a press is in flight and has not ended yet
+        private bool    _enabled;
 
-        private System.Collections.Generic.Queue<PointerSample> _syntheticFrames;  // test-only queue
+        private readonly EmberfallActions _actions = new EmberfallActions();
 
-        /// <summary>EDITOR/TEST ONLY: whether a finger/gesture is currently being tracked.</summary>
-        public bool IsTrackingFinger => _fingerId >= 0;
+        private Queue<PointerSample> _syntheticFrames;  // test-only queue
+
+        /// <summary>Whether a press/drag gesture is currently in flight.</summary>
+        public bool IsTrackingFinger => _gestureActive;
+
+        /// <summary>
+        /// Whether the live press is a real finger rather than a mouse or pen. Callers use this to
+        /// pick touch-only behaviour (see <c>CardRevealController</c>: only a touch arms the hold).
+        /// This asks about the DEVICE, which the unified pointer stream deliberately does not carry.
+        /// </summary>
+        public bool HasActiveTouch => Touchscreen.current?.primaryTouch.press.isPressed == true;
+
+        public bool IsPressed
+        {
+            get
+            {
+                Enable();
+                return _actions.ScreenActions.Press.IsPressed();
+            }
+        }
+
+        public void Enable()
+        {
+            if (_enabled) return;
+            _actions.ScreenActions.Enable();
+            _enabled = true;
+        }
+
+        public void Disable()
+        {
+            if (!_enabled) return;
+            _actions.ScreenActions.Disable();
+            _enabled = false;
+            Reset();
+        }
+
+        public void Dispose()
+        {
+            Disable();
+            _actions.Dispose();
+        }
 
         public PointerSample Sample()
         {
-            // Test injection: if synthetic frames are queued, drain them instead of reading Input.
+            // Test injection: if synthetic frames are queued, drain them instead of reading actions.
             if (_syntheticFrames != null && _syntheticFrames.Count > 0)
-                return _syntheticFrames.Dequeue();
+                return Track(_syntheticFrames.Dequeue());
 
-            if (Input.touchCount > 0 || _fingerId >= 0)
+            Enable();
+            return Track(SamplePointer());
+        }
+
+        /// <summary>
+        /// Keep <see cref="IsTrackingFinger"/> in step with whatever phase we are about to hand out.
+        /// Synthetic frames run through here too, so the harness's "gesture fully cleared" checks
+        /// assert the real flag rather than one that was never set.
+        /// </summary>
+        private PointerSample Track(PointerSample sample)
+        {
+            switch (sample.Phase)
             {
-                _mouseSuppressed = true;
-                return SampleTouch();
+                case PointerPhase.Pressed:
+                    _gestureActive = true;
+                    break;
+                case PointerPhase.Released:
+                case PointerPhase.Canceled:
+                    _gestureActive = false;
+                    break;
             }
-
-            if (_mouseSuppressed)
-            {
-                // Hold the mouse stream off until it is genuinely idle. Anything still reading as
-                // pressed here is the synthetic tail of the touch we just finished, and replaying it
-                // would release the same gesture twice.
-                if (Input.GetMouseButton(0) || Input.GetMouseButtonUp(0))
-                    return new PointerSample(PointerPhase.None, _last);
-                _mouseSuppressed = false;
-            }
-
-            return SampleMouse();
+            return sample;
         }
 
         /// <summary>Drops any in-flight gesture (focus loss, UI taking over). The next press starts clean.</summary>
         public void Reset()
         {
-            _fingerId            = -1;
-            _pendingMouseRelease = false;
+            _pendingRelease = false;
+            _gestureActive  = false;
         }
 
         /// <summary>
-        /// EDITOR/TEST ONLY: inject a scripted frame sequence, overriding Input readings for headless
-        /// verification (EF-048 InputGestureVerify). Drains from the queue in order; once depleted,
-        /// Sample() resumes reading Input normally.
+        /// EDITOR/TEST ONLY: inject a scripted frame sequence, overriding action readings for
+        /// headless verification (EF-048 InputGestureVerify). Drains from the queue in order; once
+        /// depleted, Sample() resumes reading the actions normally.
         /// </summary>
         public void QueueSyntheticFrames(params PointerSample[] frames)
         {
             if (_syntheticFrames == null)
-                _syntheticFrames = new System.Collections.Generic.Queue<PointerSample>();
+                _syntheticFrames = new Queue<PointerSample>();
             foreach (var frame in frames)
                 _syntheticFrames.Enqueue(frame);
         }
 
-        private PointerSample SampleTouch()
+        private PointerSample SamplePointer()
         {
-            for (int i = 0; i < Input.touchCount; i++)
-            {
-                Touch t = Input.GetTouch(i);
-
-                if (_fingerId < 0)
-                {
-                    // Not tracking yet: the FIRST finger to begin owns the gesture. A second finger
-                    // landing mid-drag is ignored rather than hijacking the aim.
-                    if (t.phase != TouchPhase.Began) continue;
-                    _fingerId = t.fingerId;
-                    _last     = t.position;
-                    return new PointerSample(PointerPhase.Pressed, t.position);
-                }
-
-                if (t.fingerId != _fingerId) continue;
-                _last = t.position;
-
-                if (t.phase == TouchPhase.Canceled)
-                {
-                    _fingerId = -1;
-                    return new PointerSample(PointerPhase.Canceled, t.position);
-                }
-                if (t.phase == TouchPhase.Ended)
-                {
-                    _fingerId = -1;
-                    return new PointerSample(PointerPhase.Released, t.position);
-                }
-                return new PointerSample(PointerPhase.Held, t.position);
-            }
-
-            // The tracked finger disappeared without ever reporting Ended — app focus loss and
-            // OS gesture interception both do this. Synthesise a cancel, or the drag strands
-            // armed forever with no way for the player to clear it.
-            if (_fingerId >= 0)
-            {
-                _fingerId = -1;
-                return new PointerSample(PointerPhase.Canceled, _last);
-            }
-            return new PointerSample(PointerPhase.None, _last);
-        }
-
-        private PointerSample SampleMouse()
-        {
-            Vector3 mouse = Input.mousePosition;
-            _last = new Vector2(mouse.x, mouse.y);
+            _last = _actions.ScreenActions.Position.ReadValue<Vector2>();
 
             // Deferred from a same-frame down+up. Must be answered BEFORE this frame's edges, or a
             // rapid double-click swallows the first release.
-            if (_pendingMouseRelease)
+            if (_pendingRelease)
             {
-                _pendingMouseRelease = false;
+                _pendingRelease = false;
                 return new PointerSample(PointerPhase.Released, _last);
             }
 
-            bool down = Input.GetMouseButtonDown(0);
-            bool up   = Input.GetMouseButtonUp(0);
+            bool down = _actions.ScreenActions.Press.WasPressedThisFrame();
+            bool up   = _actions.ScreenActions.Press.WasReleasedThisFrame();
+
+            if (up && WasCanceledByOs())
+                return new PointerSample(PointerPhase.Canceled, _last);
 
             if (down && up)
             {
-                _pendingMouseRelease = true;
+                _pendingRelease = true;
                 return new PointerSample(PointerPhase.Pressed, _last);
             }
             if (down) return new PointerSample(PointerPhase.Pressed,  _last);
             if (up)   return new PointerSample(PointerPhase.Released, _last);
-            if (Input.GetMouseButton(0)) return new PointerSample(PointerPhase.Held, _last);
+            if (_actions.ScreenActions.Press.IsPressed()) return new PointerSample(PointerPhase.Held, _last);
             return new PointerSample(PointerPhase.None, _last);
         }
+
+        /// <summary>
+        /// Distinguish "the player lifted their finger" from "the OS took the touch away" (NOR-137:
+        /// a system gesture or focus loss mid-drag must not complete the drag). The action stream
+        /// reports both as a plain release, so the touch phase is the only thing that still carries
+        /// the difference — and only a touchscreen has one, which is why a mouse release is never a
+        /// cancel.
+        /// </summary>
+        private static bool WasCanceledByOs()
+            => Touchscreen.current != null
+               && Touchscreen.current.primaryTouch.phase.ReadValue() == UnityEngine.InputSystem.TouchPhase.Canceled;
     }
 }

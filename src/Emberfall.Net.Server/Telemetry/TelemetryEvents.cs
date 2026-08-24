@@ -95,7 +95,7 @@ namespace Emberfall.Net.Server.Telemetry
         string DeckId,
         string DeckHash,
         SeatResult Result,
-        IReadOnlyList<string> MulliganKept);
+        IReadOnlyList<int> MulliganKept);
 
     /// <summary>
     /// `match_complete` — emitted once per finished match. THIS EVENT IS THE ≥200-MATCH SAMPLE the
@@ -133,7 +133,7 @@ namespace Emberfall.Net.Server.Telemetry
         AccountId Account,
         CardClass Class,
         bool MatchWon,
-        string CardDefId,
+        int CardDefId,
         bool InDeck,
         bool DrawnThisMatch,
         bool KeptInMulligan,

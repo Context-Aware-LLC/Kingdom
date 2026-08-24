@@ -70,9 +70,8 @@ namespace Emberfall.Core.Projection
                 CurrentHealth = ps.Hero.CurrentHealth,   // PUBLIC (all hero fields)
                 Armor = ps.Hero.Armor,
                 HeroPowerId = ps.Hero.HeroPowerId,
-                IsFrosted = ps.Hero.IsFrosted,
-                FrostThawPending = ps.Hero.FrostThawPending,
             };
+            CloneEffects(s, ps.Hero.Effects, hero.Effects, viewerSeat, ref max);
 
             var proj = new PlayerState(ps.Id, hero);
 
@@ -106,6 +105,39 @@ namespace Emberfall.Core.Projection
             return proj;
         }
 
+        /// <summary>
+        /// Deep-copies an effect list into a projection. <see cref="EffectInstance.Source"/> gets the
+        /// SAME resolution guard as <see cref="Enchantment.Source"/> and for the same reason: an
+        /// ephemeral hero-power id or a bounced-away minion's retired id must not reach the wire.
+        /// A <c>null</c> Source (nothing applied it) passes through as <c>null</c> — absence is shape,
+        /// not information, same as <see cref="Redact"/> below.
+        ///
+        /// <para>Effect state is otherwise PUBLIC — frost is already visible on both boards, and the
+        /// remaining-turns count is exactly what the frost pip on a card face is drawn from. A future
+        /// non-public effect kind is what would make this a per-kind decision instead of a blanket one;
+        /// <b>RETIREMENT TRIGGER:</b> the first hidden <c>EffectKind</c> must revisit this method.</para>
+        /// </summary>
+        private static void CloneEffects(GameState s, List<EffectInstance> src,
+            List<EffectInstance> dst, int viewerSeat, ref int max)
+        {
+            foreach (var e in src)
+            {
+                InstanceId? source = null;
+                if (e.Source.HasValue)
+                {
+                    bool visible = IsVisibleTo(Classify(s, e.Source.Value), viewerSeat);
+                    source = visible ? Track(e.Source.Value, ref max) : Sentinel;
+                }
+                dst.Add(new EffectInstance
+                {
+                    Kind = e.Kind,
+                    Source = source,
+                    Scope = e.Scope,
+                    TurnsRemaining = e.TurnsRemaining,
+                });
+            }
+        }
+
         private static CardInstance CloneCard(GameState s, CardInstance c, int viewerSeat, ref int max)
         {
             var proj = new CardInstance(Track(c.Id, ref max), c.DefinitionId, c.Controller)
@@ -116,14 +148,13 @@ namespace Emberfall.Core.Projection
                 MaxHealth = c.MaxHealth,
                 CurrentDurability = c.CurrentDurability,
                 HasAegisShield = c.HasAegisShield,
-                IsFrosted = c.IsFrosted,
-                FrostThawPending = c.FrostThawPending,
                 IsSilenced = c.IsSilenced,
                 SummonedThisTurn = c.SummonedThisTurn,
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,
                 HasUsedRekindle = c.HasUsedRekindle,
                 Position = c.Position,
             };
+            CloneEffects(s, c.Effects, proj.Effects, viewerSeat, ref max);
             foreach (var k in c.Keywords) proj.Keywords.Add(k);
             foreach (var e in c.Enchantments)
             {
@@ -145,7 +176,10 @@ namespace Emberfall.Core.Projection
 
         /// <summary>The §5.2.1 card-back form: sentinel id, empty definition, zeroed stats.</summary>
         private static CardInstance Placeholder(PlayerId controller, Zone zone)
-            => new CardInstance(Sentinel, "", controller) { Zone = zone };
+            // 0, never a real id — the reason the bands start at 1. A hidden card is one whose
+            // definition the viewer may not learn, and it has to be UNRESOLVABLE rather than
+            // merely blank.
+            => new CardInstance(Sentinel, 0, controller) { Zone = zone };
 
         private static PendingChoice? ProjectPendingChoice(PendingChoice? pc, PlayerId viewer, int viewerSeat, ref int max)
         {

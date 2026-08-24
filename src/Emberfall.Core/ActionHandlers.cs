@@ -21,8 +21,7 @@ namespace Emberfall.Core
                 case HealAction _: new HealHandler().Execute(context); return;
                 case DrawAction _: new DrawHandler().Execute(context); return;
                 case SummonAction _: new SummonHandler().Execute(context); return;
-                case ModifyStatsAction _:
-                case ReinforceAction _: new BuffHandler().Execute(context); return;
+                case ModifyStatsAction _: new ModifyStatsHandler().Execute(context); return;
                 case GrantKeywordAction _: new GiveKeywordHandler().Execute(context); return;
                 case DestroyAction _: new DestroyHandler().Execute(context); return;
                 case ReturnToHandAction _: new ReturnToHandHandler().Execute(context); return;
@@ -112,21 +111,26 @@ namespace Emberfall.Core
         }
     }
 
-    // ── BUFF ─────────────────────────────────────────────────────────────────────
-    internal sealed class BuffHandler : IActionHandler
+    // ── MODIFY STATS ─────────────────────────────────────────────────────────────
+    /// <summary>
+    /// The only action that moves a minion's stats, in either direction. A negative delta is an
+    /// ordinary debuff and needs no separate path; allegiance is whatever the rule's selector says.
+    /// </summary>
+    internal sealed class ModifyStatsHandler : IActionHandler
     {
         public void Execute(in EffectContext ctx)
         {
-            int atk = ctx.Rule.Action is ReinforceAction ? 1 : ((ModifyStatsAction)ctx.Rule.Action).AttackDelta;
-            int hp = ctx.Rule.Action is ReinforceAction ? 1 : ((ModifyStatsAction)ctx.Rule.Action).HealthDelta;
+            var buff = (ModifyStatsAction)ctx.Rule.Action;
+            int atk = buff.AttackDelta;
+            int hp = buff.HealthDelta;
             if (atk == 0 && hp == 0) return;
             foreach (var t in ctx.Targets)
             {
                 if (!t.IsMinion) continue;
                 var m = t.Minion!;
-                // The enchantment is the record and the recompute reads it back (EF-017a). Before that
-                // layer this baked `CurrentAttack += atk` and the enchantment was write-only, so nothing
-                // could ever take the buff off again.
+                // The enchantment IS the record; DerivedStats recomputes live stats from the list
+                // (EF-017a). Never bake `CurrentAttack += atk` here — a contribution melted into the
+                // total cannot be taken back off when its source leaves.
                 m.Enchantments.Add(new Enchantment { Source = ctx.Source.Identity, AttackDelta = atk, HealthDelta = hp });
                 DerivedStats.Recompute(m, ctx.Db.Get(m.DefinitionId));
                 ctx.Events.Emit(GameEventKind.StatsModified, source: ctx.Source.Identity, target: m.Id, amount: atk != 0 ? atk : hp);
@@ -176,9 +180,9 @@ namespace Emberfall.Core
             {
                 if (t.IsMinion) t.Minion!.CurrentHealth = 0;
                 else if (t.IsHero) t.Hero!.CurrentHealth = 0;
-                else if (t.Kind == TargetCandidateKind.Weapon)
+                else if (t.Zone == Zone.Weapon)
                     RulesEngine.BreakWeapon(ctx.Interpreter, t.Seat);
-                else if (t.Kind == TargetCandidateKind.HandCard && t.Card != null)
+                else if (t.Zone == Zone.Hand && t.Card != null)
                 {
                     PlayerState owner = ctx.State.Players[t.Seat];
                     if (!owner.Hand.Remove(t.Card)) continue;
@@ -197,7 +201,7 @@ namespace Emberfall.Core
         {
             foreach (var t in ctx.Targets)
             {
-                if (t.Kind == TargetCandidateKind.Weapon)
+                if (t.Zone == Zone.Weapon)
                 {
                     var owner = ctx.State.Players[t.Seat];
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance) continue;
@@ -207,13 +211,13 @@ namespace Emberfall.Core
                     MoveCardToHand(ctx, owner, weapon, wasPublic: true);
                     continue;
                 }
-                if (t.Card != null && t.Kind != TargetCandidateKind.Minion)
+                if (t.Card != null && t.Zone != Zone.Board)
                 {
                     var owner = ctx.State.Players[t.Seat];
-                    if (t.Kind == TargetCandidateKind.HandCard) continue;
-                    if (t.Kind == TargetCandidateKind.DeckCard) owner.Deck.Remove(t.Card);
-                    else if (t.Kind == TargetCandidateKind.GraveyardCard) owner.Graveyard.Remove(t.Card);
-                    MoveCardToHand(ctx, owner, t.Card, wasPublic: t.Kind == TargetCandidateKind.GraveyardCard);
+                    if (t.Zone == Zone.Hand) continue;
+                    if (t.Zone == Zone.Deck) owner.Deck.Remove(t.Card);
+                    else if (t.Zone == Zone.Graveyard) owner.Graveyard.Remove(t.Card);
+                    MoveCardToHand(ctx, owner, t.Card, wasPublic: t.Zone == Zone.Graveyard);
                     continue;
                 }
                 if (!t.IsMinion) continue;          // heroes/weapons can't be bounced
@@ -269,7 +273,7 @@ namespace Emberfall.Core
             foreach (var t in ctx.Targets)
             {
                 CardInstance? card = t.IsMinion ? t.Minion
-                    : t.Kind == TargetCandidateKind.Weapon ? t.Card : null;
+                    : t.Zone == Zone.Weapon ? t.Card : null;
                 if (card == null) continue;
                 var def = ctx.Db.Get(card.DefinitionId);
 
@@ -363,7 +367,7 @@ namespace Emberfall.Core
             if (!ctx.Db.TryGet(action.CardId, out var def)) return;
             foreach (var t in ctx.Targets)
             {
-                if (t.Kind == TargetCandidateKind.Weapon)
+                if (t.Zone == Zone.Weapon)
                 {
                     var owner = ctx.State.Players[t.Seat];
                     if (owner.Weapon == null || owner.Weapon.Id != t.Instance || def.Type != CardType.WEAPON) continue;
@@ -412,7 +416,7 @@ namespace Emberfall.Core
                         target: minion.Id);
                     continue;
                 }
-                if (target.Kind != TargetCandidateKind.Weapon || destination.Weapon != null ||
+                if (target.Zone != Zone.Weapon || destination.Weapon != null ||
                     owner.Weapon == null || owner.Weapon.Id != target.Instance) continue;
                 CardInstance weapon = owner.Weapon;
                 owner.Weapon = null;
@@ -455,7 +459,7 @@ namespace Emberfall.Core
                 chooser.Hand.Count >= MatchEngine.HandCap)
                 return;
 
-            List<string> remaining = CanonicalEligiblePool(ctx.Db);
+            List<int> remaining = CanonicalEligiblePool(ctx.Db);
             if (remaining.Count == 0) return;
 
             int offerCount = System.Math.Min(action.Count, remaining.Count);
@@ -482,20 +486,21 @@ namespace Emberfall.Core
             ctx.Events.Emit(GameEventKind.UnearthOffered, source: ctx.Source.Identity);
         }
 
-        private static List<string> CanonicalEligiblePool(ICardDatabase db)
+        private static List<int> CanonicalEligiblePool(ICardDatabase db)
         {
-            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+            var ids = new HashSet<int>();
             foreach (CardDefinition definition in db.AllCollectible())
             {
                 // AllCollectible implementations promise PoolEligible rows, but this is a trust
                 // boundary for authoritative choice state, so enforce the gate again here.
-                if (definition != null && definition.PoolEligible &&
-                    !string.IsNullOrEmpty(definition.Id))
+                if (definition != null && definition.PoolEligible && definition.Id > 0)
                     ids.Add(definition.Id);
             }
 
-            var canonical = new List<string>(ids);
-            canonical.Sort(System.StringComparer.Ordinal);
+            // Sorted so the offered pool is the same list on both machines. The ORDER CHANGED
+            // when the key did: this is numeric order now, not the ordinal order of the handles.
+            var canonical = new List<int>(ids);
+            canonical.Sort();
             return canonical;
         }
     }
@@ -507,12 +512,14 @@ namespace Emberfall.Core
         {
             foreach (var t in ctx.Targets)
             {
-                // NOR-367: arm the two-step thaw. FrostThawPending survives until the START of the
-                // frozen character's own turn (StartTurnSequence), so a unit frozen on its own turn
-                // (warden's ON_DEATH) still owes a full turn; the enemy case clears at their next start.
-                if (t.IsMinion) { t.Minion!.IsFrosted = true; t.Minion!.FrostThawPending = true; }
-                else if (t.IsHero) { t.Hero!.IsFrosted = true; t.Hero!.FrostThawPending = true; }
-                else continue;
+                // One turn-scoped instance. It is aged at the START of the frozen character's own turn
+                // and expires at the END of a turn it entered already aged, so a unit frozen on its own
+                // turn (warden's ON_DEATH) still owes a full turn — NOR-367 without the second flag.
+                var frost = new EffectInstance(EffectKind.Frost, ctx.Source.Identity,
+                    EffectScope.ControllerTurns, turnsRemaining: 1);
+                IEffectHost? host = t.Host;
+                if (host == null) continue;
+                EffectList.Apply(host.Effects, frost);
                 ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Identity, target: t.Id);
             }
         }

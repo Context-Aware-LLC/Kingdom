@@ -21,7 +21,7 @@
 
        RETIREMENT TRIGGER: if a device with a deeper cutout than 136px is ever supported,
        this number moves. It is the only place it is written down. */
-    --edge-safe: 150px;
+    --edge-safe: 50px;
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;
@@ -72,16 +72,16 @@
    Applied per element rather than to every child of .emb-root, because a flow
    child in a column would take the clearance on its TOP and BOTTOM too, and
    three of those on a 1080-unit panel eats the screen. */
-.emb-edge {
+/* .emb-edge {
     margin: var(--edge-safe);
-}
+} */
 
 /* A layer that must PAINT to the panel edge — a scrim, a modal backdrop — spans
    the panel and insets its own CONTENT instead. This is why one class serves both
    the bare scrims and the modal containers: paint to the edge, keep content in. */
-.emb-bleed {
+/* .emb-bleed {
     padding: var(--edge-safe);
-}
+} */
 
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);

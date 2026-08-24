@@ -127,14 +127,11 @@ namespace Emberfall.Presentation
             Keyword.VANGUARD =>
                 "Takes no damage back when its attack kills the defender.",
 
-            // Reserved legacy ordinal slot, NOT carrier behavior (KeywordSemantics.IsActionMarker),
-            // so C25 rejects it in keywords[] and BuildBody — which only looks up a card's authored
-            // keywords — can never reach this line. It exists solely for CardRevealVerify's enum
-            // walk. The copy here used to read "Herald — give a friendly minion +1/+1", which the
-            // engine never guaranteed: REINFORCE is a bare +1/+1 (BuffHandler hardcodes 1/1) with no
-            // timing of its own, and grave_memorial_wisp applies it ON_DEATH. Card text now
-            // prints the stats directly instead of a marker (CardTextGenerator), so no player ever
-            // meets this word and no glossary entry is owed for it.
+            // Reserved ordinal slot, NOT carrier behavior (KeywordSemantics.IsActionMarker), so C25
+            // rejects it in keywords[] and BuildBody — which only looks up a card's authored keywords
+            // — can never reach this line. It exists solely to satisfy CardRevealVerify's enum walk.
+            // No player meets this word: stat changes print their numbers directly (CardTextGenerator),
+            // so no glossary entry is owed and the string below is a placeholder, not copy.
             Keyword.REINFORCE =>
                 "Gives a friendly minion +1/+1.",
 

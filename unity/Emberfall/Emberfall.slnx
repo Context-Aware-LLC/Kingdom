@@ -1,8 +1,8 @@
 ﻿<Solution>
   <Project Path="Unity.Pipeline.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
-  <Project Path="Unity.Addressables.Android.csproj" />
   <Project Path="Emberfall.Core.Contracts.csproj" />
+  <Project Path="Unity.Addressables.Android.csproj" />
   <Project Path="Unity.Pipeline.Editor.csproj" />
   <Project Path="Emberfall.Editor.csproj" />
   <Project Path="Emberfall.Data.csproj" />

@@ -19,7 +19,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
     /// </summary>
     internal sealed class CardSet : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _byId = new(StringComparer.Ordinal);
+        private readonly Dictionary<int, CardDefinition> _byId = new();
 
         private CardSet(IEnumerable<CardDefinition> defs)
         {
@@ -28,10 +28,10 @@ namespace Emberfall.Tools.CollectionSelfCheck
 
         internal int Count => _byId.Count;
 
-        public bool TryGet(string cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
+        public bool TryGet(int cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId)
-            => _byId.TryGetValue(cardId, out var d) ? d : throw new KeyNotFoundException($"Card '{cardId}' is not in the live set.");
+        public CardDefinition Get(int cardId)
+            => _byId.TryGetValue(cardId, out var d) ? d : throw new KeyNotFoundException($"Card {cardId} is not in the live set.");
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()
         {

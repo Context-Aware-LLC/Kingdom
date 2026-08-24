@@ -8,7 +8,8 @@ namespace Emberfall.Net.Protocol
     /// (design §6). Field order and structure mirror <c>GameStateSerializer</c> one-for-one:
     /// same seat order, same keyword sort (by enum int), same nullable conventions (JSON null
     /// stands in for the present-flag byte), same PendingChoice tail. Names are camelCase of the
-    /// C# members; InstanceId as "i&lt;n&gt;", PlayerId/MatchId/DefinitionId as bare strings.
+    /// C# members; InstanceId as "i&lt;n&gt;", PlayerId/MatchId as bare strings, DefinitionId as a
+    /// NUMBER — the wire carries the card id the same way the hash does.
     ///
     /// This is a SECOND walk over the same shape — the drift risk is closed by test, not
     /// discipline: the A2 bridge test (hash-preserving round-trip over the fixture corpus) and
@@ -88,10 +89,31 @@ namespace Emberfall.Net.Protocol
             w.Name("currentHealth"); w.I32(h.CurrentHealth);
             w.Name("maxHealth"); w.I32(h.MaxHealth);
             w.Name("armor"); w.I32(h.Armor);
-            w.Name("heroPowerId"); w.Str(h.HeroPowerId);
-            w.Name("isFrosted"); w.Bool(h.IsFrosted);
-            w.Name("frostThawPending"); w.Bool(h.FrostThawPending);
+            w.Name("heroPowerId"); w.I32(h.HeroPowerId);
+            w.Name("effects"); WriteEffects(w, h.Effects);
             w.EndObject();
+        }
+
+        /// <summary>
+        /// EXPERIMENT (effect-model fork). Replaces the <c>isFrosted</c>/<c>frostThawPending</c> pair on
+        /// both hero and card. Those were derived views; putting a derivation on the wire instead of its
+        /// source cannot carry an effect's provenance or scope, which is what the mutation sweep noticed.
+        /// </summary>
+        private static void WriteEffects(JsonWriter w, List<EffectInstance> effects)
+        {
+            w.BeginArray();
+            foreach (var e in effects)
+            {
+                w.BeginObject();
+                w.Name("kind"); w.Str(e.Kind.ToString());
+                w.Name("source");
+                if (e.Source.HasValue) w.Str(WirePrimitives.InstanceToWire(e.Source.Value));
+                else w.Null();
+                w.Name("scope"); w.Str(e.Scope.ToString());
+                w.Name("turnsRemaining"); w.I32(e.TurnsRemaining);
+                w.EndObject();
+            }
+            w.EndArray();
         }
 
         private static void WriteZone(JsonWriter w, List<CardInstance> zone)
@@ -105,7 +127,7 @@ namespace Emberfall.Net.Protocol
         {
             w.BeginObject();
             w.Name("id"); w.Str(WirePrimitives.InstanceToWire(c.Id));
-            w.Name("definitionId"); w.Str(c.DefinitionId);
+            w.Name("definitionId"); w.I32(c.DefinitionId);
             w.Name("controller"); w.Str(c.Controller.Value);
             w.Name("zone"); w.Str(c.Zone.ToString());
             w.Name("currentAttack"); w.I32(c.CurrentAttack);
@@ -141,8 +163,7 @@ namespace Emberfall.Net.Protocol
             w.EndArray();
 
             w.Name("hasAegisShield"); w.Bool(c.HasAegisShield);
-            w.Name("isFrosted"); w.Bool(c.IsFrosted);
-            w.Name("frostThawPending"); w.Bool(c.FrostThawPending);
+            w.Name("effects"); WriteEffects(w, c.Effects);
             w.Name("isSilenced"); w.Bool(c.IsSilenced);
             w.Name("summonedThisTurn"); w.Bool(c.SummonedThisTurn);
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
@@ -161,7 +182,7 @@ namespace Emberfall.Net.Protocol
             // (OBL-3); the codec never re-sorts it.
             w.Name("options");
             w.BeginArray();
-            foreach (var o in pc.Options) w.Str(o);
+            foreach (var o in pc.Options) w.I32(o);
             w.EndArray();
             w.Name("choiceSequence"); w.U64(pc.ChoiceSequence);
             w.EndObject();
@@ -172,7 +193,7 @@ namespace Emberfall.Net.Protocol
             w.BeginObject();
             w.Name("id"); w.Str(WirePrimitives.InstanceToWire(effect.Id));
             w.Name("controller"); w.Str(effect.Controller.Value);
-            w.Name("sourceDefinitionId"); w.Str(effect.SourceDefinitionId);
+            w.Name("sourceDefinitionId"); w.I32(effect.SourceDefinitionId);
             // Authority snapshots need this key to resume deterministic execution. Projected
             // snapshots carry the empty sentinel because GameStateProjector never copies it.
             w.Name("ruleId"); w.Str(effect.RuleId);
@@ -304,18 +325,34 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "currentHealth", out int curHp, ref detail)) return false;
             if (!TryI32Field(obj, "maxHealth", out int maxHp, ref detail)) return false;
             if (!TryI32Field(obj, "armor", out int armor, ref detail)) return false;
-            if (!TryStrField(obj, "heroPowerId", out string hpId, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
-            if (!TryBoolField(obj, "frostThawPending", out bool frostPending, ref detail)) return false;
-
+            if (!TryI32Field(obj, "heroPowerId", out int hpId, ref detail)) return false;
             hero = new HeroInstance(id, new PlayerId(controller), cls, maxHp)
             {
                 CurrentHealth = curHp,
                 Armor = armor,
                 HeroPowerId = hpId,
-                IsFrosted = frosted,
-                FrostThawPending = frostPending,
             };
+            if (!TryReadEffects(obj, hero.Effects, ref detail)) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Reads the effect list written by <c>WriteEffects</c>. Order is preserved because application
+        /// order IS the canonical order — re-sorting here would silently change the digest.
+        /// </summary>
+        private static bool TryReadEffects(JVal obj, List<EffectInstance> into, ref string detail)
+        {
+            if (!obj.TryGet("effects", out var arr) || arr.Kind != JKind.Array)
+            { detail = "missing effects"; return false; }
+            foreach (var item in arr.Items!)
+            {
+                if (item.Kind != JKind.Object) { detail = "effect is not an object"; return false; }
+                if (!TryEnumField(item, "kind", out EffectKind kind, ref detail)) return false;
+                if (!TryNullableInstanceField(item, "source", out InstanceId? src, ref detail)) return false;
+                if (!TryEnumField(item, "scope", out EffectScope scope, ref detail)) return false;
+                if (!TryI32Field(item, "turnsRemaining", out int turns, ref detail)) return false;
+                into.Add(new EffectInstance(kind, src, scope, turns));
+            }
             return true;
         }
 
@@ -336,7 +373,7 @@ namespace Emberfall.Net.Protocol
             card = null!;
             if (obj.Kind != JKind.Object) { detail = "card is not an object"; return false; }
             if (!TryInstanceField(obj, "id", out var id, ref detail)) return false;
-            if (!TryStrField(obj, "definitionId", out string defId, ref detail)) return false;
+            if (!TryI32Field(obj, "definitionId", out int defId, ref detail)) return false;
             if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
             if (!TryEnumField(obj, "zone", out Zone zone, ref detail)) return false;
             if (!TryI32Field(obj, "currentAttack", out int atk, ref detail)) return false;
@@ -397,16 +434,13 @@ namespace Emberfall.Net.Protocol
             }
 
             if (!TryBoolField(obj, "hasAegisShield", out bool aegis, ref detail)) return false;
-            if (!TryBoolField(obj, "isFrosted", out bool frosted, ref detail)) return false;
-            if (!TryBoolField(obj, "frostThawPending", out bool frostPending, ref detail)) return false;
+            if (!TryReadEffects(obj, card.Effects, ref detail)) return false;
             if (!TryBoolField(obj, "isSilenced", out bool silenced, ref detail)) return false;
             if (!TryBoolField(obj, "summonedThisTurn", out bool summoned, ref detail)) return false;
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
             if (!TryBoolField(obj, "hasUsedRekindle", out bool rekindle, ref detail)) return false;
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
             card.HasAegisShield = aegis;
-            card.IsFrosted = frosted;
-            card.FrostThawPending = frostPending;
             card.IsSilenced = silenced;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;
@@ -435,7 +469,7 @@ namespace Emberfall.Net.Protocol
             };
             foreach (var item in optVal.Items!)
             {
-                if (!item.TryStr(out string o)) { detail = "bad option"; return false; }
+                if (!item.TryI32(out int o)) { detail = "bad option"; return false; }
                 result.Options.Add(o);
             }
             pc = result;
@@ -450,7 +484,7 @@ namespace Emberfall.Net.Protocol
             { detail = "ongoing effect is not an object"; return false; }
             if (!TryInstanceField(obj, "id", out InstanceId id, ref detail)) return false;
             if (!TryStrField(obj, "controller", out string controller, ref detail)) return false;
-            if (!TryStrField(obj, "sourceDefinitionId", out string definitionId, ref detail)) return false;
+            if (!TryI32Field(obj, "sourceDefinitionId", out int definitionId, ref detail)) return false;
             if (!TryStrField(obj, "ruleId", out string ruleId, ref detail)) return false;
             if (!TryEnumField(obj, "lifetime", out OngoingEffectLifetime lifetime, ref detail)) return false;
             if (!obj.TryGet("remainingUses", out JVal remainingVal))
@@ -463,7 +497,7 @@ namespace Emberfall.Net.Protocol
                 remainingUses = uses;
             }
 
-            if (string.IsNullOrWhiteSpace(definitionId))
+            if (definitionId <= 0)
             { detail = "empty sourceDefinitionId"; return false; }
             if (lifetime == OngoingEffectLifetime.PERMANENT && remainingUses.HasValue)
             { detail = "permanent ongoing effect cannot carry remainingUses"; return false; }
@@ -530,6 +564,18 @@ namespace Emberfall.Net.Protocol
             id = default;
             detail = $"missing/bad '{name}'";
             return false;
+        }
+
+        /// <summary>Same convention as <c>currentDurability</c>: JSON null IS the absent case, not an error.</summary>
+        private static bool TryNullableInstanceField(JVal obj, string name, out InstanceId? id, ref string detail)
+        {
+            id = null;
+            if (!obj.TryGet(name, out var val)) { detail = $"missing '{name}'"; return false; }
+            if (val.IsNull) return true;
+            if (!val.TryStr(out string s) || !WirePrimitives.TryInstance(s, out InstanceId parsed))
+            { detail = $"bad '{name}'"; return false; }
+            id = parsed;
+            return true;
         }
     }
 }

@@ -36,16 +36,16 @@ namespace Emberfall.Net.Server.Telemetry
             public int? FirstPlayedTurn;
         }
 
-        private readonly Dictionary<string, Entry> _byDef = new Dictionary<string, Entry>();
+        private readonly Dictionary<int, Entry> _byDef = new Dictionary<int, Entry>();
 
         /// <summary>
         /// First-appearance order, kept alongside the dictionary. Rows come out deck-order-first and
         /// stable across runs — a set-ordered emission would make two byte-identical replays produce
         /// diffable telemetry, which is the one thing this repo's determinism work exists to prevent.
         /// </summary>
-        private readonly List<string> _order = new List<string>();
+        private readonly List<int> _order = new List<int>();
 
-        private Entry Get(string defId)
+        private Entry Get(int defId)
         {
             if (!_byDef.TryGetValue(defId, out var e))
             {
@@ -57,7 +57,7 @@ namespace Emberfall.Net.Server.Telemetry
         }
 
         /// <summary>The decklist — the `inDeck` inclusion-rate denominator. Called once, at Start.</summary>
-        public void NoteDeck(IReadOnlyList<string> deck)
+        public void NoteDeck(IReadOnlyList<int> deck)
         {
             for (int i = 0; i < deck.Count; i++) Get(deck[i]).InDeck = true;
         }
@@ -72,7 +72,7 @@ namespace Emberfall.Net.Server.Telemetry
         /// An ACCEPTED play. First one wins: `firstPlayedTurn` is a first, so a second copy played
         /// on turn 9 must not overwrite the turn-2 answer.
         /// </summary>
-        public void NotePlayed(string defId, int turnNumber)
+        public void NotePlayed(int defId, int turnNumber)
         {
             var e = Get(defId);
             // A played card was necessarily in hand, but the play may be the first time we look at
@@ -86,13 +86,13 @@ namespace Emberfall.Net.Server.Telemetry
         /// the answer exists, since the core replaces discarded cards in place.
         /// </param>
         public IReadOnlyList<CardSeenRow> Rows(
-            AccountId account, CardClass @class, bool matchWon, IReadOnlyList<string> mulliganKept)
+            AccountId account, CardClass @class, bool matchWon, IReadOnlyList<int> mulliganKept)
         {
-            var kept = new HashSet<string>(mulliganKept);
+            var kept = new HashSet<int>(mulliganKept);
             var rows = new List<CardSeenRow>(_order.Count);
             for (int i = 0; i < _order.Count; i++)
             {
-                string defId = _order[i];
+                int defId = _order[i];
                 var e = _byDef[defId];
                 rows.Add(new CardSeenRow(
                     account, @class, matchWon, defId,

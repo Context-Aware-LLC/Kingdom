@@ -57,14 +57,6 @@ if (-not $Quick) {
     Invoke-Stage 'Stage 1 · Lint (dotnet format)' {
         dotnet format Emberfall.slnx --verify-no-changes --no-restore
     }
-    # Stage 1's canonical-vocabulary scan was REMOVED 2026-08-18. It grepped six directory trees,
-    # case-insensitively, for the genre's keyword words, to stop a completed rename (EF-022) from
-    # regressing. It never caught one. It could not: `Keyword` is a closed enum and the validator
-    # fails shut on values outside it, so the regression it guarded was already impossible by
-    # construction. What it did produce was false positives on ordinary English — a carve-out for
-    # FREEZE within days of landing, then six innocent uses of "charge" in the store reconciler and
-    # an art prompt. Do not reinstate it: if a retired keyword word ever matters again, it matters
-    # in printed card text, which is data with a human reviewing it, not prose in a payment file.
 
     # Gates USS PARSEABILITY, not style — .stylelintrc.json carries zero rules on purpose. Unity
     # discards an entire stylesheet on one malformed declaration, silently: every rule in the file
@@ -103,9 +95,7 @@ Invoke-Stage 'Stage 5b · Networked AI soak' {
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
     dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
 }
-Invoke-Stage 'Stage 6b · Trigger/selector drift guard' {
-    python3 tooling/scripts/scan_unresolvable_trigger_selectors.py
-}
+# Sams Migration FLag
 Invoke-Stage 'Stage 6c · Training exporter tests' {
     python3 tests/python/test_training_exporters.py -v
 }

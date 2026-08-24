@@ -11,10 +11,10 @@
                         <ui:Label text="Choose a set, then buy with Gold or Gems." class="shop-subtitle"/>
                     </ui:VisualElement>
                     <ui:VisualElement class="shop-wallet">
-                        <ui:Label name="shop-gold-balance" text="Gold  —" class="shop-wallet__balance shop-wallet__balance--gold"/>
-                        <ui:Label name="shop-gem-balance" text="Gems  —" class="shop-wallet__balance shop-wallet__balance--gems"/>
+                        <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
+                        <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
                     </ui:VisualElement>
-                    <ui:Button name="btn-shop-close" text="← Back" class="shop-close"/>
+                    <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
                 </ui:VisualElement>
                 <ui:ScrollView name="shop-scroll" class="shop-scroll">
                     <ui:VisualElement class="shop-section">

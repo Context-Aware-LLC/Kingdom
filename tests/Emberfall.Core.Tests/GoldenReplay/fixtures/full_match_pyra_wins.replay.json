@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 3,
+  "name": "full_match_pyra_wins",
+  "engineContractVersion": "interfaces.v4",
+  "cardSetSnapshot": "M1.cards.snapshot.json",
+  "matchId": "GOLD-0002",
+  "p0": "P0",
+  "p1": "P1",
+  "p0Class": "EMBERWARD",
+  "p1Class": "TIDECALLER",
+  "heroMaxHealth": 30,
+  "sparkTokenId": "token_spark_coin",
+  "p0Deck": [
+    "ember_recruit",
+    "ember_zealot",
+    "ember_flame_bolt",
+    "ember_cinder_drake",
+    "ember_recruit",
+    "ember_zealot",
+    "ember_flame_bolt",
+    "ember_cinder_drake",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "p1Deck": [
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "tide_initiate",
+    "tide_oracle",
+    "frost_ripple",
+    "wave_caller",
+    "stone_sentry",
+    "wandering_scout"
+  ],
+  "seed": 8675309001122334455,
+  "intents": [
+    {
+      "$type": "mulligan",
+      "player": "P0",
+      "toReplace": []
+    },
+    {
+      "$type": "mulligan",
+      "player": "P1",
+      "toReplace": []
+    },
+    {
+      "$type": "concede",
+      "player": "P1"
+    }
+  ],
+  "expected": {
+    "stateHashAlgo": "sha256",
+    "stateHash": "642a1dc66a4651bcac54024ebf845b493a3f487ab6cb127cb5c7eba0e422fe4a",
+    "eventStream": [
+      {
+        "seq": 0,
+        "kind": "TurnStarted",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 1,
+        "kind": "CardDrawn",
+        "src": "i26",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 2,
+        "kind": "MatchEnded",
+        "src": null,
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      },
+      {
+        "seq": 3,
+        "kind": "MatchWon",
+        "src": "i1",
+        "tgt": null,
+        "amt": null,
+        "flags": "None"
+      }
+    ]
+  }
+}

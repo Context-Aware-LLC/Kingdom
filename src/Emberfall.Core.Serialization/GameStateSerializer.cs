@@ -68,9 +68,27 @@ namespace Emberfall.Core.Serialization
             w.I32(h.CurrentHealth);
             w.I32(h.MaxHealth);
             w.I32(h.Armor);
-            w.Str(h.HeroPowerId);
-            w.Bool(h.IsFrosted); // added step 4 — hero frost state is determinism-relevant
-            w.Bool(h.FrostThawPending); // NOR-367 — persists across the opponent's turn, so it is hashed
+            w.I32(h.HeroPowerId);
+            WalkEffects(w, h.Effects);
+        }
+
+        /// <summary>
+        /// EXPERIMENT (effect-model fork). Application order IS the canonical order — unlike
+        /// <c>Keywords</c>, which needs a sort imposed because a set has no order of its own.
+        /// Replaces the separately-hashed <c>IsFrosted</c>/<c>FrostThawPending</c> pair: those are now
+        /// derived views of this list, and hashing a derivation alongside its source is exactly the
+        /// two-representations problem this list exists to remove.
+        /// </summary>
+        private static void WalkEffects(ICanonicalWriter w, List<EffectInstance> effects)
+        {
+            w.I32(effects.Count);
+            foreach (var e in effects)
+            {
+                w.Enum(e.Kind);
+                w.NullableI32(e.Source?.Value);
+                w.Enum(e.Scope);
+                w.I32(e.TurnsRemaining);
+            }
         }
 
         private static void WalkZone(ICanonicalWriter w, List<CardInstance> zone)
@@ -82,7 +100,10 @@ namespace Emberfall.Core.Serialization
         private static void WalkCard(ICanonicalWriter w, CardInstance c)
         {
             w.I32(c.Id.Value);
-            w.Str(c.DefinitionId);
+            // I32, not Str — the card id is a number now, and writing it through the string lane
+            // would hash the DECIMAL SPELLING of it. That reads identically in every log and is a
+            // different digest, which is exactly the class of change nothing in this repo detects.
+            w.I32(c.DefinitionId);
             w.Str(c.Controller.Value);
             w.Enum(c.Zone);
             w.I32(c.CurrentAttack);
@@ -107,9 +128,9 @@ namespace Emberfall.Core.Serialization
                 w.Bool(e.IsAura);
             }
 
+            WalkEffects(w, c.Effects);
+
             w.Bool(c.HasAegisShield);
-            w.Bool(c.IsFrosted);
-            w.Bool(c.FrostThawPending); // NOR-367
             w.Bool(c.IsSilenced);
             w.Bool(c.SummonedThisTurn);
             w.I32(c.AttacksUsedThisTurn);
@@ -134,7 +155,7 @@ namespace Emberfall.Core.Serialization
             w.I32(pc.Options.Count);                    // count prefix, then list order (§4.1).
             // Phase-2 ringfence (OBL-3): list order MUST be the deterministic RNG roll order of
             // the Unearth pool — the walk is order-PRESERVING only, never an ordering source.
-            foreach (var id in pc.Options) w.Str(id);
+            foreach (var id in pc.Options) w.I32(id);
             w.U64(pc.ChoiceSequence);
         }
 
@@ -146,7 +167,7 @@ namespace Emberfall.Core.Serialization
             {
                 w.I32(effect.Id.Value);
                 w.Str(effect.Controller.Value);
-                w.Str(effect.SourceDefinitionId);
+                w.I32(effect.SourceDefinitionId);
                 w.Str(effect.RuleId);
                 w.Enum(effect.Lifetime);
                 w.NullableI32(effect.RemainingUses);

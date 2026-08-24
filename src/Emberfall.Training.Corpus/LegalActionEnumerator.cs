@@ -31,7 +31,7 @@ namespace Emberfall.Training.Corpus
             if (state.PendingChoice is PendingChoice pending)
             {
                 if (pending.Chooser != player) return result;
-                foreach (string option in pending.Options)
+                foreach (int option in pending.Options)
                     AddIfLegal(state, new UnearthChoiceIntent(player, option, pending.ChoiceSequence), result);
                 return result;
             }

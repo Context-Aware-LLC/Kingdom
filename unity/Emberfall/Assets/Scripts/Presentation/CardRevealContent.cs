@@ -96,10 +96,11 @@ namespace Emberfall.Presentation
         {
             var sb = new StringBuilder();
 
-            // CardDefinition.CardText was removed in eec7c6c: rules text is GENERATED from the
-            // typed rule model now, so there is no stored string to read. CardQuery.cs does the
-            // same thing for its search index — that is the precedent this mirrors.
-            string rulesText = CardTextGenerator.Generate(def);
+            // Read, not composed. The stored string was removed in eec7c6c in favour of generating
+            // from the typed rule model, and that direction was reversed on 2026-08-16 — the text is
+            // authored again, and CardValidator's C26 is what holds it against the rules. CardQuery
+            // reads the same field for its search index.
+            string rulesText = def.Text;
             if (!string.IsNullOrEmpty(rulesText))
                 sb.Append(CardTextStyling.Style(rulesText));
 

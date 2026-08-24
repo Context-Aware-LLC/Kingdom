@@ -1,0 +1,1385 @@
+[
+  {
+    "id": "ember_recruit",
+    "name": "Ember Recruit",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 2,
+    "health": 1,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "ember_recruit"
+  },
+  {
+    "id": "ember_zealot",
+    "name": "Ember Zealot",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 3,
+    "health": 2,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "keywords": [
+      "FERVOR"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "ember_zealot"
+  },
+  {
+    "id": "ember_flame_bolt",
+    "name": "Flame Bolt",
+    "type": "SPELL",
+    "cost": 1,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "ember_flame_bolt",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "ember_cinder_drake",
+    "name": "Cinder Drake",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 4,
+    "health": 4,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [],
+    "tribe": "DRAGON",
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "ember_cinder_drake"
+  },
+  {
+    "id": "tide_initiate",
+    "name": "Tide Initiate",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "tide_initiate"
+  },
+  {
+    "id": "tide_oracle",
+    "name": "Tide Oracle",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 2,
+    "health": 4,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "tide_oracle"
+  },
+  {
+    "id": "frost_ripple",
+    "name": "Frost Ripple",
+    "type": "SPELL",
+    "cost": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "tide_frost_ripple",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "wave_caller",
+    "name": "Wave Caller",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 3,
+    "health": 5,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "keywords": [],
+    "rules": [],
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "tide_wave_caller"
+  },
+  {
+    "id": "stone_sentry",
+    "name": "Stone Sentry",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "tribe": "CONSTRUCT",
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "stone_sentry"
+  },
+  {
+    "id": "wandering_scout",
+    "name": "Wandering Scout",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [],
+    "tribe": "BEAST",
+    "setId": "EMBERFALL",
+    "collectible": true,
+    "artId": "wandering_scout"
+  },
+  {
+    "id": "core_emberling",
+    "name": "Emberling Pup",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 2,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "FERVOR"
+    ],
+    "rules": [],
+    "tribe": "BEAST",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "emberling_pup"
+  },
+  {
+    "id": "core_stoneback",
+    "name": "Stoneback Sentry",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 4,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "stoneback_sentry"
+  },
+  {
+    "id": "core_hollow_acolyte",
+    "name": "Hollow Acolyte",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 3,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "hollow_acolyte",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "core_lantern_bearer",
+    "name": "Grave Lantern Bearer",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 2,
+    "health": 2,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "gravelight_lantern_bearer",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DEATH"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_wisp_1_1",
+          "count": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "core_aegis_templar",
+    "name": "Aegis Templar",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 4,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "AEGIS"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "aegis_templar"
+  },
+  {
+    "id": "core_veilstalker",
+    "name": "Veilstalker",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 3,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "keywords": [
+      "SHROUD"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "veilstalker"
+  },
+  {
+    "id": "core_grove_mender",
+    "name": "Grove Mender",
+    "type": "MINION",
+    "cost": 4,
+    "attack": 3,
+    "health": 4,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "grove_mender",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 4,
+          "target": {
+            "selector": "ANY_FRIENDLY",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core_arclight_adept",
+    "name": "Arclight Adept",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 1,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "RARE",
+    "keywords": [
+      "ARCANE_SURGE"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "arclight_adept"
+  },
+  {
+    "id": "core_bonehound",
+    "name": "Ravenous Bonehound",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 3,
+    "health": 2,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "SKIRMISH"
+    ],
+    "rules": [],
+    "tribe": "UNDEAD",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ravenous_bonehound"
+  },
+  {
+    "id": "core_throneless_king",
+    "name": "Throneless King",
+    "type": "MINION",
+    "cost": 6,
+    "attack": 6,
+    "health": 6,
+    "class": "NEUTRAL",
+    "rarity": "LEGENDARY",
+    "keywords": [
+      "BULWARK",
+      "REKINDLE"
+    ],
+    "rules": [],
+    "tribe": "UNDEAD",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "throneless_king"
+  },
+  {
+    "id": "ember_cinder_lance",
+    "name": "Cinder Lance",
+    "type": "WEAPON",
+    "cost": 1,
+    "attack": 1,
+    "durability": 2,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ember_cinder_lance",
+    "rules": []
+  },
+  {
+    "id": "ember_scorch",
+    "name": "Scorch",
+    "type": "SPELL",
+    "cost": 2,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ember_scorch",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 3,
+          "target": {
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "ember_overheat_golem",
+    "name": "Overheat Golem",
+    "type": "MINION",
+    "cost": 3,
+    "attack": 5,
+    "health": 4,
+    "class": "EMBERWARD",
+    "rarity": "RARE",
+    "keywords": [],
+    "tribe": "CONSTRUCT",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ember_overheat_golem",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "BACKDRAFT",
+          "amount": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "ember_twin_flame",
+    "name": "Twin Flame Strike",
+    "type": "SPELL",
+    "cost": 4,
+    "class": "EMBERWARD",
+    "rarity": "EPIC",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ember_twin_flame_strike",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "ember_pyras_wrath",
+    "name": "Pyra's Wrath",
+    "type": "MINION",
+    "cost": 7,
+    "attack": 7,
+    "health": 5,
+    "class": "EMBERWARD",
+    "rarity": "LEGENDARY",
+    "keywords": [
+      "FERVOR"
+    ],
+    "tribe": "ELEMENTAL",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "ember_pyras_wrath",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "tide_frostbind",
+    "name": "Frostbind",
+    "type": "SPELL",
+    "cost": 1,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "tide_frostbind",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "tide_undertow",
+    "name": "Undertow",
+    "type": "SPELL",
+    "cost": 2,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "tide_undertow",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "RETURN_TO_HAND",
+          "target": {
+            "selector": "ANY_MINION",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "tide_siren",
+    "name": "Hollow Tide Siren",
+    "type": "MINION",
+    "cost": 5,
+    "attack": 4,
+    "health": 5,
+    "class": "TIDECALLER",
+    "rarity": "EPIC",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "tide_hollow_tide_siren",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_PLAY"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "FROST",
+          "target": {
+            "selector": "ANY_ENEMY_MINION",
+            "selection": "7"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "tide_reefguard",
+    "name": "Reefguard Wisp",
+    "type": "MINION",
+    "cost": 2,
+    "attack": 0,
+    "health": 4,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "tribe": "SPIRIT",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "tide_reefguard_wisp"
+  },
+  {
+    "id": "tide_deep_bargain",
+    "name": "Maren's Deep Bargain",
+    "type": "SPELL",
+    "cost": 3,
+    "class": "TIDECALLER",
+    "rarity": "RARE",
+    "setId": "CORE",
+    "collectible": true,
+    "artId": "tide_marens_deep_bargain",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "token_spark_coin",
+    "name": "The Spark",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "token_the_spark",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GAIN_MANA",
+          "amount": 1,
+          "manaKind": "TEMPORARY"
+        }
+      }
+    ]
+  },
+  {
+    "id": "token_wisp_1_1",
+    "name": "Wisp",
+    "type": "MINION",
+    "cost": 0,
+    "attack": 1,
+    "health": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "token_wisp",
+    "rules": []
+  },
+  {
+    "id": "hero_power_searing_bolt",
+    "name": "Searing Bolt",
+    "type": "HERO_POWER",
+    "cost": 2,
+    "class": "EMBERWARD",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "ember_hero_power_searing_bolt",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ANY_CHARACTER",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "hero_power_tidal_ward",
+    "name": "Tidal Ward",
+    "type": "HERO_POWER",
+    "cost": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "tide_hero_power_tidal_ward",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "SUMMON",
+          "cardId": "token_tide_wisp",
+          "count": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "hero_power_toll_the_bell",
+    "name": "Toll the Bell",
+    "type": "HERO_POWER",
+    "cost": 2,
+    "class": "GRAVEKEEP",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "grave_hero_power_toll_the_bell",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "hero_power_quicken",
+    "name": "Quicken",
+    "type": "HERO_POWER",
+    "cost": 2,
+    "class": "VERDANT",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "verdant_hero_power_quicken",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 3,
+          "target": {
+            "selector": "FRIENDLY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "token_tide_wisp",
+    "name": "Tide Wisp",
+    "type": "MINION",
+    "cost": 0,
+    "attack": 0,
+    "health": 2,
+    "class": "TIDECALLER",
+    "rarity": "COMMON",
+    "keywords": [
+      "BULWARK"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "tide_token_wisp"
+  },
+  {
+    "_comment": "EF-012 fixture card. Fixture-only: it exists to give turn_end_toll an ON_TURN_END subscriber and is deliberately NOT in the shipping cards/** tree. Appending a definition here is inert for the other three fixtures — decks are explicit id lists and the hasher walks state, never the db — which the unrebaselined R1 run proves.",
+    "id": "test_turn_end_toller",
+    "name": "Turn-End Toller",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_turn_end_toller",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_END"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "EF-014 fixture card (1 of 2). Fixture-only, same contract as test_turn_end_toller above: appended never inserted, collectible:false, absent from the shipping cards/** tree. Gives on_damaged_thorns an ON_DAMAGED subscriber that survives the hit (5 health vs a 1-damage volley) so the fixture pins the raise, not a death.",
+    "id": "test_thornback",
+    "name": "Thornback",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 5,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_thornback",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DAMAGED"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "EF-014 fixture card (2 of 2). Identical to test_thornback except for AEGIS. The pair is the whole point of on_damaged_thorns: one volley hits both, and only the unshielded one retaliates — pinning DamagePipeline's early return, which raises no ON_DAMAGED for an Aegis-absorbed hit.",
+    "id": "test_aegis_thornback",
+    "name": "Aegis Thornback",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 5,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "AEGIS"
+    ],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_aegis_thornback",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_DAMAGED"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "EF-016 fixture cards. Fixture-only: the pair exists to give spell_cast_echo an ON_SPELL_CAST subscriber and a cheap spell to trigger it, and both are deliberately NOT in the shipping cards/** tree. Appended, never edited into an existing row — the other fixtures' decks are explicit id lists and the hasher walks state, never the db, which the unrebaselined R1 run proves.",
+    "id": "test_spell_cast_echo",
+    "name": "Spell Echo",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_spell_cast_echo",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_SPELL_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "test_spell_cast_probe",
+    "name": "Probe",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_spell_cast_probe",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "EF-011 fixture card. Fixture-only, appended never inserted, collectible:false, absent from the shipping cards/** tree. Its explicit TURN_OWNER:ANY condition pins the globally recurring variant while unit tests separately pin CONTROLLER and OPPONENT. The fixture remains a timing mirror of test_turn_end_toller: end-of-turn before the seat flip versus start-of-turn after reset and before draw.",
+    "id": "test_turn_start_toller",
+    "name": "Turn-Start Toller",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_turn_start_toller",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_START"
+        },
+        "condition": {
+          "type": "TURN_OWNER",
+          "owner": "ANY"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "EF-015 fixture cards. Fixture-only, appended never inserted, collectible:false, absent from the shipping cards/** tree — the same contract test_turn_end_toller established for EF-012. The pair gives on_heal_wardsong an ON_HEAL subscriber and a no-target sweep to heal it with. Minions rather than characters, and selection \"all\" so the interpreter auto-resolves the sweep and the replay carries no target ids — the name was FRIENDLY_MINIONS until 2026-08-20, when it collapsed into ANY_FRIENDLY_MINION; the sweep-not-pick half of that reasoning is the SELECTION term and was never the name's to carry.",
+    "id": "test_heal_wardsong",
+    "name": "Wardsong",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 1,
+    "health": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_heal_wardsong",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_HEAL"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "SOURCE_BOUND"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "test_heal_salve",
+    "name": "Mending Salve",
+    "type": "SPELL",
+    "cost": 1,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_heal_salve",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "HEAL",
+          "amount": 2,
+          "target": {
+            "selector": "ANY_FRIENDLY_MINION",
+            "selection": "7"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "NOR-31 weapon-identity fixture cards. Fixture-only and appended: the blade is the first weapon exercised by GoldenReplay, so it covers the populated canonical weapon branch and all four behaviorally valid carrier keywords.",
+    "id": "test_rider_blade",
+    "name": "Rider Blade",
+    "type": "WEAPON",
+    "cost": 1,
+    "attack": 2,
+    "durability": 3,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "LIFEDRAIN",
+      "DOUBLESTRIKE",
+      "VENOM",
+      "FROST"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_rider_blade"
+  },
+  {
+    "id": "test_rider_brute",
+    "name": "Rider Brute",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 0,
+    "health": 6,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_rider_brute"
+  },
+  {
+    "_comment": "Aegis control: identical to test_rider_brute except for AEGIS. Its absorbed hit must carry none of the weapon riders.",
+    "id": "test_rider_aegis",
+    "name": "Rider Aegis",
+    "type": "MINION",
+    "cost": 1,
+    "attack": 0,
+    "health": 6,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [
+      "AEGIS"
+    ],
+    "rules": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_rider_aegis"
+  },
+  {
+    "_comment": "NOR-31 Unearth golden-replay source. Fixture-only, appended, non-collectible, and absent from shipping card data so it cannot enter or perturb the eligible offer pool.",
+    "id": "test_unearth_source",
+    "name": "Unearth Source",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_unearth_source",
+    "rules": [
+      {
+        "id": "offer_three",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "UNEARTH",
+          "count": 3
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "NOR-31 fixture-only resolved spell. Its permanent turn-start observer remains in canonical state after the replay.",
+    "id": "test_ongoing_permanent",
+    "name": "Endless Ember",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_ongoing_permanent",
+    "rules": [
+      {
+        "id": "permanent_tick",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_START"
+        },
+        "condition": {
+          "type": "TURN_OWNER",
+          "owner": "ANY"
+        },
+        "lifetime": {
+          "type": "PERMANENT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 1,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "_comment": "NOR-31 fixture-only resolved spell. Its one-shot observer triggers once and emits expiration.",
+    "id": "test_ongoing_one_shot",
+    "name": "Brief Blaze",
+    "type": "SPELL",
+    "cost": 0,
+    "class": "NEUTRAL",
+    "rarity": "COMMON",
+    "keywords": [],
+    "setId": "CORE",
+    "collectible": false,
+    "artId": "art/test_ongoing_one_shot",
+    "rules": [
+      {
+        "id": "one_shot_tick",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_TURN_START"
+        },
+        "condition": {
+          "type": "TURN_OWNER",
+          "owner": "ANY"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DAMAGE",
+          "amount": 2,
+          "target": {
+            "selector": "ENEMY_HERO",
+            "selection": "1"
+          }
+        }
+      }
+    ]
+  }
+]

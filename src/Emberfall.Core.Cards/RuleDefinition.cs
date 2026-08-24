@@ -75,6 +75,35 @@ namespace Emberfall.Core.Cards
         public TurnOwnerCondition(TurnOwner owner) => Owner = owner;
     }
 
+    /// <summary>
+    /// Holds only when this run's COST was paid — the gate a cost prefix puts over the effects it
+    /// buys.
+    ///
+    /// <para><b>Why a cost needs a condition at all</b> (Sam, 2026-08-22). A flag on the cost's own
+    /// target says whether the pick must be payable; it can never reach the SIBLING rule the cost
+    /// pays for, and suppressing that sibling is the entire point of an unpaid cost. So the price
+    /// and the payoff are two rules, and this is the wire between them.</para>
+    ///
+    /// <para><b>It names no cost, because the tie is not authored</b> (Sam, 2026-08-22: "no cost
+    /// will be printed on a card unless it is tied to the action adjacent to it"). A cost always
+    /// buys the run beneath it, so the cost this reads is simply the one earlier in the same
+    /// trigger's rule order. That is why there is no binding here to keep in step with anything.</para>
+    ///
+    /// <para><b>Inert on a REQUIRED cost, and deliberately still written.</b> A required cost is
+    /// paid whenever the card was playable at all, so the gate never closes; it earns its keep on an
+    /// OPTIONAL one and on a MINION or WEAPON whose optional cost found nothing to pay with. Writing
+    /// it either way keeps the row saying what the engine will do rather than what it usually does.</para>
+    ///
+    /// <para>RETIREMENT TRIGGER: this reads ONE cost per trigger, which <c>CardValidator</c> C28
+    /// enforces. A card wanting two costs needs this to name which one it waits on — at which point
+    /// adjacency stops being sufficient and a binding comes back.</para>
+    /// </summary>
+    public sealed class CostPaidCondition : RuleCondition
+    {
+        public static readonly CostPaidCondition Instance = new CostPaidCondition();
+        private CostPaidCondition() { }
+    }
+
     public abstract class RuleLifetime { private protected RuleLifetime() { } }
 
     public sealed class SourceBoundLifetime : RuleLifetime
@@ -101,7 +130,24 @@ namespace Emberfall.Core.Cards
         private PermanentLifetime() { }
     }
 
-    public abstract class RuleAction { private protected RuleAction() { } }
+    public abstract class RuleAction
+    {
+        private protected RuleAction() { }
+
+        /// <summary>
+        /// Guards a card id an action names. <b>This replaces a null check, and it is not the same
+        /// guard.</b> A string id could only be absent; a numeric one has a value that LOOKS
+        /// present and resolves to nothing — <c>default(int)</c> is 0, and 0 is below every band,
+        /// so an unset field would otherwise travel as far as the database lookup before failing
+        /// as "no card 0", naming neither the rule nor the row it came from.
+        /// </summary>
+        private protected static int Require(int cardId)
+            => cardId > 0
+                ? cardId
+                : throw new ArgumentOutOfRangeException(nameof(cardId),
+                    $"A rule action names card {cardId}. Card ids start at 1, so this is an unset " +
+                    "field rather than a card.");
+    }
 
     public abstract class TargetedRuleAction : RuleAction
     {
@@ -134,11 +180,6 @@ namespace Emberfall.Core.Cards
         }
     }
 
-    public sealed class ReinforceAction : TargetedRuleAction
-    {
-        public ReinforceAction(TargetSpec target) : base(target) { }
-    }
-
     public sealed class GrantKeywordAction : TargetedRuleAction
     {
         public Keyword Keyword { get; }
@@ -162,9 +203,9 @@ namespace Emberfall.Core.Cards
 
     public sealed class TransformAction : TargetedRuleAction
     {
-        public string CardId { get; }
-        public TransformAction(string cardId, TargetSpec target) : base(target)
-            => CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+        public int CardId { get; }
+        public TransformAction(int cardId, TargetSpec target) : base(target)
+            => CardId = Require(cardId);
     }
 
     public sealed class FrostAction : TargetedRuleAction
@@ -186,31 +227,31 @@ namespace Emberfall.Core.Cards
 
     public sealed class SummonAction : RuleAction
     {
-        public string CardId { get; }
+        public int CardId { get; }
         public int Count { get; }
-        public SummonAction(string cardId, int count)
+        public SummonAction(int cardId, int count)
         {
-            CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+            CardId = Require(cardId);
             Count = count;
         }
     }
 
     public sealed class AddToHandAction : RuleAction
     {
-        public string CardId { get; }
+        public int CardId { get; }
         public int Count { get; }
-        public AddToHandAction(string cardId, int count)
+        public AddToHandAction(int cardId, int count)
         {
-            CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+            CardId = Require(cardId);
             Count = count;
         }
     }
 
     public sealed class EquipAction : RuleAction
     {
-        public string CardId { get; }
-        public EquipAction(string cardId)
-            => CardId = cardId ?? throw new ArgumentNullException(nameof(cardId));
+        public int CardId { get; }
+        public EquipAction(int cardId)
+            => CardId = Require(cardId);
     }
 
     public enum ManaGainKind { TEMPORARY, PERMANENT_FILLED, PERMANENT_EMPTY }
@@ -266,74 +307,48 @@ namespace Emberfall.Core.Cards
     {
         public static bool ConsumesTargets(RuleAction action) => action is TargetedRuleAction;
 
-        public static bool Allows(RuleAction action, TargetCandidateKind kind)
-            => (AllowedKinds(action) & (TargetCandidateKinds)(1 << (int)kind)) != 0;
+        /// <summary>
+        /// Whether an action accepts a candidate in <paramref name="zone"/> of
+        /// <paramref name="type"/>. A null type is the hero, and only the hero -- see
+        /// <see cref="TargetTypes.Hero"/>.
+        ///
+        /// <para>The two axes are checked independently, which is the point of unfusing them: this
+        /// asks "is that zone allowed AND is that type allowed", where the fused predicate could
+        /// only ask "is that NAME allowed" -- and so could not be told about a type outside the zone
+        /// its name was minted for.</para>
+        /// </summary>
+        public static bool Allows(RuleAction action, Zone zone, CardType? type)
+        {
+            TargetShape allowed = AllowedShape(action);
+            TargetTypes typeBit = type.HasValue ? TargetAxes.OfCard(type.Value) : TargetTypes.Hero;
+            return (allowed.Zones & TargetAxes.OfZone(zone)) != 0 && (allowed.Types & typeBit) != 0;
+        }
 
         public static bool HasCompatibleTarget(RuleAction action, string selector,
             CardType sourceType, Trigger trigger)
         {
             if (!ConsumesTargets(action)) return false;
-            TargetCandidateKinds selected = selector == "SELF"
-                ? SourceKinds(sourceType, trigger)
+            TargetShape selected = selector == "SELF"
+                ? SourceShape(sourceType, trigger)
                 : selector == "TRIGGER_SOURCE"
-                    ? TriggerSourceKinds(sourceType, trigger)
-                    : SelectorKinds(selector);
-            return (AllowedKinds(action) & selected) != 0;
+                    ? TriggerSourceShape(sourceType, trigger)
+                    : SelectorShape(selector);
+            return AllowedShape(action).Intersects(selected);
         }
-
-        /// <summary>
-        /// Actions that may only ever affect the controller's OWN side. This is the allegiance
-        /// axis, deliberately separate from the <see cref="AllowedKinds"/> KIND axis: "Minion" and
-        /// "a minion I control" are different questions, and the kind relation alone cannot answer
-        /// the second — which is how <c>REINFORCE</c> on <c>ENEMY_MINIONS</c> stayed authorable and
-        /// runnable (Sam, 2026-08-10: buffing the enemy board is never the intent).
-        /// </summary>
-        public static bool RequiresFriendlyTarget(RuleAction action) => action is ReinforceAction;
-
-        /// <summary>
-        /// Whether every candidate a selector can produce is on the controller's own side.
-        /// <c>ADJACENT</c> qualifies because it walks the SOURCE minion's own board row, and
-        /// <c>SELF</c> is the source itself. <c>TRIGGER_SOURCE</c> deliberately does NOT: on
-        /// <c>ON_DAMAGED</c> the trigger source is whoever hit you.
-        /// </summary>
-        public static bool IsFriendlyOnlySelector(string selector)
-        {
-            switch (selector)
-            {
-                case "SELF":
-                case "ADJACENT":
-                case "FRIENDLY_HERO":
-                case "FRIENDLY_MINIONS":
-                case "OTHER_FRIENDLY_MINIONS":
-                case "ANY_FRIENDLY":
-                case "ANY_FRIENDLY_MINION":
-                case "FRIENDLY_WEAPON":
-                case "FRIENDLY_HAND":
-                case "FRIENDLY_DECK":
-                case "FRIENDLY_GRAVEYARD":
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>Whether <paramref name="selector"/> respects the action's allegiance rule.</summary>
-        public static bool HasCompatibleAllegiance(RuleAction action, string selector)
-            => !RequiresFriendlyTarget(action) || IsFriendlyOnlySelector(selector);
 
         /// <summary>
         /// Whether a selector names exactly ONE thing, so there is never a second one to tell it
-        /// apart from. The CARDINALITY axis, and a third one distinct from both KIND
-        /// (<see cref="AllowedKinds"/>) and allegiance (<see cref="IsFriendlyOnlySelector"/>) —
-        /// which is why neither of those can answer it.
+        /// apart from. The CARDINALITY axis — read off the query, where it is a consequence of
+        /// side and zone rather than a fourth list of names. See <see cref="TargetQuery.IsUnique"/>,
+        /// which carries the ruling and the retirement trigger.
         ///
         /// <para>WHAT IT IS FOR. A <c>distinctFrom</c> asks the resolver to exclude a target already
         /// chosen. Against a unique selector it can never exclude anything, so a card authored that
         /// way is asking for something the game cannot express. Sam ruled it out on 2026-08-12
-        /// (issue #143): "there is no other weapon. There isn't another one." The renderer used to
-        /// paper over it with "your other weapon" / "another enemy hero", both of which state a
-        /// thing the rules do not support — the wording question only existed because the data shape
-        /// was meaningless, so the shape is what got rejected.</para>
+        /// (issue #143): "there is no other weapon. There isn't another one." Every phrasing the
+        /// renderer could offer — "your other weapon", "another enemy hero" — asserts a second one
+        /// exists, so the wording has no right answer and the data shape is what gets rejected
+        /// instead.</para>
         ///
         /// <para><c>TRIGGER_SOURCE</c> is here for the same reason and not because #143 listed it:
         /// whatever fired the trigger is one entity, so "another the trigger source" is the identical
@@ -348,43 +363,60 @@ namespace Emberfall.Core.Cards
         /// <c>"your other "</c> determiner back. A second hero does the same for the hero pair.</para>
         /// </summary>
         public static bool IsUniqueSelector(string selector)
+            => TargetQueries.TryGet(selector, out TargetQuery query) && query.IsUnique;
+
+        /// <summary>
+        /// A rectangle in (zone x type) space: the set of candidates a selector produces, or the set
+        /// an action accepts. <b>Every relation below is a rectangle</b> -- no member needed a
+        /// per-cell exception, which is the evidence that these two axes are genuinely independent
+        /// rather than a decomposition imposed on them after the fact.
+        /// </summary>
+        public readonly struct TargetShape
         {
-            switch (selector)
+            public TargetZones Zones { get; }
+            public TargetTypes Types { get; }
+
+            public TargetShape(TargetZones zones, TargetTypes types)
             {
-                case "SELF":
-                case "TRIGGER_SOURCE":
-                case "FRIENDLY_HERO":
-                case "ENEMY_HERO":
-                case "FRIENDLY_WEAPON":
-                case "ENEMY_WEAPON":
-                    return true;
-                default:
-                    return false;
+                Zones = zones;
+                Types = types;
             }
+
+            public static TargetShape None => new TargetShape(TargetZones.None, TargetTypes.None);
+
+            /// <summary>Non-empty overlap. Both axes must meet: two rectangles that share a zone but
+            /// no type describe disjoint candidate sets.</summary>
+            public bool Intersects(TargetShape other)
+                => (Zones & other.Zones) != 0 && (Types & other.Types) != 0;
         }
 
-        public static TargetCandidateKinds AllowedKinds(RuleAction action)
+        public static TargetShape AllowedShape(RuleAction action)
         {
             switch (action)
             {
                 case DamageAction _:
                 case HealAction _:
                 case FrostAction _:
-                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion;
+                    return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
                 case ModifyStatsAction _:
-                case ReinforceAction _:
                 case GrantKeywordAction _:
-                    return TargetCandidateKinds.Minion;
+                    return new TargetShape(TargetZones.Board, TargetTypes.Minion);
+                // The hand is type-agnostic here and always was: the fused `HandCard` named a zone
+                // and said nothing about type, so destroying a spell in hand was already legal.
+                // Unfusing changes nothing on this side. What it opens is the QUERY side, where a
+                // hand selector can eventually say "and only weapons".
                 case DestroyAction _:
-                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion |
-                           TargetCandidateKinds.Weapon | TargetCandidateKinds.HandCard;
+                    return new TargetShape(TargetZones.Board | TargetZones.Weapon | TargetZones.Hand,
+                        TargetTypes.Any);
                 case ReturnToHandAction _:
-                    return TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon |
-                           TargetCandidateKinds.DeckCard | TargetCandidateKinds.GraveyardCard;
+                    return new TargetShape(
+                        TargetZones.Board | TargetZones.Weapon | TargetZones.Deck | TargetZones.Graveyard,
+                        TargetTypes.AnyCard);
                 case SilenceAction _:
                 case TransformAction _:
                 case TakeControlAction _:
-                    return TargetCandidateKinds.Minion | TargetCandidateKinds.Weapon;
+                    return new TargetShape(TargetZones.Board | TargetZones.Weapon,
+                        TargetTypes.Minion | TargetTypes.Weapon);
                 case DrawAction _:
                 case SummonAction _:
                 case AddToHandAction _:
@@ -393,86 +425,60 @@ namespace Emberfall.Core.Cards
                 case GainArmorAction _:
                 case BackdraftAction _:
                 case UnearthAction _:
-                    return TargetCandidateKinds.None;
+                    return TargetShape.None;
                 default:
                     throw new InvalidOperationException(
                         $"Rule action '{action.GetType().Name}' is absent from the target capability relation.");
             }
         }
 
-        private static TargetCandidateKinds SelectorKinds(string selector)
-        {
-            switch (selector)
-            {
-                case "FRIENDLY_HERO":
-                case "ENEMY_HERO":
-                    return TargetCandidateKinds.Hero;
-                case "FRIENDLY_MINIONS":
-                case "OTHER_FRIENDLY_MINIONS":
-                case "ENEMY_MINIONS":
-                case "ALL_MINIONS":
-                case "ANY_MINION":
-                case "ANY_FRIENDLY_MINION":
-                case "ADJACENT":
-                    return TargetCandidateKinds.Minion;
-                case "ANY_CHARACTER":
-                case "ANY_FRIENDLY":
-                case "ANY_ENEMY":
-                case "ENEMY_CHARACTERS":
-                    return TargetCandidateKinds.Hero | TargetCandidateKinds.Minion;
-                case "FRIENDLY_WEAPON":
-                case "ENEMY_WEAPON":
-                    return TargetCandidateKinds.Weapon;
-                case "FRIENDLY_HAND":
-                case "ENEMY_HAND":
-                case "ANY_HAND_CARD":
-                    return TargetCandidateKinds.HandCard;
-                case "FRIENDLY_DECK":
-                case "ENEMY_DECK":
-                case "ANY_DECK_CARD":
-                    return TargetCandidateKinds.DeckCard;
-                case "FRIENDLY_GRAVEYARD":
-                case "ENEMY_GRAVEYARD":
-                case "ANY_GRAVEYARD_CARD":
-                    return TargetCandidateKinds.GraveyardCard;
-                case "SELF":
-                case "TRIGGER_SOURCE":
-                    return TargetCandidateKinds.Any;
-                default:
-                    return TargetCandidateKinds.None;
-            }
-        }
+        /// <summary>
+        /// A selector's (zone x type) rectangle, projected off its query. This was the SECOND of
+        /// three enumerations of the same 26 names — a switch that restated, per name, what the
+        /// criteria already say. It cannot disagree with the resolver any more because it is not a
+        /// second statement of anything.
+        /// </summary>
+        private static TargetShape SelectorShape(string selector)
+            => TargetQueries.TryGet(selector, out TargetQuery query)
+                ? new TargetShape(query.Zones, query.Types)
+                : TargetShape.None;
 
-        private static TargetCandidateKinds SourceKinds(CardType sourceType, Trigger trigger)
+        private static TargetShape SourceShape(CardType sourceType, Trigger trigger)
         {
-            if (trigger == Trigger.ON_DEATH) return TargetCandidateKinds.GraveyardCard;
+            // A rattle resolves from the graveyard, whatever the carrier was.
+            if (trigger == Trigger.ON_DEATH)
+                return new TargetShape(TargetZones.Graveyard, TargetTypes.AnyCard);
             switch (sourceType)
             {
-                case CardType.MINION: return TargetCandidateKinds.Minion;
-                case CardType.WEAPON: return TargetCandidateKinds.Weapon;
-                case CardType.SPELL: return TargetCandidateKinds.GraveyardCard;
-                default: return TargetCandidateKinds.None;
+                case CardType.MINION:
+                    return new TargetShape(TargetZones.Board, TargetTypes.Minion);
+                case CardType.WEAPON:
+                    return new TargetShape(TargetZones.Weapon, TargetTypes.Weapon);
+                case CardType.SPELL:
+                    return new TargetShape(TargetZones.Graveyard, TargetTypes.AnyCard);
+                default:
+                    return TargetShape.None;
             }
         }
 
-        private static TargetCandidateKinds TriggerSourceKinds(CardType sourceType, Trigger trigger)
+        private static TargetShape TriggerSourceShape(CardType sourceType, Trigger trigger)
         {
             switch (trigger)
             {
                 case Trigger.ON_FRIENDLY_SUMMON:
                 case Trigger.ON_DAMAGED:
                 case Trigger.ON_HEAL:
-                    return TargetCandidateKinds.Minion;
+                    return new TargetShape(TargetZones.Board, TargetTypes.Minion);
                 case Trigger.ON_SPELL_CAST:
                 case Trigger.ON_DEATH:
-                    return TargetCandidateKinds.GraveyardCard;
+                    return new TargetShape(TargetZones.Graveyard, TargetTypes.AnyCard);
                 case Trigger.ON_ATTACK:
-                    return TargetCandidateKinds.Weapon;
+                    return new TargetShape(TargetZones.Weapon, TargetTypes.Weapon);
                 case Trigger.ON_PLAY:
                 case Trigger.ON_CAST:
-                    return SourceKinds(sourceType, trigger);
+                    return SourceShape(sourceType, trigger);
                 default:
-                    return TargetCandidateKinds.None;
+                    return TargetShape.None;
             }
         }
     }

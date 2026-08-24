@@ -13,7 +13,7 @@ namespace Emberfall.Net.Server.Data
     /// </summary>
     public sealed class FileCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _byId = new Dictionary<string, CardDefinition>(StringComparer.Ordinal);
+        private readonly Dictionary<int, CardDefinition> _byId = new Dictionary<int, CardDefinition>();
 
         public FileCardDatabase(IEnumerable<CardDefinition> defs)
         {
@@ -35,9 +35,9 @@ namespace Emberfall.Net.Server.Data
             return new FileCardDatabase(defs);
         }
 
-        public bool TryGet(string cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
+        public bool TryGet(int cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId)
+        public CardDefinition Get(int cardId)
             => _byId.TryGetValue(cardId, out var d) ? d : throw new KeyNotFoundException($"Card '{cardId}' not in database.");
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()

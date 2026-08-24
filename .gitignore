@@ -187,3 +187,9 @@ node_modules/
 # The shared-Editor lock (C:\claude-editor). Ephemeral state, never committed --
 # see CLAUDE.md "The shared headless Editor".
 EDITOR-LOCK.md
+
+# Written by the card-text test fixtures on every run — a report, never an input.
+card-text-audit.txt
+corpus-behaviour-sweep.txt
+card-text-parser-coverage.txt
+card-text-parser-refusals.txt

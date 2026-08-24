@@ -259,7 +259,7 @@ namespace Emberfall.Editor
 
         private static CardDefinition MinionWith(Keyword kw, int attack = 1, int health = 1) =>
             new CardDefinition(
-                id: "verify_minion", name: "Verify Minion", type: CardType.MINION, cost: 1,
+                id: 9010, handle: "verify_minion", name: "Verify Minion", type: CardType.MINION, cost: 1,
                 attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
                 // `effects:`/`EffectDef` were removed with the legacy effect model (8a86fc0) and

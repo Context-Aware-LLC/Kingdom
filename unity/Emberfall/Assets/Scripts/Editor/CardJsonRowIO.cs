@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using Emberfall.Core.Cards;
+using Emberfall.Core.Contracts;
 
 namespace Emberfall.Editor
 {
@@ -21,6 +22,34 @@ namespace Emberfall.Editor
         // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
         // Addressables group at address "cards/Emberfall.cards".
         public const string DefaultEmberfallJsonPath = "Assets/CardData/Emberfall.cards.json";
+
+        /// <summary>
+        /// The file a row belongs in, decided by its <see cref="SetId"/> rather than by where it
+        /// happened to be loaded from. So changing a card's set MOVES it, and the filing cannot
+        /// drift from the row the way it does when a tool remembers a path.
+        ///
+        /// <para><b>This is the one list that says which set files exist.</b> Two other places
+        /// enumerate them and one globs: the server and CardCi scan the directory, while
+        /// <c>CardDatabaseLoader</c> (the client) and <c>CardSetValidator</c> list them. A new set
+        /// means editing those enumerations too — the server finding a file the client cannot is
+        /// exactly how a build ships without its hero powers.</para>
+        /// </summary>
+        public static string PathForSet(SetId set) => set switch
+        {
+            SetId.CORE => "Assets/CardData/Core.cards.json",
+            SetId.EMBERFALL => DefaultEmberfallJsonPath,
+            SetId.REKINDLING => "Assets/CardData/Rekindling.cards.json",
+            _ => throw new System.ArgumentOutOfRangeException(nameof(set), set,
+                "No card-data file is defined for this set."),
+        };
+
+        /// <summary>Every set file, in load order.</summary>
+        public static IReadOnlyList<string> AllSetPaths()
+        {
+            var paths = new List<string>();
+            foreach (SetId set in System.Enum.GetValues(typeof(SetId))) paths.Add(PathForSet(set));
+            return paths;
+        }
 
         /// <summary>Loads every row as (parsed definition, verbatim source JSON for that row).</summary>
         public static IReadOnlyList<(CardDefinition def, string json)> LoadRows(string path)
@@ -55,7 +84,8 @@ namespace Emberfall.Editor
             using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
             {
                 w.WriteStartObject();
-                w.WriteString("id", def.Id);
+                w.WriteNumber("id", def.Id);
+                w.WriteString("handle", def.Handle);
                 w.WriteString("name", def.Name);
                 w.WriteString("type", def.Type.ToString());
                 w.WriteNumber("cost", def.Cost);
@@ -76,6 +106,11 @@ namespace Emberfall.Editor
                 if (!string.IsNullOrEmpty(def.FlavorText)) w.WriteString("flavorText", def.FlavorText);
                 if (!string.IsNullOrEmpty(def.Tooltip)) w.WriteString("tooltip", def.Tooltip);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);
+
+                // Authored rules text, written immediately ahead of the rules it describes. Omitted
+                // when empty for the same reason flavorText is: a vanilla card has no text, so a
+                // blank string would be a field standing in for nothing.
+                if (!string.IsNullOrEmpty(def.Text)) w.WriteString("text", def.Text);
 
                 w.WriteStartArray("rules");
                 foreach (var rule in def.Rules)
@@ -120,6 +155,8 @@ namespace Emberfall.Editor
                 w.WriteString("type", "TURN_OWNER");
                 w.WriteString("owner", turnOwner.Owner.ToString());
             }
+            else if (condition is CostPaidCondition)
+                w.WriteString("type", "COST_PAID");
             else
                 throw Unknown("condition", condition);
             w.WriteEndObject();
@@ -156,18 +193,17 @@ namespace Emberfall.Editor
                 w.WriteNumber("health", stats.HealthDelta);
                 Target(w, stats.Target);
             }
-            else if (action is ReinforceAction reinforce) { Type(w, "REINFORCE"); Target(w, reinforce.Target); }
             else if (action is GrantKeywordAction grant) { Type(w, "GRANT_KEYWORD"); w.WriteString("keyword", grant.Keyword.ToString()); Target(w, grant.Target); }
             else if (action is DestroyAction destroy) { Type(w, "DESTROY"); Target(w, destroy.Target); }
             else if (action is ReturnToHandAction returnToHand) { Type(w, "RETURN_TO_HAND"); Target(w, returnToHand.Target); }
             else if (action is SilenceAction silence) { Type(w, "SILENCE"); Target(w, silence.Target); }
-            else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteString("cardId", transform.CardId); Target(w, transform.Target); }
+            else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
             else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
             else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }
             else if (action is DrawAction draw) { Type(w, "DRAW"); Count(w, draw.Count); }
-            else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteString("cardId", summon.CardId); Count(w, summon.Count); }
-            else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteString("cardId", addToHand.CardId); Count(w, addToHand.Count); }
-            else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteString("cardId", equip.CardId); }
+            else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteNumber("cardId", summon.CardId); Count(w, summon.Count); }
+            else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteNumber("cardId", addToHand.CardId); Count(w, addToHand.Count); }
+            else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteNumber("cardId", equip.CardId); }
             else if (action is GainManaAction mana) { Type(w, "GAIN_MANA"); Amount(w, mana.Amount); w.WriteString("manaKind", mana.Kind.ToString()); }
             else if (action is BackdraftAction backdraft) { Type(w, "BACKDRAFT"); Amount(w, backdraft.Amount); }
             else if (action is UnearthAction unearth) { Type(w, "UNEARTH"); Count(w, unearth.Count); }
@@ -184,8 +220,7 @@ namespace Emberfall.Editor
         {
             w.WriteStartObject("target");
             w.WriteString("selector", target.Selector);
-            if (target.ChosenBy is { } chosenBy) w.WriteString("chosenBy", chosenBy.ToString());
-            if (target.Count is { } count) w.WriteNumber("count", count);
+            w.WriteString("selection", target.Selection.ToString());
             if (target.Filter is { } filter)
             {
                 w.WriteStartObject("filter");
@@ -195,6 +230,12 @@ namespace Emberfall.Editor
             }
             if (!string.IsNullOrEmpty(target.Binding)) w.WriteString("binding", target.Binding);
             if (!string.IsNullOrEmpty(target.DistinctFrom)) w.WriteString("distinctFrom", target.DistinctFrom);
+            // Omitted when the pick is an ordinary effect, exactly as an absent filter is: "not a
+            // cost" is the default and a written CostKind.None would be a field standing in for
+            // nothing. Dropping it when it IS set is the bug this line exists to have fixed — the
+            // card kept its sentence and quietly became payable with nothing to pay.
+            if (target.Cost != CostKind.None)
+                w.WriteString("cost", target.Cost.ToString().ToLowerInvariant());
             w.WriteEndObject();
         }
 

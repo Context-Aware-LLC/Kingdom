@@ -13,7 +13,7 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Card Authoring EditorWindow (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B, dev-docs/pipelines/card-authoring-and-import.md:9). Edits the
-    /// canonical JSON row (Emberfall.cards.json today — see CardJsonRowIO), never the baked SO directly.
+    /// canonical JSON rows across every set file (see CardJsonRowIO.PathForSet), never a derived copy.
     /// Every enum control is a real C# enum popup (EnumPopup/Toggle), so a designer cannot type an
     /// unknown verb/keyword/selector — invalid effects are structurally unrepresentable in the UI.
     ///
@@ -24,16 +24,17 @@ namespace Emberfall.Editor
     /// </summary>
     public sealed class CardAuthoringWindow : EditorWindow
     {
+        /// <summary>
+        /// The selector popup, taken from the engine rather than retyped. The class comment above
+        /// promises a designer cannot pick an unknown selector; a hand-kept copy of the names is
+        /// exactly how that promise breaks, and it had broken — this list still offered three names
+        /// the engine retired on 2026-08-20, so the popup could author a row the validator rejects.
+        /// The sibling keyword list below always derived from its enum; this now matches it.
+        /// </summary>
         private static readonly string[] SelectorOptions =
-        {
-            "(none)", "SELF", "FRIENDLY_MINIONS", "OTHER_FRIENDLY_MINIONS", "ENEMY_MINIONS", "ALL_MINIONS", "FRIENDLY_HERO",
-            "ENEMY_HERO", "ENEMY_CHARACTERS", "ANY_CHARACTER", "ANY_FRIENDLY", "ANY_ENEMY", "ANY_MINION",
-            "ANY_FRIENDLY_MINION", "ADJACENT", "TRIGGER_SOURCE",
-            "FRIENDLY_WEAPON", "ENEMY_WEAPON",
-            "FRIENDLY_HAND", "ENEMY_HAND", "ANY_HAND_CARD",
-            "FRIENDLY_DECK", "ENEMY_DECK", "ANY_DECK_CARD",
-            "FRIENDLY_GRAVEYARD", "ENEMY_GRAVEYARD", "ANY_GRAVEYARD_CARD",
-        };
+            new[] { "(none)" }
+                .Concat(TargetSpec.Selectors.OrderBy(n => n, StringComparer.Ordinal))
+                .ToArray();
 
         private static readonly Keyword[] CarrierKeywordOptions =
             Enum.GetValues(typeof(Keyword)).Cast<Keyword>()
@@ -49,7 +50,7 @@ namespace Emberfall.Editor
         public static void ValidateAllMenuItem() => CardSetValidator.RunAndLog();
 
         private readonly List<EditableCard> _cards = new List<EditableCard>();
-        private readonly HashSet<string> _dirtyIds = new HashSet<string>();
+        private readonly HashSet<int> _dirtyIds = new HashSet<int>();
         private int _selected = -1;
         private string _search = "";
         private Vector2 _listScroll, _editScroll;
@@ -85,23 +86,121 @@ namespace Emberfall.Editor
         private void LoadAll()
         {
             _cards.Clear();
-            foreach (var (def, _) in CardJsonRowIO.LoadRows(CardJsonRowIO.DefaultEmberfallJsonPath))
-                _cards.Add(EditableCard.FromDefinition(def));
+            // EVERY set file, not just Emberfall. Loading one file made this window wrong in two
+            // ways at once, both silent: LiveDb() could not resolve a rule naming a card from
+            // another set (reported as C12-TOKEN-UNRESOLVED against a card that is fine), and
+            // NextIdInBand scanned 179 of 268 rows, so the id it minted collided with an existing
+            // card in EVERY band — measured 2026-08-23, the moment CORE split out.
+            foreach (string path in CardJsonRowIO.AllSetPaths())
+            {
+                if (!File.Exists(path)) { Debug.LogWarning($"[CardAuthoring] missing set file: {path}"); continue; }
+                foreach (var (def, _) in CardJsonRowIO.LoadRows(path))
+                    _cards.Add(EditableCard.FromDefinition(def));
+            }
             _dirtyIds.Clear();
+            InvalidateAll();
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
         }
 
-        private ICardDatabase LiveDb() => new InMemoryCardDatabase(_cards.Select(c => c.ToDefinition()));
+        /// <summary>
+        /// The pool every per-card check resolves against, built ONCE PER REPAINT rather than once
+        /// per card.
+        ///
+        /// <para><b>It used to be per call, and the library list calls it per row.</b> With no
+        /// search filter that was <c>_cards.Count</c> squared <c>ToDefinition()</c> calls and as
+        /// many dictionary builds on every single IMGUI frame — and IMGUI repaints continuously,
+        /// which is the same fact the art-preview cache above exists for. The cost also jumped the
+        /// moment this window started loading all three set files instead of one: 179 rows became
+        /// 268, and the work is quadratic, so it did not grow by half, it grew by 2.2x.</para>
+        /// </summary>
+        private ICardDatabase LiveDb() => _liveDb ??= new InMemoryCardDatabase(_cards.Select(c => c.ToDefinition()));
+
+        private ICardDatabase _liveDb;
+
+        /// <summary>
+        /// Cached validation per card, because the library list draws a badge for EVERY row and
+        /// IMGUI repaints continuously — so an uncached badge means the full C-series plus the
+        /// content lint, for all 268 rows, many times a second while you sit still. That is why
+        /// typing in this window crawled.
+        /// </summary>
+        private readonly Dictionary<int, (ValidationReport core, ValidationReport lint)> _reports = new();
+
+        /// <summary>
+        /// Drops the cached pool and every cached report. For a STRUCTURAL change — a row added,
+        /// removed, reloaded, or moved between sets — since those change what every other row
+        /// resolves against.
+        /// </summary>
+        private void InvalidateAll()
+        {
+            _liveDb = null;
+            _reports.Clear();
+        }
+
+        /// <summary>
+        /// Drops one card's cached report after an edit to that card.
+        ///
+        /// <para><b>Deliberately re-checks nothing else, and does not rebuild the pool.</b> A
+        /// keystroke therefore costs one validation and one lint — not 268 — and no allocation of
+        /// the pool at all.</para>
+        ///
+        /// <para>Keeping the pool is safe because a field edit cannot change its KEY SET: rows are
+        /// resolved by id, and the id stopped being editable when it became the permanent key. Only
+        /// adding, removing or reloading a row changes what ids exist, and those call
+        /// <see cref="InvalidateAll"/>.</para>
+        ///
+        /// <para>The staleness this buys is one thing wide, and it is the same thing the report
+        /// cache already accepts: C13 reads another row's <c>Collectible</c>, so toggling that on a
+        /// token can leave a stale badge on a card that summons it. Validate All is the
+        /// authoritative sweep and reads from disk.</para>
+        /// </summary>
+        /// <summary>
+        /// Queues a card for revalidation shortly after the typing stops, rather than on the
+        /// keystroke itself (Sam, 2026-08-23: "I still don't think every keystroke is reasonable").
+        ///
+        /// <para>Held rather than dropped: the STALE report keeps rendering until the new one is
+        /// computed, so the panel does not flicker empty between keystrokes. What it costs is a
+        /// quarter second of a badge describing the previous keystroke, which is invisible while
+        /// you are still typing and gone by the time you look up.</para>
+        /// </summary>
+        private void Invalidate(int cardId)
+        {
+            _revalidateId = cardId;
+            _revalidateAt = EditorApplication.timeSinceStartup + RevalidateDelay;
+        }
+
+        private const double RevalidateDelay = 0.25;
+        private int _revalidateId = -1;
+        private double _revalidateAt;
+
+        /// <summary>Fires a queued revalidation once the delay is up. Called once per repaint.</summary>
+        private void TickRevalidate()
+        {
+            if (_revalidateId < 0) return;
+            if (EditorApplication.timeSinceStartup < _revalidateAt)
+            {
+                // IMGUI only repaints on input, and the whole point here is the moment input STOPS,
+                // so nothing else would wake this window to run the check.
+                Repaint();
+                return;
+            }
+            _reports.Remove(_revalidateId);
+            _revalidateId = -1;
+        }
 
         private (ValidationReport core, ValidationReport lint) Validate(EditableCard card)
         {
+            if (_reports.TryGetValue(card.Id, out var cached)) return cached;
+
             var def = card.ToDefinition();
             var db = LiveDb();
-            return (_validator.Validate(def, db), _linter.Lint(def, _artCatalog, _guardrails, db));
+            var report = (_validator.Validate(def, db), _linter.Lint(def, _artCatalog, _guardrails, db));
+            _reports[card.Id] = report;
+            return report;
         }
 
         private void OnGUI()
         {
+            TickRevalidate();
             DrawToolbar();
             EditorGUILayout.BeginHorizontal();
             DrawLibraryList();
@@ -118,9 +217,27 @@ namespace Emberfall.Editor
             GUILayout.Space(8);
             if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
             if (GUILayout.Button("Validate All", EditorStyles.toolbarButton, GUILayout.Width(80))) CardSetValidator.RunAndLog();
+            // The selected card's state, beside the button that checks all of them, so it is on
+            // screen whatever the editor pane is scrolled to. The messages stay in the pinned panel
+            // — a toolbar can carry a verdict, not three sentences.
+            GUILayout.Space(8);
+            GUILayout.Label(SelectedStatus(), EditorStyles.miniLabel);
+
             GUILayout.FlexibleSpace();
             GUILayout.Label(_dirtyIds.Count > 0 ? $"● {_dirtyIds.Count} unsaved" : "saved", EditorStyles.miniLabel);
             EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>The selected card's verdict, for the toolbar. Empty when nothing is selected.</summary>
+        private string SelectedStatus()
+        {
+            if (_selected < 0 || _selected >= _cards.Count) return "";
+            var (core, lint) = Validate(_cards[_selected]);
+            int errors = core.Issues.Count(i => i.Severity == Severity.Error);
+            int warnings = core.Issues.Count - errors + lint.Issues.Count;
+            if (errors > 0) return $"✕ {errors} error{(errors == 1 ? "" : "s")}, {warnings} warning{(warnings == 1 ? "" : "s")}";
+            if (warnings > 0) return $"▲ {warnings} warning{(warnings == 1 ? "" : "s")}";
+            return "● clean";
         }
 
         private void DrawLibraryList()
@@ -132,8 +249,10 @@ namespace Emberfall.Editor
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _cards[i];
+                // Searches the HANDLE and the name — the two things a human can actually type.
+                // The number is shown but not searched; nobody remembers 1049.
                 if (!string.IsNullOrEmpty(_search)
-                    && card.Id.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
+                    && card.Handle.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
                     && card.Name.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
 
@@ -141,7 +260,15 @@ namespace Emberfall.Editor
                 string badge = BadgeFor(core, lint);
                 string dirtyMark = _dirtyIds.Contains(card.Id) ? "*" : "";
                 var style = i == _selected ? EditorStyles.helpBox : GUI.skin.label;
-                if (GUILayout.Button($"{badge} {card.Id}{dirtyMark}  ({card.Name})", style))
+                // The display NAME alone (Sam, 2026-08-23). The number and the handle are both
+                // identifiers, and neither is what a designer scanning this list is looking for —
+                // they are on the row itself, under Identity, once a card is selected.
+                //
+                // Two rows CAN print the same name and this list cannot tell them apart; that is
+                // the same lossiness CardNameIndex reports rather than resolves. Search still
+                // matches the handle, so a duplicate name stays reachable by typing the handle
+                // even though the handle is no longer shown.
+                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark}", style))
                     _selected = i;
             }
             EditorGUILayout.EndScrollView();
@@ -242,12 +369,50 @@ namespace Emberfall.Editor
             }
 
             var card = _cards[_selected];
+
+            // PINNED ABOVE THE SCROLL VIEW, not inside it. This panel used to sit at the very
+            // bottom of the pane, under Rules, so seeing what the validator found meant scrolling
+            // past every field on the card — which nobody does, which made a live check that runs
+            // on every edit effectively invisible (Sam, 2026-08-23: "I don't see the output from it
+            // anywhere"). A check nobody reads is the same as no check.
+            DrawValidationPanel(card);
+
             _editScroll = EditorGUILayout.BeginScrollView(_editScroll);
 
+            // The face first: what the card SAYS, and the art it says it over. Everything below is
+            // the machinery behind it. Authoring reads top-down as a result, and the text field —
+            // the authored source of the rules since the 2026-08-16 reversal — is no longer the
+            // last thing on the page.
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
+            DrawCardText(card);
+            card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
+            card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
+            card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
+            }
+
+            // Deliberately BETWEEN the two change checks, never inside one. Every control in this
+            // block is a button, and a clicked button sets GUI.changed — inside a check, merely
+            // pinging the art in the Project window would mark the card unsaved. That is why the
+            // pane runs two checks rather than one: the split is where this block sits.
+            DrawArtPreview(card);
+
+            EditorGUILayout.Space();
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.LabelField("Identity", EditorStyles.boldLabel);
-            card.Id = EditorGUILayout.TextField("id", card.Id);
+            // The id is PERMANENT and is shown, never typed. Editing it would repoint a key that
+            // saved decks, replays and telemetry already carry — the failure the whole identity
+            // model exists to make impossible. The handle beneath it is free to change.
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.IntField("id", card.Id);
+            card.Handle = EditorGUILayout.TextField("handle", card.Handle);
             card.Name = EditorGUILayout.TextField("name", card.Name);
             card.SetId = (SetId)EditorGUILayout.EnumPopup("setId", card.SetId);
             card.Collectible = EditorGUILayout.Toggle("collectible", card.Collectible);
@@ -274,26 +439,57 @@ namespace Emberfall.Editor
             EditorGUILayout.LabelField("Rules", EditorStyles.boldLabel);
             DrawRules(card);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("generatedText", CardTextGenerator.Generate(card.ToDefinition()), EditorStyles.wordWrappedLabel);
-            card.FlavorText = EditorGUILayout.TextField("flavorText", card.FlavorText);
-            card.Tooltip = EditorGUILayout.TextField("tooltip", card.Tooltip);
-            card.ArtId = EditorGUILayout.TextField("artId", card.ArtId);
-
             if (EditorGUI.EndChangeCheck())
+            {
                 _dirtyIds.Add(card.Id);
-
-            // Deliberately OUTSIDE the change check above. Every control in this block is a button,
-            // and a clicked button sets GUI.changed — inside the check, merely pinging the art in
-            // the Project window would mark the card unsaved.
-            DrawArtPreview(card);
-
-            EditorGUILayout.Space();
-            DrawValidationPanel(card);
+                Invalidate(card.Id);
+            }
 
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// The authored card face, plus what the rules under it read as when the two disagree.
+        /// </summary>
+        /// <remarks>
+        /// This field used to be a read-only <c>generatedText</c> label — the author watched the
+        /// sentence appear and could not touch it. Under the 2026-08-16 text-direction reversal the
+        /// text is the authored thing and the rendering is the check, so the two swap places: the
+        /// field is editable and the generator's output only appears when it disagrees.
+        ///
+        /// <para>The "use it" button is the whole ergonomics of the reversal for a NEW card: author
+        /// the rules, take the rendering as a first draft, then edit the prose freely. What it is
+        /// NOT is a sync button — pressing it on an existing card overwrites a sentence somebody
+        /// wrote, which is why it sits behind a visible disagreement rather than running on save.</para>
+        /// </remarks>
+        private void DrawCardText(EditableCard card)
+        {
+            card.Text = EditorGUILayout.TextField("text", card.Text);
+
+            var divergence = CardTextGenerator.Check(card.ToDefinition(), LiveDb(), out string expected);
+            if (divergence == CardTextDivergence.None) return;
+
+            if (divergence == CardTextDivergence.Unrenderable)
+            {
+                EditorGUILayout.HelpBox(
+                    "C26: these rules are a shape with no phrasing, so 'text' cannot be checked against them.",
+                    MessageType.Error);
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                divergence == CardTextDivergence.Orphaned
+                    ? "C26: this card has no keywords or rules, so it should carry no text."
+                    : $"C26: the rules read as \"{expected}\".",
+                MessageType.Error);
+
+            using (new EditorGUI.DisabledScope(divergence == CardTextDivergence.Orphaned))
+                if (GUILayout.Button("Use what the rules read as"))
+                {
+                    card.Text = expected;
+                    GUI.FocusControl(null);
+                }
         }
 
         private void DrawStatFields(EditableCard card)
@@ -340,7 +536,7 @@ namespace Emberfall.Editor
                     if (GUILayout.Button("▲", GUILayout.Width(24))) { Swap(card.Rules, i, i - 1); }
                 using (new EditorGUI.DisabledScope(i == card.Rules.Count - 1))
                     if (GUILayout.Button("▼", GUILayout.Width(24))) { Swap(card.Rules, i, i + 1); }
-                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Rules.RemoveAt(i); _dirtyIds.Add(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
+                if (GUILayout.Button("✕", GUILayout.Width(24))) { card.Rules.RemoveAt(i); _dirtyIds.Add(card.Id); Invalidate(card.Id); EditorGUILayout.EndHorizontal(); EditorGUILayout.EndVertical(); break; }
                 EditorGUILayout.EndHorizontal();
 
                 rule.Id = EditorGUILayout.TextField("id", rule.Id);
@@ -373,6 +569,7 @@ namespace Emberfall.Editor
                 while (card.Rules.Any(rule => rule.Id == id)) id += "_new";
                 card.Rules.Add(new EditableRule { Id = id });
                 _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
             }
         }
 
@@ -403,7 +600,7 @@ namespace Emberfall.Editor
                 || rule.ActionKind == EditableRuleActionKind.AddToHand
                 || rule.ActionKind == EditableRuleActionKind.Equip
                 || rule.ActionKind == EditableRuleActionKind.Transform)
-                rule.CardId = EditorGUILayout.TextField("action.cardId", rule.CardId);
+                rule.CardId = EditorGUILayout.IntField("action.cardId", rule.CardId);
 
             if (rule.ActionKind == EditableRuleActionKind.GrantKeyword)
                 rule.Keyword = DrawCarrierKeywordPopup("action.keyword", rule.Keyword);
@@ -427,11 +624,17 @@ namespace Emberfall.Editor
             target.Selector = SelectorOptions[EditorGUILayout.Popup(
                 "action.target.selector", selectorIndex, SelectorOptions)];
 
-            target.HasChosenBy = EditorGUILayout.Toggle("target has chosenBy", target.HasChosenBy);
-            if (target.HasChosenBy)
-                target.ChosenBy = (TargetChosenBy)EditorGUILayout.EnumPopup("target.chosenBy", target.ChosenBy);
-            target.HasCount = EditorGUILayout.Toggle("target has count", target.HasCount);
-            if (target.HasCount) target.Count = EditorGUILayout.IntField("target.count", target.Count);
+            // One selection term, always written — there is no "has a selection" toggle, because a
+            // count of the selector's own maximum IS "every candidate". Who chooses follows from
+            // the pair: random rolls, otherwise the controller picks, unless the count has reached
+            // the maximum and nobody picks. C27 rejects the one shape this lets you type but the
+            // model deliberately cannot say — an automatic finite count.
+            target.SelectionCount = Mathf.Max(1,
+                EditorGUILayout.IntField("target.selection count", target.SelectionCount));
+            target.RandomSelection = EditorGUILayout.Toggle("target.selection random", target.RandomSelection);
+            // Authored, not derived: whether this pick is the card's price is the one thing no
+            // sentence can be read back to recover.
+            target.Cost = (CostKind)EditorGUILayout.EnumPopup("target.cost", target.Cost);
             target.HasDamagedFilter = EditorGUILayout.Toggle("filter has damaged", target.HasDamagedFilter);
             if (target.HasDamagedFilter) target.Damaged = EditorGUILayout.Toggle("filter.damaged", target.Damaged);
             target.HasTribeFilter = EditorGUILayout.Toggle("filter has tribe", target.HasTribeFilter);
@@ -446,28 +649,53 @@ namespace Emberfall.Editor
             (list[a], list[b]) = (list[b], list[a]);
         }
 
+        /// <summary>
+        /// What the validator and the linter say about the selected card, right now.
+        /// </summary>
+        /// <remarks>
+        /// Loud when there is something to say and nearly silent when there is not: a clean card
+        /// gets one grey line rather than a help box, because a permanent "Clean." panel at the top
+        /// of every card is exactly the kind of chrome a reader stops seeing — and then stops
+        /// seeing the errors that replace it.
+        /// </remarks>
         private void DrawValidationPanel(EditableCard card)
         {
             var (core, lint) = Validate(card);
-            EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
+            int errors = core.Issues.Count(i => i.Severity == Severity.Error);
+            int warnings = core.Issues.Count - errors + lint.Issues.Count;
 
-            foreach (var issue in core.Issues)
-                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}",
-                    issue.Severity == Severity.Error ? MessageType.Error : MessageType.Warning);
+            if (errors == 0 && warnings == 0)
+            {
+                EditorGUILayout.LabelField("● clean", EditorStyles.miniLabel);
+                return;
+            }
 
+            EditorGUILayout.LabelField(
+                errors > 0 ? $"✕ {errors} error(s), {warnings} warning(s)" : $"▲ {warnings} warning(s)",
+                EditorStyles.boldLabel);
+
+            // Errors first: a card with both is blocked by the errors, and reading the warnings
+            // first buries that.
+            foreach (var issue in core.Issues.Where(i => i.Severity == Severity.Error))
+                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Error);
+            foreach (var issue in core.Issues.Where(i => i.Severity != Severity.Error))
+                EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Warning);
             foreach (var issue in lint.Issues)
                 EditorGUILayout.HelpBox($"[{issue.Code}] {issue.Field}: {issue.Message}", MessageType.Warning);
-
-            if (core.Ok && core.Issues.Count == 0 && lint.Issues.Count == 0)
-                EditorGUILayout.HelpBox("Clean.", MessageType.None);
         }
 
         // ── toolbar actions ──────────────────────────────────────────────────────
 
         private void OnNew()
         {
-            var card = new EditableCard { Id = UniqueId("new_card"), Name = "New Card" };
+            var card = new EditableCard
+            {
+                Id = NextIdInBand(CardType.MINION),
+                Handle = UniqueHandle("new_card"),
+                Name = "New Card",
+            };
             _cards.Add(card);
+            InvalidateAll();
             _selected = _cards.Count - 1;
             _dirtyIds.Add(card.Id);
         }
@@ -476,8 +704,10 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var clone = _cards[_selected].Clone();
-            clone.Id = UniqueId(clone.Id + "_copy");
+            clone.Id = NextIdInBand(clone.Type);
+            clone.Handle = UniqueHandle(clone.Handle + "_copy");
             _cards.Insert(_selected + 1, clone);
+            InvalidateAll();
             _selected += 1;
             _dirtyIds.Add(clone.Id);
         }
@@ -486,7 +716,7 @@ namespace Emberfall.Editor
         {
             if (_selected < 0) return;
             var card = _cards[_selected];
-            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Id}'? This removes it from Emberfall.cards.json on next Save.", "Delete", "Cancel"))
+            if (!EditorUtility.DisplayDialog("Delete Card", $"Delete '{card.Handle}' (card {card.Id})? This removes it from its set file on next Save.", "Delete", "Cancel"))
                 return;
 
             var referencedBy = _cards.Where(c => c.Rules.Any(rule => rule.ReferencedCardId == card.Id))
@@ -497,23 +727,73 @@ namespace Emberfall.Editor
                 return;
 
             _cards.RemoveAt(_selected);
+            InvalidateAll();
             _dirtyIds.Remove(card.Id);
             _selected = Mathf.Min(_selected, _cards.Count - 1);
         }
 
-        private string UniqueId(string baseId)
+        /// <summary>
+        /// The next free number in the band this card TYPE owns — HERO_POWER 1-50, WEAPON 51-150,
+        /// SPELL 151-1000, MINION 1001 and up. Mirrors CardValidator's C1B, which rejects a row
+        /// that lands outside its band.
+        ///
+        /// <para><b>Scoped to the rows this window has loaded</b>, which is every shipped set, so
+        /// it cannot hand out a number already in use. It is not a reservation: two authors
+        /// working at once would both be handed the same next number, and the duplicate surfaces
+        /// as C2 at validation rather than silently.</para>
+        /// </summary>
+        private int NextIdInBand(CardType type)
+        {
+            (int first, int last) = type switch
+            {
+                CardType.HERO_POWER => (1, 50),
+                CardType.WEAPON => (51, 150),
+                CardType.SPELL => (151, 1000),
+                _ => (1001, int.MaxValue),
+            };
+            int next = first;
+            foreach (var c in _cards)
+                if (c.Id >= first && c.Id <= last && c.Id >= next) next = c.Id + 1;
+            if (next > last)
+                Debug.LogError($"[CardAuthoring] the {type} band ({first}-{last}) is full. " +
+                               "Widen the band rather than spilling into the next one.");
+            return next;
+        }
+
+        private string UniqueHandle(string baseId)
         {
             string id = baseId;
             int n = 1;
-            while (_cards.Any(c => c.Id == id))
+            while (_cards.Any(c => c.Handle == id))
                 id = $"{baseId}_{n++}";
             return id;
         }
 
+        /// <summary>
+        /// Writes every loaded row back to the file its <see cref="SetId"/> names — so a card whose
+        /// set changed MOVES between files, and a new card is filed by what it says it is rather
+        /// than by which file the window happened to open.
+        ///
+        /// <para><b>Writes each set file whole, from what is in memory.</b> Any set file this
+        /// window did not load would therefore be TRUNCATED, which is why LoadAll reads all of them
+        /// and warns rather than skipping quietly.</para>
+        /// </summary>
         private void SaveAll()
         {
-            var defs = _cards.Select(c => c.ToDefinition()).ToList();
-            CardJsonRowIO.SaveRows(CardJsonRowIO.DefaultEmberfallJsonPath, defs);
+            var bySet = new Dictionary<SetId, List<CardDefinition>>();
+            foreach (var card in _cards)
+            {
+                CardDefinition def = card.ToDefinition();
+                if (!bySet.TryGetValue(def.SetId, out var rows)) bySet[def.SetId] = rows = new List<CardDefinition>();
+                rows.Add(def);
+            }
+
+            foreach (SetId set in System.Enum.GetValues(typeof(SetId)))
+            {
+                bySet.TryGetValue(set, out var rows);
+                CardJsonRowIO.SaveRows(CardJsonRowIO.PathForSet(set), rows ?? new List<CardDefinition>());
+            }
+
             AssetDatabase.Refresh();
             _dirtyIds.Clear();
         }

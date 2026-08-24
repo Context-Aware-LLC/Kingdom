@@ -23,7 +23,7 @@ namespace Emberfall.Net.Server.Bots
         string DisplayName,
         CardClass PrimaryClass,
         CardClass SecondaryClass,
-        IReadOnlyList<string> Cards);
+        IReadOnlyList<int> Cards);
 
     /// <summary>Loads and validates <see cref="BotRosterEntry"/> rows from the canonical
     /// <c>bot-roster.json</c>. Validation happens once, at load time, so a malformed roster fails
@@ -36,7 +36,7 @@ namespace Emberfall.Net.Server.Bots
             public string DisplayName { get; set; } = "";
             public CardClass PrimaryClass { get; set; }
             public CardClass SecondaryClass { get; set; }
-            public List<string> Cards { get; set; } = new List<string>();
+            public List<int> Cards { get; set; } = new List<int>();
         }
 
         private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
@@ -116,12 +116,12 @@ namespace Emberfall.Net.Server.Bots
                 if (dto.Cards is null || dto.Cards.Count == 0)
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': entry '{dto.AccountUsername}' has no cards.");
-                foreach (string cardId in dto.Cards)
+                foreach (int cardId in dto.Cards)
                 {
                     if (!db.TryGet(cardId, out _))
                         throw new InvalidOperationException(
                             $"Bot roster '{path}': entry '{dto.AccountUsername}' references unknown " +
-                            $"card id '{cardId}'.");
+                            $"card id {cardId}.");
                 }
 
                 // Deck legality (DeckValidator L1-L5 via QueueEligibility.Check) — the SAME gate a
@@ -130,9 +130,9 @@ namespace Emberfall.Net.Server.Bots
                 // above, so this is purely size/copy-cap/class-membership. A malformed/illegal roster
                 // must fail server startup loudly rather than produce an illegal deck at match time —
                 // this loader's whole reason to exist.
-                var summed = new Dictionary<string, int>(StringComparer.Ordinal);
-                var order = new List<string>();
-                foreach (string cardId in dto.Cards)
+                var summed = new Dictionary<int, int>();
+                var order = new List<int>();
+                foreach (int cardId in dto.Cards)
                 {
                     if (!summed.TryGetValue(cardId, out int have)) order.Add(cardId);
                     summed[cardId] = have + 1;

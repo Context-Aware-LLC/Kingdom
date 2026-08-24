@@ -13,6 +13,7 @@ using Emberfall.Net.Client;
 using Emberfall.Net.Protocol;
 using Emberfall.Session;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Action = System.Action;
 
@@ -95,7 +96,7 @@ namespace Emberfall.Presentation
             _view?.Pump();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             // [DesyncDbg] dev tool — F9 arms a one-shot wire fault (see DesyncFaultInjector).
-            if (Input.GetKeyDown(KeyCode.F9)) _faultInjector?.ArmOneShot();
+            if (Keyboard.current?.f9Key.wasPressedThisFrame == true) _faultInjector?.ArmOneShot();
 #endif
         }
 

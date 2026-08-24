@@ -21,40 +21,40 @@ namespace Emberfall.Core
             CardClass.TIDECALLER, TidecallerDeck(),
             heroMaxHealth: 20);
 
-        public static IReadOnlyList<string> EmberwardDeck() => new string[]
+        public static IReadOnlyList<int> EmberwardDeck() => new int[]
         {
             // EMBERWARD class cards (2x each Common/Rare; 1x Legendary)
-            "ember_recruit",         "ember_recruit",
-            "ember_zealot",          "ember_zealot",
-            "ember_flame_bolt",            "ember_flame_bolt",
-            "ember_scorch",          "ember_scorch",
-            "ember_cinder_drake",
-            "ember_overheat_golem",
-            "ember_cinder_lance",    "ember_cinder_lance",
+            1001,         1001,
+            1002,          1002,
+            151,            151,
+            153,          153,
+            1003,
+            1019,
+            51,    51,
             // Neutral fill
-            "neutral_stone_sentry",          "neutral_stone_sentry",
-            "neutral_emberling",        "neutral_emberling",
-            "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
-            "neutral_hollow_acolyte",
-            "neutral_aegis_templar",
+            1007,          1007,
+            1009,        1009,
+            1010,        1010,
+            1011,
+            1013,
         };
 
-        public static IReadOnlyList<string> TidecallerDeck() => new string[]
+        public static IReadOnlyList<int> TidecallerDeck() => new int[]
         {
             // TIDECALLER class cards
-            "tide_initiate",         "tide_initiate",
-            "tide_oracle",           "tide_oracle",
-            "tide_frost_ripple",          "tide_frost_ripple",
-            "tide_reefguard",        "tide_reefguard",
-            "tide_deep_bargain",
-            "tide_wave_caller",
+            1004,         1004,
+            1005,           1005,
+            152,          152,
+            1022,        1022,
+            157,
+            1006,
             // Neutral fill
-            "neutral_stone_sentry",          "neutral_stone_sentry",
-            "neutral_wandering_scout",       "neutral_wandering_scout",
-            "neutral_stoneback_sentry",        "neutral_stoneback_sentry",
-            "neutral_bonehound",        "neutral_bonehound",
-            "neutral_hollow_acolyte",
-            "neutral_throneless_king",
+            1007,          1007,
+            1008,       1008,
+            1010,        1010,
+            1017,        1017,
+            1011,
+            1018,
         };
     }
 }

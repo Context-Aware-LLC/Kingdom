@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Training.Corpus
@@ -17,10 +18,10 @@ namespace Emberfall.Training.Corpus
         string P1,
         CardClass P0Class,
         CardClass P1Class,
-        IReadOnlyList<string> P0Deck,
-        IReadOnlyList<string> P1Deck,
+        IReadOnlyList<int> P0Deck,
+        IReadOnlyList<int> P1Deck,
         int HeroMaxHealth,
-        string SparkTokenId,
+        int SparkTokenId,
         string EngineContractVersion,
         string WireContractVersion,
         string BuildRevision,
@@ -45,7 +46,10 @@ namespace Emberfall.Training.Corpus
             Require(MatchId, nameof(MatchId));
             Require(P0, nameof(P0));
             Require(P1, nameof(P1));
-            Require(SparkTokenId, nameof(SparkTokenId));
+            // A card id is a NUMBER now, so "required" is > 0 rather than non-empty — 0 is the
+            // unset value that looks set.
+            if (SparkTokenId <= 0)
+                throw new InvalidDataException($"{nameof(SparkTokenId)} is required.");
             Require(EngineContractVersion, nameof(EngineContractVersion));
             Require(WireContractVersion, nameof(WireContractVersion));
             Require(BuildRevision, nameof(BuildRevision));

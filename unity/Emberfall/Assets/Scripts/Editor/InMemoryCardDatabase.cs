@@ -12,16 +12,16 @@ namespace Emberfall.Editor
     /// </summary>
     public sealed class InMemoryCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _cards = new Dictionary<string, CardDefinition>();
+        private readonly Dictionary<int, CardDefinition> _cards = new Dictionary<int, CardDefinition>();
 
         public InMemoryCardDatabase(IEnumerable<CardDefinition> defs)
         {
             foreach (var d in defs) _cards[d.Id] = d;
         }
 
-        public bool TryGet(string cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
+        public bool TryGet(int cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId) => _cards[cardId];
+        public CardDefinition Get(int cardId) => _cards[cardId];
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()
         {

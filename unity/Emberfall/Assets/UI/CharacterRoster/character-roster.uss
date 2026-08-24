@@ -703,6 +703,18 @@
  * actually has, the same solve .deck-strip runs — flex alone cannot grow a square. */
 .hero-grid {
     flex-grow: 1;
+    /* min-height:0 IS THE LOAD-BEARING LINE, and its absence closed a feedback loop.
+       A flex item's automatic minimum size is its CONTENT, so without this the grid can grow but
+       can never shrink below the tiles it holds. LayoutHeroGrid measures THIS element to decide
+       how big those tiles should be — so bigger tiles made a taller grid, a taller grid read as
+       more room, and more room made bigger tiles. It settled wherever it settled: 130dp portraits
+       overflowing the dialog, the pass title painted underneath them and Cancel off the bottom
+       (measured on device 2026-08-23). The exact same declaration is on #create-grid-view one
+       level up, for the exact same reason.
+       Whoever removes flex-grow here should delete this line with it; on its own it means nothing. */
+    min-height: 0;
+    /* A residual overflow must clip, not paint over the title above it. */
+    overflow: hidden;
     flex-direction: row;
     flex-wrap: wrap;
     align-content: center;

@@ -21,7 +21,7 @@ namespace Emberfall.AI
     /// <para><b>2026-07-22 — three holes closed.</b> This could not target, could not swing a weapon,
     /// and never used the hero power. That reads as mild weakness until you notice it lands
     /// asymmetrically: EMBERWARD's removal is <c>ANY_CHARACTER</c> (ember_flame_bolt, ember_scorch) and its
-    /// weapon is ember_cinder_lance, while TIDECALLER's tide_frost_ripple auto-resolves and deep_bargain
+    /// weapon is ember_cinder_lance, while TIDECALLER's frost_ripple auto-resolves and deep_bargain
     /// just draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were —
     /// found when the soak reported a 72.5/27.5 split that turned out to be this bug, not the cards.
     /// In the shipped single-player game it meant the AI played EMBERWARD with a third of its deck
@@ -133,7 +133,7 @@ namespace Emberfall.AI
             int slot = ps.Board.Count;
 
             // Untargeted first. Covers minions, weapons, draw, and every effect whose selector the
-            // interpreter auto-resolves (ENEMY_MINIONS, ENEMY_HERO, SELF). Only the explicit-choice
+            // interpreter auto-resolves (ANY_ENEMY_MINION, ENEMY_HERO, SELF). Only the explicit-choice
             // ANY_* selectors fall through — exactly the set that needs a target supplied.
             var bare = new PlayCardIntent(_playerId, card.Id, slot, Array.Empty<TargetRef>());
             if (_validator.CanExecute(state, bare, out _)) return bare;

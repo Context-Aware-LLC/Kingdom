@@ -214,7 +214,7 @@ namespace Emberfall.Presentation
 
         /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
         private string _pendingCardBackId = "";
-        private string _pendingShowcaseCardId = "";
+        private int _pendingShowcaseCardId;
 
         private void OnEnable()
         {
@@ -462,13 +462,21 @@ namespace Emberfall.Presentation
         /// row and pushes the last portrait off the bottom of the screen.</summary>
         private const float HeroNameBand = 36f;
 
-        /// <summary>Below this a portrait stops being a picture you can judge a hero by. Clamped at
-        /// the bottom only — clamping UP is what would push a tile off the grid.</summary>
-        private const float MinHeroArt = 88f;
-
-        /// <summary>Four across is the shape the grid was drawn for, and the shape a landscape
-        /// display wants. Fewer classes than that make their own single row.</summary>
-        private const int HeroColumns = 4;
+        // THERE IS NO MINIMUM ART SIZE AND NO FIXED COLUMN COUNT, and removing them is the fix.
+        //
+        // Until 2026-08-23 this pair was `MinHeroArt = 88` and `HeroColumns = 4`, and the solve
+        // below clamped the portrait UP to that floor — which its own comment said was the one
+        // thing never to do. On the emulator's 914x411dp landscape canvas the grid box is about
+        // 890x250dp, so four across over two rows solved to a 52dp portrait, the floor raised it
+        // to 88, and the tile went out at 88+20+16 = 124dp wide. .hero-grid wraps on WIDTH, so
+        // 890/124 seated SEVEN tiles on the first row and one on the second: a 2x4 grid that had
+        // become 7+1, with nothing anywhere reporting it. The column count was used to size the
+        // tile and never to place it, so the moment the clamp fired the two disagreed silently.
+        //
+        // So: solve for the column count instead of assuming one, take the shape that yields the
+        // biggest portrait, and PIN the grid's width to it so the wrap lands where the solve said.
+        // A short landscape phone gets one row of eight; a desktop canvas still gets 4x2, because
+        // that is what the search picks when there is height to spend.
 
         private bool _heroLayoutQueued;
 
@@ -491,15 +499,21 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Grow the portraits into whatever space the full-screen overlay has (NOR-288). The tiles
         /// used to be a fixed 152px inside a 760px dialog, which on a phone in landscape drew eight
-        /// small pictures in the middle of a mostly empty screen. Both axes are solved and the
-        /// smaller wins, so the grid always fits without scrolling: width has to seat
-        /// <see cref="HeroColumns"/> tiles across, and height has to seat every row down.
+        /// small pictures in the middle of a mostly empty screen. Every column count is tried and
+        /// the one yielding the biggest portrait wins; within each, both axes are solved and the
+        /// smaller wins, so the grid always fits without scrolling. The chosen shape is then
+        /// written to the grid's width, because .hero-grid wraps on width and would otherwise be
+        /// free to seat a different number per row than was solved for.
         /// </summary>
         private void LayoutHeroGrid()
         {
             if (_createHeroGrid == null) return;
 
-            float availableWidth = _createHeroGrid.resolvedStyle.width - RowSafetyMargin;
+            // Width comes from the PARENT, never from the grid. This method writes the grid's own
+            // width, so measuring the grid would feed its output back into its input and walk the
+            // tiles a little smaller on every layout pass.
+            VisualElement box = _createHeroGrid.parent ?? _createHeroGrid;
+            float availableWidth = box.resolvedStyle.width - RowSafetyMargin;
             float availableHeight = _createHeroGrid.resolvedStyle.height - RowSafetyMargin;
             if (availableWidth <= 0f || availableHeight <= 0f) return;
 
@@ -508,12 +522,25 @@ namespace Emberfall.Presentation
                 if (child.ClassListContains("hero-tile")) tiles++;
             if (tiles == 0) return;
 
-            int columns = Mathf.Min(HeroColumns, tiles);
-            int rows = Mathf.CeilToInt(tiles / (float)columns);
+            int columns = 1;
+            float side = 0f;
+            for (int c = 1; c <= tiles; c++)
+            {
+                int r = Mathf.CeilToInt(tiles / (float)c);
+                float fromWidth = availableWidth / c - HeroGutter - HeroChrome;
+                float fromHeight = availableHeight / r - HeroGutter - HeroChrome - HeroNameBand;
+                float candidate = Mathf.Min(fromWidth, fromHeight);
+                if (candidate <= side) continue;
+                side = candidate;
+                columns = c;
+            }
+            if (side <= 0f) return;
 
-            float fromWidth = availableWidth / columns - HeroGutter - HeroChrome;
-            float fromHeight = availableHeight / rows - HeroGutter - HeroChrome - HeroNameBand;
-            float side = Mathf.Max(MinHeroArt, Mathf.Min(fromWidth, fromHeight));
+            // Pin the wrap to the shape that was solved for. Without this the grid is free to seat
+            // a different number of tiles per row than the solve assumed — and that is precisely
+            // the failure documented above the constants.
+            _createHeroGrid.style.width = columns * (side + HeroChrome + HeroGutter) + RowSafetyMargin;
+            _createHeroGrid.style.alignSelf = Align.Center;
 
             foreach (VisualElement child in _createHeroGrid.Children())
             {
@@ -598,12 +625,13 @@ namespace Emberfall.Presentation
         /// exist yet (<c>FlavorText</c> is a wired but unpopulated schema field) and is tracked
         /// separately.
         ///
-        /// <para><b>The hero power block is DERIVED, never authored (NOR-291).</b> Its name is the
-        /// power card's own <c>Name</c> and its description is <see cref="CardTextGenerator"/> run
-        /// over that card's typed rules — the identical text the power shows on the board in a match.
-        /// No prose copy is stored anywhere, so a hero power that is later retuned changes its
-        /// description here in the same edit that changes its rules, and the two can never disagree.
-        /// A hand-written description would be a second copy of the rules with nothing comparing them.</para>
+        /// <para><b>The hero power block is READ OFF THE CARD, never written here (NOR-291).</b> Its
+        /// name is the power card's own <c>Name</c> and its description is that card's
+        /// <c>Text</c> — literally the same string the power shows on the board in a match. NOR-291's
+        /// point survives the 2026-08-16 text-direction reversal intact and is worth restating in the
+        /// new terms: the danger was ever a SECOND copy of the rules with nothing comparing them.
+        /// There is still exactly one copy; what changed is that it is authored rather than composed,
+        /// and CardValidator's C26 is now the thing comparing it to the rules.</para>
         ///
         /// <para>The power is shown on both passes. On pass 2 the class being inspected does NOT
         /// supply the character's power; the pass line above already says so explicitly.</para>
@@ -662,14 +690,14 @@ namespace Emberfall.Presentation
         /// </summary>
         private void FillHeroPower(CardClass heroClass)
         {
-            string powerId = HeroPowers.ForClass(heroClass);
+            int powerId = HeroPowers.ForClass(heroClass);
             CardDefinition power = null;
-            bool found = _db != null && !string.IsNullOrEmpty(powerId) && _db.TryGet(powerId, out power);
+            bool found = _db != null && powerId > 0 && _db.TryGet(powerId, out power);
 
             if (_createPowerBlock != null)
                 _createPowerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
             if (_createPowerName != null) _createPowerName.text = found ? power.Name : "";
-            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextStyling.Style(CardTextGenerator.Generate(power)) : "";
+            if (_createPowerDesc != null) _createPowerDesc.text = found ? CardTextStyling.Style(power.Text) : "";
         }
 
         /// <summary>The confirm view, reached once both classes are picked. Names the pairing and the
@@ -1036,7 +1064,7 @@ namespace Emberfall.Presentation
             _deckImageGrid.Clear();
 
             CardDefinition current =
-                !string.IsNullOrEmpty(_pendingShowcaseCardId) && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
+                _pendingShowcaseCardId > 0 && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
                     ? picked
                     : ShowcaseOf(_menuDeck);
             foreach (DeckEntry entry in _menuDeck.Entries)
@@ -1250,7 +1278,7 @@ namespace Emberfall.Presentation
             _menuSiblingCount = 0;
             _menuQueueReady = false;
             _pendingCardBackId = "";
-            _pendingShowcaseCardId = "";
+            _pendingShowcaseCardId = 0;
             _deckPane = DeckPane.Menu;
         }
 
@@ -1725,7 +1753,7 @@ namespace Emberfall.Presentation
         /// card rather than reshuffling with the entry order.</summary>
         private CardDefinition ShowcaseOf(DeckList deck)
         {
-            if (!string.IsNullOrEmpty(deck.ShowcaseCardId)
+            if (deck.ShowcaseCardId > 0
                 && deck.CountOf(deck.ShowcaseCardId) > 0
                 && _db.TryGet(deck.ShowcaseCardId, out CardDefinition chosen))
                 return chosen;

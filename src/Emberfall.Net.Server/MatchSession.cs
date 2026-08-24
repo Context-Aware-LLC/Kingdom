@@ -71,7 +71,7 @@ namespace Emberfall.Net.Server
         /// Captured at submit time because it is unrecoverable afterwards: the core replaces
         /// discarded cards in place, so the post-mulligan hand cannot say what was thrown back.
         /// </summary>
-        private readonly List<string>[] _mulliganKept = { new List<string>(), new List<string>() };
+        private readonly List<int>[] _mulliganKept = { new List<int>(), new List<int>() };
 
         /// <summary>
         /// Per-seat `card_seen` accumulators (telemetry-spec §2). Fed by <see cref="ObserveHands"/>
@@ -331,12 +331,12 @@ namespace Emberfall.Net.Server
             // Read the mulligan keeps BEFORE the core sees the intent — afterwards the hand has
             // already been rewritten and the answer is gone (telemetry-spec §1 `mulliganKept`).
             // Held aside rather than stored, so a REJECTED mulligan records nothing.
-            (int seat, List<string> kept)? keeps = CaptureMulliganKeeps(intent);
+            (int seat, List<int> kept)? keeps = CaptureMulliganKeeps(intent);
 
             // Same reason, same timing: after the play resolves the card is on the board or in the
             // graveyard and its hand slot is gone, so `firstPlayedTurn` has to be read now. Held
             // aside rather than recorded, so a REJECTED play never counts as played.
-            (int seat, string defId, int turn)? play = CapturePlay(intent);
+            (int seat, int defId, int turn)? play = CapturePlay(intent);
 
             var raw = _host.Submit(intent);
             if (!raw.Accepted) return raw;
@@ -398,14 +398,14 @@ namespace Emberfall.Net.Server
         /// <c>AutoConfirmIntent</c> keeps the whole hand — that is what auto-confirm means, and a
         /// timed-out mulligan is still a real data point about what the opening hand was.
         /// </summary>
-        private (int seat, List<string> kept)? CaptureMulliganKeeps(PlayerIntent intent)
+        private (int seat, List<int> kept)? CaptureMulliganKeeps(PlayerIntent intent)
         {
             if (_host.State.Phase != TurnPhase.Mulligan) return null;
             if (intent is not MulliganIntent && intent is not AutoConfirmIntent) return null;
 
             int seat = _host.State.SeatOf(intent.Player);
             var replaced = intent as MulliganIntent;
-            var kept = new List<string>();
+            var kept = new List<int>();
             foreach (var card in _host.State.Players[seat].Hand)
             {
                 bool thrown = false;
@@ -423,7 +423,7 @@ namespace Emberfall.Net.Server
         /// seat's hand — a spoofed or stale id is the core's business to reject, and telemetry must
         /// not record a play the core is about to refuse.
         /// </summary>
-        private (int seat, string defId, int turn)? CapturePlay(PlayerIntent intent)
+        private (int seat, int defId, int turn)? CapturePlay(PlayerIntent intent)
         {
             if (intent is not PlayCardIntent play) return null;
             if (_host.State.Outcome != MatchOutcome.InProgress) return null;

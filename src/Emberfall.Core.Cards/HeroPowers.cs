@@ -13,22 +13,28 @@ namespace Emberfall.Core.Cards
     /// is what stranded four classes in the create flow that already had cards. A class whose power
     /// changes, or a ninth class, updates one method instead of two that nothing compares.</para>
     ///
-    /// <para>An unmapped class returns <see cref="string.Empty"/> rather than throwing, preserving the
-    /// behaviour the match-start path has always had: NEUTRAL is not a hero and has no power.</para>
+    /// <para>An unmapped class returns 0 rather than throwing, preserving the behaviour the
+    /// match-start path has always had: NEUTRAL is not a hero and has no power. 0 is safe as that
+    /// signal precisely because no card is ever numbered 0.</para>
+    ///
+    /// <para><b>The numbers are written out rather than looked up, and that is correct.</b> A card
+    /// id is permanent, so a literal here cannot go stale the way a handle could — and resolving
+    /// these through the handle instead would make the handle load-bearing, which is the one thing
+    /// the identity model forbids. The comment beside each is a label, not a lookup key.</para>
     /// </summary>
     public static class HeroPowers
     {
-        public static string ForClass(CardClass cls) => cls switch
+        public static int ForClass(CardClass cls) => cls switch
         {
-            CardClass.EMBERWARD => "hero_power_searing_bolt",
-            CardClass.TIDECALLER => "hero_power_tidal_ward",
-            CardClass.GRAVEKEEP => "hero_power_toll_the_bell",
-            CardClass.VERDANT => "hero_power_quicken",
-            CardClass.CLOCKWRIGHT => "hero_power_blueprint",
-            CardClass.NIGHTVEIL => "hero_power_shadow_mark",
-            CardClass.STONEWARDEN => "hero_power_earthwall",
-            CardClass.TEMPEST => "hero_power_chain_spark",
-            _ => "",
+            CardClass.EMBERWARD => 1,    // hero_power_searing_bolt
+            CardClass.TIDECALLER => 2,   // hero_power_tidal_ward
+            CardClass.GRAVEKEEP => 3,    // hero_power_toll_the_bell
+            CardClass.VERDANT => 4,      // hero_power_quicken
+            CardClass.CLOCKWRIGHT => 5,  // hero_power_blueprint
+            CardClass.NIGHTVEIL => 6,    // hero_power_shadow_mark
+            CardClass.STONEWARDEN => 7,  // hero_power_earthwall
+            CardClass.TEMPEST => 8,      // hero_power_chain_spark
+            _ => 0,
         };
     }
 }

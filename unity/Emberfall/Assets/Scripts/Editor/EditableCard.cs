@@ -12,7 +12,8 @@ namespace Emberfall.Editor
     /// </summary>
     public sealed class EditableCard
     {
-        public string Id = "";
+        public int Id;
+        public string Handle = "";
         public string Name = "";
         public CardType Type = CardType.MINION;
         public int Cost;
@@ -23,6 +24,7 @@ namespace Emberfall.Editor
         public Rarity Rarity = Rarity.COMMON;
         public List<Keyword> Keywords = new List<Keyword>();
         public List<EditableRule> Rules = new List<EditableRule>();
+        public string Text = "";
         public string FlavorText = "";
         public string Tooltip = "";
         public string ArtId = "";
@@ -34,6 +36,7 @@ namespace Emberfall.Editor
         public static EditableCard FromDefinition(CardDefinition def) => new EditableCard
         {
             Id = def.Id,
+            Handle = def.Handle,
             Name = def.Name,
             Type = def.Type,
             Cost = def.Cost,
@@ -47,6 +50,7 @@ namespace Emberfall.Editor
             Rarity = def.Rarity,
             Keywords = new List<Keyword>(def.Keywords),
             Rules = def.Rules.Select(EditableRule.FromDefinition).ToList(),
+            Text = def.Text,
             FlavorText = def.FlavorText,
             Tooltip = def.Tooltip,
             ArtId = def.ArtId,
@@ -58,7 +62,7 @@ namespace Emberfall.Editor
         };
 
         public CardDefinition ToDefinition() => new CardDefinition(
-            id: Id, name: Name, type: Type, cost: Cost,
+            id: Id, handle: Handle, name: Name, type: Type, cost: Cost,
             attack: HasAttack ? Attack : (int?)null,
             health: HasHealth ? Health : (int?)null,
             durability: HasDurability ? Durability : (int?)null,
@@ -66,20 +70,19 @@ namespace Emberfall.Editor
             keywords: Keywords, rules: Rules.Select(rule => rule.ToDefinition()).ToList(),
             flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
-            factionId: FactionId, tooltip: Tooltip);
+            factionId: FactionId, tooltip: Tooltip, text: Text);
 
         public EditableCard Clone() => FromDefinition(ToDefinition());
     }
 
     public enum EditableActivationKind { Triggered, Aura }
-    public enum EditableConditionKind { Always, TurnOwner }
+    public enum EditableConditionKind { Always, TurnOwner, CostPaid }
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
     {
         Damage,
         Heal,
         ModifyStats,
-        Reinforce,
         GrantKeyword,
         Destroy,
         ReturnToHand,
@@ -100,26 +103,41 @@ namespace Emberfall.Editor
     public sealed class EditableTarget
     {
         public string Selector = "ANY_CHARACTER";
-        public bool HasChosenBy; public TargetChosenBy ChosenBy = TargetChosenBy.PLAYER;
-        public bool HasCount; public int Count = 1;
+        // One term, always written — so there is no "has a selection" toggle to leave off. The
+        // count IS the term: "every candidate" is the selector's own maximum rather than a third
+        // mode, so there is no longer a box that means nothing under one of the modes.
+        public int SelectionCount = 1;
+        public bool RandomSelection;
         public bool HasDamagedFilter; public bool Damaged;
         public bool HasTribeFilter; public Tribe Tribe;
         public string Binding = "";
         public string DistinctFrom = "";
 
+        /// <summary>
+        /// Whether this pick is the card's PRICE, and whether the card is playable without paying
+        /// it. The one thing an author states that no sentence can be read to recover — see
+        /// <see cref="CostKind"/>.
+        ///
+        /// <para><b>This field going missing is what made the bug worth naming.</b> Until
+        /// 2026-08-22 <see cref="ToDefinition"/> simply did not pass the flag, so opening any of the
+        /// seven cost cards in this window and saving it silently deleted the cost — the card kept
+        /// its sentence and quietly became playable with nothing to sacrifice. A field the round
+        /// trip drops is invisible in every direction except the one nobody looks at.</para>
+        /// </summary>
+        public CostKind Cost = CostKind.None;
+
         public static EditableTarget FromDefinition(TargetSpec target) => new EditableTarget
         {
             Selector = target.Selector,
-            HasChosenBy = target.ChosenBy.HasValue,
-            ChosenBy = target.ChosenBy ?? TargetChosenBy.PLAYER,
-            HasCount = target.Count.HasValue,
-            Count = target.Count ?? 1,
+            SelectionCount = target.Selection.Count,
+            RandomSelection = target.Selection.IsRandom,
             HasDamagedFilter = target.Filter?.Damaged.HasValue ?? false,
             Damaged = target.Filter?.Damaged ?? false,
             HasTribeFilter = target.Filter?.Tribe.HasValue ?? false,
             Tribe = target.Filter?.Tribe ?? default,
             Binding = target.Binding,
             DistinctFrom = target.DistinctFrom,
+            Cost = target.Cost,
         };
 
         public TargetSpec ToDefinition()
@@ -128,12 +146,10 @@ namespace Emberfall.Editor
                 ? new TargetFilterDef(HasDamagedFilter ? Damaged : (bool?)null,
                     HasTribeFilter ? Tribe : (Tribe?)null)
                 : null;
-            return new TargetSpec(Selector,
-                HasChosenBy ? ChosenBy : (TargetChosenBy?)null,
-                HasCount ? Count : (int?)null,
-                filter,
-                Binding,
-                DistinctFrom);
+            TargetSelection selection = RandomSelection
+                ? TargetSelection.RandomOf(SelectionCount)
+                : TargetSelection.Of(SelectionCount);
+            return new TargetSpec(Selector, selection, filter, Binding, DistinctFrom, Cost);
         }
     }
 
@@ -152,7 +168,7 @@ namespace Emberfall.Editor
         public int AttackDelta;
         public int HealthDelta;
         public int Count = 1;
-        public string CardId = "";
+        public int CardId;
         public Keyword Keyword;
         public ManaGainKind ManaKind = ManaGainKind.TEMPORARY;
         public EditableTarget Target = new EditableTarget();
@@ -160,7 +176,6 @@ namespace Emberfall.Editor
         public bool IsTargeted => ActionKind == EditableRuleActionKind.Damage
             || ActionKind == EditableRuleActionKind.Heal
             || ActionKind == EditableRuleActionKind.ModifyStats
-            || ActionKind == EditableRuleActionKind.Reinforce
             || ActionKind == EditableRuleActionKind.GrantKeyword
             || ActionKind == EditableRuleActionKind.Destroy
             || ActionKind == EditableRuleActionKind.ReturnToHand
@@ -169,12 +184,12 @@ namespace Emberfall.Editor
             || ActionKind == EditableRuleActionKind.Frost
             || ActionKind == EditableRuleActionKind.TakeControl;
 
-        public string ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
+        public int ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
             || ActionKind == EditableRuleActionKind.AddToHand
             || ActionKind == EditableRuleActionKind.Equip
             || ActionKind == EditableRuleActionKind.Transform
                 ? CardId
-                : "";
+                : 0;
 
         public static EditableRule FromDefinition(RuleDefinition rule)
         {
@@ -197,6 +212,8 @@ namespace Emberfall.Editor
                 editable.ConditionKind = EditableConditionKind.TurnOwner;
                 editable.TurnOwnerScope = turnOwner.Owner;
             }
+            else if (rule.Condition is CostPaidCondition)
+                editable.ConditionKind = EditableConditionKind.CostPaid;
             else throw Unknown("condition", rule.Condition);
 
             if (rule.Lifetime is SourceBoundLifetime)
@@ -239,6 +256,7 @@ namespace Emberfall.Editor
             {
                 case EditableConditionKind.Always: return AlwaysCondition.Instance;
                 case EditableConditionKind.TurnOwner: return new TurnOwnerCondition(TurnOwnerScope);
+                case EditableConditionKind.CostPaid: return CostPaidCondition.Instance;
                 default: throw Unknown("editable condition", ConditionKind);
             }
         }
@@ -263,7 +281,6 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Damage: return new DamageAction(Amount, target);
                 case EditableRuleActionKind.Heal: return new HealAction(Amount, target);
                 case EditableRuleActionKind.ModifyStats: return new ModifyStatsAction(AttackDelta, HealthDelta, target);
-                case EditableRuleActionKind.Reinforce: return new ReinforceAction(target);
                 case EditableRuleActionKind.GrantKeyword: return new GrantKeywordAction(Keyword, target);
                 case EditableRuleActionKind.Destroy: return new DestroyAction(target);
                 case EditableRuleActionKind.ReturnToHand: return new ReturnToHandAction(target);
@@ -288,7 +305,6 @@ namespace Emberfall.Editor
             if (action is DamageAction damage) { ActionKind = EditableRuleActionKind.Damage; Amount = damage.Amount; ReadTarget(damage); }
             else if (action is HealAction heal) { ActionKind = EditableRuleActionKind.Heal; Amount = heal.Amount; ReadTarget(heal); }
             else if (action is ModifyStatsAction stats) { ActionKind = EditableRuleActionKind.ModifyStats; AttackDelta = stats.AttackDelta; HealthDelta = stats.HealthDelta; ReadTarget(stats); }
-            else if (action is ReinforceAction reinforce) { ActionKind = EditableRuleActionKind.Reinforce; ReadTarget(reinforce); }
             else if (action is GrantKeywordAction grant) { ActionKind = EditableRuleActionKind.GrantKeyword; Keyword = grant.Keyword; ReadTarget(grant); }
             else if (action is DestroyAction destroy) { ActionKind = EditableRuleActionKind.Destroy; ReadTarget(destroy); }
             else if (action is ReturnToHandAction returnToHand) { ActionKind = EditableRuleActionKind.ReturnToHand; ReadTarget(returnToHand); }

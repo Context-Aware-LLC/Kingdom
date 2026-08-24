@@ -55,7 +55,7 @@ namespace Emberfall.Tools.CardCi
 
             int errors = 0, warnings = 0;
             var allCards = new List<CardDefinition>();
-            var cardFileOf = new Dictionary<string, string>(); // defId -> source file (first seen)
+            var cardFileOf = new Dictionary<int, string>();    // defId -> source file (first seen)
 
             // ── Parse every row of every set file (per-row error context) ────────────
             foreach (var file in files)
@@ -90,13 +90,22 @@ namespace Emberfall.Tools.CardCi
             var db = new InMemoryCardDatabase(allCards);
             var validator = new CardValidator();
 
+            // Collected during the C-series pass and printed as rows at the end. See the
+            // "text divergences" block below for why this is a separate readout and not just
+            // the C26 error lines it duplicates.
+            var divergences = new List<(CardTextDivergence Kind, CardDefinition Def, string Expected)>();
+
             // ── C1–C21 per card ──────────────────────────────────────────────────────
             foreach (var def in allCards)
             {
+                var kind = CardTextGenerator.Check(def, db, out string expected);
+                if (kind != CardTextDivergence.None) divergences.Add((kind, def, expected));
+
                 var report = validator.Validate(def, db);
                 foreach (var issue in report.Issues)
                 {
-                    string where = $"{cardFileOf[def.Id]}:{def.Id}";
+                    // Handle as well as number: a CI line a human reads names the card.
+                    string where = $"{cardFileOf[def.Id]}:{def.Id} {def.Handle}";
                     if (issue.Severity == Severity.Error)
                     {
                         Console.Error.WriteLine($"ERROR {where}: {issue.Code} {issue.Field} — {issue.Message}");
@@ -145,25 +154,69 @@ namespace Emberfall.Tools.CardCi
                 warnings++;
             }
 
+            // ── Text divergences, as rows (Sam, 2026-08-19) ──────────────────────────
+            // Every line here is ALSO a C26 error above, so this block gates nothing and changes
+            // no exit code. It exists because the two outputs answer different questions. The error
+            // stream answers "is the build clean" — one line per issue, C26 interleaved with C1–C21,
+            // ordered by card. This answers "which cards do I have to make a wording decision about,
+            // and what are the two candidate wordings" — which is the actual triage when a fresh
+            // corpus lands, and is unreadable when the pairs are scattered through a few hundred
+            // lines of unrelated findings.
+            //
+            // The decision each row is asking for is per card and is Sam's: adapt the TEXT to what
+            // the grammar can already say, or adapt the GRAMMAR to say what the card wants. Usually
+            // some of both, which is why both wordings are printed in full and neither is truncated
+            // — the difference between them is frequently a single word, and truncating is how you
+            // hide exactly the thing being decided.
+            if (divergences.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"TEXT DIVERGENCES — {divergences.Count} card(s) need a wording decision");
+                Console.WriteLine();
+
+                foreach (var (kind, def, expected) in divergences
+                             .OrderBy(d => d.Kind)
+                             .ThenBy(d => cardFileOf[d.Def.Id], StringComparer.Ordinal)
+                             .ThenBy(d => d.Def.Id))
+                {
+                    Console.WriteLine($"{kind.ToString().ToUpperInvariant(),-13} {cardFileOf[def.Id]}:{def.Id}");
+                    Console.WriteLine($"  authored   {Show(def.Text)}");
+                    // Unrenderable carries no expected string — Check() returns "" because Generate
+                    // threw. Printing that through Show() would read as "the rules say nothing",
+                    // which is the opposite of what happened and the wrong triage.
+                    Console.WriteLine(kind == CardTextDivergence.Unrenderable
+                        ? "  rules say  (no phrasing exists for this rule shape — always a grammar gap)"
+                        : $"  rules say  {Show(expected)}");
+                }
+
+                Console.WriteLine();
+                foreach (var group in divergences.GroupBy(d => d.Kind).OrderBy(g => g.Key))
+                    Console.WriteLine($"  {group.Key.ToString().ToUpperInvariant(),-13} {group.Count()}");
+            }
+
             Console.WriteLine();
             Console.WriteLine($"CardCi: {allCards.Count} cards across {files.Length} set file(s) — {errors} error(s), {warnings} warning(s).");
             return errors > 0 ? 1 : 0;
         }
+
+        /// <summary>Quotes an authored sentence for a divergence row, distinguishing empty from absent.</summary>
+        private static string Show(string text)
+            => string.IsNullOrEmpty(text) ? "(none)" : $"\"{text}\"";
     }
 
     /// <summary>Minimal ICardDatabase over the loaded library, for token-resolution checks (C12/C13).</summary>
     internal sealed class InMemoryCardDatabase : ICardDatabase
     {
-        private readonly Dictionary<string, CardDefinition> _cards = new(StringComparer.Ordinal);
+        private readonly Dictionary<int, CardDefinition> _cards = new();
 
         public InMemoryCardDatabase(IEnumerable<CardDefinition> defs)
         {
             foreach (var d in defs) _cards[d.Id] = d; // last wins; C2 reports the duplicate separately
         }
 
-        public bool TryGet(string cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
+        public bool TryGet(int cardId, out CardDefinition def) => _cards.TryGetValue(cardId, out def!);
 
-        public CardDefinition Get(string cardId) => _cards[cardId];
+        public CardDefinition Get(int cardId) => _cards[cardId];
 
         public IReadOnlyCollection<CardDefinition> AllCollectible()
             => _cards.Values.Where(d => d.PoolEligible).ToArray();
