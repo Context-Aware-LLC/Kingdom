@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
+using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
@@ -390,7 +391,7 @@ namespace Emberfall.Presentation
                     _identityShowcase.style.backgroundImage = new StyleBackground(back);
             }
 
-            if (_db == null || _art == null || string.IsNullOrEmpty(deck.ShowcaseCardId)) return;
+            if (_db == null || _art == null || deck.ShowcaseCardId <= 0) return;
             if (!_db.TryGet(deck.ShowcaseCardId, out CardDefinition showcase)) return;
             if (string.IsNullOrEmpty(showcase.ArtId)) return;
 
