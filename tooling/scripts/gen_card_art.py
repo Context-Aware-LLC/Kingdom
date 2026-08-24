@@ -88,12 +88,7 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DOCS = pathlib.Path(
-    os.environ.get(
-        "EMBERFALL_DOCS",
-        pathlib.Path.home() / "docs",
-    )
-)
+DOCS = pathlib.Path(os.environ.get("EMBERFALL_DOCS", REPO / "docs"))
 DESIGN = DOCS / "design"
 
 OUT = REPO / "art-pipeline" / "card-art"
@@ -163,12 +158,12 @@ CLASSES = {
     "batch2": "card-drafts-emberward-tidecaller",
     "batch3": "card-drafts-emberward-tidecaller-b3",
     "weapon-rerolls": "card-drafts-weapon-rerolls",
-    # M2 expansion classes (dev-docs/descriptors/classes.md:7)
+    # M2 expansion classes (dev-docs/art/descriptors/classes.md:7)
     "clockwright": "card-drafts-clockwright",
     "nightveil":   "card-drafts-nightveil",
     "stonewarden": "card-drafts-stonewarden",
     "tempest":     "card-drafts-tempest",
-    # REKINDLING second expansion set (dev-docs/descriptors/classes.md:7)
+    # REKINDLING second expansion set (dev-docs/art/descriptors/classes.md:7)
     "rekindling":  "card-drafts-rekindling",
 }
 
@@ -402,7 +397,7 @@ def load_cards() -> list[dict]:
 # STYLE is still STYLE_BLOCKS[provider], so the two providers stay a controlled
 # comparison, and the class house look is still house-level prose rather than anything
 # invented here. The class descriptors and world tone come from the same
-# dev-docs/descriptors files gen_card_prompt_briefs.py reads, so a card's seed composes
+# dev-docs/art/descriptors files gen_card_prompt_briefs.py reads, so a card's seed composes
 # to the same direction whichever of the two scripts you ask.
 #
 # This is opt-in, not a union with load_cards(): a bare run must keep selecting exactly
@@ -436,7 +431,8 @@ def load_seed_cards() -> list[dict]:
 
     cards: list[dict] = []
     for row in rows:
-        seed = seeds.get(row["id"])
+        # Seeds are keyed by HANDLE; the row's id is a number. See gen_card_prompt_briefs.
+        seed = seeds.get(row["handle"])
         if not seed:
             continue
         cls = row.get("class", "NEUTRAL").lower()
@@ -469,7 +465,7 @@ def load_seed_cards() -> list[dict]:
 
         cards.append(
             {
-                "id": row["id"],
+                "id": row["handle"],
                 "name": row["name"],
                 "artId": row["artId"],
                 "file": art_file(row["artId"]),

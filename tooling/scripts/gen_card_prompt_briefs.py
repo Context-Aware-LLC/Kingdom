@@ -17,9 +17,9 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     call that then hangs on an approval gate (found 2026-08-01). This script emits the
     already-fixed descriptive phrasing instead. If the source doc's wording ever changes,
     reconcile this constant by hand — it is intentionally NOT a verbatim mirror.
-  - Subject class + palette/motifs/mood, looked up from dev-docs/descriptors/classes.md's
+  - Subject class + palette/motifs/mood, looked up from dev-docs/art/descriptors/classes.md's
     table by the card's `class`. Never hardcoded here — parsed at runtime so it cannot drift.
-  - World tone, from dev-docs/descriptors/world.md (base + REKINDLING section when relevant).
+  - World tone, from dev-docs/art/descriptors/world.md (base + REKINDLING section when relevant).
   - Output path + canonical filename, from setId/artId. ONE rule, no per-class exceptions:
     art-pipeline/card-art/<setId>/<artId>/<artId>.png. The PNG stem repeats the enclosing
     leaf-directory name exactly. gen_card_art.py used to key candidates by a CLASS group
@@ -72,18 +72,13 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DOCS = pathlib.Path(
-    os.environ.get(
-        "EMBERFALL_DOCS",
-        pathlib.Path.home() / "docs",
-    )
-)
+DOCS = pathlib.Path(os.environ.get("EMBERFALL_DOCS", REPO / "docs"))
 CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
 OUT_ROOT = REPO / "art-pipeline" / "card-art"
 
-CLASSES_MD = DOCS / "dev-docs" / "descriptors" / "classes.md"
-WORLD_MD = DOCS / "dev-docs" / "descriptors" / "world.md"
+CLASSES_MD = DOCS / "dev-docs" / "art" / "descriptors" / "classes.md"
+WORLD_MD = DOCS / "dev-docs" / "art" / "descriptors" / "world.md"
 
 # ---------------------------------------------------------------- boilerplate
 
@@ -206,8 +201,13 @@ def load_cards(set_id, class_filter=None, card_ids=None):
         cards.extend(json.loads(fp.read_text(encoding="utf-8")))
     cards = [c for c in cards if c.get("setId") == set_id and c.get("collectible", True)]
     if card_ids:
-        wanted = set(card_ids)
-        cards = [c for c in cards if c["id"] in wanted]
+        # HANDLE, not id. The id became a NUMBER (numeric-card-id migration) while every seed
+        # file, every --card argument and every prompt manifest still speaks the handle. Matching
+        # on "id" silently selected nothing and made every seed unreachable, so an entire batch
+        # came back on placeholder direction with no error anywhere. Accept a numeric id too, as
+        # a string, so a caller reading the row does not get a silent empty set either.
+        wanted = {str(w) for w in card_ids}
+        cards = [c for c in cards if c["handle"] in wanted or str(c["id"]) in wanted]
     if class_filter:
         cards = [c for c in cards if c.get("class", "").upper() == class_filter.upper()]
     return cards
@@ -408,7 +408,7 @@ def main():
         print("No matching cards found.", file=sys.stderr)
         sys.exit(1)
 
-    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(c["id"])) for c in cards]
+    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(c["handle"])) for c in cards]
     output = "\n\n---\n\n".join(briefs) + "\n"
 
     if args.out:
