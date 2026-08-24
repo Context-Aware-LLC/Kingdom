@@ -81,30 +81,27 @@ tables. The spec doc is a copy of those, and the copy is the thing to fix.
 have to move together are the canonical serializer, the projection and the snapshot codec — miss one
 and the client and server disagree about a state neither can prove wrong.
 
-**Do not go looking for a rebaseline guard, a pinned digest or a golden fixture to satisfy. They do
-not exist.** `a9eaa0e3` (2026-08-18) archived the .NET test suites out of the repo and the fixtures
-went with them, and `ci.yml` says in a comment not to re-add `dotnet test` until they return.
-Stage 4's `DeterminismGate` survives and bans non-deterministic APIs — floats, `System.Random`,
-local time — but it pins no digest.
+**There IS a suite again, and it is ADVISORY — a green CI does not mean it passed.** The five .NET
+test projects came back on 2026-08-24 (Sam's direction), minus the card-authoring block, and all
+five are in `Emberfall.slnx`. `ci.yml` Stage 2 and `gates.ps1` Stage 2 run `dotnet test` with
+`continue-on-error`, so **a failing test cannot fail the job**. Read the run, do not read the badge.
+Both stages carry the same note and the same retirement trigger on that flag.
 
-**`tests/Emberfall.Core.Tests` and its `Emberfall.slnx` entry came BACK with `7c7596da` (the
-effect-model fork), and the project DOES NOT COMPILE** — measured 2026-08-23,
-`dotnet build tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj` = **98 `error CS`**, all of
-them the numeric card id: `ICardDatabase` keys on `int` now, `CardDefinition` gained `handle`, and
-every fixture still speaks `string`. So the conclusion above is unchanged and the reason for it is
-not — there is still no gate to turn green, but it is now debt rather than a deliberate absence.
-Nothing runs it: `ci.yml` does not, and a green CI says nothing about it.
+**The golden digest is still not a gate you can satisfy.** `Known_Vector_Digest_Is_Pinned` and the
+11 golden replay fixtures are back and they are RED: the effect-model fork and the numeric card id
+both moved the canonical hash. Rebaselining them is Sam's deferred call (2026-08-23) — with one
+developer and no live players, a golden fixture guards against a desync that cannot happen, and
+re-pinning one is a cost with no payer. So a state-shape change still lands on review and a build,
+and **the reviewer is still the only guard**: read the three sites rather than hunting for a gate.
 
-**That absence is deliberate and it is Sam's ruling** (2026-08-23): with one developer and no live
-players, a golden fixture guards against a desync that cannot happen, and re-pinning one is a cost
-with no payer. Fixtures get calculated closer to release. Until then a state-shape change lands on
-review and a build, and **the reviewer is the only guard** — so read the three sites, do not go
-hunting for a gate to turn green.
+**A fixture's card id is minted, not written.** `Support/FixtureCard` maps a test-local mnemonic to
+a number above 1_000_000, far clear of every shipped row; `Support/ShippedCards` is the ONE place a
+real handle resolves to a real id, and it exists only in tests. Neither is a handle lookup in the
+sense the ruling forbids — see the class docs, which say why.
 
-**RETIREMENT TRIGGER:** the first golden fixture recalculated for release, or the first `dotnet test`
-run that COMPILES, ends this section. ("A test project added back to `Emberfall.slnx`" was the old
-trigger; it fired in `7c7596da` and nothing discharged it, which is how the paragraph above spent
-five days claiming the file was not there.)
+**RETIREMENT TRIGGER:** `dotnet test Emberfall.slnx` going green ends the advisory half of this
+section, and the flag comes out of `ci.yml` and `tools/ci/gates.ps1` in the same commit. A golden
+fixture recalculated for release ends the digest half.
 
 ## Player-facing input consults the vulnerability index
 
