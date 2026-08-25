@@ -30,7 +30,7 @@
       "HERO_POWER": 0
     },
     "keywordFrequency": {
-      "BULWARK": 47,
+      "BULWARK": 46,
       "SHROUD": 14,
       "SKIRMISH": 14,
       "DOUBLESTRIKE": 10,
@@ -45,7 +45,7 @@
       "FROST": 3
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 66,
+      "ANY_FRIENDLY_MINION": 65,
       "ANY_MINION": 28,
       "ANY_ENEMY_MINION": 24,
       "ANY_ENEMY": 22,
@@ -53,12 +53,12 @@
       "ENEMY_HERO": 9,
       "ANY_FRIENDLY": 5,
       "ANY_CHARACTER": 3,
-      "SELF": 2
+      "SELF": 3
     },
     "costDistribution": {
       "0": 7,
-      "1": 35,
-      "2": 57,
+      "1": 34,
+      "2": 58,
       "3": 71,
       "4": 51,
       "5": 23,
@@ -125,10 +125,10 @@
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 9,
+        "ANY_FRIENDLY_MINION": 8,
         "ANY_MINION": 3,
-        "ANY_CHARACTER": 1,
-        "SELF": 1
+        "SELF": 2,
+        "ANY_CHARACTER": 1
       },
       "costDistribution": {
         "0": 1,
@@ -305,7 +305,7 @@
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "BULWARK": 8,
+        "BULWARK": 7,
         "SKIRMISH": 4,
         "AEGIS": 3,
         "ARCANE_SURGE": 2,
@@ -323,8 +323,8 @@
       },
       "costDistribution": {
         "0": 4,
-        "1": 4,
-        "2": 11,
+        "1": 3,
+        "2": 12,
         "3": 10,
         "4": 6,
         "5": 1,
@@ -861,15 +861,13 @@
       "id": 1008,
       "name": "Wandering Scout",
       "type": "MINION",
-      "cost": 1,
+      "cost": 2,
       "attack": 1,
       "health": 1,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
-      "keywords": [
-        "BULWARK"
-      ],
+      "keywords": [],
       "selectors": [],
       "tribe": "BEAST",
       "setId": "EMBERFALL",
@@ -5365,7 +5363,7 @@
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [
-        "ANY_FRIENDLY_MINION"
+        "SELF"
       ],
       "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
