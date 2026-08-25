@@ -10,19 +10,6 @@
   <xs:import schemaLocation="Unity.AppUI.UI.xsd" namespace="Unity.AppUI.UI" />
   <xs:import schemaLocation="System.xsd" namespace="System" />
   <xs:import schemaLocation="Unity.AppUI.Core.xsd" namespace="Unity.AppUI.Core" />
-  <xs:import schemaLocation="Unity.AI.Toolkit.Accounts.Components.xsd" namespace="Unity.AI.Toolkit.Accounts.Components" />
-  <xs:import schemaLocation="Unity.AI.Sound.Components.xsd" namespace="Unity.AI.Sound.Components" />
-  <xs:import schemaLocation="Unity.AI.Pbr.Components.xsd" namespace="Unity.AI.Pbr.Components" />
-  <xs:import schemaLocation="Unity.AI.ModelSelector.Components.xsd" namespace="Unity.AI.ModelSelector.Components" />
-  <xs:import schemaLocation="Unity.AI.Mesh.Components.xsd" namespace="Unity.AI.Mesh.Components" />
-  <xs:import schemaLocation="Unity.AI.Image.Components.xsd" namespace="Unity.AI.Image.Components" />
-  <xs:import schemaLocation="Unity.AI.Image.Panel.xsd" namespace="Unity.AI.Image.Panel" />
-  <xs:import schemaLocation="Unity.AI.Generators.UI.xsd" namespace="Unity.AI.Generators.UI" />
-  <xs:import schemaLocation="Unity.AI.Assistant.UI.Editor.Scripts.Components.PromptPopup.xsd" namespace="Unity.AI.Assistant.UI.Editor.Scripts.Components.PromptPopup" />
-  <xs:import schemaLocation="Unity.AI.Assistant.UI.Editor.Scripts.Components.xsd" namespace="Unity.AI.Assistant.UI.Editor.Scripts.Components" />
-  <xs:import schemaLocation="Unity.AI.Assistant.UI.Editor.Scripts.xsd" namespace="Unity.AI.Assistant.UI.Editor.Scripts" />
-  <xs:import schemaLocation="Unity.AI.Assistant.Editor.SessionBanner.xsd" namespace="Unity.AI.Assistant.Editor.SessionBanner" />
-  <xs:import schemaLocation="Unity.AI.Animate.Components.xsd" namespace="Unity.AI.Animate.Components" />
   <xs:import schemaLocation="UnityEditor.AddressableAssets.Diagnostics.xsd" namespace="UnityEditor.AddressableAssets.Diagnostics" />
   <xs:import schemaLocation="UnityEditor.AddressableAssets.GUIElements.xsd" namespace="UnityEditor.AddressableAssets.GUIElements" />
   <xs:import schemaLocation="UnityEditor.U2D.Sprites.SpriteEditorTool.xsd" namespace="UnityEditor.U2D.Sprites.SpriteEditorTool" />

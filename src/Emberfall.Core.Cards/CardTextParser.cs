@@ -879,6 +879,18 @@ namespace Emberfall.Core.Cards
                 if (tribe == Tribe.NONE) continue;
                 yield return new TargetFilterDef(tribe: tribe);
             }
+            // Same reason as the cost ceiling below: proposed only when the clause is holding the
+            // word. Enumerating the whole Keyword enum against every selector and selection would
+            // multiply the search by fourteen to proffer thirteen names the sentence does not
+            // contain. A clause naming Shroud proposes exactly the Shroud filter -- and also the
+            // Shroud GRANT, which is the ambiguity the round trip is there to settle.
+            foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
+            {
+                if (KeywordSemantics.IsActionMarker(keyword)) continue;
+                if (clause.IndexOf(CardTextGenerator.DescribeKeyword(keyword), StringComparison.Ordinal) < 0) continue;
+                yield return new TargetFilterDef(keyword: keyword);
+            }
+
             if (clause.IndexOf(" or less", StringComparison.Ordinal) < 0) yield break;
             var offered = new HashSet<int>();
             foreach (int maxCost in InOrder(clause))

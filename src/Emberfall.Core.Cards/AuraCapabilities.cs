@@ -51,6 +51,11 @@ namespace Emberfall.Core.Cards
             // again the day a cost-modifying effect exists, because that is the door the feedback
             // loop comes through. RETIREMENT TRIGGER: a card or effect that changes a card's cost.
             if (filter.MaxCost.HasValue) return false;
+            // Keyword is the axis the whitelist was actually written for. An aura that grants a
+            // keyword and selects on one is the confluence problem `docs/effect-model-scheduling.md`
+            // §7.1 predicts, arriving through the front door rather than the side one Damaged came
+            // through -- the aura's own grant changes the set it folds over.
+            if (filter.Keyword.HasValue) return false;
             return filter.Tribe.HasValue && filter.Tribe.Value != Tribe.NONE;
         }
 

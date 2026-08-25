@@ -515,6 +515,14 @@ namespace Emberfall.Core
                     !db.TryGet(candidate.DefinitionId, out CardDefinition costDef) ||
                     costDef.Cost > filter.MaxCost.Value) return false;
             }
+            // The LIVE keyword set, base union granted -- see TargetFilterDef.Keyword for why this
+            // axis reads the instance while the two above it read the printed row. A hero carries no
+            // card keywords, so it fails, which is the same fail-closed answer tribe and cost give.
+            if (filter.Keyword.HasValue)
+            {
+                CardInstance? card = candidate.Card ?? candidate.Minion;
+                if (card == null || !card.Keywords.Contains(filter.Keyword.Value)) return false;
+            }
             return true;
         }
 

@@ -614,7 +614,7 @@ namespace Emberfall.Core.Cards
         {
             if (first == null || second == null) return first == null && second == null;
             return first.Damaged == second.Damaged && first.Tribe == second.Tribe &&
-                first.MaxCost == second.MaxCost;
+                first.MaxCost == second.MaxCost && first.Keyword == second.Keyword;
         }
 
         /// <summary>
@@ -1180,6 +1180,14 @@ namespace Emberfall.Core.Cards
         /// <summary>Splices a filter's adjectives into a description, between determiner and noun.</summary>
         private static string Filter(string description, TargetFilterDef filter)
         {
+            // A keyword QUALIFIES the head noun and sits against it: "all friendly Shroud minions".
+            // It cannot use SpliceAfterDeterminer like an adjective does -- that inserts after "all "
+            // and would say "all Shroud friendly minions" -- and it runs before the tribe so that
+            // both together read "all friendly Shroud Constructs", the tribe still replacing the noun
+            // this has just qualified.
+            if (filter.Keyword.HasValue)
+                description = InsertBeforeHeadNoun(description, Name(filter.Keyword.Value.ToString()));
+
             // The tribe REPLACES the noun rather than qualifying it (Sam, 2026-08-11): "all friendly
             // Constructs", not "all friendly Construct minions". Splicing it after the determiner
             // produced "all Construct friendly minions", which is not English — a classifying noun
@@ -1212,6 +1220,23 @@ namespace Emberfall.Core.Cards
         /// </remarks>
         private static string CostVerb(string description)
             => description.EndsWith("s", StringComparison.Ordinal) ? "cost" : "costs";
+
+        /// <summary>Sets a qualifier against a minion phrase's head noun, keeping its number.</summary>
+        /// <remarks>
+        /// Falls back to a trailing "with X" on a phrase that names no minion — "an enemy with
+        /// Shroud". That shape is unauthored today and the fallback exists so it reads as English
+        /// rather than as a mangled determiner if it ever is.
+        /// </remarks>
+        private static string InsertBeforeHeadNoun(string description, string qualifier)
+        {
+            if (description.EndsWith(" minions", StringComparison.Ordinal))
+                return description.Substring(0, description.Length - " minions".Length) + " " + qualifier + " minions";
+            if (description.EndsWith(" minion", StringComparison.Ordinal))
+                return description.Substring(0, description.Length - " minion".Length) + " " + qualifier + " minion";
+            if (string.Equals(description, "minions", StringComparison.Ordinal)) return qualifier + " minions";
+            if (string.Equals(description, "minion", StringComparison.Ordinal)) return qualifier + " minion";
+            return description + " with " + qualifier;
+        }
 
         /// <summary>Swaps a minion phrase's head noun for a tribe, keeping its number.</summary>
         /// <remarks>

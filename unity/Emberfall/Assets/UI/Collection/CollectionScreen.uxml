@@ -52,16 +52,23 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="col-chip-group">
-                <ui:Label text="Rarity" class="col-chip-group__label"/>
                 <ui:VisualElement name="query-rarities" class="col-chip-row"/>
             </ui:VisualElement>
             <ui:VisualElement class="col-chip-group">
-                <ui:Label text="Type" class="col-chip-group__label"/>
                 <ui:VisualElement name="query-types" class="col-chip-row"/>
             </ui:VisualElement>
             <ui:VisualElement class="col-chip-group">
-                <ui:Label text="Cost" class="col-chip-group__label"/>
                 <ui:VisualElement name="query-costs" class="col-chip-row"/>
+            </ui:VisualElement>
+            <ui:VisualElement picking-mode="Ignore" class="col-query-bracket col-query-bracket--left">
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__upper"/>
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__shoulder"/>
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__lower"/>
+            </ui:VisualElement>
+            <ui:VisualElement picking-mode="Ignore" class="col-query-bracket col-query-bracket--right">
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__upper"/>
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__shoulder"/>
+                <ui:VisualElement class="col-query-bracket__piece col-query-bracket__lower"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="deck-drawer" class="deck-drawer chrome-panel chrome-panel--outer">

@@ -61,7 +61,7 @@
         <xs:choice />
         <xs:attribute default="M" name="size" type="tns:SizeType" />
         <xs:attribute default="false" name="invalid" type="xs:boolean" />
-        <xs:attribute default="08/01/2026 00:00:00" name="value" type="xs:string" />
+        <xs:attribute default="08/25/2026 00:00:00" name="value" type="xs:string" />
         <xs:attribute default="yyyy-MM-dd" name="format-string" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
@@ -258,7 +258,7 @@
     <xs:complexContent mixed="false">
       <xs:extension base="tns:BaseDatePickerType">
         <xs:choice />
-        <xs:attribute default="2026-08-01,2026-08-02" name="value" type="xs:string" />
+        <xs:attribute default="2026-08-25,2026-08-26" name="value" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -297,7 +297,7 @@
     <xs:complexContent mixed="false">
       <xs:extension base="tns:BaseDatePickerType">
         <xs:choice />
-        <xs:attribute default="08/01/2026 00:00:00" name="value" type="xs:string" />
+        <xs:attribute default="08/25/2026 00:00:00" name="value" type="xs:string" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1928,7 +1928,7 @@
         <xs:choice />
         <xs:attribute default="M" name="size" type="tns:SizeType" />
         <xs:attribute default="false" name="invalid" type="xs:boolean" />
-        <xs:attribute default="2026-08-01,2026-08-02" name="value" type="xs:string" />
+        <xs:attribute default="2026-08-25,2026-08-26" name="value" type="xs:string" />
         <xs:attribute default="yyyy-MM-dd" name="format-string" type="xs:string" />
       </xs:extension>
     </xs:complexContent>

@@ -137,11 +137,17 @@
 .col-query-row {
     flex-direction: row;
     align-items: center;
+    justify-content: center;
+    margin-left: 56px;
+    margin-right: 56px;
     margin-bottom: var(--space-2);
 }
 .col-query-utility-row {
     flex-direction: row;
     align-items: center;
+    justify-content: center;
+    margin-left: 156px;
+    margin-right: 156px;
     margin-bottom: var(--space-2);
 }
 .col-query-actions {
@@ -160,14 +166,19 @@
 }
 .col-search {
     flex-grow: 1;
+    max-width: 58%;
     margin-right: var(--space-3);
 }
 .col-sort {
-    width: 180px;
+    width: 200px;
     margin-right: var(--space-2);
 }
 .col-sort-dir {
-    width: 72px;
+    width: 132px;
+    margin-right: var(--space-2);
+}
+#query-reset {
+    width: 120px;
 }
 /* Chips wrap: eight classes will not fit one row on a phone, and percentage-driven wrapping is the
  * project's sizing model rather than a pixel breakpoint. */
@@ -175,24 +186,77 @@
     flex-direction: row;
     flex-wrap: wrap;
     flex-grow: 1;
+    justify-content: center;
 }
 .col-chip-group {
     flex-direction: row;
     align-items: center;
+    margin-left: 156px;
+    margin-right: 156px;
     margin-bottom: var(--space-2);
 }
-.col-chip-group__label {
-    width: 72px;
-    flex-shrink: 0;
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    -unity-text-align: middle-left;
+
+/* Matched forged brackets turn inward below the search row, then run to the drawer floor. Their
+ * inner uprights define the narrower bay that centres the three filter families; the controls own
+ * the corresponding margins above, so these remain decorative and never intercept input. */
+.col-query-bracket {
+    position: absolute;
+    top: var(--space-3);
+    bottom: 0;
+    width: 128px;
+}
+.col-query-bracket--left {
+    left: var(--space-6);
+}
+.col-query-bracket--right {
+    right: var(--space-6);
+}
+.col-query-bracket__piece {
+    position: absolute;
+    background-color: rgba(18, 23, 31, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 64;
+    -unity-slice-bottom: 64;
+    -unity-slice-scale: 0.18px;
+    -unity-background-image-tint-color: rgb(205, 211, 220);
+    border-width: 2px;
+    border-color: rgba(240, 166, 60, 0.72);
+}
+.col-query-bracket__upper {
+    top: 0;
+    width: 18px;
+    height: 76px;
+}
+.col-query-bracket__shoulder {
+    top: 60px;
+    width: 120px;
+    height: 18px;
+}
+.col-query-bracket__lower {
+    top: 60px;
+    bottom: 0;
+    width: 18px;
+}
+.col-query-bracket--left .col-query-bracket__upper,
+.col-query-bracket--left .col-query-bracket__shoulder {
+    left: 0;
+}
+.col-query-bracket--left .col-query-bracket__lower {
+    left: 102px;
+}
+.col-query-bracket--right .col-query-bracket__upper,
+.col-query-bracket--right .col-query-bracket__shoulder {
+    right: 0;
+}
+.col-query-bracket--right .col-query-bracket__lower {
+    right: 102px;
 }
 .collection .db-chip {
-    min-height: 44px;
-    height: 44px;
-    padding: 0 var(--space-4);
+    min-height: 56px;
+    height: 56px;
+    padding: 0 var(--space-6);
     border-width: 0;
     border-radius: 0;
     background-color: rgba(21, 28, 38, 0.98);
@@ -204,6 +268,7 @@
     -unity-slice-scale: 0.42px;
     -unity-background-image-tint-color: rgb(222, 227, 234);
     color: var(--ink-2);
+    font-size: var(--type-body);
     transition-property: -unity-background-image-tint-color, color, opacity, translate;
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
@@ -230,6 +295,21 @@
     opacity: 0.42;
 }
 
+#query-rarities .db-chip,
+#query-types .db-chip {
+    width: 132px;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+}
+
+#query-costs .db-chip {
+    width: 64px;
+    padding-left: 0;
+    padding-right: 0;
+    -unity-text-align: middle-center;
+}
+
 /* ---------- Active-deck pairing + cost chip sizing (#160) ----------
  *
  * All of this is scoped under .collection--editing so browse is pixel-identical (the pairing chips
@@ -240,7 +320,7 @@
  * Sam ruling 4 (2026-08-11): a chip's width must not be driven by its label length — a row of chips
  * should read as a set of equal things. Exact pixels were left to the implementer; this is the
  * min-width-plus-centred-text shape Sam sketched. Pixels rather than percentages match every other
- * control dimension in this file (.col-sort 180px, .col-sort-dir 72px, .db-chip height 32px) — the
+ * control dimension in this file (.col-sort 200px, .col-sort-dir 132px, .db-chip height 56px) — the
  * percentage-over-pixels house ruling is about responsive layout, not fixed control chrome. */
 
 /* The three pairing chips: one floor width so they read as a set, text centred within it. */
@@ -256,14 +336,9 @@
     margin-left: var(--space-3);
 }
 
-/* Cost chips are single glyphs (0..6, 7+): a narrow centred square, not a label-width pill. The
- * side padding on .db-chip would otherwise stretch a one-character chip absurdly wide. */
+/* Cost chips stay at the same enlarged square size while editing a deck. */
 .collection--editing #query-costs .db-chip {
-    min-width: 44px;
-    width: 44px;
-    padding-left: 0;
-    padding-right: 0;
-    -unity-text-align: middle-center;
+    width: 64px;
 }
 
 /* ---------- Wall ---------- */
@@ -581,10 +656,10 @@
 }
 
 /* The two nested panel sprites replace the former flat wall while keeping the responsive card
- * contract untouched. Horizontal padding preserves a real screen-edge inset; compact vertical
- * padding leaves two complete art-first rows at the reference height. */
+ * contract untouched. The deeper bottom inset keeps scrolling cards visibly inside the forged
+ * frame instead of letting the final visible row paint over its lower ledge. */
 .collection .db-collection.chrome-panel--outer {
-    padding: 4px 16px;
+    padding: 4px 16px 20px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
@@ -663,12 +738,12 @@
 }
 
 .chrome-input {
-    min-height: 44px;
-    height: 44px;
+    min-height: 56px;
+    height: 56px;
 }
 .chrome-input > .unity-base-text-field__input,
 .chrome-input .unity-base-popup-field__input {
-    min-height: 44px;
+    min-height: 56px;
     padding-left: 18px;
     padding-right: 18px;
     border-width: 0;

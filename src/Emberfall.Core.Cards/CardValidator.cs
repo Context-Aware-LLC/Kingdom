@@ -436,6 +436,15 @@ namespace Emberfall.Core.Cards
                     if (target.Filter?.MaxCost is int maxCost && (maxCost < 0 || maxCost > 25))
                         Err("C14K-TARGET-MAXCOST-RANGE", $"{prefix}.action.target.filter.maxCost",
                             "target.filter.maxCost must be 0-25, the same range a cost is printed in.");
+                    // C14L — an action marker is never CARRIED (its behaviour comes from a typed
+                    // action, and CardValidator refuses it as a carrier or granted keyword), so a
+                    // filter naming one selects nobody on every board there has ever been. It reads
+                    // on the card face as a narrowing; it is an empty set.
+                    if (target.Filter?.Keyword is Keyword filterKeyword &&
+                        KeywordSemantics.IsActionMarker(filterKeyword))
+                        Err("C14L-TARGET-FILTER-ACTION-MARKER", $"{prefix}.action.target.filter.keyword",
+                            $"target.filter.keyword '{filterKeyword}' is an action marker, which no " +
+                            "card ever carries — the filter would select nobody.");
                     if (target.IsCost && !TargetSpec.IsPlayerChosen(target))
                         Err("C14H-TARGET-COST-AUTOMATIC", $"{prefix}.action.target.cost",
                             "target.cost is meaningful only on a player-chosen target — an " +

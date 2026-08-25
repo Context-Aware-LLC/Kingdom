@@ -619,6 +619,15 @@ namespace Emberfall.Editor
             if (rule.IsTargeted) DrawTarget(rule.Target);
         }
 
+        /// <summary>The carrier-keyword popup with no label, for a row that already has one.</summary>
+        private static Keyword DrawCarrierKeywordPopup(Keyword current)
+        {
+            int selected = Array.IndexOf(CarrierKeywordOptions, current);
+            if (selected < 0) selected = 0;
+            selected = EditorGUILayout.Popup(selected, CarrierKeywordNames);
+            return CarrierKeywordOptions[selected];
+        }
+
         private static Keyword DrawCarrierKeywordPopup(string label, Keyword current)
         {
             int selected = Array.IndexOf(CarrierKeywordOptions, current);
@@ -687,6 +696,12 @@ namespace Emberfall.Editor
                         case EditableFilterKind.MaxCost:
                             clause.MaxCost = Mathf.Clamp(EditorGUILayout.IntField(clause.MaxCost), 0, 25);
                             EditorGUILayout.LabelField("or less");
+                            break;
+                        case EditableFilterKind.Keyword:
+                            // The same popup a carrier keyword uses, so an action marker is not
+                            // offered here either — C14L would reject it, and a filter naming one
+                            // selects nobody.
+                            clause.Keyword = DrawCarrierKeywordPopup(clause.Keyword);
                             break;
                     }
 

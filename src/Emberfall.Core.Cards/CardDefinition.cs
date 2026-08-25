@@ -609,11 +609,29 @@ namespace Emberfall.Core.Cards
         /// </summary>
         public int? MaxCost { get; }
 
-        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null, int? maxCost = null)
+        /// <summary>
+        /// A keyword the candidate must be carrying — "all friendly Shroud minions".
+        ///
+        /// <para><b>This one reads the INSTANCE, not the definition</b>, and it is the only axis
+        /// that does. <c>Damaged</c> reads live health, <c>Tribe</c> and <c>MaxCost</c> read the
+        /// printed row; a keyword is BOTH, because <c>CardInstance.Keywords</c> is base ∪ granted
+        /// and a granted Shroud is as real as a printed one. Reading the definition here would make
+        /// "your Shroud minions" quietly mean "the ones that were PRINTED with Shroud", which is
+        /// not what any card face says.</para>
+        ///
+        /// <para>An action marker (<c>SILENCE</c>, <c>BACKDRAFT</c>, <c>REINFORCE</c>) is never
+        /// carried, so filtering on one selects nobody; <c>CardValidator</c> C14L refuses it rather
+        /// than letting a row read as a constraint that matches nothing.</para>
+        /// </summary>
+        public Keyword? Keyword { get; }
+
+        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null, int? maxCost = null,
+            Keyword? keyword = null)
         {
             Damaged = damaged;
             Tribe = tribe;
             MaxCost = maxCost;
+            Keyword = keyword;
         }
     }
 

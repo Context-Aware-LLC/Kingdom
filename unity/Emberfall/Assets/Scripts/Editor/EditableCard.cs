@@ -114,6 +114,7 @@ namespace Emberfall.Editor
         Damaged,
         Tribe,
         MaxCost,
+        Keyword,
     }
 
     /// <summary>One authored filter clause: which axis, and the value it carries.</summary>
@@ -128,6 +129,7 @@ namespace Emberfall.Editor
         public bool Damaged = true;
         public Tribe Tribe = Tribe.CONSTRUCT;
         public int MaxCost = 1;
+        public Keyword Keyword = Keyword.SHROUD;
 
         /// <summary>Unfolds a definition-side filter into one clause per axis it carries.</summary>
         public static List<EditableFilter> From(TargetFilterDef? filter)
@@ -140,6 +142,8 @@ namespace Emberfall.Editor
                 clauses.Add(new EditableFilter { Kind = EditableFilterKind.Tribe, Tribe = tribe });
             if (filter.MaxCost is { } maxCost)
                 clauses.Add(new EditableFilter { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost });
+            if (filter.Keyword is { } keyword)
+                clauses.Add(new EditableFilter { Kind = EditableFilterKind.Keyword, Keyword = keyword });
             return clauses;
         }
 
@@ -154,15 +158,16 @@ namespace Emberfall.Editor
         public static TargetFilterDef? Fold(List<EditableFilter> clauses)
         {
             if (clauses == null || clauses.Count == 0) return null;
-            bool? damaged = null; Tribe? tribe = null; int? maxCost = null;
+            bool? damaged = null; Tribe? tribe = null; int? maxCost = null; Keyword? keyword = null;
             foreach (EditableFilter clause in clauses)
                 switch (clause.Kind)
                 {
                     case EditableFilterKind.Damaged: damaged = clause.Damaged; break;
                     case EditableFilterKind.Tribe: tribe = clause.Tribe; break;
                     case EditableFilterKind.MaxCost: maxCost = clause.MaxCost; break;
+                    case EditableFilterKind.Keyword: keyword = clause.Keyword; break;
                 }
-            return new TargetFilterDef(damaged, tribe, maxCost);
+            return new TargetFilterDef(damaged, tribe, maxCost, keyword);
         }
     }
 
