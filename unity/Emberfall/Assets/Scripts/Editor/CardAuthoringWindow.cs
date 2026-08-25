@@ -550,6 +550,16 @@ namespace Emberfall.Editor
                 if (rule.ConditionKind == EditableConditionKind.TurnOwner)
                     rule.TurnOwnerScope = (TurnOwner)EditorGUILayout.EnumPopup(
                         "condition.owner", rule.TurnOwnerScope);
+                if (rule.ConditionKind == EditableConditionKind.Controls)
+                {
+                    rule.ControlsTribe = (Tribe)EditorGUILayout.EnumPopup(
+                        "condition.tribe", rule.ControlsTribe);
+                    // C29 pins this to the carrier: on a minion of that same tribe it MUST be set,
+                    // and anywhere else it must not be — the card would otherwise count itself, or
+                    // print "another" with nothing to be another of.
+                    rule.ControlsExcludesSource = EditorGUILayout.Toggle(
+                        "condition.other", rule.ControlsExcludesSource);
+                }
 
                 rule.LifetimeKind = (EditableLifetimeKind)EditorGUILayout.EnumPopup(
                     "lifetime.type", rule.LifetimeKind);

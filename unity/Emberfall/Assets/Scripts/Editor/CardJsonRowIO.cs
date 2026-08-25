@@ -157,6 +157,12 @@ namespace Emberfall.Editor
             }
             else if (condition is CostPaidCondition)
                 w.WriteString("type", "COST_PAID");
+            else if (condition is ControlsCondition controls)
+            {
+                w.WriteString("type", "CONTROLS");
+                w.WriteString("tribe", controls.Tribe.ToString());
+                if (controls.ExcludesSource) w.WriteBoolean("other", true);
+            }
             else
                 throw Unknown("condition", condition);
             w.WriteEndObject();

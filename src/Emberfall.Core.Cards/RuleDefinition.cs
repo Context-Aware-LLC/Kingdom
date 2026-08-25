@@ -76,6 +76,41 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>
+    /// Holds while the controller has a minion of <see cref="Tribe"/> on the board — the
+    /// "If you control a Construct, …" gate.
+    ///
+    /// <para><b><see cref="ExcludesSource"/> is redundant with the card, and is authored anyway.</b>
+    /// A minion is already on the board when its own <c>ON_PLAY</c> resolves (<c>EnterBoard</c> runs
+    /// before <c>RaiseSelf</c>), so a Construct asking whether you control a Construct would answer
+    /// itself and print a condition it never has. Excluding the source fixes the behaviour and
+    /// changes the WORDING — "another Construct" — and
+    /// <see cref="CardTextGenerator.DescribeConditionPrefix"/> is handed a condition and nothing
+    /// else, because the parser reads a clause back by re-rendering candidates. So the flag that
+    /// picks the word has to live on the condition rather than be derived from the carrier at print
+    /// time. <c>CardValidator</c> C29 pins it to the one value the card allows, which is what keeps
+    /// a redundant field from becoming a second, disagreeing opinion.</para>
+    ///
+    /// <para>Not authorable on <c>ON_TURN_START</c>, which C22 reserves for <c>TURN_OWNER</c>, nor
+    /// under an <c>AURA</c>, which <c>AuraCapabilities</c> restricts to <c>ALWAYS</c>.</para>
+    /// </summary>
+    public sealed class ControlsCondition : RuleCondition
+    {
+        public Tribe Tribe { get; }
+
+        /// <summary>Whether the rule's own source is left out of the count.</summary>
+        public bool ExcludesSource { get; }
+
+        public ControlsCondition(Tribe tribe, bool excludesSource)
+        {
+            if (tribe == Tribe.NONE)
+                throw new ArgumentOutOfRangeException(nameof(tribe),
+                    "A CONTROLS condition names a tribe to look for; NONE is the absence of one.");
+            Tribe = tribe;
+            ExcludesSource = excludesSource;
+        }
+    }
+
+    /// <summary>
     /// Holds only when this run's COST was paid — the gate a cost prefix puts over the effects it
     /// buys.
     ///

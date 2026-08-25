@@ -732,6 +732,7 @@ namespace Emberfall.Core.Cards
             // build it — this condition names no cost, so on its own it has nothing to say.
             if (condition is CostPaidCondition) return "";
             if (condition is TurnOwnerCondition turnOwner) return TurnOwnerPrefix(turnOwner.Owner);
+            if (condition is ControlsCondition controls) return ControlsPrefix(controls);
             throw UnsupportedNode("condition", condition);
         }
 
@@ -740,6 +741,22 @@ namespace Emberfall.Core.Cards
         /// parser reads a condition back by rendering every candidate through this and keeping the
         /// one that prints the clause it is looking at, so the two halves cannot drift.</remarks>
         internal static string DescribeConditionPrefix(RuleCondition condition) => ConditionPrefix(condition);
+
+        /// <summary>
+        /// Maps a board condition to the clause naming what you must control —
+        /// <c>"If you control another Construct, "</c>.
+        ///
+        /// <para>The determiner is the whole of the difference between a card that counts itself and
+        /// one that cannot: see <see cref="ControlsCondition.ExcludesSource"/>, which carries why the
+        /// flag is authored on the condition rather than read off the carrier here.</para>
+        /// </summary>
+        private static string ControlsPrefix(ControlsCondition controls)
+        {
+            if (controls.Tribe == Tribe.NONE) throw Unsupported("tribe", controls.Tribe);
+            string tribe = Name(controls.Tribe.ToString());
+            string determiner = controls.ExcludesSource ? "another" : Article(tribe);
+            return "If you control " + determiner + " " + tribe + ", ";
+        }
 
         /// <summary>Maps a turn-owner condition to the clause naming whose turn it must be.</summary>
         private static string TurnOwnerPrefix(TurnOwner owner) => owner switch

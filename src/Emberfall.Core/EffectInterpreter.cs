@@ -128,7 +128,7 @@ namespace Emberfall.Core
                          _state, _db, firstPlayer, trigger))
             {
                 if (excluded != null && source.Identity == excluded.Id) continue;
-                if (!ConditionEvaluator.Holds(source, context, bindings)) continue;
+                if (!ConditionEvaluator.Holds(_state, _db, source, context, bindings)) continue;
                 if (previous == null || previous.Identity != source.Identity ||
                     previous.Kind != source.Kind)
                     bindings = new TargetBindingContext();
@@ -151,7 +151,7 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(qe.Source, qe.TriggerEvent, qe.Bindings))
+                if (!ConditionEvaluator.Holds(_state, _db, qe.Source, qe.TriggerEvent, qe.Bindings))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -319,14 +319,16 @@ namespace Emberfall.Core
     /// <summary>
     /// Pure condition gate evaluated immediately before a queued effect resolves.
     ///
-    /// <para><b>Still pure, and the bindings argument does not change that</b> — it reads what the
-    /// play has already recorded and writes nothing. A cost is paid by the cost RULE resolving, one
-    /// dequeue earlier; this only asks whether it did.</para>
+    /// <para><b>Still pure, and neither the bindings nor the state argument changes that</b> — it
+    /// reads what the play has already recorded and writes nothing. A cost is paid by the cost RULE
+    /// resolving, one dequeue earlier; this only asks whether it did. CONTROLS reads the board the
+    /// same way, at both gates, so a condition that stopped holding between enqueue and dequeue
+    /// drops its effect rather than resolving on a board that no longer qualifies.</para>
     /// </summary>
     internal static class ConditionEvaluator
     {
-        public static bool Holds(EffectSourceContext source, TriggerEventContext context,
-            TargetBindingContext? bindings = null)
+        public static bool Holds(GameState state, ICardDatabase db, EffectSourceContext source,
+            TriggerEventContext context, TargetBindingContext? bindings = null)
         {
             switch (source.Rule.Condition)
             {
@@ -337,6 +339,8 @@ namespace Emberfall.Core
                     return bindings != null && bindings.CostPaid;
                 case AlwaysCondition _:
                     return RuleSemantics.TriggerOf(source.Rule) != Trigger.ON_TURN_START;
+                case ControlsCondition controls:
+                    return ControlsMinionOf(state, db, source, controls);
                 case TurnOwnerCondition condition:
                     if (!context.IncomingTurnPlayer.HasValue) return false;
                     bool controllerTurn = source.Controller == context.IncomingTurnPlayer.Value;
@@ -350,6 +354,32 @@ namespace Emberfall.Core
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Whether the rule's controller has a board minion of the named tribe.
+        ///
+        /// <para><b>The source is excluded by ID, not by position.</b> A minion is on the board
+        /// before its own ON_PLAY resolves, so a Construct asking about Constructs would otherwise
+        /// answer itself; and a Toll fires from a minion that has already left, where the exclusion
+        /// costs nothing and an index-based one would have nothing to point at. What the flag says
+        /// is what the card FACE says — "another Construct" — which is why CardValidator C29 pins
+        /// the two together rather than letting the runtime decide.</para>
+        /// </summary>
+        private static bool ControlsMinionOf(GameState state, ICardDatabase db,
+            EffectSourceContext source, ControlsCondition controls)
+        {
+            if (state == null || db == null) return false;   // fail closed, as COST_PAID does
+            List<CardInstance> board = state.PlayerOf(source.Controller).Board;
+            for (int i = 0; i < board.Count; i++)
+            {
+                CardInstance minion = board[i];
+                if (controls.ExcludesSource && minion.Id == source.Identity) continue;
+                if (db.TryGet(minion.DefinitionId, out CardDefinition def) &&
+                    def.Tribe == controls.Tribe)
+                    return true;
+            }
+            return false;
         }
     }
 

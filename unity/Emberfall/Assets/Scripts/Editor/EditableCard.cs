@@ -76,7 +76,7 @@ namespace Emberfall.Editor
     }
 
     public enum EditableActivationKind { Triggered, Aura }
-    public enum EditableConditionKind { Always, TurnOwner, CostPaid }
+    public enum EditableConditionKind { Always, TurnOwner, CostPaid, Controls }
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
     {
@@ -160,6 +160,8 @@ namespace Emberfall.Editor
         public Trigger Trigger = Trigger.ON_PLAY;
         public EditableConditionKind ConditionKind = EditableConditionKind.Always;
         public TurnOwner TurnOwnerScope = TurnOwner.CONTROLLER;
+        public Tribe ControlsTribe = Tribe.CONSTRUCT;
+        public bool ControlsExcludesSource;
         public EditableLifetimeKind LifetimeKind = EditableLifetimeKind.OneShot;
         public int Uses = 1;
         public EditableRuleActionKind ActionKind = EditableRuleActionKind.Damage;
@@ -214,6 +216,12 @@ namespace Emberfall.Editor
             }
             else if (rule.Condition is CostPaidCondition)
                 editable.ConditionKind = EditableConditionKind.CostPaid;
+            else if (rule.Condition is ControlsCondition controls)
+            {
+                editable.ConditionKind = EditableConditionKind.Controls;
+                editable.ControlsTribe = controls.Tribe;
+                editable.ControlsExcludesSource = controls.ExcludesSource;
+            }
             else throw Unknown("condition", rule.Condition);
 
             if (rule.Lifetime is SourceBoundLifetime)
@@ -257,6 +265,8 @@ namespace Emberfall.Editor
                 case EditableConditionKind.Always: return AlwaysCondition.Instance;
                 case EditableConditionKind.TurnOwner: return new TurnOwnerCondition(TurnOwnerScope);
                 case EditableConditionKind.CostPaid: return CostPaidCondition.Instance;
+                case EditableConditionKind.Controls:
+                    return new ControlsCondition(ControlsTribe, ControlsExcludesSource);
                 default: throw Unknown("editable condition", ConditionKind);
             }
         }

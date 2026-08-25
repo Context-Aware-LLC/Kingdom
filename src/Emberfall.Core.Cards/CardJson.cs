@@ -144,6 +144,14 @@ namespace Emberfall.Core.Cards
                 case "COST_PAID":
                     RejectUnknownProperties(element, "rule.condition", Set("type"));
                     return CostPaidCondition.Instance;
+                case "CONTROLS":
+                    RejectUnknownProperties(element, "rule.condition", Set("type", "tribe", "other"));
+                    Tribe named = ReqEnum<Tribe>(element, "tribe");
+                    if (named == Tribe.NONE)
+                        throw new FormatException(
+                            "rule.condition.tribe is NONE. A CONTROLS condition names a tribe to " +
+                            "look for, and NONE is the absence of one.");
+                    return new ControlsCondition(named, Bool(element, "other") ?? false);
                 default:
                     throw new FormatException($"Unknown rule condition type '{type}'.");
             }

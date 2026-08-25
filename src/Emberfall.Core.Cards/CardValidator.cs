@@ -238,6 +238,32 @@ namespace Emberfall.Core.Cards
                         "TURN_OWNER is valid only on ON_TURN_START because other triggers carry no incoming-turn context.");
                 }
 
+                // C29 — the board condition. "If you control a Construct" is checked against the
+                // board when the effect resolves, so it needs no event context and is legal on every
+                // trigger C22 has not already claimed. What it cannot survive is naming a tribe the
+                // card itself supplies: EnterBoard runs before the ON_PLAY raise, so a Construct
+                // asking whether you control a Construct answers itself, holds always, and prints a
+                // condition it does not have. ExcludesSource is the fix and the WORDING both — see
+                // ControlsCondition — so it is pinned to the one value the carrier allows rather
+                // than left as a second opinion the face and the runtime can disagree about.
+                if (rule.Condition is ControlsCondition controls)
+                {
+                    if (controls.Tribe == Tribe.NONE)
+                        Err("C29-CONTROLS-TRIBE-NONE", $"{prefix}.condition.tribe",
+                            "a CONTROLS condition names a tribe to look for; NONE is the absence of one.");
+
+                    bool sourceIsThatTribe = def.Type == CardType.MINION && def.Tribe == controls.Tribe;
+                    if (sourceIsThatTribe && !controls.ExcludesSource)
+                        Err("C29-CONTROLS-SELF-TRIVIAL", $"{prefix}.condition",
+                            $"this card is a {controls.Tribe} and is on the board before its own " +
+                            "effects resolve, so the condition would count itself and hold always — " +
+                            "set other: true, which also prints it as \"another\".");
+                    if (!sourceIsThatTribe && controls.ExcludesSource)
+                        Err("C29-CONTROLS-OTHER-UNSPEAKABLE", $"{prefix}.condition",
+                            $"other: true prints \"another {controls.Tribe}\", and this card is not " +
+                            $"a {controls.Tribe} board minion for there to be another OF — drop it.");
+                }
+
                 // C28 — the cost prefix. A cost is a price paid to play the card, and every clause
                 // below follows from that one sentence rather than from a policy choice.
                 CostKind ruleCost = RuleSemantics.TargetOf(rule.Action)?.Cost ?? CostKind.None;

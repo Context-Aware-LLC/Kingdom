@@ -302,6 +302,16 @@ namespace Emberfall.Core.Cards
         {
             foreach (TurnOwner owner in (TurnOwner[])Enum.GetValues(typeof(TurnOwner)))
                 yield return new TurnOwnerCondition(owner);
+
+            // Both determiners are proposed, because the flag is not derivable from a sentence:
+            // "another Construct" and "a Construct" are two different conditions, and the one the
+            // card carries is the one whose clause it printed.
+            foreach (Tribe tribe in (Tribe[])Enum.GetValues(typeof(Tribe)))
+            {
+                if (tribe == Tribe.NONE) continue;
+                yield return new ControlsCondition(tribe, excludesSource: true);
+                yield return new ControlsCondition(tribe, excludesSource: false);
+            }
         }
 
         /// <summary>Drops the words that mark a cost declinable, so the clause beneath can be
