@@ -42,6 +42,12 @@ namespace Emberfall.Core.Tests.Interpreter
                 System.Array.Empty<RuleDefinition>(), "", "art/" + FixtureCard.Handle(id), SetId.CORE, true,
                 tribe, "");
 
+        private static CardDefinition MinionCosting(int id, int cost)
+            => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, cost, 1, 3, null,
+                CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
+                System.Array.Empty<RuleDefinition>(), "", "art/" + FixtureCard.Handle(id), SetId.CORE, true,
+                null, "");
+
         private static CardDefinition Minion(int id, params RuleDefinition[] rules)
             => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
@@ -167,6 +173,56 @@ namespace Emberfall.Core.Tests.Interpreter
                 state.Players[0].Id, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AllOf("ANY_FRIENDLY_MINION"), filter: new TargetFilterDef(damaged: true, tribe: Tribe.CONSTRUCT)));
 
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { damagedConstruct.Id }));
+        }
+
+        /// <summary>
+        /// The cost ceiling is inclusive, and it reads the DEFINITION's printed cost rather than
+        /// anything on the instance — which is what "Take control of an enemy minion that costs 4
+        /// or less" means and the only thing the engine could mean, there being no runtime cost.
+        /// </summary>
+        /// <remarks>
+        /// The failure this guards is silent in the worst direction: a filter axis the resolver
+        /// does not read narrows NOTHING, so the card plays, prompts for a target the sentence says
+        /// it cannot take, and steals it. Nothing throws and no gate notices — the row validates,
+        /// the text round-trips, and only a game says otherwise.
+        /// </remarks>
+        [Test]
+        public void MaxCost_Filter_Narrows_By_The_Printed_Cost_Inclusively()
+        {
+            var cheap = MinionCosting(FixtureCard.Id("cheap"), 2);
+            var atTheCeiling = MinionCosting(FixtureCard.Id("at_ceiling"), 4);
+            var dear = MinionCosting(FixtureCard.Id("dear"), 5);
+            var db = new FakeCardDatabase().Register(cheap).Register(atTheCeiling).Register(dear);
+            var state = State();
+            CardInstance affordable = Board(state, 1, cheap);
+            CardInstance exact = Board(state, 1, atTheCeiling);
+            Board(state, 1, dear);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_ENEMY_MINION", TargetSelection.AllOf("ANY_ENEMY_MINION"),
+                    filter: new TargetFilterDef(maxCost: 4)));
+
+            Assert.That(candidates.Select(c => c.Instance),
+                Is.EqualTo(new[] { affordable.Id, exact.Id }));
+        }
+
+        /// <summary>A hero has no card behind it, so a cost ceiling excludes it rather than
+        /// admitting it by default — the same fail-closed answer the tribe filter gives.</summary>
+        [Test]
+        public void MaxCost_Filter_Excludes_A_Hero()
+        {
+            var cheap = MinionCosting(FixtureCard.Id("cheap"), 1);
+            var db = new FakeCardDatabase().Register(cheap);
+            var state = State();
+            CardInstance minion = Board(state, 1, cheap);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_ENEMY", TargetSelection.AllOf("ANY_ENEMY"),
+                    filter: new TargetFilterDef(maxCost: 25)));
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { minion.Id }));
         }
 
         [Test]

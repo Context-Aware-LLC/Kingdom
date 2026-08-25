@@ -584,15 +584,36 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>Optional predicates applied after selector candidate enumeration.</summary>
+    /// <remarks>
+    /// Every axis is nullable and they compose as AND. Adding one is never a single edit: the
+    /// filter is read by <c>Targeting.PassesFilter</c>, written and read by the JSON codec on both
+    /// sides, spoken by <c>CardTextGenerator.Filter</c>, proposed back by
+    /// <c>CardTextParser.Filters</c>, compared by <c>SameFilter</c>, and gated by
+    /// <c>AuraCapabilities.IsFoldableFilter</c> — which is a WHITELIST, so a new axis is refused
+    /// on an aura until somebody rules on it rather than silently admitted.
+    /// </remarks>
     public sealed class TargetFilterDef
     {
         public bool? Damaged { get; }
         public Tribe? Tribe { get; }
 
-        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null)
+        /// <summary>
+        /// The most a candidate's card may cost, inclusive — "an enemy minion that costs 4 or less".
+        ///
+        /// <para>It reads the DEFINITION's printed cost, because that is the only cost this engine
+        /// has: nothing modifies a card's cost at runtime, so there is no "current cost" to consult
+        /// and a candidate not backed by a definition simply fails the test. RETIREMENT TRIGGER: the
+        /// day a cost-modifying effect lands, this predicate has to choose between printed and
+        /// current, and <c>AuraCapabilities.IsFoldableFilter</c>'s refusal of this axis becomes
+        /// load-bearing rather than merely cautious.</para>
+        /// </summary>
+        public int? MaxCost { get; }
+
+        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null, int? maxCost = null)
         {
             Damaged = damaged;
             Tribe = tribe;
+            MaxCost = maxCost;
         }
     }
 

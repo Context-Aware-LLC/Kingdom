@@ -613,7 +613,8 @@ namespace Emberfall.Core.Cards
         private static bool SameFilter(TargetFilterDef? first, TargetFilterDef? second)
         {
             if (first == null || second == null) return first == null && second == null;
-            return first.Damaged == second.Damaged && first.Tribe == second.Tribe;
+            return first.Damaged == second.Damaged && first.Tribe == second.Tribe &&
+                first.MaxCost == second.MaxCost;
         }
 
         /// <summary>
@@ -1190,8 +1191,27 @@ namespace Emberfall.Core.Cards
             if (filter.Damaged.HasValue)
                 description = SpliceAfterDeterminer(description, filter.Damaged.Value ? "damaged " : "undamaged ");
 
+            // A cost is the one axis that is NOT an adjective. English has no pre-nominal form of
+            // it -- "a 4-or-less enemy minion" is not a phrase -- so it trails the noun as a
+            // relative clause and must therefore be spliced LAST: everything above inserts between
+            // the determiner and the head noun, and a clause already hanging off the end would put
+            // the head noun out of reach of ReplaceHeadNoun. Bare numeral, no brackets, matching
+            // the rest of the vocabulary (Sam, 2026-08-11).
+            if (filter.MaxCost.HasValue)
+                description += " that " + CostVerb(description) + " " +
+                    filter.MaxCost.Value.ToString(CultureInfo.InvariantCulture) + " or less";
+
             return description;
         }
+
+        /// <summary>Agrees the cost clause's verb with the phrase it hangs off.</summary>
+        /// <remarks>
+        /// The number of the head noun is not recoverable from the filter -- the same
+        /// <see cref="TargetFilterDef"/> renders onto "an enemy minion" and onto "all enemy
+        /// minions" -- so it is read off the description, which is the only thing that knows.
+        /// </remarks>
+        private static string CostVerb(string description)
+            => description.EndsWith("s", StringComparison.Ordinal) ? "cost" : "costs";
 
         /// <summary>Swaps a minion phrase's head noun for a tribe, keeping its number.</summary>
         /// <remarks>

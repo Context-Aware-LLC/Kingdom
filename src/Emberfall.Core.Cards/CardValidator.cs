@@ -429,6 +429,13 @@ namespace Emberfall.Core.Cards
                     // unpaid: an automatic or RANDOM spec takes whatever exists and never asks, so
                     // the flag could not gate anything there. Fail closed rather than let a row read
                     // as a sacrifice it never enforces.
+                    // C14K — a cost ceiling outside the authorable cost range narrows to
+                    // everything or to nothing, and both spellings read on the card face as a real
+                    // constraint. The range is C7's, deliberately: the ceiling is compared against a
+                    // printed cost, so anything C7 refuses to print cannot be met or missed.
+                    if (target.Filter?.MaxCost is int maxCost && (maxCost < 0 || maxCost > 25))
+                        Err("C14K-TARGET-MAXCOST-RANGE", $"{prefix}.action.target.filter.maxCost",
+                            "target.filter.maxCost must be 0-25, the same range a cost is printed in.");
                     if (target.IsCost && !TargetSpec.IsPlayerChosen(target))
                         Err("C14H-TARGET-COST-AUTOMATIC", $"{prefix}.action.target.cost",
                             "target.cost is meaningful only on a player-chosen target — an " +

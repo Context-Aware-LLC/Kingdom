@@ -506,6 +506,15 @@ namespace Emberfall.Core
                     !db.TryGet(candidate.DefinitionId, out CardDefinition def) ||
                     def.Tribe != filter.Tribe.Value) return false;
             }
+            // The PRINTED cost, which is the only one there is -- no effect modifies a card's cost,
+            // so there is no live value to prefer and a candidate with no definition behind it (a
+            // hero) simply fails rather than passing by default.
+            if (filter.MaxCost.HasValue)
+            {
+                if (candidate.DefinitionId <= 0 ||
+                    !db.TryGet(candidate.DefinitionId, out CardDefinition costDef) ||
+                    costDef.Cost > filter.MaxCost.Value) return false;
+            }
             return true;
         }
 

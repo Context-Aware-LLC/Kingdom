@@ -29,7 +29,7 @@ namespace Emberfall.Core.Cards
 
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "damaged", "tribe"
+            "damaged", "tribe", "maxCost"
         };
 
         private static readonly HashSet<string> RuleProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -306,7 +306,15 @@ namespace Emberfall.Core.Cards
                         throw new FormatException("Card JSON target.filter.tribe must be a string.");
                     tribe = (Tribe)Enum.Parse(typeof(Tribe), tribeValue.GetString()!, ignoreCase: false);
                 }
-                filter = new TargetFilterDef(damaged, tribe);
+                int? maxCost = null;
+                if (f.TryGetProperty("maxCost", out var maxCostValue))
+                {
+                    if (maxCostValue.ValueKind != JsonValueKind.Number ||
+                        !maxCostValue.TryGetInt32(out int parsedMaxCost))
+                        throw new FormatException("Card JSON target.filter.maxCost must be an integer.");
+                    maxCost = parsedMaxCost;
+                }
+                filter = new TargetFilterDef(damaged, tribe, maxCost);
             }
             // A cost is spelled out rather than flagged: "required" and "optional" are two
             // different cards, and a boolean would have to name one of them by its absence.

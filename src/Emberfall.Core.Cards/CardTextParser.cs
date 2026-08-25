@@ -476,7 +476,7 @@ namespace Emberfall.Core.Cards
             // the whole parse, where the spec enumeration is not cheap.
             if (!sentence.StartsWith("Deal ", StringComparison.Ordinal)) yield break;
 
-            foreach (TargetSpec spec in Specs())
+            foreach (TargetSpec spec in Specs(sentence))
             {
                 if (spec.Binding.Length > 0) continue;
                 foreach (List<int> amounts in FoldRuns(sentence))
@@ -672,7 +672,7 @@ namespace Emberfall.Core.Cards
             string backdraft = CardTextGenerator.DescribeKeyword(Keyword.BACKDRAFT) + " ";
             string unearth = CardTextGenerator.UnearthLabel + " ";
 
-            foreach (TargetSpec spec in Specs(cost))
+            foreach (TargetSpec spec in Specs(clause, cost))
             {
                 foreach (int amount in Amounts(clause))
                 {
@@ -742,7 +742,7 @@ namespace Emberfall.Core.Cards
                 }
 
                 if (!Verb("Transform ")) continue;
-                foreach (TargetSpec spec in Specs()) yield return new TransformAction(cardId, spec);
+                foreach (TargetSpec spec in Specs(clause)) yield return new TransformAction(cardId, spec);
             }
         }
 
@@ -835,13 +835,13 @@ namespace Emberfall.Core.Cards
         /// trait ("a damaged minion", "all friendly Constructs") refuses rather than resolving to the
         /// untraited spec that would otherwise render close to it.</para>
         /// </summary>
-        private static IEnumerable<TargetSpec> Specs(CostKind cost = CostKind.None)
+        private static IEnumerable<TargetSpec> Specs(string clause, CostKind cost = CostKind.None)
         {
             for (int rank = 0; rank <= LastSelectionRank; rank++)
                 foreach (string selector in TargetSpec.Selectors)
                 {
                     if (!TrySelectionAt(rank, selector, out TargetSelection selection)) continue;
-                    foreach (TargetFilterDef? filter in Filters())
+                    foreach (TargetFilterDef? filter in Filters(clause))
                     {
                         yield return new TargetSpec(selector, selection, filter, cost: cost);
                         yield return new TargetSpec(selector, selection, filter, binding: SharedPick,
@@ -851,12 +851,25 @@ namespace Emberfall.Core.Cards
         }
 
         /// <summary>
-        /// The traits a target can be narrowed by. A closed and very small space — one nullable flag
-        /// and one nullable tribe — so it is enumerated like every other axis rather than read out of
-        /// the noun phrase. No filter is yielded first, which keeps an untraited phrase resolving to
-        /// an untraited spec.
+        /// The traits a target can be narrowed by. A small space — one nullable flag, one nullable
+        /// tribe and one nullable cost ceiling — so it is enumerated like every other axis rather
+        /// than read out of the noun phrase. No filter is yielded first, which keeps an untraited
+        /// phrase resolving to an untraited spec.
+        ///
+        /// <para><b>Axes are proposed one at a time, never in combination.</b> That is unchanged
+        /// from when there were two, and it is why "a damaged Construct" refuses rather than
+        /// deriving: the combined spec is never offered, so nothing renders to that sentence. Widen
+        /// this to a cross product only with a measurement in hand — every yield here multiplies the
+        /// whole selector x selection enumeration above it.</para>
+        ///
+        /// <para><b>The cost ceiling is the exception: it is read out of the clause</b>, the same
+        /// way <see cref="Amounts"/> reads a damage number, because it is a NUMBER and enumerating
+        /// the authorable range would multiply the search by twenty-six for a value the sentence is
+        /// already holding. Over-generating stays free — a wrong number cannot survive the
+        /// re-render — so every numeral in the clause is offered and the round trip settles which
+        /// one was the cost.</para>
         /// </summary>
-        private static IEnumerable<TargetFilterDef?> Filters()
+        private static IEnumerable<TargetFilterDef?> Filters(string clause)
         {
             yield return null;
             yield return new TargetFilterDef(damaged: true);
@@ -866,6 +879,10 @@ namespace Emberfall.Core.Cards
                 if (tribe == Tribe.NONE) continue;
                 yield return new TargetFilterDef(tribe: tribe);
             }
+            if (clause.IndexOf(" or less", StringComparison.Ordinal) < 0) yield break;
+            var offered = new HashSet<int>();
+            foreach (int maxCost in InOrder(clause))
+                if (offered.Add(maxCost)) yield return new TargetFilterDef(maxCost: maxCost);
         }
 
         /// <summary>

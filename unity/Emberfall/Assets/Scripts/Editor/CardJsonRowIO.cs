@@ -232,6 +232,7 @@ namespace Emberfall.Editor
                 w.WriteStartObject("filter");
                 if (filter.Damaged is { } damaged) w.WriteBoolean("damaged", damaged);
                 if (filter.Tribe is { } tribe) w.WriteString("tribe", tribe.ToString());
+                if (filter.MaxCost is { } maxCost) w.WriteNumber("maxCost", maxCost);
                 w.WriteEndObject();
             }
             if (!string.IsNullOrEmpty(target.Binding)) w.WriteString("binding", target.Binding);

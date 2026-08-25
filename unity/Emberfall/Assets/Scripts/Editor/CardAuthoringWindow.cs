@@ -645,13 +645,75 @@ namespace Emberfall.Editor
             // Authored, not derived: whether this pick is the card's price is the one thing no
             // sentence can be read back to recover.
             target.Cost = (CostKind)EditorGUILayout.EnumPopup("target.cost", target.Cost);
-            target.HasDamagedFilter = EditorGUILayout.Toggle("filter has damaged", target.HasDamagedFilter);
-            if (target.HasDamagedFilter) target.Damaged = EditorGUILayout.Toggle("filter.damaged", target.Damaged);
-            target.HasTribeFilter = EditorGUILayout.Toggle("filter has tribe", target.HasTribeFilter);
-            if (target.HasTribeFilter)
-                target.Tribe = (Tribe)EditorGUILayout.EnumPopup("filter.tribe", target.Tribe);
+            DrawFilters(target);
             target.Binding = EditorGUILayout.TextField("target.binding", target.Binding);
             target.DistinctFrom = EditorGUILayout.TextField("target.distinctFrom", target.DistinctFrom);
+        }
+
+        /// <summary>
+        /// The target's filter clauses, as a growable list of axis-plus-value rows.
+        ///
+        /// <para>This replaced a pair of "filter has x" toggles, one per axis, which is a shape that
+        /// only works while there are two of them. An axis added to <c>TargetFilterDef</c> now costs
+        /// one arm of the value switch below and nothing else — no new toggle, no new field pair, and
+        /// no third place to forget.</para>
+        ///
+        /// <para>An axis already in the list is not offered again: the target holds ONE value per
+        /// axis, so a second clause could only overwrite the first and would read as a constraint
+        /// that is not there. The add control disappears entirely once every axis is spoken for.</para>
+        /// </summary>
+        private static void DrawFilters(EditableTarget target)
+        {
+            EditorGUILayout.LabelField("target.filter", EditorStyles.boldLabel);
+            int remove = -1;
+            for (int i = 0; i < target.Filters.Count; i++)
+            {
+                EditableFilter clause = target.Filters[i];
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditableFilterKind chosen =
+                        (EditableFilterKind)EditorGUILayout.EnumPopup(clause.Kind, GUILayout.Width(90));
+                    if (chosen != clause.Kind && !Holds(target, chosen)) clause.Kind = chosen;
+
+                    switch (clause.Kind)
+                    {
+                        case EditableFilterKind.Damaged:
+                            clause.Damaged = EditorGUILayout.Toggle(clause.Damaged);
+                            EditorGUILayout.LabelField(clause.Damaged ? "damaged" : "undamaged");
+                            break;
+                        case EditableFilterKind.Tribe:
+                            clause.Tribe = (Tribe)EditorGUILayout.EnumPopup(clause.Tribe);
+                            break;
+                        case EditableFilterKind.MaxCost:
+                            clause.MaxCost = Mathf.Clamp(EditorGUILayout.IntField(clause.MaxCost), 0, 25);
+                            EditorGUILayout.LabelField("or less");
+                            break;
+                    }
+
+                    if (GUILayout.Button("−", GUILayout.Width(22))) remove = i;
+                }
+            }
+            if (remove >= 0) target.Filters.RemoveAt(remove);
+
+            EditableFilterKind? free = FirstUnused(target);
+            if (free.HasValue && GUILayout.Button("add filter", GUILayout.Width(90)))
+                target.Filters.Add(new EditableFilter { Kind = free.Value });
+        }
+
+        /// <summary>Whether the target already narrows on an axis.</summary>
+        private static bool Holds(EditableTarget target, EditableFilterKind kind)
+        {
+            foreach (EditableFilter clause in target.Filters)
+                if (clause.Kind == kind) return true;
+            return false;
+        }
+
+        /// <summary>The first axis this target is not already narrowed by, or null when none is.</summary>
+        private static EditableFilterKind? FirstUnused(EditableTarget target)
+        {
+            foreach (EditableFilterKind kind in (EditableFilterKind[])Enum.GetValues(typeof(EditableFilterKind)))
+                if (!Holds(target, kind)) return kind;
+            return null;
         }
 
         private static void Swap<T>(List<T> list, int a, int b)

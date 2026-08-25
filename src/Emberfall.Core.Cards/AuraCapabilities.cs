@@ -45,6 +45,12 @@ namespace Emberfall.Core.Cards
         {
             if (filter == null) return true;
             if (filter.Damaged.HasValue) return false;
+            // MaxCost is refused as the whitelist promises, not because it is known to be unstable
+            // -- a printed cost is as fixed as a tribe today, and nothing in the engine moves it.
+            // It stays out until the question above is actually asked of it, and it has to be asked
+            // again the day a cost-modifying effect exists, because that is the door the feedback
+            // loop comes through. RETIREMENT TRIGGER: a card or effect that changes a card's cost.
+            if (filter.MaxCost.HasValue) return false;
             return filter.Tribe.HasValue && filter.Tribe.Value != Tribe.NONE;
         }
 

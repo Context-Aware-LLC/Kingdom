@@ -100,6 +100,72 @@ namespace Emberfall.Editor
         GainArmor,
     }
 
+    /// <summary>
+    /// One axis a target can be narrowed by, as the authoring window holds it.
+    ///
+    /// <para>The window edits a LIST of these rather than a fixed row of "has x" toggles, because
+    /// the toggles stopped scaling at two and <c>TargetFilterDef</c> is open-ended. Adding an axis
+    /// is now a member here, an arm in <c>EditableFilter.Apply</c>, an arm in
+    /// <c>EditableFilter.From</c>, and a value field in the window's switch — no new widget, no new
+    /// pair of parallel fields.</para>
+    /// </summary>
+    public enum EditableFilterKind
+    {
+        Damaged,
+        Tribe,
+        MaxCost,
+    }
+
+    /// <summary>One authored filter clause: which axis, and the value it carries.</summary>
+    /// <remarks>
+    /// Every axis keeps its own field rather than sharing one boxed value, so switching the
+    /// dropdown back and forth does not destroy what the other arms held. Only the arm the Kind
+    /// names is read.
+    /// </remarks>
+    public sealed class EditableFilter
+    {
+        public EditableFilterKind Kind = EditableFilterKind.Damaged;
+        public bool Damaged = true;
+        public Tribe Tribe = Tribe.CONSTRUCT;
+        public int MaxCost = 1;
+
+        /// <summary>Unfolds a definition-side filter into one clause per axis it carries.</summary>
+        public static List<EditableFilter> From(TargetFilterDef? filter)
+        {
+            var clauses = new List<EditableFilter>();
+            if (filter == null) return clauses;
+            if (filter.Damaged is { } damaged)
+                clauses.Add(new EditableFilter { Kind = EditableFilterKind.Damaged, Damaged = damaged });
+            if (filter.Tribe is { } tribe)
+                clauses.Add(new EditableFilter { Kind = EditableFilterKind.Tribe, Tribe = tribe });
+            if (filter.MaxCost is { } maxCost)
+                clauses.Add(new EditableFilter { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost });
+            return clauses;
+        }
+
+        /// <summary>
+        /// Folds the clauses back into the one definition-side filter, or null when there are none.
+        /// </summary>
+        /// <remarks>
+        /// A repeated axis is not an error to report here — the later clause simply wins, which is
+        /// what the single-valued target shape can express. The window is what keeps a second one
+        /// from being added.
+        /// </remarks>
+        public static TargetFilterDef? Fold(List<EditableFilter> clauses)
+        {
+            if (clauses == null || clauses.Count == 0) return null;
+            bool? damaged = null; Tribe? tribe = null; int? maxCost = null;
+            foreach (EditableFilter clause in clauses)
+                switch (clause.Kind)
+                {
+                    case EditableFilterKind.Damaged: damaged = clause.Damaged; break;
+                    case EditableFilterKind.Tribe: tribe = clause.Tribe; break;
+                    case EditableFilterKind.MaxCost: maxCost = clause.MaxCost; break;
+                }
+            return new TargetFilterDef(damaged, tribe, maxCost);
+        }
+    }
+
     public sealed class EditableTarget
     {
         public string Selector = "ANY_CHARACTER";
@@ -108,8 +174,7 @@ namespace Emberfall.Editor
         // mode, so there is no longer a box that means nothing under one of the modes.
         public int SelectionCount = 1;
         public bool RandomSelection;
-        public bool HasDamagedFilter; public bool Damaged;
-        public bool HasTribeFilter; public Tribe Tribe;
+        public List<EditableFilter> Filters = new List<EditableFilter>();
         public string Binding = "";
         public string DistinctFrom = "";
 
@@ -131,10 +196,7 @@ namespace Emberfall.Editor
             Selector = target.Selector,
             SelectionCount = target.Selection.Count,
             RandomSelection = target.Selection.IsRandom,
-            HasDamagedFilter = target.Filter?.Damaged.HasValue ?? false,
-            Damaged = target.Filter?.Damaged ?? false,
-            HasTribeFilter = target.Filter?.Tribe.HasValue ?? false,
-            Tribe = target.Filter?.Tribe ?? default,
+            Filters = EditableFilter.From(target.Filter),
             Binding = target.Binding,
             DistinctFrom = target.DistinctFrom,
             Cost = target.Cost,
@@ -142,10 +204,7 @@ namespace Emberfall.Editor
 
         public TargetSpec ToDefinition()
         {
-            TargetFilterDef? filter = HasDamagedFilter || HasTribeFilter
-                ? new TargetFilterDef(HasDamagedFilter ? Damaged : (bool?)null,
-                    HasTribeFilter ? Tribe : (Tribe?)null)
-                : null;
+            TargetFilterDef? filter = EditableFilter.Fold(Filters);
             TargetSelection selection = RandomSelection
                 ? TargetSelection.RandomOf(SelectionCount)
                 : TargetSelection.Of(SelectionCount);
