@@ -80,16 +80,28 @@ def read(p: pathlib.Path) -> str:
     return p.read_text(encoding="utf-8", errors="replace")
 
 
-def token_value() -> float | None:
-    """`--touch-min` out of theme.uss.
+def token_values() -> list[tuple[str, float]]:
+    """Every `--touch-min` declaration in theme.uss, with the selector it sits under.
 
-    The fix for #244 replaced thirteen bare pixel values with `var(--touch-min)`, which
-    takes them out of this audit's reach by design — a token IS the compliant form. So the
-    token itself has to be checked, or the whole sweep could be undone by editing one line
-    that nothing looks at.
+    The fix for #244 replaced fifteen bare pixel values with `var(--touch-min)`, which takes
+    them out of this audit's reach by design — a token IS the compliant form. So the token
+    itself has to be checked, or the whole sweep could be undone by editing one line that
+    nothing looks at.
+
+    #247 then made it a RUN rather than a single value: the base in `:root` is the phone, and
+    `.emb-sw-medium` / `.emb-sw-expanded` step up from it. Reading only the first declaration
+    would check the phone and silently ignore the other two — the safe direction, but not the
+    whole answer, and "safe direction" is how an audit rots. ALL of them must clear the floor.
     """
-    m = re.search(r"--touch-min\s*:\s*(\d+(?:\.\d+)?)px\s*;", read(THEME))
-    return float(m.group(1)) if m else None
+    text = read(THEME)
+    out: list[tuple[str, float]] = []
+    for m in re.finditer(r"--touch-min\s*:\s*(\d+(?:\.\d+)?)px\s*;", text):
+        # Nearest selector opening a block above this declaration.
+        head = text[:m.start()]
+        sels = re.findall(r"([^{};/]+)\{", head)
+        where = sels[-1].strip().splitlines()[-1].strip() if sels else "?"
+        out.append((where, float(m.group(1))))
+    return out
 
 
 # ── the sheets ──────────────────────────────────────────────────────────────────────
@@ -243,19 +255,23 @@ def main() -> int:
           f"{len(from_uxml)} by UXML tag, {len(from_code)} by wired click")
     print()
 
-    tok = token_value()
+    toks = token_values()
     token_bad = False
-    if tok is None:
+    if not toks:
         print(f"  --touch-min: NOT DECLARED in {THEME.relative_to(REPO).as_posix()}")
         print("     Every var(--touch-min) in the sheets resolves to nothing, and a control")
         print("     sized by it collapses. This is a failure, not a missing nicety.")
         token_bad = True
-    elif tok < FLOOR_DP:
-        print(f"  --touch-min: {tok:g}px — BELOW the {FLOOR_DP}dp floor it exists to name.")
-        token_bad = True
     else:
-        print(f"  --touch-min: {tok:g}px — at or over the floor, so every var(--touch-min)")
-        print(f"     site below is compliant by construction.")
+        print(f"  --touch-min declarations ({len(toks)} — one per screen class since #247):")
+        for where, val in toks:
+            ok = val >= FLOOR_DP
+            token_bad = token_bad or not ok
+            flag = "" if ok else f"   <<< BELOW the {FLOOR_DP}dp floor it exists to name"
+            print(f"     {where:<20} {val:g}px{flag}")
+        if not token_bad:
+            print(f"     all at or over {FLOOR_DP}dp, so every var(--touch-min) site below is")
+            print( "     compliant by construction, on every screen class.")
     print()
 
     under, over, unclassified, exempted = [], [], [], []
@@ -315,8 +331,8 @@ def main() -> int:
         if token_bad:
             print("FAIL — --touch-min does not hold the floor.")
         return 1
-    print(f"PASS — --touch-min holds at {tok:g}px, and no rule this audit can identify as "
-          f"interactive is under {FLOOR_DP}dp in bare pixels.")
+    print(f"PASS — every --touch-min step holds at or over {FLOOR_DP}dp, and no rule this "
+          f"audit can identify as interactive is under it in bare pixels.")
     return 0
 
 

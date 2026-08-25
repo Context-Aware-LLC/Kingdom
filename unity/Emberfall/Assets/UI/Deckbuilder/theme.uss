@@ -61,6 +61,11 @@
        the audit with it, since the audit currently assumes a single value. */
     --touch-min: 48px;
 
+    /* THE COMPACT STEP OF THE TYPE SCALE. These are the PHONE's values, and they are the base
+       because the phone is the floor — every other screen class steps UP from here, at the
+       bottom of this file. See "SCREEN CLASSES" there before changing any of them: a value
+       edited here moves the phone only, and its medium/expanded partners have to move with it
+       or the run stops being a run. */
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;
@@ -124,5 +129,80 @@
 
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);
+}
+
+/* ── SCREEN CLASSES — how big an element is, by how big the screen is (#247) ───────────────
+   Sam, 2026-08-23: "we need breakpoints on some of the elements, specifically the SIZE of the
+   elements. So far, we only have breakpoints on layout, not on the size of buttons."
+
+   He was being generous. There were no breakpoints at all — what existed was per-component
+   solves (CardWall promoting tiles by available width, LayoutHeroGrid solving a column count)
+   and one content-driven modifier. Nothing keyed on the screen, so every element shipped one
+   size for every device.
+
+   THE KEY IS THE SHORT AXIS, IN dp. Android calls it smallest width; here the game is
+   landscape-locked (NOR-283) so it is always the panel's HEIGHT, and it is always the scarce
+   one. The Pixel 5a gives 411dp of it against 914dp of width — height is what runs out, so
+   height is what decides. Measured, not assumed: see the recipe in
+   ~/.claude/projects/.../memory/editor-game-view-does-not-reproduce-device-dp.md, because the
+   Editor's own Game View reports 1800dp here and would put every desk test in `expanded`.
+
+   THE BREAKPOINTS ARE MATERIAL 3's, deliberately not invented:
+       compact    sw < 600     the phone. Pixel 5a = 411
+       medium     600..839     large phones, small tablets
+       expanded   sw >= 840    tablets, and the Editor/desktop at 1800
+
+   ONE MULTIPLIER IS IMPOSSIBLE, so the scale steps token by token. #247 asked whether sizes
+   should step per-breakpoint or scale as a group from one number. That is not a preference
+   here — it is a constraint, measured in a live panel 2026-08-25:
+
+       calc(var(--probe-base) * 2)   resolved width = 4000.00   <- declaration DROPPED
+       var(--probe-base)             resolved width = 10.00
+
+   4000 is the panel width, i.e. the element fell back to `auto`. USS parses calc() and then
+   discards it, silently, which is the worst of both. So `font-size: calc(var(--type-body) *
+   var(--ui-scale))` cannot work and the runs below are written out in full. DO NOT "simplify"
+   this into a multiplier without re-running that probe.
+
+   THE BASE IS COMPACT, above, and these two blocks only ever step UP. Mobile-first: a phone
+   that never matches a class still gets a complete, correct scale, so a bug in the applier
+   degrades to "the phone size everywhere" rather than to nothing.
+
+   WHAT PARTICIPATES: the type scale and the touch floor, which is what #247's acceptance asks
+   for. THE SPACING RUN DELIBERATELY DOES NOT — --space-* is what buys the room the bigger type
+   spends, several layout solves are written against it (LayoutHeroGrid's HeroGutter and
+   HeroChrome are literal copies of --space-2 and its border), and moving both at once would
+   make any regression impossible to attribute. Left for a follow-up with its own evidence.
+
+   APPLIED BY: ScreenClass.cs, which installs itself and needs no scene edit. Exactly one of
+   these three classes is on .emb-root at any time.
+
+   THESE BLOCKS MUST STAY BELOW `.emb-root`, and that is load-bearing rather than tidy. The
+   base tokens are declared on `.emb-root` — a single class — and so are these. Equal
+   specificity, same element, so SOURCE ORDER is the only thing deciding the winner. Move
+   either block above the other and the screen classes silently stop applying: no error, no
+   warning, every screen just renders at phone size forever.
+
+   RETIREMENT TRIGGER: audit_touch_targets.py reads --touch-min and assumes a SINGLE value.
+   It now has three. If that audit is not taught the run, it is checking the phone only —
+   which is the safe direction, but not the whole answer. */
+.emb-sw-medium {
+    --type-display: 40px;
+    --type-h1: 32px;
+    --type-h2: 24px;
+    --type-body: 20px;
+    --type-label: 18px;
+    --type-caption: 15px;
+    --touch-min: 52px;
+}
+
+.emb-sw-expanded {
+    --type-display: 44px;
+    --type-h1: 36px;
+    --type-h2: 26px;
+    --type-body: 22px;
+    --type-label: 20px;
+    --type-caption: 16px;
+    --touch-min: 56px;
 }
 
