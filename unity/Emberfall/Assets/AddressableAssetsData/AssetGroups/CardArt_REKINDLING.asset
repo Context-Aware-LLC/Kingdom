@@ -485,11 +485,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: de011fda5b6957046a52990b8dc1d108
-    m_Address: card_art/jolly_portrait
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfa239abbaf346ada4bcde4055b416a8
     m_Address: card_art/clock_cogsworth_the_grand_rebuilder
     m_ReadOnly: 0
