@@ -524,16 +524,16 @@
 }
 .class-tab-frame {
     position: absolute;
-    left: 5px;
-    top: 5px;
-    right: 5px;
-    bottom: 5px;
+    left: 3px;
+    top: 3px;
+    right: 3px;
+    bottom: 3px;
     border-left-width: 3px;
     border-top-width: 3px;
     border-right-width: 3px;
     border-bottom-width: 3px;
     border-color: var(--accent);
-    border-radius: 22px 0 0 22px;
+    border-radius: 25px 0 0 25px;
     background-color: rgba(240, 166, 60, 0.08);
     opacity: 0;
     transition-property: opacity;

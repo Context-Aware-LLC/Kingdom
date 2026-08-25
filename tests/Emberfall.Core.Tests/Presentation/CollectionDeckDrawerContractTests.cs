@@ -194,8 +194,8 @@ namespace Emberfall.Core.Tests.Presentation
                     && (string?)element.Attribute("picking-mode") == "Ignore") == 1), Is.True);
                 Assert.That(frame.Success, Is.True);
                 Assert.That(frame.Groups["body"].Value, Does.Contain("position: absolute"));
-                Assert.That(frame.Groups["body"].Value, Does.Contain("left: 5px"));
-                Assert.That(frame.Groups["body"].Value, Does.Contain("right: 5px"));
+                Assert.That(frame.Groups["body"].Value, Does.Contain("left: 3px"));
+                Assert.That(frame.Groups["body"].Value, Does.Contain("right: 3px"));
                 Assert.That(selected.Groups["body"].Value, Does.Contain("opacity: 1"));
                 Assert.That(styles, Does.Not.Match(@"(?s)\.class-tab_art--on\s*\{.*?translate:"));
                 Assert.That(controller, Does.Contain("bool constrained = _selectedClasses.Count > 0;"));
