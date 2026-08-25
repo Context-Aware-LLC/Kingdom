@@ -40,6 +40,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 174a5e1ca2e4ac94aaeceb9a91e00aff
+    m_Address: card_art/night_toxin_blade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 19262be8a75d42cdb14d1d6fd69808c3
     m_Address: card_art/ember_coalition_blazer
     m_ReadOnly: 0
@@ -55,6 +60,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e42b0c976b51d6418fe26d1df7c09e0
+    m_Address: card_art/clock_refraction_module
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 200b1829a39a4423bccdb788bf034234
     m_Address: card_art/grave_mass_rebirth
     m_ReadOnly: 0
@@ -65,6 +75,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21a6a81bbf6749e40a854e14e48c3848
+    m_Address: card_art/storm_bolt_rider
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23af8f9fd22e4b40951782818d32a3d0
     m_Address: card_art/clock_blueprint_archive
     m_ReadOnly: 0
@@ -72,6 +87,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a234e08b68ddfb4d9d27c6f12b3b5ca
     m_Address: card_art/clock_nameless_bell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c214fc9bc0c495418edf7bd487267d5
+    m_Address: card_art/storm_stormbound_imp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -117,6 +137,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41f324c091bf4d33a6e10af40f86bdbb
     m_Address: card_art/neutral_alliance_messenger
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42dfc151296cc884dbcc6e7d57ed299e
+    m_Address: card_art/night_shadow_recon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -190,6 +215,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5cb76bf4a2f34cb4fa4471300ea50319
+    m_Address: card_art/storm_arc_flash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6489a3ec51dfb31498e5ab05ec4eb94c
+    m_Address: card_art/storm_gale_herald
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 65a240359c174c22a8d42937dcf2361c
     m_Address: card_art/night_seraphine_whisper_queen
     m_ReadOnly: 0
@@ -200,8 +235,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68252f1466517154e933f4f250aad95c
+    m_Address: card_art/clock_grand_artificer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b06b312b4db41f2a38120201d4a39c6
     m_Address: card_art/tide_tidal_emissary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70cd24087628218498e87fd79968bcef
+    m_Address: card_art/stone_granite_behemoth
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -212,6 +257,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 762b2e3377984737bdec23391c12f78b
     m_Address: card_art/tide_deepwater_alliance
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76e8c006c31df0845a2128fd7b620ba0
+    m_Address: card_art/clock_ticking_automaton
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -230,13 +280,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7bb40028444da0445b24c4757725b2c1
+    m_Address: card_art/stone_fortress_keeper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8235f864524cd504887b1e53d1a0606d
+    m_Address: card_art/night_nightfall_rogue
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83622015ff894de492035379f0d992a8
     m_Address: card_art/neutral_token_risen_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83f83ffd8a8adb048a72e6e23cb1241e
+    m_Address: card_art/clock_gear_cache
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8588439f4ea39ca4e9939696f9a65ec6
+    m_Address: card_art/stone_rubble_toss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 859d3930bed24cfbaa3dc7860291b465
     m_Address: card_art/verdant_rootswell_champion
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 860265f2ada556146a6c1cc6cfbf1a7d
+    m_Address: card_art/clock_clockwork_knight
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -285,6 +360,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1e4eae0ee175144791baad341366cde
+    m_Address: card_art/stone_ironclad_grunt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a77e927562d64e14a91445e1b6c4c9c2
     m_Address: card_art/ember_pyre_commander
     m_ReadOnly: 0
@@ -302,6 +382,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b236903582c14cff949b522949c878b3
     m_Address: card_art/ember_rekindled_flame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6b99b2f20e51c44a934735be601aeab
+    m_Address: card_art/night_dusk_imp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b799c394a2fa63741a311ceaf9ff0acd
+    m_Address: card_art/night_poison_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -375,8 +465,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d38d16d374f164b489aa6dde27d4f82e
+    m_Address: card_art/storm_crackling_sprite
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d586fd6629144a4eb4a5c9bd8831b72d
     m_Address: card_art/grave_pact_of_mourning
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d83cea9797f8be340be12c7cb6c5e543
+    m_Address: card_art/stone_wardens_vow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbcb2864332337343bb6c043416b939b
+    m_Address: card_art/storm_overcharge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -410,6 +515,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7ca9bb2e54837846873abc318c4220a
+    m_Address: card_art/storm_tempest_fury
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f803d967e6f17f245abfb43125755845
+    m_Address: card_art/night_venom_lash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fc7d9b476695460983d61a69318242ab
     m_Address: card_art/tide_channel_mender
     m_ReadOnly: 0
@@ -422,6 +537,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd1b055ff54846e9878ab5435867622f
     m_Address: card_art/ember_vanguard_conscript
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fdbab9050c97484448305c8673adb650
+    m_Address: card_art/night_shadow_slip
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
