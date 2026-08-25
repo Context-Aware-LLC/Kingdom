@@ -704,7 +704,15 @@ namespace Emberfall.Core.Cards
             Trigger.ON_ATTACK => "Attack",
             Trigger.ON_DAMAGED => "Damaged",
             Trigger.ON_HEAL => "Healed",
-            Trigger.ON_TURN_START => "Turn Start",
+            // UNMARKED, and the only trigger other than "you played it" that is (Sam, 2026-08-25).
+            // The rule above — every timing that is not "when you played it" carries a label — holds
+            // because a label is the ONLY thing that would state the timing. ON_TURN_START is the one
+            // trigger where that is false: CardValidator requires a TURN_OWNER condition on it and
+            // rejects that condition everywhere else, so the condition prefix ALWAYS speaks the
+            // timing in prose ("At the start of your turn, "). Keeping the label printed it twice —
+            // "Turn Start: While it is your turn, …" — and the doubling is what made
+            // clock_mechanical_essence read as a standing buff rather than a per-turn tick.
+            Trigger.ON_TURN_START => "",
             Trigger.ON_TURN_END => "Turn End",
             Trigger.ON_FRIENDLY_SUMMON => "Friendly Summon",
             Trigger.ON_SPELL_CAST => "Spell Cast",
@@ -773,9 +781,14 @@ namespace Emberfall.Core.Cards
         /// <summary>Maps a turn-owner condition to the clause naming whose turn it must be.</summary>
         private static string TurnOwnerPrefix(TurnOwner owner) => owner switch
         {
-            TurnOwner.CONTROLLER => "While it is your turn, ",
-            TurnOwner.OPPONENT => "While it is your opponent's turn, ",
-            TurnOwner.ANY => "On either player's turn, ",
+            // These name a MOMENT, not a span (Sam, 2026-08-25). TURN_OWNER is legal only on
+            // ON_TURN_START, so the condition can only ever mean "which turn-starts does this fire
+            // on" — never "while it is your turn". The old wording said the latter, describing a
+            // standing conditional buff the engine cannot express at all, and an author read it that
+            // way. Since ON_TURN_START now prints no label, this clause carries the whole timing.
+            TurnOwner.CONTROLLER => "At the start of your turn, ",
+            TurnOwner.OPPONENT => "At the start of your opponent's turn, ",
+            TurnOwner.ANY => "At the start of each turn, ",
             _ => throw Unsupported("turn owner", owner),
         };
 
@@ -792,6 +805,15 @@ namespace Emberfall.Core.Cards
             throw UnsupportedNode("lifetime", lifetime);
         }
 
+        /// <summary>
+        /// Whether a target names the source itself — asked as a SHAPE, never as the string "SELF",
+        /// for the reason <see cref="AuraCapabilities.IsAutomaticMinionSet"/> spells out: a name
+        /// listed in one place and not another is a divergence with nothing checking it.
+        /// </summary>
+        private static bool IsSelf(TargetSpec target)
+            => TargetQueries.TryGet(target.Selector, out TargetQuery query)
+               && query.Relation == SourceRelation.Self;
+
         /// <summary>Renders one typed action as a complete effect sentence.</summary>
         private static string RenderAction(RuleAction action, ICardDatabase pool) => action switch
         {
@@ -806,6 +828,13 @@ namespace Emberfall.Core.Cards
             // the intent, but it should still be possible... unless the card text specifically says
             // 'a friendly minion'." The words ARE the restriction; C26 keeps them true to the
             // selector underneath.
+            // A minion buffing ITSELF gains; "Give this +1/+1" is the same fact in the third person
+            // about the speaker (Sam, 2026-08-25). The allegiance argument above does not apply —
+            // SELF names one entity and carries no side to get wrong — so this is purely how the
+            // sentence reads. Every other selector keeps "Give", because there the words ARE the
+            // restriction.
+            ModifyStatsAction a when IsSelf(a.Target)
+                => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
             ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
             GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
             DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target)}.",

@@ -647,6 +647,18 @@ namespace Emberfall.Core.Cards
                         yield return new GrantKeywordAction(keyword, spec);
                 }
 
+                // "Gain +1/+1." is the same action with the target elided, because a minion buffing
+                // itself gains (Sam, 2026-08-25). Proposed against EVERY spec exactly like the two
+                // destroy verbs above rather than against SELF here — only the self spec re-renders
+                // to this sentence, so the round trip settles it and this stays free of a second
+                // opinion about which selector prints which verb. "Gain 2 Armor." reaches the same
+                // head and proposes nothing, because Deltas finds no +x/+y in it.
+                if (Verb("Gain "))
+                {
+                    foreach (KeyValuePair<int, int> delta in Deltas(clause))
+                        yield return new ModifyStatsAction(delta.Key, delta.Value, spec);
+                }
+
                 // Two words, one action — CardTextGenerator.DestroyVerb picks between them off the
                 // target's side, so both are proposed and the re-render settles which was printed.
                 if (Verb("Destroy ") || Verb("Sacrifice ")) yield return new DestroyAction(spec);
