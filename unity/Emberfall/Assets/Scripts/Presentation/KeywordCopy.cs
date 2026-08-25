@@ -31,8 +31,10 @@ namespace Emberfall.Presentation
         /// design; humanise for player-facing surfaces until the full display layer lands.</summary>
         internal static string DisplayName(Keyword kw)
         {
-            // An authored name outranks the humaniser: FROST prints as "Freeze", and the card face
-            // resolves the same call, so a card and its own tooltip cannot disagree.
+            // An authored name outranks the humaniser, and the card face resolves the same call, so
+            // a card and its own tooltip cannot disagree. No keyword overrides its id today — FROST
+            // was the last one, and since 2026-08-25 it humanises to "Frost" like everything else,
+            // the verb "Freeze" having moved to CardTextGenerator.FrostVerb.
             string authored = KeywordSemantics.AuthoredName(kw);
             if (authored != null) return authored;
 

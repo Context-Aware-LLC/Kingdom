@@ -42,14 +42,14 @@
       "ARCANE_SURGE": 6,
       "FERVOR": 6,
       "LIFEDRAIN": 6,
-      "FROST": 3
+      "FROST": 5
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 64,
       "ANY_MINION": 28,
       "ANY_ENEMY_MINION": 24,
-      "ANY_ENEMY": 22,
       "FRIENDLY_HERO": 22,
+      "ANY_ENEMY": 20,
       "ENEMY_HERO": 8,
       "ANY_FRIENDLY": 5,
       "ANY_CHARACTER": 3,
@@ -556,8 +556,8 @@
       },
       "keywordFrequency": {
         "BULWARK": 7,
+        "FROST": 3,
         "AEGIS": 1,
-        "FROST": 1,
         "REKINDLE": 1,
         "SKIRMISH": 1,
         "VANGUARD": 1,
@@ -565,8 +565,8 @@
       },
       "selectorFrequency": {
         "ANY_ENEMY_MINION": 9,
-        "ANY_ENEMY": 7,
         "ANY_MINION": 7,
+        "ANY_ENEMY": 5,
         "ANY_FRIENDLY_MINION": 4,
         "ANY_FRIENDLY": 1
       },
@@ -3854,10 +3854,10 @@
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_ENEMY"
+      "keywords": [
+        "FROST"
       ],
+      "selectors": [],
       "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": true,
@@ -3981,10 +3981,10 @@
       "durability": 2,
       "class": "TIDECALLER",
       "rarity": "RARE",
-      "keywords": [],
-      "selectors": [
-        "ANY_ENEMY"
+      "keywords": [
+        "FROST"
       ],
+      "selectors": [],
       "tribe": null,
       "setId": "EMBERFALL",
       "collectible": true,
@@ -6097,7 +6097,7 @@
       "selectors": [],
       "tribe": "SPIRIT",
       "setId": "REKINDLING",
-      "collectible": true,
+      "collectible": false,
       "artId": "night_poison_wisp",
       "sourceFile": "Rekindling.cards.json"
     },

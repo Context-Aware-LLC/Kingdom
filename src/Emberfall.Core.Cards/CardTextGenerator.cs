@@ -652,6 +652,21 @@ namespace Emberfall.Core.Cards
         public const string UnearthLabel = "Unearth";
 
         /// <summary>
+        /// The verb the FROST <b>action</b> prints — "Freeze a minion." The keyword prints "Frost".
+        ///
+        /// <para><b>Two words for two mechanics, deliberately</b> (Sam, 2026-08-25). The action
+        /// picks a target and freezes it as the card resolves; the keyword freezes whatever its
+        /// carrier damages. They were the same string until this split, so converting a card from
+        /// one to the other left the face reading the same word and the player with no way to tell
+        /// which one they were holding.</para>
+        ///
+        /// <para>Public for the same reason <see cref="UnearthLabel"/> is: the parser proposes a
+        /// <c>FrostAction</c> by looking for this verb at the head of a clause, and reading it from
+        /// here is what keeps the two halves of the round trip spelled once.</para>
+        /// </summary>
+        public const string FrostVerb = "Freeze";
+
+        /// <summary>
         /// Every word this generator prints as game vocabulary rather than as ordinary English:
         /// carrier keyword names, timing labels, and the two labels that belong to neither list.
         /// Presentation emphasises exactly these (Unity's CardTextStyling).
@@ -663,7 +678,12 @@ namespace Emberfall.Core.Cards
         /// </summary>
         public static IReadOnlyList<string> EmphasisVocabulary()
         {
-            var words = new List<string> { AuraLabel, UnearthLabel };
+            // FrostVerb is seeded like the two labels below it, and for the same reason: it is game
+            // vocabulary that is not a keyword NAME, so the loop over the enum cannot reach it.
+            // Without this line "Freeze a minion." would be the one effect verb on any card that
+            // renders unemphasised, because every other one — Silence, Backdraft — happens to be
+            // spelled exactly like the keyword it belongs to.
+            var words = new List<string> { AuraLabel, UnearthLabel, FrostVerb };
 
             foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
                 words.Add(Name(keyword));
@@ -883,11 +903,9 @@ namespace Emberfall.Core.Cards
             ReturnToHandAction a => $"Return {Target(a.Target)} to {BounceDestination(a.Target)}.",
             SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target)}.",
             TransformAction a => $"Transform {Target(a.Target)} into {NamedCard(a.CardId, pool)}.",
-            // Named through the keyword rather than spelled here, so the verb on the card and the
-            // marker on a carrier of the same keyword cannot drift apart — KeywordSemantics
-            // .AuthoredName is the one place the word is decided, and the tooltip reads the same
-            // entry. Presentation emphasises the word by matching it, so it needs no delimiter.
-            FrostAction a => $"{Name(Keyword.FROST)} {Target(a.Target)}.",
+            // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
+            // 2026-08-25, which is what made the action and the carrier print the same word.
+            FrostAction a => $"{FrostVerb} {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",

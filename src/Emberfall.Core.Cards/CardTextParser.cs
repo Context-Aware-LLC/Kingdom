@@ -667,7 +667,7 @@ namespace Emberfall.Core.Cards
         {
             bool Verb(string head) => clause.StartsWith(head, StringComparison.Ordinal);
 
-            string frost = CardTextGenerator.DescribeKeyword(Keyword.FROST) + " ";
+            string frost = CardTextGenerator.FrostVerb + " ";
             string silence = CardTextGenerator.DescribeKeyword(Keyword.SILENCE) + " ";
             string backdraft = CardTextGenerator.DescribeKeyword(Keyword.BACKDRAFT) + " ";
             string unearth = CardTextGenerator.UnearthLabel + " ";

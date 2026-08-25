@@ -141,9 +141,10 @@ namespace Emberfall.Presentation
             RejectReason.WeaponMissing        => "No weapon equipped.",
             RejectReason.HasSummoningSickness => "Can't attack yet this turn.",
             RejectReason.NoAttacksLeft        => "Already attacked this turn.",
-            // "Frozen", not the enum's spelling: FROST prints as "Freeze" on the card face
-            // (KeywordSemantics.AuthoredName), and a toast is the same player reading the same
-            // mechanic seconds later. The enum id stays AttackerFrosted — it is wire state.
+            // "Frozen" — the state a player is in, not either of the two words that put them
+            // there: the keyword prints "Frost" and the action's verb is "Freeze"
+            // (CardTextGenerator.FrostVerb). A toast names the condition, so it agrees with both.
+            // The enum id stays AttackerFrosted — it is wire state.
             RejectReason.AttackerFrosted       => "Frozen — can't attack.",
             RejectReason.AlreadyMulliganed    => "You've already swapped.",
             RejectReason.GameOver             => "The match is over.",

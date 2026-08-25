@@ -28,13 +28,21 @@ namespace Emberfall.Core.Cards
         /// back gets an obvious null, not a silently plausible name.</para>
         /// </summary>
         public static string? AuthoredName(Keyword keyword)
-            // Sam, 2026-08-11. FROST keeps the enum id (ordinal 12 is wire/hash state, and the
-            // engine's IsFrosted/FrostApplied/isFrosted spellings go with it), but the card says
-            // "Freeze": frost is not a verb in English, so "Frost a minion." did not parse as a
-            // sentence. Freeze collides with the genre's word for the same mechanic and that is
-            // accepted here — one collision on a plain English verb, ruled cheaper than a keyword
-            // the player cannot read. (This used to note that the vocabulary gate carved out an
-            // exception for it; that gate was removed 2026-08-18. The ruling stands on its own.)
-            => keyword == Keyword.FROST ? "Freeze" : null;
+            // No keyword overrides its enum id today, and FROST is the one that used to.
+            //
+            // Sam, 2026-08-25: the KEYWORD prints "Frost" and the ACTION prints "Freeze". Until now
+            // one string did both jobs, and the cost was that a card converted from the action to
+            // the keyword read the same afterwards as before — "Freeze an enemy." became "Freeze."
+            // and nothing on the face said which of the two mechanics the card had. They are not
+            // the same mechanic: the action picks a target and freezes it on the spot, the keyword
+            // freezes whatever the carrier damages, and Tidecaller is being moved from the first to
+            // the second across a dozen rows.
+            //
+            // This REPLACES the 2026-08-11 ruling, whose objection was that "frost is not a verb in
+            // English, so 'Frost a minion.' did not parse as a sentence". True, and the split
+            // dissolves it rather than overrules it — the verb is still "Freeze", it just is not
+            // the keyword's name any more. See CardTextGenerator.FrostVerb, which is where the verb
+            // now lives and the ONLY reason this may return null for FROST.
+            => null;
     }
 }
