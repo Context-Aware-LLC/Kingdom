@@ -89,12 +89,12 @@
     align-content: flex-start;
 }
 .card-tile {
-    width: 310px;
-    height: 435px;
+    width: 340px;
+    height: 477px;
     /* margin-left/margin-right are runtime-computed per row by
-     * CardWall.Layout (fixed tile size, variable gutter, no dead
-     * space on the right edge); only the top/bottom 8px here actually applies. */
-    margin: var(--space-2);
+     * CardWall.Layout (responsive tile tier, bounded gutter, centred
+     * outer breathing room); only the top/bottom 4px here actually applies. */
+    margin: var(--space-1) var(--space-2);
     background-color: var(--surface-3);   /* shows through until the bake resolves */
     -unity-background-scale-mode: scale-to-fit;
     border-radius: var(--space-2);

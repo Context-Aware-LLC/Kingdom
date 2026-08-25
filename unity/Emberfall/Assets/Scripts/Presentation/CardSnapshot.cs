@@ -45,7 +45,7 @@ namespace Emberfall.Presentation
         /// Resolution is the ONLY thing the caller picks. The framing is fixed: the camera is sized
         /// from BoardController.CardW/CardH, because what frames the shot is the card's world size,
         /// not how many pixels the consumer wants of it. That is what keeps a 256×361 death burn
-        /// and a 310×435 collection face the same picture at two magnifications.
+        /// and any responsive collection face the same picture at a different magnification.
         /// </summary>
         public static RenderTexture Capture(Transform visual, int width, int height)
         {

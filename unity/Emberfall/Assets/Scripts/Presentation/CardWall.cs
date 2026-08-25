@@ -8,8 +8,9 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The card wall: one persistent baked tile per pool card, laid out edge-to-edge in a grid whose
-    /// gutter is solved per row. Extracted from the old <c>DeckbuilderController</c> (Sam, 2026-08-07)
+    /// The card wall: one persistent baked tile per pool card, laid out in a centred grid whose
+    /// responsive tile tier, gutter and outer breathing room are solved from the live viewport.
+    /// Extracted from the old <c>DeckbuilderController</c> (Sam, 2026-08-07)
     /// so browsing and deckbuilding render the same wall rather than two copies that drift — the
     /// failure the four card frames already demonstrate, where four independently maintained versions
     /// of one thing ended up 11% different in size. Those two screens are now one
@@ -27,15 +28,35 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardWall
     {
-        // Must match .card-tile in deckbuilder.uss. Tile size is FIXED — this is a bake-cache wall,
-        // never stretched to fill space — so the gutter is the only responsive lever. At the
-        // 1920x1080 reference panel this resolves to five columns and two complete rows; a 20:9
-        // panel resolves to six columns, keeping the wall art-first instead of density-first.
-        public const float TileWidth = 310f;
-        public const float TileHeight = 435f;
+        // Must match .card-tile in deckbuilder.uss. These are the compact fallback and the baker's
+        // safe pre-layout defaults. Layout promotes the wall to one of the larger discrete tiers
+        // when at least four columns and two complete rows fit. Discrete tiers matter: a continuous
+        // resize would invalidate and rebake ~90 RenderTextures on every window pixel.
+        public const float TileWidth = 340f;
+        public const float TileHeight = 477f;
+
+        public const float MediumTileWidth = 480f;
+        public const float MediumTileHeight = 674f;
+
+        public const float DesktopTileWidth = 620f;
+        public const float DesktopTileHeight = 870f;
 
         /// <summary>Floor == --space-4; never squeeze tighter than that token.</summary>
         private const float MinGutter = 16f;
+
+        /// <summary>Do not turn a four-card row into four islands just to touch both edges.</summary>
+        private const float MaxGutter = 32f;
+
+        /// <summary>Art-first desktop target; extra width becomes breathing room, not tiny cards.</summary>
+        private const int MaxColumns = 5;
+
+        /// <summary>A larger tier must still form a wall rather than a two-card detail view.</summary>
+        private const int MinColumnsForLargerTier = 4;
+
+        /// <summary>Keep two complete rows visible before promoting a viewport to a larger tier.</summary>
+        private const int TargetVisibleRows = 2;
+
+        private const float VerticalTileMargin = 8f;
 
         // Pointer movement beyond this distance (in panel pixels) is treated as a scroll gesture,
         // not a tap. Keeps PointerUp from firing TileClicked after the player drags to scroll.
@@ -50,6 +71,7 @@ namespace Emberfall.Presentation
         private const float RowSafetyMargin = 2f;
 
         private readonly VisualElement _grid;
+        private readonly VisualElement _viewport;
         private readonly CardFaceBaker _baker;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
         private readonly Dictionary<int, VisualElement> _tiles = new Dictionary<int, VisualElement>();
@@ -58,10 +80,14 @@ namespace Emberfall.Presentation
         private CardFilter _filter;                       // null = no constraint
         private CardSort _sort = CardSort.Default;
         private bool _layoutQueued;
+        private float _activeTileWidth = -1f;
+        private float _activeTileHeight = -1f;
+        private bool _tilesNeedBake;
 
         // Cache used by Layout() to break the GeometryChangedEvent feedback loop.
         // See Layout() for the full explanation.
         private float _lastLayoutAvailable = -1f;
+        private float _lastLayoutViewportHeight = -1f;
         private int _lastLayoutVisibleCount = -1;
 
         /// <summary>Total <see cref="Layout"/> calls since construction. Read by NOR-360 instrumentation.</summary>
@@ -86,6 +112,8 @@ namespace Emberfall.Presentation
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
             _baker = baker ?? throw new ArgumentNullException(nameof(baker));
             _grid.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
+            _viewport = _grid.GetFirstAncestorOfType<ScrollView>()?.contentViewport;
+            _viewport?.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
         }
 
         /// <summary>
@@ -145,26 +173,16 @@ namespace Emberfall.Presentation
                     tileDragged     = false;
                 });
 
-                _baker.Bake(def, tex =>
-                {
-                    if (tex == null)
-                    {
-                        // A blank tile that is still clickable is worse than no tile: the player
-                        // can add a card they cannot read. Disable picking so the slot is inert
-                        // until the bake succeeds (or is never retried — same outcome either way).
-                        Debug.LogWarning($"[CardWall] bake failed for '{captured.Id}' — tile will be blank and non-interactive.");
-                        tile.pickingMode = PickingMode.Ignore;
-                        return;
-                    }
-                    tile.style.backgroundImage =
-                        new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
-                });
-
                 _grid.Add(tile);
                 _pool.Add(def);
                 _tiles[def.Id] = tile;
             }
 
+            // Geometry is not trustworthy while this tree is being built. The first scheduled
+            // Layout chooses the responsive tier, sets the baker to that exact resolution, and only
+            // then requests faces. That avoids baking the whole collection small and immediately
+            // throwing those textures away on a desktop viewport.
+            _tilesNeedBake = true;
             ApplyQuery();
         }
 
@@ -215,18 +233,18 @@ namespace Emberfall.Presentation
 
             RefreshTiles();
             _lastLayoutAvailable    = -1f;  // force a fresh Layout() pass for the new visible set
+            _lastLayoutViewportHeight = -1f;
             _lastLayoutVisibleCount = -1;
             QueueLayout();
         }
 
         // ---- Gutter solve ----------------------------------------------------------------------
         //
-        // Fixed tile size, variable gutter, recomputed per row on every resize (panel opening or
-        // closing, window resize) so full rows span the grid edge to edge instead of packing left
-        // with dead space on the right; a partial last row stays left-aligned at the same gutter
-        // rather than spreading apart. This is the manual equivalent of CSS Grid's
-        // `repeat(auto-fill, TileWidth)` + `justify-content: space-between`, which UI Toolkit's
-        // flexbox-only layout has no direct way to express.
+        // Discrete responsive tile size, bounded gutter, recomputed per row on every resize (panel
+        // opening or closing, window resize). A sparse row keeps a readable gap and spends the
+        // surplus as equal outer breathing room instead of shrinking the art or stretching cards
+        // into islands. A partial last row stays left-aligned with the full rows. UI Toolkit has no
+        // CSS Grid equivalent, so explicit sizes and margins carry the solve.
 
         /// <summary>
         /// Defers to the next scheduler tick instead of running inline. The grid's own
@@ -252,7 +270,8 @@ namespace Emberfall.Presentation
             LayoutCount++;
 
             float available = _grid.resolvedStyle.width - RowSafetyMargin;
-            if (available <= 0f) return;
+            float viewportHeight = _viewport?.resolvedStyle.height ?? 0f;
+            if (available <= 0f || viewportHeight <= 0f) return;
 
             // Break the GeometryChangedEvent feedback loop.
             //
@@ -261,26 +280,113 @@ namespace Emberfall.Presentation
             // _layoutQueued only coalesces bursts within the SAME tick; it does not stop the
             // cross-tick chain, because _layoutQueued is set to false before Layout() is called.
             //
-            // The gutter solve depends only on (available_width, visible_count): same inputs → same
-            // margins → no new GeometryChangedEvent. So early-returning when both are unchanged
-            // writes nothing, fires no event, and terminates the chain.
+            // The tier/gutter solve depends only on (available_width, viewport_height,
+            // visible_count): same inputs → same sizes and margins → no new GeometryChangedEvent.
+            // So early-returning when all three are unchanged writes nothing, fires no event, and
+            // terminates the chain.
             //
             // ApplyQuery() resets both fields to -1 before calling QueueLayout(), so a filter or
             // sort change always runs at least one fresh pass even if the width is unchanged.
-            if (Mathf.Approximately(available, _lastLayoutAvailable) && _visible.Count == _lastLayoutVisibleCount)
+            if (Mathf.Approximately(available, _lastLayoutAvailable)
+                && Mathf.Approximately(viewportHeight, _lastLayoutViewportHeight)
+                && _visible.Count == _lastLayoutVisibleCount
+                && !_tilesNeedBake)
                 return;
             _lastLayoutAvailable    = available;
+            _lastLayoutViewportHeight = viewportHeight;
             _lastLayoutVisibleCount = _visible.Count;
 
-            int columns = Mathf.Max(1, Mathf.FloorToInt((available + MinGutter) / (TileWidth + MinGutter)));
-            float gutter = columns > 1 ? (available - columns * TileWidth) / (columns - 1) : 0f;
+            ResolveTileTier(available, viewportHeight, out float tileWidth, out float tileHeight);
+            bool tierChanged = !Mathf.Approximately(tileWidth, _activeTileWidth)
+                || !Mathf.Approximately(tileHeight, _activeTileHeight);
+            if (tierChanged)
+            {
+                _activeTileWidth = tileWidth;
+                _activeTileHeight = tileHeight;
+                _baker.SetFaceSize(Mathf.RoundToInt(tileWidth), Mathf.RoundToInt(tileHeight));
+                _tilesNeedBake = true;
+            }
+
+            int columns = Mathf.Clamp(
+                Mathf.FloorToInt((available + MinGutter) / (tileWidth + MinGutter)),
+                1,
+                MaxColumns);
+            float naturalGutter = columns > 1 ? (available - columns * tileWidth) / (columns - 1) : 0f;
+            float gutter = Mathf.Min(MaxGutter, naturalGutter);
+            float outer = Mathf.Max(0f,
+                (available - columns * tileWidth - (columns - 1) * gutter) * 0.5f);
 
             for (int i = 0; i < _visible.Count; i++)
             {
                 if (!_tiles.TryGetValue(_visible[i].Id, out var tile)) continue;
+                tile.style.width = tileWidth;
+                tile.style.height = tileHeight;
+                bool startOfRow = i % columns == 0;
                 bool endOfRow = (i % columns) == columns - 1 || i == _visible.Count - 1;
-                tile.style.marginLeft = 0f;
+                tile.style.marginLeft = startOfRow ? outer : 0f;
                 tile.style.marginRight = endOfRow ? 0f : gutter;
+            }
+
+            if (_tilesNeedBake)
+            {
+                _tilesNeedBake = false;
+                BakeTiles();
+            }
+        }
+
+        private static void ResolveTileTier(
+            float availableWidth,
+            float viewportHeight,
+            out float tileWidth,
+            out float tileHeight)
+        {
+            if (TierFits(availableWidth, viewportHeight, DesktopTileWidth, DesktopTileHeight))
+            {
+                tileWidth = DesktopTileWidth;
+                tileHeight = DesktopTileHeight;
+                return;
+            }
+
+            if (TierFits(availableWidth, viewportHeight, MediumTileWidth, MediumTileHeight))
+            {
+                tileWidth = MediumTileWidth;
+                tileHeight = MediumTileHeight;
+                return;
+            }
+
+            tileWidth = TileWidth;
+            tileHeight = TileHeight;
+        }
+
+        private static bool TierFits(float availableWidth, float viewportHeight, float width, float height)
+        {
+            float rowWidth = MinColumnsForLargerTier * width
+                + (MinColumnsForLargerTier - 1) * MinGutter;
+            float rowsHeight = TargetVisibleRows * (height + VerticalTileMargin);
+            return availableWidth >= rowWidth && viewportHeight >= rowsHeight;
+        }
+
+        private void BakeTiles()
+        {
+            foreach (CardDefinition def in _pool)
+            {
+                if (!_tiles.TryGetValue(def.Id, out VisualElement tile)) continue;
+                CardDefinition captured = def;
+                _baker.Bake(captured, tex =>
+                {
+                    if (tex == null)
+                    {
+                        // A blank tile that is still clickable is worse than no tile: the player
+                        // can add a card they cannot read. Disable picking so the slot is inert
+                        // until the bake succeeds (or is never retried — same outcome either way).
+                        Debug.LogWarning($"[CardWall] bake failed for '{captured.Id}' — tile will be blank and non-interactive.");
+                        tile.pickingMode = PickingMode.Ignore;
+                        return;
+                    }
+                    tile.pickingMode = PickingMode.Position;
+                    tile.style.backgroundImage =
+                        new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
+                });
             }
         }
     }

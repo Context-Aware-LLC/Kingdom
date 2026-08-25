@@ -10,12 +10,12 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Bakes real cards through the real <see cref="CardFaceBaker"/> and composites them into one
-    /// contact sheet at TRUE collection-wall geometry — 310 × 435 faces, 5 per row, on the wall's
+    /// contact sheet at the desktop collection-wall geometry — 620 × 870 faces, 5 per row, on the wall's
     /// own 20px gutter and dark surface (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9,
     /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §2.1) — written to <c>artifacts/card-face-preview/</c>.
     ///
     /// THE GEOMETRY IS THE POINT. What this sheet answers is one question the .NET tests and every
-    /// full-size render cannot: is a card FACE legible as a 310 × 435 tile, sitting next to four
+    /// full-size render cannot: is a card FACE legible as a 620 × 870 tile, sitting next to four
     /// others, at the density a scrolling wall actually has. Thumbnails butted together with no
     /// gutter answer a different question and answer it wrong — that exact mistake was made once on
     /// this project already (see the collection mock, 2026-07-26), and the sheet that settled it had
@@ -31,12 +31,11 @@ namespace Emberfall.Editor
     /// </summary>
     public static class CardFacePreview
     {
-        // Current 16:9 collection target: 2 complete rows, 5 per row, 310 × 435. A 20:9 panel gets
-        // a sixth column without shrinking the faces.
+        // Desktop collection target: 2 complete rows, no more than 5 per row, 620 × 870.
         // Two rows here rather than three — the sheet is judged on density and legibility, and a
         // third identical row adds no information.
-        private const int FaceW  = (int)CardWall.TileWidth;
-        private const int FaceH  = (int)CardWall.TileHeight;
+        private const int FaceW  = (int)CardWall.DesktopTileWidth;
+        private const int FaceH  = (int)CardWall.DesktopTileHeight;
         private const int Columns = 5;
         private const int Rows    = 2;
         private const int Cards   = Columns * Rows;

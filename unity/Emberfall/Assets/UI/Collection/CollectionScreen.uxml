@@ -8,7 +8,7 @@
                 <ui:Label text="FILTERS" picking-mode="Ignore" class="col-filter-ribbon__label"/>
                 <ui:Label text="⌄" picking-mode="Ignore" class="col-filter-ribbon__chevron"/>
             </ui:Button>
-            <ui:VisualElement class="col-query-actions">
+            <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
                 <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
