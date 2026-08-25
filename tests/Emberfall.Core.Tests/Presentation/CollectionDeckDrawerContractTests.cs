@@ -135,6 +135,9 @@ namespace Emberfall.Core.Tests.Presentation
             XDocument document = XDocument.Parse(uxml);
             XElement toggle = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-toggle");
+            XElement actions = document.Descendants()
+                .Single(element => ((string?)element.Attribute("class"))?.Split(' ')
+                    .Contains("col-query-actions") == true);
             Match ribbon = Regex.Match(styles, @"(?s)\.col-button--filters\s*\{(?<body>.*?)\}");
 
             Assert.Multiple(() =>
@@ -143,6 +146,8 @@ namespace Emberfall.Core.Tests.Presentation
                     (string?)element.Attribute("class") == "col-filter-ribbon__label"), Is.True);
                 Assert.That(toggle.Elements().Any(element =>
                     (string?)element.Attribute("class") == "col-filter-ribbon__chevron"), Is.True);
+                Assert.That((string?)actions.Attribute("picking-mode"), Is.EqualTo("Ignore"),
+                    "The transparent full-width actions wrapper must not intercept the ribbon click.");
                 Assert.That(ribbon.Success, Is.True);
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("position: absolute"));
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 50%"));
@@ -152,41 +157,42 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
-        public void Collection_wall_targets_two_art_first_rows_across_supported_aspects()
+        public void Collection_wall_uses_art_first_responsive_tiers_instead_of_screen_pixel_density()
         {
             string sharedStyles = Asset("UI", "Deckbuilder", "deckbuilder.uss");
             string collectionStyles = Asset("UI", "Collection", "collection.uss");
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
 
-            const float tileWidth = 310f;
-            const float tileHeight = 435f;
+            const float desktopWidth = 620f;
+            const float desktopHeight = 870f;
             const float minGutter = 16f;
-            const float rowSafety = 2f;
 
-            // ScaleWithScreenSize matches height, so these are panel units for a 16:9 reference
-            // panel and a 20:9 phone/ultrawide panel respectively. The deductions are the authored
-            // shell: root sides, class strip, outer panel, recessed scroll, then CardWall's tie guard.
-            float referenceAvailable = 1920f - 48f - 130f - 32f - 40f - rowSafety;
-            float wideAvailable = 2400f - 48f - 130f - 32f - 40f - rowSafety;
-            int referenceColumns = Math.Max(1,
-                (int)Math.Floor((referenceAvailable + minGutter) / (tileWidth + minGutter)));
-            int wideColumns = Math.Max(1,
-                (int)Math.Floor((wideAvailable + minGutter) / (tileWidth + minGutter)));
-
-            // Root bottom + 60px toolbar + toolbar-to-wall margin + both nested panel insets.
-            float wallViewportHeight = 1080f - 24f - 60f - 16f - 32f - 40f;
-            int completeRows = (int)Math.Floor(wallViewportHeight / (tileHeight + 16f));
+            // Sam's desktop observation was roughly 10 x 4.5 at the old compact size. The same
+            // physical-size panel therefore exposes about 3,500 x 2,200 panel units. The desktop
+            // tier must convert that real viewport into an art wall, irrespective of monitor DPI.
+            const float observedDesktopWidth = 3500f;
+            const float observedDesktopHeight = 2200f;
+            int desktopColumns = Math.Min(5, Math.Max(1,
+                (int)Math.Floor((observedDesktopWidth + minGutter) / (desktopWidth + minGutter))));
+            int desktopRows = (int)Math.Floor(observedDesktopHeight / (desktopHeight + 8f));
 
             Assert.Multiple(() =>
             {
-                Assert.That(sharedStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*310px;.*?height:\s*435px;"));
+                Assert.That(sharedStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*340px;.*?height:\s*477px;"));
                 Assert.That(collectionStyles, Does.Match(
-                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*20px;\s*\}"));
-                Assert.That(wall, Does.Contain("public const float TileWidth = 310f;"));
-                Assert.That(wall, Does.Contain("public const float TileHeight = 435f;"));
-                Assert.That(referenceColumns, Is.EqualTo(5), "16:9 should show about ten cards, not a dense wall.");
-                Assert.That(wideColumns, Is.EqualTo(6), "20:9 may spend its extra width on one more card.");
-                Assert.That(completeRows, Is.EqualTo(2), "The larger face must still leave two complete rows visible.");
+                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*4px 20px;\s*\}"));
+                Assert.That(wall, Does.Contain("public const float TileWidth = 340f;"));
+                Assert.That(wall, Does.Contain("public const float TileHeight = 477f;"));
+                Assert.That(wall, Does.Contain("public const float MediumTileWidth = 480f;"));
+                Assert.That(wall, Does.Contain("public const float DesktopTileWidth = 620f;"));
+                Assert.That(wall, Does.Contain("public const float DesktopTileHeight = 870f;"));
+                Assert.That(wall, Does.Contain("private const float MaxGutter = 32f;"));
+                Assert.That(wall, Does.Contain("private const int MaxColumns = 5;"));
+                Assert.That(wall, Does.Contain("ResolveTileTier(available, viewportHeight"));
+                Assert.That(wall, Does.Contain("_baker.SetFaceSize(Mathf.RoundToInt(tileWidth)"),
+                    "A larger tile must be freshly baked at its display resolution, not upscaled.");
+                Assert.That(desktopColumns, Is.EqualTo(5));
+                Assert.That(desktopRows, Is.EqualTo(2));
             });
         }
 

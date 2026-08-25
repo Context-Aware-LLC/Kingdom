@@ -1,8 +1,8 @@
 /* collection.uss — the full-pool browse surface.
  *
  * Tokens come from theme.uss; only what is specific to this screen lives here. The tile itself is
- * deliberately NOT restyled: .card-tile is declared once in deckbuilder.uss and its 310px width is
- * a contract with CardWall.TileWidth, which solves the per-row gutter against it. A second
+ * deliberately NOT restyled: .card-tile is declared once in deckbuilder.uss and its compact size is
+ * a contract with CardWall, which promotes it to larger responsive tiers at runtime. A second
  * .card-tile rule here would be a second source of truth for one number, which is the exact shape
  * of the card-frame drift this project already paid for.
  *
@@ -102,7 +102,7 @@
     background-color: rgba(0, 0, 0, 0.45);
     border-radius: 0 0 var(--space-2) var(--space-2);
     padding: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-1);
 }
 .col-query {
     position: absolute;
@@ -562,16 +562,16 @@
     -unity-slice-scale: 0.35px;
 }
 
-/* The two nested panel sprites replace the former flat wall while keeping the fixed-width card
- * contract untouched. Their compact padding spends 56px total horizontally at the reference scale,
- * leaving the landscape wall room for the same practical card count. */
+/* The two nested panel sprites replace the former flat wall while keeping the responsive card
+ * contract untouched. Horizontal padding preserves a real screen-edge inset; compact vertical
+ * padding leaves two complete art-first rows at the reference height. */
 .collection .db-collection.chrome-panel--outer {
-    padding: 16px;
+    padding: 4px 16px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
 .collection .col-scroll.chrome-panel--recessed {
-    padding: 20px;
+    padding: 4px 20px;
 }
 .deck-drawer.chrome-panel--outer {
     padding: 24px;
