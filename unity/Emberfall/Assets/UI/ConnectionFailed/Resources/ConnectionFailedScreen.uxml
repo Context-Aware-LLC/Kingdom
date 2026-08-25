@@ -19,7 +19,7 @@
             <ui:Label text="Couldn't reach the match" class="mm-modal__title" />
             <ui:Label name="reason" text=" " class="mm-modal__help" />
             <ui:VisualElement class="mm-modal__actions">
-                <ui:Button name="btn-back" text="Back to menu" class="mm-modal__button" />
+                <ui:Button name="btn-back" text="Back to menu" class="mm-modal__button emb-back" />
                 <ui:Button name="btn-retry" text="Retry" class="mm-modal__button mm-modal__button--cta" />
             </ui:VisualElement>
         </ui:VisualElement>

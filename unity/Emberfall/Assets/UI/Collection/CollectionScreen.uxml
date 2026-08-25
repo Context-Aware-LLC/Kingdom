@@ -13,7 +13,7 @@
             </ui:Button>
             <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
-                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
+                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body">
@@ -80,7 +80,7 @@
                     <ui:Label name="deck-drawer-title" text="Decks" class="deck-drawer__title"/>
                     <ui:Label name="deck-drawer-subtitle" text="Choose a deck to edit" class="deck-drawer__subtitle"/>
                 </ui:VisualElement>
-                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
+                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
             <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser chrome-panel chrome-panel--recessed">
                 <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
@@ -132,7 +132,7 @@
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value" />
                     <ui:Label text="shards" class="craft-wallet-word" />
                 </ui:VisualElement>
-                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary" />
+                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back" />
             </ui:VisualElement>
 
             <ui:VisualElement class="craft-body">

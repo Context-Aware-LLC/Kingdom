@@ -19,7 +19,7 @@
                      2026-08-07). Moved into the header when the create panel it used to sit under
                      was removed (NOR-278); it is still a way further in, offered beside the way out. -->
                 <ui:Button name="view-collection" text="View Collection" class="roster-button roster-button--ghost" />
-                <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost" />
+                <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost emb-back" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -104,7 +104,7 @@
 
                 <ui:Label name="deck-modal-error" text="" class="create-error" />
                 <ui:VisualElement class="delete-actions">
-                    <ui:Button name="deck-modal-cancel" text="Close" class="roster-button roster-button--ghost" />
+                    <ui:Button name="deck-modal-cancel" text="Close" class="roster-button roster-button--ghost emb-back" />
                     <ui:Button name="deck-modal-confirm" text="Save" class="roster-button roster-button--cta" />
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -139,7 +139,7 @@
                     <ui:Label name="create-pass-help" text="" class="create-help" />
                     <ui:VisualElement name="create-hero-grid" class="hero-grid" />
                     <ui:VisualElement class="delete-actions">
-                        <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost" />
+                        <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost emb-back" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
@@ -165,7 +165,7 @@
                         <ui:Label name="create-power-desc" text="" class="hero-power-desc" />
                     </ui:VisualElement>
                     <ui:VisualElement class="delete-actions">
-                        <ui:Button name="create-detail-back" text="Back" class="roster-button roster-button--ghost" />
+                        <ui:Button name="create-detail-back" text="Back" class="roster-button roster-button--ghost emb-back" />
                         <ui:Button name="create-detail-select" text="Select" class="roster-button roster-button--cta" />
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -194,7 +194,7 @@
                 <ui:Label name="delete-message" text="" class="delete-message" />
                 <ui:Label name="delete-error" text="" class="create-error" />
                 <ui:VisualElement class="delete-actions">
-                    <ui:Button name="cancel-delete" text="Cancel" class="roster-button roster-button--ghost" />
+                    <ui:Button name="cancel-delete" text="Cancel" class="roster-button roster-button--ghost emb-back" />
                     <ui:Button name="confirm-delete" text="Delete character" class="roster-button roster-button--danger" />
                 </ui:VisualElement>
             </ui:VisualElement>

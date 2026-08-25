@@ -14,7 +14,7 @@
                         <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
                         <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
                     </ui:VisualElement>
-                    <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary"/>
+                    <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
                 </ui:VisualElement>
                 <ui:ScrollView name="shop-scroll" class="shop-scroll">
                     <ui:VisualElement class="shop-section">

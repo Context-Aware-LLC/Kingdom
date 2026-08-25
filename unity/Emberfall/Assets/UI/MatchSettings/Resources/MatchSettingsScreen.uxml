@@ -43,7 +43,7 @@
                 <ui:VisualElement name="view-menu" class="ms-view">
                     <ui:Label text="Menu" class="ms-title" />
                     <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
-                    <ui:Button name="btn-close" text="Close" class="ms-item" />
+                    <ui:Button name="btn-close" text="Close" class="ms-item emb-back" />
                     <!-- Dev/testing only (Sam, moved off the main menu identity plate 2026-08-09) —
                          hidden here in the UXML so a release build stays hidden even if the show
                          call is ever reached; MatchSettingsController reveals it under
@@ -76,7 +76,7 @@
                 <ui:VisualElement name="account-list" class="mm-accounts"/>
                 <ui:Label name="account-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button"/>
+                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button emb-back"/>
                     <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta"/>
                 </ui:VisualElement>
             </ui:VisualElement>
