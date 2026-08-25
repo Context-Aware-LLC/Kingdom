@@ -576,14 +576,23 @@ namespace Emberfall.Presentation
             });
             tile.Add(art);
 
-            // The badge, bottom-left, in the mana-frame treatment (NOR-278). Empty when unselected
+            // The badge, top-left, in the mana-frame treatment (NOR-278). Empty when unselected
             // but still the toggle target; filled with the pick order when on. A plain VisualElement
             // with StopPropagation rather than a Button, so its click cannot also open the detail.
+            //
+            // TWO ELEMENTS: an invisible 48dp box that catches the tap, and a 28dp disc inside it
+            // that is what you see. The portrait underneath is only 64dp square on a landscape
+            // phone, so a 48dp DISC would cover three quarters of the hero's face — it did, and it
+            // read on device as the portrait failing to load. The touch floor and the visual want
+            // different sizes, so they get different elements. See .hero-tile-badge in the sheet.
             var badge = new VisualElement();
             badge.AddToClassList("hero-tile-badge");
             badge.EnableInClassList("hero-tile-badge--on", selected);
+            var badgeDisc = new VisualElement();
+            badgeDisc.AddToClassList("hero-tile-badge__disc");
             var badgeLabel = new Label(selected ? (order + 1).ToString() : "");
-            badge.Add(badgeLabel);
+            badgeDisc.Add(badgeLabel);
+            badge.Add(badgeDisc);
             badge.tooltip = selected ? "Deselect" : "Select";
             badge.RegisterCallback<ClickEvent>(evt =>
             {

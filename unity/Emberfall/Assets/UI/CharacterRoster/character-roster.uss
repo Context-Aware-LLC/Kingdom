@@ -758,10 +758,21 @@
     overflow: hidden;
 }
 
+/* --type-caption, not --type-body, and the reason is the tile's WIDTH rather than taste.
+ * On a 411dp-tall landscape phone LayoutHeroGrid solves eight tiles onto one row — there is
+ * no height for a second — which leaves each tile about 84dp wide and 64dp of that inside
+ * the padding. At --type-body (18dp) every class name ellipsised to four characters:
+ * "Emb…", "Tide…", "Gra…", "Ston…", measured in the Editor at the device's dp budget on
+ * 2026-08-25. At 14dp most of them fit whole.
+ *
+ * The two longest, Stonewarden and Clockwright, still truncate, and no font size fixes that
+ * without a wider tile — which needs fewer columns, which needs a second row, which needs
+ * height this screen does not have. That is #247's problem (element size by screen class),
+ * not a value to keep shaving here. */
 .hero-tile-name {
     width: 100%;
     margin-top: var(--space-2);
-    font-size: var(--type-body);
+    font-size: var(--type-caption);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
@@ -769,31 +780,55 @@
     overflow: hidden;
 }
 
-/* The selection badge, bottom-left of the art, in the same circular treatment as the card's
+/* The selection badge, top-left of the art, in the same circular treatment as the card's
  * mana-cost frame (NOR-278). Empty and quiet when unselected — still tappable, that is how you
- * select — and filled with the pick order (1 = primary/hero power, 2 = secondary) when on. */
+ * select — and filled with the pick order (1 = primary/hero power, 2 = secondary) when on.
+ *
+ * TWO ELEMENTS, AND THE OUTER ONE IS INVISIBLE ON PURPOSE. The touch target has to be 48dp
+ * (--touch-min, Android's floor) and the visible disc must NOT be, because the portrait it
+ * sits on is only 64dp square on a 411dp-tall landscape phone — the grid solves eight tiles
+ * onto one row there, and there is no second row to be had. A 48dp disc on a 64dp portrait
+ * covers three quarters of it: measured in the Editor at the device's own dp budget on
+ * 2026-08-25, every hero's face was behind a black circle. That is very likely what
+ * "portraits do not render" meant on device; the art loads fine.
+ *
+ * So .hero-tile-badge is a transparent 48dp box that catches the tap, and
+ * .hero-tile-badge__disc is the 28dp circle you actually see, centred in it. Do not put a
+ * background or a border back on the outer box. */
 .hero-tile-badge {
     position: absolute;
-    left: var(--space-2);
-    top: var(--space-2);
+    left: 0;
+    top: 0;
     width: var(--touch-min);
     height: var(--touch-min);
-    border-radius: 24px;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.hero-tile-badge__disc {
+    width: 28px;
+    height: 28px;
+    border-radius: 14px;
     border-width: 2px;
     border-color: var(--surface-3);
     background-color: var(--surface-0);
     color: var(--ink-1);
-    font-size: var(--type-body);
+    font-size: var(--type-label);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
+    align-items: center;
+    justify-content: center;
     padding: 0;
 }
 
-.hero-tile-badge:hover {
+.hero-tile-badge:hover .hero-tile-badge__disc {
     border-color: var(--mana);
 }
 
-.hero-tile-badge--on {
+.hero-tile-badge--on .hero-tile-badge__disc {
     border-color: var(--mana);
     background-color: var(--mana);
     color: var(--surface-0);
