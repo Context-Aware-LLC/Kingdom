@@ -323,13 +323,16 @@
     "type": "MINION",
     "cost": 2,
     "attack": 2,
-    "health": 3,
+    "health": 2,
     "class": "EMBERWARD",
     "rarity": "COMMON",
-    "keywords": [],
+    "keywords": [
+      "ARCANE_SURGE"
+    ],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "ember_brazier_keeper",
+    "text": "Arcane Surge.",
     "rules": []
   },
   {
@@ -514,16 +517,18 @@
     "name": "Coalition Blazer",
     "type": "MINION",
     "cost": 4,
-    "attack": 5,
+    "attack": 4,
     "health": 4,
     "class": "EMBERWARD",
     "rarity": "RARE",
-    "keywords": [],
+    "keywords": [
+      "FERVOR"
+    ],
     "tribe": "ELEMENTAL",
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "ember_coalition_blazer",
-    "text": "Backdraft 1.",
+    "text": "Fervor. Backdraft 1.",
     "rules": [
       {
         "id": "rule_1",
@@ -2358,12 +2363,13 @@
     "class": "NIGHTVEIL",
     "rarity": "COMMON",
     "keywords": [
-      "SHROUD"
+      "SHROUD",
+      "ARCANE_SURGE"
     ],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "night_shadow_scout",
-    "text": "Shroud.",
+    "text": "Shroud, Arcane Surge.",
     "rules": []
   },
   {

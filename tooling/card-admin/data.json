@@ -31,18 +31,18 @@
     },
     "keywordFrequency": {
       "BULWARK": 47,
-      "SKIRMISH": 15,
       "SHROUD": 14,
+      "SKIRMISH": 14,
       "DOUBLESTRIKE": 10,
       "VENOM": 10,
       "AEGIS": 9,
       "OVERWHELM": 9,
       "REKINDLE": 8,
+      "ARCANE_SURGE": 6,
+      "FERVOR": 6,
       "LIFEDRAIN": 6,
       "VANGUARD": 6,
-      "ARCANE_SURGE": 4,
-      "FERVOR": 4,
-      "FROST": 1
+      "FROST": 3
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 66,
@@ -86,22 +86,22 @@
     "attackDistribution": {
       "0": 5,
       "1": 36,
-      "2": 50,
-      "3": 42,
-      "4": 21,
-      "5": 17,
+      "2": 51,
+      "3": 41,
+      "4": 22,
+      "5": 16,
       "6": 14,
       "7": 4,
       "10": 1
     },
     "healthDistribution": {
       "1": 24,
-      "2": 34,
-      "3": 31,
+      "2": 35,
+      "3": 30,
       "4": 37,
       "5": 29,
-      "6": 17,
-      "7": 9,
+      "6": 18,
+      "7": 8,
       "8": 6,
       "10": 2,
       "12": 1
@@ -120,6 +120,7 @@
         "BULWARK": 3,
         "SKIRMISH": 2,
         "AEGIS": 1,
+        "FROST": 1,
         "OVERWHELM": 1,
         "VANGUARD": 1
       },
@@ -152,8 +153,8 @@
       "minionCount": 20,
       "attackDistribution": {
         "1": 6,
-        "2": 3,
-        "3": 4,
+        "2": 4,
+        "3": 3,
         "4": 3,
         "5": 1,
         "6": 3
@@ -178,11 +179,12 @@
         "HERO_POWER": 0
       },
       "keywordFrequency": {
+        "FERVOR": 4,
         "BULWARK": 3,
-        "FERVOR": 3,
         "SKIRMISH": 2,
         "VANGUARD": 2,
         "AEGIS": 1,
+        "ARCANE_SURGE": 1,
         "DOUBLESTRIKE": 1,
         "LIFEDRAIN": 1
       },
@@ -218,15 +220,15 @@
       "attackDistribution": {
         "2": 6,
         "3": 4,
-        "4": 3,
-        "5": 4,
+        "4": 4,
+        "5": 3,
         "6": 3,
         "7": 1
       },
       "healthDistribution": {
         "1": 3,
-        "2": 3,
-        "3": 3,
+        "2": 4,
+        "3": 2,
         "4": 4,
         "5": 3,
         "6": 3,
@@ -246,6 +248,7 @@
         "REKINDLE": 3,
         "LIFEDRAIN": 2,
         "AEGIS": 1,
+        "FROST": 1,
         "SKIRMISH": 1,
         "VENOM": 1
       },
@@ -289,8 +292,7 @@
         "3": 4,
         "4": 5,
         "5": 2,
-        "6": 1,
-        "7": 1,
+        "6": 2,
         "8": 1
       }
     },
@@ -373,6 +375,7 @@
         "SHROUD": 12,
         "VENOM": 5,
         "BULWARK": 2,
+        "ARCANE_SURGE": 1,
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
@@ -492,9 +495,10 @@
       },
       "keywordFrequency": {
         "DOUBLESTRIKE": 8,
-        "SKIRMISH": 4,
+        "SKIRMISH": 3,
         "ARCANE_SURGE": 1,
-        "BULWARK": 1
+        "BULWARK": 1,
+        "FERVOR": 1
       },
       "selectorFrequency": {
         "ANY_ENEMY": 12,
@@ -2332,13 +2336,14 @@
       "name": "Spring Coil",
       "type": "MINION",
       "cost": 3,
-      "attack": 3,
+      "attack": 2,
       "health": 2,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "COMMON",
       "keywords": [
-        "SKIRMISH"
+        "SKIRMISH",
+        "FROST"
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
@@ -3286,7 +3291,7 @@
       "class": "TEMPEST",
       "rarity": "RARE",
       "keywords": [
-        "SKIRMISH"
+        "FERVOR"
       ],
       "selectors": [],
       "tribe": "BEAST",
@@ -4109,12 +4114,13 @@
       "type": "MINION",
       "cost": 7,
       "attack": 6,
-      "health": 7,
+      "health": 6,
       "durability": null,
       "class": "GRAVEKEEP",
       "rarity": "EPIC",
       "keywords": [
-        "BULWARK"
+        "BULWARK",
+        "FROST"
       ],
       "selectors": [
         "ANY_FRIENDLY_MINION",
@@ -4440,11 +4446,13 @@
       "type": "MINION",
       "cost": 2,
       "attack": 2,
-      "health": 3,
+      "health": 2,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
-      "keywords": [],
+      "keywords": [
+        "ARCANE_SURGE"
+      ],
       "selectors": [],
       "tribe": null,
       "setId": "REKINDLING",
@@ -4557,12 +4565,14 @@
       "name": "Coalition Blazer",
       "type": "MINION",
       "cost": 4,
-      "attack": 5,
+      "attack": 4,
       "health": 4,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "RARE",
-      "keywords": [],
+      "keywords": [
+        "FERVOR"
+      ],
       "selectors": [],
       "tribe": "ELEMENTAL",
       "setId": "REKINDLING",
@@ -5396,7 +5406,8 @@
       "class": "NIGHTVEIL",
       "rarity": "COMMON",
       "keywords": [
-        "SHROUD"
+        "SHROUD",
+        "ARCANE_SURGE"
       ],
       "selectors": [],
       "tribe": null,
