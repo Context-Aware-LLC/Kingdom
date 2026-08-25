@@ -714,10 +714,43 @@ namespace Emberfall.Core.Cards
             // clock_mechanical_essence read as a standing buff rather than a per-turn tick.
             Trigger.ON_TURN_START => "",
             Trigger.ON_TURN_END => "Turn End",
-            Trigger.ON_FRIENDLY_SUMMON => "Friendly Summon",
+            // UNLABELLED, and it speaks in prose instead — see TriggerPrefix (Sam, 2026-08-25).
+            Trigger.ON_FRIENDLY_SUMMON => "",
             Trigger.ON_SPELL_CAST => "Spell Cast",
             Trigger.ON_CAST => "",
             _ => throw Unsupported("trigger", trigger),
+        };
+
+        /// <summary>
+        /// The prose clause a LABELLESS trigger speaks its timing with, or "" for a trigger that
+        /// prints a label or nothing at all. The second of the two ways a timing can be stated, and
+        /// exclusive with <see cref="TriggerLabel"/>: a trigger prints one or the other, never both.
+        ///
+        /// <para><b>Why ON_FRIENDLY_SUMMON is not a label.</b> A label is a styled piece of the
+        /// game's vocabulary — a word the player learns once and then recognises, like Toll or
+        /// Attack. "Friendly Summon" was never that: it is the enum id with the underscore taken
+        /// out, and the qualifier it leads with does the opposite of what a reader expects. Sam
+        /// asked outright, on 2026-08-25, what the word "Friendly" was supposed to indicate on
+        /// Cogsworth — it marks the SUMMONED minion as yours, not the effect, not the target, and
+        /// nothing in "Friendly Summon: Give all friendly minions +1/+1." says so. A label that has
+        /// to be explained is not doing a label's job, and inventing a shorter word for it only
+        /// moves the problem. Prose states the same timing with nothing left to infer.</para>
+        ///
+        /// <para>Note this is a NARROWER statement than the trigger: the engine raises it for any
+        /// friendly minion entering play, played or summoned, and excludes the card that caused it.
+        /// "Whenever you summon a minion" is how a card game says that; the exclusion is the
+        /// ordinary reading of it and needs no clause.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER:</b> a second labelless-but-spoken trigger. This is a switch
+        /// with one live arm on purpose — it is a table, not a special case, so the next one adds a
+        /// line here and the parser reads it back with no change at all. If this ever grows a second
+        /// arm whose clause is not a plain prefix, revisit <c>TryTrigger</c>, which assumes a
+        /// marker is a literal head it can take off the front.</para>
+        /// </summary>
+        public static string TriggerPrefix(Trigger trigger) => trigger switch
+        {
+            Trigger.ON_FRIENDLY_SUMMON => "Whenever you summon a minion, ",
+            _ => "",
         };
 
         /// <summary>Renders the marker a rule prints, derived from how it activates.</summary>
@@ -741,8 +774,14 @@ namespace Emberfall.Core.Cards
         private static string TriggerMarker(Trigger trigger)
         {
             string label = TriggerLabel(trigger);
-            return label.Length == 0 ? "" : label + ": ";
+            return label.Length == 0 ? TriggerPrefix(trigger) : label + ": ";
         }
+
+        /// <summary>The exact head a trigger prints, label form or prose form — the one place that
+        /// decides it, so the parser can take a marker off the front without knowing which kind it
+        /// is. "" for a trigger that prints nothing. Same seam as
+        /// <see cref="DescribeConditionPrefix"/>, for the same reason.</summary>
+        internal static string DescribeTriggerMarker(Trigger trigger) => TriggerMarker(trigger);
 
         /// <summary>Renders the clause qualifying when a rule applies, ahead of its effects.</summary>
         private static string ConditionPrefix(RuleCondition condition)

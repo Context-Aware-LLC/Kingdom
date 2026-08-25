@@ -220,17 +220,25 @@ namespace Emberfall.Core.Cards
             clause = line;
             foreach (Trigger candidate in (Trigger[])Enum.GetValues(typeof(Trigger)))
             {
-                string label;
-                // AURA has no timing label and TriggerLabel throws rather than invent one, which is
-                // the renderer refusing to print an activation that cannot be triggered. Enumerating
-                // the enum means meeting it here, and skipping it is the same refusal read back.
-                try { label = CardTextGenerator.TriggerLabel(candidate); }
+                string marker;
+                // AURA has no timing marker and the renderer throws rather than invent one, which is
+                // it refusing to print an activation that cannot be triggered. Enumerating the enum
+                // means meeting it here, and skipping it is the same refusal read back.
+                //
+                // The marker is asked for whole rather than rebuilt from the label, because a
+                // trigger states its timing in one of TWO forms — "Toll: " or "Whenever you summon a
+                // minion, " — and which one is the renderer's business, not this loop's. Rebuilding
+                // it here as `label + ": "` is what made the prose form unreadable.
+                try { marker = CardTextGenerator.DescribeTriggerMarker(candidate); }
                 catch (Exception) { continue; }
-                if (label.Length == 0) continue;
+                if (marker.Length == 0) continue;
 
-                string marker = label + ": ";
                 if (!line.StartsWith(marker, StringComparison.Ordinal)) continue;
-                clause = line.Substring(marker.Length).Trim();
+                // Capitalised for the same reason TryConditionPrefix does it: a marker ending in a
+                // COMMA leaves the run mid-sentence and lowercased, while one ending in a colon
+                // leaves it already capitalised and this is a no-op. Every frame below reads a
+                // sentence, so the run has to arrive as one whichever head came off.
+                clause = Capitalized(line.Substring(marker.Length).Trim());
                 trigger = candidate;
                 return true;
             }
