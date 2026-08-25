@@ -450,12 +450,17 @@ namespace Emberfall.Presentation
             QueueHeroGridLayout();
         }
 
-        /// <summary>Must match .hero-tile's margin (--space-2), both sides of a tile.</summary>
-        private const float HeroGutter = 16f;
+        /// <summary>FIRST-PASS FALLBACK for .hero-tile's margin (--space-1), both sides. The solve
+        /// measures the real value off a tile once one has a resolved style; this is only what it
+        /// uses before that, when nothing has been laid out yet. Not a contract with the sheet —
+        /// the measured value is authoritative and is what device-pixel snapping actually
+        /// produces.</summary>
+        private const float HeroGutter = 8f;
 
-        /// <summary>.hero-tile padding (--space-2) plus its 2px border, both sides — the difference
-        /// between the tile's outer width and the square portrait inside it.</summary>
-        private const float HeroChrome = 20f;
+        /// <summary>FIRST-PASS FALLBACK for .hero-tile's padding (--space-1) plus its 2px border,
+        /// both sides — the difference between the tile's outer width and the square portrait
+        /// inside it. Measured off a real tile once one exists; see HeroGutter.</summary>
+        private const float HeroChrome = 12f;
 
         /// <summary>The name band under the portrait: --type-body plus its --space-2 margin, with
         /// room for a descender. Charged against the height budget so a tile never overflows its
@@ -518,17 +523,38 @@ namespace Emberfall.Presentation
             if (availableWidth <= 0f || availableHeight <= 0f) return;
 
             int tiles = 0;
+            VisualElement sample = null;
             foreach (VisualElement child in _createHeroGrid.Children())
-                if (child.ClassListContains("hero-tile")) tiles++;
+                if (child.ClassListContains("hero-tile")) { tiles++; sample ??= child; }
             if (tiles == 0) return;
+
+            // MEASURE THE CHROME, DO NOT ASSUME IT. UI Toolkit snaps margins, padding and borders
+            // to whole DEVICE pixels, so an authored dp value is not what the tile actually gets:
+            // at the phone's 2.625x scale a 4dp margin is 10.5 device px, rounds to 11, and comes
+            // back as 4.190dp. Eight tiles then advance 101.333 each and need 810.667 of a
+            // 809.905 grid — SHORT BY 0.76 — so the row wraps to seven plus one, and .hero-grid's
+            // overflow:hidden clips the first row's tops. That is exactly the 7+1 failure
+            // described above the constants, arriving by a second route.
+            //
+            // Reading it off a real tile also retires the "must match the USS" coupling those two
+            // constants carry: they are a FALLBACK for the first pass, before any tile has a
+            // resolved style, and no longer a second source of truth that can drift.
+            float gutter = HeroGutter;
+            float chrome = HeroChrome;
+            if (sample != null && sample.resolvedStyle.marginLeft > 0f)
+            {
+                gutter = sample.resolvedStyle.marginLeft + sample.resolvedStyle.marginRight;
+                chrome = sample.resolvedStyle.paddingLeft + sample.resolvedStyle.paddingRight
+                       + sample.resolvedStyle.borderLeftWidth + sample.resolvedStyle.borderRightWidth;
+            }
 
             int columns = 1;
             float side = 0f;
             for (int c = 1; c <= tiles; c++)
             {
                 int r = Mathf.CeilToInt(tiles / (float)c);
-                float fromWidth = availableWidth / c - HeroGutter - HeroChrome;
-                float fromHeight = availableHeight / r - HeroGutter - HeroChrome - HeroNameBand;
+                float fromWidth = availableWidth / c - gutter - chrome;
+                float fromHeight = availableHeight / r - gutter - chrome - HeroNameBand;
                 float candidate = Mathf.Min(fromWidth, fromHeight);
                 if (candidate <= side) continue;
                 side = candidate;
@@ -539,13 +565,13 @@ namespace Emberfall.Presentation
             // Pin the wrap to the shape that was solved for. Without this the grid is free to seat
             // a different number of tiles per row than the solve assumed — and that is precisely
             // the failure documented above the constants.
-            _createHeroGrid.style.width = columns * (side + HeroChrome + HeroGutter) + RowSafetyMargin;
+            _createHeroGrid.style.width = columns * (side + chrome + gutter) + RowSafetyMargin;
             _createHeroGrid.style.alignSelf = Align.Center;
 
             foreach (VisualElement child in _createHeroGrid.Children())
             {
                 if (!child.ClassListContains("hero-tile")) continue;
-                child.style.width = side + HeroChrome;
+                child.style.width = side + chrome;
 
                 VisualElement art = child.Q<VisualElement>(className: "hero-tile-art");
                 if (art == null) continue;

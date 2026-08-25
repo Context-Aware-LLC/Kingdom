@@ -727,12 +727,23 @@
  *
  * width, and the art's square side, are written per pass by LayoutHeroGrid. The values here are
  * only what a tile looks like for the frame before that pass runs. */
+/* THE GUTTER AND THE PADDING ARE THE PORTRAIT'S BUDGET, so they are --space-1 and not
+ * --space-2. LayoutHeroGrid seats eight tiles on one row on a 411dp-tall landscape phone --
+ * two rows need 272dp of grid and the screen affords 138, so that is forced, not a choice --
+ * which leaves each column 100.6dp of pitch. At --space-2 the margin and padding and border
+ * took 36 of those 100.6, THIRTY-SIX PERCENT of the row spent on air, and the portrait got
+ * 64.4dp. At --space-1 the overhead is 20 and the portrait gets 80.6dp: a quarter wider, and
+ * over half again the area.
+ *
+ * MUST MATCH CharacterRosterController.HeroGutter (2x the margin) and HeroChrome (2x the
+ * padding + 2x the border). The solve cannot see this sheet; those two constants are a copy
+ * of these values and changing one without the other silently mis-sizes every tile. */
 .hero-tile {
     width: 152px;
     align-items: center;
     justify-content: center;
-    margin: var(--space-2);
-    padding: var(--space-2);
+    margin: var(--space-1);
+    padding: var(--space-1);
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
@@ -770,6 +781,14 @@
  * height this screen does not have. That is #247's problem (element size by screen class),
  * not a value to keep shaving here. */
 .hero-tile-name {
+    /* width:100%, and DO NOT try to widen it past the tile's content box. Spanning the tile's
+     * padding with `align-self: stretch` + a -4px inset bought the label 8dp — enough for
+     * Clockwright, which misses by 2.6 — and cost the row an entire tile: a flex item's
+     * automatic minimum size is its CONTENT, so a label wider than its tile raised the tile's
+     * min-width, eight stopped fitting across, and the grid wrapped to SEVEN PLUS ONE with the
+     * first row clipped at the top by .hero-grid's overflow:hidden. Measured 2026-08-25; it is
+     * the same 7+1 failure the constants above LayoutHeroGrid already describe.
+     * One truncated name is a much better trade than that. */
     width: 100%;
     margin-top: var(--space-2);
     font-size: var(--type-caption);
