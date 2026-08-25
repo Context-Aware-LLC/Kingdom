@@ -204,7 +204,7 @@ namespace Emberfall.Tools.CardCi
             => string.IsNullOrEmpty(text) ? "(none)" : $"\"{text}\"";
     }
 
-    /// <summary>Minimal ICardDatabase over the loaded library, for token-resolution checks (C12/C13).</summary>
+    /// <summary>Minimal ICardDatabase over the loaded library, for token-resolution checks (C12).</summary>
     internal sealed class InMemoryCardDatabase : ICardDatabase
     {
         private readonly Dictionary<int, CardDefinition> _cards = new();

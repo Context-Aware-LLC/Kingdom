@@ -59,8 +59,17 @@ namespace Emberfall.Core.Cards
             var issues = new List<ValidationIssue>();
             void Err(string code, string field, string message) =>
                 issues.Add(new ValidationIssue(Severity.Error, code, field, message, def.Id, def.Handle));
-            void Warn(string code, string field, string message) =>
-                issues.Add(new ValidationIssue(Severity.Warning, code, field, message, def.Id, def.Handle));
+
+            // There is no `Warn` here any more, and its absence is the point. C13 was the only
+            // warning the C-series ever raised, and deleting it (Sam, 2026-08-25) left this helper
+            // dead — the compiler said so, which is how the fact surfaced. **Every C-series finding
+            // is now an ERROR**, so a card either passes this validator or does not build, with no
+            // third state anyone has to decide how much to care about. `Severity.Warning` survives
+            // on the enum for ContentLinter's E-series; it is simply unreachable from here.
+            //
+            // RETIREMENT TRIGGER: the first C-series rule that genuinely cannot be an error. Adding
+            // `Warn` back is a ruling — a warning nobody must act on is a finding nobody reads —
+            // so record why it earned the exception at the same time.
 
             // C1 — the FORMAT rule moved to the handle when the id became a number. It is still an
             // error rather than a warning: the handle is what a human reads in every report this
@@ -329,22 +338,35 @@ namespace Emberfall.Core.Cards
                     Err("C23-FINITE-USES", $"{prefix}.lifetime.uses",
                         "FINITE lifetime uses must be greater than zero.");
 
-                // C11-C13 — payload presence is structural in the typed action classes. A
+                // C11-C12 — payload presence is structural in the typed action classes. A
                 // hand-built definition can still carry an unset id, which since the id became a
                 // number means 0 rather than "" — a value that looks present. Referenced cards
                 // must resolve.
+                //
+                // C13-TOKEN-COLLECTIBLE was here and is DELETED (Sam, 2026-08-25). It warned that a
+                // SUMMON pointing at a collectible card was probably meant to point at a token, and
+                // that was a fair guess while every SUMMON in the corpus did. It stopped being one
+                // when summoning a COPY OF A REAL CARD became supported design —
+                // clock_masterwork_construct summons another Masterwork Constructor, and Sam's
+                // ruling is that a card may summon a copy of any card, its own or another's,
+                // without minting a token for each: "we don't want to have to make a token for
+                // every card that might have that feature."
+                //
+                // So the rule no longer separates a mistake from a feature — it fires on every
+                // instance of the feature, and a validator finding that is always noise stops being
+                // read at all. There is no suppression mechanism by design: a warning is re-derived
+                // from the data on every run, so the only way to stop one is to stop tripping it or
+                // to delete the rule. C12 still catches the real failure underneath — an id that
+                // resolves to nothing.
                 int? referencedCardId = ReferencedCardId(rule.Action);
                 if (referencedCardId != null)
                 {
                     if (referencedCardId.Value <= 0)
                         Err("C11-PAYLOAD-REQUIRED", $"{prefix}.action.cardId",
                             $"{actionName} requires action.cardId.");
-                    else if (db is null || !db.TryGet(referencedCardId.Value, out var token))
+                    else if (db is null || !db.TryGet(referencedCardId.Value, out _))
                         Err("C12-TOKEN-UNRESOLVED", $"{prefix}.action.cardId",
                             $"card {referencedCardId} does not resolve in the card database.");
-                    else if (rule.Action is SummonAction && token.Collectible)
-                        Warn("C13-TOKEN-COLLECTIBLE", $"{prefix}.action.cardId",
-                            $"SUMMON token '{referencedCardId}' is collectible:true — tokens are usually collectible:false.");
                 }
 
                 // C14
