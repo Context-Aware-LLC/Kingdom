@@ -46,7 +46,19 @@ namespace Emberfall.Core.Cards
     /// <para>RETIREMENT TRIGGER: the parser. The reversal's end state is that rules are parsed FROM
     /// the authored sentence, at which point round-tripping replaces this comparison, exact-match
     /// stops being the definition of agreement, and this renderer's grammar becomes the parser's.
-    /// Whoever lands that parser retires <see cref="Check"/> and the C26 family with it.</para>
+    /// <b>NARROWED, not retired (Sam, 2026-08-25).</b> This paragraph used to say whoever lands the
+    /// parser retires <see cref="Check"/> and the C26 family with it. The ruling is that the parser
+    /// takes the FIRST swing and <see cref="Check"/> survives behind it: parse the sentence, compare
+    /// the derived rules to the authored ones, and on a match C26 does not run at all — it could
+    /// only reject a legitimate re-wording, having compared strings where the parser compared
+    /// meaning. C26 runs when the parser REFUSES, because an unreadable sentence has no other
+    /// evidence behind it and strictness is right there. <b>The fall-through is on <i>refused</i>,
+    /// never on <i>disagreed</i>:</b> a sentence that parses to rules other than the authored ones
+    /// is a defect, and letting an exact string match rescue it would hide the one failure this
+    /// pipeline exists to catch. So whoever lands the parser rewires <see cref="Check"/> into that
+    /// second position; C26 then shrinks as parser coverage grows instead of dying on a flag day.
+    /// Coverage is <c>CardTextParserCoverage</c>'s printed number — 200/200 rule-carrying cards as
+    /// of 2026-08-25, so the refusal path currently guards nothing.</para>
     ///
     /// <para><b>THE GRAMMAR IS ASYMMETRIC, and this is the first requirement recorded against it
     /// (Sam, 2026-08-18): the parser accepts "next to" AND "beside" for adjacency.</b> Rendering
