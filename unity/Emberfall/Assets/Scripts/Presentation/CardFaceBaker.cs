@@ -39,12 +39,12 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardFaceBaker : MonoBehaviour
     {
-        // Desktop wall tile at Sam's 2560×1440 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §2.9 breakpoint table).
-        // Serialized rather than const because the wall's card size is DERIVED from the viewport —
-        // it is 190×267 at 1920×1080 and 108×151 on phone-landscape — and it has already changed
-        // once this week. Anything that hard-codes it is wrong at four of five breakpoints.
-        [SerializeField] private int faceWidth  = 276;
-        [SerializeField] private int faceHeight = 387;
+        // The wall does not upscale a smaller bake: its fixed display geometry is also its capture
+        // resolution, so enlarging the collection reveals more of the real card rather than merely
+        // stretching the old texture. CardWall owns the dimensions; the casts remain compile-time
+        // constants and keep a newly-added baker on the same contract before any request is queued.
+        [SerializeField] private int faceWidth  = (int)CardWall.TileWidth;
+        [SerializeField] private int faceHeight = (int)CardWall.TileHeight;
 
         // Off-camera parking. The rig must stay ACTIVE — an inactive hierarchy renders to nothing,
         // which would bake 400 transparent faces — so it is moved out of the board camera's ortho

@@ -89,6 +89,9 @@ TOKEN_EXCEPTIONS = {
 }
 
 ELEMENT_INTERNAL = {
+    'col-button--filters':
+        'ribbon positioned against the collection toolbar, not the screen; '
+        'CollectionScreen.uxml parents it to .col-query-toolbar',
     'deck-plate-star':
         'star on a deck plate; CharacterRosterController.cs parents it to the plate',
     'hero-tile-badge':
