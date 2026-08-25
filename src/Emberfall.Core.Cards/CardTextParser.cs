@@ -62,9 +62,18 @@ namespace Emberfall.Core.Cards
             if (body.Length == 0) { reason = "no rules text"; return true; }
 
             var parsed = new List<RuleDefinition>();
-            foreach (string line in Sentences(body))
+            foreach (string sentence in Sentences(body))
             {
-                if (!TryTrigger(card.Type, line, out Trigger trigger, out string clause, out reason))
+                // AURA is an activation, not a trigger, so it cannot come back through TryTrigger's
+                // enum sweep — it has no Trigger member to be. Its marker is taken first and the rest
+                // of the sentence reads exactly like any other run of effects.
+                string line = sentence;
+                bool isAura = TryAuraMarker(ref line);
+
+                Trigger trigger = default;
+                string clause;
+                if (isAura) clause = line;
+                else if (!TryTrigger(card.Type, line, out trigger, out clause, out reason))
                     return false;
 
                 // A cost prefixes the run it buys, so it is peeled off before the run is read — the
@@ -78,9 +87,9 @@ namespace Emberfall.Core.Cards
                 if (cost != null)
                     parsed.Add(new RuleDefinition(
                         new RuleId("rule_" + (parsed.Count + 1).ToString(CultureInfo.InvariantCulture)),
-                        new TriggeredActivation(trigger),
+                        Activation(isAura, trigger),
                         AlwaysCondition.Instance,
-                        LifetimeFor(trigger),
+                        LifetimeFor(isAura, trigger),
                         cost));
 
                 if (!TryActions(clause, names, out IReadOnlyList<RuleAction> actions, out reason))
@@ -93,9 +102,9 @@ namespace Emberfall.Core.Cards
                 foreach (RuleAction action in actions)
                     parsed.Add(new RuleDefinition(
                         new RuleId("rule_" + (parsed.Count + 1).ToString(CultureInfo.InvariantCulture)),
-                        new TriggeredActivation(trigger),
+                        Activation(isAura, trigger),
                         condition,
-                        LifetimeFor(trigger),
+                        LifetimeFor(isAura, trigger),
                         action));
             }
 
@@ -115,10 +124,34 @@ namespace Emberfall.Core.Cards
         /// what it built: a lifetime that changes the sentence is caught, and one that does not
         /// change the sentence is a genuine gap recorded here rather than a silent guess.</para>
         /// </summary>
-        private static RuleLifetime LifetimeFor(Trigger trigger)
-            => trigger == Trigger.ON_PLAY || trigger == Trigger.ON_CAST
+        private static RuleLifetime LifetimeFor(bool isAura, Trigger trigger)
+            => !isAura && (trigger == Trigger.ON_PLAY || trigger == Trigger.ON_CAST)
                 ? (RuleLifetime)OneShotLifetime.Instance
                 : SourceBoundLifetime.Instance;
+
+        /// <summary>
+        /// The activation a marker named. AURA is the one that is not a <see cref="Trigger"/>, so it
+        /// is carried as a flag rather than smuggled in as an enum member that does not exist.
+        /// </summary>
+        private static RuleActivation Activation(bool isAura, Trigger trigger)
+            => isAura ? (RuleActivation)AuraActivation.Instance : new TriggeredActivation(trigger);
+
+        /// <summary>
+        /// Takes the <c>"Aura: "</c> marker off a sentence, reporting whether it was there.
+        ///
+        /// <para>Read off <see cref="CardTextGenerator.AuraLabel"/> rather than spelled here, for the
+        /// same reason every other marker is: the renderer decides the word, and a second copy of it
+        /// is a divergence waiting to happen. <c>AuraCapabilities</c> pins everything else about the
+        /// rule — ALWAYS, SOURCE_BOUND, MODIFY_STATS — so the marker is the whole of what the
+        /// sentence has to carry, and the round trip proves the rest.</para>
+        /// </summary>
+        private static bool TryAuraMarker(ref string line)
+        {
+            string marker = CardTextGenerator.AuraLabel + ": ";
+            if (!line.StartsWith(marker, StringComparison.Ordinal)) return false;
+            line = line.Substring(marker.Length).Trim();
+            return true;
+        }
 
         /// <summary>
         /// Removes the leading carrier-keyword band, which is authored state on its own field and

@@ -46,7 +46,7 @@ namespace Emberfall.Core.Tests.Targeting
         /// lower it to make a run pass.</b> A drop means a card that used to derive no longer does,
         /// which is a regression whatever the new number is.
         /// </summary>
-        private const int MinimumCardsDerived = 200;
+        private const int MinimumCardsDerived = 201;
 
         [Test]
         public void Every_card_the_parser_accepts_round_trips_exactly()

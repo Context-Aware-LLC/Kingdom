@@ -15,10 +15,37 @@ namespace Emberfall.Core.Cards
             // An aura is a continuous fold over a whole set, so the plain sweep is the only
             // selection it can hold: a player pick has no moment to happen in and a random pick
             // would re-roll on every recompute.
-            if (!target.IsEveryCandidate || target.Filter != null ||
+            if (!target.IsEveryCandidate ||
                 target.Binding.Length != 0 || target.DistinctFrom.Length != 0) return false;
+            if (!IsFoldableFilter(target.Filter)) return false;
 
             return IsAutomaticMinionSet(target.Selector);
+        }
+
+        /// <summary>
+        /// Whether a filter can survive being re-evaluated on every recompute.
+        ///
+        /// <para><b>TRIBE is admitted; DAMAGED is not (Sam, 2026-08-25).</b> The rule the two sit
+        /// either side of is not "which fields do we like" — it is whether the predicate can be
+        /// changed by the aura's own effect. A tribe is printed on the card and nothing in the game
+        /// alters it, so folding over "your Constructs" reaches the same set every pass and settles
+        /// in one. <c>Damaged</c> reads current health, and a stat aura WRITES current health, so an
+        /// aura selecting on it is a feedback loop with no examined fixed point — a minion could
+        /// leave the damaged set because the aura healed it into range and re-enter when the aura
+        /// detaches. That is the same confluence problem `docs/effect-model-scheduling.md` §7.1
+        /// predicts for keyword-granting auras, arriving early through a different door.</para>
+        ///
+        /// <para>So this is deliberately a WHITELIST of one field rather than a veto of one: a
+        /// filter axis added later is refused until somebody asks whether an aura can change it.
+        /// The previous gate was `Filter != null`, which refused tribe and damaged together and was
+        /// strictly stricter than the engine — <c>AuraEngine.Targets</c> resolves through
+        /// <c>Targeting.ResolutionCandidates</c>, which has always applied filters.</para>
+        /// </summary>
+        private static bool IsFoldableFilter(TargetFilterDef? filter)
+        {
+            if (filter == null) return true;
+            if (filter.Damaged.HasValue) return false;
+            return filter.Tribe.HasValue && filter.Tribe.Value != Tribe.NONE;
         }
 
         /// <summary>

@@ -36,7 +36,7 @@
       "DOUBLESTRIKE": 10,
       "VENOM": 10,
       "AEGIS": 9,
-      "OVERWHELM": 9,
+      "OVERWHELM": 8,
       "REKINDLE": 8,
       "ARCANE_SURGE": 6,
       "FERVOR": 6,
@@ -45,7 +45,7 @@
       "FROST": 3
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 65,
+      "ANY_FRIENDLY_MINION": 66,
       "ANY_MINION": 28,
       "ANY_ENEMY_MINION": 24,
       "ANY_ENEMY": 22,
@@ -87,10 +87,10 @@
       "0": 5,
       "1": 36,
       "2": 51,
-      "3": 41,
+      "3": 42,
       "4": 22,
       "5": 16,
-      "6": 14,
+      "6": 13,
       "7": 4,
       "10": 1
     },
@@ -98,8 +98,8 @@
       "1": 24,
       "2": 35,
       "3": 30,
-      "4": 37,
-      "5": 29,
+      "4": 38,
+      "5": 28,
       "6": 18,
       "7": 8,
       "8": 6,
@@ -121,11 +121,10 @@
         "SKIRMISH": 2,
         "AEGIS": 1,
         "FROST": 1,
-        "OVERWHELM": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 8,
+        "ANY_FRIENDLY_MINION": 9,
         "ANY_MINION": 3,
         "SELF": 2,
         "ANY_CHARACTER": 1
@@ -154,17 +153,16 @@
       "attackDistribution": {
         "1": 6,
         "2": 4,
-        "3": 3,
+        "3": 4,
         "4": 3,
         "5": 1,
-        "6": 3
+        "6": 2
       },
       "healthDistribution": {
         "1": 2,
         "2": 3,
         "3": 5,
-        "4": 5,
-        "5": 1,
+        "4": 6,
         "6": 2,
         "7": 1,
         "8": 1
@@ -4523,15 +4521,15 @@
       "name": "Nameless Bell",
       "type": "MINION",
       "cost": 4,
-      "attack": 6,
-      "health": 5,
+      "attack": 3,
+      "health": 4,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "EPIC",
-      "keywords": [
-        "OVERWHELM"
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
       ],
-      "selectors": [],
       "tribe": null,
       "setId": "REKINDLING",
       "collectible": true,
