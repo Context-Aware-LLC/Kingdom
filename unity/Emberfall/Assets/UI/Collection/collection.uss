@@ -1,7 +1,7 @@
 /* collection.uss — the full-pool browse surface.
  *
  * Tokens come from theme.uss; only what is specific to this screen lives here. The tile itself is
- * deliberately NOT restyled: .card-tile is declared once in deckbuilder.uss and its 276px width is
+ * deliberately NOT restyled: .card-tile is declared once in deckbuilder.uss and its 310px width is
  * a contract with CardWall.TileWidth, which solves the per-row gutter against it. A second
  * .card-tile rule here would be a second source of truth for one number, which is the exact shape
  * of the card-frame drift this project already paid for.
@@ -50,10 +50,43 @@
     -unity-font-style: bold;
 }
 .col-button--filters {
-    min-width: 120px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 144px;
+    height: 72px;
+    min-height: 72px;
+    padding: var(--space-2) var(--space-3) var(--space-1);
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-color: rgba(240, 166, 60, 0.82);
+    border-radius: 0 0 var(--space-2) var(--space-2);
+    translate: -50% 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 .col-button--filters-on {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.col-filter-ribbon__label {
+    color: rgb(250, 230, 193);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    -unity-text-align: middle-center;
+}
+.col-filter-ribbon__chevron {
+    height: 20px;
+    margin-top: -2px;
     color: var(--accent);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+.col-button--filters.chrome-button:active {
+    translate: -50% 1px;
 }
 
 /* Query toolbar + top drawer
@@ -61,6 +94,7 @@
  * after the wall in UXML, so opening it does not relayout the fixed-size card tiles.
  */
 .col-query-toolbar {
+    position: relative;
     flex-direction: row;
     align-items: center;
     min-width: 150px;
@@ -537,7 +571,7 @@
     overflow: hidden;
 }
 .collection .col-scroll.chrome-panel--recessed {
-    padding: 12px;
+    padding: 20px;
 }
 .deck-drawer.chrome-panel--outer {
     padding: 24px;

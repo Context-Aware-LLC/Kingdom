@@ -89,8 +89,8 @@
     align-content: flex-start;
 }
 .card-tile {
-    width: 276px;
-    height: 387px;
+    width: 310px;
+    height: 435px;
     /* margin-left/margin-right are runtime-computed per row by
      * CardWall.Layout (fixed tile size, variable gutter, no dead
      * space on the right edge); only the top/bottom 8px here actually applies. */

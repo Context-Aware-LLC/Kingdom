@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -123,6 +124,69 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(controller, Does.Match(
                     @"(?s)_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);\s*if \(_grid == null\).*?return;"),
                     "CardWall must never be constructed with a null collection-grid host.");
+            });
+        }
+
+        [Test]
+        public void Collection_filter_opener_reads_as_a_hanging_ribbon()
+        {
+            string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
+            string styles = Asset("UI", "Collection", "collection.uss");
+            XDocument document = XDocument.Parse(uxml);
+            XElement toggle = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "query-toggle");
+            Match ribbon = Regex.Match(styles, @"(?s)\.col-button--filters\s*\{(?<body>.*?)\}");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(toggle.Elements().Any(element =>
+                    (string?)element.Attribute("class") == "col-filter-ribbon__label"), Is.True);
+                Assert.That(toggle.Elements().Any(element =>
+                    (string?)element.Attribute("class") == "col-filter-ribbon__chevron"), Is.True);
+                Assert.That(ribbon.Success, Is.True);
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("position: absolute"));
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 50%"));
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 72px"));
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("translate: -50% 0"));
+            });
+        }
+
+        [Test]
+        public void Collection_wall_targets_two_art_first_rows_across_supported_aspects()
+        {
+            string sharedStyles = Asset("UI", "Deckbuilder", "deckbuilder.uss");
+            string collectionStyles = Asset("UI", "Collection", "collection.uss");
+            string wall = Asset("Scripts", "Presentation", "CardWall.cs");
+
+            const float tileWidth = 310f;
+            const float tileHeight = 435f;
+            const float minGutter = 16f;
+            const float rowSafety = 2f;
+
+            // ScaleWithScreenSize matches height, so these are panel units for a 16:9 reference
+            // panel and a 20:9 phone/ultrawide panel respectively. The deductions are the authored
+            // shell: root sides, class strip, outer panel, recessed scroll, then CardWall's tie guard.
+            float referenceAvailable = 1920f - 48f - 130f - 32f - 40f - rowSafety;
+            float wideAvailable = 2400f - 48f - 130f - 32f - 40f - rowSafety;
+            int referenceColumns = Math.Max(1,
+                (int)Math.Floor((referenceAvailable + minGutter) / (tileWidth + minGutter)));
+            int wideColumns = Math.Max(1,
+                (int)Math.Floor((wideAvailable + minGutter) / (tileWidth + minGutter)));
+
+            // Root bottom + 60px toolbar + toolbar-to-wall margin + both nested panel insets.
+            float wallViewportHeight = 1080f - 24f - 60f - 16f - 32f - 40f;
+            int completeRows = (int)Math.Floor(wallViewportHeight / (tileHeight + 16f));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sharedStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*310px;.*?height:\s*435px;"));
+                Assert.That(collectionStyles, Does.Match(
+                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*20px;\s*\}"));
+                Assert.That(wall, Does.Contain("public const float TileWidth = 310f;"));
+                Assert.That(wall, Does.Contain("public const float TileHeight = 435f;"));
+                Assert.That(referenceColumns, Is.EqualTo(5), "16:9 should show about ten cards, not a dense wall.");
+                Assert.That(wideColumns, Is.EqualTo(6), "20:9 may spend its extra width on one more card.");
+                Assert.That(completeRows, Is.EqualTo(2), "The larger face must still leave two complete rows visible.");
             });
         }
 

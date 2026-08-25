@@ -27,9 +27,12 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardWall
     {
-        // Must match .card-tile width in deckbuilder.uss / collection.uss. Tile size is FIXED — this
-        // is a bake-cache wall, never stretched to fill space — so the gutter is the only lever.
-        public const float TileWidth = 276f;
+        // Must match .card-tile in deckbuilder.uss. Tile size is FIXED — this is a bake-cache wall,
+        // never stretched to fill space — so the gutter is the only responsive lever. At the
+        // 1920x1080 reference panel this resolves to five columns and two complete rows; a 20:9
+        // panel resolves to six columns, keeping the wall art-first instead of density-first.
+        public const float TileWidth = 310f;
+        public const float TileHeight = 435f;
 
         /// <summary>Floor == --space-4; never squeeze tighter than that token.</summary>
         private const float MinGutter = 16f;
