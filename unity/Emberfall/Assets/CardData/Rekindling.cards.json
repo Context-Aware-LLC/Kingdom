@@ -3035,7 +3035,7 @@
     "handle": "tempest_lightning_lash",
     "name": "Lightning Lash",
     "type": "SPELL",
-    "cost": 2,
+    "cost": 3,
     "class": "TEMPEST",
     "rarity": "COMMON",
     "keywords": [],
