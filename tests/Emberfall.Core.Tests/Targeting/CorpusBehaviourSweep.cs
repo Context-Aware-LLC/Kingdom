@@ -298,6 +298,22 @@ namespace Emberfall.Core.Tests.Targeting
         /// </summary>
         private static readonly Tribe[] Tribes = { Tribe.CONSTRUCT, Tribe.BEAST, Tribe.UNDEAD };
 
+        /// <summary>
+        /// Keywords worn by two of each side's six minions, for the same reason the fillers are
+        /// tribed: a keyword FILTER matches nothing on a board of bare fillers, which reads as "this
+        /// card can never do anything" and is really "this board has none of what it asked for".
+        /// Two, not one, or "all friendly Shroud minions" reaches exactly one and trips
+        /// SAYS-ALL-REACHES-ONE instead.
+        ///
+        /// <para><b>Deliberately not the whole Keyword enum.</b> These are worn during the sweep's
+        /// EXECUTION half as well as its targeting half, so a blanket AEGIS would absorb the damage
+        /// every damage card is being measured by and report the corpus inert. A filter naming a
+        /// keyword absent from this list surfaces as NO-CANDIDATES — which is the right failure:
+        /// it asks whoever authored that card to widen the board here, and to think about what the
+        /// keyword does to everything else being swept while they do.</para>
+        /// </summary>
+        private static readonly Keyword[] WornKeywords = { Keyword.SHROUD };
+
         private static IEnumerable<CardDefinition> Fillers()
         {
             for (int i = 0; i < 64; i++)
@@ -336,6 +352,8 @@ namespace Emberfall.Core.Tests.Targeting
                 for (int i = 0; i < 6; i++)
                 {
                     int id = next++;
+                    var worn = new HashSet<Keyword>();
+                    if (i % 3 == 1) worn.Add(WornKeywords[(i / 3) % WornKeywords.Length]);
                     // Tribed on purpose: a tribe FILTER matches nothing on a board of untribed
                     // fillers, which reads as "this card can never do anything" and is really
                     // "this board has none of what it asked for".
@@ -346,6 +364,7 @@ namespace Emberfall.Core.Tests.Targeting
                         CurrentAttack = 2,
                         MaxHealth = 4,
                         CurrentHealth = i == 0 ? 2 : 4,
+                        Keywords = worn,
                     });
                 }
                 int wid = next++;

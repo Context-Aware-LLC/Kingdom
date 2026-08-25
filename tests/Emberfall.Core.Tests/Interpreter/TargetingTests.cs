@@ -42,6 +42,12 @@ namespace Emberfall.Core.Tests.Interpreter
                 System.Array.Empty<RuleDefinition>(), "", "art/" + FixtureCard.Handle(id), SetId.CORE, true,
                 tribe, "");
 
+        private static CardDefinition MinionWith(int id, params Keyword[] keywords)
+            => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, 1, 1, 3, null,
+                CardClass.NEUTRAL, Rarity.COMMON, keywords,
+                System.Array.Empty<RuleDefinition>(), "", "art/" + FixtureCard.Handle(id), SetId.CORE, true,
+                null, "");
+
         private static CardDefinition MinionCosting(int id, int cost)
             => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, cost, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
@@ -223,6 +229,61 @@ namespace Emberfall.Core.Tests.Interpreter
                     filter: new TargetFilterDef(maxCost: 25)));
 
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { minion.Id }));
+        }
+
+        /// <summary>
+        /// The keyword filter reads the LIVE set, so a minion that was GRANTED the keyword is
+        /// selected exactly like one printed with it.
+        /// </summary>
+        /// <remarks>
+        /// This is the axis's whole point and the one way it could be quietly wrong. Reading
+        /// <c>CardDefinition.Keywords</c> instead would pass a test built only from printed
+        /// carriers, ship, and then mean "the ones PRINTED with Shroud" on a board where half the
+        /// class hands Shroud out — a card that reads correctly and selects the wrong minions.
+        /// </remarks>
+        [Test]
+        public void Keyword_Filter_Selects_A_Minion_That_Was_GRANTED_The_Keyword()
+        {
+            var plain = Minion(FixtureCard.Id("plain"));
+            var db = new FakeCardDatabase().Register(plain);
+            var state = State();
+            CardInstance granted = Board(state, 0, plain);
+            granted.Keywords.Add(Keyword.SHROUD);
+            Board(state, 0, plain);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AllOf("ANY_FRIENDLY_MINION"),
+                    filter: new TargetFilterDef(keyword: Keyword.SHROUD)));
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { granted.Id }));
+        }
+
+        /// <summary>
+        /// The other half of the same proof: a minion PRINTED with the keyword whose instance no
+        /// longer carries it is excluded. Read together with the granted case above, the two pin
+        /// the filter to the instance in both directions — either one alone would still pass if it
+        /// read the definition.
+        /// </summary>
+        [Test]
+        public void Keyword_Filter_Drops_A_Minion_That_Loses_The_Keyword()
+        {
+            var shrouded = MinionWith(FixtureCard.Id("shrouded"), Keyword.SHROUD);
+            var db = new FakeCardDatabase().Register(shrouded);
+            var state = State();
+            // Board() does not copy a definition's keywords onto the instance -- the summon path
+            // does that -- so the carrier is stated here, which is also the only thing the filter
+            // ever reads.
+            CardInstance kept = Board(state, 0, shrouded);
+            kept.Keywords.Add(Keyword.SHROUD);
+            Board(state, 0, shrouded);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AllOf("ANY_FRIENDLY_MINION"),
+                    filter: new TargetFilterDef(keyword: Keyword.SHROUD)));
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { kept.Id }));
         }
 
         [Test]

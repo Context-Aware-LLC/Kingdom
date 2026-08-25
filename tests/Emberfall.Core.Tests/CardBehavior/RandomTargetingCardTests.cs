@@ -91,21 +91,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(losses.Count(loss => loss == 1), Is.EqualTo(2), "'another' forbids a repeat hit.");
         }
 
-        [Test]
-        public void DeathMark_Destroys_The_Player_Target_Then_Grants_Venom_To_One_Random_Friendly_Minion()
-        {
-            var state = State(seed: 11);
-            CardInstance allyA = Board(state, 0, ShippedCards.Id("neutral_stoneback_sentry"));
-            CardInstance allyB = Board(state, 0, ShippedCards.Id("neutral_stoneback_sentry"));
-            CardInstance victim = Board(state, 1, ShippedCards.Id("neutral_stoneback_sentry"));
-            CardInstance spell = Hand(state, ShippedCards.Id("night_death_mark"));
-
-            var result = new CommandProcessor(_db).Execute(state, Play(state, spell, victim.Id));
-
-            Assert.That(result.Accepted, Is.True);
-            Assert.That(state.Players[1].Board, Is.Empty);
-            Assert.That(new[] { allyA, allyB }.Count(m => m.Keywords.Contains(Keyword.VENOM)), Is.EqualTo(1));
-        }
+        // Death Mark's random Venom grant was cut 2026-08-25 (Sam, the Nightveil Venom pass) and
+        // its test went with it: the card is "Destroy a minion." now, and no row in the corpus
+        // pairs a random selection with GRANT_KEYWORD any more. Random MODIFY_STATS is still
+        // covered by Stomp below, random DAMAGE by Chain Lightning and Chain Spark above.
 
         [Test]
         public void Stomp_Hits_All_Enemies_Then_Buffs_One_Random_Friendly_Minion()
