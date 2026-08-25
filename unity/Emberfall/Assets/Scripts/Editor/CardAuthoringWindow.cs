@@ -83,6 +83,16 @@ namespace Emberfall.Editor
             LoadAll();
         }
 
+        /// <summary>
+        /// The sets this window read back WHOLE, and therefore the only ones it may write.
+        ///
+        /// <para>An empty set file and a set file that failed to parse look identical once the rows
+        /// are in memory — both are zero rows — and <see cref="SaveAll"/> writes each file whole.
+        /// So the fact that a load failed has to survive as its own state; deriving it from the row
+        /// list is exactly the mistake that emptied REKINDLING.</para>
+        /// </summary>
+        private readonly HashSet<SetId> _loadedSets = new HashSet<SetId>();
+
         private void LoadAll()
         {
             _cards.Clear();
@@ -91,11 +101,36 @@ namespace Emberfall.Editor
             // another set (reported as C12-TOKEN-UNRESOLVED against a card that is fine), and
             // NextIdInBand scanned 179 of 268 rows, so the id it minted collided with an existing
             // card in EVERY band — measured 2026-08-23, the moment CORE split out.
-            foreach (string path in CardJsonRowIO.AllSetPaths())
+            // A set is SAVEABLE only once it has been read back whole. See _loadedSets — this is
+            // the half of the load that SaveAll is not allowed to guess at.
+            _loadedSets.Clear();
+            foreach (SetId set in System.Enum.GetValues(typeof(SetId)))
             {
+                string path = CardJsonRowIO.PathForSet(set);
                 if (!File.Exists(path)) { Debug.LogWarning($"[CardAuthoring] missing set file: {path}"); continue; }
-                foreach (var (def, _) in CardJsonRowIO.LoadRows(path))
-                    _cards.Add(EditableCard.FromDefinition(def));
+                // Per file, and CAUGHT. A row this window's compiled assembly cannot parse throws
+                // out of LoadRows, and before 2026-08-25 that exception left the loop — so the sets
+                // after the bad one never loaded, and SaveAll then wrote each of them as `[]`.
+                // It happened for real: an authored `target.filter.keyword` against a stale
+                // Emberfall.Core.Cards.dll took REKINDLING's 105 rows down to an empty array, and
+                // the only reason the corpus survived was that it had been committed minutes
+                // earlier. The parse failure is what should be loud; the file is what must be left
+                // alone.
+                try
+                {
+                    var loaded = new List<EditableCard>();
+                    foreach (var (def, _) in CardJsonRowIO.LoadRows(path))
+                        loaded.Add(EditableCard.FromDefinition(def));
+                    _cards.AddRange(loaded);
+                    _loadedSets.Add(set);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[CardAuthoring] {set} did NOT load and is now READ-ONLY in this " +
+                        $"window — it will not be written until it parses. {e.GetType().Name}: {e.Message}. " +
+                        "If this names an unknown property, Unity is compiling an older core than the " +
+                        "one that authored the row: let it recompile and reopen this window.");
+                }
             }
             _dirtyIds.Clear();
             InvalidateAll();
@@ -877,6 +912,16 @@ namespace Emberfall.Editor
 
             foreach (SetId set in System.Enum.GetValues(typeof(SetId)))
             {
+                // NEVER write a set this window did not read. An unloaded set has no rows in
+                // memory, so "write what is in memory" means "empty the file" — the difference
+                // between a set with no cards and a set that failed to parse is invisible in
+                // `bySet` and total on disk.
+                if (!_loadedSets.Contains(set))
+                {
+                    Debug.LogWarning($"[CardAuthoring] {set} was not loaded, so it is not being " +
+                        "written. Its file on disk is untouched.");
+                    continue;
+                }
                 bySet.TryGetValue(set, out var rows);
                 CardJsonRowIO.SaveRows(CardJsonRowIO.PathForSet(set), rows ?? new List<CardDefinition>());
             }

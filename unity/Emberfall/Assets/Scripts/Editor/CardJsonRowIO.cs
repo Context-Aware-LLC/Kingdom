@@ -43,14 +43,6 @@ namespace Emberfall.Editor
                 "No card-data file is defined for this set."),
         };
 
-        /// <summary>Every set file, in load order.</summary>
-        public static IReadOnlyList<string> AllSetPaths()
-        {
-            var paths = new List<string>();
-            foreach (SetId set in System.Enum.GetValues(typeof(SetId))) paths.Add(PathForSet(set));
-            return paths;
-        }
-
         /// <summary>Loads every row as (parsed definition, verbatim source JSON for that row).</summary>
         public static IReadOnlyList<(CardDefinition def, string json)> LoadRows(string path)
         {
