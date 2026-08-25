@@ -107,6 +107,7 @@ namespace Emberfall.Presentation
         private VisualElement _scopeRow;
         private Button _scopeOwnedButton;
         private Button _scopeAllButton;
+        private VisualElement _queryScrim;
         private VisualElement _queryDrawer;
         private Button _queryToggleButton;
         private VisualElement _drawer;
@@ -325,6 +326,7 @@ namespace Emberfall.Presentation
             _scopeRow            = _root.Q<VisualElement>("scope-row");
             _scopeOwnedButton    = _root.Q<Button>("scope-owned");
             _scopeAllButton      = _root.Q<Button>("scope-all");
+            _queryScrim          = _root.Q<VisualElement>("query-scrim");
             _queryDrawer         = _root.Q<VisualElement>("query-bar");
             _queryToggleButton   = _root.Q<Button>("query-toggle");
             _drawer              = _root.Q<VisualElement>("deck-drawer");
@@ -1065,8 +1067,7 @@ namespace Emberfall.Presentation
             SetQueryDrawerOpen(false);
             _queryToggleButton?.RegisterCallback<ClickEvent>(_ =>
                 SetQueryDrawerOpen(!_queryDrawerOpen));
-            _root.Q<Button>("query-close")?.RegisterCallback<ClickEvent>(_ =>
-                SetQueryDrawerOpen(false));
+            _queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));
             _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
             _root.Q<Button>("deck-drawer-close")?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
@@ -1098,6 +1099,9 @@ namespace Emberfall.Presentation
             _queryDrawer.EnableInClassList("col-query--open", open);
             _queryDrawer.pickingMode = open ? PickingMode.Position : PickingMode.Ignore;
             _queryDrawer.SetEnabled(open);
+            _queryScrim?.EnableInClassList("col-query-scrim--open", open);
+            if (_queryScrim != null)
+                _queryScrim.pickingMode = open ? PickingMode.Position : PickingMode.Ignore;
             _queryToggleButton?.EnableInClassList("col-button--filters-on", open);
         }
 

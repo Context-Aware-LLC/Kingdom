@@ -50,6 +50,8 @@ namespace Emberfall.Core.Tests.Presentation
                 .Single(element => (string?)element.Attribute("name") == "root");
             XElement queryBar = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-bar");
+            XElement queryScrim = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "query-scrim");
             XElement toolbar = screenRoot.Elements().First();
 
             Assert.Multiple(() =>
@@ -77,8 +79,16 @@ namespace Emberfall.Core.Tests.Presentation
                     (string?)element.Attribute("name") == "query-toggle"), Is.True,
                     "The toolbar is what opens the query panel.");
                 Assert.That(queryBar.Descendants().Any(element =>
-                    (string?)element.Attribute("name") == "query-close"), Is.True,
-                    "A panel that slides out needs its own way back.");
+                    (string?)element.Attribute("name") == "query-close"), Is.False,
+                    "The persistent ribbon and Back action already dismiss the query panel.");
+                Assert.That(queryBar.Descendants().Any(element =>
+                    (string?)element.Attribute("class") == "col-query-drawer-title"), Is.False,
+                    "The visible controls make a redundant filter-and-sort heading unnecessary.");
+                Assert.That((string?)queryScrim.Attribute("picking-mode"), Is.EqualTo("Ignore"),
+                    "The outside-click scrim must not block the wall while the drawer is closed.");
+                Assert.That(screenRoot.Elements().ToList().IndexOf(queryScrim),
+                    Is.LessThan(screenRoot.Elements().ToList().IndexOf(queryBar)),
+                    "UI Toolkit paints in document order, so the drawer must remain above its scrim.");
                 Assert.That(uxml, Does.Contain("name=\"collection-empty\""));
 
                 // Matched on the class LIST, not the whole attribute. Pinning the exact string
@@ -124,6 +134,10 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(controller, Does.Match(
                     @"(?s)_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);\s*if \(_grid == null\).*?return;"),
                     "CardWall must never be constructed with a null collection-grid host.");
+                Assert.That(controller, Does.Contain(
+                    "_queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));"));
+                Assert.That(controller, Does.Contain(
+                    "_queryScrim?.EnableInClassList(\"col-query-scrim--open\", open);"));
             });
         }
 
