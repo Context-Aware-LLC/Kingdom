@@ -36,7 +36,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10afee2761154592a74b63021695d51d
-    m_Address: card_art/new_dawn_bannerman
+    m_Address: card_art/neutral_new_dawn_bannerman
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -61,7 +61,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2110a591afbe46c68e30ac69b8eefbc3
-    m_Address: card_art/restored_bulwark
+    m_Address: card_art/neutral_restored_bulwark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -116,7 +116,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41f324c091bf4d33a6e10af40f86bdbb
-    m_Address: card_art/alliance_messenger
+    m_Address: card_art/neutral_alliance_messenger
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -181,7 +181,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5b2487e71b8d48dcbd64e34c3e6d3a73
-    m_Address: card_art/aric_first_among_equals
+    m_Address: card_art/neutral_aric_first_among_equals
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -196,7 +196,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 680b80dca1e459745b753ee6692fdff8
-    m_Address: card_art/smithy_hammer
+    m_Address: card_art/neutral_smithy_hammer
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -231,7 +231,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83622015ff894de492035379f0d992a8
-    m_Address: card_art/token_risen_guardian
+    m_Address: card_art/neutral_token_risen_guardian
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -306,7 +306,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b86261547b304b9ca6c8b50c483c4e68
-    m_Address: card_art/reclaimed_scout
+    m_Address: card_art/neutral_reclaimed_scout
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -325,13 +325,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2b9c692d84a4e5b80b37ff63f07fafd
+    m_Address: card_art/storm_tempest_maul
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c73d07af99804a34932e462944cd655c
     m_Address: card_art/storm_thunderstrike
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7ad691a3b2c4366a2c02370b9ce87b0
-    m_Address: card_art/truce_pact
+    m_Address: card_art/neutral_truce_pact
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -417,11 +422,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd1b055ff54846e9878ab5435867622f
     m_Address: card_art/ember_vanguard_conscript
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c2b9c692d84a4e5b80b37ff63f07fafd
-    m_Address: card_art/storm_tempest_maul
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

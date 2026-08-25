@@ -26,7 +26,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 067d8e2fa0537bd48b28d9836f3ded57
-    m_Address: card_art/corpse_cart
+    m_Address: card_art/neutral_corpse_cart
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -61,7 +61,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10aabc05934cd0a44ab413d1b5eab5b3
-    m_Address: card_art/stoneback_sentry
+    m_Address: card_art/neutral_stoneback_sentry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 17496e1e85dd25a4aa30b30cc5c07675
-    m_Address: card_art/stone_sentry
+    m_Address: card_art/neutral_stone_sentry
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -106,7 +106,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 221c306fd2ba8b84cbf9b175b2aed9be
-    m_Address: card_art/veilstalker
+    m_Address: card_art/neutral_veilstalker
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -116,7 +116,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27483a35eacdf3444866199d4b4a9e04
-    m_Address: card_art/bound_revenant
+    m_Address: card_art/neutral_bound_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -141,7 +141,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2a8446fc7d78cd747bb5efa147ee6331
-    m_Address: card_art/token_wisp
+    m_Address: card_art/neutral_token_wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -161,7 +161,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ea9709b522ad4a43be804abdac8fa97
-    m_Address: card_art/ravenous_bonehound
+    m_Address: card_art/neutral_ravenous_bonehound
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -206,7 +206,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 362cb2087aff48a09c37dcfdf0583726
-    m_Address: card_art/spellwarden
+    m_Address: card_art/neutral_spellwarden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -246,7 +246,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4032b546faf1e544ca8647f4fa64371a
-    m_Address: card_art/token_thorn_cub
+    m_Address: card_art/neutral_token_thorn_cub
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -281,7 +281,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46eebc9ae9712bd4096dc1405b7cb385
-    m_Address: card_art/bog_crawler
+    m_Address: card_art/neutral_bog_crawler
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -291,7 +291,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 48e04f01b91740588a29edf3e96e4d31
-    m_Address: card_art/lifeclaw_bat
+    m_Address: card_art/neutral_lifeclaw_bat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -301,7 +301,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b1e6e7f23f633d41949fc6fec633990
-    m_Address: card_art/throneless_king
+    m_Address: card_art/neutral_throneless_king
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -311,7 +311,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4ff22fd7e03a1f24596c672530c418cd
-    m_Address: card_art/phantom_duelist
+    m_Address: card_art/neutral_phantom_duelist
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -336,7 +336,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 555f515b28c83344187fb9df52dbb257
-    m_Address: card_art/thistleguard_sprig
+    m_Address: card_art/neutral_thistleguard_sprig
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -346,7 +346,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56d701593a334295abf706680ec473eb
-    m_Address: card_art/soulbound_revenant
+    m_Address: card_art/neutral_soulbound_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -361,7 +361,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5da9e10bf90a48949a554d5bbfe09ec7
-    m_Address: card_art/doublestrike_hawk
+    m_Address: card_art/neutral_doublestrike_hawk
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -391,7 +391,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69da8e25079846fc8b19afd6db05ca20
-    m_Address: card_art/venomscale_drake
+    m_Address: card_art/neutral_venomscale_drake
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -401,7 +401,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6dbe77c06590205448d3566db990038a
-    m_Address: card_art/emberling_pup
+    m_Address: card_art/neutral_emberling_pup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -461,7 +461,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 78ba600a0f8f4390af576217968361a8
-    m_Address: card_art/searing_quill
+    m_Address: card_art/neutral_searing_quill
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -481,7 +481,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8014240f8de949f43aee1d021c31238f
-    m_Address: card_art/token_revenant
+    m_Address: card_art/neutral_token_revenant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -546,7 +546,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91bdbd6fca827e14db97a3f98f3c7a54
-    m_Address: card_art/arclight_adept
+    m_Address: card_art/neutral_arclight_adept
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -596,7 +596,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9abd9c40fcd749c58295873acf5eda2a
-    m_Address: card_art/ironclad_bulwark
+    m_Address: card_art/neutral_ironclad_bulwark
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -626,7 +626,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a33142ca8a8b16242845a63e191549fd
-    m_Address: card_art/aegis_templar
+    m_Address: card_art/neutral_aegis_templar
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -656,7 +656,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b0da1bf65224a584790cc79cc095e679
-    m_Address: card_art/choking_vines
+    m_Address: card_art/neutral_choking_vines
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -696,7 +696,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bdee2f3219e3a0440904e689424a64c1
-    m_Address: card_art/hollow_acolyte
+    m_Address: card_art/neutral_hollow_acolyte
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -756,7 +756,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1779c627d9fe6c4387ef235cb8ecf8d
-    m_Address: card_art/galewind_runner
+    m_Address: card_art/neutral_galewind_runner
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -801,7 +801,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0b8061f770922443a22ca18cbd8dd8f
-    m_Address: card_art/wandering_scout
+    m_Address: card_art/neutral_wandering_scout
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -881,7 +881,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f88e17e6723146258c86ecc42503a4ec
-    m_Address: card_art/duneborn_construct
+    m_Address: card_art/neutral_duneborn_construct
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -896,7 +896,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fdf6d30057d0f4748a69342a708ef2d7
-    m_Address: card_art/razorcoil_adder
+    m_Address: card_art/neutral_razorcoil_adder
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
