@@ -16,8 +16,8 @@
     position: absolute;
     bottom: var(--space-6);
     right: var(--space-6);
-    width: 44px;
-    height: 44px;
+    width: var(--touch-min);
+    height: var(--touch-min);
     background-color: var(--surface-2);
     border-width: 1px;
     border-color: rgba(11, 14, 19, 0.7);

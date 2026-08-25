@@ -327,7 +327,7 @@
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-1);
-    height: 44px;
+    height: var(--touch-min);
     padding: 0 var(--space-6);
     margin-left: var(--space-2);
 }

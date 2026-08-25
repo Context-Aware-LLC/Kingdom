@@ -188,7 +188,7 @@
 
 .shop-close,
 .shop-action {
-    min-height: 44px;
+    min-height: var(--touch-min);
     color: var(--ink-1);
     background-color: var(--surface-2);
     border-width: 1px;

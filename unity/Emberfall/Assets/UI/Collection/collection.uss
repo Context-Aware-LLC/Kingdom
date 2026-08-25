@@ -157,8 +157,8 @@
     flex-grow: 1;
 }
 .col-query-actions .col-button {
-    min-height: 44px;
-    height: 44px;
+    min-height: var(--touch-min);
+    height: var(--touch-min);
     padding: 0 var(--space-4);
 }
 .col-query-actions .col-button--decks {
@@ -678,7 +678,7 @@
 }
 
 .chrome-button {
-    min-height: 44px;
+    min-height: var(--touch-min);
     padding: 0 24px;
     border-width: 0;
     border-radius: 0;
@@ -720,13 +720,13 @@
     opacity: 0.42;
 }
 .col-query-actions .chrome-button {
-    min-height: 44px;
-    height: 44px;
+    min-height: var(--touch-min);
+    height: var(--touch-min);
     padding: 0 20px;
 }
 .deck-drawer__back.chrome-button {
-    min-height: 44px;
-    height: 44px;
+    min-height: var(--touch-min);
+    height: var(--touch-min);
     padding-left: 20px;
     color: var(--ink-1);
     -unity-text-align: middle-left;
@@ -959,7 +959,7 @@
 
 .craft-action {
     height: 15%;
-    min-height: 44px;             /* touch target floor; mobile-first */
+    min-height: var(--touch-min);             /* touch target floor; mobile-first */
     background-color: var(--accent);
     color: var(--surface-0);
     font-size: var(--type-body);

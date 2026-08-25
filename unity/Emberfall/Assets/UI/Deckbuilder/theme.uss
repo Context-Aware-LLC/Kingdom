@@ -38,6 +38,29 @@
        or referenceDpi moves off 160, recompute this. It is the only place it is written
        down, and tooling/scripts/audit_edge_safety.py fails if either class loses its body. */
     --edge-safe: 52px;
+
+    /* THE SMALLEST A CONTROL A FINGER HAS TO HIT MAY BE. Android's floor, and since
+       99b179b1 an authored px IS one Android dp, so 48 here is literally Google's 48dp —
+       before that change no USS number was comparable to that guidance at all and this
+       token could not have existed.
+
+       A token rather than 48 written thirteen times, because thirteen copies is how the
+       old ones drifted: the sweep for #244 found .ms-gear at 44, .db-chip at 32,
+       .hero-tile-badge at 34 and .new-character-button at 40, every one of them authored
+       under the old scale where the number meant nothing checkable.
+
+       USE THIS, NOT A BARE PIXEL, on anything pressed. tooling/scripts/audit_touch_targets.py
+       flags a bare px under 48 on any selector it can prove is interactive, and reads this
+       token's own value so the token cannot quietly drop below the floor it names.
+
+       UI Toolkit sizes BORDER-BOX, so this is the touch target with no adjustment for the
+       rule's own border-width.
+
+       RETIREMENT TRIGGER: #247 wants element sizes to step per screen class. When that
+       lands this stops being one number and becomes the smallest step in a run — update
+       the audit with it, since the audit currently assumes a single value. */
+    --touch-min: 48px;
+
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;

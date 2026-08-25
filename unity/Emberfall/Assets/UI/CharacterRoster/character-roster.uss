@@ -32,7 +32,7 @@
  * already show, so the heading is gone and this no longer needs a margin to clear it. */
 .new-character-button {
     min-width: 0;
-    height: 40px;
+    height: var(--touch-min);
     font-size: var(--type-label);
 }
 
@@ -507,7 +507,7 @@
 
 .roster-field .unity-base-text-field__input,
 .roster-field .unity-base-popup-field__input {
-    min-height: 44px;
+    min-height: var(--touch-min);
     background-color: var(--surface-0);
     border-color: var(--surface-3);
     border-radius: var(--space-1);
@@ -562,7 +562,7 @@
 
 .roster-button--small {
     min-width: 128px;
-    height: 40px;
+    height: var(--touch-min);
     font-size: var(--type-label);
 }
 
@@ -776,9 +776,9 @@
     position: absolute;
     left: var(--space-2);
     top: var(--space-2);
-    width: 34px;
-    height: 34px;
-    border-radius: 17px;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    border-radius: 24px;
     border-width: 2px;
     border-color: var(--surface-3);
     background-color: var(--surface-0);
