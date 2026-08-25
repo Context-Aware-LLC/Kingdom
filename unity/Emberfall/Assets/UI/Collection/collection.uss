@@ -77,13 +77,33 @@
     letter-spacing: 1px;
     -unity-text-align: middle-center;
 }
+/* TWO ROTATED BARS, NOT A GLYPH. This was `<ui:Label text="⌄">` — U+2304 DOWNWARDS CHEVRON —
+ * and the font does not have it, so the FILTERS button's only affordance rendered as a
+ * missing-glyph box. Seen in a device-dp capture 2026-08-25.
+ *
+ * Swapping in a different arrow character would just be the same bet on a different code
+ * point. .ms-gear already solved this and says why in matchsettings.uss: "Three bars are child
+ * VisualElements so the icon is font-independent." Same treatment here. */
 .col-filter-ribbon__chevron {
-    height: 20px;
-    margin-top: -2px;
-    color: var(--accent);
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
+    width: 22px;
+    height: 12px;
+    margin-top: 2px;
+}
+.col-filter-ribbon__chevron-arm {
+    position: absolute;
+    top: 3px;
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+    background-color: var(--accent);
+}
+.col-filter-ribbon__chevron-arm--left {
+    left: -1px;
+    rotate: 40deg;
+}
+.col-filter-ribbon__chevron-arm--right {
+    right: -1px;
+    rotate: -40deg;
 }
 .col-button--filters.chrome-button:active {
     translate: -50% 1px;

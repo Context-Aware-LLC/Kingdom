@@ -110,6 +110,11 @@ ELEMENT_INTERNAL = {
     'reveal-card__flourish':
         'decoration on a revealed card at top:-18% left:-15%; PackRevealPanel.cs '
         'parents it to the card',
+    'col-filter-ribbon__chevron-arm':
+        'the two rotated bars that draw the FILTERS chevron; CollectionScreen.uxml:9-12 '
+        'parents both to .col-filter-ribbon__chevron inside the #query-toggle Button, and '
+        'their offsets are against that 22x12 box. Font-independent by design — the glyph '
+        'they replace was a missing character',
     'col-query-bracket':
         'the decorative frame INSIDE the query bar; CollectionScreen.uxml:63 and :68 parent '
         'both to #query-bar, not to .emb-root, and both carry picking-mode="Ignore". This '
