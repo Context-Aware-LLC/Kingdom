@@ -164,7 +164,7 @@
     "attack": 4,
     "health": 5,
     "class": "NIGHTVEIL",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [
       "BULWARK",
       "LIFEDRAIN"
@@ -1850,7 +1850,7 @@
     "attack": 3,
     "health": 4,
     "class": "VERDANT",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [
       "REKINDLE"
     ],
@@ -2067,7 +2067,7 @@
     "type": "SPELL",
     "cost": 2,
     "class": "CLOCKWRIGHT",
-    "rarity": "COMMON",
+    "rarity": "RARE",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -2141,7 +2141,7 @@
     "type": "SPELL",
     "cost": 3,
     "class": "CLOCKWRIGHT",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -2472,7 +2472,7 @@
     "type": "SPELL",
     "cost": 4,
     "class": "NIGHTVEIL",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -3070,7 +3070,7 @@
     "attack": 2,
     "health": 4,
     "class": "TEMPEST",
-    "rarity": "COMMON",
+    "rarity": "RARE",
     "keywords": [
       "ARCANE_SURGE"
     ],
@@ -3090,7 +3090,7 @@
     "attack": 3,
     "health": 5,
     "class": "TEMPEST",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [
       "BULWARK"
     ],
@@ -3392,7 +3392,7 @@
     "attack": 4,
     "health": 5,
     "class": "TEMPEST",
-    "rarity": "RARE",
+    "rarity": "EPIC",
     "keywords": [
       "DOUBLESTRIKE"
     ],
@@ -3708,7 +3708,7 @@
     "type": "SPELL",
     "cost": 2,
     "class": "NIGHTVEIL",
-    "rarity": "COMMON",
+    "rarity": "RARE",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
@@ -4005,7 +4005,7 @@
     "type": "SPELL",
     "cost": 3,
     "class": "STONEWARDEN",
-    "rarity": "COMMON",
+    "rarity": "RARE",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,

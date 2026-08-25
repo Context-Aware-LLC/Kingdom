@@ -68,9 +68,9 @@
       "9": 1
     },
     "rarityBreakdown": {
-      "COMMON": 126,
+      "COMMON": 119,
       "RARE": 96,
-      "EPIC": 44,
+      "EPIC": 51,
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
@@ -141,9 +141,9 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 12,
+        "COMMON": 11,
         "RARE": 11,
-        "EPIC": 5,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -204,8 +204,8 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "RARE": 13,
-        "COMMON": 10,
+        "RARE": 12,
+        "COMMON": 11,
         "EPIC": 6,
         "LEGENDARY": 2
       },
@@ -392,9 +392,9 @@
         "6": 3
       },
       "rarityBreakdown": {
-        "COMMON": 13,
+        "COMMON": 11,
         "RARE": 11,
-        "EPIC": 4,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -451,8 +451,8 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 13,
-        "RARE": 10,
+        "COMMON": 12,
+        "RARE": 11,
         "EPIC": 5,
         "LEGENDARY": 2
       },
@@ -513,9 +513,9 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 13,
+        "COMMON": 11,
         "RARE": 11,
-        "EPIC": 4,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -575,9 +575,9 @@
         "7": 3
       },
       "rarityBreakdown": {
-        "COMMON": 15,
+        "COMMON": 14,
         "RARE": 11,
-        "EPIC": 5,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -645,9 +645,9 @@
         "9": 1
       },
       "rarityBreakdown": {
-        "COMMON": 13,
+        "COMMON": 12,
         "RARE": 11,
-        "EPIC": 5,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -746,7 +746,7 @@
       "health": 5,
       "durability": null,
       "class": "EMBERWARD",
-      "rarity": "RARE",
+      "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
       "tribe": "DRAGON",
@@ -2651,7 +2651,7 @@
       "health": null,
       "durability": null,
       "class": "NIGHTVEIL",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_MINION"
@@ -3202,7 +3202,7 @@
       "health": null,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_ENEMY",
@@ -3866,7 +3866,7 @@
       "health": null,
       "durability": null,
       "class": "TIDECALLER",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_MINION"
@@ -3953,7 +3953,7 @@
       "health": null,
       "durability": null,
       "class": "TIDECALLER",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [
         "ANY_ENEMY_MINION"
@@ -4135,7 +4135,7 @@
       "health": 3,
       "durability": null,
       "class": "VERDANT",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [
         "BULWARK",
         "VENOM"
@@ -4359,7 +4359,7 @@
       "health": 5,
       "durability": null,
       "class": "NIGHTVEIL",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [
         "BULWARK",
         "LIFEDRAIN"
@@ -5168,7 +5168,7 @@
       "health": 4,
       "durability": null,
       "class": "VERDANT",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [
         "REKINDLE"
       ],
@@ -5272,7 +5272,7 @@
       "health": null,
       "durability": null,
       "class": "CLOCKWRIGHT",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
@@ -5312,7 +5312,7 @@
       "health": null,
       "durability": null,
       "class": "CLOCKWRIGHT",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
@@ -5477,7 +5477,7 @@
       "health": null,
       "durability": null,
       "class": "NIGHTVEIL",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [
         "ANY_MINION"
@@ -5791,7 +5791,7 @@
       "health": 4,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [
         "ARCANE_SURGE"
       ],
@@ -5811,7 +5811,7 @@
       "health": 5,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [
         "BULWARK"
       ],
@@ -5959,7 +5959,7 @@
       "health": 5,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "RARE",
+      "rarity": "EPIC",
       "keywords": [
         "DOUBLESTRIKE"
       ],
@@ -6139,7 +6139,7 @@
       "health": null,
       "durability": null,
       "class": "NIGHTVEIL",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_ENEMY_MINION"
@@ -6285,7 +6285,7 @@
       "health": null,
       "durability": null,
       "class": "STONEWARDEN",
-      "rarity": "COMMON",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION",
