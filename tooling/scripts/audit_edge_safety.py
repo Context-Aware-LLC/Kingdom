@@ -86,6 +86,17 @@ TOKEN_EXCEPTIONS = {
     'craft-modal':
         'offsets on all four sides size it as well as place it; .emb-edge on top '
         'of its old percentages overflowed (8% + 150 + 84% > 1080)',
+    'col-query':
+        'spans left:0..right:0 at screen level, so it takes the token HORIZONTALLY '
+        'and the ordinary gutter top and bottom; the Pixel 5a insets measured over '
+        'USB are [136,0][0,63] / [0,0][136,63], so left/right flip and the TOP is 0 '
+        'in both landscape rotations, which is the only orientation this game has',
+    'col-query-bracket--left':
+        'the left upright of that frame; measured at x 24 with the panel already cleared, '
+        'i.e. under the 52dp cutout, so it restates the token itself',
+    'col-query-bracket--right':
+        'the right upright; same reason, and both sides pay because the cutout flips with '
+        'rotation direction',
 }
 
 ELEMENT_INTERNAL = {
@@ -99,6 +110,22 @@ ELEMENT_INTERNAL = {
     'reveal-card__flourish':
         'decoration on a revealed card at top:-18% left:-15%; PackRevealPanel.cs '
         'parents it to the card',
+    'col-query-bracket':
+        'the decorative frame INSIDE the query bar; CollectionScreen.uxml:63 and :68 parent '
+        'both to #query-bar, not to .emb-root, and both carry picking-mode="Ignore". This '
+        'rule holds only the top/bottom offsets, which are against that bar; the horizontal '
+        'clearance is on --left/--right in TOKEN_EXCEPTIONS, because a parent padding does '
+        'not reach a position:absolute child (#237)',
+    'col-query-bracket__piece':
+        'the three pieces of the decorative bracket frame INSIDE the query bar; '
+        'CollectionScreen.uxml:63-72 parents all six to .col-query-bracket, which is '
+        'itself inside .col-query and carries picking-mode="Ignore". Their offsets are '
+        'against that bracket, so --edge-safe would push them off the bay they draw',
+    'craft-illustration-scrim':
+        'the scrim over the craft modal\'s backdrop illustration; '
+        'CollectionScreen.uxml:121 parents it to #craft-modal, which already spends '
+        '--edge-safe on all four sides (see TOKEN_EXCEPTIONS above). Clearing the edge '
+        'twice would inset it from an inset',
 }
 
 

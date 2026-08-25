@@ -120,7 +120,28 @@
     top: 0;
     left: 0;
     right: 0;
-    padding: var(--space-4) var(--space-6);
+    /* --edge-safe HORIZONTALLY ONLY, and the asymmetry is measured rather than assumed.
+       This panel spans left:0 to right:0, so at the old --space-6 its search field and chips
+       sat under the display cutout — 52dp deep, and it FLIPS SIDES with rotation direction,
+       which is why both sides pay rather than the one an API happens to name.
+
+       The TOP does not pay. The Pixel 5a's insets, read over USB 2026-08-21, are
+       ROTATION_90 [136,0][0,63] and ROTATION_270 [0,0][136,63] — left/right flip, top is 0
+       in BOTH, and the 63 at the bottom is the gesture bar. The game is landscape-locked
+       (NOR-283), so no rotation exists that puts a cutout on this panel's top edge. Spending
+       52 there cost 36dp of a 411dp screen for nothing, and this bar is already over budget
+       (see below).
+
+       Painting to the edge is correct; putting CONTENT there is not — which is the .emb-bleed
+       idea, just not all four sides of it. Declared in audit_edge_safety.py's
+       TOKEN_EXCEPTIONS.
+
+       KNOWN, MEASURED, NOT FIXED HERE: with the five rows this bar stacks it resolves to
+       431dp tall against a 411.4dp landscape panel, so the last chip group runs ~20dp off the
+       bottom. That predates this change (it was 431 at the old padding too) and it needs the
+       content to scroll, which is structural — tracked with the rest of the mobile collection
+       work in #177. */
+    padding: var(--space-4) var(--edge-safe);
     background-color: rgba(8, 12, 18, 0.98);
     border-bottom-width: 2px;
     border-bottom-color: var(--accent);
@@ -205,11 +226,18 @@
     bottom: 0;
     width: 128px;
 }
+/* --edge-safe, NOT --space-6, and it has to be restated here rather than inherited from the
+   panel: these are position:absolute, and a parent's PADDING DOES NOT REACH AN ABSOLUTELY
+   POSITIONED CHILD (#237). Measured at the device dp budget, the panel's new 52dp horizontal
+   padding moved every flow child to x >= 108 and left these two frame uprights sitting at
+   x 24 — under the 52dp cutout, which is the one thing --edge-safe exists to prevent. The
+   bay they draw narrows by 28dp on each side; the chip groups sit at 208..706 and are still
+   well inside it. */
 .col-query-bracket--left {
-    left: var(--space-6);
+    left: var(--edge-safe);
 }
 .col-query-bracket--right {
-    right: var(--space-6);
+    right: var(--edge-safe);
 }
 .col-query-bracket__piece {
     position: absolute;

@@ -60,8 +60,17 @@ SCRIPTS = REPO / "unity" / "Emberfall" / "Assets" / "Scripts"
 FLOOR_DP = 48
 
 # A control deliberately under the floor records WHY here, keyed by the full selector as
-# it appears in the sheet, rather than in a comment the audit cannot read.
-EXEMPT: dict[str, str] = {}
+# it appears in the sheet, rather than in a comment the audit cannot read. Exemptions are
+# PRINTED, not silently skipped — an allowlist nobody reads is how the 44s survived.
+EXEMPT: dict[str, str] = {
+    ".hero-tile-badge__disc":
+        "not the touch target — the VISIBLE disc inside .hero-tile-badge, which is a "
+        "transparent 48dp box that catches the tap. It is 28dp because the portrait it "
+        "sits on is only 64dp square on a landscape phone and a 48dp disc covered 56% of "
+        "the hero's face. The evidence that flags it is a :hover rule on the PARENT "
+        "(.hero-tile-badge:hover .hero-tile-badge__disc), which is correct — the parent is "
+        "interactive, this is its paint.",
+}
 
 
 THEME = UI / "Deckbuilder" / "theme.uss"
@@ -249,20 +258,31 @@ def main() -> int:
         print(f"     site below is compliant by construction.")
     print()
 
-    under, over, unclassified = [], [], []
+    under, over, unclassified, exempted = [], [], [], []
     for sel, (bs, hits) in sorted(sized.items()):
         why = [w for w, src in (("pseudo", pseudo), ("uxml", from_uxml), ("code", from_code))
                if any(b in src for b in bs)]
         small = [h for h in hits if h[3] < FLOOR_DP]
         smallest = min(h[3] for h in hits)
         row = (sel, smallest, small or hits, ",".join(why))
-        if not why:
+        if small and sel in EXEMPT:
+            exempted.append(row)
+        elif not why:
             if small:
                 unclassified.append(row)
-        elif small and sel not in EXEMPT:
+        elif small:
             under.append(row)
         else:
             over.append(row)
+
+    if exempted:
+        print("DELIBERATELY UNDER THE FLOOR — declared in EXEMPT " + "=" * 39)
+        for sel, smallest, hits, why in sorted(exempted, key=lambda r: r[0]):
+            print(f"  {sel}  ({smallest:g}dp)")
+            for line in EXEMPT[sel].split(". "):
+                if line.strip():
+                    print(f"      {line.strip().rstrip('.')}.")
+        print()
 
     print(f"UNDER THE FLOOR — interactive and smaller than {FLOOR_DP}dp " + "=" * 33)
     if not under:
