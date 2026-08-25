@@ -28,10 +28,25 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardWall
     {
-        // Must match .card-tile in deckbuilder.uss. These are the compact fallback and the baker's
-        // safe pre-layout defaults. Layout promotes the wall to one of the larger discrete tiers
-        // when at least four columns and two complete rows fit. Discrete tiers matter: a continuous
+        // Must match .card-tile in deckbuilder.uss. These are the baker's safe pre-layout defaults
+        // and the SMALLEST OF THE THREE FIXED TIERS. Layout promotes the wall to a larger tier when
+        // at least four columns and two complete rows fit. Discrete tiers matter: a continuous
         // resize would invalidate and rebake ~90 RenderTextures on every window pixel.
+        //
+        // THIS IS NO LONGER THE FLOOR. It used to be — ResolveTileTier fell back to it
+        // unconditionally, with nothing below — and on a phone that was #177/#179's whole
+        // complaint. Measured at the device dp budget, 2026-08-25, before the compact tier below
+        // existed:
+        //
+        //     #collection-scroll   704.4 x 291.0      the viewport
+        //     tile 0 :             340.2 x 477.0      TALLER than the viewport, half its width
+        //     tiles per row: 1     #collection-grid resolved to 133480dp tall
+        //
+        // One card per row and a grid 325 screens long, which is exactly Sam's report: "there's one
+        // row of cards and then it's just the background". The tier table was authored when an
+        // authored px was an arbitrary unit; since 99b179b1 it is one Android dp, so 340 means
+        // 340dp and a phone has 291dp of viewport to put it in. The table never moved with the
+        // unit.
         public const float TileWidth = 340f;
         public const float TileHeight = 477f;
 
@@ -57,6 +72,19 @@ namespace Emberfall.Presentation
         private const int TargetVisibleRows = 2;
 
         private const float VerticalTileMargin = 8f;
+
+        /// <summary>The COMPACT floor is derived from the viewport rather than tabulated, because a
+        /// fourth magic pair would have gone stale the same way the other three did. Height is
+        /// solved for <see cref="TargetVisibleRows"/> and then quantised to this step, which is what
+        /// keeps the bake count bounded — the whole reason the larger tiers are discrete. A phone
+        /// resizing between 128 and 144 rebakes once, not on every pixel.</summary>
+        private const float TileQuantum = 16f;
+
+        /// <summary>Legibility floor for the derived tier. At the phone's 2.625x scale a 96dp tile
+        /// is 252 device px, against the 265px collection tile EF-050's acuity margin was measured
+        /// on — so this is about where a card face stops being readable, and the wall would rather
+        /// show fewer rows than unreadable ones.</summary>
+        private const float MinTileHeight = 96f;
 
         // Pointer movement beyond this distance (in panel pixels) is treated as a scroll gesture,
         // not a tap. Keeps PointerUp from firing TileClicked after the player drags to scroll.
@@ -354,8 +382,20 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            tileWidth = TileWidth;
-            tileHeight = TileHeight;
+            if (TierFits(availableWidth, viewportHeight, TileWidth, TileHeight))
+            {
+                tileWidth = TileWidth;
+                tileHeight = TileHeight;
+                return;
+            }
+
+            // COMPACT: derived, not tabulated. Solve the height that puts TargetVisibleRows in the
+            // viewport, quantise it so the bake count stays bounded, and take the width from the
+            // fixed tiers' own aspect so a card keeps its proportions across every tier.
+            float solved = viewportHeight / TargetVisibleRows - VerticalTileMargin;
+            solved = Mathf.Floor(solved / TileQuantum) * TileQuantum;
+            tileHeight = Mathf.Max(solved, MinTileHeight);
+            tileWidth = Mathf.Round(tileHeight * (TileWidth / TileHeight));
         }
 
         private static bool TierFits(float availableWidth, float viewportHeight, float width, float height)
