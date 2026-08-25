@@ -734,7 +734,8 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Create the character from the two picks and the confirmed name, then return to the roster.
+        /// Create the character from the two picks and the confirmed name, then go STRAIGHT INTO
+        /// THE DECK BUILDER on a new blank deck.
         ///
         /// <para><b>The name carries VULN-002's validation with it.</b> <see cref="PlayerName.Check"/>
         /// is the same predicate the server's <c>MatchGate</c> enforces on the wire, so this reuses
@@ -743,8 +744,13 @@ namespace Emberfall.Presentation
         /// which is why the field lives here at the one moment the character is constructed rather
         /// than as a deferred rename surface.</para>
         ///
-        /// <para><b>No deck.</b> The character lands as a lone "+" row; the first deck is chosen from
-        /// there (Sam, NOR-278).</para>
+        /// <para><b>A deck, and no stop at the roster</b> (#204). This used to land the character as
+        /// a lone "+" row and return here, so creating one meant scrolling back through the roster to
+        /// find it and entering the deck builder by hand — "it's assumed that you would like to enter
+        /// the deck" (Sam). It now mints a blank deck, sets it as the default, and hands off through
+        /// <see cref="OpenDeckForEdit"/>, which parks CharacterRoster as the return scene so Back
+        /// still comes here. <c>CreateCharacterWithoutDeck</c> keeps its name because the account API
+        /// still constructs the two separately; only this flow joins them.</para>
         /// </summary>
         private void CommitCreate()
         {
