@@ -601,8 +601,14 @@ namespace Emberfall.Presentation
         // leave the other chip's highlight stale.
         private void StampClassSelection()
         {
+            bool constrained = _selectedClasses.Count > 0;
             foreach (var pair in _classTabs)
-                pair.Value.EnableInClassList("class-tab_art--on", _selectedClasses.Contains(pair.Key));
+            {
+                bool selected = _selectedClasses.Contains(pair.Key);
+                bool available = _availableClasses.Contains(pair.Key);
+                pair.Value.EnableInClassList("class-tab_art--on", selected);
+                pair.Value.EnableInClassList("class-tab_art--muted", constrained && available && !selected);
+            }
 
             if (!EditingDeck) return;
             _filterPrimaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_character.PrimaryClass));

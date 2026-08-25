@@ -24,8 +24,7 @@ namespace Emberfall.Presentation
     /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
     /// asked once here — <b>once</b> being the whole of it: a display name is permanent (NOR-287), so the
     /// nameplate top-left only reports it and the client carries no rename flow at all.
-    /// Character creation lives on the roster screen, never on this menu. Everything
-    /// is local: no display name travels the wire yet, so the opponent still sees a seat id.</para>
+    /// Character creation lives on the roster screen, never on this menu.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MainMenuScreen.uxml and whose Panel Settings is MainMenuPanelSettings.

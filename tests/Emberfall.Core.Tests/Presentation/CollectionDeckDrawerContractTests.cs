@@ -171,6 +171,40 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
+        public void Collection_class_tabs_mark_selection_with_an_inset_frame_without_moving()
+        {
+            string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
+            string styles = Asset("UI", "Collection", "collection.uss");
+            string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+            XDocument document = XDocument.Parse(uxml);
+            XElement[] tabs = document.Descendants()
+                .Where(element => ((string?)element.Attribute("class"))?.Split(' ')
+                    .Contains("class-tab_art") == true)
+                .ToArray();
+            Match selected = Regex.Match(styles,
+                @"(?s)\.class-tab_art--on\s*>\s*\.class-tab-frame\s*\{(?<body>.*?)\}");
+            Match frame = Regex.Match(styles, @"(?s)\.class-tab-frame\s*\{(?<body>.*?)\}");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tabs, Has.Length.EqualTo(9));
+                Assert.That(tabs.All(tab => tab.Elements().Count(element =>
+                    ((string?)element.Attribute("class"))?.Split(' ')
+                        .Contains("class-tab-frame") == true
+                    && (string?)element.Attribute("picking-mode") == "Ignore") == 1), Is.True);
+                Assert.That(frame.Success, Is.True);
+                Assert.That(frame.Groups["body"].Value, Does.Contain("position: absolute"));
+                Assert.That(frame.Groups["body"].Value, Does.Contain("left: 5px"));
+                Assert.That(frame.Groups["body"].Value, Does.Contain("right: 5px"));
+                Assert.That(selected.Groups["body"].Value, Does.Contain("opacity: 1"));
+                Assert.That(styles, Does.Not.Match(@"(?s)\.class-tab_art--on\s*\{.*?translate:"));
+                Assert.That(controller, Does.Contain("bool constrained = _selectedClasses.Count > 0;"));
+                Assert.That(controller, Does.Contain(
+                    "EnableInClassList(\"class-tab_art--muted\", constrained && available && !selected);"));
+            });
+        }
+
+        [Test]
         public void Collection_wall_uses_art_first_responsive_tiers_instead_of_screen_pixel_density()
         {
             string sharedStyles = Asset("UI", "Deckbuilder", "deckbuilder.uss");

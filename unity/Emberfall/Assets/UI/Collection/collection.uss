@@ -513,16 +513,39 @@
  * eight lit tabs, so the art is also tinted toward the surface it sits on; the neutral tab paints a
  * flat colour rather than an image and takes the opacity half only.
  *
- * --on answers "is this tab filtering the wall", and slides the tab out toward the wall it is
- * narrowing. Nothing selected means unconstrained, so the resting strip carries no --on at all and
- * an unselected tab needs no treatment of its own to be distinguishable from a selected one. */
+ * --on answers "is this tab filtering the wall" with a frame drawn inside the portrait. It never
+ * changes the tab's geometry or overlaps its neighbours. Once any class is selected, --muted quiets
+ * the other available portraits; with no selection they all remain vivid because the wall is
+ * unconstrained and every available class is included. */
 .class-tab_art {
-    transition-property: translate, opacity, -unity-background-image-tint-color;
+    transition-property: opacity, -unity-background-image-tint-color;
     transition-duration: 0.16s;
     transition-timing-function: ease-out;
 }
-.class-tab_art--on {
-    translate: 10px 0;
+.class-tab-frame {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    right: 5px;
+    bottom: 5px;
+    border-left-width: 3px;
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-color: var(--accent);
+    border-radius: 22px 0 0 22px;
+    background-color: rgba(240, 166, 60, 0.08);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.16s;
+    transition-timing-function: ease-out;
+}
+.class-tab_art--on > .class-tab-frame {
+    opacity: 1;
+}
+.class-tab_art--muted {
+    opacity: 0.6;
+    -unity-background-image-tint-color: rgb(158, 164, 177);
 }
 .class-tab_art--off {
     opacity: 0.3;
