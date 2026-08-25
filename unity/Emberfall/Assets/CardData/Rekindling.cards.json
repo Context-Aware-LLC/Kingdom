@@ -3438,12 +3438,12 @@
     "type": "SPELL",
     "cost": 1,
     "class": "TEMPEST",
-    "rarity": "COMMON",
+    "rarity": "EPIC",
     "keywords": [],
     "setId": "REKINDLING",
     "collectible": true,
     "artId": "storm_overcharge",
-    "text": "Backdraft 3.",
+    "text": "Backdraft 2, gain 3 Mana Crystals this turn only and draw a card.",
     "rules": [
       {
         "id": "rule_1",
@@ -3459,7 +3459,42 @@
         },
         "action": {
           "type": "BACKDRAFT",
-          "amount": 3
+          "amount": 2
+        }
+      },
+      {
+        "id": "rule_2",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "GAIN_MANA",
+          "amount": 3,
+          "manaKind": "TEMPORARY"
+        }
+      },
+      {
+        "id": "rule_3",
+        "activation": {
+          "type": "TRIGGERED",
+          "trigger": "ON_CAST"
+        },
+        "condition": {
+          "type": "ALWAYS"
+        },
+        "lifetime": {
+          "type": "ONE_SHOT"
+        },
+        "action": {
+          "type": "DRAW",
+          "count": 1
         }
       }
     ]

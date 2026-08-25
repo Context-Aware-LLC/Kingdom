@@ -3249,7 +3249,7 @@
       "health": 3,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "RARE",
+      "rarity": "COMMON",
       "keywords": [
         "DOUBLESTRIKE"
       ],
@@ -3349,7 +3349,7 @@
       "health": null,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "EPIC",
+      "rarity": "RARE",
       "keywords": [],
       "selectors": [
         "ANY_ENEMY"
@@ -5992,7 +5992,7 @@
       "health": null,
       "durability": null,
       "class": "TEMPEST",
-      "rarity": "COMMON",
+      "rarity": "EPIC",
       "keywords": [],
       "selectors": [],
       "tribe": null,
