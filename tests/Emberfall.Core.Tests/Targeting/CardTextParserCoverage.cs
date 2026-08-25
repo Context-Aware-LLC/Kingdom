@@ -41,12 +41,23 @@ namespace Emberfall.Core.Tests.Targeting
     [TestFixture]
     public sealed class CardTextParserCoverage
     {
-        /// <summary>
-        /// The floor coverage must not fall below. <b>Raise this when the parser improves; never
-        /// lower it to make a run pass.</b> A drop means a card that used to derive no longer does,
-        /// which is a regression whatever the new number is.
-        /// </summary>
-        private const int MinimumCardsDerived = 201;
+        // RETIRED 2026-08-25: `private const int MinimumCardsDerived`.
+        //
+        // It was a count floor — raise it as the parser improves, never lower it — and it was the
+        // right guard while coverage was PARTIAL. It stopped being right the moment coverage went
+        // total, because the number it guards is a COUNT OF CARDS and the corpus is content: the
+        // Clockwright draw pass turned two cards into vanillas, rule-carrying cards fell 201 -> 198,
+        // and the floor failed a run in which the parser had not regressed by one card.
+        //
+        // The invariant below is what the floor was approximating and is strictly stronger: the
+        // parser refuses NOTHING. A real regression still fails it — a card the parser can no longer
+        // read lands in `refused` — while a card losing its rules to a balance edit changes the
+        // denominator and nothing else. No number to keep in sync, and nothing that can be quietly
+        // lowered to make a run pass, which is the failure the old comment was written to prevent.
+        //
+        // RETIREMENT TRIGGER for the replacement: the first card the parser is ALLOWED to refuse.
+        // If a shape is ever deliberately left unparsable, this assertion is what says so out loud —
+        // do not weaken it to an allowlist without recording why here.
 
         [Test]
         public void Every_card_the_parser_accepts_round_trips_exactly()
@@ -97,9 +108,11 @@ namespace Emberfall.Core.Tests.Targeting
             Assert.That(wrong, Is.Empty,
                 "a card was DERIVED WRONG. Refusing to parse is always acceptable; deriving rules " +
                 "that do not say what the card says is the one outcome this work must never ship.");
-            Assert.That(derived.Count, Is.GreaterThanOrEqualTo(MinimumCardsDerived),
-                $"parser coverage fell to {derived.Count}/{cards.Count}; the floor is {MinimumCardsDerived}. " +
-                "A drop means a card that used to derive no longer does.");
+            Assert.That(refused, Is.Empty,
+                $"the parser refused {refused.Count} of {cards.Count} rule-carrying cards. Coverage " +
+                "has been total since 2026-08-25, so a refusal is a REGRESSION, not a backlog item — " +
+                "either a card was authored in a shape the grammar does not cover, or a change to " +
+                "the renderer moved a sentence the parser was reading. The reasons are printed above.");
         }
 
         /// <summary>

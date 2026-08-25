@@ -36,12 +36,12 @@
       "DOUBLESTRIKE": 10,
       "VENOM": 10,
       "AEGIS": 9,
-      "OVERWHELM": 8,
+      "OVERWHELM": 9,
       "REKINDLE": 8,
+      "VANGUARD": 7,
       "ARCANE_SURGE": 6,
       "FERVOR": 6,
       "LIFEDRAIN": 6,
-      "VANGUARD": 6,
       "FROST": 3
     },
     "selectorFrequency": {
@@ -62,8 +62,8 @@
       "3": 71,
       "4": 51,
       "5": 23,
-      "6": 21,
-      "7": 14,
+      "6": 20,
+      "7": 15,
       "8": 4,
       "9": 1
     },
@@ -74,7 +74,7 @@
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
-      "CONSTRUCT": 42,
+      "CONSTRUCT": 43,
       "BEAST": 24,
       "UNDEAD": 21,
       "ELEMENTAL": 19,
@@ -95,8 +95,8 @@
       "10": 1
     },
     "healthDistribution": {
-      "1": 24,
-      "2": 35,
+      "1": 23,
+      "2": 36,
       "3": 30,
       "4": 38,
       "5": 28,
@@ -119,9 +119,10 @@
       "keywordFrequency": {
         "BULWARK": 3,
         "SKIRMISH": 2,
+        "VANGUARD": 2,
         "AEGIS": 1,
         "FROST": 1,
-        "VANGUARD": 1
+        "OVERWHELM": 1
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 9,
@@ -136,8 +137,7 @@
         "3": 9,
         "4": 7,
         "5": 2,
-        "6": 1,
-        "7": 1,
+        "7": 2,
         "8": 2
       },
       "rarityBreakdown": {
@@ -147,7 +147,7 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 18
+        "CONSTRUCT": 19
       },
       "minionCount": 20,
       "attackDistribution": {
@@ -159,8 +159,8 @@
         "6": 2
       },
       "healthDistribution": {
-        "1": 2,
-        "2": 3,
+        "1": 1,
+        "2": 4,
         "3": 5,
         "4": 6,
         "6": 2,
@@ -2297,7 +2297,7 @@
       "type": "MINION",
       "cost": 1,
       "attack": 1,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "COMMON",
@@ -2536,7 +2536,9 @@
       "class": "CLOCKWRIGHT",
       "rarity": "LEGENDARY",
       "keywords": [
-        "AEGIS"
+        "AEGIS",
+        "VANGUARD",
+        "OVERWHELM"
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
@@ -5263,7 +5265,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "clock_blueprint_archive",
@@ -5353,7 +5355,7 @@
       "id": 1158,
       "name": "Masterwork Constructor",
       "type": "MINION",
-      "cost": 6,
+      "cost": 7,
       "attack": 4,
       "health": 4,
       "durability": null,
