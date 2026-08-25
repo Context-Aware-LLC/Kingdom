@@ -88,7 +88,8 @@ namespace Emberfall.Presentation
         // block Unity physics, so while a UI surface owns input we suppress board gestures here —
         // otherwise a press passes through the scrim to the cards behind it.
         public System.Func<bool> UiBlocksInput;
-        private bool UiBlocked => UiBlocksInput != null && UiBlocksInput();
+        private bool ChoiceBlocksInput => _currentState?.PendingChoice != null;
+        public bool BlocksInput => ChoiceBlocksInput || (UiBlocksInput != null && UiBlocksInput());
 
         // EDITOR/TEST ONLY: injectable probe for headless verification. Overrides raycast behavior.
         public System.Func<Vector2, (PointerSubject subject, Transform hitTransform, CardPresenter presenter)> InjectableProbe;
@@ -159,6 +160,12 @@ namespace Emberfall.Presentation
             if (!IsMulliganActive() && _mulliganToss.Count > 0)
                 ResetMulliganSelection(clearMarks: true);
 
+            if (ChoiceBlocksInput && _gesture != Gesture.None)
+            {
+                CancelGesture();
+                return;
+            }
+
             if (_gesture != Gesture.None && state != null && state.ActivePlayer != _p0Id)
             {
                 CancelGesture();
@@ -179,7 +186,7 @@ namespace Emberfall.Presentation
             // makes it miss the transition it exists to report.
             PointerSample p = _pointer.Sample();
 
-            if (UiBlocked)
+            if (BlocksInput)
             {
                 if (_gesture != Gesture.None) CancelGesture();
                 _pointer.Reset();   // a press that began under the UI must not arm when it lifts
@@ -662,6 +669,18 @@ namespace Emberfall.Presentation
             Submit(new MulliganIntent(_p0Id, toss));
         }
 
+        /// <summary>
+        /// Called only by <see cref="UnearthChoiceView"/>. Rechecks the current snapshot so a
+        /// delayed click cannot answer a replacement offer, then echoes the authoritative sequence
+        /// unchanged through the ordinary submit pipe.
+        /// </summary>
+        public void OnUnearthChoiceClicked(int chosenCardId, ulong choiceSequence)
+        {
+            UnearthChoiceIntent intent = UnearthChoiceModel.IntentForSelection(
+                _currentState, _p0Id, chosenCardId, choiceSequence);
+            if (intent != null) Submit(intent);
+        }
+
         private void ResetMulliganSelection(bool clearMarks)
         {
             if (clearMarks)
@@ -742,6 +761,10 @@ namespace Emberfall.Presentation
         // OnRejected path a server reject would take.
         private void Submit(PlayerIntent intent)
         {
+            // A pending interactive choice is the sole legal gameplay continuation. Keep all
+            // board/button/keyboard paths quiet rather than manufacturing predictable reject toasts.
+            if (ChoiceBlocksInput && intent is not UnearthChoiceIntent) return;
+
             if (_validator != null && _currentState != null
                 && !_validator.CanExecute(_currentState, intent, out RejectReason? reason))
             {

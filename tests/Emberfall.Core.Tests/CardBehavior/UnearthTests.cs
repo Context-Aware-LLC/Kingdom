@@ -19,6 +19,22 @@ namespace Emberfall.Core.Tests.CardBehavior
         private static readonly PlayerId P1 = new PlayerId("P1");
 
         [Test]
+        public void Gear_Cache_Is_The_First_Shipped_Unearth_Card()
+        {
+            CardDefinition gearCache = ShippedCards.Db.Get(ShippedCards.Id("clock_gear_cache"));
+            RuleDefinition rule = gearCache.Rules.Single();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(gearCache.Text, Is.EqualTo("Unearth 3."));
+                Assert.That(rule.Activation, Is.TypeOf<TriggeredActivation>());
+                Assert.That(((TriggeredActivation)rule.Activation).Trigger, Is.EqualTo(Trigger.ON_CAST));
+                Assert.That(rule.Action, Is.TypeOf<UnearthAction>());
+                Assert.That(((UnearthAction)rule.Action).Count, Is.EqualTo(3));
+            });
+        }
+
+        [Test]
         public void Offer_Uses_Canonical_Eligible_Pool_And_Preserves_Rng_Order()
         {
             CardDefinition a = Card(FixtureCard.Id("a"));

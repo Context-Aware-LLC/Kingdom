@@ -176,6 +176,41 @@ namespace Emberfall.Net.Server.Tests
         }
 
         [Test]
+        public void Turn_Timeout_AutoConfirms_A_Pending_Choice_For_Its_Chooser()
+        {
+            var h = new SessionHarness();
+            h.ConfirmMulligans();
+            GameState state = h.Session.Host.State;
+            PlayerId active = state.ActivePlayer;
+            int chooserSeat = 1 - state.SeatOf(active);
+            PlayerId chooser = state.Players[chooserSeat].Id;
+            int option = state.Players[chooserSeat].Deck[0].DefinitionId;
+            int handBefore = state.Players[chooserSeat].Hand.Count;
+            state.PendingChoice = new PendingChoice
+            {
+                Chooser = chooser,
+                Kind = PendingChoiceKind.Unearth,
+                Source = state.Players[chooserSeat].Hero.Id,
+                ChoiceSequence = 702,
+                Options = { option },
+            };
+
+            h.AdvanceAndTick(h.Options.TurnMs + 1);
+
+            Assert.That(state.PendingChoice, Is.Null,
+                "the expired turn clock must resolve the choice instead of repeatedly rejecting EndTurn");
+            Assert.That(state.Players[chooserSeat].Hand.Count, Is.EqualTo(handBefore + 1));
+            Assert.That(state.Players[chooserSeat].Hand[handBefore].DefinitionId, Is.EqualTo(option),
+                "Unearth auto-confirm deterministically takes Options[0]");
+            Assert.That(state.ActivePlayer, Is.EqualTo(active),
+                "resolving the choice is the deadline's continuation; the next clock tick may end the turn");
+
+            var intents = h.Replay.Matches[h.Id.Value].Intents;
+            Assert.That(intents[intents.Count - 1], Is.EqualTo(new AutoConfirmIntent(chooser)),
+                "the timer must submit for PendingChoice.Chooser, which need not be ActivePlayer");
+        }
+
+        [Test]
         public void Two_Consecutive_Auto_Turns_Idle_Forfeit_The_Seat()
         {
             var h = new SessionHarness();

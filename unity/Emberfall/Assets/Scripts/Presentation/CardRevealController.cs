@@ -172,12 +172,10 @@ namespace Emberfall.Presentation
             if (_lifted != null) _lifted.SetLift(true);
         }
 
-        // Borrowed from InputRouter rather than wired separately. UI Toolkit does not block Unity
-        // physics, so while a modal surface owns input the board's colliders are still live and a
-        // reveal would open behind the scrim. Reading the router's own delegate means the two
-        // bootstraps that already set it get this for free — a third wiring site is a third thing
-        // to forget, and forgetting it fails silently.
-        private bool Blocked()
-            => _router != null && _router.UiBlocksInput != null && _router.UiBlocksInput();
+        // Borrowed from InputRouter rather than wired separately. UI Toolkit and the world-space
+        // Unearth surface do not block Unity physics, so while either modal owns input the board's
+        // colliders remain live. Reading the router's combined gate keeps gestures and reveals on
+        // one modal truth instead of creating a third wiring site that can silently drift.
+        private bool Blocked() => _router != null && _router.BlocksInput;
     }
 }

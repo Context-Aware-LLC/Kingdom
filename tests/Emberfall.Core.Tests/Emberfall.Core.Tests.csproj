@@ -43,6 +43,10 @@
              Link="Presentation\BoardRowGeometry.cs" />
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\OngoingEffectStatusModel.cs"
              Link="Presentation\OngoingEffectStatusModel.cs" />
+    <!-- Unearth snapshot interpretation is Unity-free so reconnect/redaction/order behavior can
+         be proved without taking the machine-wide Unity Editor seat. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\UnearthChoiceModel.cs"
+             Link="Presentation\UnearthChoiceModel.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Editor\EditableCard.cs"
              Link="Editor\EditableCard.cs" />
