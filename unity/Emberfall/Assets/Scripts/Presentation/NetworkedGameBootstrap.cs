@@ -461,6 +461,19 @@ namespace Emberfall.Presentation
                 mulligan.OnStateUpdated(_view.Current);
             }
 
+            // ── Unearth choice (snapshot truth, reconnect-safe) ──────────────────────
+            // Definition ids render through the board's detached real-card face. The viewer-safe
+            // model preserves chooser order/sequence and turns the opponent projection into a
+            // count-free passive state. InputRouter independently gates every non-choice intent.
+            if (inputRouter != null && boardController != null)
+            {
+                var unearthGo = new GameObject("UnearthChoice");
+                var unearth = unearthGo.AddComponent<UnearthChoiceView>();
+                unearth.Init(localId, inputRouter, db, boardController, artProvider);
+                _view.OnSnapshot += unearth.OnStateUpdated;
+                unearth.OnStateUpdated(_view.Current);
+            }
+
             // ── Settings overlay + concede (C-G1-3 / decision 23 §5) ──────────────
             // UI Toolkit meta-surface over the world-space board: a corner button opening a modal
             // whose confirm forwards to InputRouter.OnConcedeClicked. Assets load from Resources so

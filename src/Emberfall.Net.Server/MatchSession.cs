@@ -529,12 +529,24 @@ namespace Emberfall.Net.Server
                 }
                 if (now >= tdl)
                 {
-                    var active = _host.State.ActivePlayer;
-                    int activeSeat = _host.State.SeatOf(active);
-                    SubmitToCore(new EndTurnIntent(active), SubmitCause.Clock, activeSeat);
+                    PlayerId timedPlayer;
+                    PlayerIntent timeoutIntent;
+                    if (_host.State.PendingChoice is PendingChoice pending)
+                    {
+                        timedPlayer = pending.Chooser;
+                        timeoutIntent = new AutoConfirmIntent(timedPlayer);
+                    }
+                    else
+                    {
+                        timedPlayer = _host.State.ActivePlayer;
+                        timeoutIntent = new EndTurnIntent(timedPlayer);
+                    }
+
+                    int timedSeat = _host.State.SeatOf(timedPlayer);
+                    SubmitToCore(timeoutIntent, SubmitCause.Clock, timedSeat);
                     if (Ended) return;
-                    if (_seats[activeSeat].ConsecutiveAutoTurns >= _opts.IdleForfeitAutoTurns)
-                        SubmitToCore(new ConcedeIntent(_seats[activeSeat].Player), SubmitCause.IdleForfeit, activeSeat);
+                    if (_seats[timedSeat].ConsecutiveAutoTurns >= _opts.IdleForfeitAutoTurns)
+                        SubmitToCore(new ConcedeIntent(_seats[timedSeat].Player), SubmitCause.IdleForfeit, timedSeat);
                 }
             }
         }
