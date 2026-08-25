@@ -22,7 +22,7 @@
             <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
-            <ui:Label name="version-label" text="M1 · vertical slice" class="mm-version"/>
+            <ui:Label name="version-label" text="—" class="mm-version"/>
         </ui:VisualElement>
         <ui:VisualElement name="name-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:ScrollView name="name-panel" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="mm-modal__panel">

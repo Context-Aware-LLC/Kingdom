@@ -91,6 +91,8 @@ namespace Emberfall.Presentation
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
 
+            BindBuildStamp();
+
             BindShardBalance();
             RefreshShardBalance();
 
@@ -231,6 +233,18 @@ namespace Emberfall.Presentation
         private void SetIdentity(string name)
         {
             if (_identityName != null) _identityName.text = name;
+        }
+
+        // ── Build stamp ────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// #195 — replace the hand-written "M1 · vertical slice" with the build a tester is
+        /// actually holding. The label's UXML text is now only what shows if this never runs.
+        /// </summary>
+        private void BindBuildStamp()
+        {
+            var label = _root.Q<Label>("version-label");
+            if (label != null) label.text = BuildStamp.Display;
         }
 
         // ── Shard balance ──────────────────────────────────────────────────────────────
