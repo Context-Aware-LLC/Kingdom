@@ -340,6 +340,38 @@ namespace Emberfall.Presentation
                 $"hand rules band bottom y {bandBottom:F4} > screen edge {-DesignHalfHeight:F2} "
                 + $"— readable at rest, {(bandBottom + DesignHalfHeight):F3} clear");
 
+            // 7c. THE BOARD ROW'S TWO CLEARANCES (#234). The card on the board grew by 1/0.9 and
+            //     spent the whole of the vertical slack between the centreline and the resting
+            //     hand. Nothing guarded that budget before, which is why the ticket costed only the
+            //     horizontal one and read the row as having 3.2 units to spare — it does, sideways.
+            //     These are the two edges the card actually stops against, and either one going
+            //     negative is invisible until a screenshot of a full board with taunts on it.
+            //
+            //     Assert, do not merely report: both were solved to a target here, so a later tune
+            //     of CardH, RowY or BulwarkRowOffset that eats one is a regression, not a choice.
+
+            // The lane at the centreline, where a bulwarked minion of each seat steps forward to
+            // meet the other. Both seats step, so the visible gap is twice this.
+            float bulwarkLane = ProceduralBoardSetup.RowY
+                                - BoardController.BulwarkRowOffset
+                                - BoardController.CardH * 0.5f;
+            ok &= Line(sb, bulwarkLane > 0.05f,
+                $"bulwark row inner edge |y| {bulwarkLane:F4} > 0.05 — two opposed taunt rows keep "
+                + $"a {2f * bulwarkLane:F3} lane at the centreline "
+                + $"(RowY {ProceduralBoardSetup.RowY:F2} - step {BoardController.BulwarkRowOffset:F2} "
+                + $"- CardH/2 {BoardController.CardH * 0.5f:F4})");
+
+            // The hand fan draws IN FRONT of the board row and tucks under it deliberately
+            // (HandFanLayout.CentreY). That is only safe while its top edge stops above the stat
+            // row — the lowest thing a minion carries and the one thing on it you must be able to
+            // read at a glance. Not "above the card's bottom edge": the overlap is the design.
+            float statRowY = ProceduralBoardSetup.RowY + BoardController.CardH * BoardController.StatRowFrac;
+            float handClear = -HandFanLayout.TopEdgeY - statRowY;
+            ok &= Line(sb, handClear > 0.05f,
+                $"hand top |y| {-HandFanLayout.TopEdgeY:F4} clears the board stat row at "
+                + $"{statRowY:F4} by {handClear:F4} — the fan overlaps the frame skirt and not the "
+                + $"attack/health digits");
+
             // 7b. The UI Toolkit insets (#237). The board camera has had a safe-area answer
             //     since EF-062 and the panels had none; this is that answer's arithmetic.
             //     Numbers are the Pixel 5a's, quoted from the SafeAreaCamera line on the

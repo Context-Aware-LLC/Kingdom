@@ -29,6 +29,7 @@ UNITY = REPO / "unity" / "Emberfall"
 SCRIPTS = UNITY / "Assets" / "Scripts" / "Presentation"
 SCENES = UNITY / "Assets" / "Scenes"
 ART = UNITY / "Assets" / "Art"
+SHADERS = UNITY / "Assets" / "Shaders"
 
 
 # ── constant extraction ──────────────────────────────────────────────────────────
@@ -91,6 +92,27 @@ def const(path: pathlib.Path, name: str, label: str | None = None,
                               f"{path.relative_to(REPO).as_posix()}:{i}"))
             return v
     raise Missing(f"const {name} not found in {path.relative_to(REPO)}")
+
+
+def shader_prop(path: pathlib.Path, name: str, label: str) -> float:
+    """Read a float default out of a .shader Properties block: `_Name ("Ui", Range(a,b)) = 0.47`.
+
+    Added by #234. The mana orb's diameter is `2 * _SocketRadius * RailH` and _SocketRadius lives
+    only in the shader, so a script that read RailH alone could report an orb size the shader does
+    not draw - which is exactly the mistake the ticket made from the other direction, by reading
+    the pitch instead. Both halves are parsed now, from the two files that own them.
+    """
+    pat = re.compile(r"^\s*(?:\[[^\]]*\]\s*)*" + re.escape(name)
+                     # GREEDY to the LAST ')': the ui block nests one, `("Socket Radius",
+                     # Range(0.1, 0.5))`, and a lazy or negated-class match stops inside Range().
+                     + r"\s*\(.*\)\s*=\s*(-?[\d.]+)\s*$")
+    for i, line in enumerate(_lines(path), 1):
+        m = pat.match(line)
+        if m:
+            v = float(m.group(1))
+            FOUND.append((label, f"{v:g}", f"{path.relative_to(REPO).as_posix()}:{i}"))
+            return v
+    raise Missing(f"shader property {name} not found in {path.relative_to(REPO)}")
 
 
 def yaml_scalar(path: pathlib.Path, key: str, label: str) -> float:
@@ -216,6 +238,12 @@ def main() -> int:
     mana_x = const(setup, "ManaRailX", "ProceduralBoardSetup.ManaRailX")
     baseline = const(setup, "Baseline", "ProceduralBoardSetup.Baseline")
     slot_gap = const(rowgeom, "SlotSpacing", "BoardRowGeometry.SlotSpacing")
+    row_y = const(setup, "RowY", "ProceduralBoardSetup.RowY")
+    bulwark_step = const(board, "BulwarkRowOffset", "BoardController.BulwarkRowOffset")
+    stat_frac = const(board, "StatRowFrac", "BoardController.StatRowFrac")
+    rail_h = const(mana, "RailH", "ManaTrayView.RailH")
+    socket_r = shader_prop(SHADERS / "SG_ManaFill.shader", "_SocketRadius",
+                           "SG_ManaFill._SocketRadius")
     slot_n = const(setup, "BoardSlotCount", "ProceduralBoardSetup.BoardSlotCount")
     plate_w = const(hero, "PlateW", "HeroPlateView.PlateW")
     pile_w = const(deck, "PileW", "DeckPileView.PileW")
@@ -257,6 +285,64 @@ def main() -> int:
     print(f"  DESIGN HALF-WIDTH        = {design_w:.4f} world units  ({elements[0][0]})")
     print(f"  MINIMUM SUPPORTED ASPECT = {design_w:.4f} / {design_h:.4f} = {min_aspect:.5f}")
     print(f"                             narrower than this and the hero plate leaves the screen.")
+    print()
+
+    # ── 2b. the vertical budget ───────────────────────────────────────
+    # Added by #234. §2 above is an x-budget, and for the board row it is the WRONG AXIS — the
+    # row reaches 4.50 of a 7.88 half-width and looks like it has 3.4 units to grow into. It has
+    # none: it is boxed between the centreline (where the opposing seat's taunt row steps forward
+    # to meet it) and the top of the resting hand fan. The ticket read §2, concluded "bigger board
+    # cards — free", and was wrong by the width of this section.
+    hand_h = card_h * rest_scale
+    hand_top = centre_y - hand_h / 2               # |y| of the resting fan's highest edge
+    row_outer = row_y + card_h / 2                 # |y| of the row's far edge
+    stat_row = row_y + card_h * stat_frac          # |y| of the attack/health digits
+    lane = row_y - bulwark_step - card_h / 2       # |y| of a taunt row's inner edge
+    hand_clear = hand_top - stat_row
+
+    print("== 2b. THE VERTICAL BUDGET — the axis the board row is actually boxed on " + "=" * 20)
+    print(f"  From the centreline to the top of the resting hand there are {hand_top:.4f} units,")
+    print(f"  and the board row has to fit inside them. Spent, from the centreline outward:")
+    print()
+    print(f"    {'centreline lane (taunt row inner edge)':<44} {lane:8.4f}")
+    print(f"    {'+ bulwark step toward the centreline':<44} {bulwark_step:8.4f}")
+    print(f"    {'+ card height':<44} {card_h:8.4f}")
+    print(f"    {'+ clearance to the hand fan':<44} "
+          f"{hand_top - row_outer:8.4f}")
+    print(f"    {'= top of the resting hand':<44} {hand_top:8.4f}")
+    print()
+    print(f"  Board row spans |y| {lane:.4f} (with a taunt) .. {row_outer:.4f}.")
+    print(f"  Hand card top |y| {hand_top:.4f}, board stat row |y| {stat_row:.4f}.")
+    print()
+    print(f"  THE TWO CLEARANCES THAT BIND, both asserted in DeviceLayout.SelfCheck:")
+    print(f"    centreline lane   {lane:.4f}  ({2*lane:.4f} visible, two seats step)"
+          f"{'   *** NEGATIVE ***' if lane <= 0 else ''}")
+    print(f"    hand vs stat row  {hand_clear:.4f}  (the fan draws IN FRONT and tucks under the")
+    print(f"                              frame skirt on purpose; it must stop above the digits)"
+          f"{'   *** NEGATIVE ***' if hand_clear <= 0 else ''}")
+    print()
+
+    # ── 2c. the mana orb ─────────────────────────────────────────────
+    # Also #234, and also a wrong-axis reading in the ticket: it divided RailW by ten and called
+    # the PITCH the orb. SG_ManaFill normalises its radii to the quad's HEIGHT (r = 0.5 touches
+    # the rail's top and bottom), so the drawn socket is 2 * _SocketRadius * RailH and the pitch
+    # only ever caps it.
+    orb_d = 2 * socket_r * rail_h
+    pitch = rail_w / 10
+    orb_gap = pitch - orb_d
+    rail_h_max = (rail_w / 20) / socket_r
+    print("== 2c. THE MANA ORB — sized by RAIL HEIGHT, capped by pitch " + "=" * 35)
+    print(f"  rail            {rail_w:.4f} x {rail_h:.4f}   pitch {pitch:.4f} (RailW / 10 sockets)")
+    print(f"  orb diameter    {orb_d:.4f}  = 2 x _SocketRadius {socket_r:g} x RailH {rail_h:g}")
+    print(f"  gap between     {orb_gap:.4f}"
+          f"{'   *** ORBS OVERLAP ***' if orb_gap <= 0 else ''}")
+    print(f"  RailH ceiling   {rail_h_max:.4f}  — above this the orbs touch and the rail reads")
+    print(f"                            as a solid bar. The orb is PITCH-limited, not height-")
+    print(f"                            limited: vertically there is room to the baseline at "
+          f"{baseline:g}.")
+    print(f"  Widening the rail is blocked on #235 — it owns x +2.5..+{mana_x + rail_w/2:.2f} between")
+    print(f"  the hand fan and the deck pile, whose outer edge is {deck_x + pile_w/2:.2f} against a "
+          f"{design_w:.2f} half-width.")
     print()
 
     # ── 3. backdrop coverage ────────────────────────────────────────────────────

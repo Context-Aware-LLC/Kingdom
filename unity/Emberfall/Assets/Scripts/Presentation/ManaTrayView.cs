@@ -23,7 +23,33 @@ namespace Emberfall.Presentation
     {
         // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 mana rail: 4.03 wide (x +2.5..+6.53) x 0.32 tall.
         private const float RailW = 4.03f;
-        private const float RailH = 0.32f;
+
+        // #234: THE ORB'S SIZE IS THIS NUMBER, NOT THE PITCH. SG_ManaFill normalises its radii to
+        // the quad's HEIGHT — `r = 0.5` touches the rail's top and bottom — so the drawn socket is
+        // `2 x _SocketRadius x RailH` = 0.94 x RailH and nothing else. The ticket read the orb off
+        // the pitch and called it 0.40 units / 2.9 mm; the orb was really 0.3008 units, 35.3 px,
+        // 2.16 mm on a 1080p phone. It was even smaller than the complaint said.
+        //
+        // 0.32 -> 0.36 takes the orb to 0.3384 units, 39.7 px, 2.43 mm. Vertically that is nearly
+        // free — the rail is centred at |y| 4.00 and the baseline it must not cross is 4.45, so
+        // there is room for RailH up to about 0.9 — but HORIZONTALLY it is nearly spent:
+        //
+        //   gap between adjacent orbs = RailW/10 - 2 * _SocketRadius * RailH = 0.4030 - 0.94 * RailH
+        //     RailH 0.32 (before)  ->  0.1022 units, 12.0 px
+        //     RailH 0.36 (now)     ->  0.0646 units,  7.6 px
+        //     RailH 0.4287         ->  0, the orbs touch and the rail reads as a solid bar
+        //
+        // SO THE ORB IS PITCH-LIMITED, NOT HEIGHT-LIMITED, AND #234's "nearly free" IS WRONG.
+        // Past this the rail has to WIDEN, and it cannot: it owns x +2.5..+6.53 between the hand
+        // fan and the deck pile, the deck pile's outer edge is 7.83 against a 7.88 design
+        // half-width, and the hand fan wants to spread the other way. Every one of those is the
+        // same shared budget. Widening it is #235's decision (the minimum supported aspect), not a
+        // tuning call here.
+        //
+        // RETIREMENT TRIGGER: if #235 raises the minimum aspect or moves the deck pile outward,
+        // re-derive this against the new RailW — the gap arithmetic above is the whole constraint
+        // and it is written down nowhere else.
+        private const float RailH = 0.36f;
 
         private static readonly int FillLevelId   = Shader.PropertyToID("_FillLevel");
         private static readonly int SpentLevelId  = Shader.PropertyToID("_SpentLevel");
@@ -49,8 +75,9 @@ namespace Emberfall.Presentation
             // Tray quad — the full mana rail of hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1: 4.03 wide, spanning
             // x +2.5..+6.53. SG_ManaFill derives all ten orbs procedurally from UV.x, so
             // the rail needs no per-orb GameObjects: at this width the pitch falls out at
-            // 0.403 and each orb at ~0.32Ø, which is §1.1's "0.4 pitch, ~0.32Ø". The shader
-            // circularises against the quad's own scale, so the orbs survive a resize.
+            // 0.403, and the orb's diameter is 0.94 x RailH — §1.1's "0.4 pitch, ~0.32Ø" was
+            // that pairing at the original RailH 0.32. The shader circularises against the
+            // quad's own scale, so the orbs survive a resize.
             // Widening this is a shared budget with the hand fan — see §1.1 before changing it.
             var quadGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             quadGo.name = "ManaTrayQuad";

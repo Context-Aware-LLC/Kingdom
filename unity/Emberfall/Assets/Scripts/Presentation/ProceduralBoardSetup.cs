@@ -14,7 +14,7 @@ namespace Emberfall.Presentation
     // each element's own width, and the y column is §1.3 — the vertical §1.1 never wrote.
     //
     // Layout (orthographic camera size 4.6, so the screen edges are y ±4.6, world units):
-    //   Board rows:  y = ±1.3   (7 slots, x = -4.05..+4.05 at 1.35 spacing) — outside §1.1
+    //   Board rows:  y = ±1.39  (7 slots, x = -4.50..+4.50 at 1.50 spacing) — outside §1.1
     //   Hand rows:   fanned by HandFanLayout — fixed 5-unit footprint, count-dependent pitch
     //   The hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
     //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). P0 signs are (-1,-1), so
@@ -31,7 +31,26 @@ namespace Emberfall.Presentation
         // a build with no Unity assemblies in it, which is why that file cannot be this one.
 
         // |y| of a board row.
-        private const float RowY           = 1.3f;
+        //
+        // MOVED OUTWARD 1.30 -> 1.39 BY #234, and it had to move: the card grew by 1/0.9 about this
+        // centre, so holding 1.30 would have pushed a bulwarked minion (which steps 0.40 further in)
+        // 0.04 ACROSS the centreline and into the opposing seat's front row. The row sits between
+        // two clearances and this is the value that balances them:
+        //
+        //   centreline lane   RowY - BulwarkRowOffset - CardH/2      = 0.073   (two opposed
+        //                                                                       bulwark rows meet)
+        //   hand clearance    |TopEdgeY| - RowY - 0.42 * CardH       = 0.152   (the fan draws IN
+        //                                                                       FRONT of the row,
+        //                                                                       so what matters is
+        //                                                                       that it does not
+        //                                                                       cover the stat
+        //                                                                       bosses at 0.42H)
+        //
+        // Both are asserted in DeviceLayout.SelfCheck. Before #234 they were 0.075 and 0.319; the
+        // card spent the slack in the second, which is the one with room, and left the first alone.
+        // Internal, not private: DeviceLayout.SelfCheck asserts both clearances above, the same
+        // reason HeroX and DeckX below are internal.
+        internal const float RowY          = 1.39f;
 
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;
@@ -75,8 +94,9 @@ namespace Emberfall.Presentation
         private const float ManaRailY  = 4.00f;  // aligned to the hero-power disc, not the
                                                  // baseline: the two read as one bottom line
         private const float DeckY      = 3.53f;  // a 1.3-wide card-proportioned pile (1.83
-                                                 // tall) on the baseline; nothing renders
-                                                 // here yet — DeckAnchor is the draw source
+                                                 // tall) on the baseline. DeckPileView renders
+                                                 // here — NetworkedGameBootstrap builds one per
+                                                 // seat — and DeckAnchor is the draw source
 
         private void Awake()
         {

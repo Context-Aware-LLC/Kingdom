@@ -20,11 +20,50 @@ namespace Emberfall.Presentation
         // Runtime card visual dimensions (world units). Internal, not private: HandFanLayout
         // derives the fan pitch from CardW, and a second copy of this number has already gone
         // stale once (the §1.1 pitch table was written against an assumed 1.3 × 1.8).
-        internal const float CardW = 1.17f;
-        internal const float CardH = 1.65f;
+        //
+        // #234: THE BOARD CARD GREW BY 1/0.9 AND THE HAND DID NOT MOVE AT ALL.
+        //
+        // Sam, 2026-08-21: "the ones on the board are not big enough". They were 137.3 x 193.7 px
+        // on a 1080p phone — 52% of the 265 px collection tile EF-050's acuity margin was measured
+        // against — while a card in hand was 1.44x that. The complaint is about the BOARD end of
+        // that ratio, so the ratio is what moved: 1.17/0.9 = 1.30 and 1.65/0.9 = 1.8333, with
+        // HandFanLayout.RestScale falling 1.44 -> 1.296 (= 1.44 x 0.9) to hold HandCardW/H at
+        // 1.6848 x 2.3760, the exact values they had before. A card in hand is unchanged to five
+        // decimal places, so EF-062 §5, the CentreY solve, TopEdgeY, MaxPitch, Sag and
+        // DeviceLayout's band-clearance assertion are all untouched by this — deliberately, because
+        // that solve is the hand's whole legibility budget and re-opening it was not the ask.
+        //
+        // 1/0.9 AND NOT MORE, because the constraint is VERTICAL and the ticket only costed the
+        // horizontal one. The row reaches |x| 5.15 of a 7.88 budget, so width was never the limit.
+        // Between the centreline and the top of the resting hand there are 2.312 units, and they
+        // hold the card (1.8333), the bulwark step (0.40), a lane at the centreline where two
+        // opposed bulwark rows meet (0.073) and the clearance that keeps the fan off your own
+        // minions' stat bosses (0.152). That sums to 2.312 with nothing left. Growing further means
+        // spending one of those three, and all three are load-bearing — see the pair of assertions
+        // in DeviceLayout.SelfCheck, which fail if a later tune eats either clearance.
+        //
+        // RETIREMENT TRIGGER: these two and RestScale are one number in two places now. Moving
+        // either without the compensating move on the other resizes the card in hand and silently
+        // invalidates EF-062 §5/§6 — re-run `python tooling/scripts/device_layout.py` in the same
+        // commit and read §5, and re-solve HandFanLayout.CentreY if the hand card's height moved.
+        internal const float CardW = 1.30f;     // 1.17 / 0.9
+        internal const float CardH = 1.8333f;   // 1.65 / 0.9; keeps the 1.17:1.65 frame aspect
 
-        // How far a bulwarked minion steps out of its row toward the centerline.
-        private const float BulwarkRowOffset = 0.40f;
+        // How far a bulwarked minion steps out of its row toward the centerline. NOT scaled with
+        // the card by #234: this is the whole of the Taunt front-row visual language, it is already
+        // only 22% of the card's height, and the centreline lane it steps into is the tightest
+        // clearance on the board. Held at 0.40 and the card grew around it.
+        // Internal, not private: DeviceLayout.SelfCheck asserts the lane this leaves at the
+        // centreline, the same reason ProceduralBoardSetup.HeroX and DeckX are internal.
+        internal const float BulwarkRowOffset = 0.40f;
+
+        // WHERE THE STAT ROW SITS, as a fraction of CardH below the card's centre. The lowest thing
+        // a minion carries, so it is the line the hand fan must not cover — the fan draws in FRONT
+        // of the board row and tucks under it on purpose (see HandFanLayout.CentreY), which is only
+        // safe while it stops above this. Hoisted out of the four call sites below by #234 so
+        // DeviceLayout.SelfCheck can assert against the number the layout actually uses rather than
+        // a copy of it.
+        internal const float StatRowFrac = 0.42f;
 
         // Hand cards draw above board content and below the match-end banner (sortingOrder 100).
         // Order within the hand is the slot index, so the fan layers left-to-right and the
@@ -652,7 +691,7 @@ namespace Emberfall.Presentation
             // fallback for a card with no painted frame; ApplyFrame overrides both the moment
             // one resolves.
             var gemRenderer = MakeSprite(root.transform, "Gem",
-                new Vector3(0f, -CardH * 0.42f, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
+                new Vector3(0f, -CardH * StatRowFrac, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
 
             // Socket housings — the three digit bosses and the gem bezel, composited OVER the
             // frame rather than painted into it (2026-08-19). That is what lets one frame serve
@@ -697,15 +736,15 @@ namespace Emberfall.Presentation
             TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 3.0f, Color.white);
             // Cost — top-left boss. White + rim per §3.1; the blue recolor is a pending
             // nudge-list item, deliberately not applied yet.
-            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
+            TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  StatRowFrac, -0.01f), 3.75f, Color.white, statOutline: true);
             // Stat digits are white with a black rim (§3.1) — the rim is what keeps them
             // legible on any frame's boss art, any rarity.
             // Attack — bottom-left (minions + weapons)
-            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
+            TextMeshPro attackLabel = MakeLabel(root.transform, "Atk",  new Vector3(-CardW * 0.35f, -CardH *  StatRowFrac, -0.01f), 3.75f, Color.white, statOutline: true);
             // Health — bottom-right (minions only)
-            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
+            TextMeshPro healthLabel = MakeLabel(root.transform, "HP",   new Vector3( CardW * 0.35f, -CardH *  StatRowFrac, -0.01f), 3.75f, Color.white, statOutline: true);
             // Durability — bottom-right (weapons only; occupies the health slot, mutually exclusive)
-            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  0.42f, -0.01f), 3.75f, Color.white, statOutline: true);
+            TextMeshPro durabilityLabel = MakeLabel(root.transform, "Dur", new Vector3( CardW * 0.35f, -CardH *  StatRowFrac, -0.01f), 3.75f, Color.white, statOutline: true);
             // Keywords — center strip
             TextMeshPro kwLabel     = MakeLabel(root.transform, "KW",   new Vector3(0f,             -CardH *  0.08f, -0.01f), 1.8f, new Color(0.9f, 0.85f, 0.6f));
 

@@ -32,14 +32,16 @@ namespace Emberfall.Presentation
 
         // A CARD IN HAND IS DRAWN LARGER THAN THE SAME CARD ON THE BOARD (EF-062 / NOR-244).
         //
-        // WHY. A hand card is 137.3 x 193.7 px on every 1080p phone — 52% of the 265 px collection
+        // WHY. Before NOR-244 a hand card was drawn at the board card's size, which was then
+        // 137.3 x 193.7 px on every 1080p phone — 52% of the 265 px collection
         // tile EF-050's 1.6x acuity margin was measured against. Re-measured at that true size,
         // rules text at BodyEmFloor (the common case: anything longer than one short line
         // auto-shrinks to it) reaches only 0.74x the recognition threshold. NO TYPEFACE CHOICE BUYS
         // BACK A FACTOR OF 1.35 — ONLY SIZE DOES, which is why EF-062 raised this as a finding
         // rather than re-opening the font ticket.
         //
-        // WHY 1.44 AND NOT 1.35. 1/0.74 = 1.348 clears threshold at the AUTHORED camera only.
+        // WHY THE RATIO IS 1.436-ISH AND NOT 1.35. 1/0.74 = 1.348 clears threshold at the AUTHORED
+        // camera only.
         // SafeAreaCamera raises orthographicSize to lift the board off the Android gesture bar,
         // shrinking everything on screen by 6.1% (24 dp gesture bar) to 12.2% (48 dp three-button
         // bar). 1.348 / 0.939 = 1.436 holds 1.0x through the gesture-bar case, the modern default.
@@ -53,15 +55,30 @@ namespace Emberfall.Presentation
         // asmdef boundary) draws the draw-flight's destination card, and a preview that guessed the
         // size of a hand slot would be judging the animation against a made-up target.
         //
-        // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget. Moving it,
-        // BoardController.CardH, or FrameRarityCatalog.BodyEmFloor invalidates §5/§6 of
-        // device_layout.py, DeviceLayout.SelfCheck's band-clearance assertion, and CentreY's solve
-        // below — re-run the script and re-solve CentreY in the same commit.
-        public const float RestScale = 1.44f;
+        // WHY 1.296 AND NOT 1.44 (#234). THIS IS NOT A REDUCTION IN THE SIZE OF A CARD IN HAND.
+        // The multiplicand moved: BoardController.CardW/CardH grew by 1/0.9, so this fell by 0.9 to
+        // hold the product where it was. HandCardW/H below are 1.6848 x 2.3760 both before and
+        // after, to five decimal places — every number in the block above still describes the card
+        // this produces, and 1.436 is still the ratio it was solved for. What changed is what a
+        // card on the BOARD is, which was the actual complaint (Sam, 2026-08-21: "the ones on the
+        // board are not big enough" — they were 52% of the reference tile).
+        //
+        // So the hand:board RATIO is 1.296 now, not 1.44. That is the whole of #234: the gap
+        // between the two closed from the board end, because the hand end is pinned by an acuity
+        // solve and the board end was pinned by nothing.
+        //
+        // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget, and since #234 it
+        // is one number spread over two files. Moving it, BoardController.CardW/CardH, or
+        // FrameRarityCatalog.BodyEmFloor invalidates §5/§6 of device_layout.py,
+        // DeviceLayout.SelfCheck's band-clearance assertion, and CentreY's solve below — re-run the
+        // script and re-solve CentreY in the same commit. Moving THIS without the compensating move
+        // on CardW/CardH (or the reverse) resizes the card in hand, which is the one thing the #234
+        // change was built not to do.
+        public const float RestScale = 1.296f;   // 1.44 x 0.9, against a card grown by 1/0.9
 
         // The card's DRAWN size in hand. Every card-relative number below derives from these and
         // NOT from BoardController.CardW/CardH — a fan solved against the board-size card would
-        // space a 1.44x card at 1.0x pitch and pivot its tilt about the wrong point.
+        // space an enlarged card at the board card's pitch and pivot its tilt about the wrong point.
         public const float HandCardW = BoardController.CardW * RestScale;   // 1.6848
         public const float HandCardH = BoardController.CardH * RestScale;   // 2.3760
 
@@ -71,7 +88,8 @@ namespace Emberfall.Presentation
         // MAXIMUM: the pitch caps just inside the card width, keeping the fan always slightly
         // overlapped, and the span shrinks under ~5 cards instead of the cards pulling apart.
         // Scaled with the card (was 1.05 against a 1.17-wide card) so "just inside the card width"
-        // still means ~10% overlap; at 1.44x it bites at 3 cards or fewer rather than 4.
+        // still means ~10% overlap; against HandCardW it bites at 3 cards or fewer rather than 4.
+        // Unmoved by #234 — HandCardW is unmoved by #234.
         internal const float MaxPitch = 1.51f;    // ≈10% overlap of HandCardW 1.6848
 
         // The footprint positions the card TOPS, not their centres (Sam, 2026-07-24: "bring the
@@ -83,6 +101,7 @@ namespace Emberfall.Presentation
         internal const float MaxTiltDeg = 18f;    // outermost card's lean
         // Edge cards' drop below the centre card. Scaled with the card (was 0.18 against a
         // 1.65-tall card) so the arc keeps its shape instead of flattening as the card grows.
+        // Unmoved by #234: this is a fraction of HandCardH, and HandCardH did not move.
         internal const float Sag        = 0.26f;
         // |y| of the centre card. Ortho size 4.6, so the screen edge is y -4.6.
         //
