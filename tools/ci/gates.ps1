@@ -75,9 +75,9 @@ if (-not $Quick) {
     }
 }
 
-# Stage 1's rebaseline-guard is deliberately absent: it diffs against a base ref that only means
-# something for a PR. Run it by hand as `bash tools/ci/rebaseline-guard.sh origin/master` when
-# you have touched a golden fixture.
+# Stage 1's rebaseline-guard is gone entirely as of 2026-08-24, here and in ci.yml: it guarded a
+# `*.replay.json` expected block against being rewritten without its sibling `*.rebaseline.md`,
+# and the golden replay fixtures were deleted that day (Sam: they were fake).
 
 # Stage 2 — the .NET test suites.
 #

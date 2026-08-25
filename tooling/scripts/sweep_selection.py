@@ -13,7 +13,7 @@ finding. Re-run it after importing cards authored against the old shape.
 Three data surfaces carry authored targets, and all three move together or the build breaks:
 
   * `unity/Emberfall/Assets/CardData/*.cards.json`   — the shipped sets
-  * `tests/.../GoldenReplay/cardsets/*.cards.snapshot.json`
+  * `tests/.../Fixtures/CardSets/*.cards.snapshot.json`
 
 The oracle for the rewrite is NOT this script. It is `CardCi` rule C26, which regenerates
 every card's text from its rules and compares it to the authored string — so a row whose
@@ -120,7 +120,7 @@ def sweep_card_files(paths, tally, log):
 
 def main() -> int:
     sets = sorted((ROOT / "unity" / "Emberfall" / "Assets" / "CardData").glob("*.cards.json"))
-    fixtures = sorted((ROOT / "tests" / "Emberfall.Core.Tests" / "GoldenReplay" / "cardsets")
+    fixtures = sorted((ROOT / "tests" / "Emberfall.Core.Tests" / "Fixtures" / "CardSets")
                       .glob("*.cards.snapshot.json"))
     if not sets:
         print("no *.cards.json found — wrong repo root?", file=sys.stderr)

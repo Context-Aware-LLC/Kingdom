@@ -81,27 +81,26 @@ tables. The spec doc is a copy of those, and the copy is the thing to fix.
 have to move together are the canonical serializer, the projection and the snapshot codec — miss one
 and the client and server disagree about a state neither can prove wrong.
 
-**There IS a suite again, and it is ADVISORY — a green CI does not mean it passed.** The five .NET
-test projects came back on 2026-08-24 (Sam's direction), minus the card-authoring block, and all
-five are in `Emberfall.slnx`. `ci.yml` Stage 2 and `gates.ps1` Stage 2 run `dotnet test` with
-`continue-on-error`, so **a failing test cannot fail the job**. Read the run, do not read the badge.
-Both stages carry the same note and the same retirement trigger on that flag.
+**The suite is BLOCKING again, and a `dotnet test` matching zero tests exits 0.** The five .NET
+projects came back on 2026-08-24 (Sam's direction) minus the card-authoring block, ran advisory
+while they were red, and went blocking the same day they went green — `ci.yml` Stage 2 and
+`gates.ps1` Stage 2. All five must stay registered in `Emberfall.slnx`, because a run that matches
+nothing is green for the wrong reason. **Read the count, not the badge.**
 
-**The golden digest is still not a gate you can satisfy.** `Known_Vector_Digest_Is_Pinned` and the
-11 golden replay fixtures are back and they are RED: the effect-model fork and the numeric card id
-both moved the canonical hash. Rebaselining them is Sam's deferred call (2026-08-23) — with one
-developer and no live players, a golden fixture guards against a desync that cannot happen, and
-re-pinning one is a cost with no payer. So a state-shape change still lands on review and a build,
-and **the reviewer is still the only guard**: read the three sites rather than hunting for a gate.
+**NOTHING pins the canonical hash any more, by decision.** `Known_Vector_Digest_Is_Pinned`, the 11
+golden replay fixtures and their rebaseline guard were deleted 2026-08-24 (Sam: the replays were
+fake) — they recorded a state the effect-model fork and the numeric card id had deliberately left
+behind, and with one developer and no live players a golden guards against a desync that cannot
+happen. What survives is RELATIVE and cannot go stale: the per-field mutation sweep in
+`CanonicalSerializationTests` (perturb a field, the digest must move), the committed field manifest,
+and NetSoak's zero-resync run. So a state-shape change still lands on review and a build, and
+**the reviewer is still the only guard**: read the three sites rather than hunting for a gate.
+The deleted copies are outside the repo in `emberfall-test-archive/returned-2026-08-24/`.
 
 **A fixture's card id is minted, not written.** `Support/FixtureCard` maps a test-local mnemonic to
 a number above 1_000_000, far clear of every shipped row; `Support/ShippedCards` is the ONE place a
 real handle resolves to a real id, and it exists only in tests. Neither is a handle lookup in the
 sense the ruling forbids — see the class docs, which say why.
-
-**RETIREMENT TRIGGER:** `dotnet test Emberfall.slnx` going green ends the advisory half of this
-section, and the flag comes out of `ci.yml` and `tools/ci/gates.ps1` in the same commit. A golden
-fixture recalculated for release ends the digest half.
 
 ## Player-facing input consults the vulnerability index
 

@@ -5,27 +5,26 @@ namespace Emberfall.Core.Tests.Support
 {
     /// <summary>
     /// Locates source-tree directories at test runtime by walking up from the test assembly's base
-    /// directory. Fixtures are read directly from source (not copied to output) so the rebaseline
-    /// command can rewrite the canonical file, and so the artifacts land at the repo root where CI
-    /// publishes them (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §4).
+    /// directory. Fixtures are read directly from source rather than copied to output, and the
+    /// artifacts land at the repo root where CI publishes them
+    /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §4).
     /// </summary>
     public static class RepoPaths
     {
         /// <summary>
-        /// The Emberfall.Core.Tests project directory (contains the GoldenReplay/ tree). The walk-up
-        /// works when running inside this project; sibling test projects (A5's wire tests share the
-        /// fixtures + harness) resolve via the repo root instead.
+        /// The Emberfall.Core.Tests project directory (contains the Fixtures/ tree). The walk-up
+        /// works when running inside this project; a sibling test project resolves via the repo
+        /// root instead.
         /// </summary>
         public static string TestProjectDir => _testProjectDir ??= TryFindUp(
-            d => Directory.Exists(Path.Combine(d, "GoldenReplay", "fixtures")))
+            d => Directory.Exists(Path.Combine(d, "Fixtures", "CardSets")))
             ?? Path.Combine(RepoRoot, "tests", "Emberfall.Core.Tests");
 
         /// <summary>The repository root (contains the .git folder or Emberfall.slnx).</summary>
         public static string RepoRoot => _repoRoot ??= FindUp(
             d => Directory.Exists(Path.Combine(d, ".git")) || File.Exists(Path.Combine(d, "Emberfall.slnx")));
 
-        public static string FixturesDir => Path.Combine(TestProjectDir, "GoldenReplay", "fixtures");
-        public static string CardSetsDir => Path.Combine(TestProjectDir, "GoldenReplay", "cardsets");
+        public static string CardSetsDir => Path.Combine(TestProjectDir, "Fixtures", "CardSets");
 
         public static string ArtifactsDir
         {

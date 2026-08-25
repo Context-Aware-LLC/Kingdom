@@ -3,7 +3,7 @@ name: Emberfall CI — determinism gates
 # The 9-stage CI pipeline (hist-docs/source-snapshots/2026-07-31-pre-reorganization/testing/ci-gates.md §2). At M1 there is NO paid Unity seat
 # (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
 #
-#   Stage 1  Lint + vocabulary + rebaseline-guard      BLOCKING   (format + vocabulary + golden path-pair)
+#   Stage 1  Lint                                      BLOCKING   (dotnet format)
 #   Stage 2  Core unit tests              ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
 #   Stage 3  Contract / interface tests   ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
 #   Stage 3b Collection + CardValidation  ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
@@ -125,7 +125,7 @@ jobs:
       # runtime itself and an ESM repackaging; the inputs used below are unchanged across all of them.
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0   # rebaseline-guard needs history to diff against the base
+          fetch-depth: 0
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v6
@@ -138,37 +138,31 @@ jobs:
       - name: Build (Release)
         run: dotnet build Emberfall.slnx -c Release --no-restore
 
-      # ── Stage 1 — Lint + vocabulary + rebaseline-guard (BLOCKING) ───────────────
+      # ── Stage 1 — Lint (BLOCKING) ───────────────────────────────────────────────
+      #
+      # The rebaseline guard that stood here went with the golden replay fixtures on
+      # 2026-08-24 (Sam: they were fake). It existed to stop a `*.replay.json` expected block
+      # being rewritten without its sibling `*.rebaseline.md`, and there are no such files now.
       - name: "Stage 1 · Lint (dotnet format)"
         run: dotnet format Emberfall.slnx --verify-no-changes --no-restore
-
-      - name: "Stage 1 · Rebaseline guard"
-        run: |
-          chmod +x tools/ci/rebaseline-guard.sh
-          base="origin/${{ github.base_ref || 'master' }}"
-          tools/ci/rebaseline-guard.sh "$base"
 
       # Stage 1's canonical-vocabulary scan was REMOVED 2026-08-18 — see the note in
       # tools/ci/gates.ps1. It never produced a true positive and could not: the regression it
       # guarded is already closed by a closed enum plus a fail-shut validator.
 
-      # ── Stage 2 — .NET test suites (ADVISORY, restored 2026-08-24) ─────────────
+      # ── Stage 2 — .NET test suites (BLOCKING as of 2026-08-24) ─────────────────
       #
       # Archived out 2026-08-18, brought back at Sam's direction on 2026-08-24 minus the
       # card-authoring block (`CardValidation/`, plus the Unity authoring model the old csproj
-      # compiled in). Five projects, 1467 tests, all five registered in Emberfall.slnx — which
-      # matters, because a `dotnet test` that matches zero tests exits 0 and would make this job
-      # green for the wrong reason.
+      # compiled in). All five projects are registered in Emberfall.slnx — which matters, because a
+      # `dotnet test` matching zero tests exits 0 and would make this job green for the wrong
+      # reason. Read the count, not the exit code.
       #
-      # `continue-on-error` is why this is worth reading. 23 tests fail on the day they returned,
-      # and none of them is a migration artefact: they are the effect-model fork and the numeric
-      # card id disagreeing with behaviour the suite was written against in July. Blocking on them
-      # would block every merge on work nobody has scheduled.
-      #
-      # RETIREMENT TRIGGER: when the run is green, delete `continue-on-error` here and cut the same
-      # flag from `tools/ci/gates.ps1`'s Stage 2, which carries a copy of this note.
-      - name: "Stage 2 · .NET test suites (ADVISORY)"
-        continue-on-error: true
+      # It returned ADVISORY because 23 tests were red, and `continue-on-error` came out the same
+      # day the run went green — exactly what its retirement trigger asked for. The last three
+      # closed by deleting pins nobody had scheduled a rebaseline for: the canonical known-vector
+      # digest, the golden replay fixtures, and the default-deck fixtures (Sam, 2026-08-24).
+      - name: "Stage 2 · .NET test suites"
         run: dotnet test Emberfall.slnx -c Release --no-build --nologo
 
       # The weight-bearing checks were never in tests/ and still run below: CardCi validates every

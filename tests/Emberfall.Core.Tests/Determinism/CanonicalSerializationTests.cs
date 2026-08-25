@@ -82,39 +82,7 @@ namespace Emberfall.Core.Tests.Determinism
         private static IEnumerable<string> MutationKeys()
             => CanonicalStateFixtures.Mutations.Keys.OrderBy(k => k, StringComparer.Ordinal);
 
-        // ── 3. pinned known-vector ──────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Digest of <see cref="CanonicalStateFixtures.BuildSeedState"/>, pinned by hand. Independent
-        /// of fixtures and card data: if this moves and you didn't intend an encoding change, the
-        /// serializer broke; if you DID intend one, that is a hash-canonical change (§7 review + full
-        /// fixture rebaseline) and this constant is re-pinned in the same reviewed commit.
-        /// </summary>
-        // Re-pinned 2026-07-15 (A2b, §7-reviewed): walk gained the PendingChoice tail + the seed
-        // state now exercises it non-null. Old pin: abb617ccf5e1c67c7697f4b52b1658c29e63045abda9e990f2561b1bfca439db
-        // Re-pinned 2026-08-05 (NOR-31 step 2): PlayerState.Weapon now walks the complete equipped
-        // CardInstance instead of the retired four-field WeaponInstance wrapper.
-        // Re-pinned 2026-08-05 (NOR-31 silence): CardInstance.IsSilenced is public, projected and
-        // hash-canonical because it controls future permanent ability resolution.
-        // EF-017b: Enchantment.IsAura is explicit continuous-effect provenance and therefore
-        // hash-canonical. The seed includes an enchantment so this pin witnesses its walk.
-        // NOR-31: the tail now includes active carrierless spell observers and their internal
-        // authored rule reference. The seed exercises a finite observer with remaining uses.
-        // Re-pinned 2026-08-13 (NOR-367): HeroInstance.FrostThawPending and CardInstance.FrostThawPending
-        // are public and hash-canonical — the two-step-thaw flag persists across the opponent's turn, so
-        // it controls a future thaw and must be replayed. Old pin: c6ece0aa9434231a6c4f7d582ed91e45d08db7df450077fa59e07c233e8aaaf6
-        private const string PinnedSeedDigest = "fedfa0b2be8dde40d71bd043a09b540d3ba022340eebf8f99aff48cad563ccc9";
-
-        [Test]
-        public void Known_Vector_Digest_Is_Pinned()
-        {
-            Assert.That(GameStateHasher.Hash(CanonicalStateFixtures.BuildSeedState()), Is.EqualTo(PinnedSeedDigest),
-                "The canonical encoding changed (or the seed-state builder did). If unintentional: the " +
-                "serializer broke — fix it. If intentional: this is hash-canonical; convene §7, rebaseline " +
-                "fixtures, and re-pin this constant in the same commit.");
-        }
-
-        // ── 4. stability ────────────────────────────────────────────────────────────────────────
+        // ── 3. stability ────────────────────────────────────────────────────────────────────────
 
         [Test]
         public void Hash_Is_Repeatable_And_Rebuild_Invariant()
