@@ -439,21 +439,6 @@
     margin-bottom: var(--space-3);
 }
 
-/* Neither first-login modal may strand the control that ends the step, so both panels are
- * ScrollViews (MainMenuScreen.uxml) and an overflow becomes a scroll rather than content off the
- * edge. That is the SAFETY NET, not the layout: if either of these ever needs to scroll on a phone
- * held in landscape, the fix is above this rule, not here. The
-   panel is a ScrollView (MainMenuScreen.uxml) so that an overflow becomes a scroll instead of
-   content off the top of the screen — the failure mode above. Scrollers hidden per the project's
-   no-visible-scrollbars rule; touch-drag and wheel still scroll. */
-#signin-panel .unity-scroller,
-#signin-panel .unity-scroll-view__vertical-scroller,
-#signin-panel .unity-scroll-view__horizontal-scroller,
-#name-panel .unity-scroller,
-#name-panel .unity-scroll-view__vertical-scroller,
-#name-panel .unity-scroll-view__horizontal-scroller {
-    display: none;
-}
 /* The code is six characters the player is copying by eye off another screen. Wide tracking and a
  * larger face is the difference between reading it back once and reading it back three times.
  * Must come after .mm-modal__field, which the code field also carries: equal specificity, so this

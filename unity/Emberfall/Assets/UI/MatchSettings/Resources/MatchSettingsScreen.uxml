@@ -17,7 +17,7 @@
   while this is open — UI Toolkit does not block Unity physics, so the scrim alone won't.
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <Style src="../../Deckbuilder/theme.uss" />
+    <Style src="../../Common/theme.uss" />
     <!-- Reused here for .mm-modal / .mm-accounts — the account switcher (below) is the same
          modal MainMenuController used to own directly; it now lives on this shared panel instead
          of being duplicated in matchsettings.uss. -->

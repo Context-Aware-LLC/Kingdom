@@ -211,15 +211,6 @@
     max-height: 90%;
 }
 
-/* No visible scrollbars anywhere (Sam, 2026-08-01 ruling — see [[no-visible-scrollbars-ruling]] in
- * memory). Wheel/drag scrolling still works; this only hides the track+thumb chrome. Same three
- * selectors as #collection-scroll in deckbuilder.uss. */
-#deck-image-scroll .unity-scroller,
-#deck-image-scroll .unity-scroller--vertical,
-#deck-image-scroll .unity-scroll-view__vertical-scroller {
-    display: none;
-}
-
 /* The art of whichever card fronts the deck, rendered SQUARE (Sam, 2026-08-07) — a deck is not
  * a card-shaped thumbnail here. scale-and-crop rather than stretch: card art is not square, and
  * letterboxing it reads as a bug where cropping reads as framing. The plate strip overwrites
@@ -635,15 +626,6 @@
 
 .delete-actions .roster-button {
     margin-left: var(--space-3);
-}
-
-/* No visible scrollbar chrome. Wheel, touch-drag, and keyboard scrolling remain available. */
-#roster-scroll .unity-scroller,
-#roster-scroll .unity-scroller--vertical,
-#roster-scroll .unity-scroller--horizontal,
-#roster-scroll .unity-scroll-view__vertical-scroller,
-#roster-scroll .unity-scroll-view__horizontal-scroller {
-    display: none;
 }
 
 /* ---- Character creation overlay (portrait grid, NOR-278) --------------------------------------

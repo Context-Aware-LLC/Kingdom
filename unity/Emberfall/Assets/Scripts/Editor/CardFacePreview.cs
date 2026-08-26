@@ -45,7 +45,7 @@ namespace Emberfall.Editor
         private const int Gutter = 20;
         private const int Margin = 48;
 
-        // --surface-1, the screen background the wall sits on (UI/Deckbuilder/theme.uss).
+        // --surface-1, the screen background the wall sits on (UI/Common/theme.uss).
         private static readonly Color Surface1 = new Color32(20, 25, 34, 255);
 
         [MenuItem("Emberfall/Preview Card Faces (offscreen)")]

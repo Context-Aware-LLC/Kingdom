@@ -1,7 +1,253 @@
+/* ---------------------------------------------------------------------------------------------
+ * Was Assets/UI/Deckbuilder/deckbuilder.uss until 2026-08-25 (#161). It was never shared: by then
+ * its ONLY consumer was CollectionScreen.uxml, which already loaded this file straight after it.
+ *
+ * PREPENDED, NOT APPENDED, AND THAT IS LOAD-BEARING. The screen loaded theme -> deckbuilder ->
+ * collection, so collection's rules won every equal-specificity tie. Appending would have
+ * silently inverted that on every selector the two sheets both touch.
+ *
+ * .card-tile's 276px width is a contract with CardWall.TileWidth. Nothing below restyles it.
+ * --------------------------------------------------------------------------------------------- */
+
+/*
+ * S7 screen styles. Consumes tokens from Common/theme.uss only (no literal colors/sizes that a
+ * token already names). dev-docs/ui/client-surfaces.md:22.
+ * UI Toolkit note: no `gap` — spacing is margins; layout is flexbox.
+ *
+ * `.deckbuilder` was declared here and worn by NOTHING — no UXML, no AddToClassList. It styled the
+ * screen root of the deckbuilder plate that #153 merged away. Deleted 2026-08-25 (#161); the live
+ * root is `.emb-root.collection`.
+ */
+
+/* The screen had a header carrying the character's name, the deck's name and the count. It is
+ * gone (Sam, 2026-08-07): the first two are on the roster, one screen back. */
+/* Back + count share a row at the top of the deck panel (Sam, 2026-08-09) — Back used to be its
+ * own footer row below the legality box, which is gone (see deck-header's UXML comment). */
+.db-deck-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+}
+.db-count {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    -unity-text-align: middle-right;
+}
+.db-pill {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: var(--surface-0);
+    padding: var(--space-1) var(--space-3);
+    border-radius: 999px;
+}
+.db-pill--valid   { background-color: var(--positive); }
+.db-pill--invalid { background-color: var(--warning); }
+
+/* ---------- Body / split ---------- */
+.db-body {
+    flex-direction: row;
+    flex-grow: 1;
+}
+.db-panel {
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    padding: var(--space-4);
+}
+/* 70/30 split (Sam, 2026-08-01) — collection reads as the primary surface, deck as the sidebar. */
+.db-collection { flex-grow: 7; margin-right: var(--space-4); }
+.db-deck       { flex-grow: 3; min-width: 360px; }
+.db-panel-title {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-2);
+    margin-bottom: var(--space-3);
+}
+
+/* ---------- Filter chips ---------- */
+.db-filter-row { flex-direction: row; margin-bottom: var(--space-3); }
+.db-chip {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: 999px;
+    padding: var(--space-1) var(--space-4);
+    margin-right: var(--space-2);
+    height: var(--touch-min);
+}
+.db-chip--on {
+    color: var(--surface-0);
+    background-color: var(--mana);
+    -unity-font-style: bold;
+}
+
+/* ---------- Lists ---------- */
+.db-list {
+    flex-grow: 1;
+    background-color: var(--surface-1);
+    border-radius: var(--space-2);
+}
+
+
+/* ---------- Collection wall (§2.9 wall tile — the REAL card, baked by CardFaceBaker, not a
+ * UI Toolkit re-implementation of the card front) ---------- */
+.db-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+.card-tile {
+    width: 340px;
+    height: 477px;
+    /* margin-left/margin-right are runtime-computed per row by
+     * CardWall.Layout (responsive tile tier, bounded gutter, centred
+     * outer breathing room); only the top/bottom 4px here actually applies. */
+    margin: var(--space-1) var(--space-2);
+    background-color: var(--surface-3);   /* shows through until the bake resolves */
+    -unity-background-scale-mode: scale-to-fit;
+    border-radius: var(--space-2);
+}
+/* The two opacities allowed on the wall, both per-CARD facts and never the wall's state — the
+ * no-dimming ruling that removed .card-tile--disabled was about a full deck greying out all ~90
+ * tiles at once, which neither of these can do (Sam, 2026-08-07). See
+ * CollectionController.DecorateTile, which is the only thing that sets either, and CardWall.RefreshTiles.
+ *
+ * They must never both land on one tile — DecorateTile's `!unowned` term is what guarantees it.
+ * They mean opposite things and want opposite pixels. */
+
+/* Spent: the deck already holds every copy of this card you are allowed. You are finished with it,
+ * so it gets out of the way. Deckbuild only. */
+.card-tile--maxed {
+    opacity: 0.1;
+}
+
+/* Unowned: you hold no copy of this card. The opposite of spent — this is the one you are shopping
+ * for, so it stays legible and reads as "not yours yet" rather than "gone". Both modes.
+ *
+ * THIS NUMBER IS THE TUNING KNOB. Too low and the wall goes dark for a new account, where nearly
+ * every card is unowned — which is the no-dimming ruling's spirit even though its letter (per-card,
+ * not wall-state) is satisfied. Sam's brief was "full colour, 100% opacity, your collection, mixed
+ * in with those some dimmer unowned cards", so the contrast has to be readable at a glance without
+ * the unowned half becoming furniture. */
+.card-tile--unowned {
+    opacity: 0.5;
+}
+/* Deck-side row (§2.3 full tiles are collection-only for now; the deck list stays a legible
+ * full-width row for L1–L5 proof) */
+.card-row {
+    flex-direction: row;
+    align-items: center;
+    height: 52px;
+    padding: 0 var(--space-3);
+    margin: var(--space-1) var(--space-2);
+    background-color: var(--surface-2);
+    border-radius: var(--space-1);
+    border-left-width: 4px;
+    border-left-color: var(--class-neutral);
+}
+.card-row--disabled { opacity: 0.4; }
+.card-cost {
+    width: 100%;
+    height: 100%;
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+    font-size: var(--type-body);
+    color: var(--surface-0);
+    background-color: var(--mana);
+    border-radius: 999px;
+    margin-right: var(--space-3);
+}
+.card-name {
+    flex-grow: 1;
+    font-size: var(--type-body);
+    color: var(--ink-1);
+}
+.card-rarity-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    margin-right: var(--space-3);
+    background-color: var(--rarity-common);
+}
+/* ---------- Deck side ---------- */
+/* The deck switcher (EF-046), the name field, Set Default and Delete Deck lived here. They are
+ * all on the CharacterRoster screen now (Sam, 2026-08-07) — this panel edits one deck's 30 and
+ * cannot change which deck, which deck is default, or whether it exists. */
+
+.db-curve {
+    flex-direction: row;
+    align-items: flex-end;
+    height: 56px;
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-1);
+}
+.curve-col {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-end;
+    margin: 0 1px;
+}
+.curve-bar {
+    width: 60%;
+    min-height: 2px;
+    background-color: var(--mana);
+    border-radius: 2px;
+}
+.curve-label {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    margin-top: 2px;
+}
+
+/* ---------- Rarity / class modifiers (token-driven; set from C# by enum) ---------- */
+.rarity--common    { background-color: var(--rarity-common); }
+.rarity--rare      { background-color: var(--rarity-rare); }
+.rarity--epic      { background-color: var(--rarity-epic); }
+.rarity--legendary { background-color: var(--rarity-legendary); }
+
+.edge--neutral    { border-left-color: var(--class-neutral); }
+.edge--emberward  { border-left-color: var(--class-emberward); }
+.edge--tidecaller { border-left-color: var(--class-tidecaller); }
+.edge--gravekeep  { border-left-color: var(--class-gravekeep); }
+.edge--verdant    { border-left-color: var(--class-verdant); }
+
+/* ---------- Buttons ---------- */
+.db-button {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    height: 48px;
+    min-width: 140px;
+    border-width: 0;
+    border-radius: var(--space-2);
+    padding: 0 var(--space-6);
+}
+/* Back sits in the deck-header row (§ deck side) — narrower than .db-button's default so it
+ * reads as a corner control next to the count, not a footer; but still 48px tall for touch. */
+.db-button--back {
+    height: var(--space-12);
+    min-width: 84px;
+    padding: 0 var(--space-4);
+}
+.db-button--cta {
+    color: var(--surface-0);
+    background-color: var(--accent);
+}
+.db-button--ghost {
+    color: var(--ink-2);
+    background-color: var(--surface-3);
+}
+.db-button:disabled { opacity: 0.35; }
+
+/* =============================================================================================
+ * BELOW: the collection's own sheet, unchanged.
+ * ============================================================================================= */
+
 /* collection.uss — the full-pool browse surface.
  *
  * Tokens come from theme.uss; only what is specific to this screen lives here. The tile itself is
- * deliberately NOT restyled: .card-tile is declared once in deckbuilder.uss and its compact size is
+ * deliberately NOT restyled: .card-tile is declared once at the top of this file and its compact size is
  * a contract with CardWall, which promotes it to larger responsive tiers at runtime. A second
  * .card-tile rule here would be a second source of truth for one number, which is the exact shape
  * of the card-frame drift this project already paid for.
@@ -362,7 +608,7 @@
  *
  * All of this is scoped under .collection--editing so browse is pixel-identical (the pairing chips
  * do not exist at rest, and the cost chips there keep their content-driven size). It is NOT put on
- * the shared .db-chip in deckbuilder.uss on purpose: that class is also worn by the scope toggle and
+ * the shared .db-chip at the top of this file on purpose: that class is also worn by the scope toggle and
  * MatchSettings, and a width there would reach screens outside this issue (see GH#161).
  *
  * Sam ruling 4 (2026-08-11): a chip's width must not be driven by its label length — a row of chips

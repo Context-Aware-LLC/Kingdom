@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <Style src="project://database/Assets/UI/Deckbuilder/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
+    <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Shop/shop.uss?fileID=7433441132597879392&amp;guid=1bfa8e0e1ac74f0287ff03d16cc57e01&amp;type=3#shop"/>
     <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
     <ui:VisualElement name="root" class="emb-root shop-screen">

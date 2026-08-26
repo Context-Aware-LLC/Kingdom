@@ -1,5 +1,5 @@
 @import url("unity-theme://default");
-@import url("/Assets/UI/Deckbuilder/theme.uss");
+@import url("/Assets/UI/Common/theme.uss");
 
 /* Runtime GenericDropdownMenu instances are attached to the PanelSettings root rather than beneath
  * the DropdownField that opened them. This rule must live in the panel theme: a stylesheet attached

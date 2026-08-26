@@ -65,7 +65,7 @@ import glob
 
 UI = 'unity/Emberfall/Assets/UI'
 SCRIPTS = 'unity/Emberfall/Assets/Scripts'
-THEME = UI + '/Deckbuilder/theme.uss'
+THEME = UI + '/Common/theme.uss'
 EDGE_CLASS = 'emb-edge'
 BLEED_CLASS = 'emb-bleed'
 ROOT_CLASS = 'emb-root'

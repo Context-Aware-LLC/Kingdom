@@ -11,7 +11,7 @@
   must resolve before anything else" shape as the account switcher.
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <Style src="../../Deckbuilder/theme.uss" />
+    <Style src="../../Common/theme.uss" />
     <Style src="../../MainMenu/mainmenu.uss" />
 
     <ui:VisualElement name="modal" class="mm-modal">
