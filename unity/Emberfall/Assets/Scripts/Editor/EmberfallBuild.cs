@@ -119,6 +119,15 @@ namespace Emberfall.Editor
 
             bool perfCaptureBuild = Environment.GetEnvironmentVariable(
                 "EMBERFALL_PERF_CAPTURE_BUILD") == "1";
+
+            // EMBERFALL_PROFILER_BUILD=1 makes the APK a development player that the Editor's
+            // Profiler can attach to over adb. It exists because `dumpsys meminfo` can say a pool
+            // grew — Unknown +411 MB and Graphics +127 MB in one second, measured on a Pixel 5a
+            // 2026-08-26 — and cannot say WHAT allocated it, which is the only question worth
+            // asking once you know something is eating the device. Off by default and never set in
+            // CI: a development player carries profiler overhead and is not shippable.
+            bool profilerBuild = Environment.GetEnvironmentVariable(
+                "EMBERFALL_PROFILER_BUILD") == "1";
             string buildCommit = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_COMMIT");
             string originalVersion = PlayerSettings.bundleVersion;
             bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
@@ -163,8 +172,14 @@ namespace Emberfall.Editor
                     locationPathName   = AndroidOutputPath,
                     target             = BuildTarget.Android,
                     targetGroup        = BuildTargetGroup.Android,
-                    options            = BuildOptions.None,
+                    options            = profilerBuild
+                        ? BuildOptions.Development | BuildOptions.ConnectWithProfiler
+                        : BuildOptions.None,
                 };
+                if (profilerBuild)
+                    Debug.Log("[EmberfallBuild] PROFILER build: development player, autoconnect "
+                              + "profiler. Attach with `adb forward tcp:34999 localabstract:Unity-"
+                              + "com.ContextAware.Emberfall`, then Window > Analysis > Profiler.");
                 Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
             }
             finally
