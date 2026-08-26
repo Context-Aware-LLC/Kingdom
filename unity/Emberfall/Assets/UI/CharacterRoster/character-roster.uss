@@ -634,23 +634,22 @@
  * while it is open, and a boxed dialog spent most of a phone's landscape width on a dimmed
  * backdrop that had nothing left to show. No radius and no border, because neither reads as an
  * edge when there is nothing outside it. */
-/* Out past the screen's padding. An absolutely-positioned child is laid out inside its parent's
- * content box, so left/top/right/bottom of 0 stops 24px short of every edge — .character-roster's
- * --space-6 padding — and the dialog's lighter surface would draw a frame around itself and read
- * as "nearly full screen". These four must stay the negative of that padding. */
-.character-create {
-    left: -24px;
-    right: -24px;
-    top: -24px;
-    bottom: -24px;
-}
-
-.character-create-dialog {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    border-radius: 0;
-    border-width: 0;
+/* The character-create SCREEN's root (Sam, 2026-08-23). Replaces .character-create and
+ * .character-create-dialog, the two rules that made the old overlay look full-screen by pulling
+ * itself out past .character-roster's padding and then filling the modal. Creation is its own
+ * scene now, so there is nothing to escape from — the root IS the panel.
+ *
+ * flex-grow: 1 IS LOAD-BEARING and its absence is not visible as a layout problem. Without it this
+ * root sizes to CONTENT, so #create-grid-view and .hero-grid below it resolve to about zero height,
+ * and LayoutHeroGrid returns at its `availableHeight <= 0` guard BEFORE it sizes anything. The
+ * tiles then keep a zero-width portrait: the name and the absolutely-positioned badge still paint,
+ * the art does not, and a zero-size tile cannot be tapped. Measured on a Pixel 5a 2026-08-23 —
+ * it reads as "the art is missing and nothing is interactive", which names neither the root nor
+ * the guard, and logs nothing because the early return is above the fallback's warning. */
+.character-create-screen {
+    flex-grow: 1;
+    background-color: var(--surface-1);
+    color: var(--ink-1);
     justify-content: center;
 }
 

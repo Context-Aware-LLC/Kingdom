@@ -1,0 +1,81 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="../Common/theme.uss" />
+    <Style src="../MainMenu/mainmenu.uss" />
+    <!--
+      Account creation, as a SCENE (Sam, 2026-08-25). The sign-in gate and the name/password step
+      were two `.mm-modal` overlays inside MainMenuScreen.uxml until then. Same call character
+      creation got, and the Store before it: full-screen, opaque, unskippable, a destination.
+
+      WHY IT HAD TO MOVE, AND WHY "IT ALREADY WAS A ROW" WAS NOT ENOUGH. mainmenu.uss records a
+      2026-08-23 measurement that split the pitch from the form because "the gate lands near 276dp
+      and the name modal near 358dp, against 411 available". The budget in that sentence is wrong:
+      both modals carried `.emb-bleed`, which is `padding: var(--edge-safe)` — 52dp PER EDGE — and
+      `git merge-base --is-ancestor` confirms `.emb-bleed` was already on them when it was written.
+      The real box was 411 - 104 = 307dp, so the gate fitted with 31dp to spare and THE NAME STEP
+      OVERFLOWED BY 51dp. That is the step with no way past it, which is why a first launch was a
+      dead end rather than a cosmetic problem.
+
+      So re-hosting alone would not have fixed it — the nesting is the bug. As a modal the flow sat
+      inside `.emb-bleed`'s 52dp per edge PLUS `.mm-modal__panel`'s `padding: var(--space-8)`
+      (32dp per edge) inside an already-inset box, on a panel that only has 411dp of height. Here
+      the root IS the panel: one clearance, one padding, nothing nested inside it.
+
+      EVERY ELEMENT KEEPS ITS NAME. SignInGateController takes an arbitrary root VisualElement and
+      does `root.Q<>()` by name, so it is reused here completely unchanged — this file is the only
+      thing that had to know the flow moved. The inner classes stay `.mm-modal__*` for the same
+      reason character creation kept `character-roster.uss`: restyling them here would be a second
+      source of truth for the same widgets. The two ScrollViews are gone; content that fits needs
+      no scroller, and a scroller was how the overflow stayed invisible.
+    -->
+    <ui:VisualElement name="root" class="emb-root account-create-screen emb-bleed">
+
+        <!-- SIGN IN: email, then the six-digit code that arrives in the reply. No Cancel, no Skip
+             and no guest — Sam's 2026-08-08 ruling. The only way out is a session, so this view
+             deliberately has nothing that dismisses it. -->
+        <ui:VisualElement name="signin-view">
+            <ui:VisualElement class="mm-modal__columns">
+                <ui:VisualElement class="mm-modal__pitch">
+                    <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
+                    <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="mm-modal__form">
+                    <ui:TextField name="signin-email" class="mm-modal__field"/>
+                    <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
+                    <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
+                    <ui:VisualElement class="mm-modal__actions">
+                        <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
+                        <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
+                    </ui:VisualElement>
+                    <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
+                    <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
+                    <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- NAME: the display name, and optionally a password. First run is the only run that ever
+             reaches this (NOR-287): a display name is permanent, so there is no second caller and
+             no Cancel — there is no earlier name to fall back to. The password is offered here and
+             only here (NOR-246), because this is the one moment the player already holds a live
+             session to attach one to. -->
+        <ui:VisualElement name="name-view">
+            <ui:VisualElement class="mm-modal__columns">
+                <ui:VisualElement class="mm-modal__pitch">
+                    <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
+                    <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="mm-modal__form">
+                    <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
+                    <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
+                    <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
+                    <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
+                    <ui:Label name="name-error" text=" " class="mm-modal__error"/>
+                    <ui:VisualElement class="mm-modal__actions">
+                        <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
