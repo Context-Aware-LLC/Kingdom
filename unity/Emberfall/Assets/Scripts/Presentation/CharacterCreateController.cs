@@ -275,7 +275,21 @@ namespace Emberfall.Presentation
             VisualElement box = _heroGrid.parent ?? _heroGrid;
             float availableWidth = box.resolvedStyle.width - RowSafetyMargin;
             float availableHeight = _heroGrid.resolvedStyle.height - RowSafetyMargin;
-            if (availableWidth <= 0f || availableHeight <= 0f)
+            // WRITTEN `!(x > 0f)` AND NOT `x <= 0f`, AND THAT IS THE WHOLE GUARD. An unresolved
+            // resolvedStyle is NaN, not zero, and every IEEE comparison against NaN is FALSE — so
+            // `<= 0f` waves NaN straight through, and so does every guard downstream of it:
+            // `candidate <= side` never continues (so side becomes NaN and columns becomes tiles),
+            // `side <= 0f` never fires the no-fit fallback, and `Mathf.Approximately(x, NaN)` is
+            // false forever, which defeats the idempotent-write latch that is the only thing
+            // stopping the relayout loop. Every tile then gets a NaN width and a NaN square.
+            // Measured on a Pixel 5a 2026-08-26, from the log line below:
+            //   hero grid solve: box=NaNxNaNdp tiles=8 -> columns=8 side=NaNdp
+            //   lowmemorykiller: Kill 'com.ContextAware.Emberfall' ... to free 1336800kB rss,
+            //                    1200672kB swap; reason: ... thrashing (300%)
+            // 1.3 GB and the kernel killed the app. It reads as "character creation crashes",
+            // which names neither NaN nor this line. `!(x > 0f)` is true for NaN, 0 and negatives
+            // alike; do not "simplify" it back.
+            if (!(availableWidth > 0f) || !(availableHeight > 0f))
             {
                 // A zero box is NORMAL for the first frame or two, before the panel has laid out —
                 // which is why this returns rather than complains. But if it is still zero once the
@@ -344,7 +358,9 @@ namespace Emberfall.Presentation
             // Measured 2026-08-23 in the modal this screen replaced: restoring the edge clearance
             // took enough height that every candidate went negative and 8 tiles fell back to a
             // clipped 4x2 (#250).
-            if (side <= 0f)
+            // `!(side > 0f)` for the reason given at the zero-box guard: this is the net that is
+            // supposed to catch a solve that found nothing, and `side <= 0f` cannot catch a NaN one.
+            if (!(side > 0f))
             {
                 columns = tiles;
                 side = Mathf.Max(availableWidth / tiles - gutter - chrome, MinHeroSide);

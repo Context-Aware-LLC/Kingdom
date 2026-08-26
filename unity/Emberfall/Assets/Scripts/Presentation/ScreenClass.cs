@@ -103,7 +103,12 @@ namespace Emberfall.Presentation
             // Layout has not run yet. Doing nothing is right: the compact base in :root is already
             // a complete scale, so an unclassified panel renders at phone size rather than at no
             // size, and the GeometryChangedEvent that follows will classify it.
-            if (shortAxisDp <= 0f) return;
+            // `!(x > 0f)`, not `x <= 0f`: an unresolved resolvedStyle is NaN, every comparison
+            // against NaN is false, and Mathf.Min(NaN, x) returns x — so a half-resolved panel can
+            // reach ClassFor with a number that is not its size and get classified from it. See the
+            // long note on CharacterCreateController.LayoutHeroGrid's guard.
+            if (!(shortAxisDp > 0f) || float.IsNaN(root.resolvedStyle.width)
+                                    || float.IsNaN(root.resolvedStyle.height)) return;
 
             string want = ClassFor(shortAxisDp);
 

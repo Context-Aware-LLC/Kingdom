@@ -321,7 +321,10 @@ namespace Emberfall.Presentation
 
             float available = _grid.resolvedStyle.width - RowSafetyMargin;
             float viewportHeight = _viewport?.resolvedStyle.height ?? 0f;
-            if (available <= 0f || viewportHeight <= 0f) return;
+            // `!(x > 0f)`, not `x <= 0f`: an unresolved resolvedStyle is NaN and every comparison
+            // against NaN is false, so `<= 0f` passes it through to the solve. See the long note on
+            // CharacterCreateController.LayoutHeroGrid's guard, where that cost a 1.3 GB OOM kill.
+            if (!(available > 0f) || !(viewportHeight > 0f)) return;
 
             // Break the GeometryChangedEvent feedback loop.
             //
