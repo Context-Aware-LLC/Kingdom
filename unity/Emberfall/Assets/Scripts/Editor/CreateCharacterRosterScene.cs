@@ -20,7 +20,7 @@ namespace Emberfall.Editor
         /// </summary>
         private const string TemplateScenePath = "Assets/Scenes/Collection.unity";
         private const string UxmlPath = "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml";
-        private const string PanelPath = "Assets/UI/Deckbuilder/DeckbuilderPanelSettings.asset";
+        private const string PanelPath = "Assets/UI/Common/EmberfallPanelSettings.asset";
 
         [MenuItem("Emberfall/UI/Rebuild Character Roster Scene")]
         public static void Build()

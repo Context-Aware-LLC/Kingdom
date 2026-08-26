@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardWall
     {
-        // Must match .card-tile in deckbuilder.uss. These are the baker's safe pre-layout defaults
+        // Must match .card-tile in Collection/collection.uss. These are the baker's safe pre-layout defaults
         // and the SMALLEST OF THE THREE FIXED TIERS. Layout promotes the wall to a larger tier when
         // at least four columns and two complete rows fit. Discrete tiers matter: a continuous
         // resize would invalidate and rebake ~90 RenderTextures on every window pixel.

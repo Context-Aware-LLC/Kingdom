@@ -73,7 +73,7 @@ EXEMPT: dict[str, str] = {
 }
 
 
-THEME = UI / "Deckbuilder" / "theme.uss"
+THEME = UI / "Common" / "theme.uss"
 
 
 def read(p: pathlib.Path) -> str:

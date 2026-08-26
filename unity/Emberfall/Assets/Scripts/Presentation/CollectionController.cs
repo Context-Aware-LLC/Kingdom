@@ -1273,7 +1273,7 @@ namespace Emberfall.Presentation
         }
 #endif
 
-        // ---- token helpers (class names mirror deckbuilder.uss) ----
+        // ---- token helpers (class names mirror Collection/collection.uss) ----
         private static readonly string[] AllRarity = { "rarity--common", "rarity--rare", "rarity--epic", "rarity--legendary" };
         private static readonly string[] AllEdge = { "edge--neutral", "edge--emberward", "edge--tidecaller", "edge--gravekeep", "edge--verdant", "edge--tempest", "edge--nightveil", "edge--clockwright", "edge--stonewarden" };
 

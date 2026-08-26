@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
-    <Style src="../Deckbuilder/theme.uss" />
+    <Style src="../Common/theme.uss" />
     <Style src="character-roster.uss" />
     <ui:VisualElement name="root" class="emb-root character-roster">
         <!--
