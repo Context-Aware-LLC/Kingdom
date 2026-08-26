@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23c42332aa507fb48bfdbb99665010e2
+    m_Address: materials/Wood
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 25a1a9becdcf83542a32813ff9f97a24
     m_Address: ui/HeroPower_CarvedStone
     m_ReadOnly: 0
