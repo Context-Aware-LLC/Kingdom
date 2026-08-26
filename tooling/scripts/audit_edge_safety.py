@@ -95,12 +95,6 @@ TOKEN_EXCEPTIONS = {
         'and the ordinary gutter top and bottom; the Pixel 5a insets measured over '
         'USB are [136,0][0,63] / [0,0][136,63], so left/right flip and the TOP is 0 '
         'in both landscape rotations, which is the only orientation this game has',
-    'col-query-bracket--left':
-        'the left upright of that frame; measured at x 24 with the panel already cleared, '
-        'i.e. under the 52dp cutout, so it restates the token itself',
-    'col-query-bracket--right':
-        'the right upright; same reason, and both sides pay because the cutout flips with '
-        'rotation direction',
 }
 
 ELEMENT_INTERNAL = {
@@ -125,9 +119,12 @@ ELEMENT_INTERNAL = {
     'col-query-bracket':
         'the decorative frame INSIDE the query bar; CollectionScreen.uxml:63 and :68 parent '
         'both to #query-bar, not to .emb-root, and both carry picking-mode="Ignore". This '
-        'rule holds only the top/bottom offsets, which are against that bar; the horizontal '
-        'clearance is on --left/--right in TOKEN_EXCEPTIONS, because a parent padding does '
-        'not reach a position:absolute child (#237)',
+        'rule holds only the top/bottom offsets, which are against that bar',
+    'col-query-bracket--left':
+        'non-pickable decorative upper leg inside #query-bar; it intentionally paints to the '
+        'panel edge while interactive content remains inside the parent panel safe padding',
+    'col-query-bracket--right':
+        'matched non-pickable decorative upper leg inside #query-bar; same intentional bleed',
     'col-query-bracket__piece':
         'the three pieces of the decorative bracket frame INSIDE the query bar; '
         'CollectionScreen.uxml:63-72 parents all six to .col-query-bracket, which is '

@@ -194,6 +194,56 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
+        public void Collection_compact_query_drawer_leaves_an_outside_tap_target_visible()
+        {
+            string styles = Asset("UI", "Collection", "collection.uss");
+            string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+
+            const float phonePanelWidth = 914.3f;
+            const float phonePanelHeight = 411.4f;
+            const float edgeSafe = 52f;
+            const float compactGroupMargin = 56f;
+            const float compactControlHeight = 52f;
+            const float rowMarginBottom = 8f;
+            const float drawerVerticalPadding = 32f;
+
+            float chipRowWidth = phonePanelWidth - 2f * edgeSafe - 2f * compactGroupMargin;
+            float rarityRowWidth = 4f * (128f + 8f);
+            float typeRowWidth = 3f * (128f + 8f);
+            float costRowWidth = 8f * (60f + 8f);
+            float drawerHeight = drawerVerticalPadding
+                + 2f * (compactControlHeight + rowMarginBottom)
+                + 3f * (compactControlHeight + rowMarginBottom);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.col-query-utility-row\s*\{.*?margin-left:\s*56px;.*?margin-right:\s*56px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.col-chip-group\s*\{.*?margin-left:\s*56px;.*?margin-right:\s*56px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.col-query-bracket--left\s*\{\s*left:\s*0;\s*\}"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.col-query-bracket--right\s*\{\s*right:\s*0;\s*\}"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection \.db-chip\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)#query-rarities \.db-chip,\s*#query-types \.db-chip\s*\{\s*width:\s*128px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)#query-costs \.db-chip\s*\{\s*width:\s*60px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.chrome-input\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
+                Assert.That(controller, Does.Contain(
+                    "_queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));"));
+                Assert.That(rarityRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
+                Assert.That(typeRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
+                Assert.That(costRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
+                Assert.That(drawerHeight, Is.LessThan(phonePanelHeight),
+                    "The open drawer must leave some scrim exposed for the outside-tap close path.");
+            });
+        }
+
+        [Test]
         public void Collection_class_tabs_mark_selection_with_an_inset_frame_without_moving()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");

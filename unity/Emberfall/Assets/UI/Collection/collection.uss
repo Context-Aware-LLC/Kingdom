@@ -416,11 +416,10 @@
        idea, just not all four sides of it. Declared in audit_edge_safety.py's
        TOKEN_EXCEPTIONS.
 
-       KNOWN, MEASURED, NOT FIXED HERE: with the five rows this bar stacks it resolves to
-       431dp tall against a 411.4dp landscape panel, so the last chip group runs ~20dp off the
-       bottom. That predates this change (it was 431 at the old padding too) and it needs the
-       content to scroll, which is structural — tracked with the rest of the mobile collection
-       work in #177. */
+       COMPACT BUDGET: the Pixel 5a has 411.4dp of height. At compact sizing the search row,
+       optional scope row and three chip rows total at most 332dp including drawer padding and
+       row margins. The 79dp remainder is the outside-tap target that closes this drawer. Keep the
+       compact row widths and heights below in sync with the source-level contract. */
     padding: var(--space-4) var(--edge-safe);
     background-color: rgba(8, 12, 18, 0.98);
     border-bottom-width: 2px;
@@ -447,9 +446,17 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    margin-left: 56px;
+    margin-right: 56px;
+    margin-bottom: var(--space-2);
+}
+.collection.emb-sw-medium .col-query-utility-row {
+    margin-left: 106px;
+    margin-right: 106px;
+}
+.collection.emb-sw-expanded .col-query-utility-row {
     margin-left: 156px;
     margin-right: 156px;
-    margin-bottom: var(--space-2);
 }
 .col-query-actions {
     position: absolute;
@@ -489,8 +496,8 @@
 #query-reset {
     width: 120px;
 }
-/* Chips wrap: eight classes will not fit one row on a phone, and percentage-driven wrapping is the
- * project's sizing model rather than a pixel breakpoint. */
+/* Wrapping remains the fallback for split-screen and unusually narrow panels. At the measured
+ * compact phone width, the wider bay and compact chip step below keep each known facet on one row. */
 .col-chip-row {
     flex-direction: row;
     flex-wrap: wrap;
@@ -500,9 +507,17 @@
 .col-chip-group {
     flex-direction: row;
     align-items: center;
+    margin-left: 56px;
+    margin-right: 56px;
+    margin-bottom: var(--space-2);
+}
+.collection.emb-sw-medium .col-chip-group {
+    margin-left: 106px;
+    margin-right: 106px;
+}
+.collection.emb-sw-expanded .col-chip-group {
     margin-left: 156px;
     margin-right: 156px;
-    margin-bottom: var(--space-2);
 }
 
 /* Matched forged brackets turn inward below the search row, then run to the drawer floor. Their
@@ -514,18 +529,14 @@
     bottom: 0;
     width: 128px;
 }
-/* --edge-safe, NOT --space-6, and it has to be restated here rather than inherited from the
-   panel: these are position:absolute, and a parent's PADDING DOES NOT REACH AN ABSOLUTELY
-   POSITIONED CHILD (#237). Measured at the device dp budget, the panel's new 52dp horizontal
-   padding moved every flow child to x >= 108 and left these two frame uprights sitting at
-   x 24 — under the 52dp cutout, which is the one thing --edge-safe exists to prevent. The
-   bay they draw narrows by 28dp on each side; the chip groups sit at 208..706 and are still
-   well inside it. */
+/* Decorative, non-pickable frame: let its upper legs paint to the panel edges while the inner
+ * uprights at 102px define the widened compact bay. Interactive content still pays the query
+ * panel's --edge-safe padding; this decoration deliberately does not. */
 .col-query-bracket--left {
-    left: var(--edge-safe);
+    left: 0;
 }
 .col-query-bracket--right {
-    right: var(--edge-safe);
+    right: 0;
 }
 .col-query-bracket__piece {
     position: absolute;
@@ -570,8 +581,8 @@
     right: 102px;
 }
 .collection .db-chip {
-    min-height: 56px;
-    height: 56px;
+    min-height: 52px;
+    height: 52px;
     padding: 0 var(--space-6);
     border-width: 0;
     border-radius: 0;
@@ -588,6 +599,14 @@
     transition-property: -unity-background-image-tint-color, color, opacity, translate;
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
+}
+.collection.emb-sw-medium .db-chip {
+    min-height: 54px;
+    height: 54px;
+}
+.collection.emb-sw-expanded .db-chip {
+    min-height: 56px;
+    height: 56px;
 }
 .collection .db-chip:hover,
 .collection .db-chip:focus {
@@ -613,17 +632,31 @@
 
 #query-rarities .db-chip,
 #query-types .db-chip {
-    width: 132px;
+    width: 128px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
 }
+.collection.emb-sw-medium #query-rarities .db-chip,
+.collection.emb-sw-medium #query-types .db-chip {
+    width: 130px;
+}
+.collection.emb-sw-expanded #query-rarities .db-chip,
+.collection.emb-sw-expanded #query-types .db-chip {
+    width: 132px;
+}
 
 #query-costs .db-chip {
-    width: 64px;
+    width: 60px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
+}
+.collection.emb-sw-medium #query-costs .db-chip {
+    width: 62px;
+}
+.collection.emb-sw-expanded #query-costs .db-chip {
+    width: 64px;
 }
 
 /* ---------- Active-deck pairing + cost chip sizing (#160) ----------
@@ -650,11 +683,6 @@
 .collection--editing .col-query-row .db-filter-row {
     margin-bottom: 0;
     margin-left: var(--space-3);
-}
-
-/* Cost chips stay at the same enlarged square size while editing a deck. */
-.collection--editing #query-costs .db-chip {
-    width: 64px;
 }
 
 /* ---------- Wall ---------- */
@@ -1066,12 +1094,12 @@
 }
 
 .chrome-input {
-    min-height: 56px;
-    height: 56px;
+    min-height: 52px;
+    height: 52px;
 }
 .chrome-input > .unity-base-text-field__input,
 .chrome-input .unity-base-popup-field__input {
-    min-height: 56px;
+    min-height: 52px;
     padding-left: 18px;
     padding-right: 18px;
     border-width: 0;
@@ -1086,6 +1114,22 @@
     -unity-background-image-tint-color: rgb(224, 229, 236);
     color: var(--ink-1);
     font-size: var(--type-body);
+}
+.collection.emb-sw-medium .chrome-input {
+    min-height: 54px;
+    height: 54px;
+}
+.collection.emb-sw-medium .chrome-input > .unity-base-text-field__input,
+.collection.emb-sw-medium .chrome-input .unity-base-popup-field__input {
+    min-height: 54px;
+}
+.collection.emb-sw-expanded .chrome-input {
+    min-height: 56px;
+    height: 56px;
+}
+.collection.emb-sw-expanded .chrome-input > .unity-base-text-field__input,
+.collection.emb-sw-expanded .chrome-input .unity-base-popup-field__input {
+    min-height: 56px;
 }
 .chrome-input > .unity-base-text-field__input:hover,
 .chrome-input .unity-base-popup-field__input:hover {
