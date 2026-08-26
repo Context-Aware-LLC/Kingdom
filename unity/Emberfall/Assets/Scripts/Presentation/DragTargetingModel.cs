@@ -119,8 +119,10 @@ namespace Emberfall.Presentation
     /// <para>Legality here is a COURTESY affordance, not authority (ADR-0004, and the same doctrine
     /// as the old click machine): the target sets exist so the board can glow, and the validator plus
     /// the server still rule on every intent this produces. Where the two disagree the engine wins,
-    /// so this errs toward submitting and letting the reject toast explain — a silently-swallowed
-    /// gesture teaches the player nothing.</para>
+    /// so this errs toward SUBMITTING: the courtesy target set can be wrong (it is built from a
+    /// mirror), and swallowing a gesture the authority would have allowed is the worse of the two
+    /// errors. Since #268 a rejection is silent, so an over-submitted gesture costs nothing
+    /// visible.</para>
     /// </summary>
     public sealed class DragTargetingModel
     {
@@ -284,8 +286,8 @@ namespace Emberfall.Presentation
         // ── Release: what intent does this gesture produce? ────────────────────────
 
         /// <summary>
-        /// The release half. Null means "this drop meant nothing" — cancel silently rather than
-        /// spending a reject toast on a gesture the player clearly abandoned.
+        /// The release half. Null means "this drop meant nothing" — cancel rather than manufacture
+        /// an intent from a gesture the player clearly abandoned.
         /// </summary>
         public PlayerIntent Resolve(DragSource source, PointerSubject released, DropPoint drop)
         {

@@ -5,7 +5,7 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// EF-049. The reveal panel itself — a plate with three text blocks, built procedurally from
-    /// primitives like RejectToastView and the targeting banner.
+    /// primitives like the targeting banner.
     ///
     /// <para><b>A panel, not an enlarged card.</b> The card blow-up (a card flying out of the hand
     /// and growing) is explicitly parked: it has to overlap the board, sort above everything,
@@ -165,12 +165,11 @@ namespace Emberfall.Presentation
         private const int SortBase = 90;
         private const float PanelZ = -1.5f;
 
-        // Bottom-right: positive X, negative Y from screen centre. Clear of the hand (which sits
-        // bottom-CENTRE) and of RejectToastView's stack — that plate sits at world (5.6, -1.5),
-        // up to 2 toasts tall (0.6 apart), spanning roughly x[3.5, 7.7] y[-1.75, -0.65]. This panel
-        // sits BELOW that band (y centre -2.9, half-height ~0.51 -> bottom of -3.4, well inside the
-        // +-4.6 safe half-height) with no y overlap, so a toast firing during a hover-read never
-        // collides with it.
+        // Bottom-right: positive X, negative Y from screen centre. Clear of the hand, which sits
+        // bottom-CENTRE. Y centre -2.9, half-height ~0.51 -> bottom of -3.4, well inside the
+        // +-4.6 safe half-height. The band above it (roughly y[-1.75, -0.65]) was reserved for the
+        // reject-toast stack until #268 deleted that surface; it is free now, but this panel's
+        // placement does not depend on it either way.
         private const float PanelX = 4.6f;
         private const float PanelY = -2.9f;
 

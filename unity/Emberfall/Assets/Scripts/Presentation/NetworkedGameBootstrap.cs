@@ -364,10 +364,9 @@ namespace Emberfall.Presentation
 
             // ── Intent source for OUR seat; the opponent seat is inert (NullIntentSource). ────────
             IIntentSource mine;
-            HotSeatInput hotSeat = null;
             if (inputRouter != null)
             {
-                hotSeat = new HotSeatInput(localId);
+                var hotSeat = new HotSeatInput(localId);
                 inputRouter.Init(localId, hotSeat, db, new CommandProcessor(db));
                 mine = hotSeat;
             }
@@ -489,15 +488,10 @@ namespace Emberfall.Presentation
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 
-            // ── Reject toasts (dev-docs/ui/client-surfaces.md:15) — server rejects (incl.
-            // RateLimited from the B1 policy gate) arrive on the same OnRejected path. ─
-            if (hotSeat != null)
-            {
-                var toastGo = new GameObject("RejectToasts");
-                toastGo.transform.position = new Vector3(5.6f, -1.5f, 0f);
-                var toasts = toastGo.AddComponent<RejectToastView>();
-                hotSeat.Rejected += toasts.Show;
-            }
+            // Rejections have NO player-facing surface, by decision (#268, 2026-08-26): the
+            // world-space toast stack that used to live here was unreadable at device scale and
+            // only restated what the absent effect already says. Rejects still reach
+            // HotSeatInput.OnRejected, which logs them for diagnosis.
 
             // ── VFX ───────────────────────────────────────────────────────────────
             if (vfxDirector != null)

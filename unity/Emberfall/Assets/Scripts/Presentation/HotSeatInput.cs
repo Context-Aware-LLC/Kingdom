@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using Emberfall.Session;
@@ -32,14 +31,13 @@ namespace Emberfall.Presentation
             return false;
         }
 
-        /// <summary>Raised on every rejection — local validator and authority both land here
-        /// (InputRouter.Submit and MatchRunner both call OnRejected). Feeds the reject toast.</summary>
-        public event Action<RejectReason> Rejected;
-
+        /// <summary>Every rejection lands here — local validator and authority both
+        /// (InputRouter.Submit and MatchRunner both call it). DIAGNOSTIC ONLY: rejections have no
+        /// player-facing surface by decision (#268, 2026-08-26), so this log is the only trace.
+        /// Nothing subscribes; do not reintroduce an event here to feed a toast.</summary>
         public void OnRejected(RejectReason reason)
         {
             Debug.LogWarning($"[HotSeatInput:{_playerId}] intent rejected — {reason}");
-            Rejected?.Invoke(reason);
         }
 
         // No-op: the human's mulligan is submitted by the mulligan picker via

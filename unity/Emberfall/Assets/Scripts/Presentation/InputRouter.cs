@@ -559,7 +559,7 @@ namespace Emberfall.Presentation
                 _activeTargets != null && _activeTargets.Contains(_model.HeroIdOf(_model.EnemyId())));
         }
 
-        // ── Armed banner (built lazily; same primitives approach as the reject toast) ──
+        // ── Armed banner (built lazily from world-space primitives) ──
 
         private void ShowBanner(string text)
         {
@@ -762,7 +762,7 @@ namespace Emberfall.Presentation
         private void Submit(PlayerIntent intent)
         {
             // A pending interactive choice is the sole legal gameplay continuation. Keep all
-            // board/button/keyboard paths quiet rather than manufacturing predictable reject toasts.
+            // board/button/keyboard paths quiet rather than manufacturing predictable rejections.
             if (ChoiceBlocksInput && intent is not UnearthChoiceIntent) return;
 
             if (_validator != null && _currentState != null
