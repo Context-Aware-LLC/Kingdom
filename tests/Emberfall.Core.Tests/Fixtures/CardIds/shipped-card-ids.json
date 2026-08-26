@@ -535,19 +535,19 @@
   },
   {
     "id": 220,
-    "handle": "tempest_lightning_lash",
+    "handle": "storm_lightning_lash",
     "type": "SPELL",
     "setId": "REKINDLING"
   },
   {
     "id": 221,
-    "handle": "tempest_thunderstrike",
+    "handle": "storm_thunderstrike",
     "type": "SPELL",
     "setId": "REKINDLING"
   },
   {
     "id": 222,
-    "handle": "tempest_stormcallers_pact",
+    "handle": "storm_stormcallers_pact",
     "type": "SPELL",
     "setId": "REKINDLING"
   },
@@ -1069,7 +1069,7 @@
   },
   {
     "id": 1087,
-    "handle": "storm_tempest_striker",
+    "handle": "storm_storm_striker",
     "type": "MINION",
     "setId": "EMBERFALL"
   },
@@ -1579,31 +1579,31 @@
   },
   {
     "id": 1172,
-    "handle": "tempest_static_wisp",
+    "handle": "storm_static_wisp",
     "type": "MINION",
     "setId": "REKINDLING"
   },
   {
     "id": 1173,
-    "handle": "tempest_chain_caller",
+    "handle": "storm_chain_caller",
     "type": "MINION",
     "setId": "REKINDLING"
   },
   {
     "id": 1174,
-    "handle": "tempest_storm_channeler",
+    "handle": "storm_storm_channeler",
     "type": "MINION",
     "setId": "REKINDLING"
   },
   {
     "id": 1175,
-    "handle": "tempest_voltaic_sentinel",
+    "handle": "storm_voltaic_sentinel",
     "type": "MINION",
     "setId": "REKINDLING"
   },
   {
     "id": 1176,
-    "handle": "tempest_vael",
+    "handle": "storm_vael",
     "type": "MINION",
     "setId": "REKINDLING"
   }

@@ -177,9 +177,29 @@ namespace Emberfall.Editor
                         : BuildOptions.None,
                 };
                 if (profilerBuild)
+                    // Attach over USB and let autoconnect do it. Measured 2026-08-26, Pixel 5a: the
+                    // Editor creates `tcp:34998 localabstract:Unity-<package>` itself and the
+                    // Profiler connects on 127.0.0.1:34998 — you do not add a forward by hand. The
+                    // player ALSO listens on TCP 55000 and multicasts discovery on 225.0.0.222:54997,
+                    // but that is the Wi-Fi path and the multicast does not survive the network here,
+                    // so the device never shows in the dropdown. Do not chase 55000; it is a
+                    // plausible-looking dead end that cost a session.
+                    //
+                    // Two limits worth knowing BEFORE you build, because neither announces itself:
+                    //   * `Deep Profiler Supported: No` on Android IL2CPP — no per-callstack
+                    //     allocation from the built-in Profiler, only which pool grew, which is what
+                    //     `dumpsys meminfo` already told you.
+                    //   * The Editor-side frame buffer grows without bound. Profiling a player that
+                    //     is itself running away hit 1.28 GB in the out-of-process Profiler window
+                    //     and stalled it; the window had to be killed. For an allocation question,
+                    //     take a com.unity.memoryprofiler snapshot — it writes to a FILE and so
+                    //     survives the player being OOM-killed — rather than recording frames.
                     Debug.Log("[EmberfallBuild] PROFILER build: development player, autoconnect "
-                              + "profiler. Attach with `adb forward tcp:34999 localabstract:Unity-"
-                              + "com.ContextAware.Emberfall`, then Window > Analysis > Profiler.");
+                              + "profiler. Connect the phone by USB and launch the app; the Editor "
+                              + "forwards tcp:34998 itself. Window > Analysis > Profiler, target "
+                              + "`AndroidPlayer(...@ADB:<serial>)`. Stop Play Mode first — it steals "
+                              + "the target and reads as 'cannot connect'. Deep Profiler is NOT "
+                              + "supported here; use Memory Profiler snapshots for allocations.");
                 Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
             }
             finally
