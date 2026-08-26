@@ -52,7 +52,11 @@ namespace Emberfall.Core.Tests.Presentation
                 .Single(element => (string?)element.Attribute("name") == "query-bar");
             XElement queryScrim = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-scrim");
-            XElement toolbar = screenRoot.Elements().First();
+            XElement body = screenRoot.Elements()
+                .Single(element => (string?)element.Attribute("name") == "body");
+            XElement toolbar = screenRoot.Elements().Single(element =>
+                ((string?)element.Attribute("class"))?.Split(' ')
+                    .Contains("col-query-toolbar") == true);
 
             Assert.Multiple(() =>
             {
@@ -62,13 +66,13 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(uxml, Does.Not.Contain("name=\"collection-header\""));
                 Assert.That(uxml, Does.Not.Contain("name=\"collection-count\""));
                 Assert.That(uxml, Does.Not.Contain("text=\"Collection\""));
-                // Navigation sits in a PERSISTENT toolbar in the header's old space; the query bar
-                // became a slide-out panel behind `query-toggle` and is no longer always on screen.
+                // Navigation sits in a PERSISTENT overlay; the query bar became a slide-out panel
+                // behind `query-toggle` and is no longer always on screen.
                 // Decks and Back cannot live inside it -- a dismissable panel is not a place to put
                 // the only way off the screen.
                 Assert.That((string?)toolbar.Attribute("class"),
                     Does.Contain("col-query-toolbar"),
-                    "The always-visible toolbar should occupy the header's old space.");
+                    "The always-visible controls should share one overlay layer.");
                 Assert.That(toolbar.Descendants().Any(element =>
                     (string?)element.Attribute("name") == "decks-button"), Is.True,
                     "Decks belongs in the persistent toolbar, not the dismissable query panel.");
@@ -86,6 +90,9 @@ namespace Emberfall.Core.Tests.Presentation
                     "The visible controls make a redundant filter-and-sort heading unnecessary.");
                 Assert.That((string?)queryScrim.Attribute("picking-mode"), Is.EqualTo("Ignore"),
                     "The outside-click scrim must not block the wall while the drawer is closed.");
+                Assert.That(screenRoot.Elements().ToList().IndexOf(toolbar),
+                    Is.GreaterThan(screenRoot.Elements().ToList().IndexOf(body)),
+                    "UI Toolkit paints in document order, so overlay chrome must follow the wall.");
                 Assert.That(screenRoot.Elements().ToList().IndexOf(queryScrim),
                     Is.LessThan(screenRoot.Elements().ToList().IndexOf(queryBar)),
                     "UI Toolkit paints in document order, so the drawer must remain above its scrim.");
@@ -142,7 +149,7 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
-        public void Collection_filter_opener_reads_as_a_hanging_ribbon()
+        public void Collection_chrome_overlays_the_wall_and_steps_with_screen_class()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
@@ -153,6 +160,7 @@ namespace Emberfall.Core.Tests.Presentation
                 .Single(element => ((string?)element.Attribute("class"))?.Split(' ')
                     .Contains("col-query-actions") == true);
             Match ribbon = Regex.Match(styles, @"(?s)\.col-button--filters\s*\{(?<body>.*?)\}");
+            Match toolbar = Regex.Match(styles, @"(?s)\.col-query-toolbar\s*\{(?<body>.*?)\}");
 
             Assert.Multiple(() =>
             {
@@ -165,8 +173,23 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(ribbon.Success, Is.True);
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("position: absolute"));
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 50%"));
-                Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 72px"));
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 56px"));
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("translate: -50% 0"));
+                Assert.That(toolbar.Success, Is.True);
+                Assert.That(toolbar.Groups["body"].Value, Does.Contain("position: absolute"));
+                Assert.That(toolbar.Groups["body"].Value, Does.Contain("left: var(--edge-safe)"));
+                Assert.That(toolbar.Groups["body"].Value, Does.Contain("right: var(--edge-safe)"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection\.emb-sw-medium \.col-button--filters\s*\{.*?height:\s*64px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection\.emb-sw-expanded \.col-button--filters\s*\{.*?height:\s*72px;"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection\s*\{.*?padding:\s*0 var\(--space-6\) 0;"),
+                    "Compact must not reserve the old 24dp bottom gutter.");
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection\.emb-sw-medium\s*\{.*?padding-bottom:\s*var\(--space-4\);"));
+                Assert.That(styles, Does.Match(
+                    @"(?s)\.collection\.emb-sw-expanded\s*\{.*?padding-bottom:\s*var\(--space-6\);"));
             });
         }
 
@@ -207,7 +230,6 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Collection_wall_uses_art_first_responsive_tiers_instead_of_screen_pixel_density()
         {
-            string sharedStyles = Asset("UI", "Deckbuilder", "deckbuilder.uss");
             string collectionStyles = Asset("UI", "Collection", "collection.uss");
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
 
@@ -226,9 +248,11 @@ namespace Emberfall.Core.Tests.Presentation
 
             Assert.Multiple(() =>
             {
-                Assert.That(sharedStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*340px;.*?height:\s*477px;"));
+                Assert.That(collectionStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*340px;.*?height:\s*477px;"));
                 Assert.That(collectionStyles, Does.Match(
-                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*4px 20px;\s*\}"));
+                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*0 12px;\s*\}"));
+                Assert.That(collectionStyles, Does.Match(
+                    @"(?s)\.collection\.emb-sw-expanded \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*4px 20px;\s*\}"));
                 Assert.That(wall, Does.Contain("public const float TileWidth = 340f;"));
                 Assert.That(wall, Does.Contain("public const float TileHeight = 477f;"));
                 Assert.That(wall, Does.Contain("public const float MediumTileWidth = 480f;"));

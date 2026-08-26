@@ -2,19 +2,6 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
-        <ui:VisualElement class="col-query-toolbar chrome-panel chrome-panel--outer">
-            <ui:Button name="query-toggle" class="col-button col-button--filters chrome-button chrome-button--primary">
-                <ui:Label text="FILTERS" picking-mode="Ignore" class="col-filter-ribbon__label"/>
-                <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron">
-                    <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron-arm col-filter-ribbon__chevron-arm--left"/>
-                    <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron-arm col-filter-ribbon__chevron-arm--right"/>
-                </ui:VisualElement>
-            </ui:Button>
-            <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
-                <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
-                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
-            </ui:VisualElement>
-        </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body">
             <ui:VisualElement name="class-tab-bar">
                 <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
@@ -32,6 +19,19 @@
                     <ui:VisualElement name="collection-grid" class="db-grid"/>
                 </ui:ScrollView>
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement picking-mode="Ignore" class="col-query-toolbar">
+            <ui:Button name="query-toggle" class="col-button col-button--filters chrome-button chrome-button--primary">
+                <ui:Label text="FILTERS" picking-mode="Ignore" class="col-filter-ribbon__label"/>
+                <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron">
+                    <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron-arm col-filter-ribbon__chevron-arm--left"/>
+                    <ui:VisualElement picking-mode="Ignore" class="col-filter-ribbon__chevron-arm col-filter-ribbon__chevron-arm--right"/>
+                </ui:VisualElement>
+            </ui:Button>
+            <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
+                <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
+                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>

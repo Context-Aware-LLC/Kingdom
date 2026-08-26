@@ -80,6 +80,10 @@ ROOT_CLASS = 'emb-root'
 # "the classes did not fit" is the excuse that would otherwise swallow every
 # element someone could not be bothered to tag.
 TOKEN_EXCEPTIONS = {
+    'col-query-toolbar':
+        'transparent overlay coordinate surface for Back, Decks and Filters; it spans the '
+        'horizontal safe area itself so its absolute children can anchor to 0/50% without '
+        'repeating or double-spending the cutout clearance',
     'deck-drawer':
         'three of its four sides are screen edges and the fourth is interior; '
         '.emb-bleed would pad all four and leave 120px of column at min-width 420',
@@ -103,6 +107,9 @@ ELEMENT_INTERNAL = {
     'col-button--filters':
         'ribbon positioned against the collection toolbar, not the screen; '
         'CollectionScreen.uxml parents it to .col-query-toolbar',
+    'col-query-actions':
+        'Decks and Back group positioned at right:0 inside .col-query-toolbar; the toolbar '
+        'already spans left/right --edge-safe, so clearing this child again would double-inset it',
     'deck-plate-star':
         'star on a deck plate; CharacterRosterController.cs parents it to the plate',
     'hero-tile-badge':

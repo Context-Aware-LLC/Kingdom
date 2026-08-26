@@ -262,9 +262,15 @@
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
     -unity-background-scale-mode: scale-and-crop;
-    /* No top inset: the compact toolbar is anchored to the top bound of the plate. The other three sides
-     * keep theirs, so the wall and the class strip stay inset from the edges as before. */
-    padding: 0 var(--space-6) var(--space-6);
+    /* The compact wall spends its full short axis. Medium and expanded restore progressively deeper
+     * bottom framing below; the controls are an overlay and never consume flow space at any class. */
+    padding: 0 var(--space-6) 0;
+}
+.collection.emb-sw-medium {
+    padding-bottom: var(--space-4);
+}
+.collection.emb-sw-expanded {
+    padding-bottom: var(--space-6);
 }
 
 /* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
@@ -299,9 +305,9 @@
     position: absolute;
     top: 0;
     left: 50%;
-    width: 144px;
-    height: 72px;
-    min-height: 72px;
+    width: 132px;
+    height: 56px;
+    min-height: 56px;
     padding: var(--space-2) var(--space-3) var(--space-1);
     border-left-width: 2px;
     border-right-width: 2px;
@@ -312,6 +318,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+.collection.emb-sw-medium .col-button--filters {
+    width: 152px;
+    height: 64px;
+    min-height: 64px;
+}
+.collection.emb-sw-expanded .col-button--filters {
+    width: 176px;
+    height: 72px;
+    min-height: 72px;
 }
 .col-button--filters-on {
     -unity-background-image-tint-color: rgb(255, 255, 255);
@@ -356,19 +372,17 @@
 }
 
 /* Query toolbar + top drawer
- * The wall keeps one compact action row in normal flow. The query itself is an overlay declared
- * after the wall in UXML, so opening it does not relayout the fixed-size card tiles.
+ * The toolbar is an overlay declared after the wall in UXML: it paints above the cards but owns no
+ * flow height. Its own picking is ignored so the transparent span does not swallow wall gestures;
+ * the three Button children remain pickable. The query drawer follows it and therefore paints above
+ * both toolbar and wall while open.
  */
 .col-query-toolbar {
-    position: relative;
-    flex-direction: row;
-    align-items: center;
-    min-width: 150px;
-    flex-shrink: 0;
-    background-color: rgba(0, 0, 0, 0.45);
-    border-radius: 0 0 var(--space-2) var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-1);
+    position: absolute;
+    top: 0;
+    left: var(--edge-safe);
+    right: var(--edge-safe);
+    height: 72px;
 }
 .col-query-scrim {
     display: none;
@@ -438,10 +452,12 @@
     margin-bottom: var(--space-2);
 }
 .col-query-actions {
+    position: absolute;
+    top: var(--space-1);
+    right: 0;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
-    flex-grow: 1;
 }
 .col-query-actions .col-button {
     min-height: var(--touch-min);
@@ -450,6 +466,12 @@
 }
 .col-query-actions .col-button--decks {
     min-width: 96px;
+}
+.collection.emb-sw-medium .col-query-actions {
+    top: var(--space-2);
+}
+.collection.emb-sw-expanded .col-query-actions {
+    top: var(--space-3);
 }
 .col-search {
     flex-grow: 1;
@@ -950,14 +972,26 @@
 }
 
 /* The two nested panel sprites replace the former flat wall while keeping the responsive card
- * contract untouched. The deeper bottom inset keeps scrolling cards visibly inside the forged
- * frame instead of letting the final visible row paint over its lower ledge. */
+ * contract untouched. Compact collapses the lower ledge to 4dp; medium and expanded progressively
+ * restore the framing as their short-axis budget grows. */
 .collection .db-collection.chrome-panel--outer {
-    padding: 4px 16px 20px;
+    padding: 4px 12px 4px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
 .collection .col-scroll.chrome-panel--recessed {
+    padding: 0 12px;
+}
+.collection.emb-sw-medium .db-collection.chrome-panel--outer {
+    padding: 4px 16px 12px;
+}
+.collection.emb-sw-medium .col-scroll.chrome-panel--recessed {
+    padding: 4px 20px;
+}
+.collection.emb-sw-expanded .db-collection.chrome-panel--outer {
+    padding-bottom: 20px;
+}
+.collection.emb-sw-expanded .col-scroll.chrome-panel--recessed {
     padding: 4px 20px;
 }
 .deck-drawer.chrome-panel--outer {
