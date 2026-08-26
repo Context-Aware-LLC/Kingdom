@@ -426,16 +426,19 @@
  * Splitting the pitch from the form spends the axis that had room: the gate lands near 276dp and
  * the name modal near 358dp, against 411 available.
  */
-.mm-modal--onboard .mm-modal__columns {
+.mm-modal--onboard .mm-modal__columns,
+.account-create-screen .mm-modal__columns {
     flex-direction: row;
     align-items: flex-start;
 }
-.mm-modal--onboard .mm-modal__pitch {
+.mm-modal--onboard .mm-modal__pitch,
+.account-create-screen .mm-modal__pitch {
     padding-right: var(--space-8);
 }
 /* 24dp under every help paragraph was a desktop rhythm. The name modal carries TWO of them and
  * needs the 24 back. */
-.mm-modal--onboard .mm-modal__help {
+.mm-modal--onboard .mm-modal__help,
+.account-create-screen .mm-modal__help {
     margin-bottom: var(--space-3);
 }
 
@@ -500,4 +503,35 @@
 .mm-version {
     font-size: var(--type-caption);              /* 14dp. Was --type-label to survive the old scale. */
     color: var(--ink-2);
+}
+
+/* ---------- Account creation, as a SCREEN (Sam, 2026-08-25) ----------
+ * The sign-in gate and the name step were two .mm-modal overlays here until then. This root
+ * replaces .mm-modal AND .mm-modal__panel: there is no backdrop to draw and nothing to centre a
+ * 520px dialog inside, because the root IS the panel.
+ *
+ * WHY THE ROW TREATMENT ABOVE WAS NOT ALREADY ENOUGH. Its comment budgets the flow "against 411
+ * available", and that number is wrong: both modals carried .emb-bleed — padding: var(--edge-safe),
+ * 52dp PER EDGE — when it was written, so the real box was 411 - 104 = 307dp. The gate's 276dp
+ * fitted with 31 to spare; the name step's 358dp overflowed by 51, and the name step is the one
+ * with no way past it. On top of that .mm-modal__panel spent another var(--space-8) per edge
+ * INSIDE that box. Re-hosting is the fix precisely because the nesting was the problem: one
+ * clearance (.emb-bleed on this root, in the UXML) and no second padding inside it.
+ *
+ * flex-grow: 1 is the same load-bearing declaration .character-create-screen documents at length:
+ * without it a scene root sizes to CONTENT and everything below it resolves to nothing.
+ *
+ * RETIREMENT TRIGGER: if the sign-in gate ever becomes skippable — it is unskippable by Sam's
+ * 2026-08-08 ruling — this stops being a whole screen and the .mm-modal rules above come back
+ * into play. Neither this block nor AccountCreateController survives that change unread. */
+.account-create-screen {
+    flex-grow: 1;
+    background-color: var(--surface-1);
+    color: var(--ink-1);
+    justify-content: center;
+}
+.account-create-screen #signin-view,
+.account-create-screen #name-view {
+    flex-grow: 1;
+    justify-content: center;
 }

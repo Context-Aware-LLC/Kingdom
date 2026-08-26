@@ -20,6 +20,7 @@ namespace Emberfall.Editor
         private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
         private const string RosterScenePath = "Assets/Scenes/CharacterRoster.unity";
         private const string CreateScenePath = "Assets/Scenes/CharacterCreate.unity";
+        private const string AccountScenePath = "Assets/Scenes/AccountCreate.unity";
 
         // Collection IS the deckbuilder (#154). There is no separate deckbuilder scene to list.
         private const string CollectionScenePath = "Assets/Scenes/Collection.unity";
@@ -46,7 +47,7 @@ namespace Emberfall.Editor
         /// </summary>
         private static readonly string[] AllScenes =
         {
-            MenuScenePath, ScenePath, RosterScenePath, CreateScenePath,
+            MenuScenePath, ScenePath, RosterScenePath, CreateScenePath, AccountScenePath,
             CollectionScenePath, ShopScenePath, PackRevealScenePath,
         };
         private const string OutputPath = "Builds/Windows/Emberfall.exe";

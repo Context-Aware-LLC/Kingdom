@@ -51,14 +51,6 @@ namespace Emberfall.Presentation
 
         private const float ShardSafeAreaMarginPercent = 2f;
 
-        private VisualElement _nameModal;
-        private Label _nameError;
-        private TextField _nameField;
-        private Label _namePasswordHelp;
-        private TextField _namePassword;
-        private TextField _namePasswordConfirm;
-        private Button _nameConfirm;
-        private bool _nameBusy;
 
         private SignInGateController _signIn;
 
@@ -97,7 +89,6 @@ namespace Emberfall.Presentation
             RefreshShardBalance();
 
             BindIdentity();
-            BindNameModal();
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
 
@@ -166,18 +157,20 @@ namespace Emberfall.Presentation
         /// </summary>
         private void BeginFirstRun()
         {
-            if (_signIn != null && _signIn.IsRequired)
-            {
-                _signIn.Open(onSignedIn: PromptForNameIfNeeded);
-                return;
-            }
-
-            PromptForNameIfNeeded();
-        }
-
-        private void PromptForNameIfNeeded()
-        {
-            if (_account != null && _account.NeedsDisplayName) OpenNameModal();
+            // FIRST RUN IS A SCENE NOW (Sam, 2026-08-25). The sign-in gate and the name step were
+            // two .mm-modal overlays on this screen; they are AccountCreate, and this is the only
+            // thing left here that knows about them.
+            //
+            // The check stays HERE rather than in a bootstrap, because this is where the account is
+            // already resolved and it is the scene the app boots into. Anything that owes an account
+            // or a name leaves immediately; everyone else never sees the scene exist.
+            //
+            // Sam's 2026-08-08 ruling made this unskippable, so leaving is not optional and there is
+            // no path that continues into the menu with the gate outstanding. AccountCreate hands
+            // the player on itself — to CharacterRoster on an empty roster, back here otherwise.
+            bool needsAccount = _signIn != null && _signIn.IsRequired;
+            bool needsName = _account != null && _account.NeedsDisplayName;
+            if (needsAccount || needsName) Go("AccountCreate");
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
@@ -431,147 +424,9 @@ namespace Emberfall.Presentation
             return null;
         }
 
-        // ── Name modal ──────────────────────────────────────────────────────────────────
-
-        private void BindNameModal()
-        {
-            _nameModal = _root.Q<VisualElement>("name-modal");
-            _nameError = _root.Q<Label>("name-error");
-            _nameField = _root.Q<TextField>("name-field");
-            _namePasswordHelp = _root.Q<Label>("name-password-help");
-            _namePassword = _root.Q<TextField>("name-password");
-            _namePasswordConfirm = _root.Q<TextField>("name-password-confirm");
-            _nameConfirm = _root.Q<Button>("btn-name-confirm");
-
-            Wire("btn-name-confirm", ConfirmName);
-
-            if (_nameField == null) return;
-            // Enter submits. A single-field form where the only way forward is the mouse is a form
-            // people abandon.
-            _nameField.RegisterCallback<KeyDownEvent>(evt =>
-            {
-                if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) ConfirmName();
-            });
-            // Clear a stale refusal as soon as the player changes anything, so the message always
-            // describes what is currently in the field.
-            _nameField.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
-            _namePassword?.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
-            _namePasswordConfirm?.RegisterValueChangedCallback(_ => SetError(_nameError, ""));
-        }
-
-        /// <summary>
-        /// Open the name prompt. <b>First run is the only time this ever opens (NOR-287)</b> — a display
-        /// name is permanent, so there is no second caller and no Cancel: there is no earlier name to
-        /// fall back to, and a dead button invites clicking.
-        ///
-        /// <para><b>Password is offered here too (NOR-246).</b> This is the one moment right after a
-        /// magic-link sign-in where the player already has a live session to attach a password to.
-        /// Changing a password later would be its own flow, which does not exist yet.</para>
-        /// </summary>
-        private void OpenNameModal()
-        {
-            // First-login sizing (NOR-284). This modal only ever opens on first launch now
-            // (NOR-287) — the name/password step the unskippable sign-in ruling leads into — so it
-            // always wears the phone-scale .mm-modal--onboard treatment the sign-in gate carries.
-            // See .mm-modal--onboard in mainmenu.uss.
-            _nameModal?.AddToClassList("mm-modal--onboard");
-
-            if (_nameField != null)
-            {
-                _nameField.SetValueWithoutNotify(_account?.Profile.DisplayName ?? "");
-                _nameField.Focus();
-            }
-
-            bool offerPassword = AuthGateway.IsConfigured;
-            SetVisible(_namePasswordHelp, offerPassword);
-            SetVisible(_namePassword, offerPassword);
-            SetVisible(_namePasswordConfirm, offerPassword);
-            _namePassword?.SetValueWithoutNotify("");
-            _namePasswordConfirm?.SetValueWithoutNotify("");
-
-            SetError(_nameError, "");
-            Show(_nameModal);
-        }
-
-        // async void is correct for a UI handler: SetPasswordAsync resumes on the main thread (it
-        // rides UnityWebRequestAuthHttp, same as everywhere else auth touches UI Toolkit), so
-        // everything after the await is free to touch elements. The try/catch keeps it honest.
-        private async void ConfirmName()
-        {
-            if (_account == null || _nameBusy) return;
-
-            NameCheck check = _account.SetDisplayName(_nameField?.value ?? "");
-            if (!check.IsValid)
-            {
-                // The refusal reason is authored player-facing in PlayerName — rendered verbatim so
-                // there is one wording, not one per form.
-                SetError(_nameError, check.Reason);
-                return;
-            }
-
-            string password = _namePassword?.value ?? "";
-            string passwordConfirm = _namePasswordConfirm?.value ?? "";
-
-            // Optional (Sam, NOR-246): an empty field skips it rather than refusing to continue — the
-            // name above is what the unskippable sign-in ruling actually requires, and a network hiccup
-            // here must not be able to trap a player who already has a valid account behind this modal.
-            if (password.Length > 0 || passwordConfirm.Length > 0)
-            {
-                if (password.Length < 6)
-                {
-                    SetError(_nameError, "Password must be at least 6 characters.");
-                    return;
-                }
-                if (password != passwordConfirm)
-                {
-                    SetError(_nameError, "Passwords do not match.");
-                    return;
-                }
-
-                SetNameBusy(true);
-                try
-                {
-                    AuthResult result = await AuthGateway.Provider.SetPasswordAsync(password);
-                    SetNameBusy(false);
-
-                    if (!result.Ok)
-                    {
-                        SetError(_nameError, string.IsNullOrEmpty(result.Detail)
-                            ? "Could not set a password. Try again, or clear both fields to skip it."
-                            : result.Detail);
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    SetNameBusy(false);
-                    Debug.LogError($"[MainMenu] setting a password threw: {ex}");
-                    SetError(_nameError, "Something went wrong setting a password. Try again, or clear both fields to skip it.");
-                    return;
-                }
-            }
-
-            Hide(_nameModal);
-            RefreshIdentity();
-
-            // Keep the first-run continuation, but move it to the roster: character creation never
-            // lives on the Main Menu. First run is the only run that reaches here (OpenNameModal).
-            if (_account.Roster().Count == 0)
-            {
-                CharacterRosterController.ReturnScene = "MainMenu";
-                Go("CharacterRoster");
-            }
-        }
-
-        private void SetNameBusy(bool busy)
-        {
-            _nameBusy = busy;
-            _nameConfirm?.SetEnabled(!busy);
-            _nameField?.SetEnabled(!busy);
-            _namePassword?.SetEnabled(!busy);
-            _namePasswordConfirm?.SetEnabled(!busy);
-        }
-
+        /// <summary>Show or hide by display, not visibility: a hidden element must not keep spending
+        /// its layout box. Lived in the name-modal region until that moved to AccountCreate
+        /// (2026-08-25); four callers here still need it.</summary>
         private static void SetVisible(VisualElement element, bool shown)
         {
             if (element != null) element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
