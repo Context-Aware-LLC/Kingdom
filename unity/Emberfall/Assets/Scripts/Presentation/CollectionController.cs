@@ -651,8 +651,8 @@ namespace Emberfall.Presentation
         /// and not a facet of a card — <c>CardFilter</c> has nowhere to put it and putting it there
         /// would push an account concern into the shared query layer every screen reads.
         ///
-        /// <para>The wall scrolls back to the top as a side effect of being re-poolled, which is the
-        /// behaviour you want here: the set under the cursor is not the set that was there.</para>
+        /// <para><c>CardWall.SetPool</c> scrolls the wall back to the top, which is the behaviour you
+        /// want here: the set under the cursor is not the set that was there.</para>
         /// </summary>
         private void SetScope(bool ownedOnly)
         {

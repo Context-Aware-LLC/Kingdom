@@ -99,6 +99,7 @@ namespace Emberfall.Presentation
         private const float RowSafetyMargin = 2f;
 
         private readonly VisualElement _grid;
+        private readonly ScrollView _scroll;
         private readonly VisualElement _viewport;
         private readonly CardFaceBaker _baker;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
@@ -140,7 +141,8 @@ namespace Emberfall.Presentation
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
             _baker = baker ?? throw new ArgumentNullException(nameof(baker));
             _grid.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
-            _viewport = _grid.GetFirstAncestorOfType<ScrollView>()?.contentViewport;
+            _scroll = _grid.GetFirstAncestorOfType<ScrollView>();
+            _viewport = _scroll?.contentViewport;
             _viewport?.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
         }
 
@@ -212,6 +214,7 @@ namespace Emberfall.Presentation
             // throwing those textures away on a desktop viewport.
             _tilesNeedBake = true;
             ApplyQuery();
+            ScrollToTop();
         }
 
         /// <summary>
@@ -223,6 +226,25 @@ namespace Emberfall.Presentation
             _filter = filter;
             _sort = sort;
             ApplyQuery();
+            ScrollToTop();
+        }
+
+        /// <summary>
+        /// Put the viewport back at the first row. Called on every query change, because the wall
+        /// gives no hint that the result of a filter is somewhere ABOVE the current scroll position:
+        /// narrowing a pool from a scrolled-down position lands the player on empty background with
+        /// the matches off-screen overhead, which reads as "the filter returned nothing" (Sam,
+        /// 2026-08-26).
+        ///
+        /// <para>Deferred as well as immediate. The immediate write is what the player sees; the
+        /// scheduled one covers the case where the grid is still resolving its new height when this
+        /// runs and the ScrollView re-clamps the offset afterwards.</para>
+        /// </summary>
+        private void ScrollToTop()
+        {
+            if (_scroll == null) return;
+            _scroll.scrollOffset = Vector2.zero;
+            _scroll.schedule.Execute(() => _scroll.scrollOffset = Vector2.zero);
         }
 
         /// <summary>Re-run <see cref="TileDecorator"/> over every tile. Cheap; call on any state change.</summary>
