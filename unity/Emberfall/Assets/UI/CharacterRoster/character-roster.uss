@@ -628,24 +628,7 @@
     margin-left: var(--space-3);
 }
 
-/* ---- Character creation overlay (portrait grid, NOR-278) --------------------------------------
- * Reuses .delete-modal for the scrim, but the card is FULL-BLEED (Sam, NOR-288): it fills the
- * whole display rather than sitting in a 760px box. The portraits are the screen's entire subject
- * while it is open, and a boxed dialog spent most of a phone's landscape width on a dimmed
- * backdrop that had nothing left to show. No radius and no border, because neither reads as an
- * edge when there is nothing outside it. */
-/* The character-create SCREEN's root (Sam, 2026-08-23). Replaces .character-create and
- * .character-create-dialog, the two rules that made the old overlay look full-screen by pulling
- * itself out past .character-roster's padding and then filling the modal. Creation is its own
- * scene now, so there is nothing to escape from — the root IS the panel.
- *
- * flex-grow: 1 IS LOAD-BEARING and its absence is not visible as a layout problem. Without it this
- * root sizes to CONTENT, so #create-grid-view and .hero-grid below it resolve to about zero height,
- * and LayoutHeroGrid returns at its `availableHeight <= 0` guard BEFORE it sizes anything. The
- * tiles then keep a zero-width portrait: the name and the absolutely-positioned badge still paint,
- * the art does not, and a zero-size tile cannot be tapped. Measured on a Pixel 5a 2026-08-23 —
- * it reads as "the art is missing and nothing is interactive", which names neither the root nor
- * the guard, and logs nothing because the early return is above the fallback's warning. */
+/* ---- Character creation ---------------------------------------------------------------------- */
 .character-create-screen {
     flex-grow: 1;
     background-color: var(--surface-1);
@@ -653,12 +636,27 @@
     justify-content: center;
 }
 
-/* The grid view takes whatever height the dialog has left after its header; the other two views
- * are text and controls, so they keep a readable column and centre in the space instead of
- * stretching a sentence across the display. */
-#create-grid-view {
+#create-picker-view {
     flex-grow: 1;
     min-height: 0;
+}
+
+.create-picker-header {
+    flex-direction: row;
+    align-items: center;
+}
+
+.create-picker-header-spacer {
+    width: 148px;
+}
+
+.create-picker-heading {
+    flex-grow: 1;
+    align-items: center;
+}
+
+.create-picker-heading #create-pass-title {
+    margin-bottom: 0;
 }
 
 #create-detail-view,
@@ -668,172 +666,39 @@
     max-width: 100%;
 }
 
-/* Centred over a centred grid. */
-#create-pass-title,
-#create-pass-help {
+#create-pass-title {
     -unity-text-align: middle-center;
 }
 
-#create-pass-help {
-    align-self: center;
-    max-width: 900px;
-}
-
-/* One square portrait per class, wrapped into rows. Fills the view: CharacterRosterController
- * .LayoutHeroGrid writes every tile's width and its art's square side from the space this element
- * actually has, the same solve .deck-strip runs — flex alone cannot grow a square. */
-.hero-grid {
+/* Fixed columns keep all eight choices predictable on a short landscape phone. The picker has
+ * no wrapping, geometry callbacks, inline dimensions, portraits, badges, or nested hit targets. */
+.hero-choice-list {
     flex-grow: 1;
-    /* min-height:0 IS THE LOAD-BEARING LINE, and its absence closed a feedback loop.
-       A flex item's automatic minimum size is its CONTENT, so without this the grid can grow but
-       can never shrink below the tiles it holds. LayoutHeroGrid measures THIS element to decide
-       how big those tiles should be — so bigger tiles made a taller grid, a taller grid read as
-       more room, and more room made bigger tiles. It settled wherever it settled: 130dp portraits
-       overflowing the dialog, the pass title painted underneath them and Cancel off the bottom
-       (measured on device 2026-08-23). The exact same declaration is on #create-grid-view one
-       level up, for the exact same reason.
-       Whoever removes flex-grow here should delete this line with it; on its own it means nothing. */
     min-height: 0;
-    /* A residual overflow must clip, not paint over the title above it. */
-    overflow: hidden;
     flex-direction: row;
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-    margin-bottom: var(--space-4);
-}
-
-/* A portrait tile: art, a name under it, and a corner selection badge. The tile body is one tap
- * target (opens the detail overlay); the badge is a second, independent one (toggles selection).
- *
- * width, and the art's square side, are written per pass by LayoutHeroGrid. The values here are
- * only what a tile looks like for the frame before that pass runs. */
-/* THE GUTTER AND THE PADDING ARE THE PORTRAIT'S BUDGET, so they are --space-1 and not
- * --space-2. LayoutHeroGrid seats eight tiles on one row on a 411dp-tall landscape phone --
- * two rows need 272dp of grid and the screen affords 138, so that is forced, not a choice --
- * which leaves each column 100.6dp of pitch. At --space-2 the margin and padding and border
- * took 36 of those 100.6, THIRTY-SIX PERCENT of the row spent on air, and the portrait got
- * 64.4dp. At --space-1 the overhead is 20 and the portrait gets 80.6dp: a quarter wider, and
- * over half again the area.
- *
- * MUST MATCH CharacterRosterController.HeroGutter (2x the margin) and HeroChrome (2x the
- * padding + 2x the border). The solve cannot see this sheet; those two constants are a copy
- * of these values and changing one without the other silently mis-sizes every tile. */
-.hero-tile {
-    width: 152px;
     align-items: center;
     justify-content: center;
-    margin: var(--space-1);
-    padding: var(--space-1);
+}
+
+.hero-choice-column {
+    flex-grow: 1;
+    max-width: 420px;
+    margin-left: var(--space-2);
+    margin-right: var(--space-2);
+    justify-content: center;
+}
+
+.hero-choice {
+    align-self: stretch;
+    min-height: var(--touch-min);
+    margin-bottom: var(--space-1);
+}
+
+.hero-choice--selected {
     border-width: 2px;
-    border-color: rgba(0, 0, 0, 0);
-    border-radius: var(--space-2);
-    background-color: var(--surface-1);
-}
-
-.hero-tile:hover {
-    border-color: var(--ink-1);
-}
-
-.hero-tile--selected {
-    border-color: var(--accent);
+    border-color: var(--mana);
     background-color: var(--surface-3);
 }
-
-/* Overwritten every layout pass by LayoutHeroGrid; this is the first frame's size. */
-.hero-tile-art {
-    width: 128px;
-    height: 128px;
-    border-radius: var(--space-1);
-    background-color: var(--surface-3);
-    -unity-background-scale-mode: scale-and-crop;
-    overflow: hidden;
-}
-
-/* --type-caption, not --type-body, and the reason is the tile's WIDTH rather than taste.
- * On a 411dp-tall landscape phone LayoutHeroGrid solves eight tiles onto one row — there is
- * no height for a second — which leaves each tile about 84dp wide and 64dp of that inside
- * the padding. At --type-body (18dp) every class name ellipsised to four characters:
- * "Emb…", "Tide…", "Gra…", "Ston…", measured in the Editor at the device's dp budget on
- * 2026-08-25. At 14dp most of them fit whole.
- *
- * The two longest, Stonewarden and Clockwright, still truncate, and no font size fixes that
- * without a wider tile — which needs fewer columns, which needs a second row, which needs
- * height this screen does not have. That is #247's problem (element size by screen class),
- * not a value to keep shaving here. */
-.hero-tile-name {
-    /* width:100%, and DO NOT try to widen it past the tile's content box. Spanning the tile's
-     * padding with `align-self: stretch` + a -4px inset bought the label 8dp — enough for
-     * Clockwright, which misses by 2.6 — and cost the row an entire tile: a flex item's
-     * automatic minimum size is its CONTENT, so a label wider than its tile raised the tile's
-     * min-width, eight stopped fitting across, and the grid wrapped to SEVEN PLUS ONE with the
-     * first row clipped at the top by .hero-grid's overflow:hidden. Measured 2026-08-25; it is
-     * the same 7+1 failure the constants above LayoutHeroGrid already describe.
-     * One truncated name is a much better trade than that. */
-    width: 100%;
-    margin-top: var(--space-2);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    color: var(--ink-1);
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-
-/* The selection badge, top-left of the art, in the same circular treatment as the card's
- * mana-cost frame (NOR-278). Empty and quiet when unselected — still tappable, that is how you
- * select — and filled with the pick order (1 = primary/hero power, 2 = secondary) when on.
- *
- * TWO ELEMENTS, AND THE OUTER ONE IS INVISIBLE ON PURPOSE. The touch target has to be 48dp
- * (--touch-min, Android's floor) and the visible disc must NOT be, because the portrait it
- * sits on is only 64dp square on a 411dp-tall landscape phone — the grid solves eight tiles
- * onto one row there, and there is no second row to be had. A 48dp disc on a 64dp portrait
- * covers three quarters of it: measured in the Editor at the device's own dp budget on
- * 2026-08-25, every hero's face was behind a black circle. That is very likely what
- * "portraits do not render" meant on device; the art loads fine.
- *
- * So .hero-tile-badge is a transparent 48dp box that catches the tap, and
- * .hero-tile-badge__disc is the 28dp circle you actually see, centred in it. Do not put a
- * background or a border back on the outer box. */
-.hero-tile-badge {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: var(--touch-min);
-    height: var(--touch-min);
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-}
-
-.hero-tile-badge__disc {
-    width: 28px;
-    height: 28px;
-    border-radius: 14px;
-    border-width: 2px;
-    border-color: var(--surface-3);
-    background-color: var(--surface-0);
-    color: var(--ink-1);
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-}
-
-.hero-tile-badge:hover .hero-tile-badge__disc {
-    border-color: var(--mana);
-}
-
-.hero-tile-badge--on .hero-tile-badge__disc {
-    border-color: var(--mana);
-    background-color: var(--mana);
-    color: var(--surface-0);
-}
-
 /* ---- Detail overlay ---- */
 .hero-detail-head {
     flex-direction: row;

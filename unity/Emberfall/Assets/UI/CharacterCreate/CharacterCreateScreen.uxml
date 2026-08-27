@@ -7,29 +7,24 @@
       got on 2026-08-20 and for the same reason: it is full-screen, opaque and a destination,
       so the overlay was hosting rather than design.
 
-      WHAT THE MOVE ACTUALLY BUYS is vertical room, and that is not cosmetic. As a modal the
-      flow sat inside THREE nested paddings on a 411dp landscape panel — .emb-bleed's 52dp
-      hardware clearance per edge on the modal, plus .delete-dialog's 24dp design gutter per
-      edge, plus the screen's own. ~152dp of 411 was gone before the title drew, which is what
-      pushed the pass title under the status bar, Cancel under the gesture bar, and drove
-      LayoutHeroGrid's column solve to find no fitting shape at all. Here the root IS the
-      panel: one .emb-bleed for the hardware clearance and nothing nested inside it.
-
       The three views are siblings, shown one at a time by CharacterCreateController. They keep
-      their element names so the controller's queries and every USS rule in character-roster.uss
-      (hero-grid, hero-tile, hero-detail-*, hero-power-*, delete-title, delete-actions,
-      roster-button, create-*) apply unchanged. Restyling them here would be a second source of
-      truth for the same widgets.
+      their styling in character-roster.uss. The picker deliberately uses two fixed columns of
+      ordinary buttons: there is no wrapping portrait grid, runtime sizing pass, or picker art.
     -->
     <ui:VisualElement name="root" class="emb-root character-create-screen emb-bleed">
 
-        <!-- GRID: one portrait per real class. Pass-specific title/help above it. -->
-        <ui:VisualElement name="create-grid-view">
-            <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
-            <ui:Label name="create-pass-help" text="" class="create-help" />
-            <ui:VisualElement name="create-hero-grid" class="hero-grid" />
-            <ui:VisualElement class="delete-actions">
+        <!-- PICKER: one ordinary button per real class, fixed at four choices per column. -->
+        <ui:VisualElement name="create-picker-view">
+            <ui:VisualElement class="create-picker-header">
+                <ui:VisualElement class="create-picker-header-spacer" />
+                <ui:VisualElement class="create-picker-heading">
+                    <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
+                </ui:VisualElement>
                 <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost emb-back" />
+            </ui:VisualElement>
+            <ui:VisualElement name="create-hero-choices" class="hero-choice-list">
+                <ui:VisualElement name="create-hero-column-left" class="hero-choice-column" />
+                <ui:VisualElement name="create-hero-column-right" class="hero-choice-column" />
             </ui:VisualElement>
         </ui:VisualElement>
 

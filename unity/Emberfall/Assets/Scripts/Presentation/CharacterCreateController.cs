@@ -10,23 +10,14 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Character creation, as a SCENE (Sam, 2026-08-23). Three sequential views over one portrait
-    /// grid: pick the primary class (its Hero Power), pick the secondary (cards only), then name
+    /// Character creation, as a scene (Sam, 2026-08-23). Three sequential views over one class
+    /// picker: pick the primary class (its Hero Power), pick the secondary (cards only), then name
     /// the character and create it with NO deck — it lands in the roster as a lone "+" row, the
     /// same empty state a character whose decks were all deleted already shows.
     ///
     /// <para>It was a <c>.delete-modal</c> overlay inside <c>CharacterRosterScreen.uxml</c> until
     /// then. Same call the Store got on 2026-08-20 and for the same reason: full-screen, opaque,
     /// and a destination — the overlay was hosting rather than design.</para>
-    ///
-    /// <para><b>Why the move was forced, and what it actually buys.</b> At <c>referenceDpi: 160</c>
-    /// a landscape panel is 411dp. As a modal this flow sat inside three nested paddings —
-    /// <c>.emb-bleed</c>'s 52dp hardware clearance per edge, <c>.delete-dialog</c>'s 24dp design
-    /// gutter per edge, and the screen's own — so roughly 152dp of 411 was spent before the title
-    /// drew. Measured on a Pixel 5a 2026-08-23: the pass title rendered under the status bar,
-    /// Cancel under the gesture bar, and <see cref="LayoutHeroGrid"/>'s column solve found no
-    /// shape that fit at all. Here the root IS the panel, with one clearance and nothing nested
-    /// inside it.</para>
     ///
     /// <para><b>Navigation is the caller-writes-its-own-way-home shape</b> that
     /// <c>ShopScreenController.ReturnScene</c> and <c>CollectionController.ReturnScene</c> use: the
@@ -56,7 +47,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Which of the three views is showing.</summary>
-        private enum CreateView { Grid, Detail, Confirm }
+        private enum CreateView { Picker, Detail, Confirm }
 
         private VisualElement _root;
         private PlayerAccount _account;
@@ -67,9 +58,10 @@ namespace Emberfall.Presentation
         private readonly List<CardClass> _picks = new List<CardClass>(2);
         private CardClass _detailClass;
 
-        private VisualElement _gridView, _detailView, _confirmView;
-        private VisualElement _heroGrid, _detailPortrait, _detailBullets, _powerBlock;
-        private Label _passTitle, _passHelp, _detailName, _detailPass;
+        private VisualElement _pickerView, _detailView, _confirmView;
+        private VisualElement _heroColumnLeft, _heroColumnRight;
+        private VisualElement _detailPortrait, _detailBullets, _powerBlock;
+        private Label _passTitle, _detailName, _detailPass;
         private Label _powerName, _powerDesc, _confirmSummary, _nameError;
         private Button _detailSelect;
         private TextField _nameField;
@@ -110,18 +102,18 @@ namespace Emberfall.Presentation
             _picks.Clear();
             _nameField?.SetValueWithoutNotify("");
             SetNameError("");
-            ShowView(CreateView.Grid);
+            ShowView(CreateView.Picker);
         }
 
         private void CacheElements()
         {
-            _gridView = _root.Q<VisualElement>("create-grid-view");
+            _pickerView = _root.Q<VisualElement>("create-picker-view");
             _detailView = _root.Q<VisualElement>("create-detail-view");
             _confirmView = _root.Q<VisualElement>("create-confirm-view");
 
             _passTitle = _root.Q<Label>("create-pass-title");
-            _passHelp = _root.Q<Label>("create-pass-help");
-            _heroGrid = _root.Q<VisualElement>("create-hero-grid");
+            _heroColumnLeft = _root.Q<VisualElement>("create-hero-column-left");
+            _heroColumnRight = _root.Q<VisualElement>("create-hero-column-right");
 
             _detailPortrait = _root.Q<VisualElement>("create-detail-portrait");
             _detailName = _root.Q<Label>("create-detail-name");
@@ -135,17 +127,12 @@ namespace Emberfall.Presentation
             _confirmSummary = _root.Q<Label>("create-confirm-summary");
             _nameField = _root.Q<TextField>("create-name-field");
             _nameError = _root.Q<Label>("create-name-error");
-
-            // The grid has no size until the scene's panel lays out, and it changes again on
-            // rotation. Re-solving on its own geometry is what makes the first frame land at the
-            // right size rather than at the stylesheet's.
-            _heroGrid?.RegisterCallback<GeometryChangedEvent>(_ => QueueHeroGridLayout());
         }
 
         private void Wire()
         {
             _root.Q<Button>("create-cancel")?.RegisterCallback<ClickEvent>(_ => Go(_returnScene));
-            _root.Q<Button>("create-detail-back")?.RegisterCallback<ClickEvent>(_ => ShowView(CreateView.Grid));
+            _root.Q<Button>("create-detail-back")?.RegisterCallback<ClickEvent>(_ => ShowView(CreateView.Picker));
             _detailSelect?.RegisterCallback<ClickEvent>(_ => TogglePick(_detailClass));
             _root.Q<Button>("create-change")?.RegisterCallback<ClickEvent>(_ => ChangeSecondary());
             _root.Q<Button>("create-continue")?.RegisterCallback<ClickEvent>(_ => CommitCreate());
@@ -157,323 +144,63 @@ namespace Emberfall.Presentation
 
         private void ShowView(CreateView view)
         {
-            Show(_gridView, view == CreateView.Grid);
+            Show(_pickerView, view == CreateView.Picker);
             Show(_detailView, view == CreateView.Detail);
             Show(_confirmView, view == CreateView.Confirm);
 
-            if (view == CreateView.Grid) BuildHeroGrid();
+            if (view == CreateView.Picker) BuildHeroChoices();
             else if (view == CreateView.Confirm) RefreshConfirm();
         }
 
         /// <summary>
-        /// The portrait grid, rebuilt each time it shows so every badge reflects the current picks.
-        /// The title and help above it are pass-specific: pass 1 says this pick locks in the hero
-        /// power; pass 2 says it only adds cards.
+        /// The button picker, rebuilt each time it shows so the primary choice stays visible.
+        /// Its title is pass-specific: pass 1 chooses the Hero Power; pass 2 adds cards only.
         /// </summary>
-        private void BuildHeroGrid()
+        private void BuildHeroChoices()
         {
-            if (_heroGrid == null) return;
-            _heroGrid.Clear();
+            if (_heroColumnLeft == null || _heroColumnRight == null) return;
+            _heroColumnLeft.Clear();
+            _heroColumnRight.Clear();
 
             if (ChoosingPrimary)
             {
                 if (_passTitle != null) _passTitle.text = "Choose your hero";
-                if (_passHelp != null)
-                    _passHelp.text = "Hero Power from your first choice — Cards from both.";
             }
             else
             {
                 if (_passTitle != null) _passTitle.text = "Choose a second class";
-                if (_passHelp != null)
-                    _passHelp.text = "This pick adds a second class's cards to your pool.";
             }
 
-            foreach (CardClass c in PairableClasses)
-                _heroGrid.Add(BuildHeroTile(c));
-
-            _heroSolvePasses = 0;
-            QueueHeroGridLayout();
-        }
-
-        /// <summary>Must match .hero-tile's margin (--space-2), both sides of a tile.</summary>
-        private const float HeroGutter = 16f;
-
-        /// <summary>.hero-tile padding (--space-2) plus its 2px border, both sides — the difference
-        /// between the tile's outer width and the square portrait inside it.</summary>
-        private const float HeroChrome = 20f;
-
-        /// <summary>The name band under the portrait: --type-body plus its --space-2 margin, with
-        /// room for a descender.</summary>
-        private const float HeroNameBand = 36f;
-
-        /// <summary>Floor for the solved portrait side, in dp. Only reached when no column count
-        /// fits the box at all. 44 rather than Android's 48 touch floor because the TILE is the tap
-        /// target and it is the portrait plus <see cref="HeroChrome"/>: 44 + 20 = 64dp of target.</summary>
-        private const float MinHeroSide = 44f;
-
-        private const float RowSafetyMargin = 2f;
-
-        private bool _heroLayoutQueued;
-
-        /// <summary>One-shot latch so the zero-box warning cannot spam a geometry callback.</summary>
-        private bool _warnedZeroBox;
-
-        /// <summary>One-shot latch for the solve log.</summary>
-        private bool _loggedSolve;
-
-        /// <summary>
-        /// Hard cap on re-solves between rebuilds. Idempotent writes stop the common loop, but not
-        /// one that ALTERNATES between two shapes — each pass would differ from the last, so each
-        /// would legitimately write, and the relayout would never end. An unbounded relayout does
-        /// not just break the screen: the UI thread stops yielding and the whole device locks up.
-        /// Eight passes is far more than a converging solve needs (it settles in one or two).
-        /// </summary>
-        private const int MaxHeroSolvePasses = 8;
-
-        private int _heroSolvePasses;
-
-        /// <summary>
-        /// Deferred because the trigger is the grid's own GeometryChangedEvent, which the layout
-        /// engine fires mid-pass, and writing sizes from inside it edits the tree while that pass
-        /// is still walking it.
-        /// </summary>
-        private void QueueHeroGridLayout()
-        {
-            if (_heroGrid == null || _heroLayoutQueued) return;
-            _heroLayoutQueued = true;
-            _heroGrid.schedule.Execute(() =>
+            int split = (PairableClasses.Length + 1) / 2;
+            for (int i = 0; i < PairableClasses.Length; i++)
             {
-                _heroLayoutQueued = false;
-                LayoutHeroGrid();
-            });
-        }
-
-        /// <summary>
-        /// Grow the portraits into whatever space the full-screen overlay has (NOR-288). The tiles
-        /// used to be a fixed 152px inside a 760px dialog, which on a phone in landscape drew eight
-        /// small pictures in the middle of a mostly empty screen. Every column count is tried and
-        /// the one yielding the biggest portrait wins; within each, both axes are solved and the
-        /// smaller wins, so the grid always fits without scrolling. The chosen shape is then
-        /// written to the grid's width, because .hero-grid wraps on width and would otherwise be
-        /// free to seat a different number per row than was solved for.
-        /// </summary>
-        private void LayoutHeroGrid()
-        {
-            if (_heroGrid == null) return;
-            if (++_heroSolvePasses > MaxHeroSolvePasses)
-            {
-                if (_heroSolvePasses == MaxHeroSolvePasses + 1)
-                    Debug.LogWarning($"[CharacterCreate] hero grid solve did not converge in "
-                                     + $"{MaxHeroSolvePasses} passes — freezing the current sizes. "
-                                     + "The layout is oscillating; the last solve log above has the numbers.");
-                return;
-            }
-
-            // Width comes from the PARENT, never from the grid. This method writes the grid's own
-            // width, so measuring the grid would feed its output back into its input and walk the
-            // tiles a little smaller on every layout pass.
-            VisualElement box = _heroGrid.parent ?? _heroGrid;
-            float availableWidth = box.resolvedStyle.width - RowSafetyMargin;
-            float availableHeight = _heroGrid.resolvedStyle.height - RowSafetyMargin;
-            // WRITTEN `!(x > 0f)` AND NOT `x <= 0f`, AND THAT IS THE WHOLE GUARD. An unresolved
-            // resolvedStyle is NaN, not zero, and every IEEE comparison against NaN is FALSE — so
-            // `<= 0f` waves NaN straight through, and so does every guard downstream of it:
-            // `candidate <= side` never continues (so side becomes NaN and columns becomes tiles),
-            // `side <= 0f` never fires the no-fit fallback, and `Mathf.Approximately(x, NaN)` is
-            // false forever, which defeats the idempotent-write latch that is the only thing
-            // stopping the relayout loop. Every tile then gets a NaN width and a NaN square.
-            // Measured on a Pixel 5a 2026-08-26, from the log line below:
-            //   hero grid solve: box=NaNxNaNdp tiles=8 -> columns=8 side=NaNdp
-            //   lowmemorykiller: Kill 'com.ContextAware.Emberfall' ... to free 1336800kB rss,
-            //                    1200672kB swap; reason: ... thrashing (300%)
-            // 1.3 GB and the kernel killed the app. It reads as "character creation crashes",
-            // which names neither NaN nor this line. `!(x > 0f)` is true for NaN, 0 and negatives
-            // alike; do not "simplify" it back.
-            if (!(availableWidth > 0f) || !(availableHeight > 0f))
-            {
-                // A zero box is NORMAL for the first frame or two, before the panel has laid out —
-                // which is why this returns rather than complains. But if it is still zero once the
-                // screen is up, the grid is inside a chain with no height and the symptom on device
-                // is "the portraits are missing and nothing is tappable": the tiles keep a
-                // zero-width portrait while the name and the absolutely-positioned badge still
-                // paint, and a zero-size tile cannot be tapped. Nothing else reports it, so say it
-                // ONCE. Cost 2026-08-23: the scene's root class had no flex-grow: 1 and this
-                // returned in silence, above the fallback below that would have warned.
-                if (!_warnedZeroBox)
-                {
-                    _warnedZeroBox = true;
-                    Debug.LogWarning(
-                        $"[CharacterCreate] hero grid has a zero box ({availableWidth:F0}x" +
-                        $"{availableHeight:F0}dp) — nothing can be sized. Normal for the first "
-                        + "frame; if the portraits stay missing, an ancestor is not filling the "
-                        + "panel (check .character-create-screen's flex-grow).");
-                }
-                return;
-            }
-            _warnedZeroBox = false;
-
-            int tiles = 0;
-            VisualElement sample = null;
-            foreach (VisualElement child in _heroGrid.Children())
-                if (child.ClassListContains("hero-tile")) { tiles++; sample ??= child; }
-            if (tiles == 0) return;
-
-            // MEASURE THE CHROME, DO NOT ASSUME IT. UI Toolkit snaps margins, padding and borders
-            // to whole DEVICE pixels, so an authored dp value is not what the tile actually gets:
-            // at the phone's 2.625x scale a 4dp margin is 10.5 device px, rounds to 11, and comes
-            // back as 4.190dp. Eight tiles then advance 101.333 each and need 810.667 of a
-            // 809.905 grid — SHORT BY 0.76 — so the row wraps to seven plus one, and .hero-grid's
-            // overflow:hidden clips the first row's tops. That is exactly the 7+1 failure
-            // described above the constants, arriving by a second route.
-            //
-            // Reading it off a real tile also retires the "must match the USS" coupling those two
-            // constants carry: they are a FALLBACK for the first pass, before any tile has a
-            // resolved style, and no longer a second source of truth that can drift.
-            float gutter = HeroGutter;
-            float chrome = HeroChrome;
-            if (sample != null && sample.resolvedStyle.marginLeft > 0f)
-            {
-                gutter = sample.resolvedStyle.marginLeft + sample.resolvedStyle.marginRight;
-                chrome = sample.resolvedStyle.paddingLeft + sample.resolvedStyle.paddingRight
-                       + sample.resolvedStyle.borderLeftWidth + sample.resolvedStyle.borderRightWidth;
-            }
-
-            int columns = 1;
-            float side = 0f;
-            for (int c = 1; c <= tiles; c++)
-            {
-                int r = Mathf.CeilToInt(tiles / (float)c);
-                float fromWidth = availableWidth / c - gutter - chrome;
-                float fromHeight = availableHeight / r - gutter - chrome - HeroNameBand;
-                float candidate = Mathf.Min(fromWidth, fromHeight);
-                if (candidate <= side) continue;
-                side = candidate;
-                columns = c;
-            }
-            // NEVER return with the tiles unsized. An early exit here is worse than any size this
-            // could write: the tiles keep their stylesheet dimensions, .hero-grid wraps them on
-            // WIDTH at desktop size, and the grid's `overflow: hidden` clips whatever does not fit
-            // — so the screen shows FEWER heroes than a cramped-but-solved layout would, which
-            // reads as the solve having made things worse rather than as it having been skipped.
-            // Measured 2026-08-23 in the modal this screen replaced: restoring the edge clearance
-            // took enough height that every candidate went negative and 8 tiles fell back to a
-            // clipped 4x2 (#250).
-            // `!(side > 0f)` for the reason given at the zero-box guard: this is the net that is
-            // supposed to catch a solve that found nothing, and `side <= 0f` cannot catch a NaN one.
-            if (!(side > 0f))
-            {
-                columns = tiles;
-                side = Mathf.Max(availableWidth / tiles - gutter - chrome, MinHeroSide);
-                Debug.LogWarning(
-                    $"[CharacterCreate] hero grid: no column count fits {availableWidth:F0}x" +
-                    $"{availableHeight:F0}dp for {tiles} tiles ({gutter + chrome + HeroNameBand:F1}dp " +
-                    $"of chrome per row). Falling back to one row at {side:F0}dp.");
-            }
-
-            // One-shot, and it earns its place: every failure of this solve so far has been
-            // INVISIBLE in the log. A tiny `side` is not zero, so neither the zero-box guard above
-            // nor the no-fit fallback fires, and the screen just renders portraits too small to
-            // see or tap while the fixed-size badge still paints — which reads as "the art is
-            // missing", naming nothing. These numbers say immediately whether the grid is being
-            // starved of height and by how much.
-            if (!_loggedSolve)
-            {
-                _loggedSolve = true;
-                Debug.Log($"[CharacterCreate] hero grid solve: box={availableWidth:F0}x{availableHeight:F0}dp " +
-                          $"tiles={tiles} -> columns={columns} side={side:F1}dp " +
-                          $"(measured chrome/row={gutter + chrome + HeroNameBand:F1}dp)");
-            }
-
-            // EVERY WRITE BELOW IS IDEMPOTENT, and that is what stops this from looping forever.
-            // This method runs from .hero-grid's own GeometryChangedEvent and then WRITES that
-            // element's width — so an unconditional write re-fires the event that called it. In
-            // the modal this happened to settle, because the dialog pinned the width and the
-            // second pass computed the same number, producing no geometry change. Nothing
-            // guarantees that in a scene whose root is flex-grow: 1, and an oscillating solve is
-            // an unbounded relayout: the UI thread never yields and the DEVICE stops responding,
-            // not just the screen. Skipping a write that would not change anything makes
-            // termination structural rather than lucky.
-            //
-            // The width also pins the wrap to the shape that was solved for — without it the grid
-            // is free to seat a different number of tiles per row than the solve assumed, which is
-            // the 7+1 failure described above the constants. It uses the MEASURED gutter/chrome,
-            // not the authored constants, for the reason given there.
-            float gridWidth = columns * (side + chrome + gutter) + RowSafetyMargin;
-            if (!Mathf.Approximately(_heroGrid.resolvedStyle.width, gridWidth))
-                _heroGrid.style.width = gridWidth;
-            _heroGrid.style.alignSelf = Align.Center;
-
-            float tileWidth = side + chrome;
-            foreach (VisualElement child in _heroGrid.Children())
-            {
-                if (!child.ClassListContains("hero-tile")) continue;
-                if (!Mathf.Approximately(child.resolvedStyle.width, tileWidth))
-                    child.style.width = tileWidth;
-
-                VisualElement art = child.Q<VisualElement>(className: "hero-tile-art");
-                if (art == null) continue;
-                if (Mathf.Approximately(art.resolvedStyle.width, side)
-                    && Mathf.Approximately(art.resolvedStyle.height, side)) continue;
-                art.style.width = side;
-                art.style.height = side;   // square: the whole point of the pass
+                VisualElement column = i < split ? _heroColumnLeft : _heroColumnRight;
+                column.Add(BuildHeroChoice(PairableClasses[i]));
             }
         }
 
         /// <summary>
-        /// One portrait tile with two independent tap targets: the tile body opens the hero's detail
-        /// overlay, and the corner badge toggles selection. The badge stops the click from reaching
-        /// the tile so the two never fire together.
+        /// One ordinary button per class. Keeping the picker to buttons avoids the former
+        /// portrait-tile hierarchy, runtime geometry callbacks, and per-element size writes.
+        /// The class detail view still owns the single portrait shown after a choice is opened.
         /// </summary>
-        private VisualElement BuildHeroTile(CardClass heroClass)
+        private Button BuildHeroChoice(CardClass heroClass)
         {
             int order = _picks.IndexOf(heroClass);   // -1 = unpicked, 0 = primary, 1 = secondary
             bool selected = order >= 0;
+            string prettyName = Pretty(heroClass);
+            string label = selected ? $"{order + 1} · {prettyName}" : prettyName;
 
-            var tile = new VisualElement();
-            tile.AddToClassList("hero-tile");
-            tile.EnableInClassList("hero-tile--selected", selected);
-
-            var art = new VisualElement();
-            art.AddToClassList("hero-tile-art");
-            _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
+            var choice = new Button(() => OpenHeroDetail(heroClass))
             {
-                if (sprite != null) art.style.backgroundImage = new StyleBackground(sprite);
-            });
-            tile.Add(art);
-
-            // The badge, top-left, in the mana-frame treatment (NOR-278). Empty when unselected
-            // but still the toggle target; filled with the pick order when on. A plain VisualElement
-            // with StopPropagation rather than a Button, so its click cannot also open the detail.
-            //
-            // TWO ELEMENTS: an invisible 48dp box that catches the tap, and a 28dp disc inside it
-            // that is what you see. The portrait underneath is only 64dp square on a landscape
-            // phone, so a 48dp DISC would cover three quarters of the hero's face — it did, and it
-            // read on device as the portrait failing to load. The touch floor and the visual want
-            // different sizes, so they get different elements. See .hero-tile-badge in the sheet.
-            var badge = new VisualElement();
-            badge.AddToClassList("hero-tile-badge");
-            badge.EnableInClassList("hero-tile-badge--on", selected);
-            var badgeDisc = new VisualElement();
-            badgeDisc.AddToClassList("hero-tile-badge__disc");
-            var badgeLabel = new Label(selected ? (order + 1).ToString() : "");
-            badgeDisc.Add(badgeLabel);
-            badge.Add(badgeDisc);
-            badge.tooltip = selected ? "Deselect" : "Select";
-            badge.RegisterCallback<ClickEvent>(evt =>
-            {
-                evt.StopPropagation();
-                TogglePick(heroClass);
-            });
-            tile.Add(badge);
-
-            var name = new Label(Pretty(heroClass));
-            name.AddToClassList("hero-tile-name");
-            tile.Add(name);
-
-            tile.RegisterCallback<ClickEvent>(_ => OpenHeroDetail(heroClass));
-            return tile;
+                text = label,
+                tooltip = $"View {prettyName}"
+            };
+            choice.AddToClassList("roster-button");
+            choice.AddToClassList("hero-choice");
+            choice.EnableInClassList("hero-choice--selected", selected);
+            return choice;
         }
-
         /// <summary>
         /// Add or remove a hero from the picks. Selecting appends (primary first, then secondary);
         /// re-selecting a picked hero removes it. The moment both slots are full the flow
@@ -489,7 +216,7 @@ namespace Emberfall.Presentation
             else
                 return;   // both slots full and this one is not among them — ignore
 
-            ShowView(_picks.Count == 2 ? CreateView.Confirm : CreateView.Grid);
+            ShowView(_picks.Count == 2 ? CreateView.Confirm : CreateView.Picker);
         }
 
         /// <summary>
@@ -563,7 +290,7 @@ namespace Emberfall.Presentation
         /// <summary>The confirm view, reached once both classes are picked.</summary>
         private void RefreshConfirm()
         {
-            if (_picks.Count < 2) { ShowView(CreateView.Grid); return; }
+            if (_picks.Count < 2) { ShowView(CreateView.Picker); return; }
 
             CardClass primary = _picks[0];
             CardClass secondary = _picks[1];
@@ -579,7 +306,7 @@ namespace Emberfall.Presentation
         private void ChangeSecondary()
         {
             if (_picks.Count == 2) _picks.RemoveAt(1);
-            ShowView(CreateView.Grid);
+            ShowView(CreateView.Picker);
         }
 
         /// <summary>
