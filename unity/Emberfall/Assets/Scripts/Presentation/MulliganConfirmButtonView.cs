@@ -57,6 +57,7 @@ namespace Emberfall.Presentation
         private InputRouter _router;
         private Renderer    _face;
         private TextMeshPro _label;
+        private TextMeshPro _instruction;
         private BoxCollider _collider;
         private MaterialPropertyBlock _mpb;
 
@@ -81,11 +82,23 @@ namespace Emberfall.Presentation
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize  = 1.3f;
+            _label.fontSize  = 1.55f;
             _label.alignment = TextAlignmentOptions.Center;
             _label.color     = Color.white;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
+
+            var instructionGo = new GameObject("Instruction");
+            instructionGo.transform.SetParent(transform, false);
+            instructionGo.transform.localPosition = new Vector3(0f, 0.72f, -0.01f);
+            _instruction = instructionGo.AddComponent<TextMeshPro>();
+            _instruction.fontSize  = 1.9f;
+            _instruction.alignment = TextAlignmentOptions.Center;
+            _instruction.color     = new Color(0.95f, 0.78f, 0.25f);
+            _instruction.fontStyle = FontStyles.Bold;
+            _instruction.rectTransform.sizeDelta = new Vector2(5.2f, 0.55f);
+            _instruction.textWrappingMode = TextWrappingModes.NoWrap;
+            _instruction.text = "TAP CARDS TO REPLACE";
 
             _collider = gameObject.AddComponent<BoxCollider>();
             _collider.size = new Vector3(ButtonW, ButtonH, 0.1f);
@@ -126,6 +139,7 @@ namespace Emberfall.Presentation
         {
             if (_face != null)     _face.gameObject.SetActive(on);
             if (_label != null)    _label.gameObject.SetActive(on);
+            if (_instruction != null) _instruction.gameObject.SetActive(on);
             if (_collider != null) _collider.enabled = on;
         }
     }
