@@ -129,21 +129,13 @@ namespace Emberfall.Presentation
         /// <summary>Awaiting a second choice: a slot placement followed by a herald target.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
-        // No cancel hint. Cancelling is releasing on nothing — see Resolve, where a null subject
-        // means "this drop meant nothing" — which is the same gesture with a mouse or a finger and
-        // needs no instruction. The banner used to end in "— Esc cancels", which named a key that
-        // does not exist on the mobile-first target and bought nothing on desktop, where Escape
-        // still cancels (InputRouter's KeyCode.Escape branch) whether or not the banner says so.
-        public const string AimBanner = "Drag to a target";
-        public const string AttackBanner = "Drag to a target to attack";
-
-        // The card is already placed by the time a herald owes a target (Sam, 2026-08-09) — a
-        // second full drag reads as the game demanding you repeat the gesture that just placed it,
-        // when the intent machine has already accepted a plain tap on the highlighted target since
-        // ArmedByTap has always resolved on release (InputRouter.OnPointerReleased). Wording this
-        // step "tap" instead of "drag" is what actually changed; the underlying gesture support did
-        // not need to.
-        public const string EffectTargetBanner = "Tap a target";
+        // NO INSTRUCTIONAL TEXT (Sam, 2026-08-27). This model used to hand InputRouter banner
+        // copy — "Drag to a target", "Tap a target" — narrating a gesture the player learns in
+        // the first ten minutes. That instruction belongs once, in onboarding, and never again;
+        // see decisions/emberfall-no-persistent-instructional-banners. The target glow is the
+        // whole affordance. Cancelling is still releasing on nothing (see Resolve, where a null
+        // subject means "this drop meant nothing"), and Escape still cancels on desktop via
+        // InputRouter's KeyCode.Escape branch — neither ever needed saying out loud.
 
         private readonly PlayerId _p0Id;
         private readonly ICardDatabase _db;
@@ -279,9 +271,6 @@ namespace Emberfall.Presentation
                 default: return null;
             }
         }
-
-        public string BannerFor(DragSource source)
-            => source.Kind == DragSourceKind.Attacker ? AttackBanner : AimBanner;
 
         // ── Release: what intent does this gesture produce? ────────────────────────
 

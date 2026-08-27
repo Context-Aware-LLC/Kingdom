@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -100,13 +99,13 @@ namespace Emberfall.Presentation
         public System.Func<Vector2, DropPoint> InjectableDrop;
 
         // ── Targeting-state visibility (ui-polish 2026-07-17) ──────────────────────
-        // While a targeting gesture is armed: a persistent banner says so, and the set of
-        // legal targets is broadcast so BoardController can glow ONLY those (readiness
-        // glow is suppressed for the duration). Null = targeting cleared.
+        // While a targeting gesture is armed the set of legal targets is broadcast so
+        // BoardController can glow ONLY those (readiness glow is suppressed for the
+        // duration). Null = targeting cleared. The glow IS the affordance — there is no
+        // instructional banner (Sam, 2026-08-27); see
+        // decisions/emberfall-no-persistent-instructional-banners.
         public event System.Action<HashSet<InstanceId>> TargetingChanged;
         private HashSet<InstanceId> _activeTargets;
-        private GameObject  _bannerGo;
-        private TextMeshPro _bannerLabel;
 
         // ── Mulligan picker (C-G1-2b) ──────────────────────────────────────────────
         // During the Mulligan phase a hand-card press toggles that card into the toss set (a red X
@@ -523,19 +522,18 @@ namespace Emberfall.Presentation
             {
                 HashSet<InstanceId> effectTargets = _model.AwaitingTargets();
                 if (effectTargets == null || effectTargets.Count == 0) ClearTargeting();
-                else                                                    SetTargeting(effectTargets, DragTargetingModel.EffectTargetBanner);
+                else                                                    SetTargeting(effectTargets);
                 return;
             }
 
             HashSet<InstanceId> targets = _model.TargetsFor(_source);
             if (targets == null) ClearTargeting();
-            else                 SetTargeting(targets, _model.BannerFor(_source));
+            else                 SetTargeting(targets);
         }
 
-        private void SetTargeting(HashSet<InstanceId> targets, string bannerText)
+        private void SetTargeting(HashSet<InstanceId> targets)
         {
             _activeTargets = targets;
-            ShowBanner(bannerText);
             TargetingChanged?.Invoke(targets);
             ApplyHeroTargetCues();
         }
@@ -544,7 +542,6 @@ namespace Emberfall.Presentation
         {
             if (_activeTargets == null) return;
             _activeTargets = null;
-            HideBanner();
             TargetingChanged?.Invoke(null);
             _p0HeroPlate?.SetTargetable(false);
             _enemyHeroPlate?.SetTargetable(false);
@@ -557,57 +554,6 @@ namespace Emberfall.Presentation
                 _activeTargets != null && _activeTargets.Contains(_model.HeroIdOf(_p0Id)));
             _enemyHeroPlate?.SetTargetable(
                 _activeTargets != null && _activeTargets.Contains(_model.HeroIdOf(_model.EnemyId())));
-        }
-
-        // ── Armed banner (built lazily from world-space primitives) ──
-
-        private void ShowBanner(string text)
-        {
-            if (_bannerGo == null) BuildBanner();
-            _bannerLabel.text = text;
-            _bannerGo.SetActive(true);
-        }
-
-        private void HideBanner()
-        {
-            if (_bannerGo != null) _bannerGo.SetActive(false);
-        }
-
-        private void BuildBanner()
-        {
-            _bannerGo = new GameObject("TargetingBanner");
-            _bannerGo.transform.position = new Vector3(0f, -2.35f, 0f);
-
-            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            faceGo.name = "Face";
-            faceGo.transform.SetParent(_bannerGo.transform, false);
-            faceGo.transform.localScale = new Vector3(4.6f, 0.42f, 1f);
-            // Edit-mode safe: InputGestureVerify builds this router outside play mode, and plain
-            // Destroy there logs an error and leaves the collider behind. Same conversion as
-            // ManaTrayView — a view only needs it once an editor tool constructs it.
-            var faceCollider = faceGo.GetComponent<MeshCollider>();
-            if (faceCollider != null)
-            {
-                if (Application.isPlaying) Destroy(faceCollider);
-                else DestroyImmediate(faceCollider);
-            }
-
-            var face = faceGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(face, MaterialCatalog.Plate);
-            var mpb = new MaterialPropertyBlock();
-            face.GetPropertyBlock(mpb);
-            mpb.SetColor("_BaseColor", new Color(0.13f, 0.22f, 0.35f));
-            face.SetPropertyBlock(mpb);
-
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(_bannerGo.transform, false);
-            labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
-            _bannerLabel = labelGo.AddComponent<TextMeshPro>();
-            _bannerLabel.fontSize  = 1.1f;
-            _bannerLabel.alignment = TextAlignmentOptions.Center;
-            _bannerLabel.color     = Color.white;
-            _bannerLabel.rectTransform.sizeDelta = new Vector2(4.6f, 0.42f);
-            _bannerLabel.textWrappingMode = TextWrappingModes.NoWrap;
         }
 
         // ── Keyboard shortcuts ─────────────────────────────────────────────────────

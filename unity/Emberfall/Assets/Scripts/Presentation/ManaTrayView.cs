@@ -87,7 +87,7 @@ namespace Emberfall.Presentation
             // Edit-mode safe: ManaTrayPreview builds this view outside play mode, and plain
             // Destroy there logs an error and leaves the collider behind. The same
             // CreatePrimitive-then-Destroy pattern is in several other Presentation views; a view
-            // is converted once an editor tool constructs it (see also InputRouter.BuildBanner).
+            // is converted once an editor tool constructs it.
             var collider = quadGo.GetComponent<MeshCollider>();
             if (collider != null)
             {
