@@ -33,8 +33,8 @@
       "BULWARK": 46,
       "SKIRMISH": 15,
       "SHROUD": 14,
+      "OVERWHELM": 11,
       "DOUBLESTRIKE": 10,
-      "OVERWHELM": 10,
       "VENOM": 10,
       "AEGIS": 9,
       "REKINDLE": 9,
@@ -84,8 +84,8 @@
     },
     "minionCount": 190,
     "attackDistribution": {
-      "0": 5,
-      "1": 36,
+      "0": 4,
+      "1": 37,
       "2": 52,
       "3": 40,
       "4": 23,
@@ -179,13 +179,13 @@
       "keywordFrequency": {
         "FERVOR": 4,
         "BULWARK": 3,
+        "OVERWHELM": 2,
         "SKIRMISH": 2,
         "VANGUARD": 2,
         "AEGIS": 1,
         "ARCANE_SURGE": 1,
         "DOUBLESTRIKE": 1,
-        "LIFEDRAIN": 1,
-        "OVERWHELM": 1
+        "LIFEDRAIN": 1
       },
       "selectorFrequency": {
         "ANY_MINION": 6,
@@ -253,7 +253,7 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 12,
+        "ANY_FRIENDLY_MINION": 13,
         "FRIENDLY_HERO": 4,
         "ANY_MINION": 2
       },
@@ -382,7 +382,7 @@
       },
       "selectorFrequency": {
         "ANY_ENEMY_MINION": 6,
-        "ANY_FRIENDLY_MINION": 6,
+        "ANY_FRIENDLY_MINION": 5,
         "ANY_MINION": 5,
         "ENEMY_HERO": 2,
         "ANY_ENEMY": 1,
@@ -662,8 +662,7 @@
       },
       "minionCount": 21,
       "attackDistribution": {
-        "0": 1,
-        "1": 2,
+        "1": 3,
         "2": 7,
         "3": 4,
         "4": 1,
@@ -1576,7 +1575,9 @@
       "class": "GRAVEKEEP",
       "rarity": "RARE",
       "keywords": [],
-      "selectors": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
       "tribe": null,
       "setId": "EMBERFALL",
       "collectible": true,
@@ -2701,9 +2702,7 @@
       "class": "NIGHTVEIL",
       "rarity": "RARE",
       "keywords": [],
-      "selectors": [
-        "ANY_FRIENDLY_MINION"
-      ],
+      "selectors": [],
       "tribe": null,
       "setId": "EMBERFALL",
       "collectible": true,
@@ -3714,7 +3713,9 @@
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "RARE",
-      "keywords": [],
+      "keywords": [
+        "OVERWHELM"
+      ],
       "selectors": [],
       "tribe": "CONSTRUCT",
       "setId": "EMBERFALL",
@@ -4140,7 +4141,7 @@
       "name": "Venomthorn",
       "type": "MINION",
       "cost": 3,
-      "attack": 0,
+      "attack": 1,
       "health": 3,
       "durability": null,
       "class": "VERDANT",
@@ -6048,7 +6049,7 @@
       "name": "Tempest Maul",
       "type": "WEAPON",
       "cost": 3,
-      "attack": 3,
+      "attack": 1,
       "health": null,
       "durability": 2,
       "class": "TEMPEST",

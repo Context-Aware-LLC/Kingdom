@@ -94,7 +94,7 @@ namespace Emberfall.Presentation
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
 
-            _modal = root.Q<VisualElement>("signin-modal");
+            // _modal = root.Q<VisualElement>("signin-modal");
             _title = root.Q<Label>("signin-title");
             _help = root.Q<Label>("signin-help");
             _emailField = root.Q<TextField>("signin-email");
@@ -106,11 +106,11 @@ namespace Emberfall.Presentation
             _googleButton = root.Q<Button>("btn-signin-google");
             _or = root.Q<VisualElement>("signin-or");
 
-            if (_modal == null)
-            {
-                Debug.LogError("[SignIn] signin-modal is not in the UXML; the sign-in gate cannot open.");
-                return;
-            }
+            // if (_modal == null)
+            // {
+            //     Debug.LogError("[SignIn] signin-modal is not in the UXML; the sign-in gate cannot open.");
+            //     return;
+            // }
 
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));

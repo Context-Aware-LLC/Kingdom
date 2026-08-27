@@ -172,10 +172,12 @@ save location for every build**: the real collection becomes unreachable and any
 tester's collection orphans, with no error and no way for the player to tell what happened.
 
 **This is not a typo risk — a tool does it to you.** Running a Unity **multiplayer scenario**
-rewrites `productName` to its role name, so expect it after every scenario run.
-**`Emberfall/Build/Restore Product Name` puts it back** (set through `PlayerSettings`, since
-Unity holds project settings in memory and overwrites a file edited underneath it). The rename
-is harmless while it stays in the working tree; only the commit is damaging.
+rewrites `productName` to its role name. The project's only scenario asset was deleted
+2026-08-26, so nothing triggers this today — but Multiplayer Play Mode is a built-in editor
+module, not a package, so authoring a new scenario under `Assets/Settings/PlayMode/` arms it
+again. **`Emberfall/Build/Restore Product Name` puts it back** (set through `PlayerSettings`,
+since Unity holds project settings in memory and overwrites a file edited underneath it). The
+rename is harmless while it stays in the working tree; only the commit is damaging.
 
 ## Two things about this working copy that will cost you a day
 
