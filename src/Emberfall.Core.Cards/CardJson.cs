@@ -235,6 +235,9 @@ namespace Emberfall.Core.Cards
                 case "TAKE_CONTROL":
                     Fields(element, type, "target");
                     return new TakeControlAction(TargetFromElement(element));
+                case "TRIGGER_TOLL":
+                    Fields(element, type, "target");
+                    return new TriggerTollAction(TargetFromElement(element));
                 case "DRAW":
                     Fields(element, type, "count");
                     return new DrawAction(Count(element));

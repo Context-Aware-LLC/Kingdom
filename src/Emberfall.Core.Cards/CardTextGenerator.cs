@@ -907,6 +907,12 @@ namespace Emberfall.Core.Cards
             // 2026-08-25, which is what made the action and the carrier print the same word.
             FrostAction a => $"{FrostVerb} {Target(a.Target)}.",
             TakeControlAction a => $"Take control of {Target(a.Target)}.",
+            // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
+            // second spelling here, so a card face and a timing marker cannot drift apart. Reads
+            // "Trigger a random friendly minion's Toll." — repetitive under a Toll: prefix, and
+            // deliberately so: the second word is the effect, and any synonym would be a word the
+            // glossary does not carry.
+            TriggerTollAction a => $"Trigger {TollOf(a.Target)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",
             AddToHandAction a => $"Add {Copies(a.Count, NamedCard(a.CardId, pool))} to your hand.",
@@ -1174,6 +1180,33 @@ namespace Emberfall.Core.Cards
             int count = target.Selection.Count;
             return count == 1 ? phrasing.Singular : count + " " + phrasing.Plural;
         }
+
+        /// <summary>
+        /// The possessive noun phrase a <c>TRIGGER_TOLL</c> reads as — "a random friendly minion's
+        /// Toll", "all friendly minions' Tolls".
+        ///
+        /// <para><b>Number comes from the spec, the apostrophe from the spelling.</b> Those are two
+        /// different questions and answering both off the string was the trap: "a Beast" is singular
+        /// and does not end in s today, but a tribe whose name does would have read as a plural. So
+        /// the LABEL is pluralised from <see cref="IsPlural"/>, which is the same derivation
+        /// <see cref="Quantity"/> already uses, and only the apostrophe form — <c>s'</c> against
+        /// <c>'s</c> — is decided by the final letter, which is the one thing English really does
+        /// key on the spelling.</para>
+        /// </summary>
+        private static string TollOf(TargetSpec target)
+        {
+            string phrase = Target(target);
+            string label = TriggerLabel(Trigger.ON_DEATH);
+            string possessive = phrase.EndsWith("s", StringComparison.Ordinal) ? "'" : "'s";
+            return phrase + possessive + " " + label + (IsPlural(target) ? "s" : "");
+        }
+
+        /// <summary>Whether a target's noun phrase is spoken in the plural — the same question
+        /// <see cref="Quantity"/> answers when it picks between a selector's two spoken forms.</summary>
+        private static bool IsPlural(TargetSpec target)
+            => target.IsEveryCandidate
+                ? NamesASet(target.Selector)
+                : target.Selection.Count != 1;
 
         /// <summary>Rewrites a description as its "not the one already chosen" form, for distinctFrom.</summary>
         private static string Another(string description)

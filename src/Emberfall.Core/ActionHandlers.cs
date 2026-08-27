@@ -31,6 +31,7 @@ namespace Emberfall.Core
                 case AddToHandAction _: new AddToHandHandler().Execute(context); return;
                 case TransformAction _: new TransformHandler().Execute(context); return;
                 case TakeControlAction _: new TakeControlHandler().Execute(context); return;
+                case TriggerTollAction _: new TriggerTollHandler().Execute(context); return;
                 case EquipAction _: new EquipHandler().Execute(context); return;
                 case UnearthAction _: new UnearthHandler().Execute(context); return;
                 case FrostAction _: new FrostHandler().Execute(context); return;
@@ -386,6 +387,40 @@ namespace Emberfall.Core
                 var replacement = new CardInstance(ctx.State.NextInstanceId(), def.Id, ps.Id);
                 RulesEngine.EnterBoard(ctx.State, replacement, def, t.Seat, idx, ctx.Db);
                 ctx.Events.Emit(GameEventKind.CardTransformed, source: ctx.Source.Identity, target: replacement.Id);
+            }
+        }
+    }
+
+    // ── TRIGGER_TOLL ─────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Fires a living board minion's own ON_DEATH rules, leaving it alive.
+    ///
+    /// <para><b>Enqueued, never executed here.</b> <c>RaiseSelf</c> puts the target's tolls on the
+    /// same queue a real death would, so they drain in <see cref="EffectInterpreter.Drain"/> behind
+    /// whatever is already waiting, get the same per-effect DeathCheck/WinCheck, and count against
+    /// the same resolution cap. Calling the target's handlers inline instead would have run them
+    /// ahead of effects queued earlier — a different board for the same cards.</para>
+    ///
+    /// <para><b>The target is the source of what it raises.</b> The carrier passed to
+    /// <c>RaiseSelf</c> is the MINION, not the card holding this rule, so a toll reading SELF or
+    /// naming its controller means the minion — the reading the card face states. Which is also why
+    /// nothing here checks silence: <c>RaiseSelf</c> already refuses to form work from a silenced
+    /// permanent, and that is the answer for a silenced minion whose toll is being rung by somebody
+    /// else, exactly as it is when it dies.</para>
+    ///
+    /// <para><b>Nothing dies and nothing rekindles.</b> The minion keeps its slot, its stats and its
+    /// unused REKINDLE. A toll is being RUNG, not paid.</para>
+    /// </summary>
+    internal sealed class TriggerTollHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            foreach (TargetCandidate target in ctx.Targets)
+            {
+                if (!target.IsMinion) continue;
+                CardInstance minion = target.Minion!;
+                ctx.Interpreter.RaiseSelf(minion, Trigger.ON_DEATH,
+                    System.Array.Empty<TargetRef>(), TriggerEventContext.ForSource(minion.Id));
             }
         }
     }

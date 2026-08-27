@@ -600,6 +600,7 @@ namespace Emberfall.Core.Cards
             yield return new DestroyAction(target);
             yield return new ReturnToHandAction(target);
             yield return new TakeControlAction(target);
+            yield return new TriggerTollAction(target);
             yield return new FrostAction(target);
             yield return new SilenceAction(target);
         }
@@ -705,6 +706,7 @@ namespace Emberfall.Core.Cards
                 if (Verb("Destroy ") || Verb("Sacrifice ")) yield return new DestroyAction(spec);
                 if (Verb("Return ")) yield return new ReturnToHandAction(spec);
                 if (Verb("Take control of ")) yield return new TakeControlAction(spec);
+                if (Verb("Trigger ")) yield return new TriggerTollAction(spec);
                 if (Verb(frost)) yield return new FrostAction(spec);
                 if (Verb(silence)) yield return new SilenceAction(spec);
             }

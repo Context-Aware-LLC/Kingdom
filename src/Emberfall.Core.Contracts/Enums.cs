@@ -84,6 +84,10 @@ namespace Emberfall.Core.Contracts
         // Weapons: RulesEngine.BreakWeapon, on durability exhaustion AND on equip-replacement (EF-020).
         // A weapon's rattle ENQUEUES like a minion's, so on a replacement the NEW weapon is already
         // equipped when it resolves — an ON_DEATH that equips will break the replacement, not itself.
+        // THIRD raise site, and the only one where nothing died: ActionHandlers.TriggerTollHandler
+        // rings a LIVING board minion's toll for the TRIGGER_TOLL action. So an ON_DEATH rule can
+        // now run with its carrier still on the board — do not read "this rule is resolving" as
+        // "this minion is in the graveyard" at any site reachable from one.
         ON_DEATH,
 
         // LIVE, BUT WEAPONS ONLY. CommandProcessor gates the raise on

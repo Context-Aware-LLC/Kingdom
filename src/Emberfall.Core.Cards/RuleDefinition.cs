@@ -254,6 +254,30 @@ namespace Emberfall.Core.Cards
         public TakeControlAction(TargetSpec target) : base(target) { }
     }
 
+    /// <summary>
+    /// Fires a living board minion's own <c>ON_DEATH</c> rules without killing it.
+    ///
+    /// <para><b>It re-raises, it does not copy.</b> The target's tolls are enqueued from the
+    /// target's own definition with the target as carrier, so whatever the minion's rattle already
+    /// does is what happens — no second statement of any card's effect lives here. The minion stays
+    /// on the board, keeps its stats and does not consume <c>REKINDLE</c>, because nothing died.</para>
+    ///
+    /// <para><b>The whiff is deliberate.</b> A minion with no <c>ON_DEATH</c> rule is a legal target
+    /// and produces nothing. Narrowing the selector to toll-carrying minions would be a filter axis
+    /// on <c>TargetFilterDef</c>, not a property of this verb; the selector stays the selector's
+    /// business, exactly as allegiance does.</para>
+    ///
+    /// <para><b>Recursion is bounded, not prevented.</b> Two minions each carrying
+    /// <c>Toll: Trigger a random friendly minion's Toll</c> can point at one another forever;
+    /// <c>MatchEngine.ActionResolutionCap</c> is the only thing that stops it, the same as for every
+    /// other toll cascade. Nothing here excludes the source, because the source is frequently NOT a
+    /// board minion — a weapon's toll fires from the graveyard with nothing to exclude.</para>
+    /// </summary>
+    public sealed class TriggerTollAction : TargetedRuleAction
+    {
+        public TriggerTollAction(TargetSpec target) : base(target) { }
+    }
+
     public sealed class DrawAction : RuleAction
     {
         public int Count { get; }
@@ -435,6 +459,12 @@ namespace Emberfall.Core.Cards
                     return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
                 case ModifyStatsAction _:
                 case GrantKeywordAction _:
+                // Board minions only, and NOT weapons, though a weapon can carry a toll (EF-020).
+                // An equipped weapon's rattle fires when the weapon BREAKS; re-raising it on a
+                // weapon still in the slot would run a rattle for a break that did not happen, and
+                // the two shapes an author could mean by that -- with or without breaking it -- have
+                // no wording that tells them apart. A minion has no such second reading.
+                case TriggerTollAction _:
                     return new TargetShape(TargetZones.Board, TargetTypes.Minion);
                 // The hand is type-agnostic here and always was: the fused `HandCard` named a zone
                 // and said nothing about type, so destroying a spell in hand was already legal.

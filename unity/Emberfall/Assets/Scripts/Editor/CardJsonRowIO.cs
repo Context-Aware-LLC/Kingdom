@@ -211,6 +211,7 @@ namespace Emberfall.Editor
             else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
             else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
             else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }
+            else if (action is TriggerTollAction triggerToll) { Type(w, "TRIGGER_TOLL"); Target(w, triggerToll.Target); }
             else if (action is DrawAction draw) { Type(w, "DRAW"); Count(w, draw.Count); }
             else if (action is SummonAction summon) { Type(w, "SUMMON"); w.WriteNumber("cardId", summon.CardId); Count(w, summon.Count); }
             else if (action is AddToHandAction addToHand) { Type(w, "ADD_TO_HAND"); w.WriteNumber("cardId", addToHand.CardId); Count(w, addToHand.Count); }

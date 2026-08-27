@@ -105,6 +105,7 @@ namespace Emberfall.Editor
         Transform,
         Frost,
         TakeControl,
+        TriggerToll,
         Draw,
         Summon,
         AddToHand,
@@ -263,7 +264,8 @@ namespace Emberfall.Editor
             || ActionKind == EditableRuleActionKind.Silence
             || ActionKind == EditableRuleActionKind.Transform
             || ActionKind == EditableRuleActionKind.Frost
-            || ActionKind == EditableRuleActionKind.TakeControl;
+            || ActionKind == EditableRuleActionKind.TakeControl
+            || ActionKind == EditableRuleActionKind.TriggerToll;
 
         public int ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
             || ActionKind == EditableRuleActionKind.AddToHand
@@ -377,6 +379,7 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Transform: return new TransformAction(CardId, target);
                 case EditableRuleActionKind.Frost: return new FrostAction(target);
                 case EditableRuleActionKind.TakeControl: return new TakeControlAction(target);
+                case EditableRuleActionKind.TriggerToll: return new TriggerTollAction(target);
                 case EditableRuleActionKind.Draw: return new DrawAction(Count);
                 case EditableRuleActionKind.Summon: return new SummonAction(CardId, Count);
                 case EditableRuleActionKind.AddToHand: return new AddToHandAction(CardId, Count);
@@ -401,6 +404,7 @@ namespace Emberfall.Editor
             else if (action is TransformAction transform) { ActionKind = EditableRuleActionKind.Transform; CardId = transform.CardId; ReadTarget(transform); }
             else if (action is FrostAction frost) { ActionKind = EditableRuleActionKind.Frost; ReadTarget(frost); }
             else if (action is TakeControlAction takeControl) { ActionKind = EditableRuleActionKind.TakeControl; ReadTarget(takeControl); }
+            else if (action is TriggerTollAction triggerToll) { ActionKind = EditableRuleActionKind.TriggerToll; ReadTarget(triggerToll); }
             else if (action is DrawAction draw) { ActionKind = EditableRuleActionKind.Draw; Count = draw.Count; }
             else if (action is SummonAction summon) { ActionKind = EditableRuleActionKind.Summon; CardId = summon.CardId; Count = summon.Count; }
             else if (action is AddToHandAction addToHand) { ActionKind = EditableRuleActionKind.AddToHand; CardId = addToHand.CardId; Count = addToHand.Count; }
