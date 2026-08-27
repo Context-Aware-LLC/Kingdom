@@ -43,6 +43,9 @@
              Link="Presentation\BoardRowGeometry.cs" />
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\OngoingEffectStatusModel.cs"
              Link="Presentation\OngoingEffectStatusModel.cs" />
+    <!-- Card SFX event routing is Unity-free; audio loading/playback remains in the Unity-only director. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\CardSoundCueRouter.cs"
+             Link="Presentation\CardSoundCueRouter.cs" />
     <!-- Unearth snapshot interpretation is Unity-free so reconnect/redaction/order behavior can
          be proved without taking the machine-wide Unity Editor seat. -->
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\UnearthChoiceModel.cs"

@@ -19,8 +19,11 @@ namespace Emberfall.Core.Cards
             // row carrying a retired one fails loudly instead of being silently ignored.
             "id", "handle", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
             "setId", "tribe", "collectible", "artId",
-            "flavorText", "tooltip", "factionId", "keywords", "text", "rules", "_comment"
+            "flavorText", "tooltip", "factionId", "keywords", "text", "rules", "soundEffects", "_comment"
         };
+
+        private static readonly HashSet<string> SoundEffectProperties =
+            new HashSet<string>(new[] { "soundId", "trigger" }, StringComparer.Ordinal);
 
         private static readonly HashSet<string> TargetProperties = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -95,8 +98,23 @@ namespace Emberfall.Core.Cards
                     throw new FormatException("Card JSON rules must be an array.");
                 foreach (var rule in ruleElements.EnumerateArray()) rules.Add(RuleFromElement(rule));
             }
+
+            var soundEffects = new List<CardSoundEffect>();
+            if (el.TryGetProperty("soundEffects", out var soundElements))
+            {
+                if (soundElements.ValueKind != JsonValueKind.Array)
+                    throw new FormatException("Card JSON soundEffects must be an array.");
+                foreach (JsonElement sound in soundElements.EnumerateArray())
+                {
+                    RejectUnknownProperties(sound, "sound effect", SoundEffectProperties);
+                    soundEffects.Add(new CardSoundEffect(
+                        RequiredString(sound, "soundId", "soundEffects[].soundId"),
+                        ReqEnum<Trigger>(sound, "trigger")));
+                }
+            }
             return new CardDefinition(id, handle, name, type, cost, attack, health, durability, cls, rarity,
-                keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip, text);
+                keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip, text,
+                soundEffects);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)

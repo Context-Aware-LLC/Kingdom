@@ -390,6 +390,14 @@ namespace Emberfall.Presentation
             var ongoingEffects = OngoingEffectsView.Create(localId, db);
             matchRunner.OnStateUpdated += ongoingEffects.OnStateUpdated;
 
+            // Card-authored SFX are presentation-only: they read the same paced snapshots/events
+            // as VFX and never enter authority state or the wire protocol.
+            var cardSounds = GetComponent<CardSoundDirector>() ??
+                gameObject.AddComponent<CardSoundDirector>();
+            cardSounds.Init(db);
+            matchRunner.OnStateUpdated += cardSounds.OnStateUpdated;
+            matchRunner.OnMatchEvent += cardSounds.OnMatchEvent;
+
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
             {

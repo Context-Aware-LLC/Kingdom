@@ -95,6 +95,19 @@ namespace Emberfall.Editor
                 w.WriteString("setId", def.SetId.ToString());
                 w.WriteBoolean("collectible", def.Collectible);
                 w.WriteString("artId", def.ArtId);
+
+                if (def.SoundEffects.Count > 0)
+                {
+                    w.WriteStartArray("soundEffects");
+                    foreach (CardSoundEffect sound in def.SoundEffects)
+                    {
+                        w.WriteStartObject();
+                        w.WriteString("soundId", sound.SoundId);
+                        w.WriteString("trigger", sound.Trigger.ToString());
+                        w.WriteEndObject();
+                    }
+                    w.WriteEndArray();
+                }
                 if (!string.IsNullOrEmpty(def.FlavorText)) w.WriteString("flavorText", def.FlavorText);
                 if (!string.IsNullOrEmpty(def.Tooltip)) w.WriteString("tooltip", def.Tooltip);
                 if (!string.IsNullOrEmpty(def.FactionId)) w.WriteString("factionId", def.FactionId);

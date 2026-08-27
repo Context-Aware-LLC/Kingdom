@@ -14,6 +14,7 @@ namespace Emberfall.Core.Cards
     public sealed class CardValidator : ICardValidator
     {
         private static readonly Regex IdPattern = new Regex("^[a-z0-9_]+$", RegexOptions.Compiled);
+        private static readonly Regex SoundIdPattern = new Regex("^[a-z0-9][a-z0-9_-]*$", RegexOptions.Compiled);
         private static readonly Regex TargetBindingPattern = new Regex("^[a-z][a-z0-9_]{0,31}$", RegexOptions.Compiled);
 
         // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
@@ -97,6 +98,21 @@ namespace Emberfall.Core.Cards
             // C3
             if (string.IsNullOrEmpty(def.Name) || def.Name.Length < 1 || def.Name.Length > 32)
                 Err("C3-NAME-LENGTH", "name", "name must be 1-32 characters.");
+
+            // C30 — sound ids are Addressables filename stems, and AURA is not an event. Keeping
+            // this in the shared validator means a hand-edited row cannot bypass the picker and
+            // ship a key the runtime can never resolve.
+            for (int i = 0; i < def.SoundEffects.Count; i++)
+            {
+                CardSoundEffect sound = def.SoundEffects[i];
+                string field = $"soundEffects[{i}]";
+                if (string.IsNullOrEmpty(sound.SoundId) || !SoundIdPattern.IsMatch(sound.SoundId))
+                    Err("C30-SOUNDID-FORMAT", field + ".soundId",
+                        "soundId must match ^[a-z0-9][a-z0-9_-]*$ (the AudioClip filename without its extension).");
+                if (sound.Trigger == Trigger.AURA)
+                    Err("C30-SOUND-TRIGGER-AURA", field + ".trigger",
+                        "AURA is continuous recomputation, not a trigger event, so it cannot play a sound effect.");
+            }
 
             // C25 — these enum members remain solely to preserve historic numeric ordinals.
             // Runtime behavior and player-facing markers come from their typed actions.

@@ -331,6 +331,23 @@ namespace Emberfall.Core.Cards
     }
 
     /// <summary>
+    /// One presentation-only sound attached to a card trigger. The sound id is the filename stem
+    /// registered at Addressables key <c>sfx/&lt;soundId&gt;</c>; the trigger reuses the card-effect
+    /// vocabulary so authors do not have to learn a second event model.
+    /// </summary>
+    public sealed class CardSoundEffect
+    {
+        public string SoundId { get; }
+        public Trigger Trigger { get; }
+
+        public CardSoundEffect(string soundId, Trigger trigger)
+        {
+            SoundId = soundId ?? "";
+            Trigger = trigger;
+        }
+    }
+
+    /// <summary>
     /// 1:1 mapping of the D1 §2 card row (dev-docs/specs/card-schema.md:5). <b>Immutable after load</b> — runtime
     /// mutable state lives on the <see cref="CardInstance"/>, never on the definition.
     /// </summary>
@@ -395,6 +412,7 @@ namespace Emberfall.Core.Cards
         public string FlavorText { get; }
         public string Tooltip { get; }
         public string ArtId { get; }
+        public IReadOnlyList<CardSoundEffect> SoundEffects { get; }
         public SetId SetId { get; }
         public bool Collectible { get; }
         public Tribe? Tribe { get; }
@@ -420,7 +438,7 @@ namespace Emberfall.Core.Cards
             IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
             string flavorText, string artId, SetId setId,
             bool collectible, Tribe? tribe, string factionId, string tooltip = "",
-            string text = "")
+            string text = "", IReadOnlyList<CardSoundEffect>? soundEffects = null)
         {
             Id = id;
             Handle = handle ?? "";
@@ -438,6 +456,7 @@ namespace Emberfall.Core.Cards
             FlavorText = flavorText ?? "";
             Tooltip = tooltip ?? "";
             ArtId = artId ?? "";
+            SoundEffects = soundEffects ?? System.Array.Empty<CardSoundEffect>();
             SetId = setId;
             Collectible = collectible;
             Tribe = tribe;

@@ -73,6 +73,11 @@ namespace Emberfall.Editor
         private Sprite _artPreviewSprite;
         private string _artPreviewPath;
 
+        // Selected-card-only AudioClip resolution. Like the art cache above, misses are cached too:
+        // an absent clip must not trigger AssetDatabase.FindAssets on every IMGUI repaint.
+        private readonly Dictionary<string, AudioClip> _soundClips =
+            new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+
         private void OnEnable()
         {
             minSize = new Vector2(760, 480);   // never collapse to a bare title strip again
@@ -471,6 +476,10 @@ namespace Emberfall.Editor
             DrawKeywords(card);
 
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Sound Effects", EditorStyles.boldLabel);
+            DrawSoundEffects(card);
+
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Rules", EditorStyles.boldLabel);
             DrawRules(card);
 
@@ -556,6 +565,94 @@ namespace Emberfall.Editor
                 if (now && !has) card.Keywords.Add(kw);
                 else if (!now && has) card.Keywords.Remove(kw);
             }
+        }
+
+        private void DrawSoundEffects(EditableCard card)
+        {
+            for (int i = 0; i < card.SoundEffects.Count; i++)
+            {
+                EditableSoundEffect sound = card.SoundEffects[i];
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"soundEffects[{i}]", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("✕", GUILayout.Width(24)))
+                {
+                    card.SoundEffects.RemoveAt(i);
+                    _dirtyIds.Add(card.Id);
+                    Invalidate(card.Id);
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.EndVertical();
+                    break;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                sound.Trigger = (Trigger)EditorGUILayout.EnumPopup("trigger", sound.Trigger);
+                AudioClip current = ResolveSoundClip(sound.SoundId);
+                AudioClip picked = (AudioClip)EditorGUILayout.ObjectField(
+                    "clip", current, typeof(AudioClip), allowSceneObjects: false);
+
+                if (picked != current)
+                {
+                    if (picked == null)
+                    {
+                        sound.SoundId = "";
+                    }
+                    else if (AddressablesSetup.TryRegisterSoundEffect(
+                                 picked, out string soundId, out string error))
+                    {
+                        sound.SoundId = soundId;
+                        _soundClips[soundId] = picked;
+                    }
+                    else
+                    {
+                        ShowNotification(new GUIContent(error));
+                        Debug.LogWarning("[CardAuthoring] " + error);
+                    }
+                }
+
+                using (new EditorGUI.DisabledScope(true))
+                    EditorGUILayout.TextField("soundId", sound.SoundId);
+
+                if (sound.Trigger == Trigger.AURA)
+                    EditorGUILayout.HelpBox(
+                        "AURA is continuous recomputation, not a trigger event. Choose an ON_* trigger.",
+                        MessageType.Error);
+                else if (!string.IsNullOrEmpty(sound.SoundId) && current == null && picked == null)
+                    EditorGUILayout.HelpBox(
+                        $"No AudioClip named '{sound.SoundId}' exists under {AddressablesSetup.SoundEffectsFolder}.",
+                        MessageType.Error);
+
+                EditorGUILayout.EndVertical();
+            }
+
+            if (GUILayout.Button("+ Add Sound Effect"))
+            {
+                card.SoundEffects.Add(new EditableSoundEffect());
+                _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
+            }
+        }
+
+        private AudioClip ResolveSoundClip(string soundId)
+        {
+            if (string.IsNullOrEmpty(soundId)) return null;
+            if (_soundClips.TryGetValue(soundId, out AudioClip cached)) return cached;
+
+            AudioClip found = null;
+            foreach (string guid in AssetDatabase.FindAssets(
+                         "t:AudioClip", new[] { AddressablesSetup.SoundEffectsFolder }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!string.Equals(Path.GetFileNameWithoutExtension(path), soundId,
+                        StringComparison.Ordinal))
+                    continue;
+                found = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
+                break;
+            }
+
+            _soundClips[soundId] = found;
+            return found;
         }
 
         private void DrawRules(EditableCard card)

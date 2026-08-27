@@ -26,6 +26,7 @@ namespace Emberfall.Editor
         private const string CardDataFolder = "Assets/CardData";
         private const string CardArtRoot = "Assets/Art/Cards";
         private const string PackArtRoot = "Assets/Art/Shop/Packs";
+        public const string SoundEffectsFolder = "Assets/Sound/SFX";
 
         /// <summary>Every group name this run touched, in the order it touched them, so the
         /// closing log reports the run rather than a list someone has to remember to edit.</summary>
@@ -112,6 +113,8 @@ namespace Emberfall.Editor
             AddFolderAssets(settings, orbsGroup, "Assets/Art/Orbs", "orbs", "t:Texture2D");
             var fontsGroup = GetGroup(settings, "Fonts");
             AddFolderAssets(settings, fontsGroup, "Assets/Art/Fonts", "fonts", "t:TMP_FontAsset");
+            var soundEffectsGroup = GetGroup(settings, "SoundEffects");
+            AddFolderAssets(settings, soundEffectsGroup, SoundEffectsFolder, "sfx", "t:AudioClip");
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
@@ -120,6 +123,53 @@ namespace Emberfall.Editor
             // it did not mention — which is what a per-set loop guarantees will happen. A summary
             // you have to remember to update is a summary that lies about the run you just did.
             Debug.Log("[AddressablesSetup] groups synced: " + string.Join(", ", SyncedGroups));
+        }
+
+        /// <summary>
+        /// Registers one clip selected by the card-authoring window immediately, so attaching a
+        /// sound is a complete operation and does not depend on remembering to run the bulk setup
+        /// menu afterwards.
+        /// </summary>
+        public static bool TryRegisterSoundEffect(AudioClip clip, out string soundId, out string error)
+        {
+            soundId = "";
+            error = "";
+            if (clip == null) return true;
+
+            string path = AssetDatabase.GetAssetPath(clip).Replace('\\', '/');
+            string prefix = SoundEffectsFolder + "/";
+            if (!path.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+            {
+                error = $"Sound effects must live under {SoundEffectsFolder}. Move '{path}' there and attach it again.";
+                return false;
+            }
+
+            soundId = Path.GetFileNameWithoutExtension(path);
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            if (string.IsNullOrEmpty(guid))
+            {
+                error = $"Unity has no asset GUID for '{path}'.";
+                soundId = "";
+                return false;
+            }
+
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
+            var entries = new List<AddressableAssetEntry>();
+            settings.GetAllAssets(entries, false);
+            string address = $"sfx/{soundId}";
+            foreach (AddressableAssetEntry existing in entries)
+                if (existing.address == address && existing.guid != guid)
+                {
+                    error = $"Another AudioClip already owns Addressables key '{address}'. Sound filenames must be unique.";
+                    soundId = "";
+                    return false;
+                }
+
+            AddressableAssetGroup group = GetGroup(settings, "SoundEffects");
+            settings.CreateOrMoveEntry(guid, group).SetAddress(address);
+            settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryModified, null, true, true);
+            AssetDatabase.SaveAssets();
+            return true;
         }
 
         private static void MigrateCardDataOutOfResources()

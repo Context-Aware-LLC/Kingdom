@@ -24,6 +24,7 @@ namespace Emberfall.Editor
         public Rarity Rarity = Rarity.COMMON;
         public List<Keyword> Keywords = new List<Keyword>();
         public List<EditableRule> Rules = new List<EditableRule>();
+        public List<EditableSoundEffect> SoundEffects = new List<EditableSoundEffect>();
         public string Text = "";
         public string FlavorText = "";
         public string Tooltip = "";
@@ -50,6 +51,7 @@ namespace Emberfall.Editor
             Rarity = def.Rarity,
             Keywords = new List<Keyword>(def.Keywords),
             Rules = def.Rules.Select(EditableRule.FromDefinition).ToList(),
+            SoundEffects = def.SoundEffects.Select(EditableSoundEffect.FromDefinition).ToList(),
             Text = def.Text,
             FlavorText = def.FlavorText,
             Tooltip = def.Tooltip,
@@ -70,12 +72,25 @@ namespace Emberfall.Editor
             keywords: Keywords, rules: Rules.Select(rule => rule.ToDefinition()).ToList(),
             flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
-            factionId: FactionId, tooltip: Tooltip, text: Text);
+            factionId: FactionId, tooltip: Tooltip, text: Text,
+            soundEffects: SoundEffects.Select(sound => sound.ToDefinition()).ToList());
 
         public EditableCard Clone() => FromDefinition(ToDefinition());
     }
 
     public enum EditableActivationKind { Triggered, Aura }
+
+    public sealed class EditableSoundEffect
+    {
+        public string SoundId = "";
+        public Trigger Trigger = Trigger.ON_PLAY;
+
+        public static EditableSoundEffect FromDefinition(CardSoundEffect sound) =>
+            new EditableSoundEffect { SoundId = sound.SoundId, Trigger = sound.Trigger };
+
+        public CardSoundEffect ToDefinition() => new CardSoundEffect(SoundId, Trigger);
+    }
+
     public enum EditableConditionKind { Always, TurnOwner, CostPaid, Controls }
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
