@@ -15,7 +15,11 @@ namespace Emberfall.Presentation
         public void Init(ICardDatabase database)
         {
             _router = new CardSoundCueRouter(database);
-            AudioSource source = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
+            // TryGetComponent, not `??`: the null-coalescing operator is the C# null check and
+            // bypasses UnityEngine.Object's overloaded `==`, so GetComponent's fake-null wrapper
+            // reads as non-null, AddComponent never runs, and the next line throws
+            // MissingComponentException (Sam, 2026-08-27).
+            if (!TryGetComponent(out AudioSource source)) source = gameObject.AddComponent<AudioSource>();
             source.playOnAwake = false;
             source.loop = false;
             source.spatialBlend = 0f;
