@@ -33,6 +33,7 @@ namespace Emberfall.Editor
         {
             "Assets/UI/MainMenu/MainMenuScreen.uxml",
             "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml",
+            "Assets/UI/CharacterCreate/CharacterCreateScreen.uxml",
             // The collection wall and the deckbuilder are one plate now (#153); DeckbuilderScreen.uxml
             // is gone. This entry replaces it and closes a gap rather than just tracking a rename:
             // CollectionScreen.uxml was never listed here, so the screen carrying the loudest warning
@@ -69,6 +70,24 @@ namespace Emberfall.Editor
                                       "look for a '--' inside a comment, or any other invalid XML.");
                     allGood = false;
                     continue;
+                }
+
+                // #266: character creation deliberately replaced the runtime-sized portrait grid
+                // with two fixed columns. Keep that boundary explicit so a future restyle cannot
+                // quietly reintroduce the leaking grid/tree shape that OOM-killed Android.
+                if (path.EndsWith("CharacterCreateScreen.uxml"))
+                {
+                    bool hasFixedColumns = tree.Q<VisualElement>("create-hero-column-left") != null
+                                           && tree.Q<VisualElement>("create-hero-column-right") != null;
+                    bool hasLegacyGrid = tree.Q<VisualElement>("create-hero-grid") != null
+                                         || tree.Q<VisualElement>(className: "hero-grid") != null;
+                    if (!hasFixedColumns || hasLegacyGrid)
+                    {
+                        report.AppendLine($"  ✗ {path} — character picker must have two fixed " +
+                                          "columns and no legacy hero grid");
+                        allGood = false;
+                        continue;
+                    }
                 }
 
                 report.AppendLine($"  ✓ {path} — childCount={tree.childCount}, {named.Count} named elements");
