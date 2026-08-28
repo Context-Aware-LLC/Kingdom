@@ -70,6 +70,18 @@ namespace Emberfall.AI
             if (state == null || state.Outcome != MatchOutcome.InProgress)
                 return null;
 
+            // A pending choice comes FIRST, ahead of the phase checks — CommandProcessor.CanExecute
+            // rejects every other intent with ChoicePending while one is open, END TURN INCLUDED,
+            // which is also why OnRejected's EndTurn fallback cannot break the deadlock. Unearth is
+            // the only kind (Q1 ruling, 2026-07-15) and card 230 Gear Cache is the only collectible
+            // that raises it. Kept in step with Emberfall.Net.Server.Bots.GreedyAi.ChooseUnearth.
+            var pending = state.PendingChoice;
+            if (pending != null && pending.Chooser == _playerId)
+            {
+                int chosen = ChooseUnearth(pending, state.PlayerOf(_playerId));
+                if (chosen != 0) return new UnearthChoiceIntent(_playerId, chosen, pending.ChoiceSequence);
+            }
+
             // Mulligan: keep entire opening hand.
             if (state.Phase == TurnPhase.Mulligan)
             {
@@ -125,6 +137,38 @@ namespace Emberfall.AI
             return new EndTurnIntent(_playerId);
         }
 
+        /// <summary>
+        /// Which Unearth option to take: the dearest one this seat could still afford to cast at its
+        /// current crystal ceiling, else the cheapest on offer. Ties break on the lower card id so the
+        /// pick is reproducible. Returns 0 when nothing offered resolves against the database — the
+        /// caller then leaves the choice alone rather than submitting an InvalidChoice.
+        /// </summary>
+        private int ChooseUnearth(PendingChoice pending, PlayerState chooser)
+        {
+            int best = 0, bestCost = -1;
+            int cheapest = 0, cheapestCost = int.MaxValue;
+            int ceiling = chooser.Mana.Max;
+
+            foreach (int cardId in pending.Options)
+            {
+                if (!_db.TryGet(cardId, out var def)) continue;
+
+                if (def.Cost < cheapestCost || (def.Cost == cheapestCost && cardId < cheapest))
+                {
+                    cheapestCost = def.Cost;
+                    cheapest = cardId;
+                }
+                if (def.Cost > ceiling) continue;
+                if (def.Cost > bestCost || (def.Cost == bestCost && cardId < best))
+                {
+                    bestCost = def.Cost;
+                    best = cardId;
+                }
+            }
+
+            return best != 0 ? best : cheapest;
+        }
+
         // ── Playing a card ────────────────────────────────────────────────────────
 
         private PlayCardIntent TryPlay(GameState state, CardInstance card, CardDefinition def,
@@ -145,9 +189,10 @@ namespace Emberfall.AI
 
             if (plan.Count == 0) return null;
 
-            // Single unnamed binding: the existing heuristic-ordered candidate loop preserves the
-            // hostile/friendly priority (killable-first) for single-target cards.
-            if (plan.Count == 1 && plan[0].Binding.Length == 0)
+            // Single unnamed binding needing ONE pick: the heuristic-ordered candidate loop preserves
+            // the hostile/friendly priority (killable-first) for single-target cards. A group wanting
+            // more than one pick falls through to the combination search below.
+            if (plan.Count == 1 && plan[0].Binding.Length == 0 && plan[0].RequiredCount <= 1)
             {
                 foreach (var t in PlayCandidates(def, ps, foe))
                 {
@@ -157,35 +202,68 @@ namespace Emberfall.AI
                 return null;
             }
 
-            // Named or multi-binding: build one candidate list per group tagged with the binding name,
-            // then try combinations depth-first. The validator is the truth about legality.
+            // Everything else: one candidate list per group tagged with the binding name, searched
+            // depth-first for the first combination the validator accepts.
             var perGroup = new List<List<TargetRef>>(plan.Count);
+            var perGroupCount = new List<int>(plan.Count);
             foreach (TargetChoiceRequirement req in plan)
             {
-                if (req.Candidates.Count == 0) return null;
                 var refs = new List<TargetRef>(req.Candidates.Count);
                 foreach (TargetCandidate c in req.Candidates)
                     refs.Add(new TargetRef(c.Instance, req.Binding));
+
+                // RequiredCount can exceed what the board offers, and carries int.MaxValue as the
+                // conflicting-binding sentinel (Targeting.PlayerChoicePlan) — clamp to what exists.
+                int take = req.RequiredCount < refs.Count ? req.RequiredCount : refs.Count;
+                if (take < req.MinimumCount) return null;
                 perGroup.Add(refs);
+                perGroupCount.Add(take);
             }
 
-            var chosen = new TargetRef[plan.Count];
-            return TryCombinations(state, card, slot, perGroup, chosen, 0);
+            var chosen = new List<TargetRef>(plan.Count);
+            return TryGroups(state, card, slot, perGroup, perGroupCount, chosen, 0);
         }
 
-        private PlayCardIntent TryCombinations(GameState state, CardInstance card, int slot,
-            List<List<TargetRef>> perGroup, TargetRef[] chosen, int depth)
+        /// <summary>
+        /// Depth-first over the binding groups, taking each group's required number of DISTINCT
+        /// candidates in canonical order.
+        ///
+        /// <para><b>The count is the whole point of this method.</b> It replaced a version that
+        /// supplied exactly one ref per group, which left every card asking for two picks — 203
+        /// Channeled Pyroclasm's "Deal 6 damage to 2 enemies" among them — permanently unplayable by
+        /// this driver, with no rejection to see because the intent was never submitted.</para>
+        ///
+        /// <para>Kept in step with Emberfall.Net.Server.Bots.GreedyAi.TryGroups.</para>
+        /// </summary>
+        private PlayCardIntent TryGroups(GameState state, CardInstance card, int slot,
+            List<List<TargetRef>> perGroup, List<int> perGroupCount, List<TargetRef> chosen, int depth)
         {
             if (depth == perGroup.Count)
             {
-                var intent = new PlayCardIntent(_playerId, card.Id, slot, (TargetRef[])chosen.Clone());
+                var intent = new PlayCardIntent(_playerId, card.Id, slot, chosen.ToArray());
                 return _validator.CanExecute(state, intent, out _) ? intent : null;
             }
-            foreach (TargetRef t in perGroup[depth])
+            return TryCombination(state, card, slot, perGroup, perGroupCount, chosen,
+                                  depth, 0, perGroupCount[depth]);
+        }
+
+        /// <summary>One group's distinct-combination walk: take <paramref name="remaining"/> more
+        /// candidates from index <paramref name="from"/> onward, then move to the next group.</summary>
+        private PlayCardIntent TryCombination(GameState state, CardInstance card, int slot,
+            List<List<TargetRef>> perGroup, List<int> perGroupCount, List<TargetRef> chosen,
+            int depth, int from, int remaining)
+        {
+            if (remaining == 0)
+                return TryGroups(state, card, slot, perGroup, perGroupCount, chosen, depth + 1);
+
+            List<TargetRef> candidates = perGroup[depth];
+            for (int i = from; i <= candidates.Count - remaining; i++)
             {
-                chosen[depth] = t;
-                PlayCardIntent result = TryCombinations(state, card, slot, perGroup, chosen, depth + 1);
+                chosen.Add(candidates[i]);
+                PlayCardIntent result = TryCombination(state, card, slot, perGroup, perGroupCount,
+                                                       chosen, depth, i + 1, remaining - 1);
                 if (result != null) return result;
+                chosen.RemoveAt(chosen.Count - 1);
             }
             return null;
         }

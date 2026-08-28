@@ -237,5 +237,43 @@ namespace Emberfall.Net.Server.Tests.Bots
             }
             finally { File.Delete(path); }
         }
+
+        /// <summary>
+        /// The SHIPPED roster — <c>tooling/data/bot-roster.json</c>, the file Dockerfile.server copies
+        /// to <c>/app/bot-roster.json</c> — loads and every entry passes L1-L5.
+        ///
+        /// <para><b>Why this is worth a test when every other case above uses a temp file.</b> Those
+        /// pin the LOADER's rules and must not depend on the roster's contents. Nothing pinned the
+        /// roster itself, so its only validation was <c>ServerApp</c> at boot: an illegal decklist
+        /// edited into that file is green through the whole suite, green through CI, and takes the
+        /// match server's startup down on deploy. This asserts the file loads and nothing about what
+        /// is in it beyond legality, so adding, retiring or rebalancing a bot never touches it.</para>
+        /// </summary>
+        [Test]
+        public void The_Shipped_Roster_Loads_And_Every_Deck_Is_Legal()
+        {
+            var db = Data.FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            string path = ShippedRosterPath();
+
+            var roster = BotRoster.LoadFromFile(path, db);   // throws on any L1-L5 or identity failure
+
+            Assert.That(roster, Is.Not.Empty, path + " is empty.");
+            foreach (var entry in roster)
+                Assert.That(entry.Cards, Has.Count.EqualTo(30),
+                    $"{entry.AccountUsername} holds {entry.Cards.Count} cards.");
+        }
+
+        /// <summary>Walks up from the test binary to the repo root, the same shape as
+        /// <see cref="SessionHarness.CardDataDir"/> and for the same reason.</summary>
+        private static string ShippedRosterPath()
+        {
+            string? path = NUnit.Framework.TestContext.CurrentContext.TestDirectory;
+            for (int i = 0; i < 10 && path is not null; i++, path = Path.GetDirectoryName(path))
+            {
+                string candidate = Path.Combine(path, "tooling", "data", "bot-roster.json");
+                if (File.Exists(candidate)) return candidate;
+            }
+            throw new FileNotFoundException("Could not locate tooling/data/bot-roster.json from the test directory.");
+        }
     }
 }

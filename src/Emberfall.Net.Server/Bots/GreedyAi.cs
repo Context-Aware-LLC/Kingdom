@@ -30,12 +30,25 @@ namespace Emberfall.Net.Server.Bots
     public static class GreedyAi
     {
         /// <summary>Dataset provenance label. Bump whenever choice ordering or heuristics change.</summary>
-        public const string PolicyVersion = "greedy-ai.v1";
+        public const string PolicyVersion = "greedy-ai.v2";
 
         /// <summary>The intent this seat wants next, or null if it is not this seat's move.</summary>
         public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator, ICardDatabase db)
         {
             if (state is null || state.Outcome != MatchOutcome.InProgress) return null;
+
+            // A pending choice comes FIRST, ahead of the phase checks — CommandProcessor.CanExecute
+            // rejects every other intent with ChoicePending while one is open, END TURN INCLUDED. A
+            // driver that cannot answer one does not merely misplay the card: it stalls its own seat
+            // for the rest of the match, because BotSeatRunner only re-decides on a new snapshot and
+            // no snapshot arrives while the turn cannot end. Unearth is the only kind (Q1 ruling,
+            // 2026-07-15) and card 230 Gear Cache is the only collectible that raises it, so the hole
+            // was invisible until a CLOCKWRIGHT deck entered the bot roster.
+            if (state.PendingChoice is PendingChoice pending && pending.Chooser == me)
+            {
+                int chosen = ChooseUnearth(pending, state.PlayerOf(me), db);
+                if (chosen != 0) return new UnearthChoiceIntent(me, chosen, pending.ChoiceSequence);
+            }
 
             if (state.Phase == TurnPhase.Mulligan)
             {
@@ -90,6 +103,46 @@ namespace Emberfall.Net.Server.Bots
             return new EndTurnIntent(me);
         }
 
+        /// <summary>
+        /// Which Unearth option to take: the dearest one this seat could still afford to cast at its
+        /// current crystal ceiling, else the cheapest on offer. Ties break on the lower card id so
+        /// the pick is reproducible.
+        ///
+        /// <para><b>Capped by <c>Mana.Max</c>, not by <c>Available</c>.</b> The card lands in hand and
+        /// is cast on some later turn, so spendable-right-now is the wrong bound — but an option that
+        /// costs more than the ceiling this seat has actually reached is a card the greedy loop will
+        /// step over every turn from here on, which is indistinguishable from having drawn nothing.</para>
+        ///
+        /// <para>Returns 0 when nothing is offered, or when no option resolves against the database —
+        /// the caller then leaves the choice alone rather than submitting an intent the validator will
+        /// refuse with <c>InvalidChoice</c>.</para>
+        /// </summary>
+        private static int ChooseUnearth(PendingChoice pending, PlayerState chooser, ICardDatabase db)
+        {
+            int best = 0, bestCost = -1;
+            int cheapest = 0, cheapestCost = int.MaxValue;
+            int ceiling = chooser.Mana.Max;
+
+            foreach (int cardId in pending.Options)
+            {
+                if (!db.TryGet(cardId, out CardDefinition def)) continue;
+
+                if (def.Cost < cheapestCost || (def.Cost == cheapestCost && cardId < cheapest))
+                {
+                    cheapestCost = def.Cost;
+                    cheapest = cardId;
+                }
+                if (def.Cost > ceiling) continue;
+                if (def.Cost > bestCost || (def.Cost == bestCost && cardId < best))
+                {
+                    bestCost = def.Cost;
+                    best = cardId;
+                }
+            }
+
+            return best != 0 ? best : cheapest;
+        }
+
         // ── Playing a card ────────────────────────────────────────────────────────
 
         private static PlayCardIntent? TryPlay(
@@ -112,10 +165,12 @@ namespace Emberfall.Net.Server.Bots
 
             if (plan.Count == 0) return null;
 
-            // Single unnamed binding: the existing heuristic-ordered candidate loop preserves the
-            // hostile/friendly priority (killable-first) for single-target cards. This is the common
-            // shape (149 of 171 authored targets as of EF-030).
-            if (plan.Count == 1 && plan[0].Binding.Length == 0)
+            // Single unnamed binding needing ONE pick: the heuristic-ordered candidate loop
+            // preserves the hostile/friendly priority (killable-first) for single-target cards. This
+            // is the common shape (149 of 171 authored targets as of EF-030). A group wanting more
+            // than one pick falls through to the combination search below - it used to fall in HERE
+            // and supply exactly one ref, which the validator refused every time.
+            if (plan.Count == 1 && plan[0].Binding.Length == 0 && plan[0].RequiredCount <= 1)
             {
                 foreach (TargetRef t in PlayCandidates(def, ps, foe))
                 {
@@ -125,62 +180,78 @@ namespace Emberfall.Net.Server.Bots
                 return null;
             }
 
-            // Named or multi-binding: build one candidate list per group, tag each TargetRef with
-            // the group's binding so the validator can match it to the correct rule, then try
-            // combinations depth-first. Each group uses the plan's canonical candidate order;
-            // the validator is the truth about legality so a first-valid combination is enough.
+            // Everything else: one candidate list per group, tagged with the group's binding so the
+            // validator can match each ref to the correct rule, searched depth-first for the first
+            // combination the validator accepts. Each group walks the plan's canonical candidate
+            // order, so the pick is reproducible.
             var perGroup = new List<List<TargetRef>>(plan.Count);
+            var perGroupCount = new List<int>(plan.Count);
             foreach (TargetChoiceRequirement req in plan)
             {
-                if (req.Candidates.Count == 0) return null; // unsatisfiable group — card is unplayable now
                 var refs = new List<TargetRef>(req.Candidates.Count);
                 foreach (TargetCandidate c in req.Candidates)
                     refs.Add(new TargetRef(c.Instance, req.Binding));
+
+                // RequiredCount can exceed what the board offers, and carries int.MaxValue as the
+                // conflicting-binding sentinel (Targeting.PlayerChoicePlan) — clamp to what exists.
+                // Below MinimumCount the group cannot be satisfied at all, so the card is unplayable
+                // this turn; a MinimumCount of 0 is an OPTIONAL cost, which we then decline by
+                // picking nothing rather than refusing the whole card.
+                int take = req.RequiredCount < refs.Count ? req.RequiredCount : refs.Count;
+                if (take < req.MinimumCount) return null;
                 perGroup.Add(refs);
+                perGroupCount.Add(take);
             }
 
-            var chosen = new TargetRef[plan.Count];
-            return TryCombinations(state, me, card, slot, validator, perGroup, chosen, 0);
+            var chosen = new List<TargetRef>(plan.Count);
+            return TryGroups(state, me, card, slot, validator, perGroup, perGroupCount, chosen, 0);
         }
 
-        private static PlayCardIntent? TryCombinations(
+        /// <summary>
+        /// Depth-first over the binding groups, taking each group's required number of DISTINCT
+        /// candidates in canonical order. Returns the first combination the validator accepts.
+        ///
+        /// <para><b>The count is the whole point of this method.</b> It replaced a version that
+        /// supplied exactly one ref per group, which left every card asking for two picks — 203
+        /// Channeled Pyroclasm's "Deal 6 damage to 2 enemies" among them — permanently unplayable
+        /// by this driver: drawn every game, cast never. Nothing reported it as a rejection either,
+        /// because the intent was never submitted; the corpus soak's never-played row was the only
+        /// trace it left.</para>
+        /// </summary>
+        private static PlayCardIntent? TryGroups(
             GameState state, PlayerId me, CardInstance card, int slot,
             ICommandValidator validator,
-            List<List<TargetRef>> perGroup, TargetRef[] chosen, int depth)
+            List<List<TargetRef>> perGroup, List<int> perGroupCount,
+            List<TargetRef> chosen, int depth)
         {
             if (depth == perGroup.Count)
             {
-                var intent = new PlayCardIntent(me, card.Id, slot, (TargetRef[])chosen.Clone());
+                var intent = new PlayCardIntent(me, card.Id, slot, chosen.ToArray());
                 return validator.CanExecute(state, intent, out _) ? intent : null;
             }
-            foreach (TargetRef t in perGroup[depth])
-            {
-                chosen[depth] = t;
-                PlayCardIntent? result = TryCombinations(state, me, card, slot, validator, perGroup, chosen, depth + 1);
-                if (result is not null) return result;
-            }
-            return null;
+            return TryCombination(state, me, card, slot, validator, perGroup, perGroupCount,
+                                  chosen, depth, from: 0, remaining: perGroupCount[depth]);
         }
 
-        // Depth-first cartesian product over the binding groups. Returns the first legally accepted
-        // combination; canonical (plan-defined) candidate ordering guarantees determinism.
-        private static PlayCardIntent? TryCombinations(
+        /// <summary>One group's distinct-combination walk: take <paramref name="remaining"/> more
+        /// candidates from index <paramref name="from"/> onward, then move to the next group.</summary>
+        private static PlayCardIntent? TryCombination(
             GameState state, PlayerId me, CardInstance card, int slot,
             ICommandValidator validator,
-            IReadOnlyList<TargetChoiceRequirement> plan, TargetRef[] targets, int depth)
+            List<List<TargetRef>> perGroup, List<int> perGroupCount,
+            List<TargetRef> chosen, int depth, int from, int remaining)
         {
-            if (depth == plan.Count)
+            if (remaining == 0)
+                return TryGroups(state, me, card, slot, validator, perGroup, perGroupCount, chosen, depth + 1);
+
+            List<TargetRef> candidates = perGroup[depth];
+            for (int i = from; i <= candidates.Count - remaining; i++)
             {
-                var intent = new PlayCardIntent(me, card.Id, slot, (TargetRef[])targets.Clone());
-                return validator.CanExecute(state, intent, out _) ? intent : null;
-            }
-            TargetChoiceRequirement group = plan[depth];
-            foreach (TargetCandidate candidate in group.Candidates)
-            {
-                targets[depth] = new TargetRef(candidate.Instance, group.Binding);
-                PlayCardIntent? result = TryCombinations(
-                    state, me, card, slot, validator, plan, targets, depth + 1);
+                chosen.Add(candidates[i]);
+                PlayCardIntent? result = TryCombination(state, me, card, slot, validator, perGroup,
+                                                        perGroupCount, chosen, depth, i + 1, remaining - 1);
                 if (result is not null) return result;
+                chosen.RemoveAt(chosen.Count - 1);
             }
             return null;
         }

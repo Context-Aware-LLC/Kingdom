@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Server.Decks;
@@ -79,23 +80,44 @@ namespace Emberfall.Net.Server.Bots
             lock (_lock) return _botAccounts.Contains(account);
         }
 
+        /// <summary>
+        /// Seats one idle bot, chosen UNIFORMLY at random among the idle ones.
+        ///
+        /// <para><b>Why not simply the first idle entry.</b> That is what this did, and with a
+        /// two-name roster it read as harmless. It is not a tie-break — <see cref="_ready"/> is keyed
+        /// by username and enumerates in insertion order in practice, so "first idle" means the bot
+        /// the roster file happens to list first wins every acquire where it is free. A player queueing
+        /// against bot-fill met the same opponent, with the same deck, every time; every other roster
+        /// entry only ever appeared while that one was mid-match. Growing the roster does nothing at
+        /// all under that rule, which is exactly how it stayed invisible.</para>
+        ///
+        /// <para>The CSPRNG rather than <c>System.Random</c>: <c>Emberfall.Tools.DeterminismGate</c>
+        /// check 7 bans the latter server-side. Nothing here reaches hashed state — which bot is
+        /// seated is a matchmaking decision, made before the match exists, exactly like
+        /// <c>MatchGate.MintSeed</c>'s own jitter.</para>
+        /// </summary>
         public BotHandle? TryAcquire()
         {
             lock (_lock)
             {
+                var idle = new List<string>(_ready.Count);
                 foreach (var kvp in _ready)
+                    if (!_busy.Contains(kvp.Key)) idle.Add(kvp.Key);
+                if (idle.Count == 0) return null;
+
+                // Sorted before the draw: _ready's enumeration order is a Dictionary implementation
+                // detail, and an unsorted list would make the draw depend on it. Ordinal, because
+                // usernames are keys.
+                idle.Sort(StringComparer.Ordinal);
+
+                string username = idle[RandomNumberGenerator.GetInt32(idle.Count)];
+                _busy.Add(username);
+                ResolvedBotAccount resolved = _ready[username];
+                var seat = new BotSeatRunner(resolved.Username, resolved.DisplayName, new CommandProcessor(_db), _db);
+                return new BotHandle(resolved.Account, resolved.DisplayName, resolved.Deck, seat, () =>
                 {
-                    string username = kvp.Key;
-                    if (_busy.Contains(username)) continue;
-                    _busy.Add(username);
-                    ResolvedBotAccount resolved = kvp.Value;
-                    var seat = new BotSeatRunner(resolved.Username, resolved.DisplayName, new CommandProcessor(_db), _db);
-                    return new BotHandle(resolved.Account, resolved.DisplayName, resolved.Deck, seat, () =>
-                    {
-                        lock (_lock) _busy.Remove(username);
-                    });
-                }
-                return null;
+                    lock (_lock) _busy.Remove(username);
+                });
             }
         }
     }
