@@ -12,7 +12,7 @@ spelling is `<classToken>_<role>_<name>` (`tide_token_wisp`, `stone_token_shard`
 token is `neutral_token_wisp`. Within the neutrals the prefixed rows were the outliers; across the
 corpus the UNPREFIXED ones were, and the corpus is what a reader is holding in their head.
 
-WHAT MOVES, and why it has to be one script. These five are one fact stored five places, and any
+WHAT MOVES, and why it has to be one script. These four are one fact stored four places, and any
 one of them left behind is silent:
 
   1. the png + its .meta, RENAMED TOGETHER      -- the .meta carries the guid the Addressables
@@ -20,11 +20,14 @@ one of them left behind is silent:
                                                    guid; moving the png alone mints a new one and
                                                    orphans the entry with no error anywhere.
   2. the row's artId in CardData/*.cards.json   -- what the game asks for.
-  3. the seed key in tooling/card-art-seeds/    -- keyed by artId since 92c7b623; a stale key is
-                                                   hand-authored direction no consumer can find.
-  4. the prompt-manifest key                    -- the re-roll history for that image.
-  5. the art-pipeline candidate directory       -- gitignored and disposable, but moving it keeps
+  3. the prompt-manifest key                    -- the re-roll history for that image.
+  4. the art-pipeline candidate directory       -- gitignored and disposable, but moving it keeps
                                                    the candidates findable next to the card.
+
+The SEED used to be a fifth, and is not one any more (Sam, 2026-08-27): hand-authored direction now
+keys on the row's numeric id, which no rename can move. See gen_card_prompt_briefs.seed_key. That
+is the whole point of the split -- everything left in this list is about the IMAGE, so an artId
+rename is now only ever about the picture.
 
 AFTERWARDS, IN UNITY: run `Emberfall/Addressables/Setup Groups + Migrate Card Data`. Group entries
 store `m_GUID` + `m_Address` and NO path, and the address is a flat `card_art/<fileName>`; the guid
@@ -47,7 +50,6 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
 ART_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
-SEEDS_DIR = ROOT / "tooling" / "card-art-seeds"
 MANIFEST = ROOT / "art-pipeline" / "card-art" / "prompt-manifest.json"
 CANDIDATES = ROOT / "art-pipeline" / "card-art"
 LOCKFILE = ROOT / "unity" / "Emberfall" / "Temp" / "UnityLockfile"
@@ -234,16 +236,13 @@ def main():
 
     by_art = {old: new for _, _, old, new in plan}
     print(f"{'WRITE' if write else 'CHECK'}: {len(plan)} NEUTRAL artId(s) gain '{PREFIX}'\n")
-    print("1/5  art files (png + .meta together, guid preserved)")
+    print("1/4  art files (png + .meta together, guid preserved)")
     rename_art(plan, write)
-    print("\n2/5  card rows")
+    print("\n2/4  card rows")
     rewrite_rows(plan, write)
-    print("\n3/5  seed keys")
-    for fp in sorted(SEEDS_DIR.glob("*.json")):
-        rekey_json(fp, by_art, write, fp.name)
-    print("\n4/5  prompt manifest")
+    print("\n3/4  prompt manifest")
     rekey_json(MANIFEST, by_art, write, "prompt-manifest.json")
-    print("\n5/5  art-pipeline candidate dirs")
+    print("\n4/4  art-pipeline candidate dirs")
     if not move_candidate_dirs(plan, write):
         print("  none on disk")
 
@@ -253,7 +252,9 @@ def main():
               "  * In Unity, run `Emberfall/Addressables/Setup Groups + Migrate Card Data`.\n"
               "    Group entries carry an ADDRESS (card_art/<fileName>) that this rename\n"
               "    invalidated and only that menu item rebuilds. The game loads by address.\n"
-              "  * Re-run audit_card_art_names.py --check-seeds and rebake_card_data.py.")
+              "  * Re-run audit_card_art_names.py --check-seeds and rebake_card_data.py.\n"
+              "    (Seeds no longer move with an artId -- they key on the card id -- but the\n"
+              "    audit is still what proves the png, the row and the manifest agree.)")
     else:
         print("Nothing was written. Rerun with --write (Editor closed).")
     return 0

@@ -92,7 +92,8 @@ namespace Emberfall.Core.Cards
                         LifetimeFor(isAura, trigger),
                         cost));
 
-                if (!TryActions(clause, names, out IReadOnlyList<RuleAction> actions, out reason))
+                if (!TryActions(clause, names, isAura ? (Trigger?)null : trigger,
+                        out IReadOnlyList<RuleAction> actions, out reason))
                     return false;
 
                 // One sentence can be several rules: the renderer joins everything under one marker
@@ -390,7 +391,7 @@ namespace Emberfall.Core.Cards
         /// here rather than read: the sentence carries the PARTITION, and a binding name is only ever
         /// a label for it.</para>
         /// </summary>
-        private static bool TryActions(string sentence, CardNameIndex names,
+        private static bool TryActions(string sentence, CardNameIndex names, Trigger? trigger,
             out IReadOnlyList<RuleAction> actions, out string reason)
         {
             actions = Array.Empty<RuleAction>();
@@ -398,7 +399,7 @@ namespace Emberfall.Core.Cards
             foreach (List<RuleAction> run in FoldedDamage(sentence))
             {
                 string folded;
-                try { folded = CardTextGenerator.DescribeActions(run, names); }
+                try { folded = CardTextGenerator.DescribeActions(run, names, trigger); }
                 catch (Exception) { continue; }
                 if (!string.Equals(folded, sentence, StringComparison.Ordinal)) continue;
 
@@ -409,13 +410,13 @@ namespace Emberfall.Core.Cards
 
             IReadOnlyList<string> pieces = Pieces(sentence);
 
-            foreach (List<RuleAction> group in Groups(pieces, names, 0, null, new List<RuleAction>()))
+            foreach (List<RuleAction> group in Groups(pieces, names, trigger, 0, null, new List<RuleAction>()))
             {
                 string rendered;
                 // A list the renderer refuses to print is simply not this sentence. Enumerating
                 // freely and letting it throw is cheaper than teaching this side which combinations
                 // are legal, and it cannot go wrong: an exception ends that candidate, never the parse.
-                try { rendered = CardTextGenerator.DescribeActions(group, names); }
+                try { rendered = CardTextGenerator.DescribeActions(group, names, trigger); }
                 catch (Exception) { continue; }
                 if (!string.Equals(rendered, sentence, StringComparison.Ordinal)) continue;
 
@@ -534,7 +535,8 @@ namespace Emberfall.Core.Cards
         /// target continues it.</para>
         /// </summary>
         private static IEnumerable<List<RuleAction>> Groups(IReadOnlyList<string> pieces,
-            CardNameIndex names, int index, RuleAction? runStart, List<RuleAction> soFar)
+            CardNameIndex names, Trigger? trigger, int index, RuleAction? runStart,
+            List<RuleAction> soFar)
         {
             if (index == pieces.Count)
             {
@@ -543,11 +545,11 @@ namespace Emberfall.Core.Cards
             }
 
             foreach (KeyValuePair<RuleAction, bool> candidate in
-                     PieceCandidates(pieces[index], names, index == 0 ? null : runStart))
+                     PieceCandidates(pieces[index], names, trigger, index == 0 ? null : runStart))
             {
                 soFar.Add(candidate.Key);
                 RuleAction next = candidate.Value ? runStart! : candidate.Key;
-                foreach (List<RuleAction> group in Groups(pieces, names, index + 1, next, soFar))
+                foreach (List<RuleAction> group in Groups(pieces, names, trigger, index + 1, next, soFar))
                     yield return group;
                 soFar.RemoveAt(soFar.Count - 1);
             }
@@ -563,11 +565,11 @@ namespace Emberfall.Core.Cards
         /// dropped subject leaves behind.</para>
         /// </summary>
         private static IEnumerable<KeyValuePair<RuleAction, bool>> PieceCandidates(string piece,
-            CardNameIndex names, RuleAction? runStart)
+            CardNameIndex names, Trigger? trigger, RuleAction? runStart)
         {
             string standalone = Standalone(piece);
             foreach (RuleAction candidate in Candidates(standalone, names))
-                if (string.Equals(Rendered(candidate, names), standalone, StringComparison.Ordinal))
+                if (string.Equals(Rendered(candidate, names, trigger), standalone, StringComparison.Ordinal))
                     yield return new KeyValuePair<RuleAction, bool>(candidate, false);
 
             if (!(runStart is TargetedRuleAction targeted)) yield break;
@@ -575,7 +577,7 @@ namespace Emberfall.Core.Cards
             string tail = " " + piece + ".";
             foreach (RuleAction candidate in Continuations(piece, targeted.Target))
             {
-                string? rendered = Rendered(candidate, names);
+                string? rendered = Rendered(candidate, names, trigger);
                 if (rendered != null && rendered.EndsWith(tail, StringComparison.Ordinal))
                     yield return new KeyValuePair<RuleAction, bool>(candidate, true);
             }
@@ -635,9 +637,9 @@ namespace Emberfall.Core.Cards
                 ? char.ToUpperInvariant(clause[0]) + clause.Substring(1)
                 : clause;
 
-        private static string? Rendered(RuleAction action, CardNameIndex names)
+        private static string? Rendered(RuleAction action, CardNameIndex names, Trigger? trigger)
         {
-            try { return CardTextGenerator.DescribeAction(action, names); }
+            try { return CardTextGenerator.DescribeAction(action, names, trigger); }
             catch (Exception) { return null; }
         }
 

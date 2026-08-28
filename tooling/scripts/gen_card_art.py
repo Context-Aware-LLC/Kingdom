@@ -436,9 +436,9 @@ def load_seed_cards() -> list[dict]:
 
     cards: list[dict] = []
     for row in rows:
-        # Seeds are keyed by ARTID -- the art system's own permanent key. See
-        # gen_card_prompt_briefs.art_key for why it is not the handle.
-        seed = seeds.get(briefs.art_key(row))
+        # Seeds are keyed by the NUMERIC CARD ID -- the only identifier a rename cannot
+        # move. See gen_card_prompt_briefs.seed_key for the two renames that proved it.
+        seed = seeds.get(briefs.seed_key(row))
         if not seed:
             continue
         cls = row.get("class", "NEUTRAL").lower()
@@ -471,7 +471,9 @@ def load_seed_cards() -> list[dict]:
 
         cards.append(
             {
-                "id": briefs.art_key(row),
+                # The candidate directory and the prompt-manifest key -- both about the
+                # IMAGE, so both stay on artId while the seed moves to the card id.
+                "id": row["artId"],
                 "handle": row.get("handle", ""),
                 "cardId": row.get("id", ""),
                 "name": row["name"],

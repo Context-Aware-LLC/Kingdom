@@ -108,53 +108,67 @@ def art_file(card):
     return card["artId"].replace("/", "_")
 
 
-def art_key(card):
-    """THE key the art pipeline joins on: the row's artId. Import it; do not re-derive it.
+def seed_key(card):
+    """THE key authored art direction joins on: the row's NUMERIC ID, as a string.
 
-    This used to be the HANDLE, in every script in this directory, and that was the bug that
-    outlived all the others. `CardDefinition.Handle` says outright that nothing may resolve
-    against it (Sam, 2026-08-15) -- "the test is that you can change a handle and have nothing
-    break" -- and the art pipeline was the halfway version that comment warns about.
+    Import it; do not re-derive it.
 
-    It broke exactly as promised. TEMPEST and STONEWARDEN are the two classes whose handle
-    token differs from their art token (`tempest_`/`storm_`, `warden_`/`stone_`), so renaming
-    those handles orphaned 18 hand-authored seeds at a stroke: the cards read as UNSEEDED and
-    every generation ran on placeholder direction, with no error at any point. Two of the
-    casualties were `stone_earthwardens_maul` and `stone_duras_the_ironmount`, whose art had to
-    be redone by hand on 2026-08-24.
+    RULING (Sam, 2026-08-27): "the ID ... is the only immutable thing." Direction has now been
+    stranded by a rename twice, and each time the fix moved it to a name that was merely HARDER
+    to change rather than to one that cannot.
 
-    artId is the right key because it is already the art system's own permanent identifier and
-    already deliberately does not track the card id -- see art_file above. A handle rename can
-    no longer strand direction, because no art file, seed or brief is keyed on a handle.
+    Round one, the HANDLE. `CardDefinition.Handle` says outright that nothing may resolve against
+    it (Sam, 2026-08-15) -- "the test is that you can change a handle and have nothing break" --
+    and the art pipeline was the halfway version that comment warns about. TEMPEST and
+    STONEWARDEN are the two classes whose handle token differs from their art token
+    (`tempest_`/`storm_`, `warden_`/`stone_`), so renaming those handles orphaned 18 hand-authored
+    seeds at a stroke: the cards read as UNSEEDED and every generation ran on placeholder
+    direction, with no error at any point. `stone_earthwardens_maul` and
+    `stone_duras_the_ironmount` had to be redrawn by hand on 2026-08-24.
 
-    RETIREMENT TRIGGER: if the seed corpus is ever rekeyed off artId, this function and
-    art_key_index below move with it, and so does the orphan check in
-    tooling/scripts/audit_card_art_names.py --check-seeds, which is the only thing that would
-    otherwise notice.
+    Round two, the ARTID. Better, and still a name a designer may want to change: reclassing a
+    card moves it, correcting a stale prefix moves it, renaming art to match a redraw moves it.
+    Every one of those is a legitimate edit that would have re-run the same failure.
+
+    The id is the one identifier with nothing behind it to drift from. It is minted with the card
+    and it outlives every name the card wears -- which is why the brief carries it too.
+
+    WHAT STAYS ON ARTID, deliberately, because these are about the IMAGE and not the card:
+      * the png filename and its .meta   (Addressables resolves `card_art/<fileName>`, guid in
+                                          the .meta)
+      * the prompt-manifest key          (the re-roll history OF an image)
+      * the art-pipeline candidate dir   (it holds candidate images)
+    So renaming an artId is now three moves that are all genuinely about the picture, and the
+    words an art lead wrote stay attached to the card whatever it ends up being called.
+
+    DISCHARGED 2026-08-27: the RETIREMENT TRIGGER this function used to carry -- "if the seed
+    corpus is ever rekeyed off artId, this function and the index below move with it, and so does
+    the orphan check in audit_card_art_names.py --check-seeds". All three moved in the same
+    change, and migrate_seed_keys_to_card_id.py rekeyed the 167 shipped seeds.
     """
-    return card["artId"]
+    return str(card["id"])
 
 
-def art_key_index(cards):
-    """{token -> artId} accepting an artId, a handle, or a stringified numeric id.
+def seed_key_index(cards):
+    """{token -> seed key} accepting an artId, a handle, or a stringified numeric id.
 
-    Only for reading LEGACY handle-keyed inputs that are not ours to rewrite -- the prose
-    prompts under docs/design/card-drafts-*.md, the scraped art-pipeline/**/draft.txt, and a
-    --card argument typed by a human who knows the card by its handle. Everything the pipeline
-    itself writes is keyed by art_key. Never use this to key new data.
+    Only for reading inputs keyed on a NAME that are not ours to rewrite -- the prose prompts
+    under docs/design/card-drafts-*.md, the scraped art-pipeline/**/draft.txt, and a --card
+    argument typed by a human who knows the card by its handle or by its picture. Everything the
+    pipeline itself writes is keyed by seed_key. Never use this to key new data.
 
-    A handle that collides with another row's artId would be ambiguous; artId wins, because it
-    is the canonical key and the collision would mean the handle is the stale spelling.
+    A handle or artId colliding with another row's id would be ambiguous; the id wins, because it
+    is the canonical key and the collision means the name is the stale spelling.
     """
     index = {}
     for card in cards:
         if not card.get("artId"):
             continue
-        key = art_key(card)
-        index.setdefault(str(card.get("id")), key)
+        key = seed_key(card)
+        index.setdefault(card["artId"], key)
         if card.get("handle"):
             index.setdefault(card["handle"], key)
-        index[key] = key          # last, and unconditional: artId always wins a collision
+        index[key] = key          # last, and unconditional: the id always wins a collision
     return index
 
 
@@ -252,16 +266,16 @@ def load_cards(set_id, class_filter=None, card_ids=None):
     cards = [c for c in cards if c.get("setId") == set_id and c.get("collectible", True)]
     if card_ids:
         # --card takes whatever the caller has to hand -- artId, handle or numeric id -- and
-        # resolves all three to the art key. Matching on "id" alone silently selected nothing
+        # resolves all three to the seed key. Matching on "id" alone silently selected nothing
         # once the id became a NUMBER, and matching on handle alone broke the moment a handle
-        # was renamed; art_key_index is the one place that ambiguity is settled.
-        index = art_key_index(cards)
+        # was renamed; seed_key_index is the one place that ambiguity is settled.
+        index = seed_key_index(cards)
         wanted = {index[str(w)] for w in card_ids if str(w) in index}
         unknown = [str(w) for w in card_ids if str(w) not in index]
         if unknown:
             raise SystemExit(f"--card: no row matches {', '.join(unknown)} "
                              f"(accepts artId, handle or numeric id)")
-        cards = [c for c in cards if art_key(c) in wanted]
+        cards = [c for c in cards if seed_key(c) in wanted]
     if class_filter:
         cards = [c for c in cards if c.get("class", "").upper() == class_filter.upper()]
     return cards
@@ -462,7 +476,7 @@ def main():
         print("No matching cards found.", file=sys.stderr)
         sys.exit(1)
 
-    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(art_key(c))) for c in cards]
+    briefs = [compose_brief(c, class_descriptors, world_tone, seeds.get(seed_key(c))) for c in cards]
     output = "\n\n---\n\n".join(briefs) + "\n"
 
     if args.out:

@@ -45,7 +45,8 @@ Three further checks, each for something no existing gate reports:
   MISSES SILENTLY: the card reads as unseeded, generates on placeholder direction, and nothing
   anywhere says so. That is how 18 of them sat stranded from 2026-08-15 to 2026-08-24, when the
   TEMPEST and STONEWARDEN handle renames moved the key they were stored under. The seeds are
-  keyed by artId now, for exactly that reason — see gen_card_prompt_briefs.art_key.
+  keyed by the numeric card id now, for exactly that reason — see
+  gen_card_prompt_briefs.seed_key.
 
 **Never deletes anything.** Orphans are reported, never removed — that call is Sam's.
 
@@ -232,23 +233,26 @@ def main():
 
     stranded = []
     if args.check_seeds:
-        # WHY THIS EXISTS. Seeds are hand-authored art direction keyed by artId. They used to be
-        # keyed by HANDLE, and when the TEMPEST and STONEWARDEN handles were renamed
-        # (tempest_/storm_, warden_/stone_) 18 seeds stopped matching any row at once. Nothing
-        # reported it: the cards simply read as unseeded and generated on placeholder direction.
-        # `stone_earthwardens_maul` was one of them and had to be redrawn by hand.
+        # WHY THIS EXISTS. Seeds are hand-authored art direction, keyed since 2026-08-27 by
+        # the row's NUMERIC ID. They were keyed by HANDLE first, and when the TEMPEST and
+        # STONEWARDEN handles were renamed (tempest_/storm_, warden_/stone_) 18 seeds stopped
+        # matching any row at once. Nothing reported it: the cards simply read as unseeded and
+        # generated on placeholder direction. `stone_earthwardens_maul` was one of them and had
+        # to be redrawn by hand. Then by artId, which a reclass or a corrected prefix still moves.
         #
-        # A key that matches no artId is that failure, and it is invisible everywhere else --
-        # every consumer does a dict lookup that quietly misses.
+        # An id cannot be renamed, so this check no longer guards against a rename -- it guards
+        # against a DELETED row, and against a key hand-edited into the file by mistake. Both are
+        # the same failure and both are invisible everywhere else: every consumer does a dict
+        # lookup that quietly misses.
         seed_dir = ROOT / "tooling" / "card-art-seeds"
-        known = {card["artId"] for _, card in all_rows}
+        known = {str(card["id"]) for _, card in all_rows}
         for fp in sorted(seed_dir.glob("*.json")):
             for key in json.loads(fp.read_text(encoding="utf-8")):
                 if key not in known:
                     stranded.append((key, fp.name))
 
         print()
-        print(f"seed keys matching no row's artId : {len(stranded)}")
+        print(f"seed keys matching no row's id    : {len(stranded)}")
         if stranded:
             print()
             print("STRANDED SEEDS — hand-authored direction no consumer can find (BLOCKING)")

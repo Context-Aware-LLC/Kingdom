@@ -16,7 +16,8 @@ opaque `token` and nothing else. That is a deliberate constraint, not a convenie
   - `handle` must never be resolved against. `CardDefinition.Handle` carries Sam's 2026-08-15
     ruling -- "the test is that you can change a handle and have nothing break".
   - `artId` is the art pipeline's permanent join key. Exposing it to an editor invites editing
-    it, and a changed artId silently strands seeds and briefs (see art_key in
+    it. A changed artId no longer strands seeds -- those key on the numeric id since
+    2026-08-27 -- but it still moves the png, its .meta and the prompt manifest (see seed_key in
     gen_card_prompt_briefs.py, which lists the 18 that were stranded for real).
 
 LOADING IS ALL-OR-NOTHING, ACROSS ALL SETS.

@@ -10,8 +10,10 @@ This file adds only the browser UI and per-card draft persistence on top.
 Drafts are saved as plain text to art-pipeline/card-art/<setId>/<art_file>/draft.txt — genuinely
 next to where that card's generated candidates land, so art you like has its prompt beside it.
 Untracked, same as the rest of art-pipeline/ (2026-08-02: an earlier version of this file kept
-drafts under tooling/card-art-seeds/drafts/ and claimed that location was git-tracked for safety;
-it never actually was — tooling/card-art-seeds/* has been gitignored the whole time).
+drafts under tooling/card-art-seeds/drafts/ for safety; the DRAFTS subdirectory was never tracked,
+which is what made that location no safer than this one. The seed corpus itself IS tracked and
+always has been — `git log -- tooling/card-art-seeds/` — so do not read the note above as a claim
+about the seeds; corrected 2026-08-27).
 
 That adjacency was a claim, not a fact, until 2026-08-06: drafts were keyed by setId while
 gen_card_art.py keyed candidates by a CLASS group, so for 92 of 260 cards the prompt sat in a
