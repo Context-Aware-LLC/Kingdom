@@ -9,100 +9,261 @@
   },
   "voices": {
     "EMBERWARD": {
-      "voice_id": "SOYHLrjzK2X1ezoPC6cr",
-      "voice_name": "Harry - Fierce Warrior",
-      "why": "Zeal, forges and vanguards. Young and rough, charges forward.",
+      "voice_id": "CKfuQaJKfvUG2Wtrda3Y",
+      "voice_name": "Lison - Seductive and soft French accent",
+      "why": "Sam, 2026-08-28 (as 'Pyra'). NOTE: labelled calm -- the drafted EMBERWARD lines are shouted and need a rewrite to suit.",
       "lines": {
-        "match_start": ["Light the forge. We burn today.", "Let them come. I have fire enough.", "Kindling. All of you."],
-        "turn_start": ["My turn to burn.", "Stoke it.", "Fire takes what it wants."],
-        "rope": ["Decide! The fire will not wait.", "Burning down, burning down.", "Hurry. The coals are dying."],
-        "win": ["Ash. Nothing but ash.", "The forge held. You did not.", "Burned to the ground."],
-        "lose": ["Even embers go cold.", "The fire goes out.", "Snuffed. So be it."]
+        "match_start": [
+          "Light the forge. We burn today.",
+          "Let them come. I have fire enough.",
+          "Kindling. All of you."
+        ],
+        "turn_start": [
+          "My turn to burn.",
+          "Stoke it.",
+          "Fire takes what it wants."
+        ],
+        "rope": [
+          "Decide! The fire will not wait.",
+          "Burning down, burning down.",
+          "Hurry. The coals are dying."
+        ],
+        "win": [
+          "Ash. Nothing but ash.",
+          "The forge held. You did not.",
+          "Burned to the ground."
+        ],
+        "lose": [
+          "Even embers go cold.",
+          "The fire goes out.",
+          "Snuffed. So be it."
+        ]
       }
     },
     "TIDECALLER": {
       "voice_id": "pFZP5JQG7iQjIQuC4Bku",
       "voice_name": "Lily - Velvety Actress",
-      "why": "Oracles, prophets and deep water. Cool, certain, unhurried.",
+      "why": "Chosen over James - Husky (EkK5I93UQWFDigLMpZcX), who is the better voice alone but would have been the THIRD middle-aged deep American after Oxley and George. Lily is british/female/confident and keeps the eight legible; the class's lines are written for cool certainty, which suits her.",
       "lines": {
-        "match_start": ["The tide has already decided.", "I have seen how this ends.", "Come in. The water is deep here."],
-        "turn_start": ["The current turns.", "Flow with it.", "Mine now."],
-        "rope": ["The tide does not wait for you.", "It is going out. Choose.", "You are drowning in time."],
-        "win": ["As the water said it would be.", "You were always going under.", "The tide keeps what it takes."],
-        "lose": ["Even the sea recedes.", "I misread the current.", "Pulled under. How strange."]
+        "match_start": [
+          "The tide has already decided.",
+          "I have seen how this ends.",
+          "Come in. The water is deep here."
+        ],
+        "turn_start": [
+          "The current turns.",
+          "Flow with it.",
+          "Mine now."
+        ],
+        "rope": [
+          "The tide does not wait for you.",
+          "It is going out. Choose.",
+          "You are drowning in time."
+        ],
+        "win": [
+          "As the water said it would be.",
+          "You were always going under.",
+          "The tide keeps what it takes."
+        ],
+        "lose": [
+          "Even the sea recedes.",
+          "I misread the current.",
+          "Pulled under. How strange."
+        ]
       }
     },
     "GRAVEKEEP": {
-      "voice_id": "wXvR48IpOq9HACltTmt7",
-      "voice_name": "Dante - Growly and Menacing Monster",
-      "why": "Bells, revenants and sealed gates. The growl carries the menace the class text implies.",
+      "voice_id": "1BfrkuYXmEwp8AWqSLWk",
+      "voice_name": "Declan - Horror, Narrator",
+      "why": "Sam, 2026-08-28. Old irish rasp; horror narrator for the bell-and-gate class.",
       "lines": {
-        "match_start": ["The bell has rung for you.", "Another name for the book.", "I keep what dies here."],
-        "turn_start": ["Toll it.", "The dead are patient. I am not.", "Rise."],
-        "rope": ["The bell is tolling. Move.", "Your time is already buried.", "Hurry. The gate is closing."],
-        "win": ["You belong to me now.", "Down you go. Down you stay.", "Sealed."],
-        "lose": ["Even the keeper is kept.", "So the gate opens for me.", "I go to my own ground."]
+        "match_start": [
+          "The bell has rung for you.",
+          "Another name for the book.",
+          "I keep what dies here."
+        ],
+        "turn_start": [
+          "Toll it.",
+          "The dead are patient. I am not.",
+          "Rise."
+        ],
+        "rope": [
+          "The bell is tolling. Move.",
+          "Your time is already buried.",
+          "Hurry. The gate is closing."
+        ],
+        "win": [
+          "You belong to me now.",
+          "Down you go. Down you stay.",
+          "Sealed."
+        ],
+        "lose": [
+          "Even the keeper is kept.",
+          "So the gate opens for me.",
+          "I go to my own ground."
+        ]
       }
     },
     "VERDANT": {
-      "voice_id": "HAvvFKatz0uu0Fv55Riy",
-      "voice_name": "Matthew Schmitz - Ancient Sage Dragon Wizard",
-      "why": "Elders, ancients and world-roots. Old age and rasp is exactly the class's register.",
+      "voice_id": "NOpBlnGInO9m6vDvFkFC",
+      "voice_name": "Spuds Oxley - Grandpa",
+      "why": "Sam, 2026-08-28. Replaces Matthew Schmitz, who collided with Declan -- both were male/old/raspy and blurred into one character across a match. Spuds is the same age register with the opposite texture (gentle, warm, southern), so GRAVEKEEP and VERDANT stay separable by ear alone.",
       "lines": {
-        "match_start": ["The grove remembers every trespass.", "Grow, and be patient.", "You are standing on old roots."],
-        "turn_start": ["Let it grow.", "Slowly. Surely.", "The season turns."],
-        "rope": ["Even roots run out of season.", "Decide, sapling.", "Time thins. Choose."],
-        "win": ["The forest outlasts everything.", "Rooted. Unmoved. Done.", "You were only a season."],
-        "lose": ["Every tree falls eventually.", "Back to the soil, then.", "Cut down. But seeds remain."]
+        "match_start": [
+          "The grove remembers every trespass.",
+          "Grow, and be patient.",
+          "You are standing on old roots."
+        ],
+        "turn_start": [
+          "Let it grow.",
+          "Slowly. Surely.",
+          "The season turns."
+        ],
+        "rope": [
+          "Even roots run out of season.",
+          "Decide, sapling.",
+          "Time thins. Choose."
+        ],
+        "win": [
+          "The forest outlasts everything.",
+          "Rooted. Unmoved. Done.",
+          "You were only a season."
+        ],
+        "lose": [
+          "Every tree falls eventually.",
+          "Back to the soil, then.",
+          "Cut down. But seeds remain."
+        ]
       }
     },
     "CLOCKWRIGHT": {
-      "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
-      "voice_name": "Alice - Clear, Engaging Educator",
-      "why": "Blueprints and artificers. Clean and precise rather than warm.",
+      "voice_id": "yjJ45q8TVCrtMhEKurxY",
+      "voice_name": "Dr. Von - Quirky, Mad Scientist",
+      "why": "Sam, 2026-08-28. Replaces Nolan. Lines stay AS WRITTEN -- Sam liked the cold-precision register, and a mad scientist delivering 'The machine does not err' deadpan is funnier than one hamming it.",
       "lines": {
-        "match_start": ["Every outcome is already drafted.", "Let us begin the sequence.", "Wound, set, and ready."],
-        "turn_start": ["Next movement.", "Precisely on schedule.", "Engaging."],
-        "rope": ["You are behind schedule.", "The mechanism will not wait.", "Tick. Tick. Decide."],
-        "win": ["Exactly as designed.", "The machine does not err.", "Assembly complete."],
-        "lose": ["A flaw in the design.", "Mechanism failure. Noted.", "I miscalculated."]
+        "match_start": [
+          "Every outcome is already drafted.",
+          "Let us begin the sequence.",
+          "Wound, set, and ready."
+        ],
+        "turn_start": [
+          "Next movement.",
+          "Precisely on schedule.",
+          "Engaging."
+        ],
+        "rope": [
+          "You are behind schedule.",
+          "The mechanism will not wait.",
+          "Tick. Tick. Decide."
+        ],
+        "win": [
+          "Exactly as designed.",
+          "The machine does not err.",
+          "Assembly complete."
+        ],
+        "lose": [
+          "A flaw in the design.",
+          "Mechanism failure. Noted.",
+          "I miscalculated."
+        ]
       }
     },
     "NIGHTVEIL": {
-      "voice_id": "N2lVS1w4EtoT3dr4eOWO",
-      "voice_name": "Callum - Husky Trickster",
-      "why": "Spies, veils and whisper queens. Deceptively gravelly with an unsettling edge.",
+      "voice_id": "Df0A8fHl2LOO7kDNIlpg",
+      "voice_name": "Raven Ashcroft - Mysterious and strong",
+      "why": "Sam, 2026-08-28.",
       "lines": {
-        "match_start": ["You never saw me arrive.", "Let us keep this quiet.", "I am already behind you."],
-        "turn_start": ["My move. You will not see it.", "Quietly now.", "Watch closely. Or do not."],
-        "rope": ["Tick tock, little light.", "The shadows are getting long.", "Decide, before I do."],
-        "win": ["You never had a chance to look.", "Gone before you knew.", "That is how it is done."],
-        "lose": ["Found me at last.", "The dark gives me up.", "Cut clean. Fine."]
+        "match_start": [
+          "You never saw me arrive.",
+          "Let us keep this quiet.",
+          "I am already behind you."
+        ],
+        "turn_start": [
+          "My move. You will not see it.",
+          "Quietly now.",
+          "Watch closely. Or do not."
+        ],
+        "rope": [
+          "Tick tock, little light.",
+          "The shadows are getting long.",
+          "Decide, before I do."
+        ],
+        "win": [
+          "You never had a chance to look.",
+          "Gone before you knew.",
+          "That is how it is done."
+        ],
+        "lose": [
+          "Found me at last.",
+          "The dark gives me up.",
+          "Cut clean. Fine."
+        ]
       }
     },
     "STONEWARDEN": {
-      "voice_id": "nPczCjzI2devNBz1zQrb",
-      "voice_name": "Brian - Deep, Resonant and Comforting",
-      "why": "PLACEHOLDER -- Sam has picked a gruff stoic voice for this class already. Swap the id.",
+      "voice_id": "G3zrXA9moYrFCgwBAvxJ",
+      "voice_name": "W. Darth Oxley",
+      "why": "Sam, 2026-08-28. Middle-aged american, deep; speaks clearly and ominously rather than loudly -- which suits the class, since STONEWARDEN never has to raise its voice.",
       "lines": {
-        "match_start": ["I do not move.", "Break yourself on me.", "The wall stands."],
-        "turn_start": ["Hold.", "Steady.", "Stone endures."],
-        "rope": ["Even stone weathers. Decide.", "Time wears you down.", "Move, or be moved."],
-        "win": ["Unbroken.", "You broke first.", "The wall holds. It always holds."],
-        "lose": ["Cracked at last.", "Even mountains fall.", "Down to rubble, then."]
+        "match_start": [
+          "I do not move.",
+          "Break yourself on me.",
+          "The wall stands."
+        ],
+        "turn_start": [
+          "Hold.",
+          "Steady.",
+          "Stone endures."
+        ],
+        "rope": [
+          "Even stone weathers. Decide.",
+          "Time wears you down.",
+          "Move, or be moved."
+        ],
+        "win": [
+          "Unbroken.",
+          "You broke first.",
+          "The wall holds. It always holds."
+        ],
+        "lose": [
+          "Cracked at last.",
+          "Even mountains fall.",
+          "Down to rubble, then."
+        ]
       }
     },
     "TEMPEST": {
-      "voice_id": "IKne3meq5aSn9XLyUdCD",
-      "voice_name": "Charlie - Deep, Confident, Energetic",
-      "why": "Bolt riders and gale heralds. The only class that should sound delighted to be here.",
+      "voice_id": "GLSWsaquVBsIPLPPRi2s",
+      "voice_name": "George - War-torn Seargant",
+      "why": "Sam, 2026-08-28 ('George'). TWO Georges exist; picked War-torn Seargant (american/confident) over Warm Storyteller (JBFqnCBsd6RMkjVDRZzb, british/mature) because bolt riders and gale heralds want energy. Say so if the storyteller was meant.",
       "lines": {
-        "match_start": ["Storm is coming in fast.", "Hope you like thunder.", "Let us make some noise."],
-        "turn_start": ["Charge it up.", "Here it comes.", "Crack!"],
-        "rope": ["Lightning waits for nobody.", "Move. Move!", "You are out of sky."],
-        "win": ["Blown clean away.", "Told you. Thunder.", "The storm passes. You do not."],
-        "lose": ["The storm breaks up.", "Grounded out.", "All that noise for nothing."]
+        "match_start": [
+          "Storm is coming in fast.",
+          "Hope you like thunder.",
+          "Let us make some noise."
+        ],
+        "turn_start": [
+          "Charge it up.",
+          "Here it comes.",
+          "Crack!"
+        ],
+        "rope": [
+          "Lightning waits for nobody.",
+          "Move. Move!",
+          "You are out of sky."
+        ],
+        "win": [
+          "Blown clean away.",
+          "Told you. Thunder.",
+          "The storm passes. You do not."
+        ],
+        "lose": [
+          "The storm breaks up.",
+          "Grounded out.",
+          "All that noise for nothing."
+        ]
       }
     }
-  }
+  },
+  "_delivery": "No shouted or high-energy voices exist on the account (Sam, 2026-08-28), so every line here is written for CONTROLLED delivery -- certainty and menace rather than volume. This is the better default anyway: turn_start fires every turn and a shouted line grates far faster than a quiet one. Where a lift is genuinely needed, model_id eleven_v3 accepts inline audio tags ([shouts], [whispers], [laughs], emotion tags); the older eleven_text_to_sound/TTS models ignore them and will read the brackets aloud."
 }

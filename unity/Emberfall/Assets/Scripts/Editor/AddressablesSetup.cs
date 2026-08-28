@@ -28,6 +28,15 @@ namespace Emberfall.Editor
         private const string PackArtRoot = "Assets/Art/Shop/Packs";
         public const string SoundEffectsFolder = "Assets/Sound/SFX";
 
+        /// <summary>
+        /// Hero voice lines, addressed <c>vo/&lt;fileName&gt;</c>. Scanned recursively and addressed by
+        /// FILE NAME, so the per-class subfolders (Voice/Grave/, Voice/Ember/, …) are organisational
+        /// only — the same arrangement Backgrounds uses, and the opposite of Art/Cards/&lt;setId&gt;/,
+        /// where the folder picks the bundle. Filenames must therefore be unique across the whole
+        /// tree, not just within a class.
+        /// </summary>
+        public const string VoiceFolder = "Assets/Sound/Voice";
+
         /// <summary>Every group name this run touched, in the order it touched them, so the
         /// closing log reports the run rather than a list someone has to remember to edit.</summary>
         private static readonly List<string> SyncedGroups = new List<string>();
@@ -115,6 +124,8 @@ namespace Emberfall.Editor
             AddFolderAssets(settings, fontsGroup, "Assets/Art/Fonts", "fonts", "t:TMP_FontAsset");
             var soundEffectsGroup = GetGroup(settings, "SoundEffects");
             AddFolderAssets(settings, soundEffectsGroup, SoundEffectsFolder, "sfx", "t:AudioClip");
+            var voiceGroup = GetGroup(settings, "Voice");
+            AddFolderAssets(settings, voiceGroup, VoiceFolder, "vo", "t:AudioClip");
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
