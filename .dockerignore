@@ -55,6 +55,10 @@ tooling/cardweb/comments/
 # the corpus it actually loaded. Shipping it would only make a stale copy reachable.
 tooling/card-admin/data.js
 tooling/card-admin/data.json
+# ...and never a locally-built bytecode cache. `*` denies everything, so a `!dir/` re-admits the
+# whole directory including one somebody's local run left behind.
+tooling/cardweb/__pycache__/
+tooling/card-admin/__pycache__/
 # corpus.py imports art_file() from this module instead of re-deriving the art filename.
 !tooling/scripts/
 tooling/scripts/*
