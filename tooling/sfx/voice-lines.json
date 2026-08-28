@@ -144,7 +144,7 @@
         "match_start": [
           "Every outcome is already drafted.",
           "Let us begin the sequence.",
-          "Wound, set, and ready."
+          "Wownd, set, and ready."
         ],
         "turn_start": [
           "Next movement.",
@@ -265,6 +265,6 @@
       }
     }
   },
-  "_delivery": "No shouted or high-energy voices on the account, so lines are written for CONTROLLED delivery -- certainty and menace rather than volume. MEASURED 2026-08-28: every voice on the account accepts model_id eleven_v3 and its inline audio tags ([shouts], [whispers], emotion tags), even though the voice list's high_quality_base_model_ids field never enumerates v3 -- that field is not evidence of incompatibility. Older TTS models ignore the tags and read the brackets aloud, so the model id has to be eleven_v3 wherever a tag is used.",
+  "_delivery": "No shouted or high-energy voices on the account, so lines are written for CONTROLLED delivery -- certainty and menace rather than volume. MEASURED 2026-08-28: every voice on the account accepts model_id eleven_v3 and its inline audio tags ([shouts], [whispers], emotion tags), even though the voice list's high_quality_base_model_ids field never enumerates v3 -- that field is not evidence of incompatibility. Older TTS models ignore the tags and read the brackets aloud, so the model id has to be eleven_v3 wherever a tag is used. HETERONYMS ARE RESPELLED, NOT REWRITTEN (Sam, 2026-08-28): eleven_v3 read CLOCKWRIGHT's 'Wound, set, and ready.' as the INJURY (/wuwnd/) rather than the wound spring (/wownd/), and no audio tag fixes a word the model has already disambiguated wrong. The line in this file is therefore spelled 'Wownd' -- the phonetic respelling is the INPUT, and the listener still hears the authored line. If a line here looks misspelled, it is a pronunciation fix; check the audio before correcting the spelling.",
   "_casting": "Cast by auditioning candidates on the CLASS'S OWN LINES, not on the library demo reel (Sam, 2026-08-28): Priyanka demoed well and lost on the actual lines. A demo is chosen to flatter the voice; five words of 'Even the sea recedes' is not. Audition before committing 15 lines to a voice -- it costs ~30 credits."
 }
