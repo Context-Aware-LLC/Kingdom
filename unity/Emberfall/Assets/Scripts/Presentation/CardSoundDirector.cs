@@ -39,18 +39,38 @@ namespace Emberfall.Presentation
         private void OnDestroy() => _player?.ReleaseAll();
     }
 
+    /// <summary>
+    /// Plays a clip by Addressables key, caching the load handle so a repeated sound loads once.
+    /// </summary>
+    /// <remarks>
+    /// The prefix is a constructor argument rather than a constant because AddressablesSetup
+    /// registers two separate audio groups: SoundEffects under <c>sfx/</c> and Voice under
+    /// <c>vo/</c>. A player built for one silently finds nothing in the other — a missing address
+    /// is a warning, not an exception, so the wrong prefix presents as "the audio just doesn't
+    /// play" with a correct-looking call site.
+    /// </remarks>
     internal sealed class AddressableSoundEffectPlayer
     {
-        private const string AddressPrefix = "sfx/";
+        public const string CardSoundPrefix = "sfx/";
+        public const string HeroVoicePrefix = "vo/";
+
+        private readonly string _addressPrefix;
+        private readonly string _owner;
         private readonly AudioSource _source;
         private readonly Dictionary<string, AsyncOperationHandle<AudioClip>> _handles = new();
 
-        public AddressableSoundEffectPlayer(AudioSource source) => _source = source;
+        public AddressableSoundEffectPlayer(
+            AudioSource source, string addressPrefix = CardSoundPrefix, string owner = null)
+        {
+            _source = source;
+            _addressPrefix = addressPrefix ?? CardSoundPrefix;
+            _owner = owner ?? nameof(CardSoundDirector);
+        }
 
         public void Play(string soundId)
         {
             if (string.IsNullOrEmpty(soundId) || _source == null) return;
-            string address = AddressPrefix + soundId;
+            string address = _addressPrefix + soundId;
             if (_handles.TryGetValue(address, out AsyncOperationHandle<AudioClip> cached))
             {
                 if (cached.IsDone) PlayLoaded(cached, address);
@@ -76,7 +96,7 @@ namespace Emberfall.Presentation
             if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
                 _source.PlayOneShot(handle.Result);
             else
-                Debug.LogWarning($"[CardSoundDirector] no AudioClip at Addressables key '{address}'.");
+                Debug.LogWarning($"[{_owner}] no AudioClip at Addressables key '{address}'.");
         }
     }
 }

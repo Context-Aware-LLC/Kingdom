@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Voice
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Voice
+  m_GUID: 3f06c083063688d4691ad7d574afa30a
+  m_SerializeEntries:
+  - m_GUID: 05794a7ebec96384bb088aef35fa64c4
+    m_Address: vo/vo_gravekeep_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0a1b1367caf737e438028c271294ae89
+    m_Address: vo/vo_gravekeep_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1de75133b2b6da24b86cba9746a18463
+    m_Address: vo/vo_gravekeep_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e24f5b2423f70d40818b1a025bce1e2
+    m_Address: vo/vo_gravekeep_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54bacce94fba5a54799aa3d28e0549ac
+    m_Address: vo/vo_gravekeep_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7381f9b4cef17fa45b3b6253377f599a
+    m_Address: vo/vo_gravekeep_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74f5ca703a2dc2d41b70762187737343
+    m_Address: vo/vo_gravekeep_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 883abfca8c7d40647b15b4ee64ddf4d5
+    m_Address: vo/vo_gravekeep_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9064c8bfd9ae7524b81aa2aa886212d0
+    m_Address: vo/vo_gravekeep_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af522a4b55fff404093de8cc0e614e23
+    m_Address: vo/vo_gravekeep_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6861d48f60a7f34aaa5ad5e49b1f006
+    m_Address: vo/vo_gravekeep_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c53affe01b37c4247abf9a9a72ee1399
+    m_Address: vo/vo_gravekeep_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3817abe22f05db498936f89fdf3ebdb
+    m_Address: vo/vo_gravekeep_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faadefb595300804a9af235ea9b81ebc
+    m_Address: vo/vo_gravekeep_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 999da73c543a3e748b4991401d90fc28, type: 2}
+    - {fileID: 11400000, guid: b8f36ae0edf61fe41afe01fb8e6b66e3, type: 2}
