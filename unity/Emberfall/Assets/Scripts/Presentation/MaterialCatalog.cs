@@ -15,6 +15,7 @@ namespace Emberfall.Presentation
     public static class MaterialCatalog
     {
         public const string CardBody = "M_CardBody";  // SG_CardComposite
+        public const string CardEdge = "M_CardEdge";  // URP Lit — shallow physical card/deck backing
         public const string CardArt  = "M_CardArt";   // URP Unlit — CardPresenter/HeroPlateView push _BaseMap
         public const string Glow     = "M_Glow";      // SG_Glow
         public const string Aegis    = "M_Aegis";     // SG_Aegis

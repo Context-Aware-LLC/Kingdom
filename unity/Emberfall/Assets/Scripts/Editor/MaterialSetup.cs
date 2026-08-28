@@ -21,6 +21,13 @@ namespace Emberfall.Editor
                 AssetDatabase.CreateFolder("Assets", "Materials");
 
             Create("M_CardBody", "Shader Graphs/SG_CardComposite");
+            Create("M_CardEdge", "Universal Render Pipeline/Lit", m =>
+            {
+                m.SetColor("_BaseColor", new Color(0.075f, 0.04f, 0.035f, 1f));
+                m.SetFloat("_Metallic", 0.05f);
+                m.SetFloat("_Smoothness", 0.36f);
+                m.enableInstancing = true;
+            });
             Create("M_CardArt",  "Universal Render Pipeline/Unlit");
             Create("M_Glow",     "Shader Graphs/SG_Glow");
             Create("M_Aegis",    "Shader Graphs/SG_Aegis");

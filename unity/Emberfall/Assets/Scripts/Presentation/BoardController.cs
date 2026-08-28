@@ -594,6 +594,22 @@ namespace Emberfall.Presentation
             // later the hover-reveal in hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8) a one-line change.
             root.AddComponent<UnityEngine.Rendering.SortingGroup>();
 
+            // Physical backing. The painted card face stays on the existing quads at z <= 0;
+            // this shallow lit box begins immediately behind them on +z. From the tabletop
+            // camera that exposes a dark lower/side lip without changing any face layout,
+            // collider, sorting order or interaction coordinate.
+            const float cardDepth = 0.12f;
+            var depthGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            depthGo.name = "CardDepth";
+            depthGo.transform.SetParent(root.transform, false);
+            depthGo.transform.localPosition = new Vector3(0f, 0f, cardDepth * 0.5f);
+            depthGo.transform.localScale = new Vector3(CardW * 0.96f, CardH * 0.96f, cardDepth);
+            DestroyObj(depthGo.GetComponent<BoxCollider>());
+            var depthRenderer = depthGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(depthRenderer, MaterialCatalog.CardEdge);
+            depthRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            depthRenderer.receiveShadows = true;
+
             // Background quad (SG_CardComposite body) — remove auto-generated MeshCollider.
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
             bg.name = "BG";

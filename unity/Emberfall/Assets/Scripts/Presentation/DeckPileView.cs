@@ -47,6 +47,7 @@ namespace Emberfall.Presentation
 
         private Vector2 _stackDir;
         private SpriteRenderer[] _layers;
+        private Transform _depthBacking;
         private TextMeshPro _countLabel;
         private PlayerId _playerId;
         private int _lastCount = -1;
@@ -70,6 +71,21 @@ namespace Emberfall.Presentation
             uiSprites ??= new AddressableUiSpriteProvider();
 #endif
             Sprite back = uiSprites.Get("card_back");
+
+            // A single shallow body gives the pile a readable physical edge under perspective;
+            // the offset sprites above it continue to communicate the actual count bands.
+            const float pileDepth = 0.14f;
+            var depthGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            depthGo.name = "DeckDepth";
+            depthGo.transform.SetParent(transform, false);
+            depthGo.transform.localPosition = new Vector3(0f, 0f, pileDepth * 0.5f);
+            depthGo.transform.localScale = new Vector3(PileW * 0.96f, PileH * 0.96f, pileDepth);
+            Destroy(depthGo.GetComponent<BoxCollider>());
+            var depthRenderer = depthGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(depthRenderer, MaterialCatalog.CardEdge);
+            depthRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            depthRenderer.receiveShadows = true;
+            _depthBacking = depthGo.transform;
 
             // WHICH WAY THE STACK GROWS, derived from the anchor so both seats mirror for free.
             //   y: INWARD, toward the board. The top card's bottom edge sits exactly on the §1.3
@@ -143,6 +159,8 @@ namespace Emberfall.Presentation
             // Ceil, not round: one card left is still a pile you can draw from, and showing
             // nothing there would read as an empty deck one draw early.
             int visible = Mathf.Clamp(Mathf.CeilToInt(count / (float)CardsPerLayer), 0, MaxLayers);
+
+            if (_depthBacking != null) _depthBacking.gameObject.SetActive(visible > 0);
 
             for (int i = 0; i < _layers.Length; i++)
             {

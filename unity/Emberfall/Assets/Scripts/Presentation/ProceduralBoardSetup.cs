@@ -104,7 +104,26 @@ namespace Emberfall.Presentation
             BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f);
             BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f);
             BoardBackdrop.Create(transform);
+            AttachBoardLighting(transform);
             AttachSafeAreaCamera();
+        }
+
+        private static void AttachBoardLighting(Transform parent)
+        {
+            if (parent == null || parent.Find("Board Key Light") != null) return;
+
+            var go = new GameObject("Board Key Light");
+            go.transform.SetParent(parent, false);
+            go.transform.rotation = Quaternion.Euler(38f, -32f, 0f);
+
+            var light = go.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.color = new Color(1f, 0.78f, 0.55f);
+            light.intensity = 1.35f;
+            light.shadows = LightShadows.Soft;
+            light.shadowStrength = 0.52f;
+            light.shadowBias = 0.025f;
+            light.shadowNormalBias = 0.18f;
         }
 
         // EF-062. The safe-area solve is attached here rather than authored into the scene:
