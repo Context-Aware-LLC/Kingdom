@@ -251,18 +251,29 @@ function drawRewrites() {
   const box = document.getElementById("rw-list");
   const stems = Object.keys(RW).sort();
   document.getElementById("rw-count").textContent = stems.length;
+  // Built with DOM APIs, never innerHTML. The stem and the line text come out of a file on
+  // disk that anything able to POST to this port can write, and a rewrite queue is exactly
+  // the long-lived store that turns a stray angle bracket into stored script. textContent
+  // cannot be talked into markup; string concatenation always can.
   if (!stems.length) {
-    box.innerHTML = '<div class="rw-empty">Nothing flagged. Rewrite is for a line whose WORDS '
-      + 'are wrong; X is for a bad read of a good line.</div>';
+    const empty = document.createElement("div");
+    empty.className = "rw-empty";
+    empty.textContent = "Nothing flagged. Rewrite is for a line whose WORDS are wrong; "
+                      + "X is for a bad read of a good line.";
+    box.replaceChildren(empty);
     return;
   }
-  box.innerHTML = stems.map(function (k) {
+  box.replaceChildren(...stems.map(function (k) {
     const e = RW[k] || {};
-    return '<div class="rw-row"><span class="stem">' + k + '</span>'
-         + '<span class="text">' + (e.text || "") + '</span>'
-         + '<button onclick=\'flag(' + JSON.stringify(k) + ')\'>unflag</button>'
-         + '</div>';
-  }).join("");
+    const row = document.createElement("div"); row.className = "rw-row";
+    const stem = document.createElement("span"); stem.className = "stem"; stem.textContent = k;
+    const text = document.createElement("span"); text.className = "text";
+    text.textContent = e.text || "";
+    const btn = document.createElement("button"); btn.textContent = "unflag";
+    btn.addEventListener("click", function () { flag(k); });
+    row.append(stem, text, btn);
+    return row;
+  }));
 }
 
 async function flag(stem, cls, moment, text) {
@@ -287,12 +298,33 @@ drawRewrites();
 """
 
 
+def clean(value, limit: int) -> str:
+    """Free text on its way into the committed queue file. Control characters go (they make a
+    committed json unreadable in a diff and can hide the rest of a line), and the length is
+    capped so a flag stays a label rather than a place to park a payload."""
+    text = value if isinstance(value, str) else ""
+    text = "".join(c for c in text if c == " " or not (c.isspace() or ord(c) < 32))
+    return text[:limit]
+
+
+def attr(value) -> str:
+    """JSON for an HTML attribute. Both halves are load-bearing: json.dumps makes it a JS
+    literal, html.escape makes it survive being inside a single-quoted onclick."""
+    return html.escape(json.dumps(value), quote=True)
+
+
 def rewrite_box(queue: dict) -> str:
     """The pinned section. Rendered server-side AND rebuilt client-side from the same JSON the
     /flag endpoint returns, so a toggle never needs a page reload to stay honest."""
     return ('<details class="rw" open><summary>Needs rewrite '
             '(<span id="rw-count">%d</span>)</summary><div id="rw-list"></div></details>'
-            '<script>var RW = %s;</script>' % (len(queue), json.dumps(queue)))
+            '<script>var RW = %s;</script>'
+            # "</" is neutered because a JSON string is not HTML: an entry containing the
+            # literal text "</script>" would otherwise close this block early. "\\/" is a valid
+            # JSON escape for "/", so the value JS sees is unchanged; only the HTML parser
+            # stops seeing a closing tag. A "<" can only appear inside a string here -- JSON
+            # structure has none -- so the replace cannot corrupt the document.
+            % (len(queue), json.dumps(queue).replace("</", "<\\/")))
 
 
 def render(groups) -> bytes:
@@ -314,13 +346,16 @@ def render(groups) -> bytes:
                     '<div class="take"><audio controls preload="none" src="/audio?p=%s"></audio>'
                     '<button onclick=\'act("promote",%s,this)\'>Promote</button>'
                     '<button class="x" onclick=\'act("reject",%s,this)\'>&times;</button></div>'
-                    % (urllib.parse.quote(t), json.dumps(t), json.dumps(t))
+                    % (urllib.parse.quote(t), attr(t), attr(t))
                     for t in line["takes"])
                 flagged = canon in queue
+                # json.dumps alone is NOT safe inside an HTML attribute: a line carrying an
+                # apostrophe closes the onclick early and everything after it parses as markup.
+                # html.escape(quote=True) is what makes the JSON safe to sit there.
                 flag = ('<button class="flag%s" id="flag-%s" onclick=\'flag(%s,%s,%s,%s)\'>'
                         '%s</button>'
-                        % (" on" if flagged else "", html.escape(canon), json.dumps(canon),
-                           json.dumps(cls_name), json.dumps(sub), json.dumps(line["text"] or ""),
+                        % (" on" if flagged else "", html.escape(canon), attr(canon),
+                           attr(cls_name), attr(sub), attr(line["text"] or ""),
                            "Flagged &#8593;" if flagged else "Rewrite"))
                 out.append(
                     '<div class="line"><div class="text">%s</div>'
@@ -400,9 +435,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             queue = load_queue()
             if payload.get("on"):
                 queue[stem] = {
-                    "class": str(payload.get("cls") or ""),
-                    "moment": str(payload.get("moment") or ""),
-                    "text": str(payload.get("text") or ""),
+                    "class": clean(payload.get("cls"), 40),
+                    "moment": clean(payload.get("moment"), 40),
+                    "text": clean(payload.get("text"), 300),
                 }
                 msg = "Flagged %s for rewrite -- pinned to the top. No audio touched." % stem
             else:
