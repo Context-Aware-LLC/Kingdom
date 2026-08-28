@@ -27,10 +27,13 @@ THE STAGING FILE IS THE DELIVERABLE
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime
+import hmac
 import http.server
 import json
 import mimetypes
+import os
 import pathlib
 import socketserver
 import subprocess
@@ -40,11 +43,19 @@ import threading
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from corpus import REPO, Corpus, sanitize_edit  # noqa: E402
+from corpus import REPO, THUMB_DIR, Corpus, sanitize_edit  # noqa: E402
 
 STATIC_DIR = HERE / "static"
-THUMB_DIR = HERE / ".thumbs"
-STAGING_DIR = REPO / "tooling" / "cardweb" / "staging"
+# Staged edits must outlive a restart. On Fly this points at a mounted volume; a machine that
+# suspends and resumes with staging on its ephemeral disk would silently drop an author's work.
+STAGING_DIR = pathlib.Path(
+    os.environ.get("EMBERFALL_STAGING_DIR", REPO / "tooling" / "cardweb" / "staging"))
+
+# HTTP Basic auth. Enabled by setting CARDWEB_PASSWORD; absent, the server runs open, which is
+# correct for the 127.0.0.1 default and wrong for anything else. main() refuses to bind a
+# non-loopback interface without it rather than leaving that to whoever writes the deploy.
+AUTH_USER = os.environ.get("CARDWEB_USER", "emberfall")
+AUTH_PASSWORD = os.environ.get("CARDWEB_PASSWORD", "")
 
 _lock = threading.Lock()
 _corpus: Corpus | None = None
@@ -158,6 +169,24 @@ def stage_edit(token: str, proposed: dict) -> dict:
         return {"staged": bool(changed), "changedFields": sorted(changed), "total": len(edits)}
 
 
+def discard_edit(token: str) -> dict:
+    """Drop the staged edit for one row.
+
+    Without this a staged edit is unreachable from the UI: reverting the fields makes the Stage
+    button inert (there is nothing to stage), so the only way back was to hand-edit the staging
+    file. Staging something by mistake has to be undoable from the same screen that did it.
+    """
+    with _lock:
+        row = corpus().by_token.get(token)
+        if row is None:
+            raise KeyError("unknown card token -- reload the page to pick up a fresh corpus.")
+        doc = read_staging()
+        before = len(doc.get("edits", []))
+        doc["edits"] = [e for e in doc.get("edits", []) if e.get("cardId") != row.card_id]
+        write_staging(doc)
+        return {"discarded": before != len(doc["edits"]), "total": len(doc["edits"])}
+
+
 def run_validation() -> dict:
     """Validate the CURRENT ON-DISK corpus through the shared C-series gate.
 
@@ -190,6 +219,36 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *a):  # quieter than the default
         sys.stderr.write(f"  {self.address_string()} {fmt % a}\n")
 
+    # ---- auth -------------------------------------------------------------
+    def _authed(self) -> bool:
+        """HTTP Basic, compared in constant time.
+
+        A plain `==` against a secret leaks its length and its prefix to a patient caller;
+        hmac.compare_digest is the same line without that. Both fields are compared even when
+        the username is already wrong, so the cost does not vary with how much was guessed.
+        """
+        if not AUTH_PASSWORD:
+            return True
+        header = self.headers.get("Authorization", "")
+        if not header.startswith("Basic "):
+            return False
+        try:
+            user, _, password = base64.b64decode(header[6:]).decode("utf-8").partition(":")
+        except (ValueError, UnicodeDecodeError):
+            return False
+        ok_user = hmac.compare_digest(user, AUTH_USER)
+        ok_pass = hmac.compare_digest(password, AUTH_PASSWORD)
+        return ok_user and ok_pass
+
+    def _challenge(self) -> None:
+        body = b'{"error":"authentication required"}'
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", 'Basic realm="Emberfall card authoring"')
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     # ---- helpers ----------------------------------------------------------
     def _send(self, code: int, body: bytes, ctype: str, cache: str = "no-store"):
         self.send_response(code)
@@ -216,6 +275,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
     # ---- routes -----------------------------------------------------------
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if path == "/healthz":
+            # Unauthenticated on purpose: Fly's checks have no credentials, and it reveals
+            # nothing but that the process is up.
+            self._json(200, {"ok": True, "rows": len(corpus().rows)})
+            return
+        if not self._authed():
+            self._challenge()
+            return
 
         if path in ("/", "/index.html"):
             self._static("index.html")
@@ -253,20 +320,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if row is None:
             self._json(404, {"error": "unknown token"})
             return
-        src = row.art_path()
-        if src is None:
-            self._json(404, {"error": "no art"})
+        thumb = row.thumb_path()
+        if thumb is None:
+            # Either the card has no art yet, or the cache was never built. Never fall back to
+            # the source PNG: that is 1-2 MB per card, and silently doing it is how a tool that
+            # looks fine locally ships half a gigabyte per page load in production.
+            self._json(404, {"error": "no thumbnail (card may have no art; "
+                                      "otherwise run tooling/cardweb/build_thumbs.py)"})
             return
-        rel = src.relative_to(src.parents[1])
-        thumb = THUMB_DIR / rel.parent / (rel.stem + ".webp")
-        if thumb.is_file():
-            self._send(200, thumb.read_bytes(), "image/webp", cache="max-age=300")
-        else:
-            # No thumbnail built yet. Refuse rather than serving a 2 MB source PNG -- silently
-            # falling back is how a "working" tool ships half a gigabyte per page load.
-            self._json(404, {"error": "thumbnail not built; run tooling/cardweb/build_thumbs.py"})
+        self._send(200, thumb.read_bytes(), "image/webp", cache="max-age=300")
 
     def do_POST(self):
+        if not self._authed():
+            self._challenge()
+            return
         path = self.path.split("?", 1)[0]
         try:
             length = int(self.headers.get("Content-Length") or 0)
@@ -290,6 +357,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json(409, {"error": str(e.args[0])})
             except (ValueError, RuntimeError) as e:
                 self._json(400, {"error": str(e)})
+        elif path == "/api/discard":
+            try:
+                self._json(200, discard_edit(body.get("token", "")))
+            except KeyError as e:
+                self._json(409, {"error": str(e.args[0])})
+            except RuntimeError as e:
+                self._json(400, {"error": str(e)})
         elif path == "/api/reload":
             with _lock:
                 corpus().load()
@@ -311,6 +385,15 @@ def main() -> int:
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8781)
     args = ap.parse_args()
+
+    # The corpus is unreleased game content. Binding it to anything but loopback without a
+    # password is the one mistake this tool must not let a deploy make quietly, so it is a
+    # refusal here rather than a warning in a README nobody reads at 2am.
+    if args.host not in ("127.0.0.1", "localhost", "::1") and not AUTH_PASSWORD:
+        print("REFUSING TO START: binding a non-loopback interface with no CARDWEB_PASSWORD "
+              "set would publish the unreleased card corpus. Set it, or bind 127.0.0.1.",
+              file=sys.stderr)
+        return 2
 
     _corpus = Corpus()
     sets = {}

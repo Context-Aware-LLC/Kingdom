@@ -167,6 +167,7 @@ function openEditor(token) {
   $('#ed-rules-wrap').hidden = rules.length === 0;
 
   buildForm(card);
+  $('#ed-discard').hidden = !state.staged.has(token);
   $('#editor').hidden = false;
   $('#ed-status').textContent = '';
   render();
@@ -290,6 +291,21 @@ $('#ed-close').addEventListener('click', () => {
 });
 $('#ed-revert').addEventListener('click', () => openEditor(state.current));
 
+$('#ed-discard').addEventListener('click', async () => {
+  try {
+    await api('/api/discard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: state.current }),
+    });
+    toast('Staged edit discarded', 'good');
+    await refreshStaging();
+    openEditor(state.current);
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+});
+
 $('#ed-stage').addEventListener('click', async () => {
   const fields = changedFields();
   try {
@@ -300,6 +316,7 @@ $('#ed-stage').addEventListener('click', async () => {
     });
     toast(r.staged ? `Staged ${r.changedFields.join(', ')}` : 'No change to stage', 'good');
     await refreshStaging();
+    $('#ed-discard').hidden = !state.staged.has(state.current);
     render();
   } catch (e) {
     toast(e.message, 'bad');

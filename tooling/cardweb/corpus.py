@@ -37,8 +37,18 @@ import secrets
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
-ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+
+# Overridable so the server can run somewhere that is not a repo checkout -- a container image
+# carries the three set files and the thumbnail cache, and nothing else of the 518 MB art tree.
+CARD_DATA_DIR = pathlib.Path(
+    os.environ.get("EMBERFALL_CARD_DIR", REPO / "unity" / "Emberfall" / "Assets" / "CardData"))
+ART_DIR = pathlib.Path(
+    os.environ.get("EMBERFALL_ART_DIR", REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"))
+# The servable images. This is the ONLY art the deployed server has -- a container ships the
+# 4.2 MB cache and none of the 518 MB source tree, so art resolution must succeed against the
+# thumbnails alone and treat ART_DIR as an optional extra.
+THUMB_DIR = pathlib.Path(
+    os.environ.get("EMBERFALL_THUMB_DIR", pathlib.Path(__file__).resolve().parent / ".thumbs"))
 
 # art_file() is THE definition of a card's art filename. Import it; do not re-derive it.
 # Three scripts re-derived it off the handle and two of them were wrong -- see its docstring.
@@ -134,6 +144,22 @@ class Row:
                 return hits[0]
         return None
 
+    def thumb_path(self) -> pathlib.Path | None:
+        """The servable image for this row, resolved against the thumbnail cache.
+
+        Joined on artId through art_file() like everything else in the art pipeline. The cache
+        mirrors the source tree's <setId>/<stem> layout, so this is the same lookup art_path()
+        does -- but it must work with NO source tree present, which is the deployed case.
+        """
+        stem = art_file(self.data)
+        p = THUMB_DIR / self.data["setId"] / f"{stem}.webp"
+        if p.is_file():
+            return p
+        # A row whose art sits under a different set folder than its setId still renders in
+        # game, so refusing to find it here would report a card as art-less when it is not.
+        hits = list(THUMB_DIR.glob(f"*/{stem}.webp"))
+        return hits[0] if hits else None
+
     def view(self) -> dict:
         """The identity-free payload the browser receives."""
         out = {"token": self.token}
@@ -141,7 +167,7 @@ class Row:
             if k in IDENTITY_FIELDS:
                 continue
             out[k] = v
-        out["hasArt"] = self.art_path() is not None
+        out["hasArt"] = self.thumb_path() is not None
         return out
 
 

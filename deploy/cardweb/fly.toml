@@ -1,0 +1,58 @@
+# Fly.io deploy — Emberfall web card authoring tool (2026-08-27).
+#
+# Separate app from `emberfall` (the match server) on purpose: this one holds no game state, has
+# a completely different uptime profile, and a bad deploy here must not be able to take a live
+# match down.
+#
+# Build context is the repo ROOT — the Dockerfile needs tooling/cardweb + the card data — so
+# deploy with:
+#     fly deploy -c deploy/cardweb/fly.toml .
+#
+# BEFORE THE FIRST DEPLOY:
+#     python tooling/cardweb/build_thumbs.py          # the cache is gitignored
+#     fly secrets set CARDWEB_PASSWORD=... -a emberfall-cardweb
+
+app = "emberfall-cardweb"
+primary_region = "sjc"
+
+[build]
+  # Relative to THIS FILE, not to the build context. (The walking-skeleton fly.toml sits at the
+  # repo root, so its path looks context-relative and is not a precedent for this one.)
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # Scale to zero. This is a single-author tool that is idle almost all the time; a suspended
+  # machine costs nothing and resumes in about a second. Unlike the match server there is no
+  # in-memory state worth preserving across the idle window, because every staged edit is
+  # already on the volume before the response returns.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 80
+
+# Staged edits are unsaved author work. They live on the volume, NOT the ephemeral disk —
+# scale-to-zero makes machine suspension routine, so anything on the rootfs is one idle
+# period away from gone.
+[[mounts]]
+  source = "cardweb_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# Unauthenticated on purpose (see server.py): it reports process liveness and the row count,
+# and Fly's checker has no credentials to offer.
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/healthz"

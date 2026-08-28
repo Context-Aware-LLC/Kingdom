@@ -39,3 +39,15 @@ tooling/*
 !tooling/data/
 tooling/data/*
 !tooling/data/bot-roster.json
+
+# The web card authoring tool (deploy/cardweb/Dockerfile). This file is an ALLOWLIST -- it opens
+# with `*`, so anything not re-included here is simply absent from the build context and the
+# COPY silently produces an empty directory rather than an error.
+!tooling/cardweb/
+# ...but never someone's staged edits. They are in-flight author work, not corpus, and baking
+# them into an image would resurrect them on every deploy.
+tooling/cardweb/staging/
+# corpus.py imports art_file() from this module instead of re-deriving the art filename.
+!tooling/scripts/
+tooling/scripts/*
+!tooling/scripts/gen_card_prompt_briefs.py
