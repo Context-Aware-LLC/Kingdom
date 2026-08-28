@@ -25,6 +25,13 @@ WHAT IT DOES
                the TOP of the page. Reject is for a bad read of a good line; rewrite is for a
                line no read can save. Flagging is a toggle and touches no audio.
 
+               A flagged line has TWO states and the box has a section for each. While it is
+               "needs_rewrite" there is nothing to hear, so it shows as a name and the old
+               words. Once someone rewrites it and sets its status to "rewritten", it moves to
+               the second section WITH ITS NEW TAKES AND A PROMOTE BUTTON -- because a rewrite
+               that merely leaves the queue has to be hunted for again in a 240-clip page,
+               which is the exact cost the box exists to remove. Done dismisses it.
+
 WHY THE QUEUE IS A FILE AND NOT A PAGE STATE
     A first pass through 240 clips is long, and the flags have to survive the page being
     closed, the server being restarted, and the session that acts on them being a different
@@ -209,6 +216,8 @@ PAGE_HEAD = """<!doctype html>
  .rw { border: 1px solid; border-radius: 10px; padding: 10px 14px; margin: 0 0 8px;
        background: color-mix(in srgb, Canvas 92%, orange); }
  .rw > summary { font-size: 14px; font-weight: 600; cursor: pointer; }
+ .rw.done-box { background: color-mix(in srgb, Canvas 92%, seagreen); }
+ .rw.done-box .line { margin: 8px 0 2px; }
  .rw-row { display: flex; align-items: baseline; gap: 10px; padding: 5px 0 4px;
            border-top: 1px solid color-mix(in srgb, CanvasText 20%, transparent); }
  .rw-row:first-child { border-top: 0; }
@@ -313,23 +322,75 @@ def attr(value) -> str:
     return html.escape(json.dumps(value), quote=True)
 
 
-def rewrite_box(queue: dict) -> str:
-    """The pinned section. Rendered server-side AND rebuilt client-side from the same JSON the
-    /flag endpoint returns, so a toggle never needs a page reload to stay honest."""
-    return ('<details class="rw" open><summary>Needs rewrite '
-            '(<span id="rw-count">%d</span>)</summary><div id="rw-list"></div></details>'
-            '<script>var RW = %s;</script>'
+def take_html(paths) -> str:
+    """The player + Promote + X trio for one take. Shared, so a line rendered in the pinned box
+    behaves identically to the same line rendered in its class -- act() finds .take and .line
+    either way and needs to know nothing about where it was clicked."""
+    return "".join(
+        '<div class="take"><audio controls preload="none" src="/audio?p=%s"></audio>'
+        '<button onclick=\'act("promote",%s,this)\'>Promote</button>'
+        '<button class="x" onclick=\'act("reject",%s,this)\'>&times;</button></div>'
+        % (urllib.parse.quote(t), attr(t), attr(t)) for t in paths)
+
+
+def find_line(groups, stem):
+    """The scanned line for a canonical stem, or None. Linear, because the page is rebuilt per
+    request and 240 clips is not a number worth indexing for."""
+    for g in groups.values():
+        for sub in g["subs"].values():
+            if stem in sub:
+                return sub[stem]
+    return None
+
+
+def rewrite_box(queue: dict, groups: dict) -> str:
+    """The pinned sections. Two of them, because a flagged line has two states and only one of
+    them is a list:
+
+      NEEDS REWRITE  a name and the old words. Nothing to listen to -- the words are the
+                     problem -- so the client renders it from RW and that is enough.
+
+      REWRITTEN      the new words, WITH ITS TAKES AND A PROMOTE BUTTON. Rendered server-side
+                     for exactly one reason: a rewritten line that leaves this box has to be
+                     hunted for again in a 240-clip page, which is the whole thing the box
+                     exists to prevent. It stays here until it is promoted or dismissed.
+    """
+    pending = {k: v for k, v in queue.items() if v.get("status") != "rewritten"}
+    redone = [(k, v) for k, v in sorted(queue.items()) if v.get("status") == "rewritten"]
+
+    out = ['<details class="rw" open><summary>Needs rewrite '
+           '(<span id="rw-count">%d</span>)</summary><div id="rw-list"></div></details>'
+           % len(pending)]
+
+    if redone:
+        out.append('<details class="rw done-box" open><summary>Rewritten &mdash; listen (%d)'
+                   '</summary>' % len(redone))
+        for stem, entry in redone:
+            line = find_line(groups, stem) or {"takes": [], "final": None}
+            in_assets = ('<span class="done">  &check; in Assets</span>'
+                         if line.get("final") else "")
+            out.append(
+                '<div class="line"><div class="text">%s</div>'
+                '<div class="stem">%s%s</div>'
+                '<div class="takes">%s<button class="flag" onclick=\'flag(%s)\'>Done</button>'
+                '</div></div>'
+                % (html.escape(entry.get("text", "")), html.escape(stem), in_assets,
+                   take_html(line["takes"]), attr(stem)))
+        out.append("</details>")
+
+    return ("".join(out)
+            + '<script>var RW = %s;</script>'
             # "</" is neutered because a JSON string is not HTML: an entry containing the
             # literal text "</script>" would otherwise close this block early. "\\/" is a valid
             # JSON escape for "/", so the value JS sees is unchanged; only the HTML parser
             # stops seeing a closing tag. A "<" can only appear inside a string here -- JSON
             # structure has none -- so the replace cannot corrupt the document.
-            % (len(queue), json.dumps(queue).replace("</", "<\\/")))
+            % json.dumps(pending).replace("</", "<\\/"))
 
 
 def render(groups) -> bytes:
     queue = load_queue()
-    out = [PAGE_HEAD, rewrite_box(queue)]
+    out = [PAGE_HEAD, rewrite_box(queue, groups)]
     if not groups:
         out.append("<p>No candidate clips found under <code>art-pipeline/sfx/</code>.</p>")
     for cls in sorted(groups):
@@ -342,12 +403,7 @@ def render(groups) -> bytes:
             out.append("<h3>%s</h3>" % html.escape(sub.replace("_", " ")))
             for canon, line in sorted(g["subs"][sub].items()):
                 done = ('<span class="done">  &check; in Assets</span>' if line["final"] else "")
-                takes = "".join(
-                    '<div class="take"><audio controls preload="none" src="/audio?p=%s"></audio>'
-                    '<button onclick=\'act("promote",%s,this)\'>Promote</button>'
-                    '<button class="x" onclick=\'act("reject",%s,this)\'>&times;</button></div>'
-                    % (urllib.parse.quote(t), attr(t), attr(t))
-                    for t in line["takes"])
+                takes = take_html(line["takes"])
                 flagged = canon in queue
                 # json.dumps alone is NOT safe inside an HTML attribute: a line carrying an
                 # apostrophe closes the onclick early and everything after it parses as markup.
@@ -438,6 +494,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "class": clean(payload.get("cls"), 40),
                     "moment": clean(payload.get("moment"), 40),
                     "text": clean(payload.get("text"), 300),
+                    # Set to "rewritten" by whoever actually rewrites the line and regenerates
+                    # its takes. That flips the entry from the flat list to the section with
+                    # players in it, so a rewrite lands back in front of Sam instead of
+                    # disappearing into a 240-clip page.
+                    "status": "needs_rewrite",
                 }
                 msg = "Flagged %s for rewrite -- pinned to the top. No audio touched." % stem
             else:
