@@ -27,7 +27,6 @@
                     <ui:VisualElement class="mm-leaderboard__heading">
                         <ui:Label text="RANKED LADDER" class="mm-leaderboard__kicker"/>
                         <ui:Label text="The Emberfall Crown" class="mm-leaderboard__title"/>
-                        <ui:Label text="A chess-inspired Elo ranking for completed player duels." class="mm-leaderboard__help"/>
                     </ui:VisualElement>
                     <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
                 </ui:VisualElement>
