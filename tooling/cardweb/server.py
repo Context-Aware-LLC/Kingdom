@@ -4,7 +4,11 @@
     python tooling/cardweb/server.py --host 0.0.0.0 --port 8781
 
 WHAT THIS IS ALLOWED TO DO
-    Read the three set files. Serve thumbnails. Append to a staging file.
+    Read the three set files. Serve thumbnails. Append to a staging file. Append to a comments
+    sidecar. Serve the card-admin panel and a rollup computed off the loaded corpus.
+
+    Both writable files live OUTSIDE the corpus, on the volume: staging/pending.json and
+    comments/comments.json. Neither can move the canonical hash and neither ships to a client.
 
 WHAT THIS IS STRUCTURALLY UNABLE TO DO, and why that is the whole point
     Write a card-data file. CardAuthoringWindow.SaveAll writes each set file WHOLE, from what is
@@ -39,13 +43,29 @@ import socketserver
 import subprocess
 import sys
 import threading
+from collections import defaultdict
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from corpus import REPO, THUMB_DIR, Corpus, sanitize_edit  # noqa: E402
+import comments as comments_store  # noqa: E402
+from corpus import (  # noqa: E402
+    IDENTITY_FIELDS, REPO, SET_FILENAMES, THUMB_DIR, Corpus, sanitize_edit,
+)
 
 STATIC_DIR = HERE / "static"
+
+# The corpus analytics panel, served as a tab rather than reimplemented. Overridable for the
+# same reason the card directory is: the container carries this directory and nothing around it.
+ADMIN_DIR = pathlib.Path(
+    os.environ.get("EMBERFALL_ADMIN_DIR", REPO / "tooling" / "card-admin"))
+sys.path.insert(0, str(ADMIN_DIR))
+
+# The aggregation is IMPORTED, never reimplemented. Two rollups over one corpus would disagree
+# eventually and the tab that disagreed would be the one nobody re-derived. build_data.py globs
+# its own CARD_FILES at import time; that glob is unused here (the rows come from the loaded
+# Corpus) and resolves to an empty list in the container, which is harmless.
+from build_data import CARD_TYPES, normalize, rollup  # noqa: E402
 # Staged edits must outlive a restart. On Fly this points at a mounted volume; a machine that
 # suspends and resumes with staging on its ephemeral disk would silently drop an author's work.
 STAGING_DIR = pathlib.Path(
@@ -187,6 +207,81 @@ def discard_edit(token: str) -> dict:
         return {"discarded": before != len(doc["edits"]), "total": len(doc["edits"])}
 
 
+def admin_data() -> dict:
+    """The rollup the corpus panel renders, computed from the corpus THIS PROCESS HOLDS.
+
+    Deliberately not tooling/card-admin/data.json. That file is a build artifact of
+    build_data.py and is only ever as current as the last rebake, so serving it would put a
+    rollup of some earlier corpus in a tab sitting next to the live grid -- and nothing about a
+    stale number looks stale. Reading the loaded rows instead means the tab cannot disagree
+    with the grid beside it.
+
+    IDENTITY IS STRIPPED HERE, not trusted to the panel. normalize() emits `id` and `artId`
+    because its file:// consumer runs off a repo checkout that already has them; this one is
+    the browser, which must never receive either. Filtering on corpus.IDENTITY_FIELDS rather
+    than an allowlist of panel fields means a field the panel starts reading arrives on its own,
+    while a new identity key added to IDENTITY_FIELDS is withheld on its own.
+    """
+    cards = []
+    for row in corpus().rows:
+        rec = normalize(row.data, SET_FILENAMES.get(row.set_id, row.set_id))
+        cards.append({k: v for k, v in rec.items() if k not in IDENTITY_FIELDS})
+
+    classes = sorted({c["class"] for c in cards if c["class"]})
+    by_class = defaultdict(list)
+    for c in cards:
+        by_class[c["class"]].append(c)
+
+    return {
+        "generatedFrom": sorted(SET_FILENAMES.values()),
+        "totalCards": len(cards),
+        "classes": classes,
+        "cardTypes": CARD_TYPES,
+        "corpus": rollup(cards),
+        "byClass": {cls: rollup(by_class[cls]) for cls in classes},
+        "cards": cards,
+    }
+
+
+def comments_view() -> dict:
+    """The sidecar as the browser may see it: card ids swapped for this run's tokens.
+
+    The same resolution staging_view() does, and for the same reason -- the file is keyed on the
+    card id because that is the only permanent handle and it outlives any one server run, while
+    tokens are salted per run. A comment on a row that no longer exists is REPORTED, not
+    dropped: silently hiding it is how a note about a deleted card becomes unfindable.
+    """
+    doc = comments_store.read_all()
+    by_id = {str(r.card_id): r for r in corpus().rows}
+    out: dict[str, list] = {}
+    orphans = 0
+    for card_id, items in doc.items():
+        row = by_id.get(card_id)
+        if row is None:
+            orphans += len(items)
+            continue
+        out[row.token] = items
+    return {"comments": out, "orphans": orphans}
+
+
+def add_comment(token: str, text: str, author: str) -> dict:
+    with _lock:
+        row = corpus().by_token.get(token)
+        if row is None:
+            raise KeyError("unknown card token -- reload the page to pick up a fresh corpus.")
+        return comments_store.add(row.card_id, text, author)
+
+
+def mutate_comment(token: str, comment_id: str, op: str, resolved: bool = True) -> dict:
+    with _lock:
+        row = corpus().by_token.get(token)
+        if row is None:
+            raise KeyError("unknown card token -- reload the page to pick up a fresh corpus.")
+        if op == "delete":
+            return {"ok": comments_store.delete(row.card_id, comment_id)}
+        return {"ok": comments_store.set_resolved(row.card_id, comment_id, resolved)}
+
+
 def run_validation() -> dict:
     """Validate the CURRENT ON-DISK corpus through the shared C-series gate.
 
@@ -240,6 +335,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
         ok_pass = hmac.compare_digest(password, AUTH_PASSWORD)
         return ok_user and ok_pass
 
+    def _auth_user(self) -> str:
+        """Who is writing, taken from the credential rather than from the request body.
+
+        A byline the client supplies is one anyone can forge, and the only value the field has
+        is that it says who actually wrote the note. With no password set the server is bound
+        to loopback (main() refuses otherwise), so there is exactly one author and it is whoever
+        is at the keyboard.
+        """
+        if not AUTH_PASSWORD:
+            return "local"
+        header = self.headers.get("Authorization", "")
+        try:
+            return base64.b64decode(header[6:]).decode("utf-8").partition(":")[0] or "unknown"
+        except (ValueError, UnicodeDecodeError):
+            return "unknown"
+
     def _challenge(self) -> None:
         body = b'{"error":"authentication required"}'
         self.send_response(401)
@@ -272,6 +383,53 @@ class Handler(http.server.BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
         self._send(200, target.read_bytes(), ctype, cache="no-cache")
 
+    # The card-admin panel's own files, served UNMODIFIED under /admin/ so that every relative
+    # reference in its index.html (styles.css, data.js, admin-panel.js) resolves without a
+    # rewrite. One copy of that markup exists, in tooling/card-admin/, and it stays the copy
+    # both the embedded tab and the standalone file:// mode render -- an id renamed there
+    # cannot desynchronise from a duplicate here, because there is no duplicate.
+    ADMIN_FILES = {
+        "": ("index.html", "text/html; charset=utf-8"),
+        "index.html": ("index.html", "text/html; charset=utf-8"),
+        "styles.css": ("styles.css", "text/css; charset=utf-8"),
+        "admin-panel.js": ("admin-panel.js", "application/javascript; charset=utf-8"),
+    }
+
+    # Appended to styles.css ON THE WAY OUT, and only there. The standalone file:// page reads
+    # styles.css off disk and never sees this, so the embedded tab can drop the panel's own
+    # page title -- redundant under the tab strip that already names it -- without changing how
+    # the panel looks when opened on its own.
+    ADMIN_EMBED_CSS = (
+        b"\n/* Appended by cardweb's /admin/styles.css route for the embedded tab only. */\n"
+        b"header { padding: 8px 16px; }\n"
+        b"header h1 { display: none; }\n"
+        b".sidebar { min-height: calc(100vh - 34px); }\n"
+    )
+
+    def _admin(self, rel: str) -> None:
+        # data.js is INTERCEPTED rather than served: on disk it is build_data.py's mirror, as
+        # current as the last rebake and no more. Generating it from the loaded corpus is what
+        # keeps the tab from showing a rollup of a corpus that has since moved -- the failure
+        # this tab would otherwise have by default, silently.
+        if rel == "data.js":
+            body = ("window.CARD_DATA = "
+                    + json.dumps(admin_data(), ensure_ascii=False) + ";\n")
+            self._send(200, body.encode("utf-8"), "application/javascript; charset=utf-8")
+            return
+        entry = self.ADMIN_FILES.get(rel)
+        if entry is None:
+            self._json(404, {"error": "not found"})
+            return
+        name, ctype = entry
+        target = ADMIN_DIR / name
+        if not target.is_file():
+            self._json(500, {"error": f"{name} missing from {ADMIN_DIR}"})
+            return
+        body = target.read_bytes()
+        if name == "styles.css":
+            body += self.ADMIN_EMBED_CSS
+        self._send(200, body, ctype, cache="no-cache")
+
     # ---- routes -----------------------------------------------------------
     def do_GET(self):
         path = self.path.split("?", 1)[0]
@@ -301,6 +459,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json(200, staging_view())
             except RuntimeError as e:
                 self._json(500, {"error": str(e)})
+        elif path == "/api/comments":
+            try:
+                self._json(200, comments_view())
+            except RuntimeError as e:
+                self._json(500, {"error": str(e)})
+        elif path == "/api/admin-data":
+            self._json(200, admin_data())
+        elif path == "/admin":
+            # A redirect, not the page. Served at /admin the panel's relative "styles.css"
+            # would resolve to /styles.css and the tab would render unstyled -- the trailing
+            # slash is what makes serving its markup verbatim work at all.
+            self.send_response(301)
+            self.send_header("Location", "/admin/")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+        elif path.startswith("/admin/"):
+            self._admin(path[len("/admin/"):])
         elif path == "/api/validate":
             self._json(200, run_validation())
         elif path.startswith("/thumb/"):
@@ -364,6 +539,25 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json(409, {"error": str(e.args[0])})
             except RuntimeError as e:
                 self._json(400, {"error": str(e)})
+        elif path == "/api/comments":
+            try:
+                # The author is the AUTHENTICATED user, never body["author"].
+                self._json(200, add_comment(
+                    body.get("token", ""), body.get("text", ""), self._auth_user()))
+            except KeyError as e:
+                self._json(409, {"error": str(e.args[0])})
+            except (ValueError, RuntimeError) as e:
+                self._json(400, {"error": str(e)})
+        elif path in ("/api/comments/delete", "/api/comments/resolve"):
+            op = "delete" if path.endswith("delete") else "resolve"
+            try:
+                self._json(200, mutate_comment(
+                    body.get("token", ""), body.get("commentId", ""), op,
+                    bool(body.get("resolved", True))))
+            except KeyError as e:
+                self._json(409, {"error": str(e.args[0])})
+            except (ValueError, RuntimeError) as e:
+                self._json(400, {"error": str(e)})
         elif path == "/api/reload":
             with _lock:
                 corpus().load()
@@ -406,6 +600,8 @@ def main() -> int:
     print(f"digest     {_corpus.source_digest}")
     print(f"thumbs     {thumbs}" + ("" if thumbs else "   (run build_thumbs.py)"))
     print(f"staging    {staging_path()}")
+    print(f"comments   {comments_store.comments_path()}")
+    print(f"panel      {ADMIN_DIR}")
     print(f"serving    http://{args.host}:{args.port}")
 
     with Server((args.host, args.port), Handler) as httpd:

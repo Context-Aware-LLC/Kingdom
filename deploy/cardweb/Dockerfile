@@ -25,6 +25,14 @@ COPY tooling/cardweb/ /app/tooling/cardweb/
 # It is stdlib-only at import time and has a __main__ guard, so importing costs nothing.
 COPY tooling/scripts/gen_card_prompt_briefs.py /app/tooling/scripts/
 
+# The corpus analytics panel, served as the "Corpus" tab. The server imports rollup()/normalize()
+# from build_data.py rather than reimplementing the aggregation, and serves the panel's own
+# index.html/styles.css/admin-panel.js verbatim -- so the image needs the directory, not a copy.
+# data.js and data.json are deliberately NOT here (see .dockerignore): they are build_data.py's
+# on-disk mirror of some earlier corpus, and the served /admin/data.js is generated per request
+# from the corpus this process actually loaded.
+COPY tooling/card-admin/ /app/tooling/card-admin/
+
 # The corpus. Three files; the 518 MB art tree is deliberately NOT shipped -- the server
 # resolves art through the thumbnail cache and never reads a source PNG.
 COPY unity/Emberfall/Assets/CardData/*.cards.json /app/carddata/
@@ -33,10 +41,12 @@ ENV EMBERFALL_CARD_DIR=/app/carddata \
     EMBERFALL_ART_DIR=/app/carddata \
     EMBERFALL_THUMB_DIR=/app/tooling/cardweb/.thumbs \
     EMBERFALL_STAGING_DIR=/data/staging \
+    EMBERFALL_COMMENTS_DIR=/data/comments \
+    EMBERFALL_ADMIN_DIR=/app/tooling/card-admin \
     PYTHONUNBUFFERED=1
 
-# /data is a Fly volume. Staged edits are an author's unsaved work and must survive the
-# machine suspending, which scale-to-zero makes routine rather than exceptional.
+# /data is a Fly volume. Staged edits and editor comments are an author's unsaved work and must
+# survive the machine suspending, which scale-to-zero makes routine rather than exceptional.
 VOLUME ["/data"]
 
 EXPOSE 8080

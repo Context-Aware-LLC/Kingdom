@@ -17,17 +17,36 @@
   </div>
 </header>
 
-<div class="filters">
-  <input id="q" type="search" placeholder="Search name or text…" autocomplete="off">
-  <select id="f-set"><option value="">All sets</option></select>
-  <select id="f-class"><option value="">All classes</option></select>
-  <select id="f-type"><option value="">All types</option></select>
-  <select id="f-rarity"><option value="">All rarities</option></select>
-  <label class="check"><input type="checkbox" id="f-staged"> Staged only</label>
-  <span id="count" class="dim"></span>
+<div class="tabs" role="tablist">
+  <button id="tab-cards" class="tab on" role="tab" aria-selected="true" aria-controls="pane-cards">Cards</button>
+  <button id="tab-corpus" class="tab" role="tab" aria-selected="false" aria-controls="pane-corpus">Corpus</button>
 </div>
 
-<main id="grid" class="grid" aria-live="polite"></main>
+<section id="pane-cards" role="tabpanel" aria-labelledby="tab-cards">
+  <div class="filters">
+    <input id="q" type="search" placeholder="Search name or text…" autocomplete="off">
+    <select id="f-set"><option value="">All sets</option></select>
+    <select id="f-class"><option value="">All classes</option></select>
+    <select id="f-type"><option value="">All types</option></select>
+    <select id="f-rarity"><option value="">All rarities</option></select>
+    <label class="check"><input type="checkbox" id="f-staged"> Staged only</label>
+    <label class="check"><input type="checkbox" id="f-commented"> Commented only</label>
+    <span id="count" class="dim"></span>
+  </div>
+
+  <main id="grid" class="grid" aria-live="polite"></main>
+</section>
+
+<!-- The analytics panel, in an iframe on purpose. tooling/card-admin/styles.css and app.css
+     both style bare `header`, `h1` and `select` and both define :root custom properties of the
+     same names with different values — merging them means rewriting one of the two, and the
+     panel still has a standalone file:// mode that the rewrite would have to keep working.
+     A document boundary costs one element and cannot leak a rule in either direction.
+     Loaded lazily: /admin/data.js is a fresh rollup over the whole corpus, and paying for it
+     on every page load would slow the tab nobody opened. -->
+<section id="pane-corpus" role="tabpanel" aria-labelledby="tab-corpus" hidden>
+  <iframe id="admin-frame" class="admin-frame" title="Corpus rollup"></iframe>
+</section>
 
 <!-- Editor drawer -->
 <aside id="editor" class="drawer" hidden>
@@ -48,6 +67,18 @@
       </p>
       <pre id="ed-rules"></pre>
     </details>
+
+    <!-- Editor comments. A sidecar keyed on the card's numeric id, NOT a field on the row:
+         `_comment` parses but is dropped by the next Unity SaveAll, and a real field would
+         ship editor chatter to the client. See tooling/cardweb/comments.py. -->
+    <section class="comments">
+      <h3>Comments <span id="ed-comment-count" class="pill">0</span></h3>
+      <div id="ed-comments"></div>
+      <div class="comment-new">
+        <textarea id="ed-comment-text" rows="2" placeholder="Note for whoever edits this card next…"></textarea>
+        <button id="ed-comment-add" class="ghost">Add comment</button>
+      </div>
+    </section>
   </div>
   <div class="drawer-foot">
     <span id="ed-status" class="dim"></span>

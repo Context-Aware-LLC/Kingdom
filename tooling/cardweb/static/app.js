@@ -8,6 +8,7 @@
 const $ = (s, r = document) => r.querySelector(s);
 const state = {
   cards: [], options: {}, staged: new Map(),   // cardToken -> changed fields (display only)
+  comments: new Map(),                         // cardToken -> [comment]
   current: null, draft: null, digest: '',
 };
 
@@ -43,6 +44,7 @@ async function load() {
   fillSelect($('#f-rarity'), state.options.rarity);
 
   await refreshStaging();
+  await refreshComments();
   render();
 }
 
@@ -72,18 +74,33 @@ async function refreshStaging() {
   pill.classList.toggle('hot', n > 0);
 }
 
+async function refreshComments() {
+  // Like staging, the server resolves its own card ids to this run's tokens -- the sidecar is
+  // keyed on the permanent numeric id, which the browser is never given.
+  const doc = await api('/api/comments');
+  state.comments.clear();
+  for (const [token, list] of Object.entries(doc.comments || {})) {
+    state.comments.set(token, list);
+  }
+}
+
+const openComments = (token) =>
+  (state.comments.get(token) || []).filter((c) => !c.resolved).length;
+
 /* ---------- grid ---------- */
 function visible() {
   const q = $('#q').value.trim().toLowerCase();
   const fs = $('#f-set').value, fc = $('#f-class').value;
   const ft = $('#f-type').value, fr = $('#f-rarity').value;
   const onlyStaged = $('#f-staged').checked;
+  const onlyCommented = $('#f-commented').checked;
   return state.cards.filter((c) => {
     if (fs && c.setId !== fs) return false;
     if (fc && c.class !== fc) return false;
     if (ft && c.type !== ft) return false;
     if (fr && c.rarity !== fr) return false;
     if (onlyStaged && !state.staged.has(c.token)) return false;
+    if (onlyCommented && openComments(c.token) === 0) return false;
     if (q) {
       const hay = `${c.name} ${c.text || ''} ${c.flavorText || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
@@ -138,6 +155,17 @@ function render() {
     body.appendChild(tags);
     el.appendChild(body);
 
+    // Only OPEN comments earn a marker. A resolved one is a record, and a badge that never
+    // clears makes the badge mean "this card has ever been discussed", which is not actionable.
+    const open = openComments(c.token);
+    if (open) {
+      const badge = document.createElement('span');
+      badge.className = 'card-comments';
+      badge.textContent = open;
+      badge.title = `${open} open comment${open === 1 ? '' : 's'}`;
+      el.appendChild(badge);
+    }
+
     el.addEventListener('click', () => openEditor(c.token));
     grid.appendChild(el);
   }
@@ -167,6 +195,7 @@ function openEditor(token) {
   $('#ed-rules-wrap').hidden = rules.length === 0;
 
   buildForm(card);
+  renderComments(token);
   $('#ed-discard').hidden = !state.staged.has(token);
   $('#editor').hidden = false;
   $('#ed-status').textContent = '';
@@ -285,6 +314,125 @@ function markChanged() {
   $('#ed-status').textContent = n ? `${n} field${n === 1 ? '' : 's'} changed` : 'no changes';
 }
 
+/* ---------- comments ----------
+ * Every value here goes in through textContent, never innerHTML. Comment text is the one thing
+ * on this page a human typed freely, and the Unity authoring window renders the same bytes.
+ */
+function renderComments(token) {
+  const list = state.comments.get(token) || [];
+  const wrap = $('#ed-comments');
+  wrap.textContent = '';
+
+  const open = list.filter((c) => !c.resolved).length;
+  const pill = $('#ed-comment-count');
+  pill.textContent = open;
+  pill.classList.toggle('hot', open > 0);
+
+  if (!list.length) {
+    const p = document.createElement('p');
+    p.className = 'dim';
+    p.textContent = 'No comments on this card.';
+    wrap.appendChild(p);
+    return;
+  }
+
+  for (const c of list) {
+    const d = document.createElement('div');
+    d.className = 'comment' + (c.resolved ? ' resolved' : '');
+
+    const head = document.createElement('div');
+    head.className = 'comment-head';
+    const who = document.createElement('b');
+    who.textContent = c.author || 'unknown';
+    const when = document.createElement('span');
+    when.className = 'dim';
+    when.textContent = (c.at || '').replace('T', ' ').slice(0, 16);
+    head.appendChild(who);
+    head.appendChild(when);
+
+    const actions = document.createElement('span');
+    actions.className = 'comment-actions';
+    const res = document.createElement('button');
+    res.className = 'ghost tiny';
+    res.textContent = c.resolved ? 'Reopen' : 'Resolve';
+    res.addEventListener('click', () => commentAction('resolve', c, !c.resolved));
+    const del = document.createElement('button');
+    del.className = 'ghost tiny';
+    del.textContent = 'Delete';
+    del.addEventListener('click', () => commentAction('delete', c));
+    actions.appendChild(res);
+    actions.appendChild(del);
+    head.appendChild(actions);
+    d.appendChild(head);
+
+    const body = document.createElement('p');
+    body.className = 'comment-text';
+    body.textContent = c.text;
+    d.appendChild(body);
+    wrap.appendChild(d);
+  }
+}
+
+async function commentAction(op, comment, resolved) {
+  try {
+    await api(`/api/comments/${op}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: state.current, commentId: comment.id, resolved }),
+    });
+    await refreshComments();
+    renderComments(state.current);
+    render();
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+}
+
+$('#ed-comment-add').addEventListener('click', async () => {
+  const box = $('#ed-comment-text');
+  const text = box.value.trim();
+  if (!text) return;
+  try {
+    await api('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // No author field. The server takes it from the credential -- a byline off the request
+      // body is one anybody can forge, and the byline is the whole point of the field.
+      body: JSON.stringify({ token: state.current, text }),
+    });
+    box.value = '';
+    await refreshComments();
+    renderComments(state.current);
+    render();
+    toast('Comment added', 'good');
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+});
+
+/* ---------- tabs ---------- */
+let adminLoaded = false;
+function showTab(which) {
+  const cards = which === 'cards';
+  $('#pane-cards').hidden = !cards;
+  $('#pane-corpus').hidden = cards;
+  for (const [id, on] of [['#tab-cards', cards], ['#tab-corpus', !cards]]) {
+    $(id).classList.toggle('on', on);
+    $(id).setAttribute('aria-selected', String(on));
+  }
+  // The drawer belongs to the grid; leaving it up over the panel would let a Stage click land
+  // on a card the author can no longer see.
+  if (!cards && !$('#editor').hidden) $('#ed-close').click();
+  if (!cards && !adminLoaded) {
+    // Src is set on first reveal, not in the markup: /admin/data.js rolls up the whole corpus
+    // and there is no reason to pay for it on a page load that never leaves the grid.
+    $('#admin-frame').src = '/admin/';
+    adminLoaded = true;
+  }
+}
+$('#tab-cards').addEventListener('click', () => showTab('cards'));
+$('#tab-corpus').addEventListener('click', () => showTab('corpus'));
+
 /* ---------- actions ---------- */
 $('#ed-close').addEventListener('click', () => {
   $('#editor').hidden = true; state.current = null; render();
@@ -376,7 +524,8 @@ $('#modal').addEventListener('click', (e) => {
   if (e.target === $('#modal')) $('#modal').hidden = true;
 });
 
-for (const id of ['#q', '#f-set', '#f-class', '#f-type', '#f-rarity', '#f-staged']) {
+for (const id of ['#q', '#f-set', '#f-class', '#f-type', '#f-rarity', '#f-staged',
+  '#f-commented']) {
   $(id).addEventListener('input', render);
 }
 document.addEventListener('keydown', (e) => {

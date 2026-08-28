@@ -73,6 +73,14 @@ namespace Emberfall.Editor
         private Sprite _artPreviewSprite;
         private string _artPreviewPath;
 
+        // Editor comments from the web tool's sidecar. Cached for the same reason the art
+        // preview is: IMGUI repaints continuously and this is a file read. Refreshed on load and
+        // on demand — the file changes underneath this window whenever somebody pulls the
+        // deployed copy back, and nothing in Unity notices a write outside Assets/.
+        private IReadOnlyDictionary<int, List<CardComments.Comment>> _comments =
+            new Dictionary<int, List<CardComments.Comment>>();
+        private bool _showResolvedComments;
+
         // Selected-card-only AudioClip resolution. Like the art cache above, misses are cached too:
         // an absent clip must not trigger AssetDatabase.FindAssets on every IMGUI repaint.
         private readonly Dictionary<string, AudioClip> _soundClips =
@@ -139,6 +147,7 @@ namespace Emberfall.Editor
             }
             _dirtyIds.Clear();
             InvalidateAll();
+            ReloadComments();
             if (_selected >= _cards.Count) _selected = _cards.Count - 1;
         }
 
@@ -308,7 +317,18 @@ namespace Emberfall.Editor
                 // the same lossiness CardNameIndex reports rather than resolves. Search still
                 // matches the handle, so a duplicate name stays reachable by typing the handle
                 // even though the handle is no longer shown.
-                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark}", style))
+                // Only OPEN comments mark a row. A resolved one is a record, and a marker that
+                // never clears degrades to "this card has ever been discussed", which nobody can
+                // act on. Same rule the web grid's badge follows.
+                string commentMark = "";
+                if (_comments.TryGetValue(card.Id, out var notes))
+                {
+                    int open = 0;
+                    for (int n = 0; n < notes.Count; n++) if (!notes[n].Resolved) open++;
+                    if (open > 0) commentMark = $"  ({open})";
+                }
+
+                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark}{commentMark}", style))
                     _selected = i;
             }
             EditorGUILayout.EndScrollView();
@@ -489,8 +509,72 @@ namespace Emberfall.Editor
                 Invalidate(card.Id);
             }
 
+            // OUTSIDE both change checks, like DrawArtPreview above: every control in here is a
+            // button, and a clicked button sets GUI.changed — inside a check, expanding a comment
+            // list would mark the card unsaved.
+            DrawComments(card);
+
             EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        private void ReloadComments()
+        {
+            CardComments.ResetWarnings();
+            _comments = CardComments.Load();
+        }
+
+        /// <summary>
+        /// Editor comments from the web tool, read out of the sidecar and shown against the card
+        /// they were written on.
+        /// </summary>
+        /// <remarks>
+        /// READ-ONLY here on purpose. The comment is authored in the browser, and this window is
+        /// where the person who has to act on it works — that is the whole of what makes the
+        /// feature worth having. Writing them from both ends would need a merge, and the repo
+        /// copy and the deployed copy already need one (<c>comments.py merge</c>); adding a third
+        /// writer that cannot see either of the other two is how a note goes missing.
+        ///
+        /// <para>The file lives outside Assets/, so nothing in Unity notices when it changes —
+        /// hence the explicit Reload button rather than a watcher that would be wrong to trust.</para>
+        /// </remarks>
+        private void DrawComments(EditableCard card)
+        {
+            _comments.TryGetValue(card.Id, out var all);
+            int total = all?.Count ?? 0;
+            int open = 0;
+            for (int i = 0; i < total; i++) if (!all[i].Resolved) open++;
+
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(
+                open > 0 ? $"Comments ({open} open)" : "Comments", EditorStyles.boldLabel);
+            if (total > open)
+            {
+                _showResolvedComments = GUILayout.Toggle(
+                    _showResolvedComments, $"show {total - open} resolved",
+                    EditorStyles.miniButton, GUILayout.Width(120));
+            }
+            if (GUILayout.Button("Reload", EditorStyles.miniButton, GUILayout.Width(60)))
+                ReloadComments();
+            EditorGUILayout.EndHorizontal();
+
+            if (total == 0)
+            {
+                EditorGUILayout.LabelField(
+                    "none — written in the web tool (cards.outofcontext.to)", EditorStyles.miniLabel);
+                return;
+            }
+
+            foreach (var c in all)
+            {
+                if (c.Resolved && !_showResolvedComments) continue;
+                // Info rather than None so the block reads as content, and so a resolved one is
+                // visually distinct from an open one without a second style to maintain.
+                EditorGUILayout.HelpBox(
+                    $"{c.Author} · {c.At}{(c.Resolved ? " · resolved" : "")}\n{c.Text}",
+                    c.Resolved ? MessageType.None : MessageType.Info);
+            }
         }
 
         /// <summary>

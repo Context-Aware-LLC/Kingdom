@@ -44,9 +44,17 @@ tooling/data/*
 # with `*`, so anything not re-included here is simply absent from the build context and the
 # COPY silently produces an empty directory rather than an error.
 !tooling/cardweb/
-# ...but never someone's staged edits. They are in-flight author work, not corpus, and baking
-# them into an image would resurrect them on every deploy.
+# ...but never someone's staged edits or editor comments. Both are in-flight author work, not
+# corpus, and baking either into an image would resurrect it on every deploy. In production both
+# live on the volume (EMBERFALL_STAGING_DIR / EMBERFALL_COMMENTS_DIR), so the image needs neither.
 tooling/cardweb/staging/
+tooling/cardweb/comments/
+# The corpus analytics panel, served as the "Corpus" tab (deploy/cardweb/Dockerfile).
+!tooling/card-admin/
+# ...minus its generated data, which is 260 KB of a rollup the server recomputes per request off
+# the corpus it actually loaded. Shipping it would only make a stale copy reachable.
+tooling/card-admin/data.js
+tooling/card-admin/data.json
 # corpus.py imports art_file() from this module instead of re-deriving the art filename.
 !tooling/scripts/
 tooling/scripts/*
