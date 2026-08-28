@@ -95,7 +95,7 @@
         "win": [
           "You belong to me now.",
           "Down you go. Down you stay.",
-          "Sealed."
+          "Sealed. Rest where you fall."
         ],
         "lose": [
           "Even the keeper is kept.",
@@ -222,7 +222,7 @@
         ],
         "win": [
           "Unbroken.",
-          "You broke first.",
+          "You spent yourself on stone.",
           "The wall holds. It always holds."
         ],
         "lose": [
@@ -245,17 +245,17 @@
         "turn_start": [
           "Charge it up.",
           "Here it comes.",
-          "Crack!"
+          "Crack! That one's mine."
         ],
         "rope": [
-          "Lightning waits for nobody.",
+          "Lightning waits for no one.",
           "Move. Move!",
           "You are out of sky."
         ],
         "win": [
           "Blown clean away.",
           "Told you. Thunder.",
-          "The storm passes. You do not."
+          "The storm moves on. You stay down."
         ],
         "lose": [
           "The storm breaks up.",

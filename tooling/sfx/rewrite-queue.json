@@ -1,10 +1,4 @@
 {
   "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so every take of them is wrong. Keyed by canonical stem. Written by the Rewrite button; clear an entry by unflagging it there, or by hand once the line in voice-lines.json has been rewritten and regenerated.",
-  "needs_rewrite": {
-    "vo_gravekeep_win_3": {
-      "class": "GRAVEKEEP",
-      "moment": "win",
-      "text": "Sealed."
-    }
-  }
+  "needs_rewrite": {}
 }
