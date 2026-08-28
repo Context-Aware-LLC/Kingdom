@@ -6,6 +6,7 @@ using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Telemetry;
 
 namespace Emberfall.Net.Server
@@ -64,6 +65,7 @@ namespace Emberfall.Net.Server
         private readonly MatchSetup _setup;
         private readonly ITelemetrySink _telemetry;
         private readonly MatchAttribution _attribution;
+        private readonly IRankedMatchSink _rankedMatchSink;
         private readonly Seat[] _seats = new Seat[2];
 
         /// <summary>
@@ -104,7 +106,8 @@ namespace Emberfall.Net.Server
             ICardDatabase db, MatchSetup setup, IReplayStore replay,
             PlayerId p0, PlayerId p1,
             ITelemetrySink? telemetry = null, MatchAttribution? attribution = null,
-            string? p0Name = null, string? p1Name = null)
+            string? p0Name = null, string? p1Name = null,
+            IRankedMatchSink? rankedMatchSink = null)
         {
             _id = id;
             _seed = seed;
@@ -114,6 +117,7 @@ namespace Emberfall.Net.Server
             _setup = setup;
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
             _attribution = attribution ?? MatchAttribution.None;
+            _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
             _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!);
@@ -638,6 +642,25 @@ namespace Emberfall.Net.Server
             // explain it, and in its own Emit so a failure in either cannot cost the other.
             Emit(() => _telemetry.CardsSeen(new CardSeenEvent(
                 _id, NowUtc(), _attribution.Source, CardRows(outcome))));
+
+            // Ratings are a projection of the authoritative result, never client input. The sink
+            // rejects bot-fill, AI soak, self-play and unattributed matches before they can move it.
+            try
+            {
+                _rankedMatchSink.Record(new RankedMatchResult(
+                    _id,
+                    NowUtc(),
+                    _attribution.P0,
+                    _seats[0].DisplayName,
+                    _attribution.P1,
+                    _seats[1].DisplayName,
+                    outcome,
+                    _attribution.Source));
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[ranking] match {0} could not be queued: {1}", _id.Value, ex.Message);
+            }
 
             Ended = true;
             for (int seat = 0; seat < 2; seat++)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
@@ -35,6 +36,13 @@ namespace Emberfall.Presentation
         private VisualElement _root;
         private PlayerAccount _account;
         private LoadingOverlay _loading;
+
+        [SerializeField] private string leaderboardUrl = "https://emberfall.fly.dev/leaderboard?limit=50";
+        private VisualElement _leaderboardModal;
+        private ScrollView _leaderboardList;
+        private Label _leaderboardStatus;
+        private Label _leaderboardUpdated;
+        private CancellationTokenSource _leaderboardRequest;
 
         private Label _identityName;
         private VisualElement _identityShowcase;
@@ -82,6 +90,8 @@ namespace Emberfall.Presentation
             Wire("btn-collection", OnCollection);
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
+            Wire("btn-leaderboard-close", CloseLeaderboard);
+            BindLeaderboard();
 
             BindBuildStamp();
 
@@ -140,6 +150,9 @@ namespace Emberfall.Presentation
         /// that no longer exists.</summary>
         private void OnDisable()
         {
+            _leaderboardRequest?.Cancel();
+            _leaderboardRequest?.Dispose();
+            _leaderboardRequest = null;
             _signIn?.Close();
         }
 
@@ -524,7 +537,97 @@ namespace Emberfall.Presentation
             Go("Shop");
         }
 
-        // Leaderboards → no backend yet.
-        private void OnLeaderboards() => Debug.Log("[MainMenu] Leaderboards → coming soon. No backend yet.");
+        private void BindLeaderboard()
+        {
+            _leaderboardModal = _root.Q<VisualElement>("leaderboard-modal");
+            _leaderboardList = _root.Q<ScrollView>("leaderboard-list");
+            _leaderboardStatus = _root.Q<Label>("leaderboard-status");
+            _leaderboardUpdated = _root.Q<Label>("leaderboard-updated");
+        }
+
+        private void OnLeaderboards()
+        {
+            Show(_leaderboardModal);
+            _ = RefreshLeaderboardAsync();
+        }
+
+        private void CloseLeaderboard()
+        {
+            _leaderboardRequest?.Cancel();
+            Hide(_leaderboardModal);
+        }
+
+        private async System.Threading.Tasks.Task RefreshLeaderboardAsync()
+        {
+            _leaderboardRequest?.Cancel();
+            _leaderboardRequest?.Dispose();
+            _leaderboardRequest = new CancellationTokenSource();
+            CancellationToken token = _leaderboardRequest.Token;
+
+            _leaderboardList?.Clear();
+            SetLeaderboardStatus("Calling the keepers…", error: false, visible: true);
+            if (_leaderboardUpdated != null)
+                _leaderboardUpdated.text = "Ratings update after every eligible match.";
+
+            LeaderboardFetchResult result = await LeaderboardApi.FetchAsync(leaderboardUrl, token);
+            if (token.IsCancellationRequested) return;
+
+            if (!result.Ok)
+            {
+                SetLeaderboardStatus(
+                    "The ranked ledger is unavailable right now. Your matches are still safe.",
+                    error: true,
+                    visible: true);
+                return;
+            }
+
+            LeaderboardRow[] entries = result.Response.entries ?? Array.Empty<LeaderboardRow>();
+            if (entries.Length == 0)
+            {
+                SetLeaderboardStatus(
+                    "No ranked duels have been recorded yet. The first crown is waiting.",
+                    error: false,
+                    visible: true);
+                return;
+            }
+
+            SetLeaderboardStatus("", error: false, visible: false);
+            foreach (LeaderboardRow entry in entries)
+                _leaderboardList?.Add(BuildLeaderboardRow(entry));
+
+            if (_leaderboardUpdated != null
+                && DateTimeOffset.TryParse(result.Response.generatedAtUtc, out DateTimeOffset generated))
+                _leaderboardUpdated.text = $"Updated {generated.ToLocalTime():h:mm tt} · Elo · top {entries.Length}";
+        }
+
+        private static VisualElement BuildLeaderboardRow(LeaderboardRow entry)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mm-leaderboard__row");
+            if (entry.rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
+            if (entry.rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
+
+            row.Add(LabelFor($"#{entry.rank}", "mm-leaderboard__rank"));
+            row.Add(LabelFor(entry.displayName ?? "Unnamed Player", "mm-leaderboard__name"));
+            row.Add(LabelFor(entry.rating.ToString(), "mm-leaderboard__rating"));
+            row.Add(LabelFor($"{entry.wins} — {entry.losses} — {entry.draws}", "mm-leaderboard__record"));
+            return row;
+        }
+
+        private static Label LabelFor(string text, string className)
+        {
+            var label = new Label(text);
+            label.AddToClassList(className);
+            label.pickingMode = PickingMode.Ignore;
+            return label;
+        }
+
+        private void SetLeaderboardStatus(string message, bool error, bool visible)
+        {
+            if (_leaderboardStatus == null) return;
+            _leaderboardStatus.text = message;
+            _leaderboardStatus.EnableInClassList("mm-leaderboard__status--error", error);
+            _leaderboardStatus.EnableInClassList("mm-leaderboard__status--hidden", !visible);
+        }
     }
 }

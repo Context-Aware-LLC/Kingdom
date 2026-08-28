@@ -14,6 +14,7 @@ using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
+using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
 
@@ -49,6 +50,8 @@ namespace Emberfall.Net.Server.Transport
         private readonly IIdentityTokenVerifier? _tokenVerifier;
         private readonly IAccountStore? _accountStore;
         private readonly IBotPool? _botPool;
+        private readonly IRatingStore? _ratingStore;
+        private readonly IRankedMatchSink _rankedMatchSink;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
@@ -67,7 +70,8 @@ namespace Emberfall.Net.Server.Transport
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
             IReplayStore replay, ITelemetrySink? telemetry = null,
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
-            IBotPool? botPool = null)
+            IBotPool? botPool = null, IRatingStore? ratingStore = null,
+            IRankedMatchSink? rankedMatchSink = null)
             : this(
                 opts,
                 time,
@@ -79,7 +83,9 @@ namespace Emberfall.Net.Server.Transport
                 telemetry,
                 tokenVerifier,
                 accountStore,
-                botPool)
+                botPool,
+                ratingStore,
+                rankedMatchSink)
         {
         }
 
@@ -88,7 +94,8 @@ namespace Emberfall.Net.Server.Transport
             IReplayStore replay, IMatchmakingQueue matchmaking,
             Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null,
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
-            IBotPool? botPool = null)
+            IBotPool? botPool = null, IRatingStore? ratingStore = null,
+            IRankedMatchSink? rankedMatchSink = null)
         {
             _opts = opts;
             _time = time;
@@ -101,6 +108,8 @@ namespace Emberfall.Net.Server.Transport
             _tokenVerifier = tokenVerifier;
             _accountStore = accountStore;
             _botPool = botPool;
+            _ratingStore = ratingStore;
+            _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
         }
 
         public int LiveSessions
@@ -350,9 +359,12 @@ namespace Emberfall.Net.Server.Transport
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
             CancellationToken ct)
         {
+            int rating = _ratingStore is null
+                ? _ratingForAccount(account)
+                : await _ratingStore.GetRatingAsync(account, ct);
             var ticket = new MatchmakingTicket(
                 Guid.NewGuid().ToString("N"),
-                _ratingForAccount(account));
+                rating);
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var waiter = new WaitingPlayer(ticket, conn, account, displayName, submitted, mySeating, _time.NowMs);
 
@@ -549,7 +561,8 @@ namespace Emberfall.Net.Server.Transport
                 var session = new MatchSession(
                     id, seed, _opts, _time, _db, setup, _replay, p0, p1,
                     _telemetry, attribution,
-                    NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1));
+                    NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1),
+                    _rankedMatchSink);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {
