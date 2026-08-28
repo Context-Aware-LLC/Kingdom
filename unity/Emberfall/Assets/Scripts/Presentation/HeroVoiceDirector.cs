@@ -17,11 +17,11 @@ namespace Emberfall.Presentation
     /// <c>vo_&lt;class&gt;_&lt;moment&gt;_&lt;n&gt;</c> with the class lowercased, matching
     /// <c>tooling/sfx/voice-lines.json</c> and the files under <c>Assets/Sound/Voice/</c>.</para>
     ///
-    /// <para><b>Most classes have no audio yet</b>, and an Addressables key that does not resolve is
-    /// a warning rather than an exception. This director therefore runs its player with
-    /// <c>logMissing: false</c> — an unrecorded class must be silent, not a console full of
-    /// warnings every turn. RETIREMENT TRIGGER: when all eight classes are recorded and addressed,
-    /// flip that argument back to <c>true</c> so a genuinely missing clip is visible again.</para>
+    /// <para><b>All eight classes are recorded and addressed</b> (2026-08-28, 120 clips), so a key
+    /// that does not resolve is now a real fault and warns. It did not always: while seven classes
+    /// were silent the player ran with <c>logMissing: false</c>, because an unrecorded class must
+    /// be quiet rather than fill the console every turn. That trigger is discharged; do not put
+    /// the flag back without also recording why a whole class is expected to be missing.</para>
     ///
     /// <para><b>There is no MatchStarted event</b> — <see cref="GameEventKind"/> has no such member.
     /// The first <see cref="GameEventKind.TurnStarted"/> of the match stands in for it, latched, and
@@ -88,8 +88,7 @@ namespace Emberfall.Presentation
             _player = new AddressableSoundEffectPlayer(
                 source,
                 AddressableSoundEffectPlayer.HeroVoicePrefix,
-                owner: nameof(HeroVoiceDirector),
-                logMissing: false);
+                owner: nameof(HeroVoiceDirector));
         }
 
         public void OnStateUpdated(GameState state)
