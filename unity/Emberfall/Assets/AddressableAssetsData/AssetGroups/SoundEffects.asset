@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: SoundEffects
   m_GUID: f640b8728ebcb854fa823215a3537929
   m_SerializeEntries:
+  - m_GUID: 169b903189270224394a426c09d767c9
+    m_Address: sfx/nightveil_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c894f4c38e2a564b801646a03b4ce06
     m_Address: sfx/spell_cast_1
     m_ReadOnly: 0
@@ -25,13 +30,58 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46737e8978a6a3a49b99332ed5625c32
+    m_Address: sfx/stonewarden_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a8633394cadfe84a8e691cb75a75d77
+    m_Address: sfx/clockwright_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9fd95adcfb875bf44b8e15d4cd3897c4
+    m_Address: sfx/tempest_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2dd3aa0a86950549b57dea72bb03cc3
     m_Address: sfx/magic1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b28f569a6e59a0d4da32dae7589d5e33
+    m_Address: sfx/verdant_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bdb43032b27fe5f4ba0ab8f5142c5dab
     m_Address: sfx/door
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cdddb6ba2f7e0804ba3408bf7fe3d125
+    m_Address: sfx/emberward_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0693ca72a17e274690ea609683637aa
+    m_Address: sfx/hero_power_activate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e35fb285f3b93c54e99614f467798a58
+    m_Address: sfx/tidecaller_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e71e0b99413f0e741b22ea1fd00494af
+    m_Address: sfx/gravekeep_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f065b51c4c631c946bfd5ebb89af8482
+    m_Address: sfx/neutral_spell_cast
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
