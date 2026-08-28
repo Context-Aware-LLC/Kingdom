@@ -223,7 +223,9 @@ namespace Emberfall.Core.Tests.Presentation
         {
             string sfx = Path.Combine(
                 RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Sound", "SFX");
-            var wanted = new List<string> { "hero_power_activate" };
+            // spell_cast_1 is a pre-convention placeholder that nothing routes to; it is listed
+            // so the orphan check stays about NEW mistakes rather than re-reporting a known one.
+            var wanted = new List<string> { "hero_power_activate", "spell_cast_1" };
             foreach (CardClass cardClass in Enum.GetValues(typeof(CardClass)))
                 wanted.Add(cardClass.ToString().ToLowerInvariant() + "_spell_cast");
 
@@ -235,16 +237,25 @@ namespace Emberfall.Core.Tests.Presentation
                     if (Path.GetExtension(file) is ".wav" or ".mp3") present.Add(stem);
                 }
 
-            // Only stems claiming to BE a class cast are judged; a bespoke per-card clip is free
-            // to be named anything the C30 filename rule allows.
+            // Only stems claiming to BE a shared-library clip are judged; a bespoke per-card clip
+            // is free to be named anything the C30 filename rule allows.
+            //
+            // CONTAINS, not EndsWith. An EndsWith("_spell_cast") test passes every near-miss it
+            // most needs to catch, because the ways a stem goes wrong are overwhelmingly SUFFIXES:
+            // "tempest_spell_cast_" (a take-suffix stripper that left its separator behind, which
+            // is exactly how the whole phase-1 set promoted unusable on 2026-08-28) or
+            // "tempest_spell_cast__take2" (no stripping at all). Both END with something else and
+            // so read as "not a class cast at all" rather than as the broken class cast they are.
             var orphans = new List<string>();
             foreach (string stem in present)
-                if (stem.EndsWith("_spell_cast", StringComparison.Ordinal) && !wanted.Contains(stem))
+                if ((stem.Contains("spell_cast", StringComparison.Ordinal) ||
+                     stem.Contains("hero_power", StringComparison.Ordinal)) &&
+                    !wanted.Contains(stem))
                     orphans.Add(stem);
 
             var missing = new List<string>();
             foreach (string stem in wanted)
-                if (!present.Contains(stem)) missing.Add(stem);
+                if (stem != "spell_cast_1" && !present.Contains(stem)) missing.Add(stem);
 
             Assert.That(orphans, Is.Empty,
                 "Assets/Sound/SFX holds these class-cast clips that CardSoundCueRouter.DefaultSoundId "

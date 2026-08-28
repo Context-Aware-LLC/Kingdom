@@ -82,7 +82,13 @@ FOLDER = {
 }
 AUDIO_EXT = {".wav", ".mp3", ".ogg", ".opus"}
 
-TAKE_RE = re.compile(r"_take\d+$")
+# Liberal on purpose: dispatch_vo writes "<stem>_take2" and dispatch_sfx writes
+# "<stem>__take2", and a stripper that knows only one leaves the other's separator
+# behind. That failure is SILENT and total -- "tempest_spell_cast_" promotes happily,
+# reads as a normal filename in every listing, and resolves for nobody. Cost the whole
+# phase-1 SFX set on 2026-08-28. Strip both rather than making the two dispatchers agree:
+# their key formats are load-bearing elsewhere (existing_keys splits on "__take").
+TAKE_RE = re.compile(r"__?take\d+$")
 # A canonical stem and nothing else. This is the only validation between a client
 # string and a key written into rewrite-queue.json.
 STEM_RE = re.compile(r"^[a-z0-9][a-z0-9_]{0,79}$")
