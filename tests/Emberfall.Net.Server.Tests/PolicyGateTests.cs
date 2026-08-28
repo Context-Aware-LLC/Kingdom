@@ -30,6 +30,37 @@ namespace Emberfall.Net.Server.Tests
             Assert.That(h.Session.StateVersion, Is.EqualTo(versionBefore), "state must not move");
         }
 
+        /// <summary>
+        /// The complement of the test above, and the reason that one is not the whole story: an
+        /// intent MISSING from the allowlist is not a stricter server, it is a mechanic no client can
+        /// finish.
+        ///
+        /// <para><c>UnearthChoiceIntent</c> was absent. Because an open <c>PendingChoice</c> makes
+        /// <c>CommandProcessor.CanExecute</c> refuse every other intent — <c>EndTurnIntent</c>
+        /// included — casting 230 Gear Cache soft-locked the CASTER's own turn on every networked
+        /// client, human and bot, until the clock ran out. The reject that came back was
+        /// <c>UnknownIntent</c>, which reads as a malformed client and names nothing.</para>
+        ///
+        /// <para>Asserting only that it is not refused BY THE ALLOWLIST: with no choice actually
+        /// open the core answers <c>NoPendingChoice</c>, and that is the pass condition. Any other
+        /// reason would mean the gate under test is still the one talking.</para>
+        /// </summary>
+        [Test]
+        public void Client_Submitted_UnearthChoice_Passes_The_Allowlist()
+        {
+            var h = new SessionHarness();
+            h.ConfirmMulligans();
+            int active = h.Session.Host.State.ActivePlayer.Value == "p0" ? 0 : 1;
+            var activePlayer = active == 0 ? h.P0 : h.P1;
+
+            h.Post(active, h.Client(active).Intent(
+                new UnearthChoiceIntent(activePlayer, ChosenCardId: 1061, ChoiceSequence: 1UL), h.Id));
+
+            var reject = h.Conn(active).Last<RejectMsg>();
+            Assert.That(reject.Reason, Is.EqualTo(RejectReason.NoPendingChoice),
+                "the allowlist must let this through so the core can answer it");
+        }
+
         [Test]
         public void Out_Of_Turn_Intent_Is_Rejected_Before_The_Core_With_Resync_For_Stale_Clients()
         {

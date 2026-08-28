@@ -62,6 +62,19 @@ namespace Emberfall.Net.Server
     /// tag registry decides what DECODES; this decides what a client may SUBMIT. Load-bearing:
     /// CommandProcessor itself accepts AutoConfirmIntent, so this list is the only thing stopping
     /// a client from self-issuing system intents (RC F6).
+    ///
+    /// <para><b>An intent MISSING from this list is not a stricter server — it is a mechanic that
+    /// cannot be completed.</b> <see cref="UnearthChoiceIntent"/> was absent, and because a
+    /// <c>PendingChoice</c> makes <c>CommandProcessor.CanExecute</c> refuse every other intent —
+    /// <c>EndTurnIntent</c> included — the one card that opens a choice (230 Gear Cache) soft-locked
+    /// the CASTER's own turn for every networked client, bot and human alike, until the turn clock
+    /// ran out. Nothing named the allowlist: the reject that came back was
+    /// <c>UnknownIntent</c>, which reads as a malformed client.</para>
+    ///
+    /// <para>It belongs here rather than being kept out for safety. It is player-authored by design,
+    /// and <c>CommandProcessor.ValidateUnearthChoice</c> binds every field of it to the authoritative
+    /// offer — chooser, monotonic sequence, membership of the exact offered set, hand cap — which is
+    /// the mitigation VULN-001 §4 requires and already ships. This list was never the control.</para>
     /// </summary>
     public static class IntentAllowlist
     {
@@ -71,6 +84,7 @@ namespace Emberfall.Net.Server
             or HeroPowerIntent
             or EndTurnIntent
             or MulliganIntent
+            or UnearthChoiceIntent
             or ConcedeIntent;
 
         /// <summary>Turn-scoped intents get the out-of-turn pre-check + elevated bucket cost (§6.4).</summary>
@@ -78,6 +92,7 @@ namespace Emberfall.Net.Server
             is PlayCardIntent
             or AttackIntent
             or HeroPowerIntent
-            or EndTurnIntent;
+            or EndTurnIntent
+            or UnearthChoiceIntent;
     }
 }
