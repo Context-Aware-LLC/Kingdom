@@ -19,16 +19,16 @@ namespace Emberfall.Presentation
     /// added later, which is what the two-scene era proved: an authored component is a copy,
     /// and copies drift.</para>
     ///
-    /// <para>On a screen with no insets — the Editor, a desktop build, an emulator with the
-    /// bars hidden — <see cref="DeviceLayout.Solve"/> returns identity and this component sets
-    /// exactly the values already authored in the scene. It is a no-op until a device gives it
-    /// something to do, which is also why it must be tested on a device and not in the Editor.</para>
+    /// <para>The perspective camera keeps one authored angle and field of view on every device.
+    /// This component only retreats and translates that rig until the logical board bounds fit
+    /// inside the current safe area.</para>
     /// </summary>
     [RequireComponent(typeof(Camera))]
     public sealed class SafeAreaCamera : MonoBehaviour
     {
         private Camera _camera;
         private Vector3 _authoredPosition;
+        private bool _authoredOrthographic;
         private Rect _lastSafeArea;
         private int _lastWidth;
         private int _lastHeight;
@@ -38,6 +38,7 @@ namespace Emberfall.Presentation
         {
             _camera = GetComponent<Camera>();
             _authoredPosition = transform.position;
+            _authoredOrthographic = _camera.orthographic;
             Apply();
         }
 
@@ -64,17 +65,23 @@ namespace Emberfall.Presentation
 
             DeviceLayout.Solution s = DeviceLayout.Solve(_lastSafeArea, _lastWidth, _lastHeight);
 
-            _camera.orthographic = true;
-            _camera.orthographicSize = s.OrthoSize;
-            transform.position = new Vector3(
-                _authoredPosition.x + s.CentreOffset.x,
-                _authoredPosition.y + s.CentreOffset.y,
-                _authoredPosition.z);
-
-            // The backdrop is sized in world units, so zooming out uncovers its edges unless it
-            // grows with the camera. It is authored with bleed to aspect 2.2173 and crops at
-            // everything narrower, so scaling it by the same factor preserves that coverage.
-            BoardBackdrop.SetVisibleHeight(s.VisibleHeight);
+            BoardCameraRig.FramingSolution perspective = default;
+            if (_authoredOrthographic)
+            {
+                _camera.orthographic = true;
+                _camera.orthographicSize = s.OrthoSize;
+                transform.position = new Vector3(
+                    _authoredPosition.x + s.CentreOffset.x,
+                    _authoredPosition.y + s.CentreOffset.y,
+                    _authoredPosition.z);
+                BoardBackdrop.SetVisibleHeight(s.VisibleHeight);
+            }
+            else
+            {
+                perspective = BoardCameraRig.ApplySafeArea(
+                    _camera, _lastSafeArea, _lastWidth, _lastHeight);
+                BoardBackdrop.FitToCamera(_camera);
+            }
 
             // One line, once, naming the numbers a device run needs to report back. EF-062
             // establishes the aspect range and the inset BUDGET from the geometry; the actual
@@ -90,6 +97,16 @@ namespace Emberfall.Presentation
                     ? "ABOVE MaxAspect — bare edge past the backdrop bleed"
                     : "in range";
 
+            string cameraSolve = _authoredOrthographic
+                ? $"orthoSize {DeviceLayout.DesignHalfHeight:F2}->{s.OrthoSize:F4} "
+                  + $"offset ({s.CentreOffset.x:F4}, {s.CentreOffset.y:F4}) · "
+                  + $"card in hand {DeviceLayout.CardPixelWidth(_lastHeight, s.OrthoSize):F1}"
+                  + $"x{DeviceLayout.CardPixelHeight(_lastHeight, s.OrthoSize):F1} px"
+                : $"perspective fov {BoardCameraRig.FieldOfView:F1} retreat {perspective.Retreat:F4} "
+                  + $"localOffset ({perspective.CameraLocalOffset.x:F4}, "
+                  + $"{perspective.CameraLocalOffset.y:F4}, "
+                  + $"{perspective.CameraLocalOffset.z:F4})";
+
             Debug.Log(
                 $"[SafeAreaCamera] screen {_lastWidth}x{_lastHeight} aspect {aspect:F4} ({range}) · "
                 + $"safeArea x{_lastSafeArea.x:F0} y{_lastSafeArea.y:F0} "
@@ -98,10 +115,7 @@ namespace Emberfall.Presentation
                 + $"R{_lastWidth - _lastSafeArea.xMax:F0} "
                 + $"B{_lastSafeArea.y:F0} "
                 + $"T{_lastHeight - _lastSafeArea.yMax:F0} · "
-                + $"orthoSize {DeviceLayout.DesignHalfHeight:F2}->{s.OrthoSize:F4} "
-                + $"offset ({s.CentreOffset.x:F4}, {s.CentreOffset.y:F4}) · "
-                + $"card in hand {DeviceLayout.CardPixelWidth(_lastHeight, s.OrthoSize):F1}"
-                + $"x{DeviceLayout.CardPixelHeight(_lastHeight, s.OrthoSize):F1} px");
+                + cameraSolve);
         }
     }
 }

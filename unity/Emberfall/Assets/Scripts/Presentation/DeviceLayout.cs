@@ -3,14 +3,13 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// EF-062. The board is an orthographic world-space scene, which makes its on-screen
-    /// geometry exact arithmetic rather than a matter of taste. This is where that arithmetic
-    /// lives, and the only place a device-facing layout number may be written down.
+    /// EF-062. Defines the board's logical world-space bounds and the device-facing layout
+    /// budgets derived from them. The live perspective rig consumes these bounds; the original
+    /// orthographic safe-area solve remains as a deterministic reference and compatibility path.
     ///
-    /// <para>THE ONE FACT EVERYTHING ELSE FOLLOWS FROM: an orthographic camera fixes the
-    /// VERTICAL extent and lets width float with aspect. So the short edge alone sets scale —
-    /// every 1080p phone renders a byte-identical card no matter its aspect or its ppi — and
-    /// a wider aspect buys horizontal room rather than shrinking anything.</para>
+    /// <para>The stable fact is the logical design box: height 9.2 and width 15.76 world units.
+    /// Camera fitting may change projected scale, but gameplay anchors and clearance checks stay
+    /// expressed against that one box.</para>
     ///
     /// <para>RETIREMENT TRIGGER (NOR-358): if you unlock portrait autorotation
     /// (ProjectSettings.asset <c>allowedAutorotateToPortrait</c>), revisit all three
@@ -27,11 +26,8 @@ namespace Emberfall.Presentation
     public static class DeviceLayout
     {
         /// <summary>
-        /// Half the visible world height, and the authored orthographicSize of BoardCamera in
-        /// BoardNetworked.unity — the only board scene that ships since the local match path was
-        /// deleted (66ab8294). DeviceLayoutVerify asserts this constant and that scene agree; it
-        /// used to compare two scenes to each other, because a second copy of a board constant
-        /// has gone stale on this project before, and now there is only one copy to guard.
+        /// Half the logical board height. <see cref="BoardCameraRig"/> fits this bound rather than
+        /// relying on the legacy orthographic size serialized in BoardNetworked.unity.
         /// </summary>
         public const float DesignHalfHeight = 4.6f;
 

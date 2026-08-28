@@ -23,16 +23,17 @@ namespace Emberfall.Presentation
         // two are asserted equal by DeviceLayoutVerify.
         private const float VisibleHeight = 9.2f;
 
-        // Cards sit at z ≤ 0 stepping toward the camera (negative z); +5 is safely
-        // behind everything. The sprite is transparent-queue, so it depth-tests
-        // behind the opaque card bodies and the sorting order settles the rest.
-        private const float BehindZ = 5f;
+        // Cards sit at z <= 0 stepping toward the camera (negative z). The board art is the
+        // physical-looking surface immediately behind them, not a distant sky plate; +0.65 keeps
+        // it behind every live element while limiting perspective drift between art and anchors.
+        private const float BehindZ = 0.65f;
         private const int SortOrder = -1000;
 
         // The live plate, so SetVisibleHeight can reach it. A destroyed GameObject compares
         // equal to null under Unity's backdraft, so a scene unload clears this on its own and a
         // second Create simply replaces it.
         private static Transform s_instance;
+        private static SpriteRenderer s_renderer;
 
         /// <summary>
         /// Rescale the plate to span <paramref name="visibleHeight"/> world units, matching
@@ -44,6 +45,50 @@ namespace Emberfall.Presentation
             if (s_instance == null || visibleHeight <= 0f) return;
             float k = visibleHeight / VisibleHeight;
             s_instance.localScale = new Vector3(k, k, 1f);
+        }
+
+        /// <summary>
+        /// Size the board-art plane to cover the full perspective viewport. Safe-area fitting may
+        /// retreat or offset the camera, so a fixed world-size sprite can otherwise expose an edge.
+        /// A uniform cover scale preserves the art's aspect ratio and spends any excess as crop.
+        /// </summary>
+        public static void FitToCamera(Camera camera)
+        {
+            if (s_instance == null || s_renderer == null || s_renderer.sprite == null || camera == null)
+                return;
+            if (camera.orthographic)
+            {
+                SetVisibleHeight(camera.orthographicSize * 2f);
+                return;
+            }
+
+            var plane = new Plane(Vector3.forward, new Vector3(0f, 0f, BehindZ));
+            float minX = float.PositiveInfinity;
+            float maxX = float.NegativeInfinity;
+            float minY = float.PositiveInfinity;
+            float maxY = float.NegativeInfinity;
+
+            foreach (Vector2 corner in new[]
+                     {
+                         new Vector2(0f, 0f), new Vector2(1f, 0f),
+                         new Vector2(0f, 1f), new Vector2(1f, 1f)
+                     })
+            {
+                Ray ray = camera.ViewportPointToRay(new Vector3(corner.x, corner.y, 0f));
+                if (!plane.Raycast(ray, out float distance)) return;
+                Vector3 point = ray.GetPoint(distance);
+                minX = Mathf.Min(minX, point.x);
+                maxX = Mathf.Max(maxX, point.x);
+                minY = Mathf.Min(minY, point.y);
+                maxY = Mathf.Max(maxY, point.y);
+            }
+
+            Vector2 spriteSize = s_renderer.sprite.bounds.size;
+            float cover = Mathf.Max((maxX - minX) / spriteSize.x, (maxY - minY) / spriteSize.y);
+            s_instance.SetPositionAndRotation(
+                new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, BehindZ),
+                Quaternion.identity);
+            s_instance.localScale = new Vector3(cover, cover, 1f);
         }
 
         public static void Create(Transform parent)
@@ -59,6 +104,7 @@ namespace Emberfall.Presentation
             // SpriteRenderer, not a quad primitive: the default sprite material
             // honors alpha and survives URP builds (LoadingOverlay precedent).
             var sr = go.AddComponent<SpriteRenderer>();
+            s_renderer = sr;
             sr.sprite = Sprite.Create(tex,
                 new Rect(0, 0, tex.width, tex.height),
                 new Vector2(0.5f, 0.5f), pixelsPerUnit: tex.height / VisibleHeight);

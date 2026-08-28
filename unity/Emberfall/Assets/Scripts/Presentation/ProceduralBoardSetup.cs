@@ -13,7 +13,7 @@ namespace Emberfall.Presentation
     // board row). §1.1 allocates SPANS on x; the element centres here are those spans minus
     // each element's own width, and the y column is §1.3 — the vertical §1.1 never wrote.
     //
-    // Layout (orthographic camera size 4.6, so the screen edges are y ±4.6, world units):
+    // Layout (logical board bounds are y ±4.6; BoardCameraRig fits them in perspective):
     //   Board rows:  y = ±1.39  (7 slots, x = -4.50..+4.50 at 1.50 spacing) — outside §1.1
     //   Hand rows:   fanned by HandFanLayout — fixed 5-unit footprint, count-dependent pitch
     //   The hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
@@ -121,6 +121,7 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            BoardCameraRig.Configure(cam);
             if (cam.GetComponent<SafeAreaCamera>() == null)
                 cam.gameObject.AddComponent<SafeAreaCamera>();
         }

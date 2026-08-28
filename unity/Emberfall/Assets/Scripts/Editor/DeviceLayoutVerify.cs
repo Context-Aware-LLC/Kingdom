@@ -1,5 +1,4 @@
 using System.IO;
-using System.Text.RegularExpressions;
 using Emberfall.Presentation;
 using UnityEditor;
 using UnityEngine;
@@ -8,9 +7,8 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// EF-062. Holds <see cref="DeviceLayout"/>'s constants against the three things outside
-    /// its own assembly that can silently falsify them: the authored orthographicSize in the
-    /// board scene, the real pixel size of the backdrop plate, and the layout constants the
-    /// board actually builds from.
+    /// its own assembly that can silently falsify them: the perspective camera fit, the real
+    /// pixel size of the backdrop plate, and the layout constants the board actually builds from.
     ///
     /// <para>WHY A CHECK AND NOT A COMMENT. Every number this file guards is a claim about the
     /// state of the world with a change that will expire it — moving the hero plate outboard,
@@ -18,13 +16,9 @@ namespace Emberfall.Editor
     /// project's rule is that such a claim carries a retirement trigger on the line that
     /// falsifies it; this is that trigger made executable, so the commit that breaks the 16:9
     /// floor fails the harness rather than quietly shipping a clipped hero.</para>
-    ///
-    /// <para>Reads the scene as TEXT rather than opening it. Opening a scene in
-    /// -nographics batchmode mutates the project and the harness is a read-only check.</para>
     /// </summary>
     public static class DeviceLayoutVerify
     {
-        private const string NetworkedScene = "Assets/Scenes/BoardNetworked.unity";
         private const string BackdropTex = "Assets/Art/Backgrounds/BoardPlate_Master.png";
 
         [MenuItem("Emberfall/Verify Device Layout (EF-062)")]
@@ -36,53 +30,82 @@ namespace Emberfall.Editor
                 Debug.LogError("[DeviceLayoutVerify] DeviceLayout.SelfCheck FAILED — see the "
                                + "FAIL lines above.");
 
-            ok &= CheckSceneOrtho(NetworkedScene);
+            ok &= CheckPerspectiveRig();
             ok &= CheckBackdropSize();
 
             Debug.Log($"[DeviceLayoutVerify] {(ok ? "PASS" : "FAIL")} — supported landscape "
                       + $"aspect {DeviceLayout.MinAspect:F5}..{DeviceLayout.MaxAspect:F5}, "
-                      + $"card in hand {DeviceLayout.HandCardPixelWidth(1080, DeviceLayout.DesignHalfHeight):F1}"
-                      + $"x{DeviceLayout.HandCardPixelHeight(1080, DeviceLayout.DesignHalfHeight):F1} px "
-                      + "at 1080p.");
+                      + "perspective board bounds remain inside every tested safe area.");
         }
 
-        private static bool CheckSceneOrtho(string scenePath)
+        private static bool CheckPerspectiveRig()
         {
-            string full = Path.Combine(Directory.GetParent(Application.dataPath).FullName, scenePath);
-            if (!File.Exists(full))
+            var go = new GameObject("DeviceLayoutPerspectiveVerify");
+            var camera = go.AddComponent<Camera>();
+            bool ok = true;
+
+            try
             {
-                Debug.LogError($"[DeviceLayoutVerify] scene not found: {scenePath}");
-                return false;
+                BoardCameraRig.Configure(camera);
+                ok &= !camera.orthographic;
+                ok &= Mathf.Abs(camera.fieldOfView - BoardCameraRig.FieldOfView) < 0.0001f;
+                ok &= CheckPerspectiveCase(camera, "1920x1080 full", 1920, 1080,
+                    new Rect(0f, 0f, 1920f, 1080f));
+                ok &= CheckPerspectiveCase(camera, "2400x1080 full", 2400, 1080,
+                    new Rect(0f, 0f, 2400f, 1080f));
+                ok &= CheckPerspectiveCase(camera, "2400x1080 bottom inset 132", 2400, 1080,
+                    new Rect(0f, 132f, 2400f, 948f));
+                ok &= CheckPerspectiveCase(camera, "2400x1080 left cutout 96", 2400, 1080,
+                    new Rect(96f, 0f, 2304f, 1080f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
             }
 
-            // First match wins. The board scene holds exactly one camera today, and if a
-            // second is ever added this reads the first one in the file — which fails loudly
-            // and sends someone to look, rather than passing on the wrong camera.
-            var m = Regex.Match(File.ReadAllText(full), @"^\s*orthographic size:\s*([\d.]+)\s*$",
-                                RegexOptions.Multiline);
-            if (!m.Success)
+            if (!ok)
+                Debug.LogError("[DeviceLayoutVerify] perspective camera rig failed its safe-area fit.");
+            else
+                Debug.Log("[DeviceLayoutVerify]       ok    perspective camera rig fits all cases");
+            return ok;
+        }
+
+        private static bool CheckPerspectiveCase(
+            Camera camera,
+            string label,
+            int width,
+            int height,
+            Rect safeArea)
+        {
+            camera.aspect = (float)width / height;
+            BoardCameraRig.FramingSolution solution = BoardCameraRig.ApplySafeArea(
+                camera, safeArea, width, height);
+
+            float safeXMin = safeArea.xMin / width;
+            float safeXMax = safeArea.xMax / width;
+            float safeYMin = safeArea.yMin / height;
+            float safeYMax = safeArea.yMax / height;
+            float toleranceX = 0.5f / width;
+            float toleranceY = 0.5f / height;
+            bool ok = true;
+            foreach (float z in new[] { BoardCameraRig.DesignFrontZ, BoardCameraRig.DesignBackZ })
+            foreach (float y in new[] { -DeviceLayout.DesignHalfHeight, DeviceLayout.DesignHalfHeight })
+            foreach (float x in new[] { -DeviceLayout.DesignHalfWidth, DeviceLayout.DesignHalfWidth })
             {
-                Debug.LogError($"[DeviceLayoutVerify] no 'orthographic size:' in {scenePath} — "
-                               + "the board camera is not orthographic, or the scene format "
-                               + "changed. DeviceLayout's entire model assumes an ortho camera.");
-                return false;
+                Vector3 viewport = camera.WorldToViewportPoint(new Vector3(x, y, z));
+                ok &= viewport.z > 0f
+                      && viewport.x >= safeXMin - toleranceX
+                      && viewport.x <= safeXMax + toleranceX
+                      && viewport.y >= safeYMin - toleranceY
+                      && viewport.y <= safeYMax + toleranceY;
             }
 
-            float authored = float.Parse(m.Groups[1].Value,
-                                         System.Globalization.CultureInfo.InvariantCulture);
-            if (Mathf.Abs(authored - DeviceLayout.DesignHalfHeight) > 0.0001f)
-            {
-                Debug.LogError($"[DeviceLayoutVerify] {scenePath} authors orthographic size "
-                               + $"{authored} but DeviceLayout.DesignHalfHeight is "
-                               + $"{DeviceLayout.DesignHalfHeight}. Every pixel figure in the "
-                               + "device-layout spec is derived from that number — change both "
-                               + "or neither.");
-                return false;
-            }
-
-            Debug.Log($"[DeviceLayoutVerify]       ok    {scenePath} orthographic size "
-                      + $"{authored} == DesignHalfHeight");
-            return true;
+            Debug.Log($"[DeviceLayoutVerify]       {(ok ? "ok" : "FAIL")}  {label} · "
+                      + $"retreat {solution.Retreat:F4} · local offset "
+                      + $"({solution.CameraLocalOffset.x:F4}, "
+                      + $"{solution.CameraLocalOffset.y:F4}, "
+                      + $"{solution.CameraLocalOffset.z:F4})");
+            return ok;
         }
 
         private static bool CheckBackdropSize()
