@@ -20,6 +20,17 @@ WHAT IT DOES
                take costs credits and a rejected take is often the better one heard again
                later, so the X is reversible by design -- drag it back out.
 
+      REWRITE  Flags the LINE, not a take: every take of it is wrong because the words are
+               wrong. Writes tooling/sfx/rewrite-queue.json and pins the line to a section at
+               the TOP of the page. Reject is for a bad read of a good line; rewrite is for a
+               line no read can save. Flagging is a toggle and touches no audio.
+
+WHY THE QUEUE IS A FILE AND NOT A PAGE STATE
+    A first pass through 240 clips is long, and the flags have to survive the page being
+    closed, the server being restarted, and the session that acts on them being a different
+    one from the session that made them. The file is committed for the same reason: the
+    rewrite list is work, not scratch.
+
 WHAT IT DELIBERATELY DOES NOT DO
     Delete anything, write a card-data file, or touch Addressables. Promotion puts a file on
     disk; the Editor still has to run Emberfall/Addressables/Setup Groups + Migrate Card Data
@@ -47,6 +58,8 @@ import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LINES_FILE = pathlib.Path(__file__).resolve().parent / "voice-lines.json"
+# Committed, not gitignored: a flag raised in one session is acted on in another.
+QUEUE_FILE = pathlib.Path(__file__).resolve().parent / "rewrite-queue.json"
 
 VOICE_TAKES = ROOT / "art-pipeline" / "sfx" / "voice"
 VOICE_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
@@ -63,6 +76,9 @@ FOLDER = {
 AUDIO_EXT = {".wav", ".mp3", ".ogg", ".opus"}
 
 TAKE_RE = re.compile(r"_take\d+$")
+# A canonical stem and nothing else. This is the only validation between a client
+# string and a key written into rewrite-queue.json.
+STEM_RE = re.compile(r"^[a-z0-9][a-z0-9_]{0,79}$")
 
 
 def canonical_stem(stem: str) -> str:
@@ -98,6 +114,28 @@ def load_lines():
             for i, text in enumerate(lines, 1):
                 text_by_stem["vo_%s_%s_%d" % (cls.lower(), moment, i)] = (cls, moment, text)
     return text_by_stem, voice_by_class
+
+
+def load_queue() -> dict:
+    """stem -> {class, moment, text}. A missing or corrupt file is an EMPTY queue, never fatal:
+    losing the flags is annoying, taking the whole preview page down over them is worse."""
+    try:
+        data = json.loads(QUEUE_FILE.read_text(encoding="utf-8"))
+        return data.get("needs_rewrite", {}) if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def save_queue(queue: dict) -> None:
+    QUEUE_FILE.write_text(
+        json.dumps({
+            "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so "
+                      "every take of them is wrong. Keyed by canonical stem. Written by the "
+                      "Rewrite button; clear an entry by unflagging it there, or by hand once the "
+                      "line in voice-lines.json has been rewritten and regenerated.",
+            "needs_rewrite": dict(sorted(queue.items())),
+        }, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8")
 
 
 def scan():
@@ -168,12 +206,23 @@ PAGE_HEAD = """<!doctype html>
  audio { height: 30px; }
  button { font: inherit; font-size: 13px; padding: 2px 9px; border-radius: 6px; cursor: pointer; }
  .x { padding: 2px 7px; }
+ .rw { border: 1px solid; border-radius: 10px; padding: 10px 14px; margin: 0 0 8px;
+       background: color-mix(in srgb, Canvas 92%, orange); }
+ .rw > summary { font-size: 14px; font-weight: 600; cursor: pointer; }
+ .rw-row { display: flex; align-items: baseline; gap: 10px; padding: 5px 0 4px;
+           border-top: 1px solid color-mix(in srgb, CanvasText 20%, transparent); }
+ .rw-row:first-child { border-top: 0; }
+ .rw-row .text { flex: 1; }
+ .rw-empty { opacity: .6; font-size: 13px; padding: 5px 0 0; }
+ .flag { padding: 2px 8px; }
+ .flag.on { font-weight: 700; border-width: 2px; }
  #toast { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 24px;
           background: Canvas; border-top: 1px solid; font-size: 13px; }
 </style>
 <h1>Emberfall sound preview</h1>
 <p class="sub">Promote copies the clip into the Unity tree under its canonical stem.
-X moves it to <code>_rejected/</code> &mdash; nothing is deleted.</p>
+X moves it to <code>_rejected/</code> &mdash; nothing is deleted.
+Rewrite flags the LINE (all its takes) and pins it to the top &mdash; for words no read can save.</p>
 """
 
 PAGE_TAIL = """
@@ -195,15 +244,64 @@ async function act(kind, path, el) {
     tag.textContent = "  \\u2713 promoted \\u2192 " + d.dest;
   }
 }
+
+// The pinned list is rebuilt from RW on every toggle rather than patched in place: one
+// rendering path means the section cannot drift from the file the server just wrote.
+function drawRewrites() {
+  const box = document.getElementById("rw-list");
+  const stems = Object.keys(RW).sort();
+  document.getElementById("rw-count").textContent = stems.length;
+  if (!stems.length) {
+    box.innerHTML = '<div class="rw-empty">Nothing flagged. Rewrite is for a line whose WORDS '
+      + 'are wrong; X is for a bad read of a good line.</div>';
+    return;
+  }
+  box.innerHTML = stems.map(function (k) {
+    const e = RW[k] || {};
+    return '<div class="rw-row"><span class="stem">' + k + '</span>'
+         + '<span class="text">' + (e.text || "") + '</span>'
+         + '<button onclick=\'flag(' + JSON.stringify(k) + ')\'>unflag</button>'
+         + '</div>';
+  }).join("");
+}
+
+async function flag(stem, cls, moment, text) {
+  const r = await fetch("/flag", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({stem, on: !(stem in RW), cls, moment, text})
+  });
+  const d = await r.json();
+  document.getElementById("toast").textContent = d.message;
+  if (!d.ok) return;
+  RW = d.queue;
+  drawRewrites();
+  const b = document.getElementById("flag-" + stem);
+  if (b) {
+    const isOn = stem in RW;
+    b.classList.toggle("on", isOn);
+    b.textContent = isOn ? "Flagged ↑" : "Rewrite";
+  }
+}
+drawRewrites();
 </script>
 """
 
 
+def rewrite_box(queue: dict) -> str:
+    """The pinned section. Rendered server-side AND rebuilt client-side from the same JSON the
+    /flag endpoint returns, so a toggle never needs a page reload to stay honest."""
+    return ('<details class="rw" open><summary>Needs rewrite '
+            '(<span id="rw-count">%d</span>)</summary><div id="rw-list"></div></details>'
+            '<script>var RW = %s;</script>' % (len(queue), json.dumps(queue)))
+
+
 def render(groups) -> bytes:
-    out = [PAGE_HEAD]
+    queue = load_queue()
+    out = [PAGE_HEAD, rewrite_box(queue)]
     if not groups:
         out.append("<p>No candidate clips found under <code>art-pipeline/sfx/</code>.</p>")
     for cls in sorted(groups):
+        cls_name = cls
         g = groups[cls]
         n = sum(len(l["takes"]) for sub in g["subs"].values() for l in sub.values())
         out.append('<details class="cls" open><summary>%s <span class="voice">%s &middot; %d clips'
@@ -218,10 +316,17 @@ def render(groups) -> bytes:
                     '<button class="x" onclick=\'act("reject",%s,this)\'>&times;</button></div>'
                     % (urllib.parse.quote(t), json.dumps(t), json.dumps(t))
                     for t in line["takes"])
+                flagged = canon in queue
+                flag = ('<button class="flag%s" id="flag-%s" onclick=\'flag(%s,%s,%s,%s)\'>'
+                        '%s</button>'
+                        % (" on" if flagged else "", html.escape(canon), json.dumps(canon),
+                           json.dumps(cls_name), json.dumps(sub), json.dumps(line["text"] or ""),
+                           "Flagged &#8593;" if flagged else "Rewrite"))
                 out.append(
                     '<div class="line"><div class="text">%s</div>'
-                    '<div class="stem">%s%s</div><div class="takes">%s</div></div>'
-                    % (html.escape(line["text"] or "&nbsp;"), html.escape(canon), done, takes))
+                    '<div class="stem">%s%s</div><div class="takes">%s%s</div></div>'
+                    % (html.escape(line["text"] or "&nbsp;"), html.escape(canon), done, takes,
+                       flag))
         out.append("</details>")
     out.append(PAGE_TAIL)
     return "".join(out).encode("utf-8")
@@ -282,6 +387,29 @@ class Handler(http.server.BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(n) or b"{}")
         except Exception:
             self._json(400, {"ok": False, "message": "bad request body"})
+            return
+
+        # /flag acts on a LINE (a canonical stem), not on a file, so it never goes through the
+        # path resolver below -- there is no path to resolve. The stem is still validated: it is
+        # written into a json file, and an unchecked one would be a write primitive.
+        if parts.path == "/flag":
+            stem = str(payload.get("stem") or "")
+            if not STEM_RE.match(stem):
+                self._json(400, {"ok": False, "message": "not a valid clip stem, refused"})
+                return
+            queue = load_queue()
+            if payload.get("on"):
+                queue[stem] = {
+                    "class": str(payload.get("cls") or ""),
+                    "moment": str(payload.get("moment") or ""),
+                    "text": str(payload.get("text") or ""),
+                }
+                msg = "Flagged %s for rewrite -- pinned to the top. No audio touched." % stem
+            else:
+                queue.pop(stem, None)
+                msg = "Unflagged %s." % stem
+            save_queue(queue)
+            self._json(200, {"ok": True, "queue": queue, "message": msg})
             return
 
         src = self._resolve(payload.get("path"))
