@@ -80,12 +80,12 @@ namespace Emberfall.Presentation
                     {
                         if (playedDefinition.Type == CardType.SPELL)
                         {
-                            Append(sounds, playedDefinition, Trigger.ON_CAST);
+                            AppendActor(sounds, playedDefinition, Trigger.ON_CAST);
                             AppendObservers(sounds, Trigger.ON_SPELL_CAST);
                         }
                         else
                         {
-                            Append(sounds, playedDefinition, Trigger.ON_PLAY);
+                            AppendActor(sounds, playedDefinition, Trigger.ON_PLAY);
                             if (playedDefinition.Type == CardType.MINION)
                                 AppendObservers(sounds, Trigger.ON_FRIENDLY_SUMMON,
                                     played.Controller, played.Id);
@@ -101,27 +101,27 @@ namespace Emberfall.Presentation
                                 ? prior
                                 : 0);
                         if (weaponId > 0 && _database.TryGet(weaponId, out CardDefinition weapon))
-                            Append(sounds, weapon, Trigger.ON_PLAY);
+                            AppendActor(sounds, weapon, Trigger.ON_PLAY);
                     }
                     break;
 
                 case GameEventKind.HeroPowerUsed:
                     if (TryHero(matchEvent.Source, out HeroSnapshot powerHero) &&
                         _database.TryGet(powerHero.HeroPowerDefinitionId, out CardDefinition power))
-                        Append(sounds, power, Trigger.ON_CAST);
+                        AppendActor(sounds, power, Trigger.ON_CAST);
                     break;
 
                 case GameEventKind.AttackDeclared:
                     if (TryCard(matchEvent.Source, out CardSnapshot attacker) && !attacker.IsSilenced &&
                         _database.TryGet(attacker.DefinitionId, out CardDefinition attackerDefinition))
                     {
-                        Append(sounds, attackerDefinition, Trigger.ON_ATTACK);
+                        AppendActor(sounds, attackerDefinition, Trigger.ON_ATTACK);
                     }
                     else if (TryHero(matchEvent.Source, out HeroSnapshot attackHero) &&
                              _lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out int weaponId) &&
                              _database.TryGet(weaponId, out CardDefinition attackingWeapon))
                     {
-                        Append(sounds, attackingWeapon, Trigger.ON_ATTACK);
+                        AppendActor(sounds, attackingWeapon, Trigger.ON_ATTACK);
                     }
                     break;
 
@@ -158,7 +158,7 @@ namespace Emberfall.Presentation
         {
             if (!TryCard(instance, out CardSnapshot card) || card.IsSilenced) return;
             if (_database.TryGet(card.DefinitionId, out CardDefinition definition))
-                Append(sounds, definition, trigger);
+                AppendActor(sounds, definition, trigger);
         }
 
         private void AppendTurnObservers(List<string> sounds, Trigger trigger, InstanceId? heroId)
@@ -189,6 +189,62 @@ namespace Emberfall.Presentation
                     continue;
                 if (_database.TryGet(carrier.DefinitionId, out CardDefinition definition))
                     Append(sounds, definition, trigger);
+            }
+        }
+
+        /// <summary>
+        /// A sound for the card that just ACTED, falling back to the shared library when the card
+        /// authored no row for this trigger. Only the actor gets a fallback: the observer paths
+        /// (<see cref="AppendObserverSide"/>, <see cref="AppendTurnObservers"/>) call
+        /// <see cref="Append"/> directly and must keep doing so, because they run once per carrier
+        /// on the board and a defaulted sound there is one clip per minion, not one per event.
+        /// </summary>
+        private static void AppendActor(List<string> sounds, CardDefinition definition, Trigger trigger)
+        {
+            int before = sounds.Count;
+            Append(sounds, definition, trigger);
+            if (sounds.Count > before) return;   // an authored row always wins over the default
+            string fallback = DefaultSoundId(definition, trigger);
+            if (!string.IsNullOrEmpty(fallback)) sounds.Add(fallback);
+        }
+
+        /// <summary>
+        /// The shared-library default for a (type, trigger) pair, or an EMPTY STRING where the
+        /// library has nothing — empty rather than null so the file needs no nullable annotation:
+        /// the test project compiles it with `Nullable` on and Unity compiles it without, and a
+        /// `string?` that satisfies one is a syntax error waiting in the other. This is why <c>soundEffects[]</c> is empty on almost every card: a row is for
+        /// a card that wants something OTHER than its class's sound, not the way a card gets one.
+        /// </summary>
+        /// <remarks>
+        /// <para><b>Only phase 1 of <c>tooling/sfx/sound-library.md</c> is here</b> — the nine
+        /// class casts and the hero power. The phase-2 stems (summons by art archetype, attacks,
+        /// deaths, weapons) are deliberately ABSENT rather than written ahead: a default naming a
+        /// clip that does not exist is silence plus an Addressables warning on every such event,
+        /// which reads exactly like a broken router.</para>
+        ///
+        /// <para><b>The class token is the enum member lowercased, and there is no name map on
+        /// purpose.</b> <c>HeroVoiceDirector</c> derives <c>vo_&lt;class&gt;_&lt;moment&gt;_&lt;n&gt;</c>
+        /// the same way. A second, shorter vocabulary for the same eight classes buys nothing and
+        /// costs a silent miss — an unresolved address is a warning at most and the call site
+        /// still looks correct.</para>
+        ///
+        /// <para>RETIREMENT TRIGGER: adding a phase-2 clip means adding its case HERE, in the same
+        /// commit that lands the file under <c>Assets/Sound/SFX/</c> — and dropping the phase-1
+        /// caveat above once the table is complete.</para>
+        /// </remarks>
+        private static string DefaultSoundId(CardDefinition definition, Trigger trigger)
+        {
+            if (trigger != Trigger.ON_CAST) return string.Empty;
+            switch (definition.Type)
+            {
+                case CardType.SPELL:
+                    return definition.Class.ToString().ToLowerInvariant() + "_spell_cast";
+                case CardType.HERO_POWER:
+                    // One clip for all eight powers, per the sheet — the class already announces
+                    // itself through the cast sound, and a power fires far more often than a spell.
+                    return "hero_power_activate";
+                default:
+                    return string.Empty;
             }
         }
 

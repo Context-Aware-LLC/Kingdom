@@ -26,8 +26,8 @@ or cares whether a clip was generated or picked.
 Per Sam, 2026-08-27: the nine class casts plus the hero power. They cover 89 cards, they
 are the sounds that tell a player which class just acted, and they need no art judgement.
 
-`ember_spell_cast` · `tide_spell_cast` · `verdant_spell_cast` · `grave_spell_cast` ·
-`night_spell_cast` · `storm_spell_cast` · `clock_spell_cast` · `warden_spell_cast` ·
+`emberward_spell_cast` · `tidecaller_spell_cast` · `verdant_spell_cast` · `gravekeep_spell_cast` ·
+`nightveil_spell_cast` · `tempest_spell_cast` · `clockwright_spell_cast` · `stonewarden_spell_cast` ·
 `neutral_spell_cast` · `hero_power_activate`
 
 Everything below is phase 2.
@@ -39,16 +39,23 @@ Everything below is phase 2.
 Highest value set in the sheet. A class-flavoured cast sound tells the player what hit them
 before the card text resolves.
 
+**The class token is the `CardClass` enum member, lowercased — nothing shorter.** So
+`stonewarden_spell_cast`, not `warden_`; `tempest_`, not `storm_`. `CardSoundCueRouter`
+derives the stem with `Class.ToString().ToLowerInvariant()` and holds no name map, which is
+the same rule `HeroVoiceDirector` uses for `vo_<class>_<moment>_<n>`. One vocabulary across
+both sound systems: a second one buys nothing and costs a silent miss, because an unresolved
+address is a console warning at most and the call site looks right.
+
 | stem | class | prompt |
 |---|---|---|
-| `ember_spell_cast` | EMBER (9) | A sharp gout of flame erupting: fast air intake, then a roaring whoosh of fire with crackling embers, tail dying quickly. |
-| `tide_spell_cast` | TIDE (11) | A surge of water conjured and released: rushing liquid, a heavy splash, droplets scattering, no reverb tail. |
+| `emberward_spell_cast` | EMBER (9) | A sharp gout of flame erupting: fast air intake, then a roaring whoosh of fire with crackling embers, tail dying quickly. |
+| `tidecaller_spell_cast` | TIDE (11) | A surge of water conjured and released: rushing liquid, a heavy splash, droplets scattering, no reverb tail. |
 | `verdant_spell_cast` | VERDANT (9) | Rapid plant growth: creaking wood, vines uncoiling and whipping through leaves, a soft earthy settle. |
-| `grave_spell_cast` | GRAVE (8) | Necrotic magic released: a low hollow moan, dry bone rattling, a cold dusty exhale. |
-| `night_spell_cast` | NIGHT (10) | Shadow magic: a muffled inward suction of air, a dark whispering swell, ending on a soft dead thud. |
-| `storm_spell_cast` | STORM (13) | A close lightning strike: crackling electrical build-up then a sharp cracking discharge with a short thunder snap. |
-| `clock_spell_cast` | CLOCK (9) | Clockwork mechanism firing: gears ratcheting fast, a spring releasing, a small brass chime. |
-| `warden_spell_cast` | WARDEN (9) | Consecrated stone magic: a deep resonant bell tone with grinding granite underneath and a bright shimmer on top. |
+| `gravekeep_spell_cast` | GRAVE (8) | Necrotic magic released: a low hollow moan, dry bone rattling, a cold dusty exhale. |
+| `nightveil_spell_cast` | NIGHT (10) | Shadow magic: a muffled inward suction of air, a dark whispering swell, ending on a soft dead thud. |
+| `tempest_spell_cast` | STORM (13) | A close lightning strike: crackling electrical build-up then a sharp cracking discharge with a short thunder snap. |
+| `clockwright_spell_cast` | CLOCK (9) | Clockwork mechanism firing: gears ratcheting fast, a spring releasing, a small brass chime. |
+| `stonewarden_spell_cast` | WARDEN (9) | Consecrated stone magic: a deep resonant bell tone with grinding granite underneath and a bright shimmer on top. |
 | `neutral_spell_cast` | NEUTRAL / CORE (2) | Generic arcane cast: a rising shimmering swell of magical energy releasing into a soft bright pop. |
 
 ## Minion summons — by what the art shows (`ON_PLAY`, 190 minions)
