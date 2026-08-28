@@ -9,8 +9,16 @@ audio tags ([whispers], [shouts], emotion tags) -- older models read the bracket
 aloud as literal text. MEASURED 2026-08-28: every voice on the account accepts v3,
 even though the voice list's high_quality_base_model_ids never enumerates it.
 
-There is no state file: a line whose wav already exists is SKIPPED, so the output
-tree is the record and a re-run is free. --force regenerates.
+At least TWO takes per line (Sam, 2026-08-28) -- eleven_v3 is non-deterministic, so
+takes of one line genuinely differ and there is something to choose between.
+
+Takes land in art-pipeline/sfx/voice/<Class>/vo_..._takeN.wav, NOT in Assets. The
+Voice group addresses by file name, so a take under Assets would claim its own
+address and the rejects would ship. Pick one, trim it, save it into Assets under
+the canonical stem with no take suffix.
+
+There is no state file: a take already on disk is skipped, and a line already
+finalised into Assets is skipped entirely. --force regenerates.
 
     python tooling/sfx/dispatch_vo.py --dry-run
     python tooling/sfx/dispatch_vo.py --only GRAVEKEEP
@@ -39,7 +47,12 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LINES = pathlib.Path(__file__).resolve().parent / "voice-lines.json"
-VOICE_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
+# Takes are CANDIDATES and land in art-pipeline/ (gitignored), never straight into Assets/.
+# The Voice group addresses by file name, so a take that reached Assets would claim its own
+# Addressables address and the rejects would ship alongside the keeper. Sam picks one, trims
+# it, and drops it into FINAL_ROOT under the canonical stem with no take suffix.
+TAKE_ROOT = ROOT / "art-pipeline" / "sfx" / "voice"
+FINAL_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
 MODEL_ID = "eleven_v3"
 API = "https://api.elevenlabs.io/v1/text-to-speech/"
 
@@ -144,10 +157,18 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("--lines", type=pathlib.Path, default=LINES)
-    ap.add_argument("--out", type=pathlib.Path, default=VOICE_ROOT)
+    ap.add_argument("--out", type=pathlib.Path, default=TAKE_ROOT, help="where takes land")
+    ap.add_argument("--final-root", type=pathlib.Path, default=FINAL_ROOT,
+                    help="checked so a line already finalised into Assets is not regenerated")
+    ap.add_argument("--takes", type=int, default=2,
+                    help="takes per line (Sam, 2026-08-28: at least two, always)")
     ap.add_argument("--api-key")
     ap.add_argument("--only", help="one class, e.g. GRAVEKEEP")
     ap.add_argument("--moment", help="one moment, e.g. win")
+    ap.add_argument("--skip", action="append", default=[],
+                    help="canonical stem to leave alone, repeatable (e.g. vo_gravekeep_win_3). "
+                         "For a line that already has takes from elsewhere -- the ElevenLabs web "
+                         "app, a hand pass -- which this script cannot see.")
     ap.add_argument("--force", action="store_true", help="regenerate clips that exist")
     ap.add_argument("--dry-run", action="store_true", help="print the plan and cost, send nothing")
     args = ap.parse_args()
@@ -161,11 +182,20 @@ def main():
         if not vid:
             uncast.add(cls)
             continue
-        dest = args.out / class_folder(cls) / (stem + ".wav")
-        if dest.exists() and not args.force:
+        if stem in set(args.skip):
+            skipped += args.takes
+            continue
+        # A line finalised into Assets is done; do not spend on it again.
+        if (args.final_root / class_folder(cls) / (stem + ".wav")).exists() and not args.force:
             skipped += 1
             continue
-        todo.append((cls, stem, text, vid, vname, dest))
+        for take in range(1, max(1, args.takes) + 1):
+            label = "%s_take%d" % (stem, take)
+            dest = args.out / class_folder(cls) / (label + ".wav")
+            if dest.exists() and not args.force:
+                skipped += 1
+                continue
+            todo.append((cls, label, text, vid, vname, dest))
 
     chars = sum(len(t) for _, _, t, _, _, _ in todo)
     print("%d line(s) to generate, %d already on disk" % (len(todo), skipped))
@@ -207,9 +237,13 @@ def main():
         print("  %-34s %-22s %s KB   %s" % (stem, vname[:20], format(len(audio) // 1024, ","), text))
 
     print(
-        "\nNow run Emberfall/Addressables/Setup Groups + Migrate Card Data in the Editor,"
-        "\nthen commit the .meta files Unity generates. Until then these clips have no"
-        "\naddress and will fail silently at runtime."
+        "\nThese are TAKES, under art-pipeline/. Pick one per line, trim it, and save it into"
+        "\n%s/<Class>/ under the canonical stem"
+        "\nwith NO _takeN suffix -- a take that reaches Assets claims its own Addressables"
+        "\naddress and the rejects ship with the keeper."
+        "\n\nThen run Emberfall/Addressables/Setup Groups + Migrate Card Data in the Editor and"
+        "\ncommit the .meta Unity generates. Until both happen the clip has no address and"
+        "\nfails silently at runtime." % args.final_root
     )
     if failures:
         print("\n%d failed: %s" % (len(failures), ", ".join(failures)))
