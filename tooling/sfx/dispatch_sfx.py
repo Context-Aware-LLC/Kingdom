@@ -162,12 +162,20 @@ def main():
         default="mp3_44100_128",
         help="mp3_44100_128 works on every paid tier; 192 needs Creator or above",
     )
-    ap.add_argument("--takes", type=int, default=1, help="clips per job (for auditioning)")
+    # RULING (Sam, 2026-08-28): generate a RANGE from the gate, do not economise into a corner.
+    # "This shit is so cheap, I think I'd actually rather just have multiple things to choose
+    # from right from the gate so I can get a better sense of the range of possibilities."
+    # A sound effect is a search, not a retake: the first result cannot tell you what the space
+    # of good answers looks like, and a second dispatch costs another round trip of Sam's
+    # attention -- which is the expensive input here, not credits. 4 takes with the influence
+    # spread on gives four genuinely different readings of one prompt.
+    ap.add_argument("--takes", type=int, default=4, help="clips per job (for auditioning)")
     ap.add_argument(
         "--influence-spread",
         type=float,
-        default=0.0,
-        help="with --takes>1, vary prompt_influence by +/- this much across takes",
+        default=0.15,
+        help="with --takes>1, vary prompt_influence by +/- this much across takes. Nonzero by "
+             "default: identical settings give near-identical takes, which is a wasted audition",
     )
     ap.add_argument("--only", action="append", help="run just this key (repeatable)")
     ap.add_argument("--force", action="store_true", help="regenerate keys that already have clips")

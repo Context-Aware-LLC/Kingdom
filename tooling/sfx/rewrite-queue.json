@@ -1,6 +1,24 @@
 {
   "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so every take of them is wrong. Keyed by canonical stem. Written by the Rewrite button; clear an entry by unflagging it there, or by hand once the line in voice-lines.json has been rewritten and regenerated.",
   "needs_rewrite": {
+    "vo_clockwright_match_start_3": {
+      "class": "CLOCKWRIGHT",
+      "moment": "match_start",
+      "text": "Wownd, set, and ready.",
+      "status": "rewritten"
+    },
+    "vo_clockwright_turn_start_3": {
+      "class": "CLOCKWRIGHT",
+      "moment": "turn_start",
+      "text": "Engage!",
+      "status": "rewritten"
+    },
+    "vo_emberward_rope_2": {
+      "class": "EMBERWARD",
+      "moment": "rope",
+      "text": "It burns down while you hesitate.",
+      "status": "rewritten"
+    },
     "vo_gravekeep_win_3": {
       "class": "GRAVEKEEP",
       "moment": "win",

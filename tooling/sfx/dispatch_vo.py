@@ -160,7 +160,10 @@ def main():
     ap.add_argument("--out", type=pathlib.Path, default=TAKE_ROOT, help="where takes land")
     ap.add_argument("--final-root", type=pathlib.Path, default=FINAL_ROOT,
                     help="checked so a line already finalised into Assets is not regenerated")
-    ap.add_argument("--takes", type=int, default=2,
+    # RULING (Sam, 2026-08-28): a wider gate beats a second trip. Raised from 2 -- see the same
+    # note in dispatch_sfx.py. TTS bills per character, so a 30-character line is ~30 credits a
+    # take and the whole 8-class corpus at 3 takes is under 7,000 against ~130k on the account.
+    ap.add_argument("--takes", type=int, default=3,
                     help="takes per line (Sam, 2026-08-28: at least two, always)")
     ap.add_argument("--api-key")
     ap.add_argument("--only", help="one class, e.g. GRAVEKEEP")
