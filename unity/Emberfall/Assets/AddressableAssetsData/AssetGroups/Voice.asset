@@ -15,13 +15,73 @@ MonoBehaviour:
   m_GroupName: Voice
   m_GUID: 3f06c083063688d4691ad7d574afa30a
   m_SerializeEntries:
+  - m_GUID: 0031ae3e9d06da54b89e2aefd2951482
+    m_Address: vo/vo_clockwright_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 00cfd691462d917449209938119a46de
+    m_Address: vo/vo_nightveil_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0543ccf38cc9843479b61247d989ddba
+    m_Address: vo/vo_verdant_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05794a7ebec96384bb088aef35fa64c4
     m_Address: vo/vo_gravekeep_turn_start_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 080e9641195fe2c4db2ae230c187f627
+    m_Address: vo/vo_emberward_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0a1b1367caf737e438028c271294ae89
     m_Address: vo/vo_gravekeep_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b8f47ada1b731242822654ddd5a8015
+    m_Address: vo/vo_nightveil_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d802ffabc8194c45a71c68d07d1328c
+    m_Address: vo/vo_verdant_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0dcaea5475a810746802ee06e105c5e6
+    m_Address: vo/vo_nightveil_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ddffa6d714763848af6ce2bf7be08e9
+    m_Address: vo/vo_tempest_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f174ea2e4a249e48bca39d6a393110c
+    m_Address: vo/vo_emberward_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 138b13c81759d4b42a17340ce5833d46
+    m_Address: vo/vo_clockwright_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1416ebd1f0a7790489f837f1e1913b57
+    m_Address: vo/vo_tidecaller_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ac3f9ff5b416914f945df322fb4a779
+    m_Address: vo/vo_tidecaller_match_start_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -35,8 +95,168 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23de7c803d98e354180b1793244cbd57
+    m_Address: vo/vo_clockwright_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26293a29d8ce7b441b23af449c46163e
+    m_Address: vo/vo_tidecaller_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 27690c0f70e27de439e86bbb205eaac3
+    m_Address: vo/vo_emberward_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 289abb168865a4847a910fb871a6d7ff
+    m_Address: vo/vo_stonewarden_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29769790f1f4ecc4ab159e9bacf0b492
+    m_Address: vo/vo_tidecaller_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2dad8f6b0cc7f5b41a48ffb8b71c7088
+    m_Address: vo/vo_tidecaller_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2eca8fb65741a28428a9bde9db5244ff
+    m_Address: vo/vo_emberward_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30148492177654c46bdfc116dc90f0ea
+    m_Address: vo/vo_stonewarden_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32fc7277f9eed5f418e224ce086ae697
+    m_Address: vo/vo_tidecaller_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b365926ae7b0244d8b19d1a787c897f
+    m_Address: vo/vo_clockwright_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 402bfd1030071134ead836b7fc845ac8
+    m_Address: vo/vo_stonewarden_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 465e4bb68809f9a4db6ede6d5b616d26
+    m_Address: vo/vo_emberward_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 484c796cea7c10047b3afa9ddc2dc91c
+    m_Address: vo/vo_emberward_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4baddb263a3a8df4d8867de43b24a312
+    m_Address: vo/vo_verdant_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c988423eb4d7fd478890129668fcd74
+    m_Address: vo/vo_verdant_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f0f85f80c51f484aa63023af0bd2ee5
+    m_Address: vo/vo_verdant_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 54bacce94fba5a54799aa3d28e0549ac
     m_Address: vo/vo_gravekeep_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59b2897b2d76410489faf16910452b1e
+    m_Address: vo/vo_stonewarden_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ca02c54bd0155e4b934a3d4ead21aae
+    m_Address: vo/vo_tidecaller_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e05bb9e51d260e4ba9740452941a1a7
+    m_Address: vo/vo_emberward_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f15abcb6ec320c4aa87b1e7a8533567
+    m_Address: vo/vo_emberward_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 604dd0c5e01edb548839e202e110304f
+    m_Address: vo/vo_stonewarden_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61c2cf246e906f942b9e94cbbdaf83d6
+    m_Address: vo/vo_clockwright_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62f0c63e044525545933bc0b702ee103
+    m_Address: vo/vo_clockwright_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65cbc860c9302a04c8fb29ff10ef5854
+    m_Address: vo/vo_clockwright_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6736c1100df63d441bc9fe0a2f967450
+    m_Address: vo/vo_tempest_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67d55ab205944a843b87740e8df7d7cc
+    m_Address: vo/vo_tidecaller_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69352d92bdc2a984e9965e7755a4f248
+    m_Address: vo/vo_verdant_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b38fd7825d56ba4a9dade68e860d774
+    m_Address: vo/vo_tempest_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c5c1aa9952075a4aaa9679a8fb8f4c5
+    m_Address: vo/vo_tempest_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f64e21c952cf33429e747f2c8c12fdf
+    m_Address: vo/vo_verdant_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 700ac1a32f36b8a43a30b61555f4a946
+    m_Address: vo/vo_nightveil_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 728c46f3d130d3e499737aaced13b2ca
+    m_Address: vo/vo_verdant_match_start_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -50,8 +270,78 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 757f6b57e65f86e4fb1f75386d41cea8
+    m_Address: vo/vo_nightveil_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 763b9f2e533659a448f87deb79a9c0b3
+    m_Address: vo/vo_nightveil_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 797328265ba2b09438c0a621b8b54fab
+    m_Address: vo/vo_nightveil_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a33d4bd1565d5d4397d26cf1aa66af0
+    m_Address: vo/vo_emberward_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7aeaeecb9e7810649802a87f3196fe55
+    m_Address: vo/vo_verdant_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7bdd641225d3d1748b9f403a65c0dff6
+    m_Address: vo/vo_tempest_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ce5c937fc6e14e4d8828edd792b08b9
+    m_Address: vo/vo_emberward_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f97f66feba6e784eb746e1537c1ddec
+    m_Address: vo/vo_tempest_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84d9a5d685b094e4599998cc53b92bd3
+    m_Address: vo/vo_emberward_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86cd307a116d21741905a7b8589e9f19
+    m_Address: vo/vo_verdant_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86dedeb1f41a5f347b800dc8a81f6563
+    m_Address: vo/vo_clockwright_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87c29899d428a7d4092abd05b430c2ac
+    m_Address: vo/vo_nightveil_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 883abfca8c7d40647b15b4ee64ddf4d5
     m_Address: vo/vo_gravekeep_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 894cd371b6b309241aa480db69bfe04b
+    m_Address: vo/vo_verdant_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d4625c339652134a85ab98578e551e0
+    m_Address: vo/vo_tempest_rope_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -60,8 +350,108 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9101cd6bdefb4144ca80b7c80a3f00fe
+    m_Address: vo/vo_stonewarden_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94df6e3457fe24c44886fce9a7e79967
+    m_Address: vo/vo_tempest_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98010998e2f518c408d481ab8dfa7c77
+    m_Address: vo/vo_gravekeep_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b6ea1856a22a9f489e574a454b54cb1
+    m_Address: vo/vo_emberward_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bb1bfbee5516834eafe393c54dd97c2
+    m_Address: vo/vo_tidecaller_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c643bfa7fb18c24db6c1d374afcf845
+    m_Address: vo/vo_tempest_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9de6821e0f8cd6b43aae57f5108be3f7
+    m_Address: vo/vo_tidecaller_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e1f7b5da38d4224bb0b51365ba1eb90
+    m_Address: vo/vo_verdant_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f453a3b4524e7746ae621f0d0bd29b1
+    m_Address: vo/vo_tempest_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a02926e15d7b5604f8c1af04e2a41ee8
+    m_Address: vo/vo_nightveil_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a291720e89aa9dc418817500f3b5068f
+    m_Address: vo/vo_clockwright_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa0a81f7378d4c04c8e237ad38381b68
+    m_Address: vo/vo_verdant_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aaf81599b621eed4da541c5632fb1368
+    m_Address: vo/vo_stonewarden_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac5a23e2050fdb5408b4ee960a6edf53
+    m_Address: vo/vo_tempest_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: af522a4b55fff404093de8cc0e614e23
     m_Address: vo/vo_gravekeep_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af8c1fc238177d94a85662a6be3a89ad
+    m_Address: vo/vo_tempest_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0c80d0953210854ea43f873627d89a8
+    m_Address: vo/vo_clockwright_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1a833ebe35a4f74e8c875223a563ffe
+    m_Address: vo/vo_tidecaller_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b28c1439d4399c541ab2cab1ba558f72
+    m_Address: vo/vo_stonewarden_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b28e9e6f10dcb86438bf3540e433ca99
+    m_Address: vo/vo_tidecaller_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b412e76934f2c0d4c83b59e086fdee2e
+    m_Address: vo/vo_stonewarden_lose_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -70,8 +460,123 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b86e4de331c4f314eb90dd6b96c4ed7b
+    m_Address: vo/vo_tidecaller_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba9a8a42bb759ba449a9ec36af196f05
+    m_Address: vo/vo_emberward_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c01ce880c7dac994591c48eed6d6e9e9
+    m_Address: vo/vo_clockwright_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0834ad77b78b184cb8414fb6b1e0bdf
+    m_Address: vo/vo_nightveil_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c53affe01b37c4247abf9a9a72ee1399
     m_Address: vo/vo_gravekeep_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9a7884ac9f886b4a8a776ac3494d49c
+    m_Address: vo/vo_nightveil_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca1f2aa2a9b37ee48999323d367e688f
+    m_Address: vo/vo_clockwright_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb2b936f7e9e4504fa1637d8ce0f4565
+    m_Address: vo/vo_stonewarden_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbc4464070c82d640a8bf263697692a8
+    m_Address: vo/vo_clockwright_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf5a26507efda8341bede79bdacc53a9
+    m_Address: vo/vo_tempest_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cff3b7cd31af27a45b2865b059e2aaaf
+    m_Address: vo/vo_clockwright_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1c16ec0fd7e760439f53ae45ef6de2d
+    m_Address: vo/vo_stonewarden_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d39a7fcf86976f840b286e436e0f1a70
+    m_Address: vo/vo_nightveil_match_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6ca246bca6e43f49b5c0b91ab66a543
+    m_Address: vo/vo_emberward_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8bf0034eea1efd448c428eb8e4c3ad3
+    m_Address: vo/vo_tidecaller_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db2afa28f6fc6cd48b17fa617fc46cbf
+    m_Address: vo/vo_emberward_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db8a1e088c9156a448b24295a9b83a46
+    m_Address: vo/vo_clockwright_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1cf1812f1e21d844992fa5588e4a211
+    m_Address: vo/vo_verdant_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2cdbd9b4f0e0f34682468a12401a785
+    m_Address: vo/vo_tempest_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e5bae9ca7942b3047a2e4bd21bd8fe44
+    m_Address: vo/vo_stonewarden_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e635dd4f6ce26ad47ac095c5d5712a91
+    m_Address: vo/vo_nightveil_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec87fcbd24fcec04fa9ea333bbba5996
+    m_Address: vo/vo_tempest_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f029ed60274a4154f9245040f6331bab
+    m_Address: vo/vo_stonewarden_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f13c4f76f2135aa4c972d3ed3dc75ce0
+    m_Address: vo/vo_nightveil_turn_start_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -80,8 +585,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f60b857472fe9ee49a6237c834ec7e62
+    m_Address: vo/vo_stonewarden_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9e772d646f154a48bc5b8e754243fe3
+    m_Address: vo/vo_tidecaller_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: faadefb595300804a9af235ea9b81ebc
     m_Address: vo/vo_gravekeep_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb2f61d1f264fef4aad7fd7afa0a59b9
+    m_Address: vo/vo_nightveil_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb3c082fecd5d034ba407125488b2e05
+    m_Address: vo/vo_stonewarden_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ffd1ddc189d80904a99455137ab8cf05
+    m_Address: vo/vo_verdant_lose_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
