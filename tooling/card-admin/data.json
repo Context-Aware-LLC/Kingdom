@@ -1,9 +1,10 @@
 {
   "generatedFrom": [
+    "unity/Emberfall/Assets/CardData/Core.cards.json",
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 284,
+  "totalCards": 293,
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -22,12 +23,12 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 284,
+    "total": 293,
     "typeSplit": {
       "MINION": 190,
-      "SPELL": 80,
+      "SPELL": 81,
       "WEAPON": 14,
-      "HERO_POWER": 0
+      "HERO_POWER": 8
     },
     "keywordFrequency": {
       "BULWARK": 46,
@@ -45,20 +46,20 @@
       "FROST": 5
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 64,
+      "ANY_FRIENDLY_MINION": 66,
       "ANY_MINION": 28,
       "ANY_ENEMY_MINION": 24,
-      "FRIENDLY_HERO": 22,
-      "ANY_ENEMY": 20,
+      "FRIENDLY_HERO": 23,
+      "ANY_ENEMY": 22,
       "ENEMY_HERO": 8,
       "ANY_FRIENDLY": 5,
-      "ANY_CHARACTER": 3,
+      "ANY_CHARACTER": 4,
       "SELF": 2
     },
     "costDistribution": {
-      "0": 7,
+      "0": 8,
       "1": 33,
-      "2": 59,
+      "2": 67,
       "3": 73,
       "4": 52,
       "5": 22,
@@ -68,7 +69,7 @@
       "9": 1
     },
     "rarityBreakdown": {
-      "COMMON": 119,
+      "COMMON": 128,
       "RARE": 96,
       "EPIC": 51,
       "LEGENDARY": 18
@@ -109,12 +110,12 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
         "MINION": 20,
         "SPELL": 9,
         "WEAPON": 1,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "BULWARK": 3,
@@ -133,7 +134,7 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 4,
+        "2": 5,
         "3": 9,
         "4": 7,
         "5": 2,
@@ -141,7 +142,7 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 12,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -169,12 +170,12 @@
       }
     },
     "EMBERWARD": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 8,
         "WEAPON": 2,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "FERVOR": 4,
@@ -191,14 +192,14 @@
         "ANY_MINION": 6,
         "ENEMY_HERO": 4,
         "ANY_FRIENDLY_MINION": 3,
+        "ANY_CHARACTER": 2,
         "ANY_ENEMY_MINION": 2,
         "FRIENDLY_HERO": 2,
-        "ANY_CHARACTER": 1,
         "ANY_ENEMY": 1
       },
       "costDistribution": {
         "1": 4,
-        "2": 5,
+        "2": 6,
         "3": 7,
         "4": 7,
         "5": 3,
@@ -206,8 +207,8 @@
         "7": 2
       },
       "rarityBreakdown": {
+        "COMMON": 12,
         "RARE": 12,
-        "COMMON": 11,
         "EPIC": 6,
         "LEGENDARY": 2
       },
@@ -236,12 +237,12 @@
       }
     },
     "GRAVEKEEP": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 8,
         "WEAPON": 1,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "BULWARK": 5,
@@ -253,13 +254,13 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 13,
+        "ANY_FRIENDLY_MINION": 14,
         "FRIENDLY_HERO": 4,
         "ANY_MINION": 2
       },
       "costDistribution": {
         "1": 4,
-        "2": 6,
+        "2": 7,
         "3": 7,
         "4": 6,
         "5": 3,
@@ -267,7 +268,7 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 12,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -297,10 +298,10 @@
       }
     },
     "NEUTRAL": {
-      "total": 39,
+      "total": 40,
       "typeSplit": {
         "MINION": 35,
-        "SPELL": 2,
+        "SPELL": 3,
         "WEAPON": 2,
         "HERO_POWER": 0
       },
@@ -322,7 +323,7 @@
         "ANY_MINION": 1
       },
       "costDistribution": {
-        "0": 4,
+        "0": 5,
         "1": 3,
         "2": 12,
         "3": 10,
@@ -332,7 +333,7 @@
         "7": 1
       },
       "rarityBreakdown": {
-        "COMMON": 26,
+        "COMMON": 27,
         "RARE": 7,
         "EPIC": 4,
         "LEGENDARY": 2
@@ -364,12 +365,12 @@
       }
     },
     "NIGHTVEIL": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
         "MINION": 18,
         "SPELL": 10,
         "WEAPON": 2,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "SHROUD": 12,
@@ -382,7 +383,7 @@
       },
       "selectorFrequency": {
         "ANY_ENEMY_MINION": 6,
-        "ANY_FRIENDLY_MINION": 5,
+        "ANY_FRIENDLY_MINION": 6,
         "ANY_MINION": 5,
         "ENEMY_HERO": 2,
         "ANY_ENEMY": 1,
@@ -390,14 +391,14 @@
       },
       "costDistribution": {
         "1": 3,
-        "2": 6,
+        "2": 7,
         "3": 10,
         "4": 5,
         "5": 4,
         "6": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 12,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -424,12 +425,12 @@
       }
     },
     "STONEWARDEN": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
         "MINION": 19,
         "SPELL": 10,
         "WEAPON": 1,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "BULWARK": 13,
@@ -447,7 +448,7 @@
       "costDistribution": {
         "0": 1,
         "1": 4,
-        "2": 5,
+        "2": 6,
         "3": 7,
         "4": 5,
         "5": 1,
@@ -456,7 +457,7 @@
         "8": 2
       },
       "rarityBreakdown": {
-        "COMMON": 12,
+        "COMMON": 13,
         "RARE": 11,
         "EPIC": 5,
         "LEGENDARY": 2
@@ -488,12 +489,12 @@
       }
     },
     "TEMPEST": {
-      "total": 30,
+      "total": 31,
       "typeSplit": {
         "MINION": 15,
         "SPELL": 13,
         "WEAPON": 2,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "DOUBLESTRIKE": 8,
@@ -503,7 +504,7 @@
         "FERVOR": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY": 12,
+        "ANY_ENEMY": 14,
         "ANY_ENEMY_MINION": 4,
         "ANY_FRIENDLY_MINION": 2,
         "ANY_MINION": 2,
@@ -511,7 +512,7 @@
       },
       "costDistribution": {
         "1": 6,
-        "2": 8,
+        "2": 9,
         "3": 7,
         "4": 3,
         "5": 3,
@@ -519,7 +520,7 @@
         "7": 2
       },
       "rarityBreakdown": {
-        "COMMON": 11,
+        "COMMON": 12,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -547,12 +548,12 @@
       }
     },
     "TIDECALLER": {
-      "total": 33,
+      "total": 34,
       "typeSplit": {
         "MINION": 20,
         "SPELL": 11,
         "WEAPON": 2,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "BULWARK": 7,
@@ -573,7 +574,7 @@
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 8,
+        "2": 9,
         "3": 8,
         "4": 5,
         "5": 2,
@@ -581,7 +582,7 @@
         "7": 3
       },
       "rarityBreakdown": {
-        "COMMON": 14,
+        "COMMON": 15,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -613,12 +614,12 @@
       }
     },
     "VERDANT": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 21,
         "SPELL": 9,
         "WEAPON": 1,
-        "HERO_POWER": 0
+        "HERO_POWER": 1
       },
       "keywordFrequency": {
         "BULWARK": 5,
@@ -632,7 +633,7 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "FRIENDLY_HERO": 9,
+        "FRIENDLY_HERO": 10,
         "ANY_FRIENDLY_MINION": 7,
         "ANY_FRIENDLY": 4,
         "ANY_CHARACTER": 1,
@@ -642,7 +643,7 @@
       },
       "costDistribution": {
         "1": 3,
-        "2": 5,
+        "2": 6,
         "3": 8,
         "4": 7,
         "5": 3,
@@ -651,7 +652,7 @@
         "9": 1
       },
       "rarityBreakdown": {
-        "COMMON": 12,
+        "COMMON": 13,
         "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -684,6 +685,179 @@
     }
   },
   "cards": [
+    {
+      "id": 158,
+      "name": "The Spark",
+      "type": "SPELL",
+      "cost": 0,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "NEUTRAL",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "neutral_token_the_spark",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 1,
+      "name": "Searing Bolt",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "EMBERWARD",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_CHARACTER"
+      ],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "ember_hero_power_searing_bolt",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 2,
+      "name": "Tidal Ward",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TIDECALLER",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "tide_hero_power_tidal_ward",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 3,
+      "name": "Toll the Bell",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "GRAVEKEEP",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "grave_hero_power_toll_the_bell",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 4,
+      "name": "Quicken",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "VERDANT",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "FRIENDLY_HERO"
+      ],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "verdant_hero_power_quicken",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 5,
+      "name": "Blueprint",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "clock_hero_power_blueprint",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 6,
+      "name": "Shadow Mark",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "night_hero_power_shadow_mark",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 7,
+      "name": "Earthwall",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "stone_hero_power_earthwall",
+      "sourceFile": "Core.cards.json"
+    },
+    {
+      "id": 8,
+      "name": "Chain Spark",
+      "type": "HERO_POWER",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY",
+        "ANY_ENEMY"
+      ],
+      "tribe": null,
+      "setId": "CORE",
+      "collectible": false,
+      "artId": "storm_hero_power_chain_spark",
+      "sourceFile": "Core.cards.json"
+    },
     {
       "id": 1001,
       "name": "Ember Recruit",

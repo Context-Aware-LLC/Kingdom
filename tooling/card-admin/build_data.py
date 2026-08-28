@@ -20,10 +20,15 @@ from pathlib import Path
 
 # Repo root is two levels up from this file (tooling/card-admin/build_data.py).
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CARD_FILES = [
-    REPO_ROOT / "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
-    REPO_ROOT / "unity/Emberfall/Assets/CardData/Rekindling.cards.json",
-]
+# EVERY set file, not a hand-listed subset. CORE split out 2026-08-23 and was never added here,
+# so the panel reported 284 cards against a 293-row corpus -- a rollup that is quietly wrong is
+# worse than one that is missing, because nothing about it looks incomplete. Globbing means the
+# next set is picked up without anyone remembering this line.
+#
+# RETIREMENT TRIGGER: if a *.cards.json ever lands here that is NOT a shipped set (a fixture, a
+# scratch file), this glob starts counting it and must go back to an explicit list -- the same
+# list CardJsonRowIO.PathForSet holds.
+CARD_FILES = sorted((REPO_ROOT / "unity/Emberfall/Assets/CardData").glob("*.cards.json"))
 OUT_PATH = Path(__file__).resolve().parent / "data.json"
 # Browsers block fetch('data.json') under file://, so the panel loads this thin
 # wrapper instead (window.CARD_DATA = <same object>). data.json stays canonical.
