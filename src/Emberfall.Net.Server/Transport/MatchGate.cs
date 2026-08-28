@@ -547,10 +547,15 @@ namespace Emberfall.Net.Server.Transport
                     TelemetrySources.Classify(first.Account, second.Account, isBotAccount));
 
                 // EF-071: deal from each seat's SUBMITTED deck where present, else the prebuilt fallback
-                // for that seat. HP + spark stay whatever the prebuilt pair uses (PrebuiltDecks' interim
-                // 20 HP) — a submitted deck changes only the cards and the hero class, never the match's
-                // balance dials, so this makes no balance decision. Both seats absent ⇒ the exact fixed
-                // pair the gate deals today.
+                // for that seat. HP + spark stay whatever the prebuilt pair uses (30 HP since
+                // 2026-08-27) — a submitted deck changes only the cards and the hero class, never the
+                // match's balance dials, so this makes no balance decision. Both seats absent ⇒ the
+                // exact fixed pair the gate deals today.
+                //
+                // RETIREMENT TRIGGER: this line is why PrebuiltDecks is a dial on EVERY match rather
+                // than only the fallback ones. If HP ever stops coming from `fallback`, say so in
+                // PrebuiltDecks' class doc, in NetSoak's ParseHeroHp, and in
+                // tooling/scripts/bot_roster_to_corpus.py — all three assert this coupling by name.
                 var fallback = _decks.NextMatch();
                 var seat0 = first.Deck ?? SeatDeck.FromFallback(fallback, 0);
                 var seat1 = second.Deck ?? SeatDeck.FromFallback(fallback, 1);
