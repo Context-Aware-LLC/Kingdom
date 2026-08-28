@@ -71,11 +71,48 @@ from build_data import CARD_TYPES, normalize, rollup  # noqa: E402
 STAGING_DIR = pathlib.Path(
     os.environ.get("EMBERFALL_STAGING_DIR", REPO / "tooling" / "cardweb" / "staging"))
 
-# HTTP Basic auth. Enabled by setting CARDWEB_PASSWORD; absent, the server runs open, which is
-# correct for the 127.0.0.1 default and wrong for anything else. main() refuses to bind a
-# non-loopback interface without it rather than leaving that to whoever writes the deploy.
+# HTTP Basic auth. With NO credential configured the server runs open, which is correct for the
+# 127.0.0.1 default and wrong for anything else; main() refuses to bind a non-loopback interface
+# without one rather than leaving that to whoever writes the deploy.
+#
+# TWO SOURCES, because the live app already holds a CARDWEB_PASSWORD secret that is write-only
+# and cannot be read back. Dropping support for it would have locked the deploy out until
+# somebody re-set a secret nobody can read:
+#
+#   CARDWEB_USER / CARDWEB_PASSWORD   one pair, the original form
+#   CARDWEB_USERS                     "user:password" entries, comma- or newline-separated
+#
+# Passwords live in the environment (a `fly secrets` value in production) and NOWHERE in the
+# repo. A credential in a tracked file is one that outlives every rotation of it.
 AUTH_USER = os.environ.get("CARDWEB_USER", "emberfall")
 AUTH_PASSWORD = os.environ.get("CARDWEB_PASSWORD", "")
+
+
+def _load_credentials() -> dict[str, str]:
+    """The user -> password table, from both env forms.
+
+    A malformed entry is DROPPED WITH A WARNING rather than ignored silently: the failure mode
+    it produces is "my login stopped working", which nobody debugs by reading the parser.
+    """
+    creds: dict[str, str] = {}
+    if AUTH_PASSWORD:
+        creds[AUTH_USER] = AUTH_PASSWORD
+    raw = os.environ.get("CARDWEB_USERS", "")
+    for entry in raw.replace("\n", ",").split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        user, sep, password = entry.partition(":")
+        user, password = user.strip(), password.strip()
+        if not sep or not user or not password:
+            print(f"CARDWEB_USERS: ignoring malformed entry {entry.split(':')[0]!r} "
+                  "(expected user:password).", file=sys.stderr)
+            continue
+        creds[user] = password
+    return creds
+
+
+CREDENTIALS = _load_credentials()
 
 _lock = threading.Lock()
 _corpus: Corpus | None = None
@@ -315,41 +352,54 @@ class Handler(http.server.BaseHTTPRequestHandler):
         sys.stderr.write(f"  {self.address_string()} {fmt % a}\n")
 
     # ---- auth -------------------------------------------------------------
-    def _authed(self) -> bool:
-        """HTTP Basic, compared in constant time.
+    def _credential(self) -> str | None:
+        """The authenticated username, or None. The ONE place a password is checked.
 
-        A plain `==` against a secret leaks its length and its prefix to a patient caller;
-        hmac.compare_digest is the same line without that. Both fields are compared even when
-        the username is already wrong, so the cost does not vary with how much was guessed.
+        Constant time in two directions, and the second one is easy to lose:
+
+          * Against the PASSWORD -- a plain `==` leaks its length and its prefix to a patient
+            caller; hmac.compare_digest is the same line without that.
+          * Against the SET OF USERNAMES -- a dict lookup that misses returns before any
+            password comparison happens, so response time says whether a username exists.
+            That is username enumeration, and with two named accounts it is most of the guess.
+            So every entry is compared every time: the loop does not break early, and the
+            combining operator is `&` rather than `and` precisely because `and` short-circuits.
+
+        Returns the CONFIGURED spelling of the user, not the client's, so nothing downstream
+        can be handed a string the table never contained.
         """
-        if not AUTH_PASSWORD:
-            return True
         header = self.headers.get("Authorization", "")
         if not header.startswith("Basic "):
-            return False
+            return None
         try:
             user, _, password = base64.b64decode(header[6:]).decode("utf-8").partition(":")
         except (ValueError, UnicodeDecodeError):
-            return False
-        ok_user = hmac.compare_digest(user, AUTH_USER)
-        ok_pass = hmac.compare_digest(password, AUTH_PASSWORD)
-        return ok_user and ok_pass
+            return None
+
+        matched: str | None = None
+        for known_user, known_password in CREDENTIALS.items():
+            ok = (hmac.compare_digest(user, known_user)
+                  & hmac.compare_digest(password, known_password))
+            if ok:
+                matched = known_user
+        return matched
+
+    def _authed(self) -> bool:
+        if not CREDENTIALS:
+            return True
+        return self._credential() is not None
 
     def _auth_user(self) -> str:
         """Who is writing, taken from the credential rather than from the request body.
 
         A byline the client supplies is one anyone can forge, and the only value the field has
-        is that it says who actually wrote the note. With no password set the server is bound
-        to loopback (main() refuses otherwise), so there is exactly one author and it is whoever
-        is at the keyboard.
+        is that it says who actually wrote the note. With no credential configured the server is
+        bound to loopback (main() refuses otherwise), so there is exactly one author and it is
+        whoever is at the keyboard.
         """
-        if not AUTH_PASSWORD:
+        if not CREDENTIALS:
             return "local"
-        header = self.headers.get("Authorization", "")
-        try:
-            return base64.b64decode(header[6:]).decode("utf-8").partition(":")[0] or "unknown"
-        except (ValueError, UnicodeDecodeError):
-            return "unknown"
+        return self._credential() or "unknown"
 
     def _challenge(self) -> None:
         body = b'{"error":"authentication required"}'
@@ -583,10 +633,10 @@ def main() -> int:
     # The corpus is unreleased game content. Binding it to anything but loopback without a
     # password is the one mistake this tool must not let a deploy make quietly, so it is a
     # refusal here rather than a warning in a README nobody reads at 2am.
-    if args.host not in ("127.0.0.1", "localhost", "::1") and not AUTH_PASSWORD:
-        print("REFUSING TO START: binding a non-loopback interface with no CARDWEB_PASSWORD "
-              "set would publish the unreleased card corpus. Set it, or bind 127.0.0.1.",
-              file=sys.stderr)
+    if args.host not in ("127.0.0.1", "localhost", "::1") and not CREDENTIALS:
+        print("REFUSING TO START: binding a non-loopback interface with no CARDWEB_PASSWORD or "
+              "CARDWEB_USERS set would publish the unreleased card corpus. Set one, or bind "
+              "127.0.0.1.", file=sys.stderr)
         return 2
 
     _corpus = Corpus()
@@ -602,6 +652,9 @@ def main() -> int:
     print(f"staging    {staging_path()}")
     print(f"comments   {comments_store.comments_path()}")
     print(f"panel      {ADMIN_DIR}")
+    # Names only. A banner that echoed a password would put it in every deploy log, where it
+    # outlives the rotation that was supposed to retire it.
+    print(f"auth       {', '.join(sorted(CREDENTIALS)) if CREDENTIALS else 'OPEN (no credential set)'}")
     print(f"serving    http://{args.host}:{args.port}")
 
     with Server((args.host, args.port), Handler) as httpd:

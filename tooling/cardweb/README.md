@@ -168,12 +168,35 @@ If you put it on a hostname: `emberfall.outofcontext.to` was retired 2026-07-30 
 at Fly's **shared** IPv4 and a neighbouring tenant's open port 3389 got attributed to the domain.
 Read `deploy/walking-skeleton/README.md` before reinstating anything under that domain.
 
-Set `CARDWEB_PASSWORD` to turn on HTTP Basic. Without it the server **refuses to bind anything but
-loopback** rather than publishing the unreleased corpus — a refusal in `main()`, not a warning in a
-README nobody reads at 2am.
+### Accounts
 
-Live at `https://cards.outofcontext.to` (user `emberfall`; the password is a Fly secret on app
-`emberfall-cardweb` and is **write-only — it cannot be read back**).
+HTTP Basic, and with **no** credential configured the server **refuses to bind anything but
+loopback** rather than publishing the unreleased corpus — a refusal in `main()`, not a warning in a
+README nobody reads at 2am. Two env forms, and they combine:
+
+| | |
+|---|---|
+| `CARDWEB_USER` / `CARDWEB_PASSWORD` | one pair; the original form, still live |
+| `CARDWEB_USERS` | `user:password` entries, comma- or newline-separated |
+
+**Passwords live in the environment and nowhere in this repo** — in production they are a
+`fly secrets` value. A credential in a tracked file outlives every rotation of it.
+
+```
+fly secrets set CARDWEB_USERS='alice:...,bob:...' -a emberfall-cardweb
+```
+
+The username is not decoration: it is the **byline on every comment**, taken from the verified
+credential and never from the request body. Give people separate accounts or the comment log
+cannot say who wrote what.
+
+Both comparisons in `_credential()` are constant time, and the second one is the one that is easy
+to lose: the loop compares **every** configured entry and never breaks early, because a dict lookup
+that misses returns before any password check and thereby leaks which usernames exist. `&` rather
+than `and` for the same reason — `and` short-circuits.
+
+Live at `https://cards.outofcontext.to`; the secret is **write-only and cannot be read back**, so
+rotating means setting a new value, never recovering the old one.
 
 ```
 fly deploy -c deploy/cardweb/fly.toml .
