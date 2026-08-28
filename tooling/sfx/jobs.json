@@ -54,14 +54,98 @@
     "prompt_influence": 0.4
   },
   {
-    "key": "minion_summon_light",
-    "prompt": "A small creature appearing on a battlefield: a light rush of displaced air and a quick soft thud of feet on packed dirt.",
+    "key": "undead_summon",
+    "prompt": "Dry bones clattering together as a corpse rises: a hollow rattling shift, a low grinding groan, dust falling.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "minion_summon_heavy",
-    "prompt": "Something large arriving: a deep ground-shaking stomp, armour plates settling, a low guttural breath.",
+    "key": "clockwork_summon",
+    "prompt": "A brass mechanism engaging: gear teeth meshing, an escapement ticking up to speed, a small pressurised hiss.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "stone_summon",
+    "prompt": "Heavy stone waking: granite slabs grinding against each other, then a deep settling thud that shakes dust loose.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "wisp_summon",
+    "prompt": "A spirit forming from nothing: a soft rising ethereal shimmer with a faint whispering breath, weightless.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "treant_summon",
+    "prompt": "Living wood moving: thick timber creaking and splitting, roots tearing free of soil, leaves rustling.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "magma_summon",
+    "prompt": "Something igniting into being: a bellows-driven whoosh of forge fire with molten crackle and settling embers.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "tide_summon",
+    "prompt": "A body surfacing from deep water: a heavy liquid surge, streaming runoff, a wet slap of settling.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "rogue_summon",
+    "prompt": "An assassin stepping out of shadow: a soft cloth whisper, a quiet foot placement, a short blade half-drawn.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "beast_summon",
+    "prompt": "A four-legged animal landing and squaring up: paws thudding on dirt, a low warning growl, a snort of breath.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "titan_summon",
+    "prompt": "Something enormous arriving: a ground-shaking impact, a long low rumble, debris raining down afterwards.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "storm_summon",
+    "prompt": "Charged air discharging into a shape: crackling static building to a sharp electrical snap, ozone fizz.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "soldier_summon",
+    "prompt": "An armoured soldier taking position: plate armour clanking, a boot planting hard, a firm grip on a weapon haft.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "drake_summon",
+    "prompt": "A winged reptile landing: two heavy leathery wingbeats, claws scraping stone, a short rasping screech.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "serpent_summon",
+    "prompt": "A serpent uncoiling: dry scales sliding over stone, then a sharp sustained hiss.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "imp_summon",
+    "prompt": "A small mischievous creature popping into existence: a quick puff of air, a high chittering squeak, tiny scampering feet.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "frost_summon",
+    "prompt": "Ice forming into a shape: sharp crystalline cracking, a cold brittle groan, small shards tinkling down.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },

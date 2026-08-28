@@ -14,6 +14,24 @@ pointing at the same `soundId` is the normal case, not a shortcut.
 Suggested settings unless noted: **duration 1.5–2.5s, prompt_influence 0.4, loop off.**
 Keep tails short — these fire mid-turn and overlap each other.
 
+**Take the stock clip where one fits.** The ElevenLabs library already carries usable
+fire, water and impact material; generating is for what it does not have. Either way the
+saved stem is what matters — the game resolves `sfx/<stem>`, and nothing downstream knows
+or cares whether a clip was generated or picked.
+
+---
+
+## PHASE 1 — the 10 clips to do first
+
+Per Sam, 2026-08-27: the nine class casts plus the hero power. They cover 89 cards, they
+are the sounds that tell a player which class just acted, and they need no art judgement.
+
+`ember_spell_cast` · `tide_spell_cast` · `verdant_spell_cast` · `grave_spell_cast` ·
+`night_spell_cast` · `storm_spell_cast` · `clock_spell_cast` · `warden_spell_cast` ·
+`neutral_spell_cast` · `hero_power_activate`
+
+Everything below is phase 2.
+
 ---
 
 ## Spell cast — one per class (`ON_CAST`, 81 spells)
@@ -33,12 +51,46 @@ before the card text resolves.
 | `warden_spell_cast` | WARDEN (9) | Consecrated stone magic: a deep resonant bell tone with grinding granite underneath and a bright shimmer on top. |
 | `neutral_spell_cast` | NEUTRAL / CORE (2) | Generic arcane cast: a rising shimmering swell of magical energy releasing into a soft bright pop. |
 
-## Minions
+## Minion summons — by what the art shows (`ON_PLAY`, 190 minions)
+
+Not light/heavy. The archetype is the **body in the picture**, because that is what a
+player expects to hear: creature kind outranks job title, so `Charnel Priest` is a
+skeleton in robes and rattles, and `Thornfang Matron` is a beast, not a serpent.
+
+Counts are from `python tooling/sfx/classify_minions.py`, which assigns all 190 and
+prints the tally. Re-run it rather than trusting these numbers — it is the authority,
+this table is a copy.
+
+**Search the ElevenLabs library first.** Where a stock clip fits, take it; generate only
+what the library does not already have. The `search` column is what to type there.
+
+| stem | n | search | prompt if generating |
+|---|---|---|---|
+| `undead_summon` | 22 | bones rattle | Dry bones clattering together as a corpse rises: a hollow rattling shift, a low grinding groan, dust falling. |
+| `clockwork_summon` | 20 | gears mechanism | A brass mechanism engaging: gear teeth meshing, an escapement ticking up to speed, a small pressurised hiss. |
+| `stone_summon` | 20 | boulder grinding | Heavy stone waking: granite slabs grinding against each other, then a deep settling thud that shakes dust loose. |
+| `wisp_summon` | 15 | ethereal shimmer | A spirit forming from nothing: a soft rising ethereal shimmer with a faint whispering breath, weightless. |
+| `treant_summon` | 14 | wood creaking | Living wood moving: thick timber creaking and splitting, roots tearing free of soil, leaves rustling. |
+| `magma_summon` | 14 | forge fire whoosh | Something igniting into being: a bellows-driven whoosh of forge fire with molten crackle and settling embers. |
+| `tide_summon` | 12 | water surge | A body surfacing from deep water: a heavy liquid surge, streaming runoff, a wet slap of settling. |
+| `rogue_summon` | 12 | cloth blade unsheathe | An assassin stepping out of shadow: a soft cloth whisper, a quiet foot placement, a short blade half-drawn. |
+| `beast_summon` | 11 | animal growl paws | A four-legged animal landing and squaring up: paws thudding on dirt, a low warning growl, a snort of breath. |
+| `titan_summon` | 11 | earthquake impact | Something enormous arriving: a ground-shaking impact, a long low rumble, debris raining down afterwards. |
+| `storm_summon` | 10 | electricity crackle | Charged air discharging into a shape: crackling static building to a sharp electrical snap, ozone fizz. |
+| `soldier_summon` | 9 | armor clank | An armoured soldier taking position: plate armour clanking, a boot planting hard, a firm grip on a weapon haft. |
+| `drake_summon` | 7 | dragon wings screech | A winged reptile landing: two heavy leathery wingbeats, claws scraping stone, a short rasping screech. |
+| `serpent_summon` | 6 | snake hiss scales | A serpent uncoiling: dry scales sliding over stone, then a sharp sustained hiss. |
+| `imp_summon` | 5 | small creature squeak | A small mischievous creature popping into existence: a quick puff of air, a high chittering squeak, tiny scampering feet. |
+| `frost_summon` | 2 | ice cracking | Ice forming into a shape: sharp crystalline cracking, a cold brittle groan, small shards tinkling down. |
+
+`frost_summon` covers only two cards (`Frostwhisper`, `Icecrown Herald`) — the other icy
+minions read as drakes or tide. It is the one bucket that may not earn a bespoke clip;
+folding it into `tide_summon` costs little.
+
+## Minion attacks
 
 | stem | trigger | prompt |
 |---|---|---|
-| `minion_summon_light` | `ON_PLAY` | A small creature appearing on a battlefield: a light rush of displaced air and a quick soft thud of feet on packed dirt. |
-| `minion_summon_heavy` | `ON_PLAY` | Something large arriving: a deep ground-shaking stomp, armour plates settling, a low guttural breath. |
 | `attack_claw` | `ON_ATTACK` | A fast animal strike: a whipping swipe through air ending in a wet tearing impact on flesh. |
 | `attack_blade_light` | `ON_ATTACK` | A short dry melee hit: a light blade striking leather and bone, close-miked, no reverb tail. |
 | `attack_blade_heavy` | `ON_ATTACK` | A heavy two-handed weapon landing: a slow whoosh then a crushing metallic impact with a low reverberating clang. |
