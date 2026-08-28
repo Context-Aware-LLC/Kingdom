@@ -1,12 +1,12 @@
 [
   {
-    "key": "ember_spell_cast",
+    "key": "emberward_spell_cast",
     "prompt": "A sharp gout of flame erupting: fast air intake, then a roaring whoosh of fire with crackling embers, tail dying quickly.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "tide_spell_cast",
+    "key": "tidecaller_spell_cast",
     "prompt": "A surge of water conjured and released: rushing liquid, a heavy splash, droplets scattering, no reverb tail.",
     "duration": 2.0,
     "prompt_influence": 0.4
@@ -18,31 +18,31 @@
     "prompt_influence": 0.4
   },
   {
-    "key": "grave_spell_cast",
+    "key": "gravekeep_spell_cast",
     "prompt": "Necrotic magic released: a low hollow moan, dry bone rattling, a cold dusty exhale.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "night_spell_cast",
+    "key": "nightveil_spell_cast",
     "prompt": "Shadow magic: a muffled inward suction of air, a dark whispering swell, ending on a soft dead thud.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "storm_spell_cast",
+    "key": "tempest_spell_cast",
     "prompt": "A close lightning strike: crackling electrical build-up then a sharp cracking discharge with a short thunder snap.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "clock_spell_cast",
+    "key": "clockwright_spell_cast",
     "prompt": "Clockwork mechanism firing: gears ratcheting fast, a spring releasing, a small brass chime.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "warden_spell_cast",
+    "key": "stonewarden_spell_cast",
     "prompt": "Consecrated stone magic: a deep resonant bell tone with grinding granite underneath and a bright shimmer on top.",
     "duration": 2.0,
     "prompt_influence": 0.4
