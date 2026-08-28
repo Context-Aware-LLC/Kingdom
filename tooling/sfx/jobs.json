@@ -1,20 +1,140 @@
 [
   {
-    "key": "1069_the_great_mechanism__on_play",
-    "prompt": "A colossal brass clockwork automaton powers up: heavy gears engaging, escapement ticking, a deep pressurised steam release, ending on a resonant metal chime.",
-    "duration": 2.5,
-    "prompt_influence": 0.4
-  },
-  {
-    "key": "1069_the_great_mechanism__attack",
-    "prompt": "A massive iron clockwork arm swings and lands a crushing blow: whirring gear spin-up, then a heavy metallic impact with a low reverberating clang.",
+    "key": "ember_spell_cast",
+    "prompt": "A sharp gout of flame erupting: fast air intake, then a roaring whoosh of fire with crackling embers, tail dying quickly.",
     "duration": 2.0,
     "prompt_influence": 0.4
   },
   {
-    "key": "shared__minion_attack_light",
-    "prompt": "A short, dry melee hit: a light blade strike on leather and bone, close-miked, no reverb tail.",
-    "duration": 1.2,
-    "prompt_influence": 0.3
+    "key": "tide_spell_cast",
+    "prompt": "A surge of water conjured and released: rushing liquid, a heavy splash, droplets scattering, no reverb tail.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "verdant_spell_cast",
+    "prompt": "Rapid plant growth: creaking wood, vines uncoiling and whipping through leaves, a soft earthy settle.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "grave_spell_cast",
+    "prompt": "Necrotic magic released: a low hollow moan, dry bone rattling, a cold dusty exhale.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "night_spell_cast",
+    "prompt": "Shadow magic: a muffled inward suction of air, a dark whispering swell, ending on a soft dead thud.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "storm_spell_cast",
+    "prompt": "A close lightning strike: crackling electrical build-up then a sharp cracking discharge with a short thunder snap.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "clock_spell_cast",
+    "prompt": "Clockwork mechanism firing: gears ratcheting fast, a spring releasing, a small brass chime.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "warden_spell_cast",
+    "prompt": "Consecrated stone magic: a deep resonant bell tone with grinding granite underneath and a bright shimmer on top.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "neutral_spell_cast",
+    "prompt": "Generic arcane cast: a rising shimmering swell of magical energy releasing into a soft bright pop.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "minion_summon_light",
+    "prompt": "A small creature appearing on a battlefield: a light rush of displaced air and a quick soft thud of feet on packed dirt.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "minion_summon_heavy",
+    "prompt": "Something large arriving: a deep ground-shaking stomp, armour plates settling, a low guttural breath.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "attack_claw",
+    "prompt": "A fast animal strike: a whipping swipe through air ending in a wet tearing impact on flesh.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "attack_blade_light",
+    "prompt": "A short dry melee hit: a light blade striking leather and bone, close-miked, no reverb tail.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "attack_blade_heavy",
+    "prompt": "A heavy two-handed weapon landing: a slow whoosh then a crushing metallic impact with a low reverberating clang.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "death_small",
+    "prompt": "A small creature dying: a short choked cry cut off, a light collapse onto dirt.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "death_large",
+    "prompt": "A large body falling: a deep pained groan, heavy armour crashing to stone, dust settling.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "damage_impact",
+    "prompt": "A blunt hit landing on a body: a dull percussive thud with a short low-frequency punch, no tail.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "heal_restore",
+    "prompt": "Healing magic: a warm rising shimmer with a soft bell-like bloom, gentle and brief.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "weapon_equip",
+    "prompt": "A weapon being drawn and readied: steel sliding from a leather sheath, then a firm grip creak.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "weapon_swing",
+    "prompt": "A weapon swung hard through air: a sharp fast whoosh ending in a solid metallic strike.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "hero_power_activate",
+    "prompt": "A hero ability activating: a short confident magical surge with a bright metallic accent, decisive and clean.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "turn_start_chime",
+    "prompt": "A clean single UI chime marking a turn beginning: bright, short, bell-like, no reverb.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "turn_end_chime",
+    "prompt": "A soft low UI tone marking a turn ending: brief, muted, settling downward.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
   }
 ]
