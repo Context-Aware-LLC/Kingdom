@@ -236,8 +236,10 @@ different statuses at the same moment.
 
 It is a permanent git worktree of this repo carrying its own warm Unity `Library/` (gitignored), so
 a session can run the compile gate, `HeadlessVerify`, a build or the Device Simulator **without
-contending for Sam's own Editor** — a different folder, not covered by this lock. For Claude
-sessions working directly with Sam; not for Paperclip agents, which take isolated worktrees.
+contending for Sam's own Editor** — a different folder, not covered by this lock. For any agent
+working **interactively** with Sam — Claude or Codex, the name is historical — and **not** for
+Paperclip or other autonomous runs, which take isolated worktrees. The protocol is mirrored in
+`AGENTS.md` for agents that do not auto-load this file; the two move together.
 
 **Nothing keeps it current with `master`, and a stale gate run comes back GREEN.** It is one
 worktree on one branch, so a result from it is about whatever is checked out there. Read
@@ -259,7 +261,8 @@ claim — OCCUPIED, no `Unity.exe` on that path, `since` older than 30 minutes �
 so in the file when you do.
 
 **RETIREMENT TRIGGER:** if `C:\claude-editor` is deleted, moved, or stops carrying its own
-`Library/`, this section dies with it, and so do those two brain pointers.
+`Library/`, this section dies with it — and so do the `AGENTS.md` mirror, the pointer block inside
+`EDITOR-LOCK.md`, and those two brain pointers.
 
 ## Ask the graph before you grep
 

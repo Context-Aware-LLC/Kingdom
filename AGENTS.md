@@ -57,6 +57,35 @@ execution-workspace policy, this table is wrong and the excluded paths become a 
 - Do not open the Unity Editor or run Unity-MCP tools unless the task brief explicitly hands you
   the Unity seat. Unity is a single-writer resource shared with the operator.
 
+## The shared headless Editor at `C:\claude-editor`
+
+A permanent worktree of this repo carrying its own warm Unity `Library/`, so an **interactive**
+session can run the compile gate, a build or the Device Simulator without contending for Sam's own
+Editor. **Autonomous runs do not use it** — they take an isolated worktree and are covered by the
+Unity-seat rule above. Its name is historical; any interactive agent may hold it.
+
+**`C:\claude-editor\EDITOR-LOCK.md` IS the lock. Read it before you touch that directory at all** —
+before you `cd` into it, `git -C` it, launch Unity on it, or "just check something quickly."
+Occupied by someone else means hands off. Editing that file's status block is how you claim it and
+how you release it; nothing else is authoritative, in this file or anywhere else.
+
+Three reasons it is not optional, all of which bite silently: one worktree is one branch, so a
+second session switching branches destroys the occupant's run mid-flight; `Temp/UnityLockfile` is
+per project folder, so it is one Editor at a time; and every Unity run rewrites tracked assets that
+are not yours, so the damage arrives looking like your own diff.
+
+**Releasing is part of the task**, not follow-up work: revert Unity's collateral, confirm
+`productName` is still `Emberfall`, park the worktree off any feature branch, set the block back to
+`VACANT`. A stale claim — OCCUPIED, no `Unity.exe` on that path, `since` older than 30 minutes — is
+fair to take; say so in the file when you do.
+
+The full protocol, and the Unity hazards it exists to contain, are in this repo's `CLAUDE.md`
+("The shared headless Editor at `C:\claude-editor`, and its lock"). That file is not loaded into
+your session automatically — **read it before your first Unity action**, not after.
+
+**RETIREMENT TRIGGER:** if `C:\claude-editor` is deleted, moved, or stops carrying its own
+`Library/`, this section dies with it, and so does the matching section in `CLAUDE.md`.
+
 ## Branch and integration contract
 
 - For autonomous work, one ticket means one branch and one merge. Do not accumulate follow-on
