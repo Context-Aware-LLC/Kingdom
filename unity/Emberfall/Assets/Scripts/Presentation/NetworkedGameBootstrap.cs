@@ -398,6 +398,18 @@ namespace Emberfall.Presentation
             matchRunner.OnStateUpdated += cardSounds.OnStateUpdated;
             matchRunner.OnMatchEvent += cardSounds.OnMatchEvent;
 
+            // Hero voice, keyed on the LOCAL hero's class. Its own AudioSource and its own
+            // GameObject, so a voice line and a card sound overlap rather than cutting each other
+            // off — PlayOneShot mixes on one source, but the two directors' lifetimes and volumes
+            // want to stay separable. OnTurnTimer and OnMatchEnded are wired further down, beside
+            // the turn clock and the end banner that already consume those signals.
+            var voiceGo = new GameObject("HeroVoice");
+            voiceGo.transform.SetParent(transform, false);
+            var heroVoice = voiceGo.AddComponent<HeroVoiceDirector>();
+            heroVoice.Init(localClass, localId, _net.Seat);
+            matchRunner.OnStateUpdated += heroVoice.OnStateUpdated;
+            matchRunner.OnMatchEvent += heroVoice.OnMatchEvent;
+
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
             {
@@ -453,6 +465,8 @@ namespace Emberfall.Presentation
             turnClock.Init();
             _view.OnTurnTimer += turnClock.OnTurnTimer;
             matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
+            // Same signal, same marshaling: the rope LINE lands when the clock goes red.
+            _view.OnTurnTimer += heroVoice.OnTurnTimer;
 
             // ── Mulligan confirm button (E2 minimal slice; C-G1-2b) ─────────────────
             // Visible only during the Mulligan phase; the human tosses cards via InputRouter
@@ -536,6 +550,7 @@ namespace Emberfall.Presentation
             {
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware — the server deals the seat
+                heroVoice.OnMatchEnded(outcome);                    // Draw is silent, by authoring
             };
 
             // ── §14 step 4 diagnostic (v9 frost retest): playback-side twin of the [Net] snap

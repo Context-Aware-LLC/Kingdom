@@ -56,15 +56,22 @@ namespace Emberfall.Presentation
 
         private readonly string _addressPrefix;
         private readonly string _owner;
+        private readonly bool _logMissing;
         private readonly AudioSource _source;
         private readonly Dictionary<string, AsyncOperationHandle<AudioClip>> _handles = new();
 
+        /// <param name="logMissing">Whether an unresolved key warns. A caller whose content is
+        /// KNOWN to be partial — hero voice, where most classes are unrecorded — passes false, so
+        /// silence stays silent instead of filling the console every turn. Everything else should
+        /// leave it true: a missing address is otherwise completely invisible.</param>
         public AddressableSoundEffectPlayer(
-            AudioSource source, string addressPrefix = CardSoundPrefix, string owner = null)
+            AudioSource source, string addressPrefix = CardSoundPrefix, string owner = null,
+            bool logMissing = true)
         {
             _source = source;
             _addressPrefix = addressPrefix ?? CardSoundPrefix;
             _owner = owner ?? nameof(CardSoundDirector);
+            _logMissing = logMissing;
         }
 
         public void Play(string soundId)
@@ -95,7 +102,7 @@ namespace Emberfall.Presentation
             if (_source == null) return;
             if (handle.Status == AsyncOperationStatus.Succeeded && handle.Result != null)
                 _source.PlayOneShot(handle.Result);
-            else
+            else if (_logMissing)
                 Debug.LogWarning($"[{_owner}] no AudioClip at Addressables key '{address}'.");
         }
     }
