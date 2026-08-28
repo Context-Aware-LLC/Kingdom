@@ -15,7 +15,11 @@ namespace Emberfall.Presentation
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = name;
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, 0f, depth * 0.5f);
+            // Leave a small air gap behind the painted quad. Putting the cube's front cap at
+            // exactly z=0 makes it coplanar with the face and lets the depth buffer choose which
+            // one wins frame-to-frame (most visible as a dark flicker inside green buttons).
+            const float faceClearance = 0.015f;
+            go.transform.localPosition = new Vector3(0f, 0f, depth * 0.5f + faceClearance);
             go.transform.localScale = new Vector3(faceSize.x * inset, faceSize.y * inset, depth);
 
             Collider generatedCollider = go.GetComponent<Collider>();
