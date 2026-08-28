@@ -21,6 +21,41 @@
             <ui:Button name="btn-store" text="Store" class="mm-button"/>
             <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
         </ui:VisualElement>
+        <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden emb-bleed">
+            <ui:VisualElement class="mm-modal__panel mm-leaderboard">
+                <ui:VisualElement class="mm-leaderboard__header">
+                    <ui:VisualElement class="mm-leaderboard__heading">
+                        <ui:Label text="RANKED LADDER" class="mm-leaderboard__kicker"/>
+                        <ui:Label text="The Emberfall Crown" class="mm-leaderboard__title"/>
+                        <ui:Label text="A chess-inspired Elo ranking for completed player duels." class="mm-leaderboard__help"/>
+                    </ui:VisualElement>
+                    <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="mm-leaderboard__rules">
+                    <ui:VisualElement class="mm-leaderboard__rule">
+                        <ui:Label text="START" class="mm-leaderboard__rule-label"/>
+                        <ui:Label text="1000" class="mm-leaderboard__rule-value"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-leaderboard__rule">
+                        <ui:Label text="PROVISIONAL" class="mm-leaderboard__rule-label"/>
+                        <ui:Label text="20 GAMES" class="mm-leaderboard__rule-value"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-leaderboard__rule mm-leaderboard__rule--last">
+                        <ui:Label text="RANKED" class="mm-leaderboard__rule-label"/>
+                        <ui:Label text="PLAYER DUELS" class="mm-leaderboard__rule-value"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="mm-leaderboard__columns">
+                    <ui:Label text="RANK" class="mm-leaderboard__rank"/>
+                    <ui:Label text="PLAYER" class="mm-leaderboard__name"/>
+                    <ui:Label text="RATING" class="mm-leaderboard__rating"/>
+                    <ui:Label text="W — L — D" class="mm-leaderboard__record"/>
+                </ui:VisualElement>
+                <ui:Label name="leaderboard-status" text="Calling the keepers…" class="mm-leaderboard__status"/>
+                <ui:ScrollView name="leaderboard-list" mode="Vertical" class="mm-leaderboard__list"/>
+                <ui:Label name="leaderboard-updated" text="Ratings update after every eligible match." class="mm-leaderboard__updated"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
             <ui:Label name="version-label" text="—" class="mm-version"/>
         </ui:VisualElement>
