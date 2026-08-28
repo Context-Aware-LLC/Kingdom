@@ -30,6 +30,9 @@ namespace Emberfall.Presentation
             _router = router;
             _mpb    = new MaterialPropertyBlock();
 
+            BoardFurnitureDepth.Create(transform, "ButtonDepth",
+                new Vector2(ButtonW, ButtonH), depth: 0.10f, inset: 0.94f);
+
             var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             faceGo.name = "Face";
             faceGo.transform.SetParent(transform, false);

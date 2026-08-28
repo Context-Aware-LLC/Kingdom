@@ -56,6 +56,7 @@ namespace Emberfall.Presentation
         private PlayerId    _p0Id;
         private InputRouter _router;
         private Renderer    _face;
+        private Renderer    _depth;
         private TextMeshPro _label;
         private TextMeshPro _instruction;
         private BoxCollider _collider;
@@ -66,6 +67,9 @@ namespace Emberfall.Presentation
             _p0Id   = p0Id;
             _router = router;
             _mpb    = new MaterialPropertyBlock();
+
+            _depth = BoardFurnitureDepth.Create(transform, "ButtonDepth",
+                new Vector2(ButtonW, ButtonH), depth: 0.10f, inset: 0.94f);
 
             var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             faceGo.name = "Face";
@@ -138,6 +142,7 @@ namespace Emberfall.Presentation
         private void SetVisible(bool on)
         {
             if (_face != null)     _face.gameObject.SetActive(on);
+            if (_depth != null)    _depth.gameObject.SetActive(on);
             if (_label != null)    _label.gameObject.SetActive(on);
             if (_instruction != null) _instruction.gameObject.SetActive(on);
             if (_collider != null) _collider.enabled = on;

@@ -53,6 +53,9 @@ namespace Emberfall.Presentation
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
 
+            BoardFurnitureDepth.Create(transform, "PlateDepth",
+                new Vector2(PlateW, PlateH), depth: 0.12f);
+
             // Plate backing quad — the hero's board presence.
             _plate = MakeQuad(transform, "Plate", Vector3.zero, new Vector3(PlateW, PlateH, 1f));
             MaterialCatalog.Assign(_plate, MaterialCatalog.Plate);

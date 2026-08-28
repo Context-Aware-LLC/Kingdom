@@ -75,17 +75,8 @@ namespace Emberfall.Presentation
             // A single shallow body gives the pile a readable physical edge under perspective;
             // the offset sprites above it continue to communicate the actual count bands.
             const float pileDepth = 0.14f;
-            var depthGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            depthGo.name = "DeckDepth";
-            depthGo.transform.SetParent(transform, false);
-            depthGo.transform.localPosition = new Vector3(0f, 0f, pileDepth * 0.5f);
-            depthGo.transform.localScale = new Vector3(PileW * 0.96f, PileH * 0.96f, pileDepth);
-            Destroy(depthGo.GetComponent<BoxCollider>());
-            var depthRenderer = depthGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(depthRenderer, MaterialCatalog.CardEdge);
-            depthRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            depthRenderer.receiveShadows = true;
-            _depthBacking = depthGo.transform;
+            _depthBacking = BoardFurnitureDepth.Create(transform, "DeckDepth",
+                new Vector2(PileW, PileH), pileDepth).transform;
 
             // WHICH WAY THE STACK GROWS, derived from the anchor so both seats mirror for free.
             //   y: INWARD, toward the board. The top card's bottom edge sits exactly on the §1.3

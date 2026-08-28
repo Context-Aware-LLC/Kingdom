@@ -599,16 +599,8 @@ namespace Emberfall.Presentation
             // camera that exposes a dark lower/side lip without changing any face layout,
             // collider, sorting order or interaction coordinate.
             const float cardDepth = 0.12f;
-            var depthGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            depthGo.name = "CardDepth";
-            depthGo.transform.SetParent(root.transform, false);
-            depthGo.transform.localPosition = new Vector3(0f, 0f, cardDepth * 0.5f);
-            depthGo.transform.localScale = new Vector3(CardW * 0.96f, CardH * 0.96f, cardDepth);
-            DestroyObj(depthGo.GetComponent<BoxCollider>());
-            var depthRenderer = depthGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(depthRenderer, MaterialCatalog.CardEdge);
-            depthRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            depthRenderer.receiveShadows = true;
+            BoardFurnitureDepth.Create(root.transform, "CardDepth",
+                new Vector2(CardW, CardH), cardDepth);
 
             // Background quad (SG_CardComposite body) — remove auto-generated MeshCollider.
             var bg = GameObject.CreatePrimitive(PrimitiveType.Quad);
