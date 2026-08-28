@@ -269,9 +269,9 @@ namespace Emberfall.Presentation
             Camera cam = Camera.main;
             if (cam == null) return;
 
-            float planeDistance = -cam.transform.position.z;
-            Vector3 world = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, planeDistance));
-            world.z = DragLiftZ;
+            if (!BoardPlaneProjection.TryScreenToPlane(
+                    cam, screenPos, DragLiftZ, out Vector3 world))
+                return;
 
             _sourceTransform.position = world;
             _sourceTransform.rotation = Quaternion.identity;
@@ -439,9 +439,9 @@ namespace Emberfall.Presentation
         /// card. Releasing into a gap between two fanned cards, or below the fan entirely, is still
         /// putting the card back — and a rule made of colliders would have said "play it".</para>
         ///
-        /// <para>The camera is orthographic, so x and y at the board plane do not depend on the
-        /// depth passed in; the plane distance is used anyway so this keeps working if the camera
-        /// is ever swapped to perspective.</para>
+        /// <para>The screen point is resolved by ray-plane intersection rather than a guessed
+        /// camera depth. That distinction is invisible under an unrotated orthographic camera,
+        /// but load-bearing once the board camera is angled in perspective.</para>
         /// </summary>
         private DropPoint DropAt(Vector2 screenPos)
         {
@@ -450,9 +450,9 @@ namespace Emberfall.Presentation
             Camera cam = Camera.main;
             if (cam == null) return DropPoint.Board(0f);
 
-            float planeDistance = -cam.transform.position.z;   // board plane is z = 0
-            Vector3 world = cam.ScreenToWorldPoint(
-                new Vector3(screenPos.x, screenPos.y, planeDistance));
+            if (!BoardPlaneProjection.TryScreenToPlane(
+                    cam, screenPos, planeZ: 0f, out Vector3 world))
+                return DropPoint.Board(0f);
 
             return world.y <= HandFanLayout.TopEdgeY
                 ? DropPoint.OwnHand

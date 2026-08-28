@@ -53,6 +53,7 @@ namespace Emberfall.Editor
             FullStackTwoStepHerald();
             OsCanceledDuringDrag();
             OsCanceledDuringArmedTap();
+            ProjectionRoundTrips();
             DragTargetingModelCore();
 
             Debug.Log($"[InputGestureVerify] {_passed} passed, {_failed} failed");
@@ -60,6 +61,63 @@ namespace Emberfall.Editor
                 Debug.LogError($"[InputGestureVerify] FAILED — {_failed} assertion(s)");
             else
                 Debug.Log("[InputGestureVerify] GREEN — press/drag/release machine behaves as specified.");
+        }
+
+        /// <summary>
+        /// The pointer-to-board seam must survive the camera migration. A world point projected
+        /// to screen and resolved back onto its source plane has to round-trip under both the old
+        /// orthographic camera and the approved angled perspective camera.
+        /// </summary>
+        private static void ProjectionRoundTrips()
+        {
+            var cameraObject = new GameObject("ProjectionVerifyCamera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.pixelRect = new Rect(0f, 0f, 1600f, 900f);
+
+            try
+            {
+                camera.orthographic = true;
+                camera.orthographicSize = 4.6f;
+                camera.transform.SetPositionAndRotation(
+                    new Vector3(0f, 0f, -10f), Quaternion.identity);
+
+                CheckProjectionRoundTrip(
+                    "orthographic pointer projection round-trips the gameplay plane",
+                    camera,
+                    new Vector3(-3.25f, 1.4f, 0f));
+
+                camera.orthographic = false;
+                camera.fieldOfView = 36f;
+                camera.transform.position = new Vector3(0f, -5.15f, -18f);
+                camera.transform.LookAt(new Vector3(0f, 0.35f, 0.45f));
+
+                CheckProjectionRoundTrip(
+                    "angled perspective projection round-trips the gameplay plane",
+                    camera,
+                    new Vector3(4.1f, -1.25f, 0f));
+                CheckProjectionRoundTrip(
+                    "angled perspective projection round-trips the lifted drag plane",
+                    camera,
+                    new Vector3(-1.8f, 0.7f, -0.65f));
+
+                camera.transform.SetPositionAndRotation(
+                    new Vector3(0f, 0f, -10f), Quaternion.LookRotation(Vector3.right));
+                Check("a camera ray parallel to the board plane is rejected",
+                    !BoardPlaneProjection.TryScreenToPlane(
+                        camera, new Vector2(800f, 450f), 0f, out _));
+            }
+            finally
+            {
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
+        private static void CheckProjectionRoundTrip(string what, Camera camera, Vector3 expected)
+        {
+            Vector3 screen = camera.WorldToScreenPoint(expected);
+            bool hit = BoardPlaneProjection.TryScreenToPlane(
+                camera, new Vector2(screen.x, screen.y), expected.z, out Vector3 actual);
+            Check(what, hit && Vector3.Distance(expected, actual) < 0.001f);
         }
 
         // ── Full-stack harness (InputRouter + PointerSampler, no scene) ───────────────
