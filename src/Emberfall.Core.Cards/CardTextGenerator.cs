@@ -263,6 +263,10 @@ namespace Emberfall.Core.Cards
             var groupActions = new List<RuleAction>();
             string groupPrefix = "";
             string costPrefix = "";
+            // A run only ever groups rules that share a prefix, and the trigger marker is part of
+            // that prefix -- so every action in a group was raised by the same trigger and the
+            // pronoun it licenses is a property of the run, not of the action.
+            string groupPronoun = "";
 
             foreach (RuleDefinition rule in rules)
             {
@@ -273,7 +277,7 @@ namespace Emberfall.Core.Cards
                     // The cost opens a new clause, so whatever run was open is finished.
                     if (groupActions.Count > 0)
                     {
-                        lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
+                        lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
                         groupActions.Clear();
                     }
                     costPrefix = CostPrefix(rule.Action, pool);
@@ -285,16 +289,17 @@ namespace Emberfall.Core.Cards
                     ConditionPrefix(rule.Condition) + LifetimePrefix(rule.Lifetime);
                 if (groupActions.Count > 0 && prefix != groupPrefix)
                 {
-                    lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
+                    lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
                     groupActions.Clear();
                 }
 
                 groupPrefix = prefix;
+                groupPronoun = SourcePronoun(rule.Activation);
                 groupActions.Add(rule.Action);
             }
 
             if (groupActions.Count > 0)
-                lines.Add(Line(groupPrefix, JoinActions(groupActions, pool)));
+                lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
             return lines;
         }
 
@@ -348,7 +353,7 @@ namespace Emberfall.Core.Cards
         {
             CostKind cost = RuleSemantics.TargetOf(action)?.Cost ?? CostKind.None;
             if (cost == CostKind.None) throw Requires("a cost-bearing target to render a cost prefix");
-            string clause = Undot(RenderAction(action, pool));
+            string clause = Undot(RenderAction(action, pool, sourcePronoun: ""));
             return cost == CostKind.Optional
                 ? "You may " + Decapitalize(clause) + ": "
                 : clause + ": ";
@@ -380,12 +385,13 @@ namespace Emberfall.Core.Cards
         /// <para><b>A standalone keyword clause opens the sentence</b> (Sam, 2026-08-23), whatever
         /// order the rules are authored in — see <see cref="VocabularyFirst"/>.</para>
         /// </remarks>
-        private static string JoinActions(IReadOnlyList<RuleAction> group, ICardDatabase pool)
+        private static string JoinActions(IReadOnlyList<RuleAction> group, ICardDatabase pool,
+            string sourcePronoun)
         {
             if (group.Count == 0) throw Requires("at least one action to join");
 
             IReadOnlyList<(string Text, TargetSpec? Target)> actions =
-                RenderClauses(VocabularyFirst(group, pool), pool);
+                RenderClauses(VocabularyFirst(group, pool, sourcePronoun), pool, sourcePronoun);
             if (actions.Count == 1) return actions[0].Text;
 
             var clauses = new List<string>(actions.Count);
@@ -436,7 +442,7 @@ namespace Emberfall.Core.Cards
         /// already keyword-first — or has no keyword clause at all — renders exactly as before.</para>
         /// </summary>
         private static IReadOnlyList<RuleAction> VocabularyFirst(IReadOnlyList<RuleAction> group,
-            ICardDatabase pool)
+            ICardDatabase pool, string sourcePronoun)
         {
             if (group.Count < 2) return group;
 
@@ -448,7 +454,7 @@ namespace Emberfall.Core.Cards
                 // a keyword or a label added there leads a sentence without anyone editing a list
                 // here. A shape this renderer cannot print throws in the same place it would have
                 // thrown below, which Check reports as Unrenderable against the row.
-                if (!(action is TargetedRuleAction) && OpensWithVocabulary(RenderAction(action, pool)))
+                if (!(action is TargetedRuleAction) && OpensWithVocabulary(RenderAction(action, pool, sourcePronoun)))
                     led.Add(action);
                 else
                     rest.Add(action);
@@ -482,7 +488,7 @@ namespace Emberfall.Core.Cards
         /// rules change this phrasing exists to avoid making.</para>
         /// </summary>
         private static IReadOnlyList<(string Text, TargetSpec? Target)> RenderClauses(IReadOnlyList<RuleAction> group,
-            ICardDatabase pool)
+            ICardDatabase pool, string sourcePronoun)
         {
             var clauses = new List<(string, TargetSpec?)>(group.Count);
 
@@ -509,7 +515,7 @@ namespace Emberfall.Core.Cards
                         // twice as long as the thing it does (Sam, 2026-08-11).
                         spread.Append(amounts[0].ToString(CultureInfo.InvariantCulture))
                             .Append(" damage ").Append(Times(amounts.Count))
-                            .Append(" to ").Append(RandomPluralTarget(spec)).Append('.');
+                            .Append(" to ").Append(RandomPluralTarget(spec, sourcePronoun)).Append('.');
                     }
                     else
                     {
@@ -518,7 +524,7 @@ namespace Emberfall.Core.Cards
                             if (j > 0) spread.Append(j == amounts.Count - 1 ? " and " : ", ");
                             spread.Append(amounts[j].ToString(CultureInfo.InvariantCulture));
                         }
-                        spread.Append(" damage each to ").Append(Target(spec)).Append('.');
+                        spread.Append(" damage each to ").Append(Target(spec, sourcePronoun)).Append('.');
                     }
 
                     // No target attached: this clause has already named its own, and it must never
@@ -528,7 +534,7 @@ namespace Emberfall.Core.Cards
                     continue;
                 }
 
-                clauses.Add((RenderAction(group[i], pool),
+                clauses.Add((RenderAction(group[i], pool, sourcePronoun),
                     group[i] is TargetedRuleAction targeted ? targeted.Target : null));
             }
 
@@ -568,9 +574,9 @@ namespace Emberfall.Core.Cards
         };
 
         /// <summary>The plural of a randomly chosen target — "random enemy characters".</summary>
-        private static string RandomPluralTarget(TargetSpec spec)
+        private static string RandomPluralTarget(TargetSpec spec, string sourcePronoun)
         {
-            string plural = PhrasingFor(spec.Selector).Plural;
+            string plural = PhrasingFor(spec.Selector, sourcePronoun).Plural;
             if (spec.Filter != null) plural = Filter(plural, spec.Filter);
             return IsRandomlyChosen(spec) ? "random " + plural : plural;
         }
@@ -774,6 +780,45 @@ namespace Emberfall.Core.Cards
             _ => "",
         };
 
+        /// <summary>
+        /// The pronoun <c>TRIGGER_SOURCE</c> is spoken with under one trigger, or "" where it has
+        /// no antecedent and must name itself.
+        ///
+        /// <para><b>A pronoun needs something to refer back to, and the trigger is the only thing
+        /// that can supply one.</b> <see cref="TriggerPrefix"/> is where a trigger states its timing
+        /// in prose, and "Whenever you summon a minion, " is the only clause in the vocabulary that
+        /// introduces a NOUN while doing so — so it is the only place a later "it" is licensed.
+        /// Every other trigger states its timing with a label (<c>Toll:</c>, <c>Healed:</c>) or with
+        /// nothing at all, and a bare "it" under one of those refers to nothing on the card.</para>
+        ///
+        /// <para>That is why this is keyed on the TRIGGER and not on the selector.
+        /// <c>TRIGGER_SOURCE</c> is legal on six triggers (see
+        /// <c>RuleActionCapabilities.TriggerSourceShape</c>) and on five of them the sentence has
+        /// not named the thing, so it keeps the long form and reads as the clumsy phrase it is —
+        /// which is the correct outcome, not a gap: those five are shapes nobody has asked to
+        /// print, and inventing a pronoun for them would ship a dangling one.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER:</b> this table and <see cref="TriggerPrefix"/> are one fact
+        /// in two switches — a trigger that speaks a noun in prose and a trigger whose source can be
+        /// pronominalised are the same trigger. A second arm added to either belongs in both, and if
+        /// a third case ever appears they collapse into one table returning the pair.</para>
+        /// </summary>
+        public static string TriggerSourcePronoun(Trigger trigger) => trigger switch
+        {
+            Trigger.ON_FRIENDLY_SUMMON => "it",
+            _ => "",
+        };
+
+        /// <summary>The pronoun an activation licenses for <c>TRIGGER_SOURCE</c>, or "".</summary>
+        /// <remarks>
+        /// An <c>AURA</c> is a continuous recompute with no triggering event, so it never has a
+        /// trigger source to speak of and licenses nothing.
+        /// </remarks>
+        private static string SourcePronoun(RuleActivation activation)
+            => activation is TriggeredActivation triggered
+                ? TriggerSourcePronoun(triggered.Trigger)
+                : "";
+
         /// <summary>Renders the marker a rule prints, derived from how it activates.</summary>
         /// <remarks>
         /// <b>The trailing colon is load-bearing.</b> Presentation renders both a timing marker and a
@@ -875,10 +920,11 @@ namespace Emberfall.Core.Cards
                && query.Relation == SourceRelation.Self;
 
         /// <summary>Renders one typed action as a complete effect sentence.</summary>
-        private static string RenderAction(RuleAction action, ICardDatabase pool) => action switch
+        private static string RenderAction(RuleAction action, ICardDatabase pool,
+            string sourcePronoun) => action switch
         {
-            DamageAction a => $"Deal {a.Amount} damage{To(a.Target)}.",
-            HealAction a => $"Restore {a.Amount} Health{To(a.Target)}.",
+            DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
+            HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
             // Prints the stats rather than a marker word, unlike its sibling action markers below.
             // A flat +1/+1 has a definition shorter than any word for it, needs no glossary entry,
             // and cannot be misread as the on-play marker it would sit beside.
@@ -895,24 +941,24 @@ namespace Emberfall.Core.Cards
             // restriction.
             ModifyStatsAction a when IsSelf(a.Target)
                 => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            ModifyStatsAction a => $"Give {Target(a.Target)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            GrantKeywordAction a => $"Give {Target(a.Target)} {Name(a.Keyword)}.",
-            DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target)}.",
+            ModifyStatsAction a => $"Give {Target(a.Target, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
+            GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {Name(a.Keyword)}.",
+            DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target, sourcePronoun)}.",
             // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
             // whose hand. Naming the owner works for one minion and for a board of them alike.
-            ReturnToHandAction a => $"Return {Target(a.Target)} to {BounceDestination(a.Target)}.",
-            SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target)}.",
-            TransformAction a => $"Transform {Target(a.Target)} into {NamedCard(a.CardId, pool)}.",
+            ReturnToHandAction a => $"Return {Target(a.Target, sourcePronoun)} to {BounceDestination(a.Target)}.",
+            SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
+            TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
             // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
             // 2026-08-25, which is what made the action and the carrier print the same word.
-            FrostAction a => $"{FrostVerb} {Target(a.Target)}.",
-            TakeControlAction a => $"Take control of {Target(a.Target)}.",
+            FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
+            TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
             // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
             // second spelling here, so a card face and a timing marker cannot drift apart. Reads
             // "Trigger a random friendly minion's Toll." — repetitive under a Toll: prefix, and
             // deliberately so: the second word is the effect, and any synonym would be a word the
             // glossary does not carry.
-            TriggerTollAction a => $"Trigger {TollOf(a.Target)}.",
+            TriggerTollAction a => $"Trigger {TollOf(a.Target, sourcePronoun)}.",
             DrawAction a => $"Draw {Cards(a.Count)}.",
             SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",
             AddToHandAction a => $"Add {Copies(a.Count, NamedCard(a.CardId, pool))} to your hand.",
@@ -973,8 +1019,8 @@ namespace Emberfall.Core.Cards
         /// query, so any selector that happens to be unrestricted qualifies without being listed —
         /// which is what the criteria work was for.</para>
         /// </summary>
-        private static string To(TargetSpec target)
-            => NarrowsNothing(target) ? "" : " to " + Target(target);
+        private static string To(TargetSpec target, string sourcePronoun)
+            => NarrowsNothing(target) ? "" : " to " + Target(target, sourcePronoun);
 
         /// <summary>Whose hand a bounced card lands in.</summary>
         /// <remarks>
@@ -1034,7 +1080,8 @@ namespace Emberfall.Core.Cards
         /// Generate-and-test cannot disagree, because there is only one renderer and the parser
         /// calls it.</para>
         /// </summary>
-        internal static string DescribeTarget(TargetSpec target) => Target(target);
+        internal static string DescribeTarget(TargetSpec target, Trigger? trigger = null)
+            => Target(target, trigger.HasValue ? TriggerSourcePronoun(trigger.Value) : "");
 
         /// <summary>
         /// One typed action as its effect sentence, exposed for the same reason as
@@ -1047,8 +1094,9 @@ namespace Emberfall.Core.Cards
         /// produces a REFUSAL rather than a wrong rule, because the only thing that can turn a
         /// candidate into a parse is this method agreeing byte for byte.</para>
         /// </summary>
-        internal static string DescribeAction(RuleAction action, ICardDatabase pool)
-            => RenderAction(action, pool);
+        internal static string DescribeAction(RuleAction action, ICardDatabase pool,
+            Trigger? trigger = null)
+            => RenderAction(action, pool, trigger.HasValue ? TriggerSourcePronoun(trigger.Value) : "");
 
         /// <summary>
         /// A whole marker's worth of actions as the single sentence they print as — the conjunction,
@@ -1060,18 +1108,19 @@ namespace Emberfall.Core.Cards
         /// this is the only thing that knows how it works, so asking it is the one way to invert it
         /// that cannot drift.</para>
         /// </summary>
-        internal static string DescribeActions(IReadOnlyList<RuleAction> group, ICardDatabase pool)
-            => JoinActions(group, pool);
+        internal static string DescribeActions(IReadOnlyList<RuleAction> group, ICardDatabase pool,
+            Trigger? trigger = null)
+            => JoinActions(group, pool, trigger.HasValue ? TriggerSourcePronoun(trigger.Value) : "");
 
         /// <summary>Renders a target spec as the noun phrase an effect sentence reads it as.</summary>
-        private static string Target(TargetSpec target)
+        private static string Target(TargetSpec target, string sourcePronoun)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             // No count check any more: a non-positive count has no spelling in TargetSelection, so
             // nothing that parses can arrive here holding one.
             bool random = IsRandomlyChosen(target);
 
-            string description = Quantity(target, PhrasingFor(target.Selector));
+            string description = Quantity(target, PhrasingFor(target.Selector, sourcePronoun));
             if (target.DistinctFrom.Length > 0)
             {
                 // Checked HERE and not inside Another(), because only the selector answers it — the
@@ -1082,7 +1131,17 @@ namespace Emberfall.Core.Cards
                     throw Unsupported("distinctFrom on the unique selector", target.Selector);
                 description = Another(description);
             }
-            if (target.Filter != null) description = Filter(description, target.Filter);
+            if (target.Filter != null)
+            {
+                // Refused for the same reason distinctFrom is refused above, and checked in the same
+                // place: a pronoun has no head noun, so every axis Filter splices onto one would
+                // land against a word that is not there -- "it with Shroud", "it that costs 4 or
+                // less". The narrowing is real and unsayable, so the ROW is what fails
+                // (C26-TEXT-UNRENDERABLE) rather than the sentence quietly coming out mangled.
+                if (description == sourcePronoun && sourcePronoun.Length > 0)
+                    throw Unsupported("filter on the pronoun form of", target.Selector);
+                description = Filter(description, target.Filter);
+            }
             // Unconditional: a random selection is never "every candidate", so a description
             // beginning "all " cannot reach Randomize() and needs no guard here.
             if (random) description = Randomize(description);
@@ -1131,9 +1190,17 @@ namespace Emberfall.Core.Cards
             => new SelectorPhrasing(singular, plural);
 
         /// <summary>Maps a target selector to the words it is spoken with.</summary>
-        private static SelectorPhrasing PhrasingFor(string selector) => selector switch
+        /// <param name="sourcePronoun">
+        /// The word <c>TRIGGER_SOURCE</c> is spoken with when the sentence has already named it, or
+        /// "" when nothing has. See <see cref="TriggerSourcePronoun"/> for which trigger licenses
+        /// one and why it is the trigger that decides.
+        /// </param>
+        private static SelectorPhrasing PhrasingFor(string selector, string sourcePronoun) => selector switch
         {
             "SELF" => Say("this", "these"),
+            // Unique, so the plural is unreachable either way; both forms are the pronoun so that
+            // nothing downstream has to know which one it took.
+            "TRIGGER_SOURCE" when sourcePronoun.Length > 0 => Say(sourcePronoun, sourcePronoun),
             "TRIGGER_SOURCE" => Say("the trigger source", "trigger sources"),
             "ADJACENT" => Say("an adjacent minion", "adjacent minions"),
             "ANY_CHARACTER" => Say("a character", "characters"),
@@ -1193,9 +1260,9 @@ namespace Emberfall.Core.Cards
         /// <c>'s</c> — is decided by the final letter, which is the one thing English really does
         /// key on the spelling.</para>
         /// </summary>
-        private static string TollOf(TargetSpec target)
+        private static string TollOf(TargetSpec target, string sourcePronoun)
         {
-            string phrase = Target(target);
+            string phrase = Target(target, sourcePronoun);
             string label = TriggerLabel(Trigger.ON_DEATH);
             string possessive = phrase.EndsWith("s", StringComparison.Ordinal) ? "'" : "'s";
             return phrase + possessive + " " + label + (IsPlural(target) ? "s" : "");
