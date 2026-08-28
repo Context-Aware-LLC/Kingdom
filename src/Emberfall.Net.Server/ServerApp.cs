@@ -13,6 +13,7 @@ using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
+using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Transport;
@@ -50,6 +51,12 @@ namespace Emberfall.Net.Server
         /// <see cref="AccountId"/> until VULN-003's authentication requirement is satisfied.
         /// </summary>
         public Func<AccountId, int>? MatchmakingRatingForAccount { get; init; }
+
+        /// <summary>
+        /// Server-authoritative ranked ladder. Null composes an in-memory store for local/dev use;
+        /// production binds the same Supabase Postgres connection as accounts.
+        /// </summary>
+        public IRatingStore? RatingStore { get; init; }
 
         /// <summary>
         /// Supabase JWT verifier (EF-074a/c). Null → auth tokens in HelloMsg are rejected with
@@ -107,6 +114,9 @@ namespace Emberfall.Net.Server
             IAccountStore? accountStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAccountStore(accountsDb!, new SystemTimeSource());
+            IRatingStore? ratingStore = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresRatingStore(accountsDb!);
 
             return new ServerConfig
             {
@@ -117,6 +127,7 @@ namespace Emberfall.Net.Server
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
+                RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
                 // behavior unchanged, same as every other optional seam above.
@@ -181,6 +192,10 @@ namespace Emberfall.Net.Server
                 new BandWideningMatchmakingQueue(time, cfg.Options.Matchmaking);
             var ratingForAccount = cfg.MatchmakingRatingForAccount ??
                 (_ => cfg.Options.Matchmaking.DefaultRating);
+            IRatingStore ratingStore = cfg.RatingStore ??
+                new InMemoryRatingStore(cfg.Options.Matchmaking.DefaultRating);
+            var ratingWorker = new RatingWorker(ratingStore);
+            builder.Services.AddSingleton<IHostedService>(ratingWorker);
 
             // Bot-fill (design doc §Bot roster & provisioning): a roster path with no account store
             // is a normal dev-box configuration, not a startup failure — logged and skipped.
@@ -212,7 +227,9 @@ namespace Emberfall.Net.Server
                 cfg.Telemetry,
                 cfg.TokenVerifier,
                 cfg.AccountStore,
-                botPool);
+                botPool,
+                cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
+                ratingWorker);
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -225,6 +242,20 @@ namespace Emberfall.Net.Server
                 cap = gate.MaxSessions,
                 contract = cfg.Options.WireContractVersion,
             }));
+            app.MapGet("/leaderboard", async (HttpContext context) =>
+            {
+                int limit = 50;
+                if (int.TryParse(context.Request.Query["limit"], out int requested))
+                    limit = Math.Clamp(requested, 1, 100);
+
+                var entries = await ratingStore.GetLeaderboardAsync(limit, context.RequestAborted);
+                return Results.Json(new
+                {
+                    generatedAtUtc = DateTimeOffset.UtcNow,
+                    ratingSystem = "elo",
+                    entries,
+                });
+            });
 
             app.Map("/ws", async context =>
             {

@@ -8,6 +8,7 @@ using Emberfall.Net.Server;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Telemetry;
 using NUnit.Framework;
 
@@ -132,7 +133,8 @@ namespace Emberfall.Net.Server.Tests.Support
         /// </param>
         public SessionHarness(
             ServerOptions? options = null, bool start = true,
-            bool attributed = false, TelemetrySource source = TelemetrySource.Ladder)
+            bool attributed = false, TelemetrySource source = TelemetrySource.Ladder,
+            IRankedMatchSink? rankedMatchSink = null)
         {
             // Clock tests advance far past the heartbeat timeout on purpose; liveness has its own test.
             // They also jump the clock a whole turn in ONE tick, which the decision-24 stall guard
@@ -152,7 +154,8 @@ namespace Emberfall.Net.Server.Tests.Support
                 Telemetry,
                 attributed
                     ? new MatchAttribution(AccountFor(0), AccountFor(1), source)
-                    : MatchAttribution.None);
+                    : MatchAttribution.None,
+                rankedMatchSink: rankedMatchSink);
             if (start) Session.Start(Conn0, Conn1);
         }
 

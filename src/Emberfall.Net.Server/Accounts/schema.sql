@@ -60,3 +60,48 @@ create table if not exists entitlement_grant (
 
 -- The balance projection reads by (player_id, item); the audit/history view reads by player_id.
 create index if not exists entitlement_grant_player_item_idx on entitlement_grant (player_id, item);
+
+-- The ranked ladder projection. Ratings are server-authored from completed human-vs-human matches;
+-- clients can read the public /leaderboard endpoint but never write these tables directly.
+create table if not exists ladder_player (
+  player_id     text        primary key,
+  display_name  text        not null,
+  rating        integer     not null,
+  games_played  bigint      not null default 0,
+  wins          bigint      not null default 0,
+  losses        bigint      not null default 0,
+  draws         bigint      not null default 0,
+  updated_at    timestamptz not null,
+  constraint ladder_player_counts_nonnegative check (
+    games_played >= 0 and wins >= 0 and losses >= 0 and draws >= 0
+    and games_played = wins + losses + draws)
+);
+
+-- One immutable audit row per ranked match. match_id is the idempotency anchor: a retry or a second
+-- server applying the same replay conflicts before either player's standing can move twice.
+create table if not exists ladder_match (
+  match_id          text        primary key,
+  ended_at          timestamptz not null,
+  p0_player_id      text        not null,
+  p1_player_id      text        not null,
+  outcome           text        not null,
+  p0_rating_before  integer,
+  p0_rating_after   integer,
+  p1_rating_before  integer,
+  p1_rating_after   integer,
+  constraint ladder_match_distinct_players check (p0_player_id <> p1_player_id),
+  constraint ladder_match_outcome check (outcome in ('p0_win', 'p1_win', 'draw'))
+);
+
+-- Serves the top-N endpoint as an index-only scan once the visibility map is warm.
+create index if not exists ladder_player_rank_idx
+  on ladder_player (rating desc, wins desc, games_played, player_id)
+  include (display_name, losses, draws);
+
+create index if not exists ladder_match_p0_idx on ladder_match (p0_player_id, ended_at desc);
+create index if not exists ladder_match_p1_idx on ladder_match (p1_player_id, ended_at desc);
+
+-- These public-schema tables are server-private. Supabase's Data API gets no policies and therefore
+-- no rows; the game reads the deliberately narrow Kestrel projection instead.
+alter table ladder_player enable row level security;
+alter table ladder_match enable row level security;
