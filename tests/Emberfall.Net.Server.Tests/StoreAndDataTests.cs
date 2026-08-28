@@ -52,14 +52,20 @@ namespace Emberfall.Net.Server.Tests
         }
 
         [Test]
-        public void PrebuiltDecks_Are_Twenty_Cards_Each_And_Fully_Resolvable()
+        public void PrebuiltDecks_Are_Thirty_Cards_Each_And_Fully_Resolvable()
         {
             // The RC F1 drift guard: the ported decklists must resolve against the live card data
             // the server actually deals from.
+            //
+            // The size is asserted against DeckValidator.DeckSize, not a literal 30. These lists are
+            // dealt to a real seat, so a fallback deck that is not the format's size is a seat playing
+            // a different game — and the two numbers drifting apart is precisely how it would happen
+            // without anything failing.
             var db = SessionHarness.Db;
             foreach (var deck in new[] { PrebuiltDecks.EmberwardDeck(), PrebuiltDecks.TidecallerDeck() })
             {
-                Assert.That(deck.Count, Is.EqualTo(20), "M1 slice decks are 20 cards");
+                Assert.That(deck.Count, Is.EqualTo(Emberfall.Core.Collection.DeckValidator.DeckSize),
+                    "a fallback deck is dealt to a real seat and must be the format's size");
                 var copies = new Dictionary<int, int>();
                 foreach (int cardId in deck)
                 {

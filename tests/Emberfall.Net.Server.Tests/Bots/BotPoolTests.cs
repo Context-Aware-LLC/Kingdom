@@ -71,5 +71,42 @@ namespace Emberfall.Net.Server.Tests.Bots
             Assert.That(first!.DisplayName, Is.Not.EqualTo(second!.DisplayName));
             Assert.That(pool.TryAcquire(), Is.Null);
         }
+
+        /// <summary>
+        /// Successive acquires do not keep handing out the same bot.
+        ///
+        /// <para><b>The failure this guards is silent and looks like a working feature.</b>
+        /// <c>TryAcquire</c> used to return the first idle entry it enumerated, and <c>_ready</c> is a
+        /// Dictionary keyed by username that enumerates in insertion order in practice — so whichever
+        /// bot <c>bot-roster.json</c> listed first won every acquire where it was free. Every other
+        /// roster entry only ever appeared while that one was mid-match. Nothing failed, no test went
+        /// red, and adding bots to the roster changed nothing a player could see.</para>
+        ///
+        /// <para>Sixteen draws from a four-bot pool: under the old first-idle rule this sees exactly
+        /// one name, and under a uniform draw the chance of seeing one name is 4·(1/4)^16 ≈ 9e-10.
+        /// The assertion is "more than one", not a distribution test — a chi-square on a CSPRNG would
+        /// be testing the platform, and would flake.</para>
+        /// </summary>
+        [Test]
+        public void Acquire_Does_Not_Always_Return_The_Same_Bot()
+        {
+            var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            var pool = new BotPool(db);
+            foreach (string name in new[] { "ember_knight", "tide_warden", "grave_toll", "verdant_grove" })
+                pool.MarkReady(MakeAccount(name));
+
+            var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
+            for (int i = 0; i < 16; i++)
+            {
+                var handle = pool.TryAcquire();
+                Assert.That(handle, Is.Not.Null, "a released pool always has an idle bot");
+                seen.Add(handle!.DisplayName);
+                handle.Release();   // back to a full pool, so every draw sees all four
+            }
+
+            Assert.That(seen, Has.Count.GreaterThan(1),
+                "16 acquires from a 4-bot pool returned one name — the draw is not random, so a "
+                + "player meets the same opponent every match and the roster's size is decorative");
+        }
     }
 }
