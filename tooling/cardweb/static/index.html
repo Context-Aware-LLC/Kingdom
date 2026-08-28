@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emberfall — Card Authoring</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<header class="bar">
+  <h1>Emberfall <span class="dim">card authoring</span></h1>
+  <div class="bar-meta">
+    <span id="corpus-meta" class="dim">loading…</span>
+    <button id="btn-staging" class="ghost">Staged <span id="staged-count" class="pill">0</span></button>
+    <button id="btn-validate" class="ghost">Validate corpus</button>
+  </div>
+</header>
+
+<div class="filters">
+  <input id="q" type="search" placeholder="Search name or text…" autocomplete="off">
+  <select id="f-set"><option value="">All sets</option></select>
+  <select id="f-class"><option value="">All classes</option></select>
+  <select id="f-type"><option value="">All types</option></select>
+  <select id="f-rarity"><option value="">All rarities</option></select>
+  <label class="check"><input type="checkbox" id="f-staged"> Staged only</label>
+  <span id="count" class="dim"></span>
+</div>
+
+<main id="grid" class="grid" aria-live="polite"></main>
+
+<!-- Editor drawer -->
+<aside id="editor" class="drawer" hidden>
+  <div class="drawer-head">
+    <strong id="ed-title">—</strong>
+    <button id="ed-close" class="ghost" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body">
+    <img id="ed-art" class="ed-art" alt="">
+    <form id="ed-form" autocomplete="off"></form>
+
+    <details id="ed-rules-wrap" class="rules">
+      <summary>Rules <span class="dim">(read-only)</span></summary>
+      <p class="note">
+        Rules are authored in the Unity window, not here. A trigger that parses is not a trigger
+        that fires, and liveness is per source type — a browser form would happily produce a card
+        that validates and does nothing.
+      </p>
+      <pre id="ed-rules"></pre>
+    </details>
+  </div>
+  <div class="drawer-foot">
+    <span id="ed-status" class="dim"></span>
+    <button id="ed-revert" class="ghost">Revert</button>
+    <button id="ed-stage" class="primary">Stage edit</button>
+  </div>
+</aside>
+
+<!-- Modal: staging / validation output -->
+<div id="modal" class="modal" hidden>
+  <div class="modal-card">
+    <div class="drawer-head">
+      <strong id="modal-title">—</strong>
+      <button id="modal-close" class="ghost" aria-label="Close">✕</button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

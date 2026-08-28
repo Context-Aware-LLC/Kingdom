@@ -1,0 +1,7 @@
+# Derived thumbnail cache — regenerate with build_thumbs.py. 4.2 MB from 515.8 MB of source
+# art; committing it would put a generated downscale in git next to the originals it came from.
+.thumbs/
+
+# Staged web edits are work in flight, not corpus. They are consumed by
+# tooling/scripts/reconcile_card_staging.py and cleared once applied.
+staging/
