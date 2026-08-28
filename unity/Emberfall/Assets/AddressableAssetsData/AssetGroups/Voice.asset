@@ -425,6 +425,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af6ca3bd895367b45a9f620818c23f3e
+    m_Address: vo/ElevenLabs_Thin_torch_flame_whoosh,_quick_airy_flare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: af8c1fc238177d94a85662a6be3a89ad
     m_Address: vo/vo_tempest_win_1
     m_ReadOnly: 0
@@ -462,6 +467,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b86e4de331c4f314eb90dd6b96c4ed7b
     m_Address: vo/vo_tidecaller_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b963f89a523c2e94eae3687ae83d18b9
+    m_Address: vo/ElevenLabs_Magical_blue_fire_whoosh,_swirling_enchanted_flames
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
