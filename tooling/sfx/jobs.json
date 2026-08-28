@@ -1,0 +1,20 @@
+[
+  {
+    "key": "1069_the_great_mechanism__on_play",
+    "prompt": "A colossal brass clockwork automaton powers up: heavy gears engaging, escapement ticking, a deep pressurised steam release, ending on a resonant metal chime.",
+    "duration": 2.5,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "1069_the_great_mechanism__attack",
+    "prompt": "A massive iron clockwork arm swings and lands a crushing blow: whirring gear spin-up, then a heavy metallic impact with a low reverberating clang.",
+    "duration": 2.0,
+    "prompt_influence": 0.4
+  },
+  {
+    "key": "shared__minion_attack_light",
+    "prompt": "A short, dry melee hit: a light blade strike on leather and bone, close-miked, no reverb tail.",
+    "duration": 1.2,
+    "prompt_influence": 0.3
+  }
+]
