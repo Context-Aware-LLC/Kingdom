@@ -23,9 +23,9 @@ WHAT IT DOES
 WHAT IT DELIBERATELY DOES NOT DO
     Delete anything, write a card-data file, or touch Addressables. Promotion puts a file on
     disk; the Editor still has to run Emberfall/Addressables/Setup Groups + Migrate Card Data
-    before that file has an address, and the generated .meta still has to be committed. Until
-    both happen the clip resolves to nothing and fails SILENTLY -- the page says so on every
-    promote, because nothing else will.
+    before that file has an address, and until it does the clip resolves to nothing and fails
+    SILENTLY -- the page says so on every promote, because nothing else will. (The .meta Unity
+    writes by itself on the next Editor focus; it only needs committing, and git status shows it.)
 
 PATHS ARE VALIDATED, NOT TRUSTED
     Every path from the client is resolved and checked to be inside a known root before it is
@@ -296,9 +296,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             shutil.copy2(src, dest)
             self._json(200, {
                 "ok": True, "dest": rel(dest),
-                "message": "%s %s -> %s. Now run Emberfall/Addressables/Setup Groups in the "
-                           "Editor and commit the generated .meta -- until both, it has no "
-                           "address and fails silently." % (
+                "message": "%s %s -> %s. Run Emberfall/Addressables/Setup Groups in the Editor "
+                           "-- until then it has no address and fails silently." % (
                                "Replaced" if existed else "Promoted", src.name, rel(dest)),
             })
             return

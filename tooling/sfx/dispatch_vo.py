@@ -29,8 +29,8 @@ AFTERWARDS, two steps this script cannot do:
   1. Run Emberfall/Addressables/Setup Groups + Migrate Card Data in the Editor.
      Files under Assets/Sound/Voice have NO address until that runs, and an
      unaddressed clip fails silently -- no exception, no console error.
-  2. Commit the .meta Unity generates beside each clip. Without it the guid is
-     re-minted on another machine and the Addressables entry orphans.
+  2. Commit the .meta beside each clip. Unity writes these itself on the next Editor
+     focus -- they are not something to create or wait for, only to `git add`.
 
 Filenames must be unique across the WHOLE Voice tree, not per class: the group
 addresses by file name, so Grave/win_1 and Ember/win_1 would collide. The
