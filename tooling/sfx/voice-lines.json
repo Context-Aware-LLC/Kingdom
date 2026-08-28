@@ -2,7 +2,7 @@
   "_about": "Hero voice lines, keyed by the character's PrimaryClass. A character is a pairing (PrimaryClass/SecondaryClass) and NEUTRAL is not pairable, so there are exactly 8 voices. Stems follow vo_<class>_<moment>_<n> and resolve as sfx/<stem>, the same Addressables address the card sound player already uses.",
   "_moments": {
     "match_start": "No MatchStarted event exists in GameEventKind. The first TurnStarted is the only stand-in.",
-    "turn_start": "Fires every turn. Three variants WILL grate over a 20-turn match -- play these at reduced probability, or widen to 6+ before shipping.",
+    "turn_start": "RULING (Sam, 2026-08-28): play at a LOW RATE -- occasionally, not every turn. So three variants is enough and the set does not need widening. The line is a flourish, not a turn marker; the turn clock already marks the turn.",
     "rope": "Server fires at ServerOptions.RopeMs = 15_000, i.e. 15s before the deadline. TurnClockView already reacts to it by tinting the number red.",
     "win": "MatchOutcome.Player0Win / Player1Win, resolved against the local seat.",
     "lose": "Same event, opposite seat. MatchOutcome.Draw has no line and falls through silent."
@@ -43,7 +43,7 @@
     "TIDECALLER": {
       "voice_id": "pFZP5JQG7iQjIQuC4Bku",
       "voice_name": "Lily - Velvety Actress",
-      "why": "Chosen over James - Husky (EkK5I93UQWFDigLMpZcX), who is the better voice alone but would have been the THIRD middle-aged deep American after Oxley and George. Lily is british/female/confident and keeps the eight legible; the class's lines are written for cool certainty, which suits her.",
+      "why": "Sam, 2026-08-28, CHOSEN after auditioning against James and Priyanka on the same lines. Mid/british/confident. Note she is an ElevenLabs stock voice rather than one added from the library, which is why she was not recognised by name -- she works on eleven_v3 like every other voice on the account.",
       "lines": {
         "match_start": [
           "The tide has already decided.",
@@ -265,5 +265,6 @@
       }
     }
   },
-  "_delivery": "No shouted or high-energy voices exist on the account (Sam, 2026-08-28), so every line here is written for CONTROLLED delivery -- certainty and menace rather than volume. This is the better default anyway: turn_start fires every turn and a shouted line grates far faster than a quiet one. Where a lift is genuinely needed, model_id eleven_v3 accepts inline audio tags ([shouts], [whispers], [laughs], emotion tags); the older eleven_text_to_sound/TTS models ignore them and will read the brackets aloud."
+  "_delivery": "No shouted or high-energy voices on the account, so lines are written for CONTROLLED delivery -- certainty and menace rather than volume. MEASURED 2026-08-28: every voice on the account accepts model_id eleven_v3 and its inline audio tags ([shouts], [whispers], emotion tags), even though the voice list's high_quality_base_model_ids field never enumerates v3 -- that field is not evidence of incompatibility. Older TTS models ignore the tags and read the brackets aloud, so the model id has to be eleven_v3 wherever a tag is used.",
+  "_casting": "Cast by auditioning candidates on the CLASS'S OWN LINES, not on the library demo reel (Sam, 2026-08-28): Priyanka demoed well and lost on the actual lines. A demo is chosen to flatter the voice; five words of 'Even the sea recedes' is not. Audition before committing 15 lines to a voice -- it costs ~30 credits."
 }
