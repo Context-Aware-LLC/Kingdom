@@ -111,13 +111,13 @@ Shader "Emberfall/SG_ManaFill"
                 float py = saturate(IN.uv.y);
 
                 // Clamp before floor so UV == 1.0 stays in the last column/row.
-                float col = floor(min(px * cols, cols - 1e-4));
+                float column = floor(min(px * cols, cols - 1e-4));
                 float visualRow = floor(min(py * rows, rows - 1e-4));
                 float flowRow = _FlipVertical > 0.5 ? rows - 1.0 - visualRow : visualRow;
-                float slot = flowRow * cols + col;
+                float slot = flowRow * cols + column;
                 float idx = (slot + 0.5) / n; // crystal center, 0..1 — band test point
 
-                float localX = px * cols - col;
+                float localX = px * cols - column;
                 float localY = py * rows - visualRow;
 
                 // Cell coordinates in units of CELL HEIGHT. Width/cols divided by height/rows

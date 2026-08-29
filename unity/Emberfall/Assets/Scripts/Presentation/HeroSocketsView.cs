@@ -19,19 +19,25 @@ namespace Emberfall.Presentation
         public const float HitDiameter = 1.12f;
         private const float SocketDiameter = 0.64f;
         // The hand-cut frames keep their full blades, so their apertures are not at the canvas
-        // pivots. Measured from the supplied 620 px exports at FrameSize 1.32: power is about
-        // (+5, -40) source pixels from centre; weapon is about (+15, +25).
+        // pivots. Measured from the supplied 620 px exports at FrameSize 1.32:
+        // hero-power.png is about (+5, -40) source pixels from centre; weapon-frame.png is
+        // about (+15, +25). The semantic roles below are intentionally swapped from the names.
         // RETIREMENT TRIGGER: replacing either PNG in place requires remeasuring its aperture
         // centre and revisiting these two offsets before the new art ships.
-        internal static readonly Vector2 PowerApertureOffset = new Vector2(0.01f, 0.085f);
-        private static readonly Vector2 WeaponApertureOffset = new Vector2(0.03f, -0.052f);
+        internal static readonly Vector2 PowerApertureOffset = new Vector2(0.03f, -0.052f);
+        private static readonly Vector2 WeaponApertureOffset = new Vector2(0.01f, 0.085f);
         private const float StatDiameterFraction = 0.22f;
-        private const string PowerFrameKey = "hero-power";
-        private const string WeaponFrameKey = "weapon-frame";
+        // Sam's live read: the double-bladed export reads as a weapon, while the molten round
+        // export reads as a power. Asset filenames predate that decision, so map by visual role.
+        private const string PowerFrameKey = "weapon-frame";
+        private const string WeaponFrameKey = "hero-power";
 
-        private const int FrameOrder = 8;
-        private const int ArtOrder = 9;
-        private const int StatOrder = 10;
+        // The sockets are bottom-docked in world space but must composite over the hero plate.
+        // HeroPlateView occupies orders 8..10; sharing those values made overlap depend on
+        // renderer submission order and let the portrait swallow the upper half of each frame.
+        private const int FrameOrder = 11;
+        private const int ArtOrder = 12;
+        private const int StatOrder = 13;
 
         // Segments around the socket disc. 64 is smooth at 88 px (the socket at board scale) and
         // still smooth if the frames are ever drawn larger for a bake-off sheet.

@@ -14,6 +14,11 @@ namespace Emberfall.Presentation
         public const float NearClip = 0.1f;
         public const float FarClip = 80f;
 
+        // The exact-bounds fit felt crowded once the larger hero cluster and vertical mana rail
+        // were on the live board. Keep a small authored pull-back even on an inset-free 16:9
+        // screen; safe-area fitting may add more retreat, but never removes this breathing room.
+        public const float CompositionRetreat = 2f;
+
         // The prototype's approved camera. Keep this single-sourced: the live scene configures
         // itself from these values at runtime rather than carrying a second YAML copy.
         public static readonly Vector3 AuthoredPosition = new(0f, -5.15f, -18f);
@@ -91,12 +96,13 @@ namespace Emberfall.Presentation
             float bottomNdc = safeViewport.yMin * 2f - 1f;
             float topNdc = safeViewport.yMax * 2f - 1f;
 
-            float retreat = 0f;
+            float retreat = CompositionRetreat;
             if (!TryOffsetIntervals(cameraPoints, retreat, tanHorizontal, tanVertical,
                     leftNdc, rightNdc, bottomNdc, topNdc,
                     out _, out _, out _, out _))
             {
-                float high = 1f;
+                float low = retreat;
+                float high = Mathf.Max(retreat + 1f, 1f);
                 while (high < MaxRetreat &&
                        !TryOffsetIntervals(cameraPoints, high, tanHorizontal, tanVertical,
                            leftNdc, rightNdc, bottomNdc, topNdc,
@@ -104,7 +110,6 @@ namespace Emberfall.Presentation
                     high *= 2f;
 
                 high = Mathf.Min(high, MaxRetreat);
-                float low = 0f;
                 for (int i = 0; i < 36; i++)
                 {
                     float mid = (low + high) * 0.5f;
