@@ -135,6 +135,69 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(cancelled, Is.Null, "back over the hand is the one release that means 'never mind'");
         }
 
+        [Test]
+        public void An_Unaffordable_Card_Dropped_On_The_Board_Returns_To_Hand()
+        {
+            var body = Minion(FixtureCard.Id("unaffordable"));
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            state.Players[0].Mana.Available = 0;
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            PlayerIntent intent = model.Resolve(source, PointerSubject.None, DropPoint.Board(0f));
+
+            Assert.That(intent, Is.Null,
+                "a play the engine must reject should cancel locally so the dragged card returns to its hand slot");
+            Assert.That(model.Phase, Is.EqualTo(DragTargetingModel.TargetingPhase.Direct));
+        }
+
+        [Test]
+        public void A_Targeted_Card_With_No_Legal_Target_Dropped_On_The_Board_Returns_To_Hand()
+        {
+            var spell = Spell(FixtureCard.Id("targetless"), new[]
+            {
+                TestRules.Rule("hit", Trigger.ON_CAST,
+                    new DamageAction(1, new TargetSpec("ANY_ENEMY_MINION", TargetSelection.Of(1)))),
+            });
+            var db = new FakeCardDatabase().Register(spell);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), spell.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            PlayerIntent intent = model.Resolve(source, PointerSubject.None, DropPoint.Board(0f));
+
+            Assert.That(intent, Is.Null,
+                "a targeted card with no valid destination should cancel locally and return to hand");
+            Assert.That(model.Phase, Is.EqualTo(DragTargetingModel.TargetingPhase.Direct));
+        }
+
+        [Test]
+        public void A_Herald_With_No_Legal_Target_Dropped_On_The_Board_Returns_To_Hand()
+        {
+            var herald = Minion(FixtureCard.Id("targetless-herald"), new[]
+            {
+                TestRules.Rule("hit", Trigger.ON_PLAY,
+                    new DamageAction(1, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1)))),
+            });
+            var db = new FakeCardDatabase().Register(herald);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), herald.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            PlayerIntent intent = model.Resolve(source, PointerSubject.None, DropPoint.Board(0f));
+
+            Assert.That(intent, Is.Null,
+                "a herald whose required target set is empty should return to hand instead of fizzling in play");
+            Assert.That(model.Phase, Is.EqualTo(DragTargetingModel.TargetingPhase.Direct));
+        }
+
         // ---- minions can be placed anywhere in the row, not just past the end (Sam, 2026-08-09) ---
 
         [Test]
@@ -249,9 +312,12 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         private static CardDefinition Minion(int id)
+            => Minion(id, System.Array.Empty<RuleDefinition>());
+
+        private static CardDefinition Minion(int id, RuleDefinition[] rules)
             => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, 1, 1, 3, null,
                 CardClass.NEUTRAL, Rarity.COMMON, System.Array.Empty<Keyword>(),
-                System.Array.Empty<RuleDefinition>(), "", "art/" + FixtureCard.Handle(id), SetId.CORE,
+                rules, "", "art/" + FixtureCard.Handle(id), SetId.CORE,
                 true, null, "");
 
         private static CardDefinition Spell(int id, RuleDefinition[] rules)

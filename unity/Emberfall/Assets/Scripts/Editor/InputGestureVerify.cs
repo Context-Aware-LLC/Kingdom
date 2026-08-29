@@ -554,7 +554,7 @@ namespace Emberfall.Editor
             HeroPowerDrops();
             DropOnOpenBoardPlays();
             TargetSets();
-            OptionalHeraldNeedsNoAimStep();
+            TargetlessHeraldReturnsToHand();
         }
 
         // ── The cases ───────────────────────────────────────────────────────────────
@@ -841,15 +841,15 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// A herald whose target set is empty FIZZLES rather than blocking the play (Sam,
-        /// 2026-08-07), so it must arm as an ordinary untargeted drop.
+        /// A herald whose target set is empty owes no aim step, but dropping it now returns it to
+        /// hand rather than allowing its effect to fizzle into play (Sam, 2026-08-29).
         ///
         /// <para>THE DEAD END THIS GUARDS. NeedsTarget used to read the card DEFINITION, which does
         /// not know the board. A Reinforce herald with no friendly minion armed an aim step holding
-        /// zero candidates: nothing glowed and every drop read as a miss. Ask the plan and read
-        /// RequiredCount; it consults the board.</para>
+        /// zero candidates: nothing glowed and every drop entered a mode that could not complete.
+        /// Ask the plan for the live candidate set, then cancel the drop when that set is empty.</para>
         /// </summary>
-        private static void OptionalHeraldNeedsNoAimStep()
+        private static void TargetlessHeraldReturnsToHand()
         {
             GameState s = NewState();
             s.Players[0].Board.Clear();                 // nothing friendly to reinforce
@@ -861,10 +861,9 @@ namespace Emberfall.Editor
             Check("a herald with no legal target needs no aim step", !fizzle.NeedsTarget);
             Check("...and glows nothing", m.TargetsFor(fizzle) == null);
 
-            var played = m.Resolve(fizzle, PointerSubject.None, DropPoint.Board(-1.35f)) as PlayCardIntent;
-            Check("...and drops straight onto the board with no targets",
-                played != null && played.Targets.Count == 0 && played.BoardSlot == 0);
-            Check("...leaving the machine in Direct, not stranded mid-aim",
+            var played = m.Resolve(fizzle, PointerSubject.None, DropPoint.Board(-1.35f));
+            Check("...and returns to hand when dropped with no legal target", played == null);
+            Check("...leaving the machine in Direct, ready for another card",
                 m.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             // A COST is not an effect: it stays required, and the engine still refuses the play.

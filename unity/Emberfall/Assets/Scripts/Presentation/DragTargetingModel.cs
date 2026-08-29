@@ -108,7 +108,6 @@ namespace Emberfall.Presentation
         public static DragSource None => default;
     }
 
-
     /// <summary>
     /// The press/drag/release decision core (EF-048), deliberately free of MonoBehaviour, Transform,
     /// collider and camera. Everything that decides WHETHER a gesture is legal and WHAT intent it
@@ -121,8 +120,10 @@ namespace Emberfall.Presentation
     /// the server still rule on every intent this produces. Where the two disagree the engine wins,
     /// so this errs toward SUBMITTING: the courtesy target set can be wrong (it is built from a
     /// mirror), and swallowing a gesture the authority would have allowed is the worse of the two
-    /// errors. Since #268 a rejection is silent, so an over-submitted gesture costs nothing
-    /// visible.</para>
+    /// errors. Hand-card legality that is fully visible in the mirror is checked here, though:
+    /// an unaffordable card or one with an empty chosen-target set must cancel so InputRouter
+    /// can return its dragged visual instead of waiting for a snapshot that a rejected play
+    /// will never produce.</para>
     /// </summary>
     public sealed class DragTargetingModel
     {
@@ -322,11 +323,10 @@ namespace Emberfall.Presentation
             CardDefinition def, Trigger trigger, InstanceId? source)
         {
             ClearChoicePlan();
-            // A group the engine no longer asks for is skipped, not shown. A herald that fizzles
-            // for want of a target reports RequiredCount 0 (Targeting.RequiredPlayerCount), and an
-            // armed step with nothing to pick is a dead end: nothing glows, every drop reads as a
-            // miss, and the only escape is cancelling the drag. Dropping it here is what lets the
-            // gesture fall through to an ordinary untargeted play.
+            // A group the engine no longer asks for is skipped, not shown. A herald with no target
+            // reports RequiredCount 0 (Targeting.RequiredPlayerCount), and an armed step with
+            // nothing to pick is a dead end. HandCardCanResolve now catches that empty candidate
+            // set before this method; skipping zero-count groups here keeps the plan itself valid.
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, source))
                 if (requirement.RequiredCount > 0)
@@ -417,6 +417,11 @@ namespace Emberfall.Presentation
             // to play the card.
             if (drop.OverOwnHand) return null;
 
+            // A rejected play produces no state snapshot. Returning an intent for a condition the
+            // local mirror can already prove false therefore strands the dragged visual at its
+            // release point until some later accepted action happens to re-layout the hand.
+            if (!HandCardCanResolve(source.Id)) return null;
+
             bool occupiesSlot = HandCardOccupiesBoardSlot(source.Id);
 
             // Exception 2. A targeted spell released on open space, on a slot's worth of empty
@@ -454,6 +459,31 @@ namespace Emberfall.Presentation
             }
 
             return new PlayCardIntent(_p0Id, source.Id, slot, System.Array.Empty<TargetRef>());
+        }
+
+        /// <summary>
+        /// Local, visible playability only. The authority remains final, but mana, board capacity
+        /// and an empty player-chosen target set are all present in this player's projection and
+        /// can be refused early so a failed drop returns to hand immediately.
+        /// </summary>
+        private bool HandCardCanResolve(InstanceId cardId)
+        {
+            if (!TryHandDefinition(cardId, out CardDefinition def)) return true;
+
+            PlayerState own = null;
+            foreach (PlayerState ps in State.Players)
+                if (ps.Id == _p0Id) { own = ps; break; }
+            if (own == null) return true;
+
+            if (own.Mana.Available < def.Cost) return false;
+            if (def.Type == CardType.MINION && own.Board.Count >= MatchEngine.BoardCap) return false;
+
+            Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
+            foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
+                         State, _db, _p0Id, def, trigger, cardId))
+                if (requirement.Candidates.Count == 0) return false;
+
+            return true;
         }
 
         /// <summary>How many minions our row is currently holding — the count the drop's x is
@@ -515,9 +545,9 @@ namespace Emberfall.Presentation
         /// returns false and the engine's rejection is the backstop.
         ///
         /// <para>This asks what the engine will actually OWE against the board as it stands, not what
-        /// the card definition mentions. A minion herald with no legal target fizzles rather than
-        /// blocking the play, so it needs no aim step and must arm as an ordinary drop — asking the
-        /// definition instead would arm a targeting mode the player can never complete.</para></summary>
+        /// the card definition mentions. A minion herald with no legal target owes no aim step;
+        /// <see cref="HandCardCanResolve"/> separately cancels its drop so it returns to hand rather
+        /// than arming a targeting mode the player can never complete.</para></summary>
         public bool HandCardNeedsTarget(InstanceId cardId)
         {
             if (!TryHandDefinition(cardId, out CardDefinition def)) return false;

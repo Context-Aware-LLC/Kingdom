@@ -342,10 +342,18 @@ namespace Emberfall.Presentation
                 return true;   // Consumed the release; no intent submitted yet.
             }
 
-            CancelGesture(restoreVisual: intent == null);
-            if (intent == null) return false;
-            Submit(intent);
-            return true;
+            if (intent == null)
+            {
+                CancelGesture();
+                return false;
+            }
+
+            // Validate before deciding whether the dragged card should stay at the release point.
+            // A rejected intent emits no snapshot, so treating it as a successful drop strands the
+            // visual until an unrelated accepted action happens to refresh the hand.
+            bool submitted = Submit(intent);
+            CancelGesture(restoreVisual: !submitted);
+            return submitted;
         }
 
         private bool IsGestureSource(PointerSubject s)
@@ -695,11 +703,11 @@ namespace Emberfall.Presentation
         // own projection, so verdicts match the authority for everything except hidden-info
         // rejects, which the authority still catches. A local reject routes to the same
         // OnRejected path a server reject would take.
-        private void Submit(PlayerIntent intent)
+        private bool Submit(PlayerIntent intent)
         {
             // A pending interactive choice is the sole legal gameplay continuation. Keep all
             // board/button/keyboard paths quiet rather than manufacturing predictable rejections.
-            if (ChoiceBlocksInput && intent is not UnearthChoiceIntent) return;
+            if (ChoiceBlocksInput && intent is not UnearthChoiceIntent) return false;
 
             if (_validator != null && _currentState != null
                 && !_validator.CanExecute(_currentState, intent, out RejectReason? reason))
@@ -710,9 +718,10 @@ namespace Emberfall.Presentation
                                  $"v{_currentState.StateVersion} phase={_currentState.Phase} " +
                                  $"active={_currentState.ActivePlayer} intent={intent.GetType().Name}");
                 _p0Input.OnRejected(reason ?? RejectReason.NotImplemented);
-                return;
+                return false;
             }
             _p0Input.Enqueue(intent);
+            return true;
         }
     }
 }
