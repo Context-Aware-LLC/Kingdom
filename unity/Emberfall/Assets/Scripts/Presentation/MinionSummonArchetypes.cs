@@ -77,7 +77,7 @@ namespace Emberfall.Presentation
         public static string Resolve(CardDefinition definition)
         {
             if (definition == null || definition.Type != CardType.MINION) return string.Empty;
-            if (Cache.TryGetValue(definition.Id, out string cached)) return cached;
+            if (Cache.TryGetValue(definition.Id, out var cached)) return cached;
 
             // Name AND handle, because the handle carries words the display name drops
             // (clock_modular_stalker -> "modular"), and lowercased because every pattern is.

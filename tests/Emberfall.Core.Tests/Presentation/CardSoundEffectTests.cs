@@ -156,6 +156,23 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
+        public void Clockwright_hero_power_uses_its_paper_clip()
+        {
+            CardDefinition power = HeroPower(1001, CardClass.CLOCKWRIGHT);
+            var database = new TestDatabase(power);
+            GameState state = State();
+            state.Players[0].Hero.HeroPowerId = power.Id;
+
+            var router = new CardSoundCueRouter(database);
+            router.Capture(state);
+            IReadOnlyList<string> sounds = router.Route(new GameEvent(
+                GameEventKind.HeroPowerUsed, 1, state.Players[0].Hero.Id, null, null,
+                EventFlags.None));
+
+            Assert.That(sounds, Is.EqualTo(new[] { "clockwright_hero_power" }));
+        }
+
+        [Test]
         public void The_default_never_reaches_observers()
         {
             // The observer paths run once per carrier on the board. If a default leaked into them
@@ -225,7 +242,10 @@ namespace Emberfall.Core.Tests.Presentation
                 RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Sound", "SFX");
             // spell_cast_1 is a pre-convention placeholder that nothing routes to; it is listed
             // so the orphan check stays about NEW mistakes rather than re-reporting a known one.
-            var wanted = new List<string> { "hero_power_activate", "spell_cast_1" };
+            var wanted = new List<string>
+            {
+                "hero_power_activate", "clockwright_hero_power", "spell_cast_1",
+            };
             foreach (CardClass cardClass in Enum.GetValues(typeof(CardClass)))
                 wanted.Add(cardClass.ToString().ToLowerInvariant() + "_spell_cast");
 
@@ -250,7 +270,7 @@ namespace Emberfall.Core.Tests.Presentation
             foreach (string stem in present)
                 if ((stem.Contains("spell_cast", StringComparison.Ordinal) ||
                      stem.Contains("hero_power", StringComparison.Ordinal)) &&
-                    !wanted.Contains(stem))
+                    !IsRoutedSoundStem(stem, wanted))
                     orphans.Add(stem);
 
             var missing = new List<string>();
@@ -273,6 +293,16 @@ namespace Emberfall.Core.Tests.Presentation
             // TestContext.Progress writes straight through to stdout so the list is actually read.
             TestContext.Progress.WriteLine(report);
             Assert.Warn(report);
+        }
+
+        private static bool IsRoutedSoundStem(string stem, IReadOnlyList<string> routedBases)
+        {
+            for (int sound = 0; sound < routedBases.Count; sound++)
+                if (stem == routedBases[sound]) return true;
+            for (int variant = 2; variant <= 6; variant++)
+                for (int sound = 0; sound < routedBases.Count; sound++)
+                    if (stem == routedBases[sound] + "_" + variant) return true;
+            return false;
         }
 
         private static GameState State()

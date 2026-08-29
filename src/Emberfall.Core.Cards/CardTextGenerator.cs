@@ -933,54 +933,54 @@ namespace Emberfall.Core.Cards
         /// <summary>Renders one typed action as a complete effect sentence.</summary>
         private static string RenderAction(RuleAction action, ICardDatabase pool,
             string sourcePronoun) => action switch
-        {
-            DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
-            HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
-            // Prints the stats rather than a marker word, unlike its sibling action markers below.
-            // A flat +1/+1 has a definition shorter than any word for it, needs no glossary entry,
-            // and cannot be misread as the on-play marker it would sit beside.
-            //
-            // The selector is the ONLY thing on this line carrying allegiance, so a card that means
-            // friendly must say so through it. Sam, 2026-08-20: "Buffing the enemy board is never
-            // the intent, but it should still be possible... unless the card text specifically says
-            // 'a friendly minion'." The words ARE the restriction; C26 keeps them true to the
-            // selector underneath.
-            // A minion buffing ITSELF gains; "Give this +1/+1" is the same fact in the third person
-            // about the speaker (Sam, 2026-08-25). The allegiance argument above does not apply —
-            // SELF names one entity and carries no side to get wrong — so this is purely how the
-            // sentence reads. Every other selector keeps "Give", because there the words ARE the
-            // restriction.
-            ModifyStatsAction a when IsSelf(a.Target)
-                => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            ModifyStatsAction a => $"Give {Target(a.Target, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-            GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {Name(a.Keyword)}.",
-            DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target, sourcePronoun)}.",
-            // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
-            // whose hand. Naming the owner works for one minion and for a board of them alike.
-            ReturnToHandAction a => $"Return {Target(a.Target, sourcePronoun)} to {BounceDestination(a.Target)}.",
-            SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
-            TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
-            // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
-            // 2026-08-25, which is what made the action and the carrier print the same word.
-            FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
-            TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
-            // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
-            // second spelling here, so a card face and a timing marker cannot drift apart. Reads
-            // "Trigger a random friendly minion's Toll." — repetitive under a Toll: prefix, and
-            // deliberately so: the second word is the effect, and any synonym would be a word the
-            // glossary does not carry.
-            TriggerTollAction a => $"Trigger {TollOf(a.Target, sourcePronoun)}.",
-            DrawAction a => $"Draw {Cards(a.Count)}.",
-            SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",
-            AddToHandAction a => $"Add {Copies(a.Count, NamedCard(a.CardId, pool))} to your hand.",
-            EquipAction a => $"Equip {NamedCard(a.CardId, pool)}.",
-            GainManaAction a => Mana(a),
-            // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
-            BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
-            GainArmorAction a => $"Gain {a.Amount} Armor.",
-            UnearthAction a => $"{UnearthLabel} {a.Count}.",
-            _ => throw UnsupportedNode("action", action),
-        };
+            {
+                DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
+                HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
+                // Prints the stats rather than a marker word, unlike its sibling action markers below.
+                // A flat +1/+1 has a definition shorter than any word for it, needs no glossary entry,
+                // and cannot be misread as the on-play marker it would sit beside.
+                //
+                // The selector is the ONLY thing on this line carrying allegiance, so a card that means
+                // friendly must say so through it. Sam, 2026-08-20: "Buffing the enemy board is never
+                // the intent, but it should still be possible... unless the card text specifically says
+                // 'a friendly minion'." The words ARE the restriction; C26 keeps them true to the
+                // selector underneath.
+                // A minion buffing ITSELF gains; "Give this +1/+1" is the same fact in the third person
+                // about the speaker (Sam, 2026-08-25). The allegiance argument above does not apply —
+                // SELF names one entity and carries no side to get wrong — so this is purely how the
+                // sentence reads. Every other selector keeps "Give", because there the words ARE the
+                // restriction.
+                ModifyStatsAction a when IsSelf(a.Target)
+                    => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
+                ModifyStatsAction a => $"Give {Target(a.Target, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
+                GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {Name(a.Keyword)}.",
+                DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target, sourcePronoun)}.",
+                // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
+                // whose hand. Naming the owner works for one minion and for a board of them alike.
+                ReturnToHandAction a => $"Return {Target(a.Target, sourcePronoun)} to {BounceDestination(a.Target)}.",
+                SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
+                TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
+                // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
+                // 2026-08-25, which is what made the action and the carrier print the same word.
+                FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
+                TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
+                // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
+                // second spelling here, so a card face and a timing marker cannot drift apart. Reads
+                // "Trigger a random friendly minion's Toll." — repetitive under a Toll: prefix, and
+                // deliberately so: the second word is the effect, and any synonym would be a word the
+                // glossary does not carry.
+                TriggerTollAction a => $"Trigger {TollOf(a.Target, sourcePronoun)}.",
+                DrawAction a => $"Draw {Cards(a.Count)}.",
+                SummonAction a => $"Summon {Copies(a.Count, NamedCard(a.CardId, pool))}.",
+                AddToHandAction a => $"Add {Copies(a.Count, NamedCard(a.CardId, pool))} to your hand.",
+                EquipAction a => $"Equip {NamedCard(a.CardId, pool)}.",
+                GainManaAction a => Mana(a),
+                // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
+                BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
+                GainArmorAction a => $"Gain {a.Amount} Armor.",
+                UnearthAction a => $"{UnearthLabel} {a.Count}.",
+                _ => throw UnsupportedNode("action", action),
+            };
 
         /// <summary>
         /// "Sacrifice" for your own minions, "Destroy" for anything else. One action either way —

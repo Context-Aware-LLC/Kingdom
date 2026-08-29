@@ -102,7 +102,8 @@ namespace Emberfall.Core.Tests.Interpreter
             Play(state, db, FixtureCard.Id("ts_observer"));
 
             var enemy = new CardInstance(state.NextInstanceId(), FixtureCard.Id("ts_body"),
-                state.Players[1].Id) { Zone = Zone.Hand };
+                state.Players[1].Id)
+            { Zone = Zone.Hand };
             state.Players[1].Hand.Add(enemy);
             state.ActivePlayer = state.Players[1].Id;
 
@@ -137,7 +138,8 @@ namespace Emberfall.Core.Tests.Interpreter
             string afterOwnSummon = Stats(mine);
 
             var enemy = new CardInstance(state.NextInstanceId(), FixtureCard.Id("ts_body"),
-                state.Players[1].Id) { Zone = Zone.Hand };
+                state.Players[1].Id)
+            { Zone = Zone.Hand };
             state.Players[1].Hand.Add(enemy);
             state.ActivePlayer = state.Players[1].Id;
             new CommandProcessor(db).Execute(state,
