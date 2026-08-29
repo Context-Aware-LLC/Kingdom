@@ -593,8 +593,9 @@ namespace Emberfall.Presentation
             return view;
         }
 
-        /// <summary>The forged hero-power and weapon rings inboard of the portrait. Separate
-        /// from the plate because the weapon half comes and goes with the equipped weapon.</summary>
+        /// <summary>The forged hero-power and weapon frames across the portrait's lower edge.
+        /// Separate from the plate because the weapon half comes and goes with the equipped
+        /// weapon.</summary>
         private void CreateHeroSockets(PlayerId playerId, BoardAnchors anchors,
                                        ICardDatabase db, IArtProvider artProvider)
         {

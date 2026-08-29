@@ -60,39 +60,30 @@ namespace Emberfall.Presentation
         // Signs are applied in BuildSeat: x is negated for the hero side, positive for the
         // rail/deck side, then multiplied by the seat sign.
         //
-        // Hero cluster owns x -7.88..-4.98 (2.9). Portrait outer against the margin, the
-        // two-disc column inboard toward the hand (Sam, 2026-07-24).
-        internal const float HeroX     = 6.98f;  // 1.8-wide plate centred in -7.88..-6.08
-        private const float DiscX      = 5.53f;  // socket column centred in -6.08..-4.98; the
-                                                 // 1.008 rings span -6.03..-5.03 inside it
+        // The portrait moved inward when the two enlarged sockets moved underneath it. The
+        // outboard socket, not the portrait, now owns the design edge at |x| 7.88.
+        internal const float HeroX = 6.65f;
+        internal const float SocketOffsetX = 0.57f;
+        internal const float HeroClusterOuterEdge =
+            HeroX + SocketOffsetX + HeroSocketsView.FrameSize * 0.5f;
 
-        // Mana rail owns +2.5..+6.53 (4.03); deck pile +6.53..+7.83 (1.3).
-        private const float ManaRailX  = 4.515f;
+        // Two columns of five mana orbs stand inboard of the deck pile. The 0.31-unit gap from
+        // the grid's outer edge at 6.22 to the pile's inner edge at 6.53 keeps them distinct.
+        internal const float ManaGridX = 5.76f;
         internal const float DeckX     = 7.18f;
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // §1.1 is an x-budget only. Everything in it rests on one baseline 0.15 above the
         // screen edge: |y| = 4.45. Each centre below is that baseline plus half the element's
         // own height, so moving the baseline moves the whole bottom row together.
-        private const float Baseline   = 4.45f;  // 0.15 above the screen edge at 4.6
-        private const float HeroY      = 3.55f;  // 1.8-tall plate on the baseline
+        private const float Baseline = 4.45f; // frame crown/bottom remains 0.15 inside y +/-4.6
+        internal const float HeroY = Baseline - HeroPlateView.PlateH * 0.5f;
 
-        // The sockets DOCK SIDE BY SIDE, hero power then weapon, both on the baseline — never
-        // stacked. Stacking is what the two 0.9Ø discs did, and two rings in that column would
-        // have to shrink to fit the plate's 1.8 height (Sam, 2026-07-25). Docked, height is not
-        // the constraint at all: the rings clear the board row, whose cards top out near 2.2.
-        //
-        // DERIVED, not independent constants — hand-picked values stop touching the moment the
-        // frame size changes. Budget by the RING, not the frame canvas: the canvas carries 34%
-        // transparent margin so the stat bosses can overhang, so 1.35 draws a ring of ~1.008.
-        // The docked pair reaches ~1 unit inboard of the old disc column, past §1.1's hero-cluster
-        // budget. IF IT EVER NEEDS MORE ROOM, TAKE IT FROM THE HAND — tighten HandFanLayout's
-        // pitch, do not shrink the portrait or the rings (Sam, 2026-07-25).
-        private const float RingD      = HeroSocketsView.FrameSize * HeroSocketsView.RingFraction;
-        private const float SocketY    = Baseline - RingD * 0.5f;   // both rings on the baseline
-        private const float WeaponX    = DiscX - RingD;             // docked inboard, rings touching
-        private const float ManaRailY  = 4.00f;  // aligned to the hero-power disc, not the
-                                                 // baseline: the two read as one bottom line
+        // Both sockets overlap the lower skirt. Screen-down is deliberate rather than multiplied
+        // by the seat sign: every portrait is upright, so the opponent's lower skirt faces the
+        // battlefield while the local portrait's faces the bottom edge.
+        internal const float SocketDrop = 0.69f;
+        internal const float ManaGridY = 3.35f;
         private const float DeckY      = 3.53f;  // a 1.3-wide card-proportioned pile (1.83
                                                  // tall) on the baseline. DeckPileView renders
                                                  // here — NetworkedGameBootstrap builds one per
@@ -163,10 +154,14 @@ namespace Emberfall.Presentation
                 seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", Vector3.zero);
             HandFanLayout.Apply(seat.HandSlots, HandSlotCount, seat.FanMirrored);
 
-            seat.HeroAnchor      = MakeAnchor($"{prefix}_Hero",      new Vector3(xSign *  HeroX,     ySign * HeroY,      0f));
-            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower", new Vector3(xSign *  DiscX,     ySign * SocketY,    0f));
-            seat.WeaponAnchor    = MakeAnchor($"{prefix}_Weapon",    new Vector3(xSign *  WeaponX,   ySign * SocketY,    0f));
-            seat.ManaTrayAnchor  = MakeAnchor($"{prefix}_ManaTray",  new Vector3(xSign * -ManaRailX, ySign * ManaRailY,  0f));
+            seat.HeroAnchor = MakeAnchor($"{prefix}_Hero",
+                new Vector3(xSign * HeroX, ySign * HeroY, 0f));
+            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower",
+                new Vector3(xSign * (HeroX - SocketOffsetX), ySign * HeroY - SocketDrop, 0f));
+            seat.WeaponAnchor = MakeAnchor($"{prefix}_Weapon",
+                new Vector3(xSign * (HeroX + SocketOffsetX), ySign * HeroY - SocketDrop, 0f));
+            seat.ManaTrayAnchor = MakeAnchor($"{prefix}_ManaTray",
+                new Vector3(xSign * -ManaGridX, ySign * ManaGridY, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
         }
 

@@ -18,12 +18,14 @@ namespace Emberfall.Presentation
             if (GetComponent<Collider>() == null)
             {
                 var col = gameObject.AddComponent<BoxCollider>();
-                // The hero-power RING, not the frame canvas it is drawn on. The canvas carries
-                // 34% transparent margin for the weapon's stat bosses, so sizing this to the
-                // canvas would put a hit target on empty air and steal the bottom of the
-                // weapon ring stacked directly above.
-                float d = HeroSocketsView.FrameSize * HeroSocketsView.RingFraction;
+                // Match the interactive circular opening, not the decorative blades that extend
+                // beyond it and overlap the hero frame.
+                float d = HeroSocketsView.HitDiameter;
                 col.size = new Vector3(d, d, 0.1f);
+                // The new bottom-docked frame overlaps the hero collider. Put the power hitbox
+                // nearer the board camera so a tap on the visible power resolves deterministically
+                // as HeroPower rather than whichever overlapping collider Physics returns first.
+                col.center = new Vector3(0f, 0f, -0.1f);
             }
         }
 

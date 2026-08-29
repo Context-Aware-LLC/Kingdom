@@ -18,7 +18,7 @@ namespace Emberfall.Presentation
             if (GetComponent<Collider>() == null)
             {
                 var col = gameObject.AddComponent<BoxCollider>();
-                col.size = new Vector3(1.8f, 1.8f, 0.1f); // matches HeroPlateView.PlateW/H (§1.1)
+                col.size = new Vector3(HeroPlateView.PlateW, HeroPlateView.PlateH, 0.1f);
             }
         }
 

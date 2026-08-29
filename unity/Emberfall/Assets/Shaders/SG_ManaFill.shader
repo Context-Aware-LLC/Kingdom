@@ -7,9 +7,9 @@
 // never implemented — and the graph could not be safely edited without the
 // Shader Graph editor. See hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/visual-contract.md §Contradictions 1.
 //
-// Model: the tray is 10 ORBS derived procedurally from UV.x (no mask texture),
-// each a carved socket with a gem seated in it. Each orb is colored by
-// cumulative bands, left→right:
+// Model: the tray is 10 ORBS derived procedurally from a configurable UV grid
+// (no mask texture), each a carved socket with a gem seated in it. The shipping
+// layout is two columns by five rows. Each orb is colored by cumulative bands:
 //   Available (blue) → Spent (dim) → Locked (backdraft) → Temporary → Empty.
 // Each level is a 0..1 ratio (count / cap) pushed per-instance via MPB.
 //
@@ -39,6 +39,8 @@ Shader "Emberfall/SG_ManaFill"
         _TempLevel   ("Temp Level", Range(0,1))   = 0
 
         _CrystalCount ("Crystal Count", Float)             = 10
+        _GridColumns  ("Grid Columns", Float)              = 2
+        _FlipVertical ("Flip Vertical Fill", Float)        = 0
         _SocketRadius ("Socket Radius", Range(0.1, 0.5))   = 0.470
         _GemRadius    ("Gem Radius", Range(0.05, 0.5))     = 0.355
     }
@@ -80,6 +82,8 @@ Shader "Emberfall/SG_ManaFill"
                 float  _LockedLevel;
                 float  _TempLevel;
                 float  _CrystalCount;
+                float  _GridColumns;
+                float  _FlipVertical;
                 float  _SocketRadius;
                 float  _GemRadius;
             CBUFFER_END
@@ -100,17 +104,27 @@ Shader "Emberfall/SG_ManaFill"
 
             half4 frag (Varyings IN) : SV_Target
             {
-                float n    = max(1.0, _CrystalCount);
-                float p    = saturate(IN.uv.x);
-                // Clamp before floor so p == 1.0 lands in the last slot, not an 11th.
-                float slot  = floor(min(p * n, n - 1e-4));
-                float idx   = (slot + 0.5) / n;   // crystal center, 0..1 — band test point
-                float local = p * n - slot;       // 0..1 within this crystal
+                float n = max(1.0, _CrystalCount);
+                float cols = clamp(round(_GridColumns), 1.0, n);
+                float rows = ceil(n / cols);
+                float px = saturate(IN.uv.x);
+                float py = saturate(IN.uv.y);
 
-                // Cell coordinates in units of rail HEIGHT, so the orb is round on screen
-                // whatever the cell's own aspect is. r = 0.5 touches the rail's top/bottom.
-                float  cellAspect = IN.aspect / n;
-                float2 q = float2((local - 0.5) * cellAspect, IN.uv.y - 0.5);
+                // Clamp before floor so UV == 1.0 stays in the last column/row.
+                float col = floor(min(px * cols, cols - 1e-4));
+                float visualRow = floor(min(py * rows, rows - 1e-4));
+                float flowRow = _FlipVertical > 0.5 ? rows - 1.0 - visualRow : visualRow;
+                float slot = flowRow * cols + col;
+                float idx = (slot + 0.5) / n; // crystal center, 0..1 — band test point
+
+                float localX = px * cols - col;
+                float localY = py * rows - visualRow;
+
+                // Cell coordinates in units of CELL HEIGHT. Width/cols divided by height/rows
+                // gives this aspect, which keeps every socket circular when the whole grid is
+                // resized or rotated.
+                float cellAspect = IN.aspect * rows / cols;
+                float2 q = float2((localX - 0.5) * cellAspect, localY - 0.5);
                 float  r = length(q);
 
                 // Cumulative thresholds. Assigned innermost-last, so precedence is

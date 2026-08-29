@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f3821d0f72546e7a2bb42cacb0b441a
+    m_Address: ui/hero-frame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10c1e2c0756a7f144bd18024d4a5e754
     m_Address: ui/gem_common
     m_ReadOnly: 0
@@ -120,6 +125,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 778eda24eb854385a455ab63e0175a8c
+    m_Address: ui/weapon-frame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
     m_Address: materials/M_Glow
     m_ReadOnly: 0
@@ -157,6 +167,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91c4e6f72a1b43deb490ef0c6e2d5a13
     m_Address: ui/ui_button_primary_ember
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96639c2fa6d74b4e95d61ef2653ab769
+    m_Address: ui/hero-power
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

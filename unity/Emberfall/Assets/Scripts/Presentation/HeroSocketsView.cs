@@ -6,57 +6,31 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The hero-power and weapon sockets: two forged rings docked side by side inboard of the
-    /// hero portrait, hero power first, weapon second, both resting on the §1.3 baseline.
-    /// Replaces the pair of flat 0.9Ø tinted discs HeroPlateView used to draw.
-    ///
-    /// DOCKED, NEVER STACKED. Stacking them in the old disc column would force both rings to
-    /// shrink to fit the plate's 1.8 height (Sam, 2026-07-25). Side by side, height stops being
-    /// the constraint. The weapon ring is present only while a weapon is equipped, which is why
-    /// the two are separate closed rings with nothing bridging them — the pair still reads
-    /// correctly with one half absent.
-    ///
-    /// ALL GEOMETRY INSIDE A FRAME IS READ, NOT WRITTEN. Ring size, socket aperture and the two
-    /// stat bosses come from HeroFrames_&lt;Material&gt;.json, which split_hero_frames.py measures
-    /// off the generated art. The generator does not honour the requested layout exactly and is
-    /// expected to land differently every batch, so a constant here would quietly offset every
-    /// numeral the next time the art is regenerated.
+    /// The enlarged hero-power and weapon sockets docked across the lower edge of the hero
+    /// portrait. They remain separate objects because the weapon disappears when unequipped and
+    /// the hero power owns its own input collider. Circular art fills each transparent opening
+    /// and stays inside the gold aperture.
     /// </summary>
     public sealed class HeroSocketsView : MonoBehaviour
     {
-        /// <summary>Frame canvas, in world units — 3/4 of the 1.8 hero plate.
-        /// Budget against the RING, not this: the canvas carries 34% of transparent margin
-        /// so the bosses can overhang, so the ring only reads ~1.008 units. Sizing the
-        /// column by the canvas overstates its footprint by a third.</summary>
-        public const float FrameSize = 1.35f;
+        /// <summary>Maximum side of either hand-cut socket frame in world units. The old frame's
+        /// visible ring was 1.008 units; these read about 30% larger.</summary>
+        public const float FrameSize = 1.32f;
+        public const float HitDiameter = 1.12f;
+        private const float SocketDiameter = 0.64f;
+        private const float StatDiameterFraction = 0.22f;
+        private const string PowerFrameKey = "hero-power";
+        private const string WeaponFrameKey = "weapon-frame";
 
-        /// <summary>Visible ring diameter as a fraction of the frame canvas — the reciprocal of
-        /// split_hero_frames.py's CANVAS_PAD. Used for LAYOUT only, so the board can size the
-        /// socket row without loading a material's JSON; the per-material file refines it (this
-        /// batch measures 0.7464 for both). Change CANVAS_PAD and change this with it.</summary>
-        public const float RingFraction = 0.7464f;
-
-        // RETIREMENT TRIGGER (GH #162): The bakeoff resolved to CarvedStone on 2026-07-25; keep
-        // Init's material parameter deliberately, deferring a second material until its point of
-        // use. Generators still emit IronEmber, but this issue deleted the shipped assets; regenerate
-        // them before passing "IronEmber" as the material.
-        private const string DefaultMaterial = "CarvedStone";
-
-        // Rings are transparent sprites, so they draw after the opaque socket discs and composite
-        // over them — which is what lets the rim occlude the illustration's edge. Numerals ride
-        // on top of both.
-        private const int RingOrder = 10;
-        private const int StatOrder = 11;
+        private const int FrameOrder = 8;
+        private const int ArtOrder = 9;
+        private const int StatOrder = 10;
 
         // Segments around the socket disc. 64 is smooth at 88 px (the socket at board scale) and
         // still smooth if the frames are ever drawn larger for a bake-off sheet.
         private const int DiscSegments = 64;
 
-        /// <summary>Numeral em height as a fraction of the boss it sits on. 0.61 is not arbitrary:
-        /// a card digit is FrameRarityCatalog's 200/2048 em of CardH 1.65 = 0.161 units, and
-        /// 0.61 x the measured 0.265 boss lands the same 0.161 — so a numeral on a ring is
-        /// physically the same size as one on a card. RAISE THIS to make the stats bolder; it is
-        /// the one number to turn.</summary>
+        /// <summary>Numeral em height as a fraction of its notional stat boss.</summary>
         private const float DigitEmFrac = 0.61f;
 
         private static readonly Color PowerReady = new Color(1.00f, 1.00f, 1.00f);
@@ -90,7 +64,7 @@ namespace Emberfall.Presentation
         /// precedent — a networked seat-1 local renders at visual bottom).</summary>
         public void Init(PlayerId playerId, Transform powerAnchor, Transform weaponAnchor,
                          ICardDatabase db, IArtProvider art,
-                         IUiSpriteProvider uiSprites = null, string material = DefaultMaterial)
+                         IUiSpriteProvider uiSprites = null)
         {
             _playerId = playerId;
             _db       = db;
@@ -103,34 +77,28 @@ namespace Emberfall.Presentation
             uiSprites ??= new AddressableUiSpriteProvider();
 #endif
 
-            HeroFrameGeometry geo = HeroFrameGeometry.Load(material);
-
             if (powerAnchor != null)
             {
-                HeroFrameGeometry.Frame f = geo.HeroPower;
-                _powerRing = MakeRing(powerAnchor, "PowerRing", uiSprites, $"HeroPower_{material}");
-                _powerArt  = MakeSocketArt(powerAnchor, "PowerArt", FrameSize * f.SocketDiameter);
-                // The cost rides low on the rim rather than a boss: the hero-power ring is
-                // measured to have none, by design.
-                _powerCost = MakeStat(powerAnchor, "PowerCost", new Vector2(0.5f, 0.86f),
-                                      f.BossDiameterOrDefault, Color.white);
+                _powerRing = MakeFrame(powerAnchor, "PowerFrame", uiSprites, PowerFrameKey);
+                _powerArt  = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter);
+                _powerCost = MakeStat(powerAnchor, "PowerCost", new Vector2(0.5f, 0.78f),
+                                      StatDiameterFraction, Color.white);
             }
 
             if (weaponAnchor != null)
             {
-                HeroFrameGeometry.Frame f = geo.Weapon;
                 _weaponRoot = new GameObject("Weapon");
                 _weaponRoot.transform.SetParent(weaponAnchor, false);
                 _weaponRoot.transform.localPosition = Vector3.zero;
 
                 Transform wt = _weaponRoot.transform;
-                _weaponRing = MakeRing(wt, "WeaponRing", uiSprites, $"Weapon_{material}");
-                _weaponArt  = MakeSocketArt(wt, "WeaponArt", FrameSize * f.SocketDiameter);
+                _weaponRing = MakeFrame(wt, "WeaponFrame", uiSprites, WeaponFrameKey);
+                _weaponArt  = MakeSocketArt(wt, "WeaponArt", SocketDiameter);
 
-                // Attack left, durability right — the order the splitter reports them, which
-                // sorts by x.
-                _weaponAttack     = MakeStat(wt, "Attack",     f.BossAt(0), f.BossDiameterOrDefault, AttackText);
-                _weaponDurability = MakeStat(wt, "Durability", f.BossAt(1), f.BossDiameterOrDefault, DuraText);
+                _weaponAttack = MakeStat(wt, "Attack", new Vector2(0.30f, 0.76f),
+                                         StatDiameterFraction, AttackText);
+                _weaponDurability = MakeStat(wt, "Durability", new Vector2(0.70f, 0.76f),
+                                             StatDiameterFraction, DuraText);
 
                 _weaponRoot.SetActive(false);
             }
@@ -196,20 +164,22 @@ namespace Emberfall.Presentation
 
         // ── Build helpers ───────────────────────────────────────────────────────────────
 
-        private static SpriteRenderer MakeRing(Transform parent, string goName,
-                                               IUiSpriteProvider uiSprites, string key)
+        private static SpriteRenderer MakeFrame(Transform parent, string goName,
+                                                IUiSpriteProvider uiSprites, string key)
         {
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, 0f, -0.02f);
+            go.transform.localPosition = Vector3.zero;
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.drawMode = SpriteDrawMode.Sliced;   // .size sets exact world dims, PPU-independent
-            // SPRITE FIRST, THEN SIZE — assignment resets .size to the sprite's own PPU extents,
-            // so a size set beforehand is silently thrown away.
-            sr.sprite       = uiSprites?.Get(key);
-            sr.size         = new Vector2(FrameSize, FrameSize);
-            sr.sortingOrder = RingOrder;
+            sr.sprite = uiSprites?.Get(key);
+            sr.sortingOrder = FrameOrder;
+            if (sr.sprite != null)
+            {
+                Vector2 native = sr.sprite.bounds.size;
+                float scale = FrameSize / Mathf.Max(native.x, native.y);
+                go.transform.localScale = new Vector3(scale, scale, 1f);
+            }
             if (sr.sprite == null)
                 Debug.LogWarning($"[HeroSocketsView] no UI sprite '{key}' — socket renders empty.");
             return sr;
@@ -235,6 +205,7 @@ namespace Emberfall.Presentation
 
             go.AddComponent<MeshFilter>().sharedMesh = DiscMesh();
             var mr = go.AddComponent<MeshRenderer>();
+            mr.sortingOrder = ArtOrder;
             MaterialCatalog.Assign(mr, MaterialCatalog.CardArt);
             // Explicit white, the way HeroPlateView does for the portrait: M_CardArt's own
             // _BaseColor is not something to rely on, and LoadInto only writes _BaseMap.

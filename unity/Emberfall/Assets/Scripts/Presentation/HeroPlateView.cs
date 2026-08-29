@@ -6,15 +6,13 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// World-space hero plate for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1 HeroAnchor/HeroPowerAnchor).
-    /// Portrait + name + HP read-out at HeroAnchor; hero-power disc (cost + name, greyed when
-    /// spent/unaffordable) at HeroPowerAnchor. Created procedurally by NetworkedGameBootstrap — one per
-    /// player, same pattern as ManaTrayView. Purely state-driven; ClickableHeroPower (attached
-    /// to the anchor by ProceduralBoardSetup) handles hot-seat input separately.
+    /// World-space hero portrait for one player. The authored ember frame is the face; hero art
+    /// is clipped to its transparent oval opening. Created procedurally by
+    /// NetworkedGameBootstrap — one per player.
     /// </summary>
     public sealed class HeroPlateView : MonoBehaviour
     {
-        private static readonly Color PlateColor   = new Color(0.16f, 0.16f, 0.24f);
+        private static readonly Color PlateColor   = Color.white;
         private static readonly Color HpFull       = Color.white;
         private static readonly Color HpDamaged    = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color FrostedTint   = new Color(0.40f, 0.60f, 0.95f);
@@ -24,11 +22,17 @@ namespace Emberfall.Presentation
         // Valid-target cue while a targeted spell / hero power / attack is armed.
         private static readonly Color TargetableTint = new Color(0.25f, 0.65f, 0.30f);
 
-        // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1: the hero cluster owns 2.9 units, of which the portrait is
-        // ~1.8. Square. Keep PlateW/PlateH and ClickableHero's collider in step; they are one
-        // figure. The socket column beside it is sized by HeroSocketsView.FrameSize.
-        internal const float PlateW  = 1.8f;
-        private const float PlateH   = 1.8f;
+        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Keep these and
+        // ClickableHero's collider in step; together they are one authored figure.
+        internal const float PlateW = 1.60f;
+        internal const float PlateH = 2.40f;
+        private const float PortraitW = 1.16f;
+        private const float PortraitH = 1.58f;
+        private const string FrameSpriteKey = "hero-frame";
+        private const int FrameOrder = 8;
+        private const int PortraitOrder = 9;
+        private const int TextOrder = 10;
+        private const int OvalSegments = 64;
 
         private PlayerId _playerId;
         private bool _selected;
@@ -44,7 +48,8 @@ namespace Emberfall.Presentation
         /// Identified by PlayerId, never by seat/visual index — a networked seat-1 local renders
         /// at visual bottom, so index-based state reads swap the players (found live, 2026-07-19).</summary>
         public void Init(PlayerId playerId, Transform heroAnchor,
-                         IArtProvider artProvider, CardClass heroClass)
+                         IArtProvider artProvider, CardClass heroClass,
+                         IUiSpriteProvider uiSprites = null)
         {
             _playerId  = playerId;
             _mpb       = new MaterialPropertyBlock();
@@ -53,37 +58,28 @@ namespace Emberfall.Presentation
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
 
-            BoardFurnitureDepth.Create(transform, "PlateDepth",
-                new Vector2(PlateW, PlateH), depth: 0.12f);
+#if UNITY_EDITOR
+            uiSprites ??= new EditorUiSpriteProvider();
+#else
+            uiSprites ??= new AddressableUiSpriteProvider();
+#endif
 
-            // Plate backing quad — the hero's board presence.
-            _plate = MakeQuad(transform, "Plate", Vector3.zero, new Vector3(PlateW, PlateH, 1f));
-            MaterialCatalog.Assign(_plate, MaterialCatalog.Plate);
-            Tint(_plate, PlateColor);
-
-            // Portrait quad — front of the plate; art resolves by class artId
-            // ("hero_emberward" → hero_emberward.png). The old "art/" namespace was dropped
-            // 2026-08-06: it had one value across every artId, so it distinguished nothing.
-            _portrait = MakeQuad(transform, "Portrait",
-                new Vector3(0f, 0.05f, -0.005f), new Vector3(PlateW * 0.90f, PlateH * 0.78f, 1f));
-            MaterialCatalog.Assign(_portrait, MaterialCatalog.CardArt);
+            // The clipped portrait fills the export's transparent opening. Its geometry sits a
+            // hair nearer the camera, so stray near-transparent pixels cannot haze the artwork.
+            _plate = MakeFrame(transform, uiSprites?.Get(FrameSpriteKey));
+            _portrait = MakePortrait(transform);
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
-            // Hero name — above the portrait.
-            // Font sizes track the plate: they were set against the old 1.15 plate, so they
-            // scale by the same 1.565 the plate grew by, or the text reads small on it.
-            var nameLabel = MakeLabel(transform, "Name", new Vector3(0f, PlateH * 0.44f, -0.01f), 2.3f, Color.white);
+            // Keep the name inside the opening; the frame's crown owns the space above it.
+            var nameLabel = MakeLabel(transform, "Name", new Vector3(0f, 0.64f, -0.02f),
+                                      1.65f, Color.white);
             nameLabel.text = HeroName(heroClass);
 
-            // HP — bottom-right gem position, the number that must be visible all match.
+            // HP sits inside the portrait's right edge. The two enlarged sockets now own the
+            // entire lower skirt, so the old bottom-right position would land on the power frame.
             _hpLabel = MakeLabel(transform, "HP",
-                new Vector3(PlateW * 0.38f, -PlateH * 0.42f, -0.01f), 4.7f, HpFull);
-
-            // The hero-power disc used to be built here as a flat tinted quad with a
-            // "(2) Quicken" label. HeroSocketsView owns that anchor now and draws a forged
-            // ring with the power's icon in its socket, which is why this no longer needs
-            // the power anchor or the card database.
+                new Vector3(0.48f, 0.12f, -0.02f), 4.7f, HpFull);
         }
 
         private void SetPortrait(Sprite sprite)
@@ -134,17 +130,74 @@ namespace Emberfall.Presentation
                        : PlateColor);
         }
 
-        // ── Build helpers (same primitives-only approach as BoardController) ────────
+        // ── Build helpers ───────────────────────────────────────────────────────
 
-        private static Renderer MakeQuad(Transform parent, string goName, Vector3 localPos, Vector3 localScale)
+        private static SpriteRenderer MakeFrame(Transform parent, Sprite sprite)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            go.name = goName;
+            var go = new GameObject("Frame");
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = localPos;
-            go.transform.localScale    = localScale;
-            Destroy(go.GetComponent<MeshCollider>());
-            return go.GetComponent<Renderer>();
+            go.transform.localPosition = Vector3.zero;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = FrameOrder;
+            if (sprite != null)
+            {
+                Vector2 native = sprite.bounds.size;
+                go.transform.localScale = new Vector3(PlateW / native.x, PlateH / native.y, 1f);
+            }
+            else
+            {
+                Debug.LogWarning($"[HeroPlateView] no UI sprite '{FrameSpriteKey}' — hero frame renders empty.");
+            }
+            return sr;
+        }
+
+        private static Renderer MakePortrait(Transform parent)
+        {
+            var go = new GameObject("Portrait");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, -0.02f, -0.01f);
+            go.transform.localScale = new Vector3(PortraitW, PortraitH, 1f);
+
+            go.AddComponent<MeshFilter>().sharedMesh = OvalMesh();
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sortingOrder = PortraitOrder;
+            MaterialCatalog.Assign(mr, MaterialCatalog.CardArt);
+            return mr;
+        }
+
+        private static Mesh _oval;
+
+        private static Mesh OvalMesh()
+        {
+            if (_oval != null) return _oval;
+
+            var verts = new Vector3[OvalSegments + 1];
+            var uvs = new Vector2[OvalSegments + 1];
+            var tris = new int[OvalSegments * 3];
+            float uSpan = PortraitW / PortraitH; // crop square art instead of stretching a face
+
+            verts[0] = Vector3.zero;
+            uvs[0] = new Vector2(0.5f, 0.5f);
+            for (int i = 0; i < OvalSegments; i++)
+            {
+                float a = 2f * Mathf.PI * i / OvalSegments;
+                float x = Mathf.Cos(a) * 0.5f;
+                float y = Mathf.Sin(a) * 0.5f;
+                verts[i + 1] = new Vector3(x, y, 0f);
+                uvs[i + 1] = new Vector2(0.5f + x * uSpan, y + 0.5f);
+                tris[i * 3 + 0] = 0;
+                tris[i * 3 + 1] = 1 + (i + 1) % OvalSegments;
+                tris[i * 3 + 2] = 1 + i;
+            }
+
+            _oval = new Mesh { name = "HeroPortraitOval" };
+            _oval.SetVertices(verts);
+            _oval.SetUVs(0, uvs);
+            _oval.SetTriangles(tris, 0);
+            _oval.RecalculateBounds();
+            return _oval;
         }
 
         private static TextMeshPro MakeLabel(Transform parent, string goName, Vector3 localPos, float fontSize, Color color)
@@ -163,12 +216,19 @@ namespace Emberfall.Presentation
             tmp.enableAutoSizing = true;
             tmp.fontSizeMax      = fontSize;
             tmp.fontSizeMin      = fontSize * 0.45f;
+            var mr = tmp.GetComponent<MeshRenderer>();
+            if (mr != null) mr.sortingOrder = TextOrder;
             return tmp;
         }
 
         private void Tint(Renderer r, Color c)
         {
             if (r == null) return;
+            if (r is SpriteRenderer sr)
+            {
+                sr.color = c;
+                return;
+            }
             r.GetPropertyBlock(_mpb);
             _mpb.SetColor("_BaseColor", c);
             r.SetPropertyBlock(_mpb);

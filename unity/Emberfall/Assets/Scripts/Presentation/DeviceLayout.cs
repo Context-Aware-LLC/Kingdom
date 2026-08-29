@@ -1,3 +1,4 @@
+using Emberfall.Core;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -33,12 +34,11 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Half the world width the bottom row actually needs, in world units. Set by the
-        /// widest element of the seat cluster: the hero plate, whose centre is
-        /// <c>ProceduralBoardSetup.HeroX</c> 6.98 and whose width is
-        /// <c>HeroPlateView.PlateW</c> 1.8, so its outer edge is at |x| 7.88. The deck pile is
-        /// second at 7.83.
+        /// widest element of the seat cluster: the outboard hero socket, whose edge is
+        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 7.88. The deck pile is second at
+        /// 7.83; the narrower portrait is deliberately inset behind its two lower sockets.
         ///
-        /// RETIREMENT TRIGGER: if you move HeroX, PlateW, DeckX or PileW outboard, this number
+        /// RETIREMENT TRIGGER: if you move the hero cluster, DeckX or PileW outboard, this number
         /// and <see cref="MinAspect"/> move with them, and CLAUDE.md / the device-layout spec
         /// state a 16:9 floor that stops being true. DeviceLayoutVerify fails on the mismatch
         /// rather than letting it ship silently.
@@ -46,7 +46,7 @@ namespace Emberfall.Presentation
         public const float DesignHalfWidth = 7.88f;
 
         /// <summary>
-        /// Narrowest landscape aspect at which the hero plate still fits on screen: 1.71304.
+        /// Narrowest landscape aspect at which the hero cluster still fits on screen: 1.71304.
         /// 16:9 (1.7778) clears it by 0.298 world units — 35 px on a 1080p panel, which is the
         /// entire horizontal safe-area budget at that aspect. 16:10 (1.6) and 4:3 (1.333) do
         /// not clear it at all.
@@ -267,12 +267,32 @@ namespace Emberfall.Presentation
             bool ok = true;
 
             // 1. The design half-width is the widest thing the bottom row builds.
-            float heroEdge = ProceduralBoardSetup.HeroX + HeroPlateView.PlateW * 0.5f;
+            float heroEdge = ProceduralBoardSetup.HeroClusterOuterEdge;
             float deckEdge = ProceduralBoardSetup.DeckX + DeckPileView.PileW * 0.5f;
             float widest = Mathf.Max(heroEdge, deckEdge);
             ok &= Line(sb, Mathf.Abs(widest - DesignHalfWidth) < 0.001f,
                 $"DesignHalfWidth {DesignHalfWidth:F4} == widest built element {widest:F4} "
-                + $"(hero plate {heroEdge:F4}, deck pile {deckEdge:F4})");
+                + $"(hero cluster {heroEdge:F4}, deck pile {deckEdge:F4})");
+
+            // 1b. The vertical mana layout is exactly 2 x 5 square cells, with all ten
+            //     MatchEngine slots represented and the tray still inside the design box.
+            float manaCellW = ManaTrayView.RailW / ManaTrayView.GridColumns;
+            float manaCellH = ManaTrayView.RailH / ManaTrayView.GridRows;
+            int manaSlots = ManaTrayView.GridColumns * ManaTrayView.GridRows;
+            float manaEdgeY = ProceduralBoardSetup.ManaGridY + ManaTrayView.RailH * 0.5f;
+            ok &= Line(sb, Mathf.Abs(manaCellW - manaCellH) < 0.001f,
+                $"mana cells are square ({manaCellW:F3} x {manaCellH:F3})");
+            ok &= Line(sb, manaSlots == MatchEngine.MaxMana,
+                $"mana grid carries {manaSlots} slots == MatchEngine.MaxMana {MatchEngine.MaxMana}");
+            ok &= Line(sb, manaEdgeY <= DesignHalfHeight + 0.001f,
+                $"mana grid edge |y| {manaEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
+
+            // 1c. The enlarged local sockets intentionally consume the remaining vertical
+            //     budget, but must never cross the safe-area design edge.
+            float socketEdgeY = ProceduralBoardSetup.HeroY + ProceduralBoardSetup.SocketDrop
+                                + HeroSocketsView.FrameSize * 0.5f;
+            ok &= Line(sb, socketEdgeY <= DesignHalfHeight + 0.001f,
+                $"local socket edge |y| {socketEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
 
             // 2. 16:9 is inside the declared range; 16:10 is outside it. Those two facts are
             //    what docs/dev-docs/ui/device-layout.md §2 promises, so they are what is checked.

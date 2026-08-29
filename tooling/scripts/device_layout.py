@@ -210,6 +210,7 @@ def main() -> int:
     fan = SCRIPTS / "HandFanLayout.cs"
     setup = SCRIPTS / "ProceduralBoardSetup.cs"
     hero = SCRIPTS / "HeroPlateView.cs"
+    sockets = SCRIPTS / "HeroSocketsView.cs"
     deck = SCRIPTS / "DeckPileView.cs"
     mana = SCRIPTS / "ManaTrayView.cs"
     frames = SCRIPTS / "FrameRarityCatalog.cs"
@@ -234,18 +235,21 @@ def main() -> int:
     lift = const(SCRIPTS / "HandCardHover.cs", "Lift", "HandCardHover.Lift")
     hover_scale = const(SCRIPTS / "HandCardHover.cs", "Scale", "HandCardHover.Scale")
     hero_x = const(setup, "HeroX", "ProceduralBoardSetup.HeroX")
+    socket_x = const(setup, "SocketOffsetX", "ProceduralBoardSetup.SocketOffsetX")
+    socket_size = const(sockets, "FrameSize", "HeroSocketsView.FrameSize")
     deck_x = const(setup, "DeckX", "ProceduralBoardSetup.DeckX")
-    mana_x = const(setup, "ManaRailX", "ProceduralBoardSetup.ManaRailX")
+    mana_x = const(setup, "ManaGridX", "ProceduralBoardSetup.ManaGridX")
     baseline = const(setup, "Baseline", "ProceduralBoardSetup.Baseline")
     slot_gap = const(rowgeom, "SlotSpacing", "BoardRowGeometry.SlotSpacing")
     row_y = const(setup, "RowY", "ProceduralBoardSetup.RowY")
     bulwark_step = const(board, "BulwarkRowOffset", "BoardController.BulwarkRowOffset")
     stat_frac = const(board, "StatRowFrac", "BoardController.StatRowFrac")
     rail_h = const(mana, "RailH", "ManaTrayView.RailH")
+    grid_cols = int(const(mana, "GridColumns", "ManaTrayView.GridColumns"))
+    grid_rows = int(const(mana, "GridRows", "ManaTrayView.GridRows"))
     socket_r = shader_prop(SHADERS / "SG_ManaFill.shader", "_SocketRadius",
                            "SG_ManaFill._SocketRadius")
     slot_n = const(setup, "BoardSlotCount", "ProceduralBoardSetup.BoardSlotCount")
-    plate_w = const(hero, "PlateW", "HeroPlateView.PlateW")
     pile_w = const(deck, "PileW", "DeckPileView.PileW")
     rail_w = const(mana, "RailW", "ManaTrayView.RailW")
     body_em = const(frames, "BodyEm", "FrameRarityCatalog.BodyEm")
@@ -265,9 +269,9 @@ def main() -> int:
     # ── 2. the horizontal budget ────────────────────────────────────────────────
     design_h = ortho                      # half-height, world units
     elements = [
-        ("hero plate outer edge", hero_x + plate_w / 2),
+        ("hero cluster outer edge", hero_x + socket_x + socket_size / 2),
         ("deck pile outer edge", deck_x + pile_w / 2),
-        ("mana rail outer edge", mana_x + rail_w / 2),
+        ("mana grid outer edge", mana_x + rail_w / 2),
         ("board row outer edge", (slot_n - 1) * 0.5 * slot_gap + card_w / 2),
     ]
     elements.sort(key=lambda e: -e[1])
@@ -284,7 +288,7 @@ def main() -> int:
     print()
     print(f"  DESIGN HALF-WIDTH        = {design_w:.4f} world units  ({elements[0][0]})")
     print(f"  MINIMUM SUPPORTED ASPECT = {design_w:.4f} / {design_h:.4f} = {min_aspect:.5f}")
-    print(f"                             narrower than this and the hero plate leaves the screen.")
+    print(f"                             narrower than this and the hero cluster leaves the screen.")
     print()
 
     # ── 2b. the vertical budget ───────────────────────────────────────
@@ -323,26 +327,24 @@ def main() -> int:
     print()
 
     # ── 2c. the mana orb ─────────────────────────────────────────────
-    # Also #234, and also a wrong-axis reading in the ticket: it divided RailW by ten and called
-    # the PITCH the orb. SG_ManaFill normalises its radii to the quad's HEIGHT (r = 0.5 touches
-    # the rail's top and bottom), so the drawn socket is 2 * _SocketRadius * RailH and the pitch
-    # only ever caps it.
-    orb_d = 2 * socket_r * rail_h
-    pitch = rail_w / 10
-    orb_gap = pitch - orb_d
-    rail_h_max = (rail_w / 20) / socket_r
-    print("== 2c. THE MANA ORB — sized by RAIL HEIGHT, capped by pitch " + "=" * 35)
-    print(f"  rail            {rail_w:.4f} x {rail_h:.4f}   pitch {pitch:.4f} (RailW / 10 sockets)")
-    print(f"  orb diameter    {orb_d:.4f}  = 2 x _SocketRadius {socket_r:g} x RailH {rail_h:g}")
-    print(f"  gap between     {orb_gap:.4f}"
-          f"{'   *** ORBS OVERLAP ***' if orb_gap <= 0 else ''}")
-    print(f"  RailH ceiling   {rail_h_max:.4f}  — above this the orbs touch and the rail reads")
-    print(f"                            as a solid bar. The orb is PITCH-limited, not height-")
-    print(f"                            limited: vertically there is room to the baseline at "
-          f"{baseline:g}.")
-    print(f"  Widening the rail is blocked on #235 — it owns x +2.5..+{mana_x + rail_w/2:.2f} between")
-    print(f"  the hand fan and the deck pile, whose outer edge is {deck_x + pile_w/2:.2f} against a "
-          f"{design_w:.2f} half-width.")
+    # SG_ManaFill normalises radius to one GRID CELL'S height. The shipping grid intentionally
+    # makes its 2 x 5 cells square, so horizontal and vertical gaps are the same.
+    cell_w = rail_w / grid_cols
+    cell_h = rail_h / grid_rows
+    orb_d = 2 * socket_r * cell_h
+    gap_x = cell_w - orb_d
+    gap_y = cell_h - orb_d
+    print("== 2c. THE MANA ORB — vertical 2 x 5 grid " + "=" * 47)
+    print(f"  grid            {rail_w:.4f} x {rail_h:.4f}   {grid_cols} columns x {grid_rows} rows")
+    print(f"  cell            {cell_w:.4f} x {cell_h:.4f}")
+    print(f"  orb diameter    {orb_d:.4f}  = 2 x _SocketRadius {socket_r:g} x cellH {cell_h:g}")
+    print(f"  horizontal gap  {gap_x:.4f}"
+          f"{'   *** ORBS OVERLAP ***' if gap_x <= 0 else ''}")
+    print(f"  vertical gap    {gap_y:.4f}"
+          f"{'   *** ORBS OVERLAP ***' if gap_y <= 0 else ''}")
+    print(f"  grid outer edge {mana_x + rail_w/2:.4f}; deck inner edge "
+          f"{deck_x - pile_w/2:.4f}; separation "
+          f"{deck_x - pile_w/2 - (mana_x + rail_w/2):.4f}")
     print()
 
     # ── 3. backdrop coverage ────────────────────────────────────────────────────
@@ -527,7 +529,7 @@ def main() -> int:
         print(f"    {d.name:<28} {vert_spare*p:6.1f} px of vertical clearance")
     print()
     print("  Android landscape puts the gesture/navigation bar on the BOTTOM edge, which is")
-    print("  exactly where the hero plate, both sockets, the mana rail and the deck pile sit.")
+    print("  exactly where the hero frame, both sockets, the mana grid and the deck pile sit.")
     print("  The gesture inset alone is 24-48 dp; at the 2.75x density of a 1080p 6.3\" panel")
     print(f"  that is {24*2.75:.0f}-{48*2.75:.0f} px against a "
           f"{vert_spare*DEVICES[0].short_px/(2*design_h):.0f} px budget.")
@@ -612,7 +614,7 @@ def main() -> int:
     print("== 9. WHAT THIS ESTABLISHES " + "=" * 66)
     print(f"  A. Supported landscape aspect range: {min_aspect:.4f} .. {plate_aspect:.4f}")
     print(f"     (16:9 = {16/9:.4f} is IN, by {(design_h*16/9-design_w)*ppu:.0f} px per side;")
-    print(f"      16:10 = {1.6:.4f} and 4:3 = {4/3:.4f} are OUT — the hero plate clips.)")
+    print(f"      16:10 = {1.6:.4f} and 4:3 = {4/3:.4f} are OUT — the hero cluster clips.)")
     hd_ppu = 720 / (2 * design_h)
     print(f"  B. Supported short edge: 1080 px. A 720p HD+ panel gives a "
           f"{hand_w*hd_ppu:.0f} px hand card and a body")

@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Renders the mana rail through the real <see cref="ManaTrayView"/> for a spread of ManaPool
+    /// Renders the mana grid through the real <see cref="ManaTrayView"/> for a spread of ManaPool
     /// states and writes one PNG per state to <c>artifacts/mana-tray-preview/</c>, at the pixel
     /// size the rail actually occupies on a 1080p screen. Sibling in spirit to
     /// <see cref="TurnClockVerify"/> and <see cref="B3TransportVerify"/>: a named one-click check
@@ -24,10 +24,10 @@ namespace Emberfall.Editor
     public static class ManaTrayPreview
     {
         private const float PxPerUnit = 1080f / 9.2f;   // BoardCamera ortho 4.6 => 9.2 units => 1080px
-        private const float RailX = -4.515f;            // ProceduralBoardSetup seat-0 ManaTrayAnchor
-        private const float RailY = -4.00f;
-        private const float ViewW = 4.60f;              // rail 4.03 plus a margin either side
-        private const float ViewH = 0.62f;              // rail 0.32 plus a margin above and below
+        private const float RailX = 5.76f;              // ProceduralBoardSetup seat-0 ManaTrayAnchor
+        private const float RailY = -3.35f;
+        private const float ViewW = 1.22f;              // grid 0.92 plus a margin either side
+        private const float ViewH = 2.60f;              // grid 2.30 plus a margin above and below
 
         private readonly struct Case
         {

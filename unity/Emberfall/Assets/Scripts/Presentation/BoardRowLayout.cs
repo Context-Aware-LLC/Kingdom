@@ -24,8 +24,8 @@ namespace Emberfall.Presentation
     // them, and not collapsed onto the last occupied slot. Both alternatives were tried and
     // rejected: parking every unused slot on the last occupied one leaves no reachable empty space
     // to drop a new minion INTO, and letting the centered sequence run on unclamped pushes
-    // empty-slot anchors for a near-empty board out past the mana rail (a 1-minion board would put
-    // slot 6 at x=8.10, well past ManaRailX=4.515).
+    // empty-slot anchors for a near-empty board out past the side HUD (a 1-minion board would put
+    // slot 6 at x=8.10, beyond the mana grid and deck pile).
     // Recomputing the ORIGINAL position fresh from `i` every call, rather than only touching
     // `i < count`, is what keeps a slot that drops OUT of the occupied range (a minion died) from
     // being stranded at a stale centered position from before it went empty.
