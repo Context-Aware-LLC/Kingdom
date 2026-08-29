@@ -19,8 +19,8 @@ namespace Emberfall.Presentation
         // Matches CardPresenter.SelectedColor so hero-as-attacker selection reads
         // identically to minion selection.
         private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
-        // Valid-target cue while a targeted spell / hero power / attack is armed.
-        private static readonly Color TargetableTint = new Color(0.25f, 0.65f, 0.30f);
+        // Valid-target cue: cyan to match CardMaterialBinder's target glow.
+        private static readonly Color TargetableTint = new Color(0.25f, 0.90f, 1.00f);
 
         // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Keep these and
         // ClickableHero's collider in step; together they are one authored figure.
@@ -70,11 +70,6 @@ namespace Emberfall.Presentation
             _portrait = MakePortrait(transform);
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
-
-            // Keep the name inside the opening; the frame's crown owns the space above it.
-            var nameLabel = MakeLabel(transform, "Name", new Vector3(0f, 0.64f, -0.02f),
-                                      1.65f, Color.white);
-            nameLabel.text = HeroName(heroClass);
 
             // HP sits inside the portrait's right edge. The two enlarged sockets now own the
             // entire lower skirt, so the old bottom-right position would land on the power frame.
@@ -233,15 +228,5 @@ namespace Emberfall.Presentation
             _mpb.SetColor("_BaseColor", c);
             r.SetPropertyBlock(_mpb);
         }
-
-        // Display names per hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/heroes.md — classes are the M1 pair + the two post-M1 heroes.
-        private static string HeroName(CardClass c) => c switch
-        {
-            CardClass.EMBERWARD  => "Pyra, Emberward",
-            CardClass.TIDECALLER => "Maren, Tidecaller",
-            CardClass.GRAVEKEEP  => "Sorrow, Gravekeep",
-            CardClass.VERDANT    => "Thalen, Verdant",
-            _                    => c.ToString(),
-        };
     }
 }

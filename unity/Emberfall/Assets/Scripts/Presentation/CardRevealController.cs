@@ -123,13 +123,9 @@ namespace Emberfall.Presentation
                 ? _router.Pointer.IsPressed
                 : Pointer.current?.press.isPressed == true;
 
-        // The press that became a read was already dispatched to InputRouter by
-        // ClickableCard.OnMouseDown, so the card is now sitting selected — primed to be played by
-        // the player's next tap, which is not what "let me read this" asked for. Undo exactly that.
-        //
-        // Not dispatching in the first place would be cleaner than undoing, and needs the click to
-        // move from press to release: EF-048's pointer abstraction (press/drag/release) is where
-        // that belongs. Until it lands, this is the seam that keeps a read from arming a card.
+        // Ordinary gameplay taps are inert, but mulligan still toggles on press. If that press
+        // becomes a long-press read, undo the mulligan toggle so reading does not change the toss
+        // set. InputRouter.CancelSelection is deliberately a no-op outside mulligan.
         private void CancelPressSelection(InstanceId card)
         {
             if (_router == null) return;

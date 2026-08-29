@@ -9,23 +9,21 @@ namespace Emberfall.Presentation
     // Pointer state machine (EF-048): converts press / drag / release into PlayerIntents for the local
     // human player and routes them to HotSeatInput (ARCHITECTURE §6).
     //
-    // ONE MACHINE, BOTH INPUT MODELS. Mouse drag on desktop and tap-and-hold-drag on Android are the
+    // ONE MACHINE, BOTH INPUT MODELS. Mouse drag on desktop and touch drag on Android are the
     // same code path, because PointerSampler collapses them into one press/drag/release stream before
     // this class sees them. Hover is therefore ADDITIVE on desktop (HandCardHover) rather than load-
     // bearing, which is the only shape that survives a phone.
     //
     // States:
-    //   None       → Pressed     : pointer down on something of ours that can move
-    //   Pressed    → Dragging    : the pointer travelled past DragThresholdPx
-    //              → ArmedByTap  : released without travelling (a tap)
-    //   Dragging   → None        : released — resolves to an intent, or cancels if the drop meant nothing
-    //   ArmedByTap → None        : released on a target (submit), on the source again (cancel),
-    //                              on another of ours (reselect), or on nothing (cancel)
+    //   None                → Pressed             : pointer down on something of ours that can move
+    //   Pressed             → Dragging            : pointer travelled past DragThresholdPx
+    //                       → None                : released without travel; taps do not arm gameplay
+    //   Dragging            → None                : release resolves or cancels
+    //                       → AwaitingEffectDrag  : a placed card still owes another target
+    //   AwaitingEffectDrag  → Pressed             : re-grab that same card for its next target
     //
-    // ArmedByTap is not a legacy remnant — it is the accessibility path. A drag is a two-handed,
-    // fine-motor gesture; tap-then-tap is the same machine reached by two short presses, and it is
-    // what a mouse user's muscle memory produces. Both funnel through DragTargetingModel.Resolve, so
-    // there is exactly one place where a gesture becomes an intent.
+    // A true button action may still be a tap (untargeted hero power, mulligan, HUD controls).
+    // Cards, attacks, targeted powers and every follow-up target use drag-and-drop exclusively.
     //
     // WHAT IS NOT HERE ANY MORE: the four Clickable* components no longer forward OnMouseDown. They
     // are raycast descriptors now — identity and a collider — and this class does the one raycast per
@@ -34,10 +32,10 @@ namespace Emberfall.Presentation
     // beginning, a middle and an end, which is what targeting actually is.
     //
     // End turn : Enter or Space during Main phase, or the on-screen button.
-    // Cancel   : Escape clears any armed gesture.
+    // Cancel   : Escape clears any active gesture.
     public sealed class InputRouter : MonoBehaviour
     {
-        private enum Gesture { None, Pressed, Dragging, ArmedByTap }
+        private enum Gesture { None, Pressed, Dragging, AwaitingEffectDrag }
 
         // Travel that separates a tap from a drag. Scaled off screen density because a thumb on a
         // 420 dpi phone wanders several times further than a mouse does on a click, and a fixed
@@ -217,9 +215,15 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // Already armed by a tap: the press changes nothing, the RELEASE decides. This is what
-            // lets a tap-armed gesture be finished by dragging as well as by a second tap.
-            if (_gesture == Gesture.ArmedByTap) return;
+            // A placed card can still owe one or more effect targets. Only re-grabbing that same
+            // source starts the next drag; pressing a glowing target is deliberately inert so a
+            // source tap followed by a target tap can never submit an intent.
+            if (_gesture == Gesture.AwaitingEffectDrag)
+            {
+                if (!IsGestureSource(subject)) return;
+                _gesture = Gesture.Pressed;
+                return;
+            }
 
             DragSource src = _model.BeginSource(subject);
             if (src.Kind == DragSourceKind.None) return;
@@ -282,55 +286,58 @@ namespace Emberfall.Presentation
             if (IsMulliganActive()) return;   // the toggle already happened on press
             if (_gesture == Gesture.None) return;
 
-            PointerSubject subject = Probe(screenPos, out Transform hitTransform, out CardPresenter presenter);
+            PointerSubject subject = Probe(screenPos, out _, out _, skipGestureSource: true);
 
             if (_gesture == Gesture.Pressed)
             {
-                // Never travelled: this was a tap on the source, not a drag.
-                ArmByTap();
+                // Never travelled: gameplay taps are reads/no-ops. The only source whose entire
+                // action is genuinely button-like is an untargeted hero power.
+                if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
+                {
+                    _gesture = Gesture.AwaitingEffectDrag;
+                    RefreshTargeting();
+                    return;
+                }
+                if (_source.Kind == DragSourceKind.HeroPower && !_source.NeedsTarget)
+                {
+                    CancelGesture();
+                    Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
+                    return;
+                }
+                CancelGesture();
                 return;
             }
 
-            if (_gesture == Gesture.ArmedByTap && IsArmedSource(subject))
-            {
-                CancelGesture();   // second tap on what you armed puts it down
-                return;
-            }
+            // AwaitingEffectDrag without a matching source press means the player tapped a target.
+            // Leave the banked placement intact and wait for a real re-grab + drag.
+            if (_gesture == Gesture.AwaitingEffectDrag) return;
 
-            bool wasArmedByTap = _gesture == Gesture.ArmedByTap;
-            if (TryResolve(subject, DropAt(screenPos))) return;
-
-            // A drag that ended on nothing is simply abandoned. A tap-armed gesture gets one more
-            // reading first: tapping another of our own cards switches the selection rather than
-            // being a dead tap, exactly as the click machine did.
-            if (!wasArmedByTap) return;
-
-            DragSource next = _model.BeginSource(subject);
-            if (next.Kind == DragSourceKind.None) return;   // TryResolve already cancelled
-
-            _source          = next;
-            _sourcePresenter = presenter;
-            _sourceTransform = hitTransform;
-            _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
-            _gesture         = Gesture.Pressed;
-            CaptureSourceRestPose(hitTransform);
-            ArmByTap();
+            TryResolve(subject, DropAt(screenPos));
         }
 
         /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
-        /// we entered AwaitingEffectTarget (two-step herald), in which case we stay armed. A drop
+        /// we entered AwaitingEffectTarget (multi-step herald), in which case the source stays
+        /// available for another drag. A drop
         /// that produced nothing restores the source's visual position — one that succeeded leaves
         /// it at the drop point, because the coming state sync is about to relocate it for real, and
         /// snapping it back first would just be a flicker on the way there.</summary>
         private bool TryResolve(PointerSubject released, DropPoint drop)
         {
+            // Once placement is banked, putting the source back in the hand is still the universal
+            // touch cancel. DragTargetingModel otherwise ignores the drop point during target steps.
+            if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
+                && drop.OverOwnHand)
+            {
+                CancelGesture();
+                return true;
+            }
+
             PlayerIntent intent = _model.Resolve(_source, released, drop);
 
-            // Check if we entered AwaitingEffectTarget phase (two-step targeting).
+            // The current drop banked a placement or satisfied only part of a multi-target plan.
             if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
             {
-                // Transition to ArmedByTap-like state and stay armed for the second targeting.
-                _gesture = Gesture.ArmedByTap;
+                _gesture = Gesture.AwaitingEffectDrag;
                 RefreshTargeting();
                 return true;   // Consumed the release; no intent submitted yet.
             }
@@ -341,21 +348,7 @@ namespace Emberfall.Presentation
             return true;
         }
 
-        private void ArmByTap()
-        {
-            // An untargeted hero power has nothing to aim at: a tap IS the whole gesture, so fire it
-            // rather than arming a state no subsequent tap could ever resolve.
-            if (_source.Kind == DragSourceKind.HeroPower && !_source.NeedsTarget)
-            {
-                CancelGesture();
-                Submit(new HeroPowerIntent(_p0Id, System.Array.Empty<TargetRef>()));
-                return;
-            }
-            _gesture = Gesture.ArmedByTap;
-            ArmVisuals();
-        }
-
-        private bool IsArmedSource(PointerSubject s)
+        private bool IsGestureSource(PointerSubject s)
         {
             switch (_source.Kind)
             {
@@ -392,7 +385,7 @@ namespace Emberfall.Presentation
             _gesture         = Gesture.None;
             ClearTargeting();
 
-            // Clear any awaiting-effect-target state (two-step herald).
+            // Clear any banked placement / awaiting-effect-target state.
             if (_model != null)
                 _model.Phase = DragTargetingModel.TargetingPhase.Direct;
         }
@@ -459,7 +452,8 @@ namespace Emberfall.Presentation
                 : DropPoint.Board(world.x);
         }
 
-        private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform, out CardPresenter presenter)
+        private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform,
+                                     out CardPresenter presenter, bool skipGestureSource = false)
         {
             // EDITOR/TEST: use injectable probe if provided (headless verification).
             if (InjectableProbe != null)
@@ -475,32 +469,41 @@ namespace Emberfall.Presentation
 
             Camera cam = Camera.main;
             if (cam == null) return PointerSubject.None;
-            if (!Physics.Raycast(cam.ScreenPointToRay(screenPos), out RaycastHit hit, 100f))
-                return PointerSubject.None;
+            RaycastHit[] hits = Physics.RaycastAll(cam.ScreenPointToRay(screenPos), 100f);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-            var card = hit.collider.GetComponentInParent<ClickableCard>();
-            if (card != null)
+            foreach (RaycastHit hit in hits)
             {
-                hitTransform = card.transform;
-                presenter    = card.Presenter;
-                return PointerSubject.OfCard(card.CardId, card.OwnerId, card.Zone);
-            }
+                var card = hit.collider.GetComponentInParent<ClickableCard>();
+                if (card != null)
+                {
+                    PointerSubject cardSubject =
+                        PointerSubject.OfCard(card.CardId, card.OwnerId, card.Zone);
+                    // FollowPointer lifts the dragged card in front of the board. Look through its
+                    // own collider on release so the character beneath it receives the drop.
+                    if (skipGestureSource && IsGestureSource(cardSubject)) continue;
 
-            // NO BOARD-SLOT BRANCH (Sam, 2026-08-12, #139). Empty board space is not raycast at
-            // all any more — the 14 invisible slot boxes and their ClickableBoardSlot descriptor
-            // are gone, and where a minion lands is solved from the drop's x in DropAt below.
-            var hero = hit.collider.GetComponentInParent<ClickableHero>();
-            if (hero != null)
-            {
-                hitTransform = hero.transform;
-                return PointerSubject.OfHero(_model.HeroIdOf(hero.OwnerId), hero.OwnerId);
-            }
+                    hitTransform = card.transform;
+                    presenter    = card.Presenter;
+                    return cardSubject;
+                }
 
-            var power = hit.collider.GetComponentInParent<ClickableHeroPower>();
-            if (power != null)
-            {
-                hitTransform = power.transform;
-                return PointerSubject.OfHeroPower(power.OwnerId);
+                // NO BOARD-SLOT BRANCH (Sam, 2026-08-12, #139). Empty board space is not raycast at
+                // all any more — the 14 invisible slot boxes and their ClickableBoardSlot descriptor
+                // are gone, and where a minion lands is solved from the drop's x in DropAt below.
+                var hero = hit.collider.GetComponentInParent<ClickableHero>();
+                if (hero != null)
+                {
+                    hitTransform = hero.transform;
+                    return PointerSubject.OfHero(_model.HeroIdOf(hero.OwnerId), hero.OwnerId);
+                }
+
+                var power = hit.collider.GetComponentInParent<ClickableHeroPower>();
+                if (power != null)
+                {
+                    hitTransform = power.transform;
+                    return PointerSubject.OfHeroPower(power.OwnerId);
+                }
             }
 
             return PointerSubject.None;
@@ -511,13 +514,13 @@ namespace Emberfall.Presentation
         private void RefreshTargeting()
         {
             if (_model == null) { ClearTargeting(); return; }
-            if (_gesture != Gesture.Dragging && _gesture != Gesture.ArmedByTap)
+            if (_gesture != Gesture.Dragging && _gesture != Gesture.AwaitingEffectDrag)
             {
                 ClearTargeting();
                 return;
             }
 
-            // If awaiting an effect target (two-step herald), show the effect targets instead.
+            // If awaiting another effect-target drag, show the remaining effect targets instead.
             if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
             {
                 HashSet<InstanceId> effectTargets = _model.AwaitingTargets();
@@ -640,25 +643,18 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// EF-049. "That press turned out to be a read, not a select." A touch long-press on a card
-        /// reveals it, but <see cref="ClickableCard"/> dispatched the same press to
-        /// <see cref="OnCardClicked"/> the moment it landed — so without this the player finishes
-        /// reading a card and finds it armed, one stray tap away from being played.
+        /// EF-049. "That press turned out to be a read, not a select." Ordinary gameplay taps are
+        /// now inert, but mulligan still toggles on press. A long-press card reveal must undo that
+        /// toggle so reading a card cannot silently change the toss set.
         ///
-        /// <para>Guarded by id so it can only ever undo the selection the reading press itself
-        /// made: a reveal over some OTHER card must not clear a selection the player made
-        /// deliberately beforehand.</para>
-        ///
-        /// <para><b>The mulligan arm is not an afterthought.</b> Mulligan is the moment a player
+        /// <para><b>The mulligan toggle is not an afterthought.</b> Mulligan is the moment a player
         /// most needs to read a card, and there a press toggles the TOSS MARK rather than
         /// selecting. Toggling once more restores the pre-press state exactly, whichever way it
         /// went — which is the only reason this takes the card and not just its id.</para>
         ///
-        /// <para><b>RETIREMENT TRIGGER, HALF DISCHARGED 2026-08-06.</b> This existed because the
-        /// click dispatched on PRESS. EF-048's pointer abstraction has since moved ordinary
-        /// selection to <c>PointerPhase.Released</c>, so that half is gone — a press no longer arms
-        /// anything to undo, and only a tap-armed gesture can outlive the gesture that set it.
-        /// <b>The MULLIGAN toggle still fires on press</b> (<c>OnPointerPressed</c>), and that is
+        /// <para><b>RETIREMENT TRIGGER.</b> The ordinary gameplay half was discharged when EF-048
+        /// moved cards to drag-and-drop. <b>The MULLIGAN toggle still fires on press</b>
+        /// (<c>OnPointerPressed</c>), and that is
         /// the only reason this method survives. When mulligan toggling also moves to release, the
         /// long press should suppress the dispatch instead of undoing it — delete this method and
         /// <c>CardRevealController.CancelPressSelection</c> in that same change.</para>
@@ -676,14 +672,8 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // Translated out of the retired _state/_selectedId selection model (112ea66 merged a
-            // body written against it onto fields that no longer exist, which is what broke the
-            // Unity build). ArmedByTap is the modern "this card is primed": the only gesture that
-            // outlives the press+release that set it, so it is the only one a long-press read can
-            // leave behind. Pressed/Dragging are torn down by the release itself.
-            if (_gesture != Gesture.ArmedByTap) return;
-            if (!_source.Id.Equals(card.CardId)) return;
-            CancelGesture();
+            // Outside mulligan, a long-press read has no selection to undo. Ordinary gameplay taps
+            // are inert and drag gestures tear themselves down on release/cancel.
         }
 
         // In-match concede (C-G1-3), invoked by the settings overlay's confirm. Deliberately

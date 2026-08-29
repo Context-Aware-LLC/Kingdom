@@ -44,15 +44,15 @@ namespace Emberfall.Editor
             _failed = 0;
 
             FullStackDragThreshold();
-            FullStackTapArm();
+            FullStackTapDoesNotArm();
             FullStackDragResolve();
-            FullStackTapReselect();
-            FullStackCancellation();
+            FullStackDragCancellation();
             FullStackOpenBoardPlays();
-            FullStackTargetedSpellDirectSelection();
-            FullStackTwoStepHerald();
+            FullStackTargetedSpellDrag();
+            FullStackTargetedMinionDirectDrag();
+            FullStackTwoStepHeraldDrags();
             OsCanceledDuringDrag();
-            OsCanceledDuringArmedTap();
+            OsCanceledDuringAwaitingEffectDrag();
             ProjectionRoundTrips();
             DragTargetingModelCore();
 
@@ -130,6 +130,7 @@ namespace Emberfall.Editor
             public PlayerId P0Id;
             public InputRouter Router;
             public List<PlayerIntent> SubmittedIntents;
+            public HashSet<InstanceId> ActiveTargets;
             private HotSeatInput _input;
             private DragTargetingModel _model;
 
@@ -149,6 +150,7 @@ namespace Emberfall.Editor
 
                 Router.Init(p0Id, _input, db);
                 Router.OnStateUpdated(state);
+                Router.TargetingChanged += targets => ActiveTargets = targets;
 
                 // THE ROUTER'S OWN MODEL, not a second one. This used to be
                 // `new DragTargetingModel(...)` — a parallel instance the router never touched, so
@@ -321,21 +323,22 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        private static void FullStackTapArm()
+        private static void FullStackTapDoesNotArm()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
 
-            // Tap hand card 0: press + release without crossing threshold → ArmedByTap, no submit.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
-            Check("tap arms without submitting", harness.SubmittedIntents.Count == 0);
+            // A targeted card tap is a read/no-op. It must neither submit nor leave legal targets
+            // glowing: gameplay targeting begins only after pointer travel crosses the threshold.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
+            Check("tap on a targeted card does not submit", harness.SubmittedIntents.Count == 0);
+            Check("tap on a targeted card does not arm indicators", harness.ActiveTargets == null);
 
-            // While armed, press is ignored; release on the board resolves to PlayCardIntent.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
-            Check("tap-armed card: release on the board submits PlayCardIntent",
-                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+            // A subsequent tap on a legal target must not complete click-click targeting.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("target tap after source tap still submits nothing", harness.SubmittedIntents.Count == 0);
 
             harness.Cleanup();
         }
@@ -356,46 +359,16 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        private static void FullStackTapReselect()
+        private static void FullStackDragCancellation()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
 
-            // Tap hand card 0 (Vanilla): arms.
+            // Drag a hand card out, then put it back over the hand: cancel, no intent.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
-            Check("first tap arms vanilla card", harness.SubmittedIntents.Count == 0);
-
-            // Tap hand card 1 (TargetedSpell): different card — reselects, does NOT submit.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
-            Check("tap different card reselects without submitting", harness.SubmittedIntents.Count == 0);
-
-            // Now armed on the targeted card; release on an enemy minion resolves to PlayCardIntent.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("release on enemy after reselect submits PlayCardIntent",
-                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
-
-            harness.Cleanup();
-        }
-
-        private static void FullStackCancellation()
-        {
-            GameState s = NewState();
-            var harness = new InputRouterHarness(s, Db(), P0);
-
-            // Tap-arm hand card 0.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
-            Check("tap arms", harness.SubmittedIntents.Count == 0);
-
-            // Release back over the HAND while armed → cancel, no intent. Empty space no longer
-            // cancels anything (#139) — putting the card back is the whole cancel vocabulary now,
-            // so that is what this has to press on to still be testing a cancel.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 50)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 215)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 50)));
-            Check("release back over the hand cancels armed gesture without submitting",
+            Check("drag released back over the hand cancels without submitting",
                 harness.SubmittedIntents.Count == 0);
 
             harness.Cleanup();
@@ -409,11 +382,10 @@ namespace Emberfall.Editor
             var harness = new InputRouterHarness(s, Db(), P0);
 
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 215)));
 
             // (750, 300) is open space to the probe — nothing under the pointer at all — and world
             // x +3.5 to the drop map, which clamps to the end of our one-minion row.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 300)));
 
             var intent = harness.SubmittedIntents.Count == 1
@@ -425,17 +397,16 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        private static void FullStackTargetedSpellDirectSelection()
+        private static void FullStackTargetedSpellDrag()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
             InstanceId enemy = s.Players[1].Board[0].Id;
 
-            // A targeted spell is armed once, then released directly on its character target.
-            // Releasing it on open board is a miss: it must not bank a position or arm a second phase.
+            // A targeted spell must travel from source to target in one drag. Releasing it on open
+            // board is a miss: it must not bank a position or arm a second phase.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(75, 215)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("targeted spell released on open board space submits nothing",
                 harness.SubmittedIntents.Count == 0);
@@ -443,14 +414,8 @@ namespace Emberfall.Editor
                 harness.Phase == DragTargetingModel.TargetingPhase.Direct && harness.AwaitingSlot == 0
                 && harness.AwaitingCardId.Equals(default));
 
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("targeted spell open-board miss does not leave a second targeting phase armed",
-                harness.SubmittedIntents.Count == 0);
-
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(75, 215)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
 
             var intent = harness.SubmittedIntents.Count == 1
@@ -463,21 +428,39 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        // Issue #30: two-step targeting for herald minions (tap-arm, drop on slot, tap target).
-        private static void FullStackTwoStepHerald()
+        private static void FullStackTargetedMinionDirectDrag()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
             InstanceId enemy = s.Players[1].Board[0].Id;
 
-            // Tap hand card 2 (TargetedMinion): press + release without travel → ArmedByTap.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(125, 200)));
-            Check("tap targeted card arms without submitting", harness.SubmittedIntents.Count == 0);
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
 
-            // Step 1: release on open board space at (200, 300) — world x -2.0, which is left of our
-            // only minion, so position 0. Placement, not a submit.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(200, 300)));
+            var intent = harness.SubmittedIntents.Count == 1
+                ? harness.SubmittedIntents[0] as PlayCardIntent
+                : null;
+            Check("targeted minion dragged directly onto a target submits in one gesture",
+                intent != null && intent.BoardSlot == 1 && intent.Targets.Count == 1
+                && intent.Targets[0].Instance.Equals(enemy));
+            Check("direct targeted-minion drag leaves no second phase armed",
+                harness.Phase == DragTargetingModel.TargetingPhase.Direct);
+
+            harness.Cleanup();
+        }
+
+        // A targeted minion dropped on open space needs a second DRAG from the banked card to its
+        // target. A target tap is deliberately inert: no click-click path survives.
+        private static void FullStackTwoStepHeraldDrags()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            InstanceId enemy = s.Players[1].Board[0].Id;
+
+            // Drag hand card 2 to open board space to bank its placement.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("drop on open board enters two-step targeting without submit",
                 harness.SubmittedIntents.Count == 0);
@@ -485,10 +468,17 @@ namespace Emberfall.Editor
                 harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
                 && harness.AwaitingSlot == 0);
 
-            // Tap on enemy minion: press + release → resolves to PlayCardIntent with slot + target.
+            // Tapping a legal target does not resolve click-click targeting.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("second tap on target submits PlayCardIntent",
+            Check("target tap during the second phase submits nothing",
+                harness.SubmittedIntents.Count == 0);
+
+            // Re-grab the banked source, cross the drag threshold, and release on the target.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
+            Check("second drag onto target submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             var intent = harness.SubmittedIntents[0] as PlayCardIntent;
@@ -519,39 +509,35 @@ namespace Emberfall.Editor
             Check("OS-canceled touch during drag: gesture fully cleared",
                 !harness.Router.Pointer.IsTrackingFinger);  // Gesture is reset
 
-            // Verify that targeting is also cleared (no armed state leaking through).
+            // Verify that targeting is also cleared (no active state leaking through).
             // A subsequent press on the same card should start fresh.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed, new Vector2(25, 200)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
-            Check("after OS cancel, new tap on the same card arms cleanly",
+            Check("after OS cancel, a new tap on the same card remains inert",
                 harness.SubmittedIntents.Count == 0);
 
             harness.Cleanup();
         }
 
-        /// <summary>NOR-137: OS-canceled touch while gesture is armed by tap (ArmedByTap state).</summary>
-        private static void OsCanceledDuringArmedTap()
+        /// <summary>An OS cancellation while a targeted minion waits for its second drag clears it.</summary>
+        private static void OsCanceledDuringAwaitingEffectDrag()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
 
-            // Tap-arm hand card 0.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(25, 200)));
-            Check("tap arms", harness.SubmittedIntents.Count == 0);
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            Check("targeted minion placement waits for an effect-target drag",
+                harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
 
-            // OS cancels while armed (e.g., app loses focus mid-tap-armed state).
-            // PointerSampler synthesizes PointerPhase.Canceled when the finger disappears.
-            harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(25, 200)));
-            Check("OS-canceled touch during ArmedByTap: no intent submitted", harness.SubmittedIntents.Count == 0);
-            Check("OS-canceled touch during ArmedByTap: gesture fully cleared",
+            harness.StepFrames(new PointerSample(PointerPhase.Canceled, new Vector2(200, 300)));
+            Check("OS cancel during effect-target wait submits nothing", harness.SubmittedIntents.Count == 0);
+            Check("OS cancel during effect-target wait clears pointer tracking",
                 !harness.Router.Pointer.IsTrackingFinger);
 
-            // Verify that a new press starts fresh without any residual ArmedByTap state.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(75, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(75, 200)));
-            Check("after OS cancel, new tap on a different card arms cleanly (reselect works)",
-                harness.SubmittedIntents.Count == 0);
+            Check("OS cancel clears the banked effect-target phase",
+                harness.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             harness.Cleanup();
         }
@@ -702,7 +688,8 @@ namespace Emberfall.Editor
                 m.Resolve(targeted, PointerSubject.None, DropPoint.Board(1.35f)) == null);
         }
 
-        // Issue #30: a targeted-herald minion needs two steps: (1) pick the slot, (2) pick the target.
+        // A targeted-herald minion can resolve slot + target in one drag. An open-space drop still
+        // banks the slot first, then asks the player to re-grab the card and drag to a target.
         private static void TwoStepHerald()
         {
             GameState s = NewState();
@@ -712,16 +699,15 @@ namespace Emberfall.Editor
             InstanceId theirs  = s.Players[1].Board[0].Id;
             DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
 
-            // Step 1 is a PLACEMENT wherever it lands, including on a character. Releasing a herald
-            // minion on the enemy minion it wants to hit used to be a flat miss; since #139 it
-            // places at that x and then asks for the target, because a minion always has a position
-            // to take and "let go anywhere and it resolves" has to mean something here too.
+            // A legal character drop carries both facts: its x chooses the slot and the subject
+            // chooses the effect target. There is no reason to ask for a redundant second gesture.
             var onCharacter = m.Resolve(targeted, PointerSubject.OfCard(theirs, P1, Zone.Board),
-                                        DropPoint.Board(1.35f));
-            Check("targeted minion released on a character places rather than submitting",
-                onCharacter == null && m.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
-                && m.AwaitingSlot == 1);
-            m.Phase = DragTargetingModel.TargetingPhase.Direct;
+                                        DropPoint.Board(1.35f)) as PlayCardIntent;
+            Check("targeted minion released on a character resolves slot and target together",
+                onCharacter != null && onCharacter.BoardSlot == 1
+                && onCharacter.Targets.Count == 1
+                && onCharacter.Targets[0].Instance.Equals(theirs)
+                && m.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             // Drop on open board space → same thing, position solved from x.
             var result = m.Resolve(targeted, PointerSubject.None, DropPoint.Board(-1.35f));
@@ -810,8 +796,8 @@ namespace Emberfall.Editor
         // Sam reversed that on 2026-08-12 (#139) — "once that card is dragged out of the hand, if
         // you let go of it anywhere, it should resolve". The concern decision 13 was protecting
         // against (a stray TAP on empty space becoming a play at the end of the board) is answered
-        // a different way now: the gesture machine arms on a tap and only the SECOND deliberate
-        // release resolves, and where it lands is the x you released at rather than "the end".
+        // a different way now: gameplay taps are inert and only a drag crossing the travel
+        // threshold can resolve; where it lands is the x you released at rather than "the end".
         private static void DropOnOpenBoardPlays()
         {
             GameState s = NewState();
@@ -860,9 +846,8 @@ namespace Emberfall.Editor
         ///
         /// <para>THE DEAD END THIS GUARDS. NeedsTarget used to read the card DEFINITION, which does
         /// not know the board. A Reinforce herald with no friendly minion armed an aim step holding
-        /// zero candidates: nothing glowed, every drop read as a miss, and the only way out was
-        /// re-tapping the card — with no message, because nothing had gone wrong as far as the router
-        /// knew. Ask the plan and read RequiredCount; it consults the board.</para>
+        /// zero candidates: nothing glowed and every drop read as a miss. Ask the plan and read
+        /// RequiredCount; it consults the board.</para>
         /// </summary>
         private static void OptionalHeraldNeedsNoAimStep()
         {

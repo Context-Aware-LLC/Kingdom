@@ -126,7 +126,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DragTargetingModel
     {
-        /// <summary>Awaiting a second choice: a slot placement followed by a herald target.</summary>
+        /// <summary>Awaiting another drag: a slot is banked and a herald target is still owed.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
         // NO INSTRUCTIONAL TEXT (Sam, 2026-08-27). This model used to hand InputRouter banner
@@ -282,7 +282,7 @@ namespace Emberfall.Presentation
         {
             if (State == null || !CanAct()) return null;
 
-            // If we're awaiting an effect target (two-step herald), handle that instead. The drop
+            // If we're awaiting an effect target (multi-drag herald), handle that instead. The drop
             // point is not consulted: the card's position was already fixed by the release that
             // placed it, and this step only picks a target.
             if (Phase == TargetingPhase.AwaitingEffectTarget)
@@ -325,7 +325,7 @@ namespace Emberfall.Presentation
             // A group the engine no longer asks for is skipped, not shown. A herald that fizzles
             // for want of a target reports RequiredCount 0 (Targeting.RequiredPlayerCount), and an
             // armed step with nothing to pick is a dead end: nothing glows, every drop reads as a
-            // miss, and the only escape is re-tapping the card. Dropping it here is what lets the
+            // miss, and the only escape is cancelling the drag. Dropping it here is what lets the
             // gesture fall through to an ordinary untargeted play.
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, source))
@@ -442,11 +442,15 @@ namespace Emberfall.Presentation
 
             if (source.NeedsTarget)
             {
-                // A targeted minion is placed first and aims second: the card is on the board by
-                // the time the herald owes a target, so the second step is a tap, not a re-drag.
                 if (!BeginHandChoicePlan(source.Id, slot)) return null;
                 _phase = TargetingPhase.AwaitingEffectTarget;
-                return null;   // No intent yet; the player still needs to pick a target.
+
+                // A character under this same drop supplies the target while drop.x supplies the
+                // slot. Open space (or an illegal target) banks placement and asks for another drag.
+                if (released.Kind == PointerSubjectKind.Card
+                    || released.Kind == PointerSubjectKind.Hero)
+                    return ChooseTarget(released);
+                return null;
             }
 
             return new PlayCardIntent(_p0Id, source.Id, slot, System.Array.Empty<TargetRef>());
