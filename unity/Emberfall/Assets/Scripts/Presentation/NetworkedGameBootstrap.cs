@@ -392,8 +392,11 @@ namespace Emberfall.Presentation
 
             // Card-authored SFX are presentation-only: they read the same paced snapshots/events
             // as VFX and never enter authority state or the wire protocol.
-            var cardSounds = GetComponent<CardSoundDirector>() ??
-                gameObject.AddComponent<CardSoundDirector>();
+            // TryGetComponent, not `??` — see CardSoundDirector.Init: `??` is the C# null check
+            // and bypasses UnityEngine.Object's overloaded `==`, so a fake-null reads as non-null
+            // and AddComponent never runs (Sam, 2026-08-27).
+            if (!TryGetComponent(out CardSoundDirector cardSounds))
+                cardSounds = gameObject.AddComponent<CardSoundDirector>();
             cardSounds.Init(db);
             matchRunner.OnStateUpdated += cardSounds.OnStateUpdated;
             matchRunner.OnMatchEvent += cardSounds.OnMatchEvent;

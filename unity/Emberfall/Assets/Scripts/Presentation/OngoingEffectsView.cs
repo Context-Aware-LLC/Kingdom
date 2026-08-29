@@ -27,7 +27,10 @@ namespace Emberfall.Presentation
         {
             _viewer = viewer;
             _database = database;
-            _label = gameObject.GetComponent<TextMeshPro>() ?? gameObject.AddComponent<TextMeshPro>();
+            // TryGetComponent, not `??` — see CardSoundDirector.Init (Sam, 2026-08-27).
+            if (!gameObject.TryGetComponent(out TextMeshPro label))
+                label = gameObject.AddComponent<TextMeshPro>();
+            _label = label;
             var font = BoardController.BodyFont();
             if (font != null) _label.font = font;
             _label.fontSize = 1.05f;
