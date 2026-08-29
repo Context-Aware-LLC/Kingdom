@@ -717,9 +717,20 @@
 .collection--editing .db-filter-row {
     display: flex;
 }
-.collection--editing {
-    display: none;
-}
+/* NOTHING hides the plate here. `.collection--editing` is stamped on the PLATE
+ * (CollectionController.StampEditing), so a bare `display: none` on it removes the whole
+ * collection — wall included — from layout. That is what a
+ * `.collection--editing { display: none; }` rule did between e034c700 (2026-08-16) and its
+ * removal: opening the deck editor rendered an empty screen with no error, because a hidden
+ * subtree is skipped by Yoga rather than failing. The symptom was
+ * `[NOR-360] content.h=NaN layouts=1` — an unresolved layout, not a zero-height one.
+ *
+ * It arrived by editing a selector down to nothing: the rule was
+ * `.collection--editing #query-classes { display: none; }` and the commit that deleted the
+ * #query-classes control deleted the SUBJECT of the selector instead of the rule, leaving the
+ * state modifier to apply on its own. Any rule whose selector is a lone `--` state modifier
+ * with `display: none` is that mistake; a modifier describes a state, and something inside it
+ * is what should be hidden. */
 
 /* ---------- Deck drawer ----------
  * Absolute positioning and translate animation are load-bearing. Animating width would emit a
