@@ -21,12 +21,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 08d33cc2d0eef1441bc23c36071025d0
-    m_Address: card_art/grave_hero_power_toll_the_bell
+    m_Address: card_art/grave_hero_power_weaken
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0e6cf0f1fe3869f4c8d449b1d34e6d88
-    m_Address: card_art/night_hero_power_shadow_mark
+    m_Address: card_art/night_hero_power_backstab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
