@@ -4,7 +4,8 @@ An offline browser panel for exploring the Emberfall card corpus, plus the scrip
 
 ## Files
 
-- `build_data.py` — parses `unity/Emberfall/Assets/CardData/{Emberfall,Rekindling}.cards.json` and writes:
+- `build_data.py` — parses EVERY `unity/Emberfall/Assets/CardData/*.cards.json` (it globs; CORE
+  split out 2026-08-23 and a hand-listed subset had already gone stale once) and writes:
   - `data.json` — canonical machine-readable aggregate (per-card records + corpus-wide and
     per-class rollups).
   - `data.js` — a thin `window.CARD_DATA = …` mirror the panel loads (browsers block
@@ -17,12 +18,39 @@ An offline browser panel for exploring the Emberfall card corpus, plus the scrip
 Any time the card data changes, re-run from the repo root:
 
 ```
-python tooling/card-admin/build_data.py            # regenerate
-python tooling/card-admin/build_data.py --check    # report staleness, write nothing, exit 1 if stale
+python tooling/card-admin/build_data.py               # regenerate, then bring the live server in line
+python tooling/card-admin/build_data.py --no-deploy   # regenerate; report the server's corpus, deploy nothing
+python tooling/card-admin/build_data.py --check       # report staleness, write nothing, touch no network
 ```
 
 The printed summary (totals, type split, per-class counts) is the run's deliverable — read it.
 `CARD_ADMIN_REGENERATED=n` / `CARD_ADMIN_STALE_OUTPUTS=n` is the count to quote.
+
+## The live server
+
+A card edit stales a second thing that is not in this repo at all: the corpus **baked into the
+server image**. `Dockerfile.server` COPYs the CardData directory in, frozen at `fly deploy`, so an
+edited card shows its new face on the client while the server keeps resolving the deployed rule --
+no error on either side. Card 1067 did exactly that on 2026-08-28, four days and 34 rules stale.
+
+So a plain run also names the corpus and closes the gap:
+
+```
+Local corpus digest:  e710fb7bd6212814
+Live corpus digest:   1f0c9a44b1d3e207
+Live server is BEHIND the working tree -- cards will resolve by their deployed rules.
+SERVER_CORPUS=stale
+```
+
+`SERVER_CORPUS=` is the line to quote: `in-sync`, `stale`, `deployed`, `deploy-failed`,
+`deploy-unconfirmed`, or `unreachable`. The digest is `CorpusDigest` in
+`src/Emberfall.Net.Server/Data/`, reported on `/healthz`, and computed here by `corpus_digest()`.
+**The two implementations are mirrored by hand and must move together** --
+`CorpusDigestTests.Python_Computes_The_Same_Digest_Over_The_Same_Directory` is what holds them so.
+
+Deploying is not fatal-on-failure only when the server is unreachable; a deploy that was attempted
+and did not land exits non-zero. `fly deploy` uploads the WORKING TREE, not `HEAD`, so an
+uncommitted change under `src/` rides along -- the run prints what it is about to send.
 
 This aggregate is one of three artifacts a card-row edit leaves stale. To do all three at once, use
 `python tooling/scripts/rebake_card_data.py --write` — it calls this script for you.

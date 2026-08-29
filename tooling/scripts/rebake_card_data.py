@@ -120,7 +120,11 @@ def step_id_drift():
 
 def step_admin_aggregate(write):
     banner("1/3  CARD-ADMIN AGGREGATE  (data.json + data.js)")
-    argv = [sys.executable, str(ADMIN_BUILD)] + ([] if write else ["--check"])
+    # --no-deploy on purpose. build_data.py run on its own brings the LIVE server in line with
+    # the working tree; this controller runs the blocking gates and must stay able to report a
+    # red one, which a run that has already pushed to production cannot do. It still names the
+    # drift (SERVER_CORPUS=stale) -- deploying it is a deliberate second command.
+    argv = [sys.executable, str(ADMIN_BUILD)] + (["--no-deploy"] if write else ["--check"])
     code, _ = run(argv)
     if write:
         return "OK" if code == 0 else "ERROR"

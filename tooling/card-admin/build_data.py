@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Aggregate the Emberfall card corpus into a single data file for the admin panel.
 
-Reads the two set files under unity/Emberfall/Assets/CardData/ and emits
+Reads every *.cards.json under unity/Emberfall/Assets/CardData/ and emits
 tooling/card-admin/data.json: a normalized per-card array plus precomputed
 corpus-wide and per-class rollups (keyword frequency, targeting-selector
 frequency, cost distribution, type split, and minion attack/health
@@ -11,10 +11,24 @@ Regenerate any time the card data changes:  python tooling/card-admin/build_data
 
 Follows the pattern of tooling/scripts/card_inventory.py: the printed stdout is
 the deliverable summary; data.json is the machine-readable output the panel reads.
+
+IT ALSO BRINGS THE LIVE SERVER IN LINE. The corpus is baked into the server image
+(`Dockerfile.server` COPYs the CardData dir), frozen at `fly deploy` -- so editing a card
+here changes the FACE the client draws while the server keeps resolving the old rule, with
+no error on either side. That is exactly what happened to card 1067 on 2026-08-28: it
+printed "Summon a 1/1 Gear Wisp" and summoned nothing, against a corpus four days and 34
+rules stale. So a plain run compares the working tree's corpus digest against the digest
+the live server reports on /healthz and, when they differ, deploys. `--no-deploy` reports
+the comparison and stops; `--check` never touches the network at all.
 """
 import argparse
+import hashlib
 import json
+import shutil
+import subprocess
 import sys
+import urllib.error
+import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -35,6 +49,15 @@ OUT_PATH = Path(__file__).resolve().parent / "data.json"
 OUT_JS_PATH = Path(__file__).resolve().parent / "data.js"
 
 CARD_TYPES = ["MINION", "SPELL", "WEAPON", "HERO_POWER"]
+
+# The live match server. `fly.toml` sets min_machines_running = 0 with auto_start, so a plain GET
+# is also what WAKES a suspended machine -- which is why the health check is an HTTP request and
+# not `fly ssh console`, whose first attempt against a suspended machine simply fails.
+HEALTH_URL = "https://emberfall.fly.dev/healthz"
+FLY_APP = "emberfall"
+CARD_DIR = REPO_ROOT / "unity/Emberfall/Assets/CardData"
+DIGEST_LENGTH = 16
+EMPTY_DIGEST = "0" * DIGEST_LENGTH
 
 
 def load_cards():
@@ -138,6 +161,152 @@ def int_keyed(counter):
     return {str(k): counter[k] for k in sorted(counter.keys())}
 
 
+def corpus_digest():
+    """Digest the working tree's card files, byte for byte.
+
+    MIRRORS CorpusDigest.Compute IN src/Emberfall.Net.Server/Data/CorpusDigest.cs and the two
+    must agree exactly -- this is the value compared against what the live server reports. Per
+    file, in relative-path order: "<relative path>\\n<sha256 of its bytes>\\n" fed into one
+    running sha256, truncated to 16 hex characters.
+
+    Bytes, never parsed rows: a digest over deserialized cards would need two serializers held
+    in step, which is the drift generator this exists to remove. Hashing the path as well means
+    a set file that is RENAMED registers as a different corpus even if no card text moved.
+    """
+    files = sorted(
+        (str(p.relative_to(CARD_DIR)).replace("\\", "/"), p)
+        for p in CARD_DIR.rglob("*.cards.json")
+    )
+    if not files:
+        return EMPTY_DIGEST
+
+    running = hashlib.sha256()
+    for rel, path in files:
+        running.update(rel.encode("utf-8"))
+        running.update(b"\n")
+        running.update(hashlib.sha256(path.read_bytes()).hexdigest().encode("utf-8"))
+        running.update(b"\n")
+    return running.hexdigest()[:DIGEST_LENGTH]
+
+
+def live_health(timeout=45):
+    """GET /healthz. Returns the parsed body, or None with a reason printed.
+
+    Never raises. A missing network or a sleeping machine must not fail the local aggregation --
+    the artifacts are already written by the time this runs, and reporting "could not reach the
+    server" is a true and useful answer where a traceback is neither.
+    """
+    try:
+        with urllib.request.urlopen(HEALTH_URL, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"  could not reach {HEALTH_URL}: {exc}")
+        return None
+
+
+def fly_binary():
+    """flyctl is installed under both names depending on how it was installed."""
+    return shutil.which("fly") or shutil.which("flyctl")
+
+
+def working_tree_note():
+    """One line naming what a deploy would actually ship.
+
+    `fly deploy` uploads the WORKING TREE, not HEAD -- so an uncommitted engine change under
+    src/ rides along with the card data. That is usually what is wanted and occasionally a
+    surprise, and the surprise is only avoidable if it is said out loud before the upload.
+    """
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=REPO_ROOT,
+            capture_output=True, text=True, check=True).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--", "src", "unity/Emberfall/Assets/CardData",
+             "tooling/data/bot-roster.json"],
+            cwd=REPO_ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "deploying the working tree (git unavailable, contents unverified)"
+    if not dirty:
+        return f"deploying the working tree at {head}, clean across the three baked paths"
+    changed = len(dirty.splitlines())
+    return (f"deploying the working tree at {head} PLUS {changed} uncommitted "
+            f"change(s) under src/, CardData/ or bot-roster.json")
+
+
+def sync_server(local, deploy):
+    """Compare the live corpus against the working tree and, when asked, close the gap.
+
+    Returns an exit code. Deliberately NOT fatal when the server is merely unreachable: the
+    aggregation succeeded and that is what the caller asked for. It IS fatal when a deploy was
+    attempted and did not land, because then the run reported an action it did not perform.
+    """
+    banner = "SERVER CORPUS SYNC" if deploy else "SERVER CORPUS SYNC (report only)"
+    print("=" * 72)
+    print(banner)
+    print("=" * 72)
+    print(f"Local corpus digest:  {local}")
+
+    health = live_health()
+    if health is None:
+        print("Live corpus digest:   UNKNOWN")
+        print("SERVER_CORPUS=unreachable")
+        print("=" * 72)
+        return 0
+
+    live = health.get("corpus")
+    print(f"Live corpus digest:   {live or 'ABSENT'}"
+          + ("" if live else "  (server predates the /healthz corpus field)"))
+    print(f"Live cards loaded:    {health.get('cards', 'unknown')}")
+
+    if live == local:
+        print("SERVER_CORPUS=in-sync")
+        print("=" * 72)
+        return 0
+
+    print("Live server is BEHIND the working tree -- cards will resolve by their deployed rules.")
+    if not deploy:
+        print("SERVER_CORPUS=stale")
+        print("Run without --no-deploy to bring it in line.")
+        print("=" * 72)
+        return 0
+
+    fly = fly_binary()
+    if fly is None:
+        print("SERVER_CORPUS=stale")
+        print("flyctl not on PATH -- cannot deploy. Install it, or run `fly deploy` yourself.")
+        print("=" * 72)
+        return 1
+
+    print(working_tree_note())
+    print(f"$ {Path(fly).name} deploy --app {FLY_APP}")
+    print("-" * 72)
+    # Output is STREAMED, not captured: a deploy runs for minutes and a silent terminal is
+    # indistinguishable from a hung one.
+    result = subprocess.run([fly, "deploy", "--app", FLY_APP], cwd=REPO_ROOT)
+    print("-" * 72)
+    if result.returncode != 0:
+        print(f"SERVER_CORPUS=deploy-failed (exit {result.returncode})")
+        print("=" * 72)
+        return result.returncode
+
+    # Re-read rather than trusting the deploy's own exit code. `fly deploy` returning 0 means
+    # the release was created; it does not prove the machine that answers /healthz is serving
+    # it, and "deployed" is precisely the claim that was wrong on 2026-08-28.
+    after = live_health()
+    live_after = (after or {}).get("corpus")
+    print(f"Live corpus digest after deploy: {live_after or 'UNKNOWN'}")
+    if live_after == local:
+        print(f"Live cards loaded:    {after.get('cards', 'unknown')}")
+        print("SERVER_CORPUS=deployed")
+        print("=" * 72)
+        return 0
+    print("SERVER_CORPUS=deploy-unconfirmed")
+    print("The deploy succeeded but /healthz still does not match. Check `fly logs -a "
+          f"{FLY_APP}` -- a machine may still be rolling.")
+    print("=" * 72)
+    return 1
+
+
 def rendered(data):
     """The exact text of both outputs, so --check never has to write to compare."""
     payload = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
@@ -152,11 +321,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check", action="store_true",
-        help="report staleness and exit 1 if stale; write nothing",
+        help="report staleness and exit 1 if stale; write nothing, touch no network",
+    )
+    parser.add_argument(
+        "--no-deploy", action="store_true",
+        help="report the live server's corpus but never deploy",
     )
     args = parser.parse_args()
 
     cards = load_cards()
+    digest = corpus_digest()
     classes = sorted({c["class"] for c in cards if c["class"]})
 
     by_class = defaultdict(list)
@@ -166,6 +340,9 @@ def main():
     data = {
         "generatedFrom": [str(p.relative_to(REPO_ROOT)).replace("\\", "/") for p in CARD_FILES],
         "totalCards": len(cards),
+        # Which corpus this rollup describes, in the same terms /healthz reports — so a panel
+        # open next to a live game can be told apart from one describing an older corpus.
+        "corpusDigest": digest,
         "classes": classes,
         "cardTypes": CARD_TYPES,
         "corpus": rollup(cards),
@@ -196,6 +373,7 @@ def main():
     print("=" * 72)
     print(f"Sources: {', '.join(p.name for p in CARD_FILES)}")
     print(f"Total cards: {len(cards)}")
+    print(f"Corpus digest: {digest}")
     print(f"Classes ({len(classes)}): {', '.join(classes)}")
     print()
     print("Type split (corpus):")
@@ -216,7 +394,14 @@ def main():
     # in write mode it is how many outputs the run actually had to regenerate.
     print(f"CARD_ADMIN_{'STALE_OUTPUTS' if args.check else 'REGENERATED'}={len(stale)}")
     print("=" * 72)
-    return 1 if (args.check and stale) else 0
+
+    # --check is the CI/pre-commit shape: pure, offline, and about THIS repo's artifacts only.
+    # Reaching the network there would make a gate's verdict depend on whether fly.io answered.
+    if args.check:
+        return 1 if stale else 0
+
+    print()
+    return sync_server(digest, deploy=not args.no_deploy)
 
 
 if __name__ == "__main__":

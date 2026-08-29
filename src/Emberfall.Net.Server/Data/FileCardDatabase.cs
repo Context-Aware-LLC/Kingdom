@@ -35,6 +35,11 @@ namespace Emberfall.Net.Server.Data
             return new FileCardDatabase(defs);
         }
 
+        /// <summary>Rows loaded, AFTER last-write-wins on a duplicate id — so this can read lower
+        /// than the row count in the files. Reported on `/healthz` beside the corpus digest as a
+        /// human-readable sanity number; the digest, not this, is what a comparison keys on.</summary>
+        public int Count => _byId.Count;
+
         public bool TryGet(int cardId, out CardDefinition def) => _byId.TryGetValue(cardId, out def!);
 
         public CardDefinition Get(int cardId)

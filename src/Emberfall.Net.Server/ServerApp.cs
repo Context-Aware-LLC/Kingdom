@@ -187,6 +187,11 @@ namespace Emberfall.Net.Server
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
             var db = FileCardDatabase.LoadDirectory(cardsDir);
+            // Computed ONCE, next to the load, over the same directory: the digest has to describe
+            // the corpus this process is actually serving, and a later recompute could read a
+            // directory that has moved underneath it. Reported on /healthz so a deployment that is
+            // behind the working tree can be SEEN — see CorpusDigest for why that was not possible.
+            string corpusDigest = CorpusDigest.Compute(cardsDir);
             var time = new SystemTimeSource();
             var matchmaking = cfg.MatchmakingQueue ??
                 new BandWideningMatchmakingQueue(time, cfg.Options.Matchmaking);
@@ -241,6 +246,8 @@ namespace Emberfall.Net.Server
                 sessions = gate.LiveSessions,
                 cap = gate.MaxSessions,
                 contract = cfg.Options.WireContractVersion,
+                corpus = corpusDigest,
+                cards = db.Count,
             }));
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {

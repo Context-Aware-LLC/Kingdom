@@ -5,6 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 293,
+  "corpusDigest": "e710fb7bd6212814",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
