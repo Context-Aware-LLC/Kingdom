@@ -109,9 +109,32 @@ Invoke-Stage 'Stage 5b · Networked AI soak' {
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
     dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
 }
-# Sams Migration FLag
 Invoke-Stage 'Stage 6c · Training exporter tests' {
-    python3 tests/python/test_training_exporters.py -v
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    if ($env:EMBERFALL_TRAINING_PYTHON) {
+        $candidates.Add($env:EMBERFALL_TRAINING_PYTHON)
+    }
+    $candidates.Add('python3')
+    $unslothPython = Join-Path $env:USERPROFILE '.unsloth/studio/unsloth_studio/Scripts/python.exe'
+    if (Test-Path -LiteralPath $unslothPython) {
+        $candidates.Add($unslothPython)
+    }
+    $exportPython = $null
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path -LiteralPath $candidate) -and
+            -not (Get-Command $candidate -ErrorAction SilentlyContinue)) {
+            continue
+        }
+        & $candidate -c 'import numpy' 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            $exportPython = $candidate
+            break
+        }
+    }
+    if (-not $exportPython) {
+        throw 'No Python with NumPy found; set EMBERFALL_TRAINING_PYTHON'
+    }
+    & $exportPython tests/python/test_training_exporters.py -v
 }
 Invoke-Stage 'Stage 6c2 · C# graph resolver tests' {
     python3 tests/python/test_csharp_resolver.py -v
