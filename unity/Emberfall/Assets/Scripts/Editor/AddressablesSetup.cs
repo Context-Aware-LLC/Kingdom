@@ -209,7 +209,14 @@ namespace Emberfall.Editor
                 group = settings.CreateGroup(name, false, false, false, null,
                     typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema));
                 var schema = group.GetSchema<BundledAssetGroupSchema>();
-                // Local packed groups only for M2 (decision 10 pending → no remote catalog).
+                // Local packed groups only for M2 — decision 10(a), approved by Sam 2026-07-12 in
+                // hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-KICKOFF.md:200.
+                // It accepted CLIENT REBUILDS as the balance-patch delivery mechanism and deferred
+                // 10(b), the remote catalog, to M3. The path back is ADR-0008 §6, which proposes
+                // executing 10(b). ("pending" was wrong: the decision was made, the option deferred.)
+                //
+                // RETIREMENT TRIGGER: if ADR-0008 §6 is accepted and these become remote groups,
+                // this comment and ADR-0008's Context section both stop describing the present.
                 schema.BuildPath.SetVariableByName(settings, AddressableAssetSettings.kLocalBuildPath);
                 schema.LoadPath.SetVariableByName(settings, AddressableAssetSettings.kLocalLoadPath);
             }
