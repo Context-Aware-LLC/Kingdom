@@ -139,8 +139,18 @@ namespace Emberfall.Presentation
 
                 case GameEventKind.CardSummoned:
                     if (TryCard(matchEvent.Source, out CardSnapshot summoned))
+                    {
+                        // A token arriving is the same event to a player as a minion being played,
+                        // so it gets the same sound. This is the ONLY actor-side raise of ON_PLAY
+                        // outside CardPlayed, and it is sound-only: an authored ON_PLAY row on a
+                        // token now fires here too, which is what an author writing "when this
+                        // arrives" already means.
+                        if (!summoned.IsSilenced &&
+                            _database.TryGet(summoned.DefinitionId, out CardDefinition summonedDef))
+                            AppendActor(sounds, summonedDef, Trigger.ON_PLAY);
                         AppendObservers(sounds, Trigger.ON_FRIENDLY_SUMMON,
                             summoned.Controller, summoned.Id);
+                    }
                     break;
 
                 case GameEventKind.TurnStarted:
@@ -216,9 +226,9 @@ namespace Emberfall.Presentation
         /// a card that wants something OTHER than its class's sound, not the way a card gets one.
         /// </summary>
         /// <remarks>
-        /// <para><b>Only phase 1 of <c>tooling/sfx/sound-library.md</c> is here</b> — the nine
-        /// class casts and the hero power. The phase-2 stems (summons by art archetype, attacks,
-        /// deaths, weapons) are deliberately ABSENT rather than written ahead: a default naming a
+        /// <para><b>Phase 1 and the summons of <c>tooling/sfx/sound-library.md</c> are here</b> — the nine
+        /// class casts, the hero power, and the art-keyed minion summons. The remaining phase-2
+        /// stems (attacks, deaths, weapons) are deliberately ABSENT rather than written ahead: a default naming a
         /// clip that does not exist is silence plus an Addressables warning on every such event,
         /// which reads exactly like a broken router.</para>
         ///
@@ -234,6 +244,11 @@ namespace Emberfall.Presentation
         /// </remarks>
         private static string DefaultSoundId(CardDefinition definition, Trigger trigger)
         {
+            if (trigger == Trigger.ON_PLAY && definition.Type == CardType.MINION)
+                // Keyed on what the ART shows, not on class or cost. See MinionSummonArchetypes,
+                // which also explains why three archetypes deliberately resolve to nothing.
+                return MinionSummonArchetypes.Resolve(definition);
+
             if (trigger != Trigger.ON_CAST) return string.Empty;
             switch (definition.Type)
             {

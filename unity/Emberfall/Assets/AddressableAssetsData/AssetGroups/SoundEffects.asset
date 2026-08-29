@@ -30,8 +30,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 344bf1c4e7fea1f419e224346e8c45d5
+    m_Address: sfx/beast_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e9713e720e1cb142b38a1326ac4f8d1
+    m_Address: sfx/drake_summon_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 426b9c530218eee40a033f2fed371ba7
+    m_Address: sfx/drake_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46737e8978a6a3a49b99332ed5625c32
     m_Address: sfx/stonewarden_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b4f213dd66274f4e96dba0caa67f73c
+    m_Address: sfx/beast_summon_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -40,8 +60,53 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e66956c622e20742b131f4907c185c1
+    m_Address: sfx/magma_summon_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76264727b727f3f40a14e22d466bfb75
+    m_Address: sfx/tide_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7814871d6e386f54ba552adc6dcf07d5
+    m_Address: sfx/magma_summon_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c4cf0e3afa180d47bbd67eb927cbf42
+    m_Address: sfx/wisp_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 862175c806a3e8e45b0e40eb0979974c
+    m_Address: sfx/stone_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a16eaa52d920b745a2481969628eae1
+    m_Address: sfx/undead_summon_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f1bbf64231746645976f2d013ef8f55
+    m_Address: sfx/wisp_summon_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c78f9d96e105b0449b333948e0a89a9
+    m_Address: sfx/magma_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fd95adcfb875bf44b8e15d4cd3897c4
     m_Address: sfx/tempest_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a287428ae388dbb418a9b5514f3c1f89
+    m_Address: sfx/beast_summon_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -50,8 +115,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5b1627613b8bad40bd4c393abd7bcfe
+    m_Address: sfx/magma_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad3db582430ee2148a47031d10877678
+    m_Address: sfx/tide_summon_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b28f569a6e59a0d4da32dae7589d5e33
     m_Address: sfx/verdant_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b45cd4494a48db849ba90e8ef2cadc26
+    m_Address: sfx/wisp_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5a6f22937413144a8bf97d882357755
+    m_Address: sfx/frost_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b79693fde2317a5449fc7f644138676f
+    m_Address: sfx/wisp_summon_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -60,8 +150,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf893ad833f59fe4d994e39069997781
+    m_Address: sfx/beast_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cdddb6ba2f7e0804ba3408bf7fe3d125
     m_Address: sfx/emberward_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d67ecd053cecacb41a60f5e24431841c
+    m_Address: sfx/imp_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: daa02e238db559445bf3cbcad512cda3
+    m_Address: sfx/serpent_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e015ca48601467648a049ac6f478a533
+    m_Address: sfx/undead_summon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -75,13 +185,48 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e466e0c3a2d6eab42a958159c2cb811d
+    m_Address: sfx/tide_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e71e0b99413f0e741b22ea1fd00494af
     m_Address: sfx/gravekeep_spell_cast
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef9816f6518ba7544aa39c88fd575e5c
+    m_Address: sfx/storm_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f065b51c4c631c946bfd5ebb89af8482
     m_Address: sfx/neutral_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2b782af50597384c947bf2fb85bf340
+    m_Address: sfx/drake_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f46eea5b65f784a4685e7abc5f9329d6
+    m_Address: sfx/drake_summon_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f653d4df1a9e2584cb27feeeae554284
+    m_Address: sfx/tide_summon_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7a1df1f0bd07c24ea6f0a992f8f24d8
+    m_Address: sfx/rogue_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe26c37fab006984285425d5b7de69da
+    m_Address: sfx/clockwork_summon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
