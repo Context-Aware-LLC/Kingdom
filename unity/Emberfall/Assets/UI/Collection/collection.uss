@@ -93,11 +93,17 @@
 
 /* ---------- Collection wall (§2.9 wall tile — the REAL card, baked by CardFaceBaker, not a
  * UI Toolkit re-implementation of the card front) ---------- */
+/* justify-content is flex-start ON PURPOSE and must stay that way. CardWall.Layout computes the
+ * column count, the bounded gutter and the outer breathing room itself and writes them as per-tile
+ * margins; any other value here re-distributes the surplus it already spent, and the two solves
+ * compose into neither. `space-between` did exactly that -- it pushed a sparse row's cards apart
+ * into islands and, with the outer margin landing only on the left, sat the row flush against the
+ * right edge. */
 .db-grid {
     flex-direction: row;
     flex-wrap: wrap;
     align-content: flex-start;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 .card-tile {
     width: 340px;

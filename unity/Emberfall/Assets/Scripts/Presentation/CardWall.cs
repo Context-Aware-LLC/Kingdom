@@ -376,8 +376,16 @@ namespace Emberfall.Presentation
                 tile.style.height = tileHeight;
                 bool startOfRow = i % columns == 0;
                 bool endOfRow = (i % columns) == columns - 1 || i == _visible.Count - 1;
+                // `outer` is HALF the surplus, so it belongs on both ends. Applying it only on the
+                // left spent the whole surplus there: the row sat flush against the right edge --
+                // against the deck drawer, in the editor -- with a gap on the left that read as a
+                // missing column. The grid is `justify-content: flex-start` precisely so this solve
+                // is the only thing positioning a row; `space-between` there re-spread the surplus
+                // between the cards instead, which is the "islands" outcome the gutter is bounded
+                // to avoid. A partial last row keeps its left `outer` and so stays aligned with the
+                // full rows above it.
                 tile.style.marginLeft = startOfRow ? outer : 0f;
-                tile.style.marginRight = endOfRow ? 0f : gutter;
+                tile.style.marginRight = endOfRow ? outer : gutter;
             }
 
             if (_tilesNeedBake)
