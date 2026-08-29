@@ -21,6 +21,8 @@ namespace Emberfall.Presentation
         // The hand-cut frames keep their full blades, so their apertures are not at the canvas
         // pivots. Measured from the supplied 620 px exports at FrameSize 1.32: power is about
         // (+5, -40) source pixels from centre; weapon is about (+15, +25).
+        // RETIREMENT TRIGGER: replacing either PNG in place requires remeasuring its aperture
+        // centre and revisiting these two offsets before the new art ships.
         internal static readonly Vector2 PowerApertureOffset = new Vector2(0.01f, 0.085f);
         private static readonly Vector2 WeaponApertureOffset = new Vector2(0.03f, -0.052f);
         private const float StatDiameterFraction = 0.22f;
