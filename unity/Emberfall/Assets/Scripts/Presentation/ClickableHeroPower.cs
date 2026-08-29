@@ -25,7 +25,8 @@ namespace Emberfall.Presentation
                 // The new bottom-docked frame overlaps the hero collider. Put the power hitbox
                 // nearer the board camera so a tap on the visible power resolves deterministically
                 // as HeroPower rather than whichever overlapping collider Physics returns first.
-                col.center = new Vector3(0f, 0f, -0.1f);
+                Vector2 aperture = HeroSocketsView.PowerApertureOffset;
+                col.center = new Vector3(aperture.x, aperture.y, -0.1f);
             }
         }
 

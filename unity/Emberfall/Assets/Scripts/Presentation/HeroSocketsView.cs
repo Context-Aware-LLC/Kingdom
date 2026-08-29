@@ -18,6 +18,11 @@ namespace Emberfall.Presentation
         public const float FrameSize = 1.32f;
         public const float HitDiameter = 1.12f;
         private const float SocketDiameter = 0.64f;
+        // The hand-cut frames keep their full blades, so their apertures are not at the canvas
+        // pivots. Measured from the supplied 620 px exports at FrameSize 1.32: power is about
+        // (+5, -40) source pixels from centre; weapon is about (+15, +25).
+        internal static readonly Vector2 PowerApertureOffset = new Vector2(0.01f, 0.085f);
+        private static readonly Vector2 WeaponApertureOffset = new Vector2(0.03f, -0.052f);
         private const float StatDiameterFraction = 0.22f;
         private const string PowerFrameKey = "hero-power";
         private const string WeaponFrameKey = "weapon-frame";
@@ -80,7 +85,8 @@ namespace Emberfall.Presentation
             if (powerAnchor != null)
             {
                 _powerRing = MakeFrame(powerAnchor, "PowerFrame", uiSprites, PowerFrameKey);
-                _powerArt  = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter);
+                _powerArt = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter,
+                                           PowerApertureOffset);
                 _powerCost = MakeStat(powerAnchor, "PowerCost", new Vector2(0.5f, 0.78f),
                                       StatDiameterFraction, Color.white);
             }
@@ -93,7 +99,8 @@ namespace Emberfall.Presentation
 
                 Transform wt = _weaponRoot.transform;
                 _weaponRing = MakeFrame(wt, "WeaponFrame", uiSprites, WeaponFrameKey);
-                _weaponArt  = MakeSocketArt(wt, "WeaponArt", SocketDiameter);
+                _weaponArt = MakeSocketArt(wt, "WeaponArt", SocketDiameter,
+                                            WeaponApertureOffset);
 
                 _weaponAttack = MakeStat(wt, "Attack", new Vector2(0.30f, 0.76f),
                                          StatDiameterFraction, AttackText);
@@ -196,11 +203,12 @@ namespace Emberfall.Presentation
         /// only honoured by the 2D Renderer. Clipping with geometry needs no stencil, no shader
         /// and no CPU-readable texture, so it cannot quietly stop working.
         /// </summary>
-        private Renderer MakeSocketArt(Transform parent, string goName, float diameter)
+        private Renderer MakeSocketArt(Transform parent, string goName, float diameter,
+                                       Vector2 apertureOffset)
         {
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+            go.transform.localPosition = new Vector3(apertureOffset.x, apertureOffset.y, -0.01f);
             go.transform.localScale    = new Vector3(diameter, diameter, 1f);
 
             go.AddComponent<MeshFilter>().sharedMesh = DiscMesh();
