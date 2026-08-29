@@ -38,6 +38,18 @@ WHY THE QUEUE IS A FILE AND NOT A PAGE STATE
     one from the session that made them. The file is committed for the same reason: the
     rewrite list is work, not scratch.
 
+CLEARING THE BOARD BETWEEN CHUNKS
+    python tooling/sfx/soundweb.py --archive-decided
+
+    A chunk's takes stay on the page forever after they are promoted, so by the third chunk the
+    new clips are below 300 decided ones and the page stops being usable for its one job. This
+    MOVES every take whose canonical stem already has a promoted file in the Unity tree into
+    art-pipeline/sfx/_archive/, preserving its relative path. It is a move, never a delete --
+    a keeper is often re-auditioned against a later take, and regenerating costs credits.
+
+    A take whose stem is NOT promoted is never touched, so an unfinished chunk cannot be swept
+    away by running this at the wrong moment. --dry-run prints what it would move.
+
 WHAT IT DELIBERATELY DOES NOT DO
     Delete anything, write a card-data file, or touch Addressables. Promotion puts a file on
     disk; the Editor still has to run Emberfall/Addressables/Setup Groups + Migrate Card Data
@@ -72,6 +84,14 @@ VOICE_TAKES = ROOT / "art-pipeline" / "sfx" / "voice"
 VOICE_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
 SFX_TAKES = ROOT / "art-pipeline" / "sfx"
 SFX_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "SFX"
+
+# Decided takes are moved here, not deleted. Sited beside the candidate trees rather than
+# inside them: VOICE_TAKES is walked with rglob, so an archive under voice/ would need the
+# skip below to work; the SFX scan is a non-recursive glob, so this level is invisible to it
+# either way. Both are belt and braces on purpose -- a swept take reappearing on the board
+# reads as "promote did nothing", which is the most expensive wrong conclusion here.
+ARCHIVE = ROOT / "art-pipeline" / "sfx" / "_archive"
+SKIP_DIRS = ("_rejected", "_archive")
 
 # Only these trees are ever read from or written to. Anything resolving outside is refused.
 ROOTS = (VOICE_TAKES, VOICE_FINAL, SFX_TAKES, SFX_FINAL)
@@ -167,7 +187,7 @@ def scan():
 
     if VOICE_TAKES.is_dir():
         for p in sorted(VOICE_TAKES.rglob("*")):
-            if p.suffix.lower() not in AUDIO_EXT or "_rejected" in p.parts:
+            if p.suffix.lower() not in AUDIO_EXT or any(d in p.parts for d in SKIP_DIRS):
                 continue
             canon = canonical_stem(p.stem)
             cls, moment, text = text_by_stem.get(canon, ("UNMATCHED", "unknown", ""))
@@ -548,6 +568,54 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_error(404)
 
 
+def promoted_stems() -> set:
+    """Canonical stems that already have a file in the Unity tree. The board's definition of
+    'decided' -- and it reads the destination rather than a ledger, so a clip promoted by hand,
+    by an earlier session, or replaced later all count the same."""
+    stems = set()
+    for final in (VOICE_FINAL, SFX_FINAL):
+        if final.is_dir():
+            for p in final.rglob("*"):
+                if p.suffix.lower() in AUDIO_EXT:
+                    stems.add(canonical_stem(p.stem))
+    return stems
+
+
+def archive_decided(dry_run: bool = False) -> int:
+    """Move every take whose stem is already promoted out of the candidate trees."""
+    decided = promoted_stems()
+    moves, skipped = [], 0
+
+    def consider(path):
+        nonlocal skipped
+        if canonical_stem(path.stem) not in decided:
+            skipped += 1
+            return
+        moves.append((path, ARCHIVE / path.resolve().relative_to(SFX_TAKES.resolve())))
+
+    if VOICE_TAKES.is_dir():
+        for p in sorted(VOICE_TAKES.rglob("*")):
+            if p.suffix.lower() in AUDIO_EXT and not any(d in p.parts for d in SKIP_DIRS):
+                consider(p)
+    if SFX_TAKES.is_dir():
+        for p in sorted(SFX_TAKES.glob("*")):
+            if p.suffix.lower() in AUDIO_EXT:
+                consider(p)
+
+    for src, dest in moves:
+        print(("would move " if dry_run else "moved ") + rel(src))
+        if not dry_run:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if dest.exists():
+                dest.unlink()      # same stem, same archive slot: the newer take wins
+            shutil.move(str(src), str(dest))
+
+    print("%s %d decided take(s) -> %s" % (
+        "would archive" if dry_run else "archived", len(moves), rel(ARCHIVE) if moves else "-"))
+    print("%d take(s) left on the board (stem not promoted yet)" % skipped)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -555,7 +623,14 @@ def main() -> int:
     # 8781-8783 are cardweb's, and a second bind there silently loses to the running one on
     # Windows rather than raising -- the page comes back 200 and is somebody else's app.
     ap.add_argument("--port", type=int, default=8795)
+    ap.add_argument("--archive-decided", action="store_true",
+                    help="move already-promoted takes into _archive/ and exit")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="with --archive-decided, print the moves without making them")
     args = ap.parse_args()
+
+    if args.archive_decided:
+        return archive_decided(dry_run=args.dry_run)
 
     groups = scan()
     total = sum(len(l["takes"]) for g in groups.values()
