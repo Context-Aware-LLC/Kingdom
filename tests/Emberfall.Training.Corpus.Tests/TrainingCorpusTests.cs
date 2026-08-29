@@ -149,6 +149,18 @@ namespace Emberfall.Training.Corpus.Tests
                 foreach (JsonElement card in opponentHand.EnumerateArray())
                     Assert.That(card.GetProperty("definitionId").GetInt32(), Is.Zero,
                         "the acting player must not receive opponent hand identities");
+                JsonElement memory = row.GetProperty("playerMemory");
+                JsonElement remainingDeck = memory.GetProperty("selfRemainingDeck");
+                Assert.That(remainingDeck.GetArrayLength(),
+                    Is.EqualTo(row.GetProperty("observation").GetProperty("players")[0]
+                        .GetProperty("deck").GetArrayLength()));
+                foreach (JsonElement cardId in remainingDeck.EnumerateArray())
+                    Assert.That(cardId.GetInt32(), Is.GreaterThan(0),
+                        "the actor's remembered remaining deck contains definitions, never order or redacted ids");
+                Assert.That(memory.TryGetProperty("opponentRemainingDeck", out _), Is.False,
+                    "player memory must not expose the opponent's unrevealed deck");
+                Assert.That(memory.GetProperty("selfGraveyard").GetArrayLength(), Is.Zero);
+                Assert.That(memory.GetProperty("opponentGraveyard").GetArrayLength(), Is.Zero);
                 Assert.That(row.GetProperty("done").GetBoolean(), Is.False,
                     "p0's transition is not terminal while p1 still acts afterward");
                 Assert.That(row.GetProperty("reward").GetInt32(), Is.Zero);

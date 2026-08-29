@@ -15,7 +15,7 @@ namespace Emberfall.Training.Corpus
         int DecisionCount,
         IReadOnlyList<DatasetShard> Shards)
     {
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
     }
 
     public sealed record DatasetShard(string File, int Records, string Sha256);

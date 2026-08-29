@@ -151,6 +151,7 @@ namespace Emberfall.Training.Corpus
                     throw new InvalidDataException(
                         $"Episode '{episode.MatchId}' intent {index} pre-action observation hash disagrees with capture.");
                 JsonElement observation = EncodeObservation(projectedBefore, new MatchId(episode.MatchId));
+                PlayerMemory playerMemory = EncodePlayerMemory(host.State, intent.Player);
                 CommandResult result = host.Submit(intent);
                 if (!result.Accepted)
                     throw new InvalidDataException(
@@ -171,6 +172,7 @@ namespace Emberfall.Training.Corpus
                     projectedBefore.StateVersion,
                     beforeHash,
                     observation,
+                    playerMemory,
                     actionJson,
                     chosenIndex,
                     chosenJson,
@@ -259,6 +261,25 @@ namespace Emberfall.Training.Corpus
             return document.RootElement.GetProperty("body").GetProperty("state").Clone();
         }
 
+        private static PlayerMemory EncodePlayerMemory(GameState state, PlayerId actor)
+        {
+            int actorSeat = state.SeatOf(actor);
+            PlayerState self = state.Players[actorSeat];
+            PlayerState opponent = state.Players[1 - actorSeat];
+            return new PlayerMemory(
+                SortedDefinitions(self.Deck),
+                SortedDefinitions(self.Graveyard),
+                SortedDefinitions(opponent.Graveyard));
+        }
+
+        private static IReadOnlyList<int> SortedDefinitions(IReadOnlyList<CardInstance> cards)
+        {
+            var definitions = new List<int>(cards.Count);
+            foreach (CardInstance card in cards) definitions.Add(card.DefinitionId);
+            definitions.Sort();
+            return definitions;
+        }
+
         private static List<JsonElement> EncodeActions(IReadOnlyList<PlayerIntent> actions, MatchId match)
         {
             var encoded = new List<JsonElement>(actions.Count);
@@ -332,6 +353,7 @@ namespace Emberfall.Training.Corpus
             ulong StateVersion,
             string ObservationHash,
             JsonElement Observation,
+            PlayerMemory PlayerMemory,
             IReadOnlyList<JsonElement> LegalActions,
             int ChosenActionIndex,
             JsonElement ChosenAction,
@@ -339,5 +361,10 @@ namespace Emberfall.Training.Corpus
             int Reward,
             bool Done,
             int EpisodeReturn);
+
+        private sealed record PlayerMemory(
+            IReadOnlyList<int> SelfRemainingDeck,
+            IReadOnlyList<int> SelfGraveyard,
+            IReadOnlyList<int> OpponentGraveyard);
     }
 }

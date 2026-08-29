@@ -62,6 +62,12 @@ record counts and output checksums and is path-independent for reproducible buil
 Python tensor, analytics, and conversational exporters should consume these model-neutral rows.
 They must not reimplement game rules or reconstruct hidden authority state.
 
+Dataset schema v2 adds `playerMemory` to every decision. It contains three sorted card-definition
+multisets: the actor's known remaining deck, the actor's public graveyard, and the opponent's
+public graveyard. Sorting removes deck order, and no opponent hand or remaining-deck identity is
+included. The builder records this memory while replaying the authoritative state, before the
+action is applied, so downstream exporters never infer it from redacted deck placeholders.
+
 ## Export
 
 The dependency-free streaming exporters validate this directory and can write all large artifacts
