@@ -9,6 +9,10 @@ span with horizontally MIRRORED edge strips: pixel-continuous at the seam (a
 block touching the edge continues into its reflection), and only ever visible
 on ultrawide displays.
 
+Preview-sized inputs are normalized to the board's 3696x2080 authored frame
+before the bleed is added, so swapping in a concept image does not change the
+runtime camera/layout contract.
+
 Usage: build_board_master.py <plate_16x9.png>
 Writes unity/Emberfall/Assets/Art/Backgrounds/BoardPlate_Master.png — a fixed
 name, so swapping the board art is: generate a new 16:9 plate, rerun this.
@@ -21,6 +25,8 @@ from PIL import Image
 
 VISIBLE_H = 9.2    # 2 x BoardCamera ortho size 4.6
 MAX_HALF_W = 10.2  # 20:9 span
+SOURCE_W = 3696     # Existing 16:9 authored-frame contract.
+OUTPUT_H = 2080
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 DEST = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Backgrounds" / "BoardPlate_Master.png"
@@ -32,6 +38,9 @@ def main() -> int:
         return 2
 
     src = Image.open(sys.argv[1]).convert("RGB")
+    original_size = src.size
+    if original_size != (SOURCE_W, OUTPUT_H):
+        src = src.resize((SOURCE_W, OUTPUT_H), Image.Resampling.LANCZOS)
     w, h = src.size
 
     target_w = round(h * (2 * MAX_HALF_W) / VISIBLE_H)
@@ -48,7 +57,9 @@ def main() -> int:
 
     DEST.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(DEST, optimize=True)
-    print(f"{w}x{h} + {bleed}px mirrored bleed each side -> {DEST.name} "
+    normalized = (f"{original_size[0]}x{original_size[1]} -> {w}x{h}; "
+                  if original_size != (w, h) else "")
+    print(f"{normalized}{w}x{h} + {bleed}px mirrored bleed each side -> {DEST.name} "
           f"({target_w}x{h}, {target_w/h:.3f}:1 vs target {2*MAX_HALF_W/VISIBLE_H:.3f}:1)")
     return 0
 
