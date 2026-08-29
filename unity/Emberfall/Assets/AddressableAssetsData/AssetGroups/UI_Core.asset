@@ -125,13 +125,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 778eda24eb854385a455ab63e0175a8c
-    m_Address: ui/weapon-frame
+  - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
+    m_Address: materials/M_Glow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
-    m_Address: materials/M_Glow
+  - m_GUID: 778eda24eb854385a455ab63e0175a8c
+    m_Address: ui/weapon-frame
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

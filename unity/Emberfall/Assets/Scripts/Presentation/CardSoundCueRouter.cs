@@ -255,9 +255,21 @@ namespace Emberfall.Presentation
                 case CardType.SPELL:
                     return definition.Class.ToString().ToLowerInvariant() + "_spell_cast";
                 case CardType.HERO_POWER:
-                    // One clip for all eight powers, per the sheet — the class already announces
-                    // itself through the cast sound, and a power fires far more often than a spell.
-                    return "hero_power_activate";
+                    // One clip for all eight was the sheet's call, on the grounds that the class
+                    // already announces itself through its cast sound. That holds for a power that
+                    // throws something and breaks for one that does not: CLOCKWRIGHT's Blueprint
+                    // draws a card, and a magical surge is the wrong GESTURE for rummaging through
+                    // paper (Sam, 2026-08-28).
+                    //
+                    // An explicit list, not "<class>_hero_power" with a fallback, because a class
+                    // gets its own clip only when someone recorded one -- and a derived name for a
+                    // clip nobody recorded is an Addressables warning on every activation, which is
+                    // the single most frequent event in the game after drawing.
+                    switch (definition.Class)
+                    {
+                        case CardClass.CLOCKWRIGHT: return "clockwright_hero_power";
+                        default: return "hero_power_activate";
+                    }
                 default:
                     return string.Empty;
             }

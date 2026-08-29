@@ -91,6 +91,8 @@ def main() -> int:
     ap.add_argument("--out", type=pathlib.Path, help="output directory (default: beside source)")
     ap.add_argument("--target", type=float, default=TARGET_DBFS)
     ap.add_argument("--no-trim", action="store_true", help="normalise only, skip TruncateSilence")
+    ap.add_argument("--replace", action="store_true",
+                    help="delete the source and carry its .meta over to the .wav")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -124,6 +126,17 @@ def main() -> int:
             out_peak, _, out_dur = probe(dest)
         if abs(out_peak - args.target) > TOLERANCE_DB:
             failures.append(dest.name)
+        if args.replace and dest != src:
+            # THE GUID FOLLOWS THE SOUND. AudioImporter meta is format-agnostic, and an
+            # Addressables entry points at the guid inside it -- so the meta is RENAMED, never
+            # deleted and regenerated. Deleting the pair mints a new guid and leaves the entry
+            # dangling, silently, which is the failure the "never delete the file and .meta
+            # pair" rule exists for.
+            meta = src.with_name(src.name + ".meta")
+            if meta.exists():
+                meta.rename(dest.with_name(dest.name + ".meta"))
+            src.unlink()
+
         print("%-22s %9.1f %8.1f %9.1f %7.2fs -> %.2fs" % (
             dest.name, peak, gain, out_peak, dur, out_dur))
 
