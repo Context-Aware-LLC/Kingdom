@@ -84,11 +84,23 @@ what the library does not already have. The `search` column is what to type ther
 | `beast_summon` | 11 | animal growl paws | A four-legged animal landing and squaring up: paws thudding on dirt, a low warning growl, a snort of breath. |
 | `titan_summon` | 11 | earthquake impact | Something enormous arriving: a ground-shaking impact, a long low rumble, debris raining down afterwards. |
 | `storm_summon` | 10 | electricity crackle | Charged air discharging into a shape: crackling static building to a sharp electrical snap, ozone fizz. |
-| `soldier_summon` | 9 | armor clank | An armoured soldier taking position: plate armour clanking, a boot planting hard, a firm grip on a weapon haft. |
+| `soldier_summon` | 9 | — | **REJECTED, 2026-08-28** — see below. |
 | `drake_summon` | 7 | dragon wings screech | A winged reptile landing: two heavy leathery wingbeats, claws scraping stone, a short rasping screech. |
 | `serpent_summon` | 6 | snake hiss scales | A serpent uncoiling: dry scales sliding over stone, then a sharp sustained hiss. |
 | `imp_summon` | 5 | small creature squeak | A small mischievous creature popping into existence: a quick puff of air, a high chittering squeak, tiny scampering feet. |
 | `frost_summon` | 2 | ice cracking | Ice forming into a shape: sharp crystalline cracking, a cold brittle groan, small shards tinkling down. |
+
+**A body that TALKS does not get a foley clip (Sam, 2026-08-28).** All four `soldier_summon`
+generations were rejected on the same grounds: *"they're human beings, and other things that talk
+might get voices instead at some point."* A clank of armour is what a soldier's KIT sounds like, not
+what a soldier sounds like, and once a person on the board has a voice the foley is the thing that
+will read as wrong. So the human archetypes are parked rather than regenerated — a better armour
+clip does not answer the objection. Whether that reaches `rogue_summon` (12) as well is undecided;
+Sam named the soldiers only.
+
+This is a bet on unbuilt work, and cheap to unwind: nine cards are silent on summon until either a
+voice line or a reinstated clip lands, and silence there costs nothing while the rest of the sheet
+is being auditioned.
 
 `frost_summon` covers only two cards (`Frostwhisper`, `Icecrown Herald`) — the other icy
 minions read as drakes or tide. It is the one bucket that may not earn a bespoke clip;

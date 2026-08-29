@@ -91,6 +91,11 @@ SFX_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "SFX"
 # either way. Both are belt and braces on purpose -- a swept take reappearing on the board
 # reads as "promote did nothing", which is the most expensive wrong conclusion here.
 ARCHIVE = ROOT / "art-pipeline" / "sfx" / "_archive"
+
+# Mirrors AddressableSoundEffectPlayer.MaxVariants. The player probes <stem>_2 .. _N for a real
+# Addressables entry, so promoting past N puts a file on disk that nothing will ever play -- the
+# exact silent failure this tool exists to prevent. The two numbers move together.
+MAX_VARIANTS = 6
 SKIP_DIRS = ("_rejected", "_archive")
 
 # Only these trees are ever read from or written to. Anything resolving outside is refused.
@@ -202,16 +207,31 @@ def scan():
     return groups
 
 
-def destination(path: pathlib.Path) -> pathlib.Path:
-    """Where a promoted clip lands, under its canonical stem."""
+def destination(path: pathlib.Path, variant: bool = False) -> pathlib.Path:
+    """Where a promoted clip lands, under its canonical stem.
+
+    With variant=True it lands in the next FREE numbered slot instead -- <stem>_2, _3, ... -- so a
+    second good take is kept rather than overwriting the first. AddressableSoundEffectPlayer probes
+    those suffixes and picks among whatever exists, which is why nothing but the filename declares
+    a variant: there is no list to keep in step, and a promoted clip is a playing clip.
+
+    Numbering starts at _2 because the BASE stem is variant one. A shared sound is heard several
+    times a turn (undead_summon alone covers 22 cards), and one clip stops sounding like the game
+    and starts sounding like a loop."""
     canon = canonical_stem(path.stem)
     m = re.match(r"vo_([a-z]+)_", canon)
     if m:
-        for cls, folder in FOLDER.items():
-            if cls.lower() == m.group(1):
-                return VOICE_FINAL / folder / (canon + path.suffix)
-        return VOICE_FINAL / "Unsorted" / (canon + path.suffix)
-    return SFX_FINAL / (canon + path.suffix)
+        folder = next((f for cls, f in FOLDER.items() if cls.lower() == m.group(1)), "Unsorted")
+        base = VOICE_FINAL / folder
+    else:
+        base = SFX_FINAL
+    if not variant:
+        return base / (canon + path.suffix)
+    for i in range(2, MAX_VARIANTS + 1):
+        slot = base / ("%s_%d%s" % (canon, i, path.suffix))
+        if not slot.exists():
+            return slot
+    return base / ("%s_%d%s" % (canon, MAX_VARIANTS, path.suffix))
 
 
 PAGE_HEAD = """<!doctype html>
@@ -239,6 +259,7 @@ PAGE_HEAD = """<!doctype html>
  audio { height: 30px; }
  button { font: inherit; font-size: 13px; padding: 2px 9px; border-radius: 6px; cursor: pointer; }
  .x { padding: 2px 7px; }
+ .var { padding: 2px 7px; }
  .rw { border: 1px solid; border-radius: 10px; padding: 10px 14px; margin: 0 0 8px;
        background: color-mix(in srgb, Canvas 92%, orange); }
  .rw > summary { font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -256,6 +277,9 @@ PAGE_HEAD = """<!doctype html>
 </style>
 <h1>Emberfall sound preview</h1>
 <p class="sub">Promote copies the clip into the Unity tree under its canonical stem.
+<b>+alt</b> keeps a take <i>as well as</i> the promoted one &mdash; it lands in the next free
+<code>_2</code>/<code>_3</code> slot and the game picks among them at random, so a sound shared by
+20 cards stops sounding like a loop.
 X moves it to <code>_rejected/</code> &mdash; nothing is deleted.
 Rewrite flags the LINE (all its takes) and pins it to the top &mdash; for words no read can save.</p>
 """
@@ -349,14 +373,16 @@ def attr(value) -> str:
 
 
 def take_html(paths) -> str:
-    """The player + Promote + X trio for one take. Shared, so a line rendered in the pinned box
+    """The player + Promote + alt + X row for one take. Shared, so a line rendered in the pinned box
     behaves identically to the same line rendered in its class -- act() finds .take and .line
     either way and needs to know nothing about where it was clicked."""
     return "".join(
         '<div class="take"><audio controls preload="none" src="/audio?p=%s"></audio>'
         '<button onclick=\'act("promote",%s,this)\'>Promote</button>'
+        '<button class="var" title="Keep this one TOO -- next free _2/_3 slot" '
+        'onclick=\'act("variant",%s,this)\'>+alt</button>'
         '<button class="x" onclick=\'act("reject",%s,this)\'>&times;</button></div>'
-        % (urllib.parse.quote(t), attr(t), attr(t)) for t in paths)
+        % (urllib.parse.quote(t), attr(t), attr(t), attr(t)) for t in paths)
 
 
 def find_line(groups, stem):
@@ -539,16 +565,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(400, {"ok": False, "message": "path is outside the known roots, refused"})
             return
 
-        if parts.path == "/promote":
-            dest = destination(src)
+        if parts.path in ("/promote", "/variant"):
+            variant = parts.path == "/variant"
+            dest = destination(src, variant=variant)
             dest.parent.mkdir(parents=True, exist_ok=True)
             existed = dest.exists()
             shutil.copy2(src, dest)
+            if variant and existed:
+                # Every slot up to MAX_VARIANTS was taken, so destination() handed back the last
+                # one and this overwrote it. Say so: silently replacing a keeper is the one
+                # outcome nobody clicking "+alt" is expecting.
+                verb = "All %d slots full, REPLACED the last --" % MAX_VARIANTS
+            elif variant:
+                verb = "Kept as an alternate:"
+            else:
+                verb = "Replaced" if existed else "Promoted"
             self._json(200, {
                 "ok": True, "dest": rel(dest),
                 "message": "%s %s -> %s. Run Emberfall/Addressables/Setup Groups in the Editor "
                            "-- until then it has no address and fails silently." % (
-                               "Replaced" if existed else "Promoted", src.name, rel(dest)),
+                               verb, src.name, rel(dest)),
             })
             return
 
@@ -632,12 +668,30 @@ def main() -> int:
     if args.archive_decided:
         return archive_decided(dry_run=args.dry_run)
 
+    # allow_reuse_address is TRUE by default, and on Windows that does not mean "reuse a dead
+    # socket" -- it means a second bind to a LIVE one succeeds and loses silently. The page then
+    # comes back 200 from the process that got there first, which may be an instance left running
+    # by an earlier session with older code in it. That is not theoretical: a stale instance
+    # carrying the pre-758cd6a9 take-stripper promoted four summon clips as "<stem>_" on
+    # 2026-08-28, hours after the fix landed, while the terminal here reported a healthy server.
+    # Refuse the bind instead, and say which process is holding it.
+    http.server.ThreadingHTTPServer.allow_reuse_address = False
+    try:
+        srv = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
+    except OSError:
+        print("port %d is already serving. Almost certainly an OLDER soundweb still"
+              " running -- the page would answer from THAT process, running whatever code it"
+              " started with, and this terminal would look healthy. Stop it first, then"
+              " restart:" % args.port, file=sys.stderr)
+        print("  powershell -NoProfile -Command \"Get-CimInstance Win32_Process | Where-Object"
+              " { $_.CommandLine -like '*soundweb*' } | Stop-Process -Force\"", file=sys.stderr)
+        return 1
     groups = scan()
     total = sum(len(l["takes"]) for g in groups.values()
                 for sub in g["subs"].values() for l in sub.values())
     print("%d clip(s) across %d group(s)" % (total, len(groups)))
     print("http://%s:%d" % (args.host, args.port))
-    srv = http.server.ThreadingHTTPServer((args.host, args.port), Handler)
+
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
