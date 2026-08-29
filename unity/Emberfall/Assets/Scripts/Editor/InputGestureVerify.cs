@@ -49,8 +49,9 @@ namespace Emberfall.Editor
             FullStackDragCancellation();
             FullStackOpenBoardPlays();
             FullStackTargetedSpellDrag();
-            FullStackTargetedMinionDirectDrag();
-            FullStackTwoStepHeraldDrags();
+            FullStackTargetedMinionDropDoesNotAim();
+            FullStackTwoStepHeraldClick();
+            FullStackTwoStepHeraldKeyboard();
             OsCanceledDuringDrag();
             OsCanceledDuringAwaitingEffectDrag();
             ProjectionRoundTrips();
@@ -131,6 +132,7 @@ namespace Emberfall.Editor
             public InputRouter Router;
             public List<PlayerIntent> SubmittedIntents;
             public HashSet<InstanceId> ActiveTargets;
+            public InstanceId? FocusedTarget;
             private HotSeatInput _input;
             private DragTargetingModel _model;
 
@@ -151,6 +153,7 @@ namespace Emberfall.Editor
                 Router.Init(p0Id, _input, db);
                 Router.OnStateUpdated(state);
                 Router.TargetingChanged += targets => ActiveTargets = targets;
+                Router.TargetFocusChanged += target => FocusedTarget = target;
 
                 // THE ROUTER'S OWN MODEL, not a second one. This used to be
                 // `new DragTargetingModel(...)` — a parallel instance the router never touched, so
@@ -202,6 +205,15 @@ namespace Emberfall.Editor
                         updateMethod.Invoke(Router, null);
                 }
                 StartCapturingIntents();
+            }
+
+            public bool CycleTarget(bool reverse = false) => Router.CycleAwaitingTarget(reverse);
+
+            public bool ConfirmTarget()
+            {
+                bool result = Router.ConfirmAwaitingTarget();
+                StartCapturingIntents();
+                return result;
             }
 
             /// <summary>
@@ -428,7 +440,7 @@ namespace Emberfall.Editor
             harness.Cleanup();
         }
 
-        private static void FullStackTargetedMinionDirectDrag()
+        private static void FullStackTargetedMinionDropDoesNotAim()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
@@ -438,21 +450,28 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
 
+            Check("targeted minion drop chooses placement, not the character underneath",
+                harness.SubmittedIntents.Count == 0
+                && harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
+                && harness.AwaitingSlot == 1);
+
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
             var intent = harness.SubmittedIntents.Count == 1
                 ? harness.SubmittedIntents[0] as PlayCardIntent
                 : null;
-            Check("targeted minion dragged directly onto a target submits in one gesture",
+            Check("targeted minion resolves only after the follow-up target click",
                 intent != null && intent.BoardSlot == 1 && intent.Targets.Count == 1
-                && intent.Targets[0].Instance.Equals(enemy));
-            Check("direct targeted-minion drag leaves no second phase armed",
-                harness.Phase == DragTargetingModel.TargetingPhase.Direct);
+                && intent.Targets[0].Instance.Equals(enemy)
+                && harness.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             harness.Cleanup();
         }
 
-        // A targeted minion dropped on open space needs a second DRAG from the banked card to its
-        // target. A target tap is deliberately inert: no click-click path survives.
-        private static void FullStackTwoStepHeraldDrags()
+        // A targeted minion dropped on open space banks its placement, then accepts a direct click
+        // on a legal target. The initial play is still a drag; only the owed target becomes a
+        // button-like selection after placement is fixed.
+        private static void FullStackTwoStepHeraldClick()
         {
             GameState s = NewState();
             var harness = new InputRouterHarness(s, Db(), P0);
@@ -468,25 +487,52 @@ namespace Emberfall.Editor
                 harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget
                 && harness.AwaitingSlot == 0);
 
-            // Tapping a legal target does not resolve click-click targeting.
+            // An invalid click leaves the banked placement intact.
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(750, 300)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(750, 300)));
+            Check("empty-space click during the second phase submits nothing",
+                harness.SubmittedIntents.Count == 0
+                && harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
+
+            // A legal target click resolves immediately on release.
             harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(500, 300)));
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("target tap during the second phase submits nothing",
-                harness.SubmittedIntents.Count == 0);
-
-            // Re-grab the banked source, cross the drag threshold, and release on the target.
-            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
-            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
-            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(500, 300)));
-            Check("second drag onto target submits PlayCardIntent",
+            Check("legal target click submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
-            var intent = harness.SubmittedIntents[0] as PlayCardIntent;
+            var intent = harness.SubmittedIntents.Count == 1
+                ? harness.SubmittedIntents[0] as PlayCardIntent
+                : null;
             Check("PlayCardIntent carries the placement from step 1",
                 intent != null && intent.BoardSlot == 0);
             Check("PlayCardIntent carries the target from step 2",
                 intent != null && intent.Targets.Count == 1
                 && intent.Targets[0].Instance.Equals(enemy));
+
+            harness.Cleanup();
+        }
+
+        private static void FullStackTwoStepHeraldKeyboard()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(125, 200)));
+            harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(125, 215)));
+            harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+
+            Check("Tab path starts only after a targeted minion placement is banked",
+                harness.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
+            Check("Tab focuses a legal target", harness.CycleTarget()
+                && harness.FocusedTarget.HasValue
+                && harness.ActiveTargets.Contains(harness.FocusedTarget.Value));
+            Check("Enter/Space confirmation path submits the focused target",
+                harness.ConfirmTarget()
+                && harness.SubmittedIntents.Count == 1
+                && harness.SubmittedIntents[0] is PlayCardIntent);
+            Check("keyboard confirmation clears target focus",
+                !harness.FocusedTarget.HasValue
+                && harness.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             harness.Cleanup();
         }
@@ -688,8 +734,7 @@ namespace Emberfall.Editor
                 m.Resolve(targeted, PointerSubject.None, DropPoint.Board(1.35f)) == null);
         }
 
-        // A targeted-herald minion can resolve slot + target in one drag. An open-space drop still
-        // banks the slot first, then asks the player to re-grab the card and drag to a target.
+        // A targeted-herald minion always resolves placement first, then its effect target.
         private static void TwoStepHerald()
         {
             GameState s = NewState();
@@ -699,14 +744,16 @@ namespace Emberfall.Editor
             InstanceId theirs  = s.Players[1].Board[0].Id;
             DragSource targeted = m.BeginSource(PointerSubject.OfCard(aimCard, P0, Zone.Hand));
 
-            // A legal character drop carries both facts: its x chooses the slot and the subject
-            // chooses the effect target. There is no reason to ask for a redundant second gesture.
+            // Even a legal character underneath the placement drop is not implicitly chosen.
             var onCharacter = m.Resolve(targeted, PointerSubject.OfCard(theirs, P1, Zone.Board),
-                                        DropPoint.Board(1.35f)) as PlayCardIntent;
-            Check("targeted minion released on a character resolves slot and target together",
-                onCharacter != null && onCharacter.BoardSlot == 1
-                && onCharacter.Targets.Count == 1
-                && onCharacter.Targets[0].Instance.Equals(theirs)
+                                        DropPoint.Board(1.35f));
+            Check("targeted minion released on a character still banks placement first",
+                onCharacter == null && m.AwaitingSlot == 1
+                && m.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget);
+            var characterIntent = m.Resolve(DragSource.None,
+                PointerSubject.OfCard(theirs, P1, Zone.Board), DropPoint.Board(0f));
+            Check("the character becomes the target only on the follow-up selection",
+                characterIntent is PlayCardIntent
                 && m.Phase == DragTargetingModel.TargetingPhase.Direct);
 
             // Drop on open board space → same thing, position solved from x.
@@ -899,6 +946,12 @@ namespace Emberfall.Editor
                 ActivePlayer = P0,
                 TurnNumber   = 3,
             };
+
+            // HandCardCanResolve performs the same visible mana precheck as the live router. Keep
+            // this fixture explicitly able to pay for every 1-cost card so gesture assertions test
+            // gestures rather than failing at the affordability gate.
+            p0.Mana.Max = p0.Mana.Available = 10;
+            p1.Mana.Max = p1.Mana.Available = 10;
 
             p0.Hand.Add(new CardInstance(new InstanceId(10), Vanilla,        P0) { Zone = Zone.Hand });
             p0.Hand.Add(new CardInstance(new InstanceId(11), TargetedSpell,  P0) { Zone = Zone.Hand });

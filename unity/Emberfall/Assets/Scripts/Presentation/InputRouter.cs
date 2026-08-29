@@ -20,10 +20,13 @@ namespace Emberfall.Presentation
     //                       → None                : released without travel; taps do not arm gameplay
     //   Dragging            → None                : release resolves or cancels
     //                       → AwaitingEffectDrag  : a placed card still owes another target
-    //   AwaitingEffectDrag  → Pressed             : re-grab that same card for its next target
+    //   AwaitingEffectDrag  → AwaitingEffectClick : press a legal target; release selects it
+    //                       → Pressed             : re-grab the banked card (legacy drag option)
     //
     // A true button action may still be a tap (untargeted hero power, mulligan, HUD controls).
-    // Cards, attacks, targeted powers and every follow-up target use drag-and-drop exclusively.
+    // Cards, attacks and targeted powers begin with drag-and-drop. Once a minion placement is
+    // banked, its on-play target can be clicked or keyboard-focused with Tab and confirmed with
+    // Enter/Space; re-grab-and-drag remains accepted as a compatible fallback.
     //
     // WHAT IS NOT HERE ANY MORE: the four Clickable* components no longer forward OnMouseDown. They
     // are raycast descriptors now — identity and a collider — and this class does the one raycast per
@@ -35,7 +38,7 @@ namespace Emberfall.Presentation
     // Cancel   : Escape clears any active gesture.
     public sealed class InputRouter : MonoBehaviour
     {
-        private enum Gesture { None, Pressed, Dragging, AwaitingEffectDrag }
+        private enum Gesture { None, Pressed, Dragging, AwaitingEffectDrag, AwaitingEffectClick }
 
         // Travel that separates a tap from a drag. Scaled off screen density because a thumb on a
         // 420 dpi phone wanders several times further than a mouse does on a click, and a fixed
@@ -103,7 +106,9 @@ namespace Emberfall.Presentation
         // instructional banner (Sam, 2026-08-27); see
         // decisions/emberfall-no-persistent-instructional-banners.
         public event System.Action<HashSet<InstanceId>> TargetingChanged;
+        public event System.Action<InstanceId?> TargetFocusChanged;
         private HashSet<InstanceId> _activeTargets;
+        private InstanceId? _focusedTarget;
 
         // ── Mulligan picker (C-G1-2b) ──────────────────────────────────────────────
         // During the Mulligan phase a hand-card press toggles that card into the toss set (a red X
@@ -215,11 +220,17 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // A placed card can still owe one or more effect targets. Only re-grabbing that same
-            // source starts the next drag; pressing a glowing target is deliberately inert so a
-            // source tap followed by a target tap can never submit an intent.
+            // A placed card can still owe one or more effect targets. Pressing a glowing target
+            // starts click confirmation; re-grabbing the source preserves the original drag
+            // fallback for touch players who prefer one continuous interaction vocabulary.
             if (_gesture == Gesture.AwaitingEffectDrag)
             {
+                if (IsActiveTarget(subject))
+                {
+                    _gesture = Gesture.AwaitingEffectClick;
+                    SetTargetFocus(subject.Id);
+                    return;
+                }
                 if (!IsGestureSource(subject)) return;
                 _gesture = Gesture.Pressed;
                 return;
@@ -288,6 +299,19 @@ namespace Emberfall.Presentation
 
             PointerSubject subject = Probe(screenPos, out _, out _, skipGestureSource: true);
 
+            if (_gesture == Gesture.AwaitingEffectClick)
+            {
+                if (IsActiveTarget(subject))
+                    TryResolve(subject, DropAt(screenPos));
+                else
+                {
+                    _gesture = Gesture.AwaitingEffectDrag;
+                    SetTargetFocus(null);
+                    RefreshTargeting();
+                }
+                return;
+            }
+
             if (_gesture == Gesture.Pressed)
             {
                 // Never travelled: gameplay taps are reads/no-ops. The only source whose entire
@@ -308,8 +332,8 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // AwaitingEffectDrag without a matching source press means the player tapped a target.
-            // Leave the banked placement intact and wait for a real re-grab + drag.
+            // AwaitingEffectDrag without a matching source or legal-target press is an inert tap.
+            // Leave the banked placement intact so click, keyboard, or re-grab can finish it.
             if (_gesture == Gesture.AwaitingEffectDrag) return;
 
             TryResolve(subject, DropAt(screenPos));
@@ -317,7 +341,7 @@ namespace Emberfall.Presentation
 
         /// <summary>Submits if the drop produced an intent. Clears the gesture either way unless
         /// we entered AwaitingEffectTarget (multi-step herald), in which case the source stays
-        /// available for another drag. A drop
+        /// available for click, keyboard selection, or another drag. A drop
         /// that produced nothing restores the source's visual position — one that succeeded leaves
         /// it at the drop point, because the coming state sync is about to relocate it for real, and
         /// snapping it back first would just be a flicker on the way there.</summary>
@@ -545,17 +569,37 @@ namespace Emberfall.Presentation
         private void SetTargeting(HashSet<InstanceId> targets)
         {
             _activeTargets = targets;
+            if (_focusedTarget.HasValue && !targets.Contains(_focusedTarget.Value))
+                SetTargetFocus(null);
             TargetingChanged?.Invoke(targets);
             ApplyHeroTargetCues();
         }
 
         private void ClearTargeting()
         {
-            if (_activeTargets == null) return;
-            _activeTargets = null;
-            TargetingChanged?.Invoke(null);
+            if (_activeTargets != null)
+            {
+                _activeTargets = null;
+                TargetingChanged?.Invoke(null);
+            }
+            SetTargetFocus(null);
             _p0HeroPlate?.SetTargetable(false);
             _enemyHeroPlate?.SetTargetable(false);
+        }
+
+        private bool IsActiveTarget(PointerSubject subject)
+            => (subject.Kind == PointerSubjectKind.Card || subject.Kind == PointerSubjectKind.Hero)
+               && _activeTargets != null && _activeTargets.Contains(subject.Id);
+
+        private void SetTargetFocus(InstanceId? target)
+        {
+            if (_focusedTarget.Equals(target)) return;
+            _focusedTarget = target;
+            TargetFocusChanged?.Invoke(target);
+            _p0HeroPlate?.SetTargetFocused(
+                target.HasValue && _model != null && target.Value.Equals(_model.HeroIdOf(_p0Id)));
+            _enemyHeroPlate?.SetTargetFocused(
+                target.HasValue && _model != null && target.Value.Equals(_model.HeroIdOf(_model.EnemyId())));
         }
 
         private void ApplyHeroTargetCues()
@@ -574,12 +618,68 @@ namespace Emberfall.Presentation
             if (_currentState.Phase != TurnPhase.Main) return;
             if (_currentState.ActivePlayer != _p0Id) return;
 
+            if (_model.Phase == DragTargetingModel.TargetingPhase.AwaitingEffectTarget)
+            {
+                if (Keyboard.current?.tabKey.wasPressedThisFrame == true)
+                    CycleAwaitingTarget(
+                        Keyboard.current.leftShiftKey.isPressed
+                        || Keyboard.current.rightShiftKey.isPressed);
+                else if (Keyboard.current?.enterKey.wasPressedThisFrame == true
+                         || Keyboard.current?.spaceKey.wasPressedThisFrame == true)
+                    ConfirmAwaitingTarget();
+                return;
+            }
+
             if (Keyboard.current?.enterKey.wasPressedThisFrame == true
                 || Keyboard.current?.spaceKey.wasPressedThisFrame == true)
             {
                 CancelGesture();
                 Submit(new EndTurnIntent(_p0Id));
             }
+        }
+
+        /// <summary>Moves keyboard focus through the currently legal follow-up targets. Internal
+        /// so the headless gesture verifier can exercise the same path without keyboard hardware.</summary>
+        internal bool CycleAwaitingTarget(bool reverse = false)
+        {
+            List<PointerSubject> targets = KeyboardTargets();
+            if (targets.Count == 0) return false;
+
+            int index = -1;
+            if (_focusedTarget.HasValue)
+                index = targets.FindIndex(t => t.Id.Equals(_focusedTarget.Value));
+            index = reverse
+                ? (index <= 0 ? targets.Count - 1 : index - 1)
+                : (index + 1) % targets.Count;
+            SetTargetFocus(targets[index].Id);
+            return true;
+        }
+
+        /// <summary>Confirms the target most recently focused with Tab.</summary>
+        internal bool ConfirmAwaitingTarget()
+        {
+            if (!_focusedTarget.HasValue) return false;
+            foreach (PointerSubject subject in KeyboardTargets())
+                if (subject.Id.Equals(_focusedTarget.Value))
+                    return TryResolve(subject, DropPoint.Board(0f));
+            SetTargetFocus(null);
+            return false;
+        }
+
+        private List<PointerSubject> KeyboardTargets()
+        {
+            var result = new List<PointerSubject>();
+            if (_currentState == null || _activeTargets == null) return result;
+
+            foreach (PlayerState player in _currentState.Players)
+            {
+                foreach (CardInstance card in player.Board)
+                    if (_activeTargets.Contains(card.Id))
+                        result.Add(PointerSubject.OfCard(card.Id, player.Id, Zone.Board));
+                if (_activeTargets.Contains(player.Hero.Id))
+                    result.Add(PointerSubject.OfHero(player.Hero.Id, player.Id));
+            }
+            return result;
         }
 
         // On-screen end-turn button (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §6 item 1) — same guards as the

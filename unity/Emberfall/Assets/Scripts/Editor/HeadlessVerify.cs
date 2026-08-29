@@ -36,6 +36,7 @@ namespace Emberfall.Editor
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
                 RunCheck("InputGestureVerify",   InputGestureVerify.Run),
+                RunCheck("CardRevealVerify",     CardRevealVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");

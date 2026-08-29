@@ -56,17 +56,14 @@ namespace Emberfall.Presentation
         // asmdef boundary) draws the draw-flight's destination card, and a preview that guessed the
         // size of a hand slot would be judging the animation against a made-up target.
         //
-        // WHY 1.296 AND NOT 1.44 (#234). THIS IS NOT A REDUCTION IN THE SIZE OF A CARD IN HAND.
-        // The multiplicand moved: BoardController.CardW/CardH grew by 1/0.9, so this fell by 0.9 to
-        // hold the product where it was. HandCardW/H below are 1.6848 x 2.3760 both before and
-        // after, to five decimal places — every number in the block above still describes the card
-        // this produces, and 1.436 is still the ratio it was solved for. What changed is what a
-        // card on the BOARD is, which was the actual complaint (Sam, 2026-08-21: "the ones on the
-        // board are not big enough" — they were 52% of the reference tile).
+        // WHY 1.20 AND NOT 1.44 (#234 + 2026-08-29 readability pass). THIS IS NOT A REDUCTION IN
+        // THE SIZE OF A CARD IN HAND. The multiplicand moved twice: BoardController.CardW/CardH
+        // first grew by 1/0.9, then by another 1.08, so this fell by the inverse factors to hold
+        // the product where it was. HandCardW/H below remain 1.6848 x 2.3760 — every number in the
+        // block above still describes the card this produces. What changed is the board card.
         //
-        // So the hand:board RATIO is 1.296 now, not 1.44. That is the whole of #234: the gap
-        // between the two closed from the board end, because the hand end is pinned by an acuity
-        // solve and the board end was pinned by nothing.
+        // So the hand:board RATIO is 1.20 now. The gap continues to close from the board end,
+        // because the hand end is pinned by an acuity solve.
         //
         // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget, and since #234 it
         // is one number spread over two files. Moving it, BoardController.CardW/CardH, or
@@ -75,7 +72,7 @@ namespace Emberfall.Presentation
         // script and re-solve CentreY in the same commit. Moving THIS without the compensating move
         // on CardW/CardH (or the reverse) resizes the card in hand, which is the one thing the #234
         // change was built not to do.
-        public const float RestScale = 1.296f;   // 1.44 x 0.9, against a card grown by 1/0.9
+        public const float RestScale = 1.20f;    // 1.44 x 0.9 / 1.08; hand stays 1.6848 x 2.376
 
         // The card's DRAWN size in hand. Every card-relative number below derives from these and
         // NOT from BoardController.CardW/CardH — a fan solved against the board-size card would

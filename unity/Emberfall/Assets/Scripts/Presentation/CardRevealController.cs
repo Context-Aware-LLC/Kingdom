@@ -20,21 +20,22 @@ namespace Emberfall.Presentation
         private readonly Dictionary<InstanceId, CardRevealTrigger> _triggers = new();
 
         private CardRevealPanel _panel;
-        private CardFlavorTextPanel _flavorPanel;
         private InputRouter     _router;
 
         private bool       _pressActive;
         private InstanceId _pressCard;
         private bool       _wasPointerHeld;
 
-        internal static CardRevealController Create(Transform parent, InputRouter router)
+        internal CardRevealPanel FocusPanel => _panel;
+
+        internal static CardRevealController Create(Transform parent, InputRouter router,
+                                                    BoardController board)
         {
             var go = new GameObject("CardRevealController");
             go.transform.SetParent(parent, false);
             var c = go.AddComponent<CardRevealController>();
             c._router = router;
-            c._panel       = CardRevealPanel.Create(go.transform);
-            c._flavorPanel = CardFlavorTextPanel.Create(go.transform);
+            c._panel = CardRevealPanel.Create(go.transform, board);
             return c;
         }
 
@@ -42,8 +43,14 @@ namespace Emberfall.Presentation
         // with this object's own hierarchy. Take them down explicitly.
         private void OnDestroy()
         {
-            if (_panel != null) Destroy(_panel.gameObject);
-            if (_flavorPanel != null) Destroy(_flavorPanel.gameObject);
+            DestroyPanel(_panel);
+        }
+
+        private static void DestroyPanel(Component panel)
+        {
+            if (panel == null) return;
+            if (Application.isPlaying) Destroy(panel.gameObject);
+            else DestroyImmediate(panel.gameObject);
         }
 
         internal void Register(CardRevealTrigger t) => _triggers[t.CardId] = t;
@@ -63,7 +70,7 @@ namespace Emberfall.Presentation
 
         internal void OnPointerEnter(CardRevealTrigger t)
         {
-            if (Blocked()) return;
+            if (Blocked() || !t.IsInPlay) return;
             _model.PointerEnter(t.CardId, Time.unscaledTime);
         }
 
@@ -72,7 +79,7 @@ namespace Emberfall.Presentation
 
         internal void OnPointerDown(CardRevealTrigger t)
         {
-            if (Blocked()) return;
+            if (Blocked() || !t.IsInPlay) return;
             _pressActive = true;
             _pressCard   = t.CardId;
             // A real touch is the only thing that arms the hold — see HoverRevealModel for why a
@@ -143,7 +150,6 @@ namespace Emberfall.Presentation
             {
                 SetLift(null);
                 _panel.Hide();
-                _flavorPanel?.Hide();
                 return;
             }
 
@@ -152,8 +158,7 @@ namespace Emberfall.Presentation
             // behaviour two owners.
             SetLift(_model.Source == HoverRevealModel.RevealSource.Hold ? t : null);
             CardRevealContent content = t.BuildContent();
-            _panel.Show(content);
-            _flavorPanel?.Show(content.FlavorText);
+            _panel.Show(t, content);
         }
 
         // Exactly one card is ever lifted from here, and the previous one is always put back —

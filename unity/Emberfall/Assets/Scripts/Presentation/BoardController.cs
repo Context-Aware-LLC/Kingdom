@@ -21,33 +21,30 @@ namespace Emberfall.Presentation
         // derives the fan pitch from CardW, and a second copy of this number has already gone
         // stale once (the §1.1 pitch table was written against an assumed 1.3 × 1.8).
         //
-        // #234: THE BOARD CARD GREW BY 1/0.9 AND THE HAND DID NOT MOVE AT ALL.
+        // #234 and the 2026-08-29 readability pass: THE BOARD CARD GREW AND THE HAND DID NOT MOVE.
         //
         // Sam, 2026-08-21: "the ones on the board are not big enough". They were 137.3 x 193.7 px
         // on a 1080p phone — 52% of the 265 px collection tile EF-050's acuity margin was measured
         // against — while a card in hand was 1.44x that. The complaint is about the BOARD end of
         // that ratio, so the ratio is what moved: 1.17/0.9 = 1.30 and 1.65/0.9 = 1.8333, with
-        // HandFanLayout.RestScale falling 1.44 -> 1.296 (= 1.44 x 0.9) to hold HandCardW/H at
+        // HandFanLayout.RestScale first fell 1.44 -> 1.296 (= 1.44 x 0.9), then 1.296 -> 1.20
+        // for this follow-up 1.08x board growth, to hold HandCardW/H at
         // 1.6848 x 2.3760, the exact values they had before. A card in hand is unchanged to five
         // decimal places, so EF-062 §5, the CentreY solve, TopEdgeY, MaxPitch, Sag and
         // DeviceLayout's band-clearance assertion are all untouched by this — deliberately, because
         // that solve is the hand's whole legibility budget and re-opening it was not the ask.
         //
-        // 1/0.9 AND NOT MORE, because the constraint is VERTICAL and the ticket only costed the
-        // horizontal one. The row reaches |x| 5.15 of a 7.88 budget, so width was never the limit.
-        // Between the centreline and the top of the resting hand there are 2.372 units, and they
-        // hold the card (1.8333), the bulwark step (0.40), a lane at the centreline where two
-        // opposed bulwark rows meet (0.073) and the clearance that keeps the fan off your own
-        // minions' stat bosses (0.212). That sums to 2.372 with nothing left. Growing further means
-        // spending one of those three, and all three are load-bearing — see the pair of assertions
-        // in DeviceLayout.SelfCheck, which fail if a later tune eats either clearance.
+        // The follow-up 1.08 growth spends the remaining vertical slack while preserving the
+        // centreline lane by moving each row outward with the card edge. The hand still clears the
+        // board stat row by 0.077 units, above DeviceLayout's 0.05 floor. Growing further means
+        // re-solving the fan/row budget rather than turning this into another blind multiplier.
         //
         // RETIREMENT TRIGGER: these two and RestScale are one number in two places now. Moving
         // either without the compensating move on the other resizes the card in hand and silently
         // invalidates EF-062 §5/§6 — re-run `python tooling/scripts/device_layout.py` in the same
         // commit and read §5, and re-solve HandFanLayout.CentreY if the hand card's height moved.
-        internal const float CardW = 1.30f;     // 1.17 / 0.9
-        internal const float CardH = 1.8333f;   // 1.65 / 0.9; keeps the 1.17:1.65 frame aspect
+        internal const float CardW = 1.404f;    // (1.17 / 0.9) * 1.08
+        internal const float CardH = 1.98f;     // (1.65 / 0.9) * 1.08; keeps the 1.17:1.65 aspect
 
         // How far a bulwarked minion steps out of its row toward the centerline. NOT scaled with
         // the card by #234: this is the whole of the Taunt front-row visual language, it is already
@@ -78,11 +75,13 @@ namespace Emberfall.Presentation
         private MatchRunner _matchRunner;
         private IArtProvider _artProvider;
         private IUiSpriteProvider _uiSprites;
+        private CardRevealController _revealController;
 
         // Bottom-right flavor-text surface (CardDefinition.FlavorText), one per match, lazily
         // built the first time a card needs it and shared by every CardPresenter. Screen-anchored
         // (re-parents itself to Camera.main), so it does not belong to any one card's hierarchy.
         private CardFlavorTextPanel _flavorPanel;
+        internal CardFlavorTextPanel FlavorPanel => _flavorPanel;
 
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
@@ -145,10 +144,20 @@ namespace Emberfall.Presentation
             _artProvider ??= new AddressableArtProvider();
             _uiSprites   ??= new AddressableUiSpriteProvider();
 #endif
+            // One shared board-card focus view. The reveal classes existed before this wiring,
+            // but no shipping bootstrap ever created the controller or attached its triggers, so
+            // their hover/hold policy could pass headless checks while remaining unreachable in a
+            // real match.
+            if (_revealController == null)
+                _revealController = CardRevealController.Create(transform, _inputRouter, this);
+
             // Targeting-state visibility: while the router has a targeting state armed,
             // only valid targets glow (binder suppresses readiness glow for the duration).
             if (_inputRouter != null)
+            {
                 _inputRouter.TargetingChanged += OnTargetingChanged;
+                _inputRouter.TargetFocusChanged += OnTargetFocusChanged;
+            }
 
             // Deaths are read here, not only in CardMaterialBinder, because the controller is what
             // owns the presenter's lifetime and therefore the only place that can hold a card
@@ -160,9 +169,15 @@ namespace Emberfall.Presentation
         private void OnDestroy()
         {
             if (_inputRouter != null)
+            {
                 _inputRouter.TargetingChanged -= OnTargetingChanged;
+                _inputRouter.TargetFocusChanged -= OnTargetFocusChanged;
+            }
             if (_matchRunner != null)
                 _matchRunner.OnMatchEvent -= OnMatchEventForDeaths;
+            // The shared flavor plate re-parents itself to the camera for screen anchoring and is
+            // therefore no longer beneath this hierarchy when the board is torn down.
+            if (_flavorPanel != null) DestroyObj(_flavorPanel.gameObject);
         }
 
         // EffectInterpreter.cs:148 and RulesEngine.cs:94 both emit CardDestroyed with SOURCE set and no
@@ -185,6 +200,15 @@ namespace Emberfall.Presentation
             {
                 var binder = kvp.Value != null ? kvp.Value.GetComponent<CardMaterialBinder>() : null;
                 binder?.SetTargetOverride(targets == null ? (bool?)null : targets.Contains(kvp.Key));
+            }
+        }
+
+        private void OnTargetFocusChanged(InstanceId? target)
+        {
+            foreach (var kvp in _presenters)
+            {
+                var binder = kvp.Value != null ? kvp.Value.GetComponent<CardMaterialBinder>() : null;
+                binder?.SetTargetFocus(target.HasValue && target.Value.Equals(kvp.Key));
             }
         }
 
@@ -369,10 +393,17 @@ namespace Emberfall.Presentation
 
                 // Attach the raycast descriptor when InputRouter is present (hot-seat mode) —
                 // InputRouter reads identity off it after its own raycast (EF-048).
+                ClickableCard clickable = null;
                 if (_inputRouter != null)
                 {
-                    var clickable = presenter.gameObject.AddComponent<ClickableCard>();
+                    clickable = presenter.gameObject.AddComponent<ClickableCard>();
                     clickable.Init(ci.Id, owner, zone, presenter);
+                }
+
+                if (def != null && _revealController != null)
+                {
+                    var reveal = presenter.gameObject.AddComponent<CardRevealTrigger>();
+                    reveal.Init(ci.Id, def, live, clickable, _revealController);
                 }
 
                 _presenters[ci.Id] = presenter;
@@ -564,6 +595,35 @@ namespace Emberfall.Presentation
         /// the IUiSpriteProvider that Initialize picks (Editor vs Addressables).
         /// </summary>
         public CardPresenter BuildDetachedCard(Transform parent) => CreatePresenter(parent);
+
+        /// <summary>Builds and binds a non-interactive copy of a live card for the board focus
+        /// view. A fresh presenter per focused card makes an asynchronous art callback harmless:
+        /// if the player moves focus before the load finishes, the old presenter is destroyed and
+        /// Unity's fake-null guard below drops the stale result.</summary>
+        internal CardPresenter BuildFocusedCard(Transform parent, CardDefinition def,
+                                                 ICardLiveState live)
+        {
+            if (def == null || live == null) return null;
+
+            CardPresenter presenter = CreatePresenter(parent);
+
+            // A focus card is display-only. Its root collider must not steal the release from the
+            // board card or target underneath it, and none of the gameplay-only root components
+            // need to run on this duplicate.
+            var binder = presenter.GetComponent<CardMaterialBinder>();
+            if (binder != null) { binder.enabled = false; DestroyObj(binder); }
+            var hover = presenter.GetComponent<HandCardHover>();
+            if (hover != null) { hover.enabled = false; DestroyObj(hover); }
+            var collider = presenter.GetComponent<BoxCollider>();
+            if (collider != null) { collider.enabled = false; DestroyObj(collider); }
+
+            presenter.Bind(def, live);
+            _artProvider?.LoadArt(def.ArtId, sprite =>
+            {
+                if (presenter != null) presenter.SetArt(sprite);
+            });
+            return presenter;
+        }
 
 #if UNITY_EDITOR
         /// <summary>
@@ -777,6 +837,10 @@ namespace Emberfall.Presentation
             bodyLabel.alignment = TextAlignmentOptions.Top;
             bodyLabel.color     = new Color(0.92f, 0.92f, 0.92f);
             bodyLabel.rectTransform.sizeDelta = new Vector2(CardW * 0.90f, CardH * 0.22f);
+            // Keep the first line off the painted middle rail without moving the whole rules box
+            // toward the stat sockets. TMP's own top margin reduces the usable content area in
+            // place, so the bottom edge and the hand-fan clearance budget stay unchanged.
+            bodyLabel.margin = new Vector4(0f, CardH * 0.025f, 0f, 0f);
             bodyLabel.textWrappingMode = TextWrappingModes.Normal;
             bodyLabel.overflowMode     = TextOverflowModes.Ellipsis;
             bodyLabel.enableAutoSizing = true;

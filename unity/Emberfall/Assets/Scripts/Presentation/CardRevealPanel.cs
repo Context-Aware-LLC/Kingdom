@@ -1,17 +1,16 @@
+using Emberfall.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// EF-049. The reveal panel itself — a plate with three text blocks, built procedurally from
-    /// primitives like the targeting banner.
+    /// EF-049. The in-play card focus view: a large, live copy of the real card face plus a
+    /// readable rules/glossary plate.
     ///
-    /// <para><b>A panel, not an enlarged card.</b> The card blow-up (a card flying out of the hand
-    /// and growing) is explicitly parked: it has to overlap the board, sort above everything,
-    /// animate back and survive interruption mid-sweep. None of that is needed to make a card
-    /// READABLE, which is the gap. A panel also carries what an enlarged card still could not — the
-    /// glossary line for each keyword, which never fits on the face at any size.</para>
+    /// <para>The focused card is built through <see cref="BoardController.BuildFocusedCard"/>, so
+    /// it is the shipping card face rather than a second visual interpretation. The companion
+    /// plate keeps the glossary that cannot fit on even an enlarged card.</para>
     ///
     /// <para><b>NO COLLIDER, deliberately.</b> The panel appears under a finger that is mid-gesture
     /// on a hand card. A collider here would swallow the release, or worse, take the next tap that
@@ -28,6 +27,9 @@ namespace Emberfall.Presentation
         // has to survive.
         private const float PanelW = BoardController.CardW * 2.55f;
         private const float PanelH = BoardController.CardH * 1.90f;
+        private const float DetailX = 1.75f;
+        private const float FocusX = -2.15f;
+        private const float FocusScale = 2.10f;
 
         // Above the hand (HandSortBase 50, +20 while lifted) and below the match-end banner (100).
         private const int SortBase = 90;
@@ -45,12 +47,18 @@ namespace Emberfall.Presentation
         private TextMeshPro _title;
         private TextMeshPro _subtitle;
         private TextMeshPro _body;
+        private Renderer _face;
+        private BoardController _board;
+        private CardPresenter _focusPresenter;
+        private InstanceId _focusedCard;
+        private bool _hasFocusedCard;
 
-        internal static CardRevealPanel Create(Transform parent)
+        internal static CardRevealPanel Create(Transform parent, BoardController board)
         {
             var go = new GameObject("CardRevealPanel");
             go.transform.SetParent(parent, false);
             var panel = go.AddComponent<CardRevealPanel>();
+            panel._board = board;
             panel.Build();
             go.SetActive(false);
             return panel;
@@ -76,9 +84,11 @@ namespace Emberfall.Presentation
             var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             faceGo.name = "Face";
             faceGo.transform.SetParent(transform, false);
+            faceGo.transform.localPosition = new Vector3(DetailX, 0f, 0f);
             faceGo.transform.localScale = new Vector3(PanelW, PanelH, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());   // see class doc: never eat a gesture
+            DestroyGenerated(faceGo.GetComponent<MeshCollider>()); // never eat a gesture
             var face = faceGo.GetComponent<Renderer>();
+            _face = face;
             face.sortingOrder = SortBase;
             MaterialCatalog.Assign(face, MaterialCatalog.Plate);
             var mpb = new MaterialPropertyBlock();
@@ -89,7 +99,7 @@ namespace Emberfall.Presentation
             float pad = PanelW * 0.06f;
             float inner = PanelW - pad * 2f;
 
-            _title = MakeText("Title", new Vector3(0f, PanelH * 0.40f, -0.01f),
+            _title = MakeText("Title", new Vector3(DetailX, PanelH * 0.40f, -0.01f),
                               new Vector2(inner, PanelH * 0.14f), 1.5f, Color.white,
                               TextAlignmentOptions.Center, wrap: false);
             // The card NAME is the one string on this panel that is a title rather than prose, so
@@ -97,12 +107,12 @@ namespace Emberfall.Presentation
             TMP_FontAsset display = BoardController.CardFont();
             if (display != null) _title.font = display;
 
-            _subtitle = MakeText("Subtitle", new Vector3(0f, PanelH * 0.28f, -0.01f),
+            _subtitle = MakeText("Subtitle", new Vector3(DetailX, PanelH * 0.28f, -0.01f),
                                  new Vector2(inner, PanelH * 0.10f), 0.85f,
                                  new Color(0.72f, 0.76f, 0.84f),
                                  TextAlignmentOptions.Center, wrap: false);
 
-            _body = MakeText("Body", new Vector3(0f, -PanelH * 0.06f, -0.01f),
+            _body = MakeText("Body", new Vector3(DetailX, -PanelH * 0.06f, -0.01f),
                              new Vector2(inner, PanelH * 0.58f), 0.90f,
                              new Color(0.94f, 0.94f, 0.94f),
                              TextAlignmentOptions.Top, wrap: true);
@@ -134,29 +144,85 @@ namespace Emberfall.Presentation
             return tmp;
         }
 
-        internal void Show(CardRevealContent content)
+        internal void Show(CardRevealTrigger trigger, CardRevealContent content)
         {
             if (_title == null) return;
+            ApplyPlateColor();
+            if (trigger != null && (!_hasFocusedCard || !_focusedCard.Equals(trigger.CardId)))
+                RebuildFocusCard(trigger);
             _title.text    = content.Title    ?? "";
             _subtitle.text = content.Subtitle ?? "";
             _body.text     = content.Body     ?? "";
             gameObject.SetActive(true);
         }
 
+        private void ApplyPlateColor()
+        {
+            if (_face == null) return;
+            var mpb = new MaterialPropertyBlock();
+            _face.GetPropertyBlock(mpb);
+            mpb.SetColor("_BaseColor", PlateColor);
+            _face.SetPropertyBlock(mpb);
+        }
+
         internal void Hide()
         {
             if (this != null) gameObject.SetActive(false);
+        }
+
+        private void RebuildFocusCard(CardRevealTrigger trigger)
+        {
+            ReleaseFocusCard();
+            if (_board == null || trigger == null) return;
+
+            _focusPresenter = _board.BuildFocusedCard(
+                transform, trigger.Definition, trigger.LiveState);
+            if (_focusPresenter == null) return;
+
+            _focusedCard = trigger.CardId;
+            _hasFocusedCard = true;
+            Transform focus = _focusPresenter.transform;
+            focus.localPosition = new Vector3(FocusX, 0f, -0.03f);
+            focus.localRotation = Quaternion.identity;
+            focus.localScale = Vector3.one * FocusScale;
+            var group = focus.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            if (group != null) group.sortingOrder = SortBase + 1;
+        }
+
+        private void ReleaseFocusCard()
+        {
+            _focusedCard = default;
+            _hasFocusedCard = false;
+            if (_focusPresenter == null) return;
+            _focusPresenter.Unbind();
+            GameObject old = _focusPresenter.gameObject;
+            _focusPresenter = null;
+            old.SetActive(false);
+            if (Application.isPlaying) Destroy(old);
+            else DestroyImmediate(old);
+        }
+
+        private void OnDestroy()
+        {
+            // The child is destroyed with this panel; only the live-state subscription needs an
+            // explicit release here.
+            if (_focusPresenter != null) _focusPresenter.Unbind();
+        }
+
+        private static void DestroyGenerated(Object generated)
+        {
+            if (generated == null) return;
+            if (Application.isPlaying) Destroy(generated);
+            else DestroyImmediate(generated);
         }
     }
 
     /// <summary>
     /// EF-049 follow-on. Flavor/lore line (CardDefinition.FlavorText), bottom-right of the screen —
-    /// completely separate from both <see cref="CardRevealPanel"/>'s centered rules/glossary plate
-    /// and CardPresenter's on-card Tooltip banner. Owned and driven by CardRevealController
-    /// alongside CardRevealPanel, off the same <see cref="HoverRevealModel"/> so it appears and
-    /// disappears in lockstep with the deliberate hover/hold read — flavor text is the lowest-
-    /// priority of the three surfaces, so it rides the gesture that already means "I want to read
-    /// this card" rather than firing on every incidental hover the way the Tooltip banner does.
+    /// completely separate from both <see cref="CardRevealPanel"/>'s rules/glossary plate and
+    /// CardPresenter's on-card Tooltip banner. BoardController owns the one shared instance and
+    /// CardPresenter drives it from direct hover, keeping flavor text out of the enlarged focus
+    /// view while avoiding duplicate screen-anchored panels.
     /// </summary>
     internal sealed class CardFlavorTextPanel : MonoBehaviour
     {
@@ -176,6 +242,7 @@ namespace Emberfall.Presentation
         private static readonly Color PlateColor = new Color(0.09f, 0.11f, 0.16f, 1f);
 
         private TextMeshPro _body;
+        private Renderer _face;
 
         internal static CardFlavorTextPanel Create(Transform parent)
         {
@@ -205,8 +272,9 @@ namespace Emberfall.Presentation
             faceGo.name = "Face";
             faceGo.transform.SetParent(transform, false);
             faceGo.transform.localScale = new Vector3(PanelW, PanelH, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());
+            DestroyGenerated(faceGo.GetComponent<MeshCollider>());
             var face = faceGo.GetComponent<Renderer>();
+            _face = face;
             face.sortingOrder = SortBase;
             MaterialCatalog.Assign(face, MaterialCatalog.Plate);
             var mpb = new MaterialPropertyBlock();
@@ -233,6 +301,13 @@ namespace Emberfall.Presentation
             _body.overflowMode     = TextOverflowModes.Ellipsis;
         }
 
+        private static void DestroyGenerated(Object generated)
+        {
+            if (generated == null) return;
+            if (Application.isPlaying) Destroy(generated);
+            else DestroyImmediate(generated);
+        }
+
         private object _owner;
 
         /// <summary>
@@ -244,8 +319,8 @@ namespace Emberfall.Presentation
         /// same hazard <see cref="HoverRevealModel.PointerExit"/> guards against: Unity delivers
         /// enter/exit per collider with no ordering guarantee between two cards, so a stale exit
         /// from the card the pointer just LEFT must not blank the panel for the card it just
-        /// ENTERED. Callers that own this panel outright (nobody does yet — see CardRevealController)
-        /// can leave it null and rely on <see cref="Hide"/>'s unconditional default.</para>
+        /// ENTERED. The shared BoardController-owned surface therefore passes its CardPresenter as
+        /// owner; callers with exclusive ownership may leave it null and use unconditional hide.</para>
         /// </summary>
         internal void Show(string flavorText, object owner = null)
         {
@@ -255,8 +330,18 @@ namespace Emberfall.Presentation
                 gameObject.SetActive(false);
                 return;
             }
+            ApplyPlateColor();
             _body.text = flavorText;
             gameObject.SetActive(true);
+        }
+
+        private void ApplyPlateColor()
+        {
+            if (_face == null) return;
+            var mpb = new MaterialPropertyBlock();
+            _face.GetPropertyBlock(mpb);
+            mpb.SetColor("_BaseColor", PlateColor);
+            _face.SetPropertyBlock(mpb);
         }
 
         /// <summary>Unconditional when <paramref name="owner"/> is null; otherwise only hides if

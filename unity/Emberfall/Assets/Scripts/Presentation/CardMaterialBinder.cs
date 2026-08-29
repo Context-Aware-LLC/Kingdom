@@ -87,6 +87,7 @@ namespace Emberfall.Presentation
         // ── ICardLiveState.Changed ──────────────────────────────────────────────────
 
         private bool? _targetOverride; // non-null while targeting is armed: glow = valid-target only
+        private bool _targetFocused;
 
         private void OnChanged(CardChange what)
         {
@@ -105,6 +106,7 @@ namespace Emberfall.Presentation
         // spell/herald target" apart from any of the other reasons a card might already be lit
         // up. Cyan reads as a distinct, unclaimed signal against a gold-heavy board.
         private static readonly Color TargetGlowColor = new Color(0.2f, 1.4f, 1.6f, 1f);
+        private static readonly Color TargetFocusGlowColor = new Color(1.8f, 1.25f, 0.2f, 1f);
 
         // Glow overlay signals Arcane Surge only (Sam, 2026-08-16: attack-readiness used to also
         // light it gold — every minion lighting up gold the instant it could attack was "hideous"
@@ -119,7 +121,9 @@ namespace Emberfall.Presentation
                 bool isValidTarget = _targetOverride.Value;
                 _glowRenderer.enabled = isValidTarget;
                 PushColorTo(_glowRenderer, ShaderIds.GlowColor,
-                    isValidTarget ? TargetGlowColor : DefaultGlowColor);
+                    isValidTarget
+                        ? (_targetFocused ? TargetFocusGlowColor : TargetGlowColor)
+                        : DefaultGlowColor);
                 return;
             }
             bool auraGlow = _live != null && (_live.Auras & AuraSet.Glow) != 0;
@@ -132,6 +136,14 @@ namespace Emberfall.Presentation
         public void SetTargetOverride(bool? isValidTarget)
         {
             _targetOverride = isValidTarget;
+            ApplyGlow();
+        }
+
+        /// <summary>Keyboard-focus cue inside the legal-target set. Legal targets stay cyan; the
+        /// one Tab currently points at turns gold until it is confirmed or focus moves.</summary>
+        public void SetTargetFocus(bool focused)
+        {
+            _targetFocused = focused;
             ApplyGlow();
         }
 

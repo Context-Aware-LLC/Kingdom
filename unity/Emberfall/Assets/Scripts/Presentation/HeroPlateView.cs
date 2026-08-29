@@ -38,6 +38,7 @@ namespace Emberfall.Presentation
         private PlayerId _playerId;
         private bool _selected;
         private bool _targetable;
+        private bool _targetFocused;
         private bool _frosted;
 
         private Renderer     _plate;
@@ -118,9 +119,16 @@ namespace Emberfall.Presentation
             ApplyPlateTint();
         }
 
+        public void SetTargetFocused(bool focused)
+        {
+            _targetFocused = focused;
+            ApplyPlateTint();
+        }
+
         private void ApplyPlateTint()
         {
             Tint(_plate, _selected   ? SelectedTint
+                       : _targetFocused ? SelectedTint
                        : _targetable ? TargetableTint
                        : _frosted     ? FrostedTint
                        : PlateColor);

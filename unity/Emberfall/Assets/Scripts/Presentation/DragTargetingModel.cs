@@ -127,7 +127,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DragTargetingModel
     {
-        /// <summary>Awaiting another drag: a slot is banked and a herald target is still owed.</summary>
+        /// <summary>A slot is banked and a herald target is still owed.</summary>
         public enum TargetingPhase { Direct, AwaitingEffectTarget }
 
         // NO INSTRUCTIONAL TEXT (Sam, 2026-08-27). This model used to hand InputRouter banner
@@ -283,7 +283,7 @@ namespace Emberfall.Presentation
         {
             if (State == null || !CanAct()) return null;
 
-            // If we're awaiting an effect target (multi-drag herald), handle that instead. The drop
+            // If we're awaiting an effect target (multi-step herald), handle that instead. The drop
             // point is not consulted: the card's position was already fixed by the release that
             // placed it, and this step only picks a target.
             if (Phase == TargetingPhase.AwaitingEffectTarget)
@@ -449,12 +449,9 @@ namespace Emberfall.Presentation
             {
                 if (!BeginHandChoicePlan(source.Id, slot)) return null;
                 _phase = TargetingPhase.AwaitingEffectTarget;
-
-                // A character under this same drop supplies the target while drop.x supplies the
-                // slot. Open space (or an illegal target) banks placement and asks for another drag.
-                if (released.Kind == PointerSubjectKind.Card
-                    || released.Kind == PointerSubjectKind.Hero)
-                    return ChooseTarget(released);
+                // Placement and effect targeting are deliberately separate decisions. Even when
+                // the card was released over a legal character, this first drop only chooses the
+                // board slot; the glowing target is then selected by click, keyboard, or re-grab.
                 return null;
             }
 

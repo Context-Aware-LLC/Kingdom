@@ -202,8 +202,8 @@ namespace Emberfall.Presentation
 
         // Immediate on-card hover cue — the card's original/full title (CardDefinition.Tooltip),
         // for a card whose printed Name was shortened to fit the face. Deliberately NOT gated by
-        // HoverRevealModel's delay/hold gesture (EF-049, CardRevealTrigger — currently unwired
-        // anyway, see CardFlavorTextPanel doc): that machinery exists to make a deliberate "let me
+        // HoverRevealModel's delayed board-card focus gesture (EF-049, CardRevealTrigger): that
+        // machinery exists to make a deliberate "let me
         // read this" read undo the click it also armed, which does not apply here — this is a
         // passive label with no side effect on the pending press, so it can just track the raw
         // pointer the same way HandCardHover's lift already does on this root.

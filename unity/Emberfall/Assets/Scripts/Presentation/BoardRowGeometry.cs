@@ -21,12 +21,12 @@ namespace Emberfall.Presentation
         /// <summary>Distance between adjacent minions. Was <c>ProceduralBoardSetup.SlotSpacing</c>;
         /// it moved here so the placement solve could see it without dragging Unity along.
         ///
-        /// <para>Scaled with the card by #234 (1.35 / 0.9), so the 0.18 of air between two adjacent
-        /// minions did not close as they grew — it widens slightly, to 0.20. A seven-slot row now
-        /// reaches |x| 5.15 against the 7.88 design half-width, so this is free horizontally and
-        /// stays free: the board row is the narrowest thing in the layout, not the widest.</para>
+        /// <para>Scaled with the card by #234 and the 2026-08-29 readability pass, so the air
+        /// between adjacent minions does not close as they grow. A seven-slot row still fits
+        /// comfortably inside the 7.88 design half-width; the board row is the narrowest thing in
+        /// the layout, not the widest.</para>
         /// </summary>
-        public const float SlotSpacing = 1.50f;
+        public const float SlotSpacing = 1.62f;
 
         /// <summary>Where position <paramref name="index"/> sits when the row is centred about
         /// <paramref name="half"/>. Used both when the anchors are first built and every time the

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
+using Emberfall.Data;
 using Emberfall.Presentation;
 using UnityEditor;
 using UnityEngine;
@@ -40,11 +41,12 @@ namespace Emberfall.Editor
             failed += StaleExitDoesNotCancelLiveHover();
             failed += EveryKeywordHasGlossary();
             failed += ContentUsesLiveStateOverPrint();
+            failed += FocusViewIsWiredToBoardCards();
 
             if (failed > 0)
                 Debug.LogError($"[CardRevealVerify] {failed} check(s) FAILED.");
             else
-                Debug.Log("[CardRevealVerify] GREEN — 10/10 checks passed.");
+                Debug.Log("[CardRevealVerify] GREEN — 11/11 checks passed.");
         }
 
         // ── Trigger policy ──────────────────────────────────────────────────────────
@@ -164,7 +166,9 @@ namespace Emberfall.Editor
             m.PointerEnter(Card(2), 0f);
             m.Tick(HoverRevealModel.HoverDelaySeconds);
             m.PointerDown(Card(3), HoverRevealModel.PointerKind.Touch, HoverRevealModel.HoverDelaySeconds);
-            m.Tick(HoverRevealModel.HoverDelaySeconds + HoverRevealModel.HoldSeconds);
+            // Step a hair past the boundary: 0.45f + 0.35f cannot represent both operands exactly,
+            // and subtracting them at the threshold can land one float ULP below HoldSeconds.
+            m.Tick(HoverRevealModel.HoverDelaySeconds + HoverRevealModel.HoldSeconds + 0.01f);
 
             if (m.Source != HoverRevealModel.RevealSource.Hold)
                 return Fail("HoldOutranksHover", $"source was {m.Source}, expected Hold to win");
@@ -236,6 +240,78 @@ namespace Emberfall.Editor
                             $"annotated an unbuffed minion: \"{plain.Subtitle}\"");
 
             return Pass("ContentUsesLiveStateOverPrint");
+        }
+
+        private static int FocusViewIsWiredToBoardCards()
+        {
+            var root = new GameObject("CardFocusVerifyRoot");
+            var routerGo = new GameObject("CardFocusVerifyRouter");
+            GameObject cameraGo = null;
+            CardRevealPanel panel = null;
+            try
+            {
+                if (Camera.main == null)
+                {
+                    cameraGo = new GameObject("CardFocusVerifyCamera");
+                    cameraGo.tag = "MainCamera";
+                    cameraGo.AddComponent<Camera>();
+                }
+
+                var p0 = new PlayerId("focus-p0");
+                var p1 = new PlayerId("focus-p1");
+                CardDefinition def = MinionWith(Keyword.BULWARK);
+                var db = new InMemoryCardDatabase(new[] { def });
+                var router = routerGo.AddComponent<InputRouter>();
+                var board = root.AddComponent<BoardController>();
+                board.Initialize(db, null, p0, p1, router);
+
+                var card = new CardInstance(new InstanceId(77), def.Id, p0)
+                {
+                    Zone = Zone.Board,
+                    CurrentAttack = def.Attack ?? 0,
+                    CurrentHealth = def.Health ?? 0,
+                    MaxHealth = def.Health ?? 0,
+                };
+                CardPresenter presenter = board.EditorBuildCard(card, p0, Zone.Board);
+                CardRevealTrigger trigger = presenter != null
+                    ? presenter.GetComponent<CardRevealTrigger>()
+                    : null;
+                CardRevealController controller = root.GetComponentInChildren<CardRevealController>();
+                panel = controller != null ? controller.FocusPanel : null;
+
+                if (trigger == null || !trigger.IsInPlay)
+                    return Fail("FocusViewIsWiredToBoardCards", "board presenter has no live reveal trigger");
+                if (panel == null)
+                    return Fail("FocusViewIsWiredToBoardCards", "board initialization created no focus panel");
+
+                panel.Show(trigger, trigger.BuildContent());
+                CardPresenter[] focused = panel.GetComponentsInChildren<CardPresenter>(true);
+                if (focused.Length != 1)
+                    return Fail("FocusViewIsWiredToBoardCards",
+                        $"focus panel contains {focused.Length} card faces, expected exactly one");
+                if (focused[0].GetComponent<BoxCollider>() != null)
+                    return Fail("FocusViewIsWiredToBoardCards", "focused copy retained an input collider");
+                if (focused[0].transform.localScale.x < 2f)
+                    return Fail("FocusViewIsWiredToBoardCards", "focused copy is not presented large");
+
+                return Pass("FocusViewIsWiredToBoardCards");
+            }
+            finally
+            {
+                // The screen-anchored panel re-parents itself to the camera, outside root. Destroy
+                // it explicitly so an edit-mode verification can never leave visual debris in
+                // the open scene even if MonoBehaviour destruction callbacks are suppressed.
+                if (panel != null) UnityEngine.Object.DestroyImmediate(panel.gameObject);
+                if (root != null)
+                {
+                    BoardController board = root.GetComponent<BoardController>();
+                    if (board != null && board.FlavorPanel != null)
+                        UnityEngine.Object.DestroyImmediate(board.FlavorPanel.gameObject);
+                }
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(routerGo);
+                if (cameraGo != null) UnityEngine.Object.DestroyImmediate(cameraGo);
+            }
         }
 
         // ── Helpers ─────────────────────────────────────────────────────────────────

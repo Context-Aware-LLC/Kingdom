@@ -21,6 +21,9 @@ namespace Emberfall.Presentation
     internal sealed class CardRevealTrigger : MonoBehaviour
     {
         internal InstanceId CardId { get; private set; }
+        internal CardDefinition Definition => _def;
+        internal ICardLiveState LiveState => _live;
+        internal bool IsInPlay => Clickable != null && Clickable.Zone == Zone.Board;
 
         /// <summary>The click handler on the same root, so the controller can hand a completed read
         /// back to InputRouter to undo whatever the same press already did. Null in modes that run
