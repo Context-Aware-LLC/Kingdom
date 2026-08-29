@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
     //
     // §8 originally ruled the hovered card "does not move — no lift, no scale", because hand slots
     // were then a flat row where nothing overlapped and nothing was clipped. The fan invalidated
-    // that premise: the bottom 3.7% of the centre card and 14.6% of the outermost cards are below
+    // that premise: the bottom 6.2% of the centre card and 17.2% of the outermost cards are below
     // the screen edge (NOR-147 raised the hand from 30% / 41% to 15% / 26%, NOR-244 again from
     // there). Re-sorting cannot reveal what is off-screen, so the card rises far enough to clear
     // the edge entirely.
@@ -31,20 +31,20 @@ namespace Emberfall.Presentation
     internal sealed class HandCardHover : MonoBehaviour
     {
         // Enough to clear the screen edge for every card in the fan. DERIVED, not dialled: with
-        // CentreY 3.50 the outermost card hides 14.6% of a 2.376-tall card (0.348 units) and the
-        // hover Scale grows it another 0.238 downward about its own centre, so 0.586 is the floor
-        // and 0.60 clears it.
+        // CentreY 3.56 the outermost card hides 17.2% of a 2.376-tall card (0.408 units) and the
+        // hover Scale grows it another 0.238 downward about its own centre, so 0.646 is the floor
+        // and 0.66 clears it.
         //
         // Sam tuned this to 0.80 live on 2026-08-07, against a hand that was 26% hidden AND whose
         // resting text was illegible — the lift was doing clearance and readability together. NOR-244
         // moved readability onto the resting card, so the extra 0.20 now buys nothing and costs
         // board occlusion: at 0.80 a revealed card reaches y -1.274, past the CENTRE of the player's
         // own minions at -1.3. The emphasis Sam tuned lives in Scale, which is untouched.
-        internal const float Lift = 0.60f;
+        internal const float Lift = 0.66f;
 
         // Was "the slightest of scale, just for emphasis" (Sam, 2026-07-24) at 1.05. Sam raised it
         // to 1.2 live (2026-08-07). It MULTIPLIES HandFanLayout.RestScale rather than replacing it,
-        // so a revealed card is 1.44 * 1.2 = 1.728x a board card. Left at Sam's value deliberately:
+        // so a revealed card is 1.296 * 1.2 = 1.5552x a board card. Left at Sam's value deliberately:
         // it is his emphasis dial, and NOR-244 was scoped to the RESTING card.
         internal const float Scale = 1.2f;
 

@@ -22,12 +22,13 @@ namespace Emberfall.Presentation
         // Valid-target cue: cyan to match CardMaterialBinder's target glow.
         private static readonly Color TargetableTint = new Color(0.25f, 0.90f, 1.00f);
 
-        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Keep these and
-        // ClickableHero's collider in step; together they are one authored figure.
-        internal const float PlateW = 1.60f;
-        internal const float PlateH = 2.40f;
-        private const float PortraitW = 1.16f;
-        private const float PortraitH = 1.58f;
+        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. The full composition
+        // is 35% larger than the first authored-frame pass (Sam, 2026-08-29); portrait, HP and
+        // ClickableHero's collider scale with it as one figure.
+        internal const float PlateW = 2.16f;       // 1.60 * 1.35
+        internal const float PlateH = 3.24f;       // 2.40 * 1.35
+        private const float PortraitW = 1.566f;    // 1.16 * 1.35
+        private const float PortraitH = 2.133f;    // 1.58 * 1.35
         private const string FrameSpriteKey = "hero-frame";
         private const int FrameOrder = 8;
         private const int PortraitOrder = 9;
@@ -74,7 +75,7 @@ namespace Emberfall.Presentation
             // HP sits inside the portrait's right edge. The two enlarged sockets now own the
             // entire lower skirt, so the old bottom-right position would land on the power frame.
             _hpLabel = MakeLabel(transform, "HP",
-                new Vector3(0.48f, 0.12f, -0.02f), 4.7f, HpFull);
+                new Vector3(0.648f, 0.162f, -0.02f), 6.345f, HpFull);
         }
 
         private void SetPortrait(Sprite sprite)

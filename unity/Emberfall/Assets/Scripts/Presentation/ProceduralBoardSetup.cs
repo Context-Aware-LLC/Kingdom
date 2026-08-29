@@ -15,7 +15,7 @@ namespace Emberfall.Presentation
     //
     // Layout (logical board bounds are y ±4.6; BoardCameraRig fits them in perspective):
     //   Board rows:  y = ±1.39  (7 slots, x = -4.50..+4.50 at 1.50 spacing) — outside §1.1
-    //   Hand rows:   fanned by HandFanLayout — fixed 5-unit footprint, count-dependent pitch
+    //   Hand rows:   fanned by HandFanLayout — fixed 6-unit footprint, count-dependent pitch
     //   The hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
     //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). P0 signs are (-1,-1), so
     //   seat 1 is seat 0 point-reflected through the origin, exactly as §1.1 specifies.

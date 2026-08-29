@@ -24,7 +24,7 @@ namespace Emberfall.Presentation
         ///
         /// <para><b>It must clear the hand fan, and the obvious spot does not.</b> This sat at
         /// <c>y = -3.0</c> and was unpressable for it (#138): the button spans y -3.275..-2.725, and
-        /// the local player's hand spans y -4.69..-2.31 (<see cref="HandFanLayout.CentreY"/> 3.50
+        /// the local player's hand spans y -5.01..-2.37 (<see cref="HandFanLayout.CentreY"/> 3.56
         /// negated for seat 0, ± half of <see cref="HandFanLayout.HandCardH"/> 2.376). The button was
         /// wholly inside the fan, and hand cards sit at z = 0, -0.03, -0.06… — <i>toward</i> the
         /// camera — so every press in that region hit a card instead. Nothing was wrong with
@@ -45,7 +45,7 @@ namespace Emberfall.Presentation
         /// come near the midline.</para>
         ///
         /// <para>RETIREMENT TRIGGER: what is left to protect is the HAND, which still reaches up to
-        /// <see cref="HandFanLayout.TopEdgeY"/> (-2.312) with its cards in front of z 0. If you move
+        /// <see cref="HandFanLayout.TopEdgeY"/> (-2.372) with its cards in front of z 0. If you move
         /// this button off the midline and down, or move the fan up
         /// (<see cref="HandFanLayout.CentreY"/>, <c>HandCardH</c>), re-check the overlap — a button
         /// behind a hand card fails silently and reads as a dead button, which is how #138

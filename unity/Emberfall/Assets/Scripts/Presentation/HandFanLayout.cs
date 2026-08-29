@@ -26,9 +26,10 @@ namespace Emberfall.Presentation
     // slot is would be judging the animation against a made-up target.
     public static class HandFanLayout
     {
-        // §1.1: the fan owns x -2.5 .. +2.5. Fan width and mana-orb size are ONE budget —
-        // every unit taken here comes out of the rail. Do not widen without re-checking it.
-        internal const float Footprint = 5.0f;
+        // The fan owns x -3.0 .. +3.0. This was widened from 5.0 to 6.0 after the redesigned
+        // match HUD made the hand read undersized beside the new hero treatment (Sam, 2026-08-29).
+        // Fan width and mana-orb size are ONE budget — every unit taken here comes out of the rail.
+        internal const float Footprint = 6.0f;
 
         // A CARD IN HAND IS DRAWN LARGER THAN THE SAME CARD ON THE BOARD (EF-062 / NOR-244).
         //
@@ -121,10 +122,10 @@ namespace Emberfall.Presentation
         //   band bottom = -(CentreY + Sag) - 0.305 * HandCardH   [CardPresenter seats the band
         //                 centre 0.20 CardH below the card centre with half-height 0.105 CardH]
         //   require 0.05 of clearance, which is also where the safe-area boundary sits:
-        //     CentreY <= 4.6 - 0.05 - 0.26 - 0.305*2.376 = 3.565  ->  3.50, with room to spare.
+        //     CentreY <= 4.6 - 0.05 - 0.26 - 0.305*2.376 = 3.565.
         //
-        // What falls out at 3.50: the centre card hides 3.7% of its height and the outermost 14.6%.
-        // The card top rises to y -2.312, tucking 0.19 under the board row's bottom edge at -2.125
+        // What falls out at 3.56: the centre card hides 6.2% of its height and the outermost 17.1%.
+        // The card top rises to y -2.372, leaving the board row's stat bosses unobscured
         // — the hand overlaps the frame skirt of your own minions and nothing they carry: their
         // stat bosses sit at -1.993 and their own rules bands bottom out at -1.803.
         //
@@ -133,11 +134,11 @@ namespace Emberfall.Presentation
         // box on the most-overlapped card in the fan; closing it needs CentreY 3.41, at which point
         // the centre card stops overhanging the edge at all and the hand stops reading as held.
         // RETIREMENT TRIGGER: MulliganConfirmButtonView.BoardPosition reasons about the span this
-        // constant produces (the fan reaching y -2.312) to justify sitting clear of it, and TopEdgeY
+        // constant produces (the fan reaching y -2.372) to justify sitting clear of it, and TopEdgeY
         // below turns that same span into the line a drop must clear to count as a play. Moving
         // CentreY or the card height means re-checking both — #138 was a confirm button buried
         // inside the fan, which fails silently and reads as a dead button, not a hidden one.
-        internal const float CentreY    = 3.50f;
+        internal const float CentreY    = 3.56f;
 
         // THE LINE BETWEEN "STILL IN MY HAND" AND "ON THE BOARD" (Sam, 2026-08-12, #139).
         //
@@ -149,7 +150,7 @@ namespace Emberfall.Presentation
         //
         // Local seat only, which is all this is ever asked about: the local player is always the
         // un-mirrored bottom seat (ProceduralBoardSetup.BuildSeat, P0Sign -1).
-        internal const float TopEdgeY   = -CentreY + HandCardH * 0.5f;   // -2.312
+        internal const float TopEdgeY   = -CentreY + HandCardH * 0.5f;   // -2.372
 
         // Hand cards step TOWARD the camera as the index rises, so a later card wins the raycast
         // against anything parked at z 0. That is what ate the mulligan confirm button (#138).

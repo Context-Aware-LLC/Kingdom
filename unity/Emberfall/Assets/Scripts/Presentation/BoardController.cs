@@ -35,10 +35,10 @@ namespace Emberfall.Presentation
         //
         // 1/0.9 AND NOT MORE, because the constraint is VERTICAL and the ticket only costed the
         // horizontal one. The row reaches |x| 5.15 of a 7.88 budget, so width was never the limit.
-        // Between the centreline and the top of the resting hand there are 2.312 units, and they
+        // Between the centreline and the top of the resting hand there are 2.372 units, and they
         // hold the card (1.8333), the bulwark step (0.40), a lane at the centreline where two
         // opposed bulwark rows meet (0.073) and the clearance that keeps the fan off your own
-        // minions' stat bosses (0.152). That sums to 2.312 with nothing left. Growing further means
+        // minions' stat bosses (0.212). That sums to 2.372 with nothing left. Growing further means
         // spending one of those three, and all three are load-bearing — see the pair of assertions
         // in DeviceLayout.SelfCheck, which fail if a later tune eats either clearance.
         //
