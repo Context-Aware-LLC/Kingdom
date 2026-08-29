@@ -2,6 +2,7 @@
   <Project Path="Unity.Pipeline.csproj" />
   <Project Path="Unity.Pipeline.Tests.Editor.csproj" />
   <Project Path="Unity.Pipeline.Editor.csproj" />
+  <Project Path="Emberfall.Presentation.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Emberfall.Core.Contracts.csproj" />
   <Project Path="Emberfall.Session.csproj" />
@@ -9,7 +10,6 @@
   <Project Path="Unity.Pipeline.CodeGen.csproj" />
   <Project Path="Emberfall.Data.csproj" />
   <Project Path="Emberfall.Core.csproj" />
-  <Project Path="Emberfall.Presentation.csproj" />
   <Project Path="Emberfall.Core.Collection.csproj" />
   <Project Path="Unity.Pipeline.Tests.Runtime.csproj" />
   <Project Path="Emberfall.Net.Protocol.csproj" />

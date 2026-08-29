@@ -31,19 +31,19 @@ namespace Emberfall.Presentation
         [Tooltip("A cast spell resolves into the graveyard, which has no anchor and would read as " +
                  "nothing — so it fades where it was cast instead of flying anywhere. That also " +
                  "makes it the ONLY type that may linger: nothing takes its place, so nothing doubles.")]
-        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.20f, 0.90f, 0f, 0.55f);
+        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.20f, 1.35f, 0f, 0.83f);
         [Tooltip("Flies up out of the hand slot it was played from, holds centre stage, then floats " +
                  "down into its board slot — landing exactly as the board redraws with the real " +
                  "card. Linger MUST stay 0: it is the overlap that put two of the same minion on " +
                  "screen at once (Sam, 2026-08-19).")]
-        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.18f, 0.55f, 0.28f, 0f);
+        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.18f, 0.83f, 0.28f, 0f);
         [Tooltip("Same three-phase flight as a minion, landing in the weapon socket. Linger 0 for " +
                  "the same reason — the socket fills the instant the entry releases.")]
-        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.18f, 0.70f, 0.28f, 0f);
+        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.18f, 1.05f, 0.28f, 0f);
         [Tooltip("Reveal card size at the top of the beat, as a multiple of the in-hand/board size. " +
                  "The flight scales between 1 and this, so the card leaves and lands at the size a " +
                  "real card is and is only magnified while it is being read.")]
-        [SerializeField, Range(0.5f, 2f)] private float playRevealScale = 1.2f;
+        [SerializeField, Range(0.5f, 2f)] private float playRevealScale = 1.6f;
 
         /// <summary>How far in front of everything the reveal card rides while it is in flight, so
         /// it never clips into the hand fan it is leaving or the board row it is joining.</summary>
