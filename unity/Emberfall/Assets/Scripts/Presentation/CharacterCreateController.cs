@@ -198,6 +198,10 @@ namespace Emberfall.Presentation
             };
             choice.AddToClassList("roster-button");
             choice.AddToClassList("hero-choice");
+            // The enum member lowercased, matching character-roster.uss's .hero-choice--* rows and
+            // the .character-row--* spine they mirror. No name map on either side: a class whose
+            // token has no row simply gets the neutral spine.
+            choice.AddToClassList("hero-choice--" + heroClass.ToString().ToLowerInvariant());
             choice.EnableInClassList("hero-choice--selected", selected);
             return choice;
         }
