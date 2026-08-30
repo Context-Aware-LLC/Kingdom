@@ -263,18 +263,17 @@
     border-radius: var(--space-2);
 }
 
-/* HEIGHT IS EXPLICIT BECAUSE UI TOOLKIT HAS NO `aspect-ratio`. This carried `aspect-ratio: 3.2`
- * until 2026-08-30, which parses, lints clean and does NOTHING — so the rail's height came only
- * from its slot labels and the whole pack tile collapsed to a sliver with its name, price and buy
- * button below the cut (#283). collection.uss says the same thing about the craft card face, and
- * solves it the same way: when a ratio matters, both axes have to be written.
+/* `aspect-ratio` IS supported — it is in the Dimensions block of the USS supported-properties
+ * table for 6000.5.1f1, and Unity's own shadergraph package uses it. It was briefly replaced with
+ * a hardcoded height on 2026-08-30 on the strength of a STALE comment in collection.uss claiming
+ * the property does not exist; that claim was true once and is not now. Restored.
  *
- * 88 against a ~261dp inner width at a 31% tile on a 920dp-wide screen is ~2.97:1, near the 3.2
- * that was intended. CHANGE `.shop-pack`'s width and you must revisit this number. */
+ * `flex-shrink: 0` is kept: the ratio gives the rail a height, and without this the rail can still
+ * surrender it when the tile's column is over-subscribed. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
-    height: 88px;
+    aspect-ratio: 3.2;
     flex-shrink: 0;
     margin-bottom: var(--space-3);
 }

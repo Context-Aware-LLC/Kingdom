@@ -1167,9 +1167,16 @@
  * once shown.
  *
  * Percentages throughout, per the sizing ruling, with ONE exception: the card face is a fixed
- * 340x477. UI Toolkit has no aspect-ratio property, so a card's 276:387 can only be held by giving
- * both axes — the same reason CardWall.TileWidth is a fixed 276 and a contract rather than a
- * percentage. Change one of those two numbers and you must change the other.
+ * 340x477, holding a card's 276:387 by giving both axes. Change one of those two numbers and you
+ * must change the other. CardWall.TileWidth is a fixed 276 and a contract for the same reason.
+ *
+ * THIS PARAGRAPH USED TO SAY "UI Toolkit has no aspect-ratio property". THAT IS NO LONGER TRUE —
+ * `aspect-ratio` is in the Dimensions block of the USS supported-properties table for 6000.5.1f1
+ * and Unity's own shadergraph package uses it. The stale claim was read as current on 2026-08-30
+ * and cost a wrong diagnosis plus a reverted commit, because a comment asserting what the engine
+ * cannot do reads exactly like a comment asserting what it does not do YET. Both axes here are
+ * still deliberate — a ratio would not pin the absolute size this face is a contract for — but
+ * that is now a CHOICE, not a limitation, and expressing it as one is the point.
  */
 
 .craft-scrim {
