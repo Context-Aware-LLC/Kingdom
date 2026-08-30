@@ -5,15 +5,17 @@
      6000.5.1f1, GameActivity) so every attribute Unity depends on — the activity class, the IL2CPP
      lib name, the theme — stays exactly what Unity would have produced itself.
 
-     There are exactly TWO deliberate deviations from that base. Anything else is drift:
+     There are exactly THREE deliberate deviations from that base. Anything else is drift:
        1. The second intent-filter below, for the emberfall://auth deep link (NOR-246).
        2. android:screenOrientation="sensorLandscape" on the activity, which the base had as
           "fullUser" (NOR-283). Because useCustomMainManifest is on, THIS FILE is the manifest —
           Unity does not regenerate it, so the PlayerSettings autorotate flags alone do not reach
           the device. Portrait boot was this attribute, not those flags; both are set now and both
           have to stay in agreement.
+       3. android:allowBackup="false" on <application>, which the base does not set at all
+          (2026-08-29). The reason is on the tag itself.
      Regenerate this base by re-running an Android build if the Unity/Android Gradle version ever
-     changes and this drifts from what Unity would generate on its own — and re-apply both
+     changes and this drifts from what Unity would generate on its own — and re-apply all three
      deviations above by hand when you do. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <uses-permission android:name="android.permission.INTERNET" />
@@ -22,7 +24,17 @@
   <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
   <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="false" />
   <uses-feature android:name="android.hardware.touchscreen.multitouch.distinct" android:required="false" />
-  <application android:appCategory="game" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true">
+  <!-- allowBackup=false is the THIRD deliberate deviation from Unity's base (2026-08-29).
+       Unset, Android defaults it ON, and Auto Backup covers getExternalFilesDir() — which is
+       exactly where the collection lives. A reinstall then RESTORES a save from the Google
+       account, and on 2026-08-29 that resurrected a decks.json written before card ids became
+       numbers; CollectionJson.ReadDecks threw straight through MainMenuController.OnEnable and
+       the menu never built. A save that outlives the schema it was written for is the hazard,
+       and pre-1.0 the schema moves. It is an ATTRIBUTE ON <application>, not a <meta-data>
+       entry — the meta-data form parses and does nothing. Nothing else sets it (the generated
+       launcher manifest has no allowBackup), so no tools:replace is needed; confirm after a
+       build with: adb shell dumpsys package com.ContextAware.Emberfall | grep ALLOW_BACKUP -->
+  <application android:allowBackup="false" android:appCategory="game" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true">
     <meta-data android:name="unity.splash-mode" android:value="0" />
     <meta-data android:name="unity.splash-enable" android:value="True" />
     <meta-data android:name="unity.requested-visible-insets" android:value="" />
