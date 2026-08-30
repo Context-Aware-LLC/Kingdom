@@ -67,15 +67,11 @@
     justify-content: center;
 }
 
-/* `aspect-ratio` was here too and is equally inert — UI Toolkit has no such property (see
- * collection.uss on the craft card face, and shop.uss's art rail). A min-height derived from
- * min-width at the intended 0.7 is the floor a card keeps when nothing else gives it height;
- * without it the card was only as tall as its contents. Both numbers move together. */
 .reveal-card {
     width: 18%;
     min-width: 135px;
     max-width: 230px;
-    min-height: 193px;
+    aspect-ratio: 0.7;
     align-items: stretch;
     justify-content: space-between;
     background-color: var(--surface-0);
