@@ -98,14 +98,8 @@
  * A COLUMN, not a row (Sam, 2026-08-07): a name band, then the decks under it at the row's full
  * width. It was three side-by-side columns — name, strip, Delete — and the two text columns took
  * enough width off the strip to wrap a third deck onto a second line. */
-/* `flex-shrink: 0` WITH `overflow: hidden` BELOW, and the pair is the point (#322, cause C2).
- * A shrinkable flex child that also clips is how a column's overflow gets paid, and it pays in
- * whole children with nothing logged -- the failure that ate two main-menu buttons in #249. Here
- * it paid in the name band, which came back sliced horizontally by the row's own edge (#307).
- * The clip is wanted (it is what rounds the row's corners); the shrink never was. */
 .character-row {
     flex-direction: column;
-    flex-shrink: 0;
     margin-bottom: var(--space-2);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
@@ -156,11 +150,6 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-2) var(--space-4) 0 var(--space-4);
-    /* 8 of padding-top + a --type-h2 line box, which is the 35 RowChrome charges for this band.
-     * Declared rather than left to the label, because the band is the FIRST thing a squeezed row
-     * gives up and the name is what gets cut in half when it does (#307). */
-    min-height: 35px;
-    flex-shrink: 0;
 }
 
 /* The character's name, and nothing else (Sam, 2026-08-07). Anything else on it is a line the
@@ -560,6 +549,13 @@
     color: var(--negative);
 }
 
+/* THIS CLASS ALONE DOES NOT MAKE A VISIBLE BUTTON. It sets geometry and type and deliberately
+ * leaves `color` and `background-color` to a modifier — --cta, --ghost, --danger. A button given
+ * `roster-button` and no modifier does not fall back to anything of ours: it renders as Unity's
+ * DEFAULT runtime button, flat light grey with a mid-grey label, and nothing warns. That is what
+ * shipped on the whole hero picker (#311/#314/#325) — the screen was read as "missing its
+ * stylesheet" when every class it uses was in fact defined right here.
+ * Add a modifier, or set the two properties yourself, whenever you add this class. */
 .roster-button {
     min-width: 148px;
     height: 48px;
@@ -708,16 +704,45 @@
     justify-content: center;
 }
 
+/* The colours are HERE, not on a --ghost modifier, because these buttons carry `roster-button`
+ * and nothing else — and `roster-button` sets no colour of its own (see the note on it above).
+ * Without these two properties the eight hero choices rendered as Unity's default grey button:
+ * #311, #314 and #315 are all that one omission, and #325 called it a missing stylesheet.
+ *
+ * The class-coloured spine is the same language a character row uses, and it is the only thing
+ * distinguishing one choice from another until the picker gets art (#312). */
 .hero-choice {
     align-self: stretch;
     min-height: var(--touch-min);
-    margin-bottom: var(--space-1);
+    margin-bottom: var(--space-2);
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    border-left-width: 6px;
+    border-left-color: var(--class-neutral);
+    -unity-text-align: middle-left;
 }
 
-.hero-choice--selected {
-    border-width: 2px;
-    border-color: var(--mana);
+.hero-choice:hover {
     background-color: var(--surface-3);
+}
+
+/* One per CardClass, keyed on the ENUM MEMBER LOWERCASED — `tempest`, `stonewarden`, never
+ * `storm` or `warden`. CharacterCreateController.BuildHeroChoice mints the token; there is no
+ * name map on either side, so a class added to the enum needs a row here or its spine is grey. */
+.hero-choice--emberward   { border-left-color: var(--class-emberward); }
+.hero-choice--tidecaller  { border-left-color: var(--class-tidecaller); }
+.hero-choice--gravekeep   { border-left-color: var(--class-gravekeep); }
+.hero-choice--verdant     { border-left-color: var(--class-verdant); }
+.hero-choice--tempest     { border-left-color: var(--class-tempest); }
+.hero-choice--clockwright { border-left-color: var(--class-clockwright); }
+.hero-choice--stonewarden { border-left-color: var(--class-stonewarden); }
+.hero-choice--nightveil   { border-left-color: var(--class-nightveil); }
+
+/* Border-width on all four sides would replace the spine, so the selected state is carried by the
+ * fill and the text instead — the spine keeps saying which class this is. */
+.hero-choice--selected {
+    background-color: var(--surface-3);
+    color: var(--accent);
 }
 /* ---- Detail overlay ---- */
 .hero-detail-head {

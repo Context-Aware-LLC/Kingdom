@@ -210,35 +210,6 @@
 }
 
 /* ================================================================================================
- * A SCROLL VIEW'S CONTENT NEVER SHRINKS — that is what makes content SCROLL instead of being
- * CLIPPED (#322, cause C2, 2026-08-30).
- *
- * UI Toolkit flex children default to `flex-shrink: 1`, and a ScrollView's content container is a
- * flex child of its viewport. So when the content asks for more height than the viewport has, the
- * container does not overflow and hand the scroller something to scroll — it SHRINKS to the
- * viewport, and every row inside it is squeezed or sliced. The scroller then reports almost
- * nothing to scroll, which is the tell: a thumb filling its whole track over content that is
- * visibly cut off.
- *
- * Measured on the Pixel 5a, 2026-08-30: the Shop's pack tiles rendered as a top sliver with name,
- * price and buy button below the cut (#283) while `shop-scroll`'s thumb spanned its full track.
- * The same mechanism is [[flex-shrink-plus-overflow-hidden-deletes-children]] one level up — there
- * a shrinkable child with `overflow: hidden` paid a column's overflow in whole children; here a
- * shrinkable content container pays it in whole rows.
- *
- * THE CLASS IS DOUBLED for the same reason the scroller rule below doubles it: `.unity-...` scores
- * (0,1,0) and ties the default runtime theme, so source order would decide it. This wins outright
- * and needs no ancestor, which matters for ConnectionFailedScreen.uxml (built at runtime, no
- * screen root above it).
- *
- * This is the CAUSE fix. A row that must additionally never be sliced still declares its own
- * `flex-shrink: 0` and a real `min-height` — see `.shop-pack` and `.character-row`.
- * ================================================================================================ */
-.unity-scroll-view__content-container.unity-scroll-view__content-container {
-    flex-shrink: 0;
-}
-
-/* ================================================================================================
  * NO VISIBLE SCROLLBARS, ANYWHERE (Sam, 2026-08-01 ruling — [[no-visible-scrollbars-ruling]]).
  * Wheel, touch-drag and keyboard scrolling all still work; this hides only the track+thumb
  * chrome, which reads as generic UI Toolkit default rather than as this game's visual language.
