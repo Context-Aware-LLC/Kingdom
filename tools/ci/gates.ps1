@@ -73,6 +73,16 @@ if (-not $Quick) {
         }
         npx stylelint "unity/Emberfall/Assets/UI/**/*.uss"
     }
+
+    # The same failure mode one file type over, and the one with no log line at all. Unity parses
+    # a .uxml as XML and, on a parse error, hands the UIDocument an EMPTY rootVisualElement --
+    # silently. It reads as a wiring bug when the wiring is fine. These files carry long design
+    # comments ABOUT CSS, so they quote custom properties, and a doubled hyphen inside an XML
+    # comment is illegal: AccountCreateScreen.uxml shipped `var(<two hyphens>edge-safe)` in a
+    # comment on 2026-08-29 and a first launch was a blank screen after the splash.
+    Invoke-Stage 'Stage 1c · UXML well-formedness' {
+        python tooling/scripts/check_uxml_wellformed.py
+    }
 }
 
 # Stage 1's rebaseline-guard is gone entirely as of 2026-08-24, here and in ci.yml: it guarded a

@@ -280,6 +280,16 @@ jobs:
       - name: "Stage 6c · UI edge-clearance audit (tooling/scripts)"
         run: python3 tooling/scripts/audit_edge_safety.py
 
+      # A .uxml is XML, and Unity answers a parse error with an EMPTY rootVisualElement and
+      # NO log line of its own. The screen is simply blank, so it reads as a wiring bug when
+      # the wiring is fine. The way it happens here is a doubled hyphen inside an XML comment,
+      # which XML forbids: these files carry long design comments about CSS, so they quote
+      # custom properties. AccountCreateScreen.uxml shipped one on 2026-08-29 and a first
+      # launch was a blank screen after the splash. Parseability only, like the USS stage in
+      # tools/ci/gates.ps1 -- there are no style rules here.
+      - name: "Stage 6e · UXML well-formedness (tooling/scripts)"
+        run: python3 tooling/scripts/check_uxml_wellformed.py
+
       # ── Stages 7–8 — Unity E-series + PlayMode (informational at M1, no seat) ────
       # Nothing Unity-side is gated in cloud CI, and cannot be until there is a seat.
       # TWO local substitutes, and they are not interchangeable:

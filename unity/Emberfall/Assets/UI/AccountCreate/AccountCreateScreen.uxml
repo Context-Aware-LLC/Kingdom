@@ -9,14 +9,14 @@
       WHY IT HAD TO MOVE, AND WHY "IT ALREADY WAS A ROW" WAS NOT ENOUGH. mainmenu.uss records a
       2026-08-23 measurement that split the pitch from the form because "the gate lands near 276dp
       and the name modal near 358dp, against 411 available". The budget in that sentence is wrong:
-      both modals carried `.emb-bleed`, which is `padding: var(--edge-safe)` — 52dp PER EDGE — and
-      `git merge-base --is-ancestor` confirms `.emb-bleed` was already on them when it was written.
+      both modals carried `.emb-bleed`, which pads by the `edge-safe` var — 52dp PER EDGE — and
+      `git merge-base` (is-ancestor) confirms `.emb-bleed` was already on them when it was written.
       The real box was 411 - 104 = 307dp, so the gate fitted with 31dp to spare and THE NAME STEP
       OVERFLOWED BY 51dp. That is the step with no way past it, which is why a first launch was a
       dead end rather than a cosmetic problem.
 
       So re-hosting alone would not have fixed it — the nesting is the bug. As a modal the flow sat
-      inside `.emb-bleed`'s 52dp per edge PLUS `.mm-modal__panel`'s `padding: var(--space-8)`
+      inside `.emb-bleed`'s 52dp per edge PLUS `.mm-modal__panel`'s `space-8` padding
       (32dp per edge) inside an already-inset box, on a panel that only has 411dp of height. Here
       the root IS the panel: one clearance, one padding, nothing nested inside it.
 
@@ -26,6 +26,11 @@
       reason character creation kept `character-roster.uss`: restyling them here would be a second
       source of truth for the same widgets. The two ScrollViews are gone; content that fits needs
       no scroller, and a scroller was how the overflow stayed invisible.
+
+      NO DOUBLE HYPHEN ANYWHERE IN THIS COMMENT. XML forbids it inside a comment, so a CSS custom
+      property written out in full (var, open paren, two hyphens) makes the whole file unparseable.
+      Unity does not report it: rootVisualElement comes back empty, the controller logs
+      "No rootVisualElement", and the screen is simply blank. Name the var without its prefix.
     -->
     <ui:VisualElement name="root" class="emb-root account-create-screen emb-bleed">
 
