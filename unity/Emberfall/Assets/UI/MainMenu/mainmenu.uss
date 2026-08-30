@@ -55,11 +55,17 @@
        screen gets. See the budget note on .mm-menu (#249). */
     margin-bottom: var(--space-6);
 }
+/* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring, and it is the same
+   artifact the margin note above records: at referenceDpi 160 one authored px is one Android dp,
+   so 72 was 72 of the 411dp the landscape panel gets, and 'EMBERFALL' plus 8dp of tracking ran
+   about 57% of the 920dp width — over the identity plate on one side and the shard pill on the
+   other. It was also a raw px, so it was the one piece of type on this screen that did NOT step
+   with the screen classes. Now a token, and part of the run. */
 .mm-wordmark {
-    font-size: 72px;
+    font-size: var(--type-wordmark);
     -unity-font-style: bold;
     color: var(--ink-1);
-    letter-spacing: 8px;
+    letter-spacing: 4px;
 }
 .mm-tagline {
     font-size: var(--type-h2);

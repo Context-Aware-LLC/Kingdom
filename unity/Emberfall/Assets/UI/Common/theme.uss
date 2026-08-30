@@ -66,6 +66,7 @@
        bottom of this file. See "SCREEN CLASSES" there before changing any of them: a value
        edited here moves the phone only, and its medium/expanded partners have to move with it
        or the run stops being a run. */
+    --type-wordmark: 44px;
     --type-display: 36px;
     --type-h1: 28px;
     --type-h2: 22px;
@@ -187,6 +188,7 @@
    It now has three. If that audit is not taught the run, it is checking the phone only —
    which is the safe direction, but not the whole answer. */
 .emb-sw-medium {
+    --type-wordmark: 50px;
     --type-display: 40px;
     --type-h1: 32px;
     --type-h2: 24px;
@@ -197,6 +199,7 @@
 }
 
 .emb-sw-expanded {
+    --type-wordmark: 56px;
     --type-display: 44px;
     --type-h1: 36px;
     --type-h2: 26px;
