@@ -27,6 +27,16 @@
             "timeout": 15
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/block-content-through-shell.py\"; [ -f \"$f\" ] || exit 0; command -v python >/dev/null 2>&1 || exit 0; PYTHONIOENCODING=utf-8 python \"$f\"",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
