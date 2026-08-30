@@ -71,6 +71,9 @@ namespace Emberfall.Presentation
         /// <summary>Keep two complete rows visible before promoting a viewport to a larger tier.</summary>
         private const int TargetVisibleRows = 2;
 
+        /// <summary>The vertical space between two rows, and the FLOOR for the derived tier's
+        /// solved pitch. Must match <c>.card-tile</c>'s top+bottom margin in collection.uss (two
+        /// times --space-1), which is what a fixed tier still uses.</summary>
         private const float VerticalTileMargin = 8f;
 
         /// <summary>The COMPACT floor is derived from the viewport rather than tabulated, because a
@@ -349,7 +352,8 @@ namespace Emberfall.Presentation
             _lastLayoutViewportHeight = viewportHeight;
             _lastLayoutVisibleCount = _visible.Count;
 
-            ResolveTileTier(available, viewportHeight, out float tileWidth, out float tileHeight);
+            ResolveTileTier(available, viewportHeight,
+                out float tileWidth, out float tileHeight, out float verticalMargin);
             bool tierChanged = !Mathf.Approximately(tileWidth, _activeTileWidth)
                 || !Mathf.Approximately(tileHeight, _activeTileHeight);
             if (tierChanged)
@@ -386,6 +390,10 @@ namespace Emberfall.Presentation
                 // full rows above it.
                 tile.style.marginLeft = startOfRow ? outer : 0f;
                 tile.style.marginRight = endOfRow ? outer : gutter;
+                // Half above, half below: the row pitch is the sum, and splitting it keeps the
+                // first row off the viewport's top edge instead of flush against it.
+                tile.style.marginTop = verticalMargin * 0.5f;
+                tile.style.marginBottom = verticalMargin * 0.5f;
             }
 
             if (_tilesNeedBake)
@@ -395,12 +403,32 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>
+        /// The tile size for a viewport, and the vertical margin that spaces its rows.
+        ///
+        /// <para><b>The margin is an output because the derived tier spends it (#322/#298).</b>
+        /// Quantising the height leaves a remainder — up to <see cref="TileQuantum"/> per row — and
+        /// left in the margin's default that remainder lands at the BOTTOM of the viewport, where
+        /// it shows as the top sliver of row three: a card cut through the middle with only its
+        /// cost band visible. Sam's ruling, 2026-08-30, is that the sliver is not to be recovered
+        /// by shortening rows; the wall is to END CLEANLY after the two rows that read. So the
+        /// derived tier hands the remainder back as row PITCH, and two rows fill the viewport
+        /// exactly. Row three is still there and still scrolls to — it just does not peek.</para>
+        ///
+        /// <para>The fixed tiers keep the flat margin. Their slack is whatever a tabulated size
+        /// happens to leave over a desk-sized viewport, which can be hundreds of dp — spreading
+        /// THAT as pitch would push the rows apart into the "islands" outcome the gutter solve is
+        /// bounded to avoid.</para>
+        /// </summary>
         private static void ResolveTileTier(
             float availableWidth,
             float viewportHeight,
             out float tileWidth,
-            out float tileHeight)
+            out float tileHeight,
+            out float verticalMargin)
         {
+            verticalMargin = VerticalTileMargin;
+
             if (TierFits(availableWidth, viewportHeight, DesktopTileWidth, DesktopTileHeight))
             {
                 tileWidth = DesktopTileWidth;
@@ -429,6 +457,14 @@ namespace Emberfall.Presentation
             solved = Mathf.Floor(solved / TileQuantum) * TileQuantum;
             tileHeight = Mathf.Max(solved, MinTileHeight);
             tileWidth = Mathf.Round(tileHeight * (TileWidth / TileHeight));
+
+            // Spend the quantiser's remainder as pitch so TargetVisibleRows fill the viewport to
+            // the pixel. Clamped at the floor for the one case that cannot be paid: MinTileHeight
+            // above it, where the tile is already taller than its share and the wall would rather
+            // show fewer legible rows than more unreadable ones.
+            verticalMargin = Mathf.Max(
+                VerticalTileMargin,
+                viewportHeight / TargetVisibleRows - tileHeight);
         }
 
         private static bool TierFits(float availableWidth, float viewportHeight, float width, float height)

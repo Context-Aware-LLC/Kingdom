@@ -211,11 +211,20 @@
     background-color: var(--surface-3);
 }
 
+/* `min-height: 0` is deliberately absent: UI Toolkit's flex-item minimum is already 0, not CSS's
+ * `auto`, so it would be a no-op. The thing that had to change for the store to scroll is on the
+ * CONTENT side, in theme.uss — a ScrollView's content container defaulted to `flex-shrink: 1` and
+ * paid this column's overflow by squeezing every section, instead of overflowing into the
+ * scroller (#322). */
 .shop-scroll {
     flex-grow: 1;
 }
 
+/* A SECTION IS NOT COMPRESSIBLE. It is one of the two things inside the scroller, and a section
+ * that gives up height gives it up as sliced pack tiles, not as whitespace (#283). Its height is
+ * whatever its rows come to; the scroller is what absorbs the difference. */
 .shop-section {
+    flex-shrink: 0;
     margin-bottom: var(--space-6);
 }
 
@@ -238,6 +247,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: stretch;
+    flex-shrink: 0;
 }
 
 /* THREE UP, not two (2026-08-30, #288/#324). At 48% a tile was ~442dp wide on a 920dp landscape
@@ -248,6 +258,28 @@
     width: 31%;
     min-width: 260px;
     max-width: 360px;
+    /* THE ROW'S REAL HEIGHT, WRITTEN DOWN (#322, cause C2). The tile carried no height at all, so
+     * the list it sits in had no reason to reserve one and a viewport shorter than the tile cut it
+     * through the middle. The sum, at the compact scale:
+     *
+     *      12  padding-top (--space-3)
+     *      88  .shop-pack__art-rail
+     *      12  the rail's margin-bottom (--space-3)
+     *      27  .shop-pack__name     -- --type-h2 22, line box
+     *      17  .shop-pack__detail   -- --type-caption 14, line box
+     *      12  the detail's margin-bottom (--space-3)
+     *      48  .shop-pack__buy      -- Android's touch floor, not negotiable
+     *      12  padding-bottom (--space-3)
+     *     ---
+     *     228, rounded to 232 for the font's line box.
+     *
+     * COMPACT ON PURPOSE, and safe at every screen class: medium and expanded step the type scale
+     * and --touch-min UP, and a box grows past its own min-height, so this reserves the phone's
+     * tile without capping a larger one. `flex-shrink: 0` is the other half -- a min-height that a
+     * shrinking parent is free to ignore reserves nothing. CHANGE THE RAIL'S HEIGHT AND THIS MOVES
+     * WITH IT. */
+    min-height: 232px;
+    flex-shrink: 0;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -263,14 +295,20 @@
     border-radius: var(--space-2);
 }
 
-/* HEIGHT IS EXPLICIT BECAUSE UI TOOLKIT HAS NO `aspect-ratio`. This carried `aspect-ratio: 3.2`
- * until 2026-08-30, which parses, lints clean and does NOTHING — so the rail's height came only
- * from its slot labels and the whole pack tile collapsed to a sliver with its name, price and buy
- * button below the cut (#283). collection.uss says the same thing about the craft card face, and
- * solves it the same way: when a ratio matters, both axes have to be written.
+/* HEIGHT IS EXPLICIT, AND THE REASON IS NOT THE ONE FIRST GIVEN. This carried `aspect-ratio: 3.2`
+ * until 2026-08-30 and was replaced under the belief that UI Toolkit has no such property. IT
+ * DOES — Unity 6000.5 lists `aspect-ratio` in its USS property table between align-self and
+ * background-color, and exposes IStyle.aspectRatio / IResolvedStyle.aspectRatio (checked against
+ * the module, 2026-08-30). The ratio was resolving; it was not the cause of #283.
  *
- * 88 against a ~261dp inner width at a 31% tile on a 920dp-wide screen is ~2.97:1, near the 3.2
- * that was intended. CHANGE `.shop-pack`'s width and you must revisit this number. */
+ * The height stays explicit anyway, and it is the better declaration: a ratio against a
+ * PERCENTAGE width makes the rail a different height on every screen width, and `.shop-pack`'s
+ * min-height below is a written-down sum that has to be able to name this number. 88 against a
+ * ~261dp inner width at a 31% tile on a 920dp-wide screen is ~2.97:1, near the 3.2 intended.
+ * CHANGE `.shop-pack`'s width and you must revisit this number AND that sum.
+ *
+ * What #283 actually was: the ScrollView's content container shrank instead of overflowing, so
+ * every section and tile inside it was squeezed to a sliver. Fixed in theme.uss (#322). */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
@@ -358,6 +396,8 @@
 .shop-gem {
     width: 31%;
     min-width: 180px;
+    min-height: var(--touch-min);
+    flex-shrink: 0;
     flex-direction: row;
     align-items: center;
     background-color: var(--surface-0);

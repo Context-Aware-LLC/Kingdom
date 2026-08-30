@@ -98,8 +98,14 @@
  * A COLUMN, not a row (Sam, 2026-08-07): a name band, then the decks under it at the row's full
  * width. It was three side-by-side columns — name, strip, Delete — and the two text columns took
  * enough width off the strip to wrap a third deck onto a second line. */
+/* `flex-shrink: 0` WITH `overflow: hidden` BELOW, and the pair is the point (#322, cause C2).
+ * A shrinkable flex child that also clips is how a column's overflow gets paid, and it pays in
+ * whole children with nothing logged -- the failure that ate two main-menu buttons in #249. Here
+ * it paid in the name band, which came back sliced horizontally by the row's own edge (#307).
+ * The clip is wanted (it is what rounds the row's corners); the shrink never was. */
 .character-row {
     flex-direction: column;
+    flex-shrink: 0;
     margin-bottom: var(--space-2);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
@@ -150,6 +156,11 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-2) var(--space-4) 0 var(--space-4);
+    /* 8 of padding-top + a --type-h2 line box, which is the 35 RowChrome charges for this band.
+     * Declared rather than left to the label, because the band is the FIRST thing a squeezed row
+     * gives up and the name is what gets cut in half when it does (#307). */
+    min-height: 35px;
+    flex-shrink: 0;
 }
 
 /* The character's name, and nothing else (Sam, 2026-08-07). Anything else on it is a line the

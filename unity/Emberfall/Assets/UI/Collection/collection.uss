@@ -1167,9 +1167,14 @@
  * once shown.
  *
  * Percentages throughout, per the sizing ruling, with ONE exception: the card face is a fixed
- * 340x477. UI Toolkit has no aspect-ratio property, so a card's 276:387 can only be held by giving
- * both axes — the same reason CardWall.TileWidth is a fixed 276 and a contract rather than a
- * percentage. Change one of those two numbers and you must change the other.
+ * 340x477. UI Toolkit DOES have `aspect-ratio` (Unity 6000.5: it sits in the USS
+ * property table between align-self and background-color, and IStyle/IResolvedStyle both expose
+ * aspectRatio). The claim that it does not was written against an older Editor and outlived it;
+ * checked 2026-08-30. Both axes are still written HERE, deliberately -- the pair is a contract
+ * with CardWall.TileWidth/TileHeight, which bakes a RenderTexture at exactly this size, and a
+ * ratio that resolves against a percentage width would hand the baker a different number on every
+ * device.
+ * Change one of those two numbers and you must change the other.
  */
 
 .craft-scrim {
