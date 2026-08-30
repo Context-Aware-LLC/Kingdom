@@ -226,6 +226,21 @@
  * ConnectionFailedScreen.uxml, whose root is .mm-modal and which is built into the panel at
  * runtime rather than under a screen root.
  *
+ * THIS RULE IS A BACKSTOP, NOT THE MECHANISM — 2026-08-30. It only bites where content never
+ * overflows. `ScrollView` writes its scroller's `display` as an INLINE style driven by
+ * `scrollerVisibility` (default `Auto`), and inline beats every USS selector: the doubling below,
+ * an id selector, anything — USS has no `!important`. So the moment a surface actually overflows,
+ * the scroller comes back and this rule is powerless. Consolidating six copies into one (#161) was
+ * right; it did not make any of them work.
+ *
+ * THE MECHANISM IS THE UXML ATTRIBUTE: `vertical-scroller-visibility="Hidden"` /
+ * `horizontal-scroller-visibility="Hidden"` on the `<ui:ScrollView>`, which sets what the internal
+ * logic reads. Every new ScrollView gets both from the start. A `ListView` does not expose the
+ * property — set it on its inner ScrollView in C#, as CollectionController does.
+ *
+ * NEVER read this rule's presence as evidence a surface is covered. That read is what let the bug
+ * survive two fixes; the shop shipped a visible scroller on a build four days after #161 landed.
+ *
  * RETIREMENT TRIGGER: if the no-visible-scrollbars ruling is ever relaxed for one surface, this
  * rule is the thing that has to gain an exception — do NOT re-add a per-id copy, which is how it
  * drifted into six divergent versions the first time.

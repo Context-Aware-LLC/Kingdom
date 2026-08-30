@@ -51,7 +51,7 @@
                     <ui:Label text="W — L — D" class="mm-leaderboard__record"/>
                 </ui:VisualElement>
                 <ui:Label name="leaderboard-status" text="Calling the keepers…" class="mm-leaderboard__status"/>
-                <ui:ScrollView name="leaderboard-list" mode="Vertical" class="mm-leaderboard__list"/>
+                <ui:ScrollView name="leaderboard-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="mm-leaderboard__list"/>
                 <ui:Label name="leaderboard-updated" text="Ratings update after every eligible match." class="mm-leaderboard__updated"/>
             </ui:VisualElement>
         </ui:VisualElement>
