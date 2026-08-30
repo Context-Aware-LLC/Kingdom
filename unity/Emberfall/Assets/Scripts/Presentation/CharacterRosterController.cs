@@ -1176,8 +1176,16 @@ namespace Emberfall.Presentation
 
         /// <summary>Everything in a row that is not the square, top to bottom: the name header, the
         /// strip's padding, the plate's padding and border, and the gap to the next row. Must be
-        /// kept in step with character-roster.uss.</summary>
-        private const float RowChrome = 112f;
+        /// kept in step with character-roster.uss.
+        ///
+        /// <para>112f until 2026-08-30 (#324). This is subtracted from <c>viewport / rows</c>, so on
+        /// the real device — 411dp of landscape height, not the Editor Game View's ~1800dp — it was
+        /// consuming 55% of a two-row screen and leaving the deck picture the remainder. The band it
+        /// measures was tightened rather than the row count reduced, because one character row per
+        /// screen stops the list reading as a list. Current sum: header padding-top 8 + an h2 name
+        /// line ~27 + strip padding 8 top and 12 bottom + plate padding 16 and border 4 + row margin
+        /// 8 = 83, rounded up to 90 for the font's line box.</para></summary>
+        private const float RowChrome = 90f;
 
         /// <summary>Must match .deck-plate's margin-right (--space-3). Every plate carries one,
         /// including the last, so the width solve charges the strip for <c>plates</c> of them.</summary>

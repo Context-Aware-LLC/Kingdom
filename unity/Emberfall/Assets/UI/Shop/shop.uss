@@ -240,9 +240,14 @@
     align-items: stretch;
 }
 
+/* THREE UP, not two (2026-08-30, #288/#324). At 48% a tile was ~442dp wide on a 920dp landscape
+ * phone — half the screen for one pack — while the store was simultaneously starved vertically and
+ * left the bottom ~45% of the screen empty. The axis that is scarce here is HEIGHT (411dp); width
+ * is the one there is plenty of, so spend it. 31% + a 2% gutter fits three per row with 1% spare. */
 .shop-pack {
-    width: 48%;
+    width: 31%;
     min-width: 260px;
+    max-width: 360px;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -258,10 +263,19 @@
     border-radius: var(--space-2);
 }
 
+/* HEIGHT IS EXPLICIT BECAUSE UI TOOLKIT HAS NO `aspect-ratio`. This carried `aspect-ratio: 3.2`
+ * until 2026-08-30, which parses, lints clean and does NOTHING — so the rail's height came only
+ * from its slot labels and the whole pack tile collapsed to a sliver with its name, price and buy
+ * button below the cut (#283). collection.uss says the same thing about the craft card face, and
+ * solves it the same way: when a ratio matters, both axes have to be written.
+ *
+ * 88 against a ~261dp inner width at a 31% tile on a 920dp-wide screen is ~2.97:1, near the 3.2
+ * that was intended. CHANGE `.shop-pack`'s width and you must revisit this number. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
-    aspect-ratio: 3.2;
+    height: 88px;
+    flex-shrink: 0;
     margin-bottom: var(--space-3);
 }
 

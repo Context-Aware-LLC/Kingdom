@@ -100,7 +100,7 @@
  * enough width off the strip to wrap a third deck onto a second line. */
 .character-row {
     flex-direction: column;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
     background-color: var(--surface-1);
     border-radius: var(--space-2);
     border-left-width: 6px;
@@ -139,11 +139,17 @@
 /* The name band over the decks. It holds the name on the left and Delete on the right, and it is
  * the only thing in the row that is not deck art — which is the point: one line of height buys the
  * strip the row's whole width, where the old left-hand column charged 18% of it forever. */
+/* EVERY dp in this band is a dp the deck picture does not get. RowChrome in
+ * CharacterRosterController is the sum of this padding, the name's line, the strip's padding, the
+ * plate's own chrome and the row's bottom margin — and it is subtracted from `viewport / rows`
+ * before the plate is sized. At 411dp of landscape height (#324) the old 112dp of chrome was 55%
+ * of a two-row screen, which is why the pictures came out ~90dp inside a mostly empty panel.
+ * Tightened 2026-08-30. KEEP RowChrome IN STEP — the constant carries the arithmetic. */
 .character-row-header {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-3) var(--space-4) 0 var(--space-4);
+    padding: var(--space-2) var(--space-4) 0 var(--space-4);
 }
 
 /* The character's name, and nothing else (Sam, 2026-08-07). Anything else on it is a line the
@@ -159,8 +165,11 @@
     color: var(--ink-1);
 }
 
+/* --type-h2, not --type-h1 (2026-08-30, #324): this line is pure RowChrome, and an h1 name cost
+ * 6dp of deck picture on every row for a string the coloured spine already identifies. It is also
+ * the row whose content was overflowing its band on the phone (#307). */
 .character-name {
-    font-size: var(--type-h1);
+    font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
     flex-shrink: 0;
@@ -188,7 +197,7 @@
     flex-grow: 1;
     flex-direction: row;
     flex-wrap: nowrap;
-    padding: var(--space-3) var(--space-4) var(--space-4) var(--space-4);
+    padding: var(--space-2) var(--space-4) var(--space-3) var(--space-4);
     overflow: hidden;
 }
 
