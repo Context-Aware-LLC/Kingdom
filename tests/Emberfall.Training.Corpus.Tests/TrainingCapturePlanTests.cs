@@ -105,5 +105,35 @@ namespace Emberfall.Training.Corpus.Tests
                 }), Throws.TypeOf<ArgumentException>());
             });
         }
+
+        [Test]
+        public void Plan_can_offset_game_seeds_without_changing_the_balanced_schedule()
+        {
+            TrainingCapturePlan baseline = TrainingCapturePlan.Create(4, new[]
+            {
+                CardClass.EMBERWARD,
+                CardClass.TIDECALLER,
+                CardClass.GRAVEKEEP,
+            });
+            TrainingCapturePlan holdout = TrainingCapturePlan.Create(4, new[]
+            {
+                CardClass.EMBERWARD,
+                CardClass.TIDECALLER,
+                CardClass.GRAVEKEEP,
+            }, gameSeedOffset: 1_000_000);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(holdout.Pairings, Is.EqualTo(baseline.Pairings));
+                Assert.That(holdout.Games.Select(game => game.MatchId),
+                    Is.EqualTo(baseline.Games.Select(game => game.MatchId)));
+                Assert.That(holdout.Games.Select(game => game.P0Class),
+                    Is.EqualTo(baseline.Games.Select(game => game.P0Class)));
+                Assert.That(holdout.Games.Select(game => game.Seed),
+                    Is.EqualTo(baseline.Games.Select(game => game.Seed + 1_000_000)));
+                Assert.That(holdout.Games.Select(game => game.Seed)
+                    .Intersect(baseline.Games.Select(game => game.Seed)), Is.Empty);
+            });
+        }
     }
 }
