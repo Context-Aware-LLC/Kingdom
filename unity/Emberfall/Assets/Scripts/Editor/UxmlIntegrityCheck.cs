@@ -25,21 +25,40 @@ namespace Emberfall.Editor
     /// </summary>
     public static class UxmlIntegrityCheck
     {
+        /// <summary>Where the runtime screens live. Everything under here is checked.</summary>
+        private const string ScreenRoot = "Assets/UI";
+
         /// <summary>
-        /// Every runtime UXML that a controller queries by name. Add a screen here when you build one —
-        /// the cost of forgetting is a silent empty screen, which is the whole point of the tool.
+        /// EVERY <c>.uxml</c> UNDER <see cref="ScreenRoot"/>, DISCOVERED, NEVER LISTED.
+        ///
+        /// <para>This was a hand-maintained array until 2026-08-31, carrying four of the project's
+        /// nine screens and a comment asking the next person to remember the fifth. They did not:
+        /// the Shop shipped a double dash inside a UXML comment, rendered completely empty, and
+        /// THIS CHECK PASSED — because <c>ShopScreen.uxml</c> was never in the list. AccountCreate,
+        /// ConnectionFailed, MatchSettings and PackReveal were unguarded by the same omission.</para>
+        ///
+        /// <para>A list whose only failure mode is being incomplete cannot be fixed by adding the
+        /// missing entry; it can only be fixed by not being a list. Enumerating the DIRECTORY, not
+        /// the asset database, is deliberate — a UXML that fails to import hard enough to produce
+        /// no <see cref="VisualTreeAsset"/> at all would be invisible to a <c>t:VisualTreeAsset</c>
+        /// search, and that is precisely the file this tool must not miss.</para>
         /// </summary>
-        private static readonly string[] Screens =
+        private static string[] Screens()
         {
-            "Assets/UI/MainMenu/MainMenuScreen.uxml",
-            "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml",
-            "Assets/UI/CharacterCreate/CharacterCreateScreen.uxml",
-            // The collection wall and the deckbuilder are one plate now (#153); DeckbuilderScreen.uxml
-            // is gone. This entry replaces it and closes a gap rather than just tracking a rename:
-            // CollectionScreen.uxml was never listed here, so the screen carrying the loudest warning
-            // about the failure this tool exists to catch was the one screen it did not check.
-            "Assets/UI/Collection/CollectionScreen.uxml",
-        };
+            string abs = System.IO.Path.Combine(
+                System.IO.Directory.GetParent(Application.dataPath).FullName, ScreenRoot);
+            if (!System.IO.Directory.Exists(abs)) return new string[0];
+
+            string[] files = System.IO.Directory.GetFiles(abs, "*.uxml", System.IO.SearchOption.AllDirectories);
+            for (int i = 0; i < files.Length; i++)
+            {
+                files[i] = ScreenRoot + files[i]
+                    .Substring(abs.Length)
+                    .Replace('\\', '/');
+            }
+            System.Array.Sort(files, System.StringComparer.Ordinal);
+            return files;
+        }
 
         [MenuItem("Emberfall/UI/Check UXML Integrity")]
         public static void Check()
@@ -48,7 +67,18 @@ namespace Emberfall.Editor
             report.AppendLine("[UxmlIntegrityCheck]");
             bool allGood = true;
 
-            foreach (string path in Screens)
+            string[] screens = Screens();
+            report.AppendLine($"  {screens.Length} screen(s) under {ScreenRoot}");
+            if (screens.Length == 0)
+            {
+                // A discovery that finds nothing is the one result that looks like a pass and is
+                // not one -- the same trap as a `dotnet test` matching zero tests.
+                report.AppendLine($"  ✗ no .uxml found under {ScreenRoot} — this check verified NOTHING");
+                Debug.LogError(report.ToString());
+                return;
+            }
+
+            foreach (string path in screens)
             {
                 AssetDatabase.ImportAsset(path,
                     ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);

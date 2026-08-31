@@ -9,7 +9,9 @@
                      gone: a screen you reached by pressing "Shop" does not need to tell you it is
                      the shop, and on a 411dp landscape phone that pair plus its own padding was
                      ~96dp of the ~280dp the two sections had to share. What survives is what you
-                     act on -- the two tabs, the wallet, and Back -- in a single row.
+                     act on: the two tabs, the wallet, and Back, in a single row.
+                     (No double dash anywhere in this comment. An XML comment may not contain one,
+                     and Unity does not report the parse failure: the whole screen renders EMPTY.)
 
                      THE TABS ARE THE SECTION TITLES. Each section's own `shop-section__title`
                      label was removed rather than duplicated up here; the tab that selects a
