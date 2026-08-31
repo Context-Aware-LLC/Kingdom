@@ -34,7 +34,7 @@
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
                 </ui:ScrollView>
-                <ui:Label name="shop-status" text="" class="shop-status"/>
+                <ui:Label name="shop-status" text="" class="shop-status shop-status--empty"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- Styled by packreveal.uss, not shop.uss: the same tree is hosted by PackRevealScreen,

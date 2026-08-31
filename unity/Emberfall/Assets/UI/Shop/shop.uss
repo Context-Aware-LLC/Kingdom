@@ -262,11 +262,15 @@
     margin-bottom: var(--space-6);
 }
 
+/* NO BOTTOM MARGIN. It separated the two sections while they were stacked; with the tabs there is
+ * never anything below the visible one, so it was 16dp of the scroll viewport spent on a gap to
+ * nothing. Measured on the Pixel 5a rig: the packs tab came to 320.4dp of content in a 289.5dp
+ * viewport, and this was half of the 31 it was over by. */
 #shop-overlay .shop-section {
     background-color: rgba(0, 0, 0, 0.45);
     border-radius: var(--space-2);
     padding: var(--space-4);
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
 }
 
 /* EXACTLY ONE SECTION IS EVER DISPLAYED, and `display: none` rather than an opacity or a translate
@@ -284,21 +288,34 @@
     align-items: stretch;
 }
 
-/* THREE UP, not two (2026-08-30, #288/#324). At 48% a tile was ~442dp wide on a 920dp landscape
- * phone — half the screen for one pack — while the store was simultaneously starved vertically and
- * left the bottom ~45% of the screen empty. The axis that is scarce here is HEIGHT (411dp); width
- * is the one there is plenty of, so spend it. 31% + a 2% gutter fits three per row with 1% spare. */
+/* THE GUTTER IS space-between, NOT A TRAILING MARGIN. Two tiles at 49% plus a 2% margin each
+ * comes to 102% and wraps to one per row; dropping the last one's margin needs a `:last-child`
+ * USS does not have. Letting the row distribute the 2% leaves no trailing margin to overflow and
+ * no floating-point tie at exactly 100% -- the failure CharacterRosterController.RowSafetyMargin
+ * exists for, one row down. */
+.shop-pack-list {
+    justify-content: space-between;
+}
+
+/* TWO UP, AS BIG AS THE ROW ALLOWS (Sam, 2026-08-31): "we just display it like the card wall,
+ * 2 packs per row, big as possible basically."
+ *
+ * This was `width: 31%` with `min-width: 260px` from the 2026-08-30 pass, whose comment claimed
+ * three per row. It never got three: 31% of the 777.9dp list this measures on a Pixel 5a is
+ * 241.3, BELOW the 260 floor, so the floor clamped it UP and two tiles sat in 551 of 777.9 with
+ * 227dp of dead width on their right. The floors are gone because the percentage is now the whole
+ * answer -- a min-width can only ever fight it.
+ *
+ * The vertical is paid for in .shop-pack__art-rail's ratio, which is the term that moves when this
+ * width does. Read the arithmetic there before changing either. */
 .shop-pack {
-    width: 31%;
-    min-width: 260px;
-    max-width: 360px;
+    width: 49%;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-3);
     padding: var(--space-3);
-    margin-right: 2%;
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
 }
 
 #shop-overlay .shop-pack {
@@ -313,13 +330,30 @@
  * the property does not exist; that claim was true once and is not now. Restored.
  *
  * `flex-shrink: 0` is kept: the ratio gives the rail a height, and without this the rail can still
- * surrender it when the tile's column is over-subscribed. */
+ * surrender it when the tile's column is over-subscribed.
+ *
+ * THE RATIO IS WHAT PAYS FOR `.shop-pack`'s WIDTH, and 3.8 is measured, not chosen. The tile went
+ * 31%-clamped-to-260dp -> 49% on 2026-08-31, which is what Sam asked for -- two per row, as big as
+ * the row allows -- and a wider tile makes a `width: 100%` rail TALLER at a fixed ratio. At the
+ * inherited 3.2 the rail came to 99.4dp and the packs tab overflowed its viewport by 19.0. On the
+ * Pixel 5a rig, after 3.2 -> 3.8 and three 12dp gaps going to 8:
+ *
+ *      viewport 323.4   content 316.2   FITS (7.2 spare)
+ *      tile 381.3 x 245.7      art-rail 326.5 x 85.7
+ *
+ * The rail is BIGGER than it was despite the flatter ratio -- 326.5x85.7 against the old
+ * 236x73.75, 61% more picture -- because the width grew faster than the ratio took back.
+ *
+ * KEEP THE 7dp. It is not slack to spend: the help label above wraps at this width, and a third
+ * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it, and the only
+ * way to know where it lands is to measure -- `Emberfall/Debug/Device DP Rig/Apply`, then read
+ * contentViewport against contentContainer on `#shop-scroll`. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
-    aspect-ratio: 3.2;
+    aspect-ratio: 3.8;
     flex-shrink: 0;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .shop-pack__art-slot {
@@ -360,7 +394,7 @@
 .shop-pack__detail {
     color: var(--ink-2);
     font-size: var(--type-caption);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .shop-pack__actions {
@@ -442,4 +476,13 @@
     border-radius: var(--space-2);
     padding: var(--space-2) var(--space-3);
     margin-top: 0;
+}
+
+/* AN EMPTY STATUS LINE COSTS NOTHING. A Label with no text still reserves its box -- measured at
+ * 32dp of a 411dp panel here, taken straight off the scroll viewport, and the store is empty of
+ * status most of the time it is open. ShopPanelController.SetStatus stamps and clears this; the
+ * UXML ships it on, because the label starts empty. Same band, same fix, as the roster's in
+ * 32dfdb81. */
+.shop-status--empty {
+    display: none;
 }

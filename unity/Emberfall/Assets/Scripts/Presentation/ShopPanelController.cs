@@ -291,9 +291,23 @@ namespace Emberfall.Presentation
             else RenderPacks(ShopCatalog.Packs, null);
         }
 
+        /// <summary>
+        /// The status line, and it COLLAPSES when it has nothing to say.
+        ///
+        /// <para>An empty Label still reserves its box: measured on the Pixel 5a rig, this one held
+        /// 32dp of a 411dp panel permanently, taken straight off the scroll viewport the sections
+        /// have to fit inside. That is the same band CharacterRoster collapsed in <c>32dfdb81</c>
+        /// for the same reason, and the reason it matters more here is that the store's viewport is
+        /// the tighter of the two.</para>
+        ///
+        /// <para>Null-or-whitespace, not null: <see cref="SetWalletUnavailable"/> and the disconnected
+        /// path both clear this by assigning "".</para>
+        /// </summary>
         private void SetStatus(string message)
         {
-            if (_status != null) _status.text = message ?? "";
+            if (_status == null) return;
+            _status.text = message ?? "";
+            Toggle(_status, "shop-status--empty", string.IsNullOrWhiteSpace(_status.text));
         }
 
         /// <summary>Back. The overlay is deliberately left visible: the host decides what
