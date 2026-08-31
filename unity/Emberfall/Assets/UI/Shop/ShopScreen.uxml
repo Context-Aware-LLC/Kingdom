@@ -5,25 +5,29 @@
     <ui:VisualElement name="root" class="emb-root shop-screen">
         <ui:VisualElement name="shop-overlay" class="shop-overlay shop-overlay--hidden emb-bleed">
             <ui:VisualElement name="shop-shell" class="shop-shell">
-                <ui:VisualElement class="shop-header">
-                    <ui:VisualElement class="shop-heading">
-                        <ui:Label text="Shop" class="shop-title"/>
-                        <ui:Label text="Choose a set, then buy with Gold or Gems." class="shop-subtitle"/>
-                    </ui:VisualElement>
-                    <ui:VisualElement class="shop-wallet">
-                        <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
-                        <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
-                    </ui:VisualElement>
+                <!-- ONE BAR, NOT A HEADER (Sam, 2026-08-31). The store's title and subtitle are
+                     gone: a screen you reached by pressing "Shop" does not need to tell you it is
+                     the shop, and on a 411dp landscape phone that pair plus its own padding was
+                     ~96dp of the ~280dp the two sections had to share. What survives is what you
+                     act on -- the two tabs, the wallet, and Back -- in a single row.
+
+                     THE TABS ARE THE SECTION TITLES. Each section's own `shop-section__title`
+                     label was removed rather than duplicated up here; the tab that selects a
+                     section is the only place its name now appears. -->
+                <ui:VisualElement name="shop-bar" class="shop-bar">
+                    <ui:Button name="shop-tab-packs" text="Booster Packs" class="shop-tab shop-tab--on"/>
+                    <ui:Button name="shop-tab-gems" text="Gem Bundles" class="shop-tab"/>
+                    <ui:VisualElement picking-mode="Ignore" class="shop-bar__gap"/>
+                    <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
+                    <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
                     <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
                 </ui:VisualElement>
                 <ui:ScrollView name="shop-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="shop-scroll">
-                    <ui:VisualElement class="shop-section">
-                        <ui:Label text="Booster Packs" class="shop-section__title"/>
+                    <ui:VisualElement name="shop-section-packs" class="shop-section">
                         <ui:Label text="Each pack contains five cards from Core plus its expansion, with at least one Rare or better." class="shop-section__help"/>
                         <ui:VisualElement name="shop-pack-list" class="shop-pack-list"/>
                     </ui:VisualElement>
-                    <ui:VisualElement class="shop-section">
-                        <ui:Label text="Gem Bundles" class="shop-section__title"/>
+                    <ui:VisualElement name="shop-section-gems" class="shop-section shop-section--hidden">
                         <ui:Label text="Gem purchases are coming soon." class="shop-section__help"/>
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>

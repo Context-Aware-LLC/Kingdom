@@ -33,6 +33,10 @@ namespace Emberfall.Presentation
         private readonly VisualElement _overlay;
         private readonly VisualElement _packList;
         private readonly VisualElement _gemList;
+        private readonly VisualElement _packSection;
+        private readonly VisualElement _gemSection;
+        private readonly Button _packTab;
+        private readonly Button _gemTab;
         private readonly Label _gold;
         private readonly Label _gems;
         private readonly Label _status;
@@ -71,6 +75,18 @@ namespace Emberfall.Presentation
             _reveal = new PackRevealPanel(root);
 
             Wire(root, "btn-shop-close", Close);
+
+            _packSection = root.Q<VisualElement>("shop-section-packs");
+            _gemSection = root.Q<VisualElement>("shop-section-gems");
+            _packTab = root.Q<Button>("shop-tab-packs");
+            _gemTab = root.Q<Button>("shop-tab-gems");
+            if (_packTab != null) _packTab.clicked += () => ShowSection(packs: true);
+            if (_gemTab != null) _gemTab.clicked += () => ShowSection(packs: false);
+            // Not a no-op even though the UXML ships the same state: the markup's classes and this
+            // field are two copies of one fact, and a tab bar whose highlight disagrees with what
+            // is on screen is the failure this forecloses. Cheap, and it runs once.
+            ShowSection(packs: true);
+
             RenderDisconnectedCatalog();
         }
 
@@ -287,6 +303,35 @@ namespace Emberfall.Presentation
         {
             _reveal.Hide();
             _onClose();
+        }
+
+        /// <summary>
+        /// Puts exactly one of the two sections on screen and marks the tab that selected it.
+        ///
+        /// <para>Both halves matter and they are one call on purpose. The store is two sections in
+        /// a ScrollView on a 411dp landscape panel whose viewport is ~280dp; stacked, the packs
+        /// section alone came to ~304 and Gem Bundles began below the fold. `flex-grow` cannot
+        /// share a scroller's height — <c>0237a00e</c> measured that a ScrollView's content
+        /// container is sized to its content and that Unity overwrites its flex properties — so
+        /// the section that is not selected has to cost NO height, which is what
+        /// <c>.shop-section--hidden</c>'s `display: none` buys.</para>
+        ///
+        /// <para>Null-tolerant throughout, like the rest of this controller: it queries its
+        /// elements by name and a host is free to supply a tree without them.</para>
+        /// </summary>
+        private void ShowSection(bool packs)
+        {
+            Toggle(_packSection, "shop-section--hidden", !packs);
+            Toggle(_gemSection, "shop-section--hidden", packs);
+            Toggle(_packTab, "shop-tab--on", packs);
+            Toggle(_gemTab, "shop-tab--on", !packs);
+        }
+
+        private static void Toggle(VisualElement element, string className, bool on)
+        {
+            if (element == null) return;
+            if (on) element.AddToClassList(className);
+            else element.RemoveFromClassList(className);
         }
 
         private static void Wire(VisualElement root, string buttonName, System.Action action)

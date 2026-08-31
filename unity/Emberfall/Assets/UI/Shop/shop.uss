@@ -113,31 +113,72 @@
     padding: 0;
 }
 
-.shop-header {
+/* ---------- The bar: tabs, wallet, Back ----------
+ * Replaced `.shop-header` on 2026-08-31. The store's `Shop` title and its subtitle are gone, and
+ * so is the pair of `.shop-section__title` labels below — the tabs carry the section names now.
+ *
+ * WHY, in dp. The Pixel 5a's panel is 914.3 x 411.4. The header cost ~96 of that (a --type-h1
+ * line, a caption under it, 12dp of padding each side and a 16dp margin) and each section spent
+ * another ~30 on a title it did not need, against a scroll viewport of ~280 that the two sections
+ * had to share between them. They never did: the packs section alone came to ~304dp, so Gem
+ * Bundles began below the fold and could only be reached by scrolling.
+ *
+ * TABS, NOT A TALLER SCROLLER, and the reason is measured rather than chosen. `0237a00e` proved
+ * on 2026-08-30 that a ScrollView's content container is sized to its CONTENT and that Unity owns
+ * its flex properties — a live eval setting `flexShrink = 1` was overwritten back to 0 on the next
+ * layout pass. So `flex-grow` on the sections cannot make them share a viewport; there is no
+ * surplus inside a scroller to grow into. The only way both sections fit is for one of them to be
+ * the only one there. */
+.shop-bar {
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-3);
 }
 
-#shop-overlay .shop-header {
+#shop-overlay .shop-bar {
     flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0.55);
     border-radius: 0 0 var(--space-2) var(--space-2);
-    padding: var(--space-3);
-    margin-bottom: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-3);
 }
 
-.shop-heading {
+/* The one element in the bar that may grow, so the tabs stay left and the wallet and Back stay
+ * right without either group being sized. picking-mode is Ignore in the UXML: it spans whatever is
+ * left over between two touch targets and must not swallow a press aimed at either. */
+.shop-bar__gap {
     flex-grow: 1;
 }
 
-.shop-title {
-    color: var(--ink-1);
-    font-size: var(--type-h1);
+/* A tab is the section's name and its selector at once. --on is CONTRAST plus the underline; it
+ * never changes the tab's geometry, so switching tabs cannot reflow the bar. Same rule the class
+ * strip in collection.uss follows. */
+.shop-tab {
+    min-height: var(--touch-min);
+    padding: 0 var(--space-4);
+    border-width: 0;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--ink-2);
+    font-size: var(--type-h2);
     -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-property: color, border-bottom-color;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
 }
 
-.shop-subtitle,
+.shop-tab:hover {
+    color: var(--ink-1);
+}
+
+.shop-tab--on {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+}
+
 .shop-section__help,
 .shop-status {
     color: var(--ink-2);
@@ -145,9 +186,11 @@
     white-space: normal;
 }
 
-.shop-wallet {
-    flex-direction: row;
-    margin-right: var(--space-4);
+/* The two balances are direct children of the bar now -- the `.shop-wallet` row that used to hold
+ * them was one flex level whose only job was grouping, and the bar already lays out in a row. This
+ * carries the separation that wrapper's margin-right used to. */
+.shop-bar .emb-back {
+    margin-left: var(--space-4);
 }
 
 .shop-wallet__balance {
@@ -226,11 +269,12 @@
     margin-bottom: var(--space-4);
 }
 
-.shop-section__title {
-    color: var(--ink-1);
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    margin-bottom: var(--space-1);
+/* EXACTLY ONE SECTION IS EVER DISPLAYED, and `display: none` rather than an opacity or a translate
+ * because a hidden section must cost NO height -- the whole point of the tabs is that the visible
+ * one gets the entire scroll viewport. ShopPanelController owns which; the two are never both on
+ * and never both off. */
+.shop-section--hidden {
+    display: none;
 }
 
 .shop-pack-list,
