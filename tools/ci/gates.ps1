@@ -34,6 +34,14 @@ Push-Location $repo
 $failed = [System.Collections.Generic.List[string]]::new()
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 
+# Stage 2 is ADVISORY and reports PASS on a red suite; these carry what it found down to the
+# summary at the bottom, which is the only part of the run anyone reads. See the long note on
+# Stage 2 -- all of this retires with the LASTEXITCODE reset it exists to compensate for.
+$testRed = 0
+$testTotal = 0
+$testSawSummary = $false
+$testRedNames = [System.Collections.Generic.List[string]]::new()
+
 function Invoke-Stage {
     param([string]$Name, [scriptblock]$Body)
     $t = [System.Diagnostics.Stopwatch]::StartNew()
@@ -105,7 +113,39 @@ if (-not $Quick) {
 # so the stage can fail the run — and cut the same flag out of ci.yml's Stage 2, which carries a
 # copy of this note.
 Invoke-Stage 'Stage 2 · .NET test suites (ADVISORY — see note above)' {
-    dotnet test Emberfall.slnx -c Release --no-build --nologo
+    dotnet test Emberfall.slnx -c Release --no-build --nologo 2>&1 | Tee-Object -Variable testOut
+
+    # THE NAG, and it exists because of the reset at the bottom of this block. That reset makes
+    # this stage print PASS on a red suite, and the failing test names scroll past under a green
+    # header in the middle of a long run -- so the one list that decides when the ADVISORY flag
+    # can go is the list nobody reads. Sam, 2026-08-30: "yep nag is good", "output fail text at
+    # the end of the run".
+    #
+    # It only COLLECTS here. The printing is in the summary block at the bottom of this file,
+    # next to the gate verdict, because that is the part of a 90-second run anyone actually
+    # reads.
+    #
+    # A PARSE THAT MATCHES NOTHING SAYS SO. Never let this report "0 red" because dotnet's
+    # summary line moved -- a fabricated zero retires the flag on a suite nobody checked.
+    #
+    # RETIREMENT TRIGGER: this block and its printer both die with the reset they are about.
+    # When the suite is green and you drop `$global:LASTEXITCODE = 0`, delete the collection
+    # here AND the "STAGE 2" section of the summary in the same commit -- the stage will fail on
+    # its own from then on, and a second voice saying so is noise.
+    foreach ($line in $testOut) {
+        $t = "$line"
+        if ($t -match 'Failed:\s*(\d+),\s*Passed:\s*\d+,\s*Skipped:\s*\d+,\s*Total:\s*(\d+)') {
+            $script:testSawSummary = $true
+            $script:testRed   += [int]$Matches[1]
+            $script:testTotal += [int]$Matches[2]
+        }
+        # The per-test failure lines, so the summary can name them rather than just count them.
+        # Both spellings: VSTest prints "  Failed Name [12 ms]", MTP prints "failed Name".
+        elseif ($t -match '^\s{2,}(?:Failed|failed)\s+(\S.*?)(?:\s+\[[\d.]+\s*m?s\])?\s*$') {
+            $null = $script:testRedNames.Add($Matches[1].Trim())
+        }
+    }
+
     $global:LASTEXITCODE = 0
 }
 
@@ -197,6 +237,33 @@ Pop-Location
 
 Write-Host ""
 Write-Host ("═" * 64) -ForegroundColor DarkGray
+
+# STAGE 2 -- the advisory suite, reported here because its own stage cannot fail and its output
+# scrolled past a hundred lines ago. Retires with the LASTEXITCODE reset in Stage 2; delete both
+# together. Skipped under -Quick, where Stage 2 does not run at all.
+if (-not $Quick) {
+    if (-not $testSawSummary) {
+        Write-Host "STAGE 2  no test summary line matched — dotnet's output format moved." -ForegroundColor Yellow
+        Write-Host "         Fix the parse in Stage 2. Do NOT read this as a green suite." -ForegroundColor Yellow
+        Write-Host ""
+    } elseif ($testRed -gt 0) {
+        Write-Host ("STAGE 2  {0} of {1} tests RED — the stage above still said PASS, by design." -f $testRed, $testTotal) -ForegroundColor Red
+        if ($testRedNames.Count -gt 0) {
+            $testRedNames | Sort-Object -Unique | ForEach-Object { Write-Host "   $_" -ForegroundColor Red }
+        } else {
+            Write-Host "   (names not parsed — scroll up for dotnet's own list)" -ForegroundColor DarkGray
+        }
+        Write-Host  "         At zero: drop the LASTEXITCODE reset in Stage 2, cut the matching flag" -ForegroundColor Red
+        Write-Host  "         from ci.yml Stage 2, and delete this section." -ForegroundColor Red
+        Write-Host ""
+    } else {
+        Write-Host ("STAGE 2  {0}/{0} GREEN. The retirement trigger is DUE: drop the LASTEXITCODE" -f $testTotal) -ForegroundColor Green
+        Write-Host  "         reset in Stage 2, cut the matching flag from ci.yml Stage 2, and delete" -ForegroundColor Green
+        Write-Host  "         this section. Cheaper now than the next person rediscovering it." -ForegroundColor Green
+        Write-Host ""
+    }
+}
+
 if ($failed.Count -eq 0) {
     Write-Host ("ALL GATES PASS  ({0:N1}s)" -f $sw.Elapsed.TotalSeconds) -ForegroundColor Green
     exit 0
