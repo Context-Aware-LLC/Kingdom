@@ -752,8 +752,13 @@
        its left is interior, so it takes the ordinary gutter there. .emb-bleed
        would pad all four by --edge-safe and leave 120px of usable column at the
        420px minimum, which is why this uses the token directly instead of the
-       class. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS. */
-    padding: var(--edge-safe) var(--edge-safe) var(--edge-safe) var(--space-5);
+       class. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS.
+
+       Only the RIGHT spends --edge-safe. The drawer's top and bottom are screen
+       edges with nothing on them -- the cutout is on a side and the gesture bar
+       is hidden (see the token in theme.uss) -- and this is a LIST, so 52 on each
+       cost it 104dp of a 411dp panel, about two deck rows, for nothing. */
+    padding: var(--space-4) var(--edge-safe) var(--space-4) var(--space-5);
     background-color: var(--surface-2);
     border-left-width: 2px;
     border-left-color: var(--accent);
@@ -1188,19 +1193,24 @@
     background-color: rgba(11, 14, 19, 0.82);
 }
 
-/* Inset from all four edges by --edge-safe rather than sized in percentages.
-   The old `left:10% top:8% width:80% height:84%` cleared a 2400px landscape by
-   240 and a 1080px portrait by 108 -- the same aspect drift that had the shard
-   counter landing somewhere different on every device. Offsets on all four sides
-   size it as well as place it, so it fills the safe area exactly and cannot
-   overflow the way `8% + --edge-safe + 84%` would. Declared in
-   audit_edge_safety.py's TOKEN_EXCEPTIONS. */
+/* Inset on all four edges rather than sized in percentages. The old
+   `left:10% top:8% width:80% height:84%` cleared a 2400px landscape by 240 and a
+   1080px portrait by 108 -- the same aspect drift that had the shard counter
+   landing somewhere different on every device. Offsets on all four sides size it
+   as well as place it, so it fills the safe area exactly and cannot overflow the
+   way `8% + --edge-safe + 84%` would. Declared in audit_edge_safety.py's
+   TOKEN_EXCEPTIONS.
+
+   --edge-safe on the SIDES only, and a plain gutter top and bottom, for the
+   reason on the token in theme.uss: the cutout is on a side, the top and bottom
+   measure zero, and 52 on each of them was 104dp of a 411dp panel spent inside a
+   modal whose whole job is to show an illustration at size. 16 matches .mm-modal. */
 .craft-modal {
     position: absolute;
     left: var(--edge-safe);
-    top: var(--edge-safe);
+    top: var(--space-4);
     right: var(--edge-safe);
-    bottom: var(--edge-safe);
+    bottom: var(--space-4);
     background-color: var(--surface-1);
     border-radius: var(--space-3);
     padding: var(--space-6);
