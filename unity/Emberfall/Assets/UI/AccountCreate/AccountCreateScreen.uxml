@@ -37,8 +37,13 @@
         <!-- SIGN IN: email, then the six-digit code that arrives in the reply. No Cancel, no Skip
              and no guest — Sam's 2026-08-08 ruling. The only way out is a session, so this view
              deliberately has nothing that dismisses it. -->
+        <!-- TWO ROWS, and every element as high up the panel as it will go (Sam, 2026-08-30). Both
+             views own a text field, so the IME is open here more often than not, and on the Pixel 5a
+             its top edge lands at roughly 119dp of the 411dp panel. A tall single column puts the
+             thing you are typing into, and the button that accepts it, underneath the keyboard.
+             Row 1 carries the question and the answer; row 2 carries everything secondary. -->
         <ui:VisualElement name="signin-view">
-            <ui:VisualElement class="mm-modal__columns">
+            <ui:VisualElement class="mm-modal__columns mm-row">
                 <ui:VisualElement class="mm-modal__pitch">
                     <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
                     <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
@@ -46,15 +51,17 @@
                 <ui:VisualElement class="mm-modal__form">
                     <ui:TextField name="signin-email" class="mm-modal__field"/>
                     <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
-                    <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
                     <ui:VisualElement class="mm-modal__actions">
                         <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
                         <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
                     </ui:VisualElement>
-                    <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
-                    <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
-                    <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
                 </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="mm-row mm-row--secondary">
+                <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
+                <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
+                <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
+                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -64,21 +71,26 @@
              only here (NOR-246), because this is the one moment the player already holds a live
              session to attach one to. -->
         <ui:VisualElement name="name-view">
-            <ui:VisualElement class="mm-modal__columns">
+            <ui:VisualElement class="mm-modal__columns mm-row">
                 <ui:VisualElement class="mm-modal__pitch">
                     <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
                     <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
                     <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
-                    <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
-                    <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
-                    <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
-                    <ui:Label name="name-error" text=" " class="mm-modal__error"/>
                     <ui:VisualElement class="mm-modal__actions">
                         <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
+            </ui:VisualElement>
+            <!-- ROW 2. The password is optional and AccountCreateController shows or hides these
+                 three by name, so they must keep their names and may not be nested any deeper than
+                 a Q() from the root will reach — which is any depth, but the names are the contract. -->
+            <ui:VisualElement class="mm-row mm-row--secondary">
+                <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
+                <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
+                <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
+                <ui:Label name="name-error" text=" " class="mm-modal__error"/>
             </ui:VisualElement>
         </ui:VisualElement>
 
