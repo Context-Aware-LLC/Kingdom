@@ -913,10 +913,17 @@
  *
  * HEIGHT IS --touch-min AND NOT A DP MORE. The strip is IN FLOW — Sam declined the overlay variant
  * on 2026-08-31 — so every dp here comes out of the wall's viewport, and CardWall's compact tier
- * derives the tile FROM that height: tile = floor((viewport/2 - 8)/16)*16, two rows visible. This
- * band already costs the wall one 16dp tier step. Making it taller costs another, and the ~130dp of
- * width the strip handed back cannot buy it back — tile width is derived from tile height by
- * aspect, so the abundant axis cannot pay for the scarce one.
+ * derives the tile FROM that height: tile = floor((viewport/2 - 8)/16)*16, two rows visible.
+ *
+ * MEASURED at 914.3x411.4dp, before and after, not estimated:
+ *     before   rail 129.9 wide x full height   wall viewport 687.6 x 403.0   tile 137 x 192
+ *     after    rail 761.9 x 48                 wall viewport 817.5 x 350.9   tile 114 x 160
+ * So this band costs the wall TWO 16dp tier steps, not one — about 17% off each tile edge. Making
+ * it taller costs more, and the 129.9dp of width the strip handed back cannot buy any of it back:
+ * tile width is derived from tile height by aspect, so the abundant axis cannot pay for the scarce
+ * one. What the width did buy is a column — 4 before, 5 after — so the wall shows 10 smaller cards
+ * where it showed 8 larger ones. CardWall.MaxColumns (5) is now the binding constraint; 6 columns
+ * fit the measured 817.5dp and are refused by that cap.
  *
  * The horizontal margin is --edge-safe on top of the root's own --space-6, which over-pays the
  * 52dp cutout on purpose: these are the only INTERACTIVE elements that reach the screen's short
