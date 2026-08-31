@@ -243,8 +243,19 @@ namespace Emberfall.Core.Tests.Presentation
             });
         }
 
+        /// <summary>
+        /// Selection is said by CONTRAST, and the strip never changes shape.
+        ///
+        /// <para>This test asserted the opposite until 2026-08-30: nine `.class-tab-frame`
+        /// children and a gold border faded in by `--on`. Sam removed the frame, so the assertion
+        /// is inverted rather than deleted — the failure mode worth guarding is a half-removal, a
+        /// rule with no element or an element with no rule, which renders as nothing and reads as
+        /// working. What survived the inversion is what was never about the frame: nine tabs
+        /// always, `--on` never moving geometry, and the muting that now carries selection alone.
+        /// </para>
+        /// </summary>
         [Test]
-        public void Collection_class_tabs_mark_selection_with_an_inset_frame_without_moving()
+        public void Collection_class_tabs_mark_selection_by_muting_the_others_and_never_move()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
@@ -254,22 +265,17 @@ namespace Emberfall.Core.Tests.Presentation
                 .Where(element => ((string?)element.Attribute("class"))?.Split(' ')
                     .Contains("class-tab_art") == true)
                 .ToArray();
-            Match selected = Regex.Match(styles,
-                @"(?s)\.class-tab_art--on\s*>\s*\.class-tab-frame\s*\{(?<body>.*?)\}");
-            Match frame = Regex.Match(styles, @"(?s)\.class-tab-frame\s*\{(?<body>.*?)\}");
+            Match muted = Regex.Match(styles, @"(?s)\.class-tab_art--muted\s*\{(?<body>.*?)\}");
 
             Assert.Multiple(() =>
             {
                 Assert.That(tabs, Has.Length.EqualTo(9));
-                Assert.That(tabs.All(tab => tab.Elements().Count(element =>
-                    ((string?)element.Attribute("class"))?.Split(' ')
-                        .Contains("class-tab-frame") == true
-                    && (string?)element.Attribute("picking-mode") == "Ignore") == 1), Is.True);
-                Assert.That(frame.Success, Is.True);
-                Assert.That(frame.Groups["body"].Value, Does.Contain("position: absolute"));
-                Assert.That(frame.Groups["body"].Value, Does.Contain("left: 3px"));
-                Assert.That(frame.Groups["body"].Value, Does.Contain("right: 3px"));
-                Assert.That(selected.Groups["body"].Value, Does.Contain("opacity: 1"));
+                Assert.That(uxml, Does.Not.Contain("class-tab-frame"),
+                    "The gold selected frame was removed by ruling; no element may carry it.");
+                Assert.That(styles, Does.Not.Match(@"(?s)\.class-tab-frame\s*\{"),
+                    "A rule for an element nobody applies renders nothing and reads as working.");
+                Assert.That(muted.Success, Is.True);
+                Assert.That(muted.Groups["body"].Value, Does.Contain("opacity:"));
                 Assert.That(styles, Does.Not.Match(@"(?s)\.class-tab_art--on\s*\{.*?translate:"));
                 Assert.That(controller, Does.Contain("bool constrained = _selectedClasses.Count > 0;"));
                 Assert.That(controller, Does.Contain(

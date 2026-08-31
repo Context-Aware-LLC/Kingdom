@@ -4,15 +4,15 @@
     <ui:VisualElement name="root" class="emb-root collection">
         <ui:VisualElement name="body" class="db-body">
             <ui:VisualElement name="class-tab-bar">
-                <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-nightveil" class="class-tab_art class-tab_art-nightveil"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-clockwright" class="class-tab_art class-tab_art-clockwright"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-verdant" class="class-tab_art class-tab_art-verdant"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-tidecaller" class="class-tab_art class-tab_art-tidecaller"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
-                <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"><ui:VisualElement picking-mode="Ignore" class="class-tab-frame"/></ui:VisualElement>
+                <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-nightveil" class="class-tab_art class-tab_art-nightveil"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-clockwright" class="class-tab_art class-tab_art-clockwright"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-verdant" class="class-tab_art class-tab_art-verdant"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-tidecaller" class="class-tab_art class-tab_art-tidecaller"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"></ui:VisualElement>
+                <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"></ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
                 <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll chrome-panel chrome-panel--recessed">
@@ -37,7 +37,7 @@
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:VisualElement class="col-query-row">
-                <ui:TextField name="query-search" class="col-search chrome-input"/>
+                <ui:TextField name="query-search" placeholder-text="Search cards" class="col-search chrome-input"/>
                 <ui:DropdownField name="query-sort" class="col-sort chrome-input"/>
                 <ui:Button name="query-sort-dir" text="Asc" class="db-chip col-sort-dir"/>
                 <ui:Button name="query-reset" text="Reset" class="db-chip"/>
@@ -87,9 +87,13 @@
             </ui:ScrollView>
             <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden chrome-panel chrome-panel--recessed">
                 <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
+                <!-- Identity is a ROW: the two names on the left, the count on the right. It was a
+                     stack, and the count's own line box cost this column ~33dp it does not have. -->
                 <ui:VisualElement class="deck-editor__identity">
-                    <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
-                    <ui:Label name="deck-name" text="" class="deck-editor__name"/>
+                    <ui:VisualElement class="deck-editor__naming">
+                        <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
+                        <ui:Label name="deck-name" text="" class="deck-editor__name"/>
+                    </ui:VisualElement>
                     <ui:Label name="count-label" text="0 / 30" class="db-count"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve"/>

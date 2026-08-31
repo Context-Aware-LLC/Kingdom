@@ -250,21 +250,32 @@ def pass2_structure():
     Returns (used, root_indent). `used` maps class -> [(file, line, classes,
     indent)]. `root_indent` maps file -> the indent of its .emb-root, derived per
     file rather than assumed: the screens do not all put the root at one depth.
+
+    EVERY class="..." ON THE LINE, not the first. This was re.search until
+    2026-08-30, and a UXML line carrying two elements -- a parent and a child
+    written inline, which is how the nine class tabs were authored -- hid the
+    SECOND one completely. PASS 4 then reported .class-tab-frame as "unused - no
+    UXML or C# applies it" while the UXML applied it nine times, which is a
+    verdict that reads like permission to delete a live class. Nothing about the
+    output said the class had been dropped rather than examined.
+
+    `indent` is per LINE, so co-authored elements share the parent's depth. That
+    is an approximation, and it is the right one: PASS 4 uses indent to ask
+    whether a rule sits at screen level or inside a panel, and an element written
+    inline with its parent is by construction inside it.
     """
     _head(2, 'STRUCTURE - class usage and depth in %s/**/*.uxml' % UI)
     used, root_indent, sites = {}, {}, 0
     for f in _files(UI, 'uxml'):
         for i, line in enumerate(_read(f).split('\n'), 1):
-            m = re.search(r'class="([^"]*)"', line)
-            if not m:
-                continue
-            classes = m.group(1).split()
             indent = len(line) - len(line.lstrip())
-            sites += 1
-            for c in classes:
-                used.setdefault(c, []).append((f, i, classes, indent))
-            if ROOT_CLASS in classes:
-                root_indent[f] = indent
+            for m in re.finditer(r'class="([^"]*)"', line):
+                classes = m.group(1).split()
+                sites += 1
+                for c in classes:
+                    used.setdefault(c, []).append((f, i, classes, indent))
+                if ROOT_CLASS in classes:
+                    root_indent[f] = indent
     for f in sorted(root_indent):
         print('   %-52s .%s at indent %d'
               % (_short(f, 'Assets/UI/'), ROOT_CLASS, root_indent[f]))

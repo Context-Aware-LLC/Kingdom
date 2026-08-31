@@ -4,9 +4,9 @@ name: Emberfall CI — determinism gates
 # (ci-gates.md §7 Q1), so the hard gates run as pure .NET, license-free:
 #
 #   Stage 1  Lint                                      BLOCKING   (dotnet format)
-#   Stage 2  Core unit tests              ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
-#   Stage 3  Contract / interface tests   ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
-#   Stage 3b Collection + CardValidation  ARCHIVED 2026-08-18 (a9eaa0e3) — no step runs here
+#   Stage 2  .NET test suites             BLOCKING as of 2026-08-24 (returned a9eaa0e3→2026-08-24)
+#   Stage 3  Contract / interface tests   FOLDED INTO Stage 2 — one `dotnet test Emberfall.slnx`
+#   Stage 3b Collection + CardValidation  FOLDED INTO Stage 2, minus the card-authoring block
 #   Stage 4  Determinism + asm firewall   BLOCKING   (criterion 7 — zero UnityEngine, no float-in-state)
 #   Stage 5  Golden-replay (R1 gate)      ARCHIVED 2026-08-18 with its fixtures — Stage 5b covers determinism now
 #   Stage 5b Networked AI soak            ADVISORY as of NOR-189 (was BLOCKING/EF-077; see step for why)
@@ -21,7 +21,9 @@ name: Emberfall CI — determinism gates
 #    listed only so its absence is deliberate rather than discovered. Checked 2026-08-22 by
 #    counting steps per stage — 2/3/3b/5 had none while the map still called all four BLOCKING,
 #    which is how Stage 4 stayed "blocking" for four days with nothing behind it. If you archive a
-#    stage, edit the map in the same commit.
+#    stage, edit the map in the same commit — AND IF YOU BRING ONE BACK. Re-counted 2026-08-30:
+#    Stage 2 has run as a real, blocking step since 2026-08-24 while this map still called it
+#    archived with no step, which is the same drift in the opposite direction.
 #    Runs on Linux x64 on purpose: baking the golden fixtures on a
 #    Windows dev box and asserting them on a Linux runner proves the little-endian, platform-independent
 #    canonical hash (golden-replay.md §4.4).

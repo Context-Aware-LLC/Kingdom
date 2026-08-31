@@ -42,10 +42,13 @@
     flex-direction: row;
 }
 
+/* Vertical padding is HALF the horizontal. This panel's height is the viewport LayoutDeckStrip
+ * divides between rows, so 16dp top and bottom is 32dp of deck picture on a 411dp landscape
+ * phone; the sides cost nothing, because width is the axis with room to spare. */
 .roster-panel {
     background-color: var(--surface-2);
     border-radius: var(--space-2);
-    padding: var(--space-4);
+    padding: var(--space-2) var(--space-4);
 }
 
 .roster-panel--list {
@@ -197,7 +200,10 @@
     flex-grow: 1;
     flex-direction: row;
     flex-wrap: nowrap;
-    padding: var(--space-2) var(--space-4) var(--space-3) var(--space-4);
+    /* Vertical halved 2026-08-30: this padding is RowChrome, subtracted from every row's share of
+     * the viewport. Keep CharacterRosterController.RowChrome in step with it -- its docstring
+     * carries the sum. */
+    padding: var(--space-1) var(--space-4) var(--space-2) var(--space-4);
     overflow: hidden;
 }
 
@@ -208,7 +214,10 @@
     flex-shrink: 0;
     align-items: center;
     margin: 0 var(--space-3) 0 0;
-    padding: var(--space-2);
+    /* Halved 2026-08-30. This padding is charged TWICE: horizontally it is
+     * CharacterRosterController.PlateChrome, vertically it is part of RowChrome. Move it and both
+     * constants move with it. */
+    padding: var(--space-1);
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
@@ -539,10 +548,21 @@
     margin-bottom: var(--space-2);
 }
 
+/* THE STATUS LINE IS NOT LAID OUT UNTIL IT HAS SOMETHING TO SAY. It is a sibling of the roster
+ * ScrollView, so its 24dp floor plus its 8dp top margin came straight off the VIEWPORT the deck
+ * plates are solved against -- 32 of ~283dp, permanently, for a Label that is empty on every
+ * screen a player ever sees. `visibility: hidden` would not do it; only display: none takes an
+ * element out of the layout. CharacterRosterController.SetStatus owns the modifier: a message
+ * turns it on, an empty one turns it back off. */
 .roster-status {
+    display: none;
     color: var(--ink-2);
     margin-top: var(--space-2);
     margin-bottom: 0;
+}
+
+.roster-status--on {
+    display: flex;
 }
 
 .roster-status--error {
@@ -645,8 +665,16 @@
 }
 
 /* ---- Character creation ---------------------------------------------------------------------- */
+/* THIS SCREEN AUTHORS ITS OWN VERTICAL GUTTER, and has to. `.emb-bleed` is its only inset and
+ * `.emb-bleed` is `0 var(--edge-safe)` since 568d6b33 -- the cutout is on a SIDE, so the class
+ * deliberately no longer imposes a top or bottom (see the token's note in theme.uss). Nothing
+ * else in the picker column has a top margin, so without these two the Cancel button in
+ * `.create-picker-header` sits at y=0 and clips its own top corners. LONGHANDS, not a `padding`
+ * shorthand: the shorthand would re-set the horizontal padding `.emb-bleed` is here to supply. */
 .character-create-screen {
     flex-grow: 1;
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
     background-color: var(--surface-1);
     color: var(--ink-1);
     justify-content: center;
@@ -688,20 +716,29 @@
 
 /* Fixed columns keep all eight choices predictable on a short landscape phone. The picker has
  * no wrapping, geometry callbacks, inline dimensions, portraits, badges, or nested hit targets. */
+/* align-items: STRETCH is what makes the columns full height, and it is the declaration the dead
+ * space was hiding behind. This is a ROW, so align-items is its CROSS axis: at `center` each
+ * column sized to its four buttons and was centred, which meant the column's own
+ * `justify-content` had no surplus to distribute and could never have had any. The two bands of
+ * nothing above and below the list were that, not an absence of sizing rules on the buttons. */
 .hero-choice-list {
     flex-grow: 1;
     min-height: 0;
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
 }
 
+/* space-evenly, not center (Sam, 2026-08-30). Four content-sized buttons centred in a full-height
+ * column left the surplus as one ~65dp band above and ~110dp below -- dead space at the top and
+ * bottom of the screen rather than air between the things you are choosing between. Evenly spends
+ * it as equal gaps, including the outer two, so the column reads as a list rather than a clump. */
 .hero-choice-column {
     flex-grow: 1;
     max-width: 420px;
     margin-left: var(--space-2);
     margin-right: var(--space-2);
-    justify-content: center;
+    justify-content: space-evenly;
 }
 
 /* The colours are HERE, not on a --ghost modifier, because these buttons carry `roster-button`
@@ -711,10 +748,24 @@
  *
  * The class-coloured spine is the same language a character row uses, and it is the only thing
  * distinguishing one choice from another until the picker gets art (#312). */
+/* flex-grow: 1 with flex-basis: 0 -- the buttons take an equal share of the column's height rather
+ * than sizing to their label, so the surplus goes INTO the targets. Sam, 2026-08-30: bigger is
+ * better but the space is what it is, so this spends the surplus rather than chasing a size.
+ *
+ * THE max-height IS WHAT LEAVES ANY GAPS AT ALL. flex-grow and the column's space-evenly compete
+ * for the same surplus and flex-grow resolves first: uncapped, four buttons eat the column's ~367dp
+ * whole, land at ~92dp each, touch edge to edge, and space-evenly distributes nothing. 72 is 1.5x
+ * --touch-min, so the buttons grow half again and ~79dp is left for space-evenly to spend as five
+ * equal gaps. Raise this and you are trading the air between the choices for taller choices.
+ *
+ * min-height stays as the floor for a screen with no surplus; margin-bottom is gone because
+ * space-evenly owns the gaps now and the two would compound. */
 .hero-choice {
     align-self: stretch;
+    flex-grow: 1;
+    flex-basis: 0;
+    max-height: 72px;
     min-height: var(--touch-min);
-    margin-bottom: var(--space-2);
     color: var(--ink-1);
     background-color: var(--surface-2);
     border-left-width: 6px;

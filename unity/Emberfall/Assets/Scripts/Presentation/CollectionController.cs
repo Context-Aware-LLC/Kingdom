@@ -117,6 +117,7 @@ namespace Emberfall.Presentation
         private VisualElement _deckEditor;
         private Label _drawerTitle;
         private Label _drawerSubtitle;
+        private Button _manageDecksButton;
         private Label _deckCharacterName;
         private Label _deckName;
         private bool _queryDrawerOpen;
@@ -338,6 +339,7 @@ namespace Emberfall.Presentation
             _drawerSubtitle      = _root.Q<Label>("deck-drawer-subtitle");
             _deckCharacterName   = _root.Q<Label>("deck-character-name");
             _deckName            = _root.Q<Label>("deck-name");
+            _manageDecksButton   = _root.Q<Button>("manage-decks-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -712,6 +714,12 @@ namespace Emberfall.Presentation
         {
             _deckChooser?.EnableInClassList("deck-chooser--hidden", editor);
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
+            // "Manage Characters & Decks" leaves the collection entirely, so it belongs to the
+            // CHOOSER pane, not to editing one deck's thirty. Editing already has two ways out
+            // ("<- All decks" and Close), and on a 411dp landscape panel this button plus its
+            // margin was 68dp -- most of the height the deck list itself was missing.
+            if (_manageDecksButton != null)
+                _manageDecksButton.style.display = editor ? DisplayStyle.None : DisplayStyle.Flex;
             if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";
             if (_drawerSubtitle != null)
                 _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";
