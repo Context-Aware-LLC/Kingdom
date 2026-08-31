@@ -173,6 +173,14 @@
    behind that list — the tint multiplies, so white is the only authoring that works for all of
    them. A use with no tint fades to white and is obviously wrong on sight.
 
+   ITS .meta's PLATFORM OVERRIDES ARE UNITY'S, NOT OURS, and trying to own them is wasted work.
+   The file was authored RGBA32/uncompressed on Standalone, Android and iOS to keep block
+   compression off a vertical alpha ramp — and Unity's first import silently rewrote all three
+   back to its own defaults (2048 / DXT5 / ASTC, compression on). A hand-edited platform override
+   block in a .meta does not survive the importer; only the Inspector or an AssetPostprocessor
+   makes one stick. So the shipped texture IS compressed. Watch this fade for banding on a device
+   before assuming otherwise, and if it bands, fix it through the importer rather than the YAML.
+
    IT IS NOT SELF-POSITIONING. `position: absolute` inside a ScrollView scrolls WITH the content,
    so this element is a sibling of the ScrollView inside a `position: relative` frame, never a
    child of it. `.deck-chooser-frame` in collection.uss is the worked example.
