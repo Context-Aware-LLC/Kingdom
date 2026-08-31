@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\src\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Net.Server\Emberfall.Net.Server.csproj" />
+    <ProjectReference Include="..\..\src\Emberfall.Tools.NetSoak\Emberfall.Tools.NetSoak.csproj" />
     <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
     <ProjectReference Include="..\Emberfall.Core.Tests\Emberfall.Core.Tests.csproj" />
   </ItemGroup>
