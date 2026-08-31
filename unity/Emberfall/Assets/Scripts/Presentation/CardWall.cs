@@ -373,6 +373,25 @@ namespace Emberfall.Presentation
             float outer = Mathf.Max(0f,
                 (available - columns * tileWidth - (columns - 1) * gutter) * 0.5f);
 
+            // ONLY ON A TIER CHANGE, so this is a handful of lines per screen rather than per frame
+            // (Layout runs on every GeometryChangedEvent). It exists because the wall's size is
+            // solved from the LIVE viewport and nothing else in the build reports what that viewport
+            // actually was -- a question that cost a session on 2026-08-31, when a second row began
+            // clipping on device and the only numbers available were from an offscreen harness that
+            // measured a DIFFERENT viewport than the device had.
+            //
+            // `rows` is the diagnostic that matters. TargetVisibleRows fill the viewport TO THE
+            // PIXEL by design (ResolveTileTier spends the quantiser's remainder as pitch), and there
+            // is no vertical equivalent of RowSafetyMargin, so a value at or a hair over
+            // TargetVisibleRows is the clipping case: the last row has nothing to round into.
+            if (tierChanged)
+            {
+                float pitch = tileHeight + verticalMargin;
+                Debug.Log($"[CardWall] tier {tileWidth:F0}x{tileHeight:F0} · viewport "
+                          + $"{available:F1}x{viewportHeight:F1} · columns {columns} · pitch "
+                          + $"{pitch:F2} · rows {(viewportHeight / pitch):F3} · gutter {gutter:F1}");
+            }
+
             for (int i = 0; i < _visible.Count; i++)
             {
                 if (!_tiles.TryGetValue(_visible[i].Id, out var tile)) continue;

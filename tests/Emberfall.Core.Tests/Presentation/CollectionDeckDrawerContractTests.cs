@@ -172,13 +172,19 @@ namespace Emberfall.Core.Tests.Presentation
                     "The transparent full-width actions wrapper must not intercept the ribbon click.");
                 Assert.That(ribbon.Success, Is.True);
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("position: absolute"));
-                Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 50%"));
+                // Hangs from the top-LEFT, the edge its drawer now arrives from. It was centred
+                // (left: 50%; translate: -50% 0) while the drawer came down across the full width.
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 0"));
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 56px"));
-                Assert.That(ribbon.Groups["body"].Value, Does.Contain("translate: -50% 0"));
                 Assert.That(toolbar.Success, Is.True);
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("position: absolute"));
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("left: var(--edge-safe)"));
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("right: var(--edge-safe)"));
+                // The class rail is IN FLOW above the wall as of 2026-08-31 and this overlay is
+                // positioned against the screen ROOT, so a top:0 here paints over the nine tabs and
+                // eats their taps. Nothing about the rail's own styling would reveal that.
+                Assert.That(toolbar.Groups["body"].Value, Does.Contain("top: var(--touch-min)"),
+                    "The toolbar overlay must clear the in-flow class rail, not paint over it.");
                 Assert.That(styles, Does.Match(
                     @"(?s)\.collection\.emb-sw-medium \.col-button--filters\s*\{.*?height:\s*64px;"));
                 Assert.That(styles, Does.Match(
@@ -193,38 +199,73 @@ namespace Emberfall.Core.Tests.Presentation
             });
         }
 
+        /// <summary>
+        /// <para>THE SCROLLVIEW IS THE WHOLE POINT OF THIS TEST. Stacked in a ~420dp column the
+        /// filter controls come to roughly 668dp against a 411dp panel, so the drawer overflows by
+        /// more than half a screen and the bottom chip families are simply unreachable without a
+        /// scroll. On a desk-sized Game View the drawer is short enough to look finished, which is
+        /// exactly how a deleted ScrollView would survive review.</para>
+        /// <para>This test used to assert the OPPOSITE and it was right to: while the drawer slid
+        /// down across the full width, the rows were laid out ACROSS it, came to at most 332dp, and
+        /// the 79dp remainder was the outside-tap target that closed it. Both the 56px group margins
+        /// that centred those rows in the forged brackets' bay, and the brackets themselves, went
+        /// with the top drawer on 2026-08-31 — see collection.uss. The outside-tap target is now the
+        /// wall to the RIGHT of the drawer, which needs no arithmetic to stay true.</para>
+        /// </summary>
         [Test]
-        public void Collection_compact_query_drawer_leaves_an_outside_tap_target_visible()
+        public void Collection_left_query_drawer_must_scroll_because_its_rows_overflow_the_panel()
         {
+            string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
             string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+            XDocument document = XDocument.Parse(uxml);
+            XElement queryBar = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "query-bar");
 
-            const float phonePanelWidth = 914.3f;
             const float phonePanelHeight = 411.4f;
+            const float drawerMinWidth = 420f;
             const float edgeSafe = 52f;
-            const float compactGroupMargin = 56f;
+            const float interiorGutter = 24f;
             const float compactControlHeight = 52f;
             const float rowMarginBottom = 8f;
             const float drawerVerticalPadding = 32f;
 
-            float chipRowWidth = phonePanelWidth - 2f * edgeSafe - 2f * compactGroupMargin;
-            float rarityRowWidth = 4f * (128f + 8f);
-            float typeRowWidth = 3f * (128f + 8f);
-            float costRowWidth = 8f * (60f + 8f);
-            float drawerHeight = drawerVerticalPadding
-                + 2f * (compactControlHeight + rowMarginBottom)
-                + 3f * (compactControlHeight + rowMarginBottom);
+            // Chips wrap inside the drawer's content width rather than running off a full-width bar.
+            float contentWidth = drawerMinWidth - edgeSafe - interiorGutter;
+            float wideChipsPerRow = MathF.Floor(contentWidth / (128f + 8f));
+            float costChipsPerRow = MathF.Floor(contentWidth / (60f + 8f));
+            float rarityRows = MathF.Ceiling(4f / wideChipsPerRow);
+            float typeRows = MathF.Ceiling(3f / wideChipsPerRow);
+            float costRows = MathF.Ceiling(8f / costChipsPerRow);
+
+            // search + sort + sort-dir + reset now stack, then the scope row, then three chip groups.
+            float stackedHeight = drawerVerticalPadding
+                + 5f * (compactControlHeight + rowMarginBottom)
+                + (rarityRows + typeRows + costRows) * compactControlHeight
+                + 3f * rowMarginBottom;
 
             Assert.Multiple(() =>
             {
+                Assert.That(wideChipsPerRow, Is.GreaterThanOrEqualTo(2f),
+                    "A chip family that cannot fit two chips per row is a column of chips, not a row.");
+                Assert.That(stackedHeight, Is.GreaterThan(phonePanelHeight),
+                    "If the rows ever fit the panel, this drawer no longer needs its ScrollView "
+                    + "and this test is measuring nothing.");
+                Assert.That(queryBar.Elements().Any(element =>
+                    (string?)element.Attribute("name") == "query-scroll"), Is.True,
+                    "The overflowing rows must live in a ScrollView or the last chip family is unreachable.");
+                Assert.That(queryBar.Elements().Any(element =>
+                    ((string?)element.Attribute("class"))?.Split(' ')
+                        .Contains("emb-scroll-fade") == true), Is.True,
+                    "Scrollbars are hidden game-wide, so the fade is the only 'there is more' signal — "
+                    + "and it must be the ScrollView's SIBLING or it scrolls away with the content.");
                 Assert.That(styles, Does.Match(
-                    @"(?s)\.col-query-utility-row\s*\{.*?margin-left:\s*56px;.*?margin-right:\s*56px;"));
+                    @"(?s)\.col-query-scroll\s*\{.*?min-height:\s*0;"),
+                    "Without min-height:0 the ScrollView floors on its content and pushes the "
+                    + "overflow straight back out of the drawer.");
                 Assert.That(styles, Does.Match(
-                    @"(?s)\.col-chip-group\s*\{.*?margin-left:\s*56px;.*?margin-right:\s*56px;"));
-                Assert.That(styles, Does.Match(
-                    @"(?s)\.col-query-bracket--left\s*\{\s*left:\s*0;\s*\}"));
-                Assert.That(styles, Does.Match(
-                    @"(?s)\.col-query-bracket--right\s*\{\s*right:\s*0;\s*\}"));
+                    @"(?s)\.col-query__fade\s*\{.*?-unity-background-image-tint-color:"),
+                    "The shared fade ramp is white; untinted it fades the filter list to white.");
                 Assert.That(styles, Does.Match(
                     @"(?s)\.collection \.db-chip\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
                 Assert.That(styles, Does.Match(
@@ -235,11 +276,6 @@ namespace Emberfall.Core.Tests.Presentation
                     @"(?s)\.chrome-input\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
                 Assert.That(controller, Does.Contain(
                     "_queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));"));
-                Assert.That(rarityRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
-                Assert.That(typeRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
-                Assert.That(costRowWidth, Is.LessThanOrEqualTo(chipRowWidth));
-                Assert.That(drawerHeight, Is.LessThan(phonePanelHeight),
-                    "The open drawer must leave some scrim exposed for the outside-tap close path.");
             });
         }
 

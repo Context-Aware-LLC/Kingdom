@@ -111,6 +111,35 @@ namespace Emberfall.Editor
         /// regardless of whatever the Editor's per-user overrides happen to be.  The keystore
         /// is the checked-in debug config at <c>keystore/debug.keystore</c>; never use it
         /// for Play Store submissions.</para>
+        ///
+        /// <para><b>ARM64 is not a preference and there is no x86_64 build to reach for.</b>
+        /// Unity 6000.5.1f1 ships no Android x86_64 runtime — <c>Variations/il2cpp/Release/Libs</c>
+        /// holds <c>arm64-v8a</c>, <c>armeabi-v7a</c> and <c>armv9</c> and nothing else — so
+        /// setting <c>AndroidArchitecture.X86_64</c> leaves the architecture set empty and the
+        /// build dies in <c>PrepareForBuild</c> with <i>"Target architecture not specified"</i>,
+        /// a message that names neither x86_64 nor the missing libs. The enum member still
+        /// exists, which is what makes this look available.</para>
+        ///
+        /// <para><b>THE EMULATOR IS STILL A TEST RIG, and the paragraph that used to stand here
+        /// saying otherwise was WRONG (corrected 2026-08-31, Sam: "I run this all the time on the
+        /// emulator").</b> It reasoned from the missing x86_64 libs straight to "no APK this repo
+        /// can produce will install on an AVD", and that step does not follow: a modern x86_64
+        /// system image TRANSLATES arm64. Measured on the Pixel_7 AVD (API 36.1,
+        /// google_apis_playstore/x86_64) the same minute the claim was removed:</para>
+        /// <code>
+        /// ro.product.cpu.abilist        = x86_64,arm64-v8a   &lt;- advertises arm64
+        /// ro.dalvik.vm.isa.arm64        = x86_64             &lt;- arm64 mapped onto x86_64
+        /// ro.enable.native.bridge.exec  = 1
+        /// adb install -r Emberfall.apk  -> Success
+        /// </code>
+        /// <para>So an arm64-v8a APK installs and runs there. The x86_64 paragraph above is about
+        /// what Unity can BUILD and remains true; it says nothing about what an AVD can RUN, and
+        /// conflating the two cost a session. Native-bridge translation arrived in the API 30 era,
+        /// so any reasonably current image has it — check <c>abilist</c> rather than assuming
+        /// either way.</para>
+        /// <para>RETIREMENT TRIGGER: if <c>ro.product.cpu.abilist</c> on the project's AVD stops
+        /// listing <c>arm64-v8a</c> (an older or non-Google image), the emulator stops being a rig
+        /// and this paragraph, plus the emulator note in project memory, change together.</para>
         /// </summary>
         [MenuItem("Emberfall/Build/Android APK (content + player, IL2CPP ARM64)")]
         public static void BuildAndroid()

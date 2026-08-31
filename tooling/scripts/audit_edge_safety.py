@@ -110,10 +110,18 @@ TOKEN_EXCEPTIONS = {
         'offsets on all four sides size it as well as place it; .emb-edge on top '
         'of its old percentages overflowed (8% + 150 + 84% > 1080)',
     'col-query':
-        'spans left:0..right:0 at screen level, so it takes the token HORIZONTALLY '
-        'and the ordinary gutter top and bottom; the Pixel 5a insets measured over '
-        'USB are [136,0][0,63] / [0,0][136,63], so left/right flip and the TOP is 0 '
-        'in both landscape rotations, which is the only orientation this game has',
+        'a LEFT drawer since 2026-08-31 (it slid down from the top until then), so its '
+        'left IS a screen edge and takes the token while its right is interior and '
+        'takes the ordinary gutter; the Pixel 5a insets measured over USB are '
+        '[136,0][0,63] / [0,0][136,63], so left/right flip and the TOP is 0 in both '
+        'landscape rotations, which is the only orientation this game has, and the 63 '
+        'at the bottom is the hidden gesture bar',
+    'class-tab-bar':
+        'the nine class tabs are the only INTERACTIVE elements that reach the screen\'s '
+        'short edges. It is a flow child of the root, so it spends the token as a MARGIN '
+        'on top of the root\'s own --space-6 -- deliberately over-paying the 52dp cutout, '
+        'because unlike the wall\'s forged frame (decoration that bleeds on purpose) a tab '
+        'under the hole-punch is a dead touch target',
 }
 
 # Screen ROOTS that deliberately run edge to edge, keyed by the root's own screen
@@ -132,8 +140,10 @@ ROOT_EXCEPTIONS = {
         ['mm-shard-balance', 'mm-identity', 'mm-footer']),
     'collection': (
         'the card wall is the background layer and bleeds by ruling (the wall is headerless, '
-        '2026-08-18); the controls are an absolute overlay that spends the token itself',
-        ['col-query-toolbar', 'col-query', 'craft-modal']),
+        '2026-08-18); the controls are an absolute overlay that spends the token itself, and '
+        'the class rail -- the one piece of FLOW chrome at this root since 2026-08-31 -- '
+        'spends it as a margin',
+        ['col-query-toolbar', 'col-query', 'craft-modal', 'class-tab-bar']),
     'pack-reveal-screen': (
         'the root holds only a backdrop; every reveal is inside the overlay',
         ['reveal-overlay']),
@@ -171,20 +181,6 @@ ELEMENT_INTERNAL = {
         'parents both to .col-filter-ribbon__chevron inside the #query-toggle Button, and '
         'their offsets are against that 22x12 box. Font-independent by design — the glyph '
         'they replace was a missing character',
-    'col-query-bracket':
-        'the decorative frame INSIDE the query bar; CollectionScreen.uxml:63 and :68 parent '
-        'both to #query-bar, not to .emb-root, and both carry picking-mode="Ignore". This '
-        'rule holds only the top/bottom offsets, which are against that bar',
-    'col-query-bracket--left':
-        'non-pickable decorative upper leg inside #query-bar; it intentionally paints to the '
-        'panel edge while interactive content remains inside the parent panel safe padding',
-    'col-query-bracket--right':
-        'matched non-pickable decorative upper leg inside #query-bar; same intentional bleed',
-    'col-query-bracket__piece':
-        'the three pieces of the decorative bracket frame INSIDE the query bar; '
-        'CollectionScreen.uxml:63-72 parents all six to .col-query-bracket, which is '
-        'itself inside .col-query and carries picking-mode="Ignore". Their offsets are '
-        'against that bracket, so --edge-safe would push them off the bay they draw',
     'craft-illustration-scrim':
         'the scrim over the craft modal\'s backdrop illustration; '
         'CollectionScreen.uxml:121 parents it to #craft-modal, which already spends '
