@@ -45,10 +45,22 @@ namespace Emberfall.Presentation
     /// <para><b>The gate only closes when there is a project to sign into.</b>
     /// <see cref="IsRequired"/> is false on a build with no <c>SupabaseAuthSettings</c> asset, because
     /// gating a player behind a sign-in that cannot succeed is a locked door with no key — the game
-    /// would simply not start. It arms itself the moment that asset lands, with no code change.
-    /// RETIREMENT TRIGGER: when the Supabase project is provisioned and the asset is committed, this
-    /// paragraph and the unconfigured branch in <see cref="Open"/> stop being hypothetical — re-read
-    /// them and confirm the boot still behaves the way you want on a device with no network.</para>
+    /// would simply not start. It arms itself the moment that asset lands, with no code change.</para>
+    ///
+    /// <para><b>THAT TRIGGER FIRED, and the answer was no (2026-08-30, #329).</b> The asset is
+    /// committed — <c>Assets/Resources/SupabaseAuthSettings.asset</c> carries a real project URL and
+    /// publishable key — so <see cref="IsRequired"/> now returns true on any device without a
+    /// session, and the boot did NOT behave the way anyone wanted. It was not the unconfigured
+    /// branch that bit: it was the one below it. The view lookup had been commented out in the
+    /// 2026-08-25 move to a scene, so <c>_modal</c> was permanently null, <see cref="Open"/> took
+    /// its "view is missing" escape hatch on every launch, and the unskippable gate skipped itself
+    /// every single time — invisibly, because that path logs nothing and looks like success.
+    ///
+    /// The visible symptom was not a missing sign-in screen. It was an infinite MainMenu →
+    /// AccountCreate bounce at four cycles a second, which only appeared once a player had a display
+    /// name, because until then the name step was what stopped the hand-back. <b>An escape hatch
+    /// that continues past a gate must also stop the gate reporting itself as outstanding</b>, or
+    /// the caller that routed on it routes for ever; that is what <see cref="Skipped"/> is.</para>
     ///
     /// <para><b>Unskippable sign-in means the game needs a network to start, Single Player included.</b>
     /// That is the accepted price of the ruling, not an oversight. It is why an offline first launch
@@ -94,7 +106,12 @@ namespace Emberfall.Presentation
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
 
-            // _modal = root.Q<VisualElement>("signin-modal");
+            // THE GATE'S OWN VIEW. `signin-view`, not `signin-modal`: first run became a SCENE on
+            // 2026-08-25 and the .mm-modal overlay was replaced by two sibling views. This lookup
+            // was commented out in that move rather than renamed, which left this field readonly,
+            // permanently null, and every Open() falling into the "view is missing" escape hatch
+            // below -- so the unskippable gate silently skipped itself on every launch. #329.
+            _modal = root.Q<VisualElement>("signin-view");
             _title = root.Q<Label>("signin-title");
             _help = root.Q<Label>("signin-help");
             _emailField = root.Q<TextField>("signin-email");
@@ -106,11 +123,14 @@ namespace Emberfall.Presentation
             _googleButton = root.Q<Button>("btn-signin-google");
             _or = root.Q<VisualElement>("signin-or");
 
-            // if (_modal == null)
-            // {
-            //     Debug.LogError("[SignIn] signin-modal is not in the UXML; the sign-in gate cannot open.");
-            //     return;
-            // }
+            // Loud, and it does NOT return: every lookup above is null-safe and every handler below
+            // is registered with `?.`, so a partially-authored screen still wires up whatever it
+            // does have. What a missing view costs is Open(), which says so itself.
+            if (_modal == null)
+            {
+                Debug.LogError("[SignIn] signin-view is not in the UXML; the sign-in gate cannot " +
+                               "open and this launch will proceed unsigned. See #329.");
+            }
 
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));
@@ -168,7 +188,26 @@ namespace Emberfall.Presentation
         /// <para>False on a build with no Supabase project — see the type remarks for why that is the
         /// only safe answer and not a hole in the ruling.</para>
         /// </summary>
-        public bool IsRequired => _auth.IsConfigured && !_auth.IsSignedIn;
+        /// <summary>
+        /// A gate that gave up and let the launch through unsigned, for THIS PROCESS.
+        ///
+        /// <para>Static and one-way on purpose. It is not a preference and it is not persisted: it
+        /// records that some screen could not present the gate on this run, and it must outlive the
+        /// controller that discovered it because the component that has to act on it — MainMenu — is
+        /// a different instance in a different scene, rebuilt on every load.</para>
+        ///
+        /// <para>Without it, "the gate is required" and "the gate can be presented" are independent
+        /// facts that no single component can reconcile, which is exactly the shape of #329: MainMenu
+        /// forever dispatching to a screen that forever hands back. Anything that skips the gate
+        /// must set this in the same breath.</para>
+        /// </summary>
+        public static bool Skipped { get; private set; }
+
+        /// <summary>True when this build has a project to sign into and no session yet — AND the gate
+        /// has not already given up this run. See <see cref="Skipped"/>: a required gate that cannot
+        /// be presented must stop reporting itself as outstanding, or every caller that routes on
+        /// this property routes in a circle.</summary>
+        public bool IsRequired => _auth.IsConfigured && !_auth.IsSignedIn && !Skipped;
 
         /// <summary>
         /// Show the gate. <paramref name="onSignedIn"/> runs once, on the main thread, after a session
@@ -180,9 +219,17 @@ namespace Emberfall.Presentation
 
             if (_modal == null)
             {
-                // The overlay is missing from the UXML. Refusing to continue would brick the boot over
+                // The view is missing from the UXML. Refusing to continue would brick the boot over
                 // a broken screen, which is a worse outcome than an unsigned session the server treats
-                // as a guest — and the error above already says what happened.
+                // as a guest — and the error in the constructor already says what happened.
+                //
+                // CONTINUING IS NOT ENOUGH ON ITS OWN, and that is what made this a boot loop rather
+                // than a degraded launch (#329). MainMenu sends anyone whose gate is outstanding to
+                // AccountCreate; if the gate then skips itself and hands the player straight back,
+                // MainMenu sends them again, four times a second, for ever. Latch it: the gate is
+                // unavailable for this process, so the answer to "is a gate outstanding" has to stop
+                // being yes, or nothing downstream can break the cycle.
+                Skipped = true;
                 onSignedIn?.Invoke();
                 return;
             }
