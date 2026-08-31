@@ -123,15 +123,16 @@ namespace Emberfall.Presentation
             _googleButton = root.Q<Button>("btn-signin-google");
             _or = root.Q<VisualElement>("signin-or");
 
-            // Loud, and it does NOT return: every lookup above is null-safe and every handler below
-            // is registered with `?.`, so a partially-authored screen still wires up whatever it
-            // does have. What a missing view costs is Open(), which says so itself.
-            if (_modal == null)
-            {
-                Debug.LogError("[SignIn] signin-view is not in the UXML; the sign-in gate cannot " +
-                               "open and this launch will proceed unsigned. See #329.");
-            }
-
+            // NOTHING IS LOGGED HERE, and that is deliberate. MainMenu builds one of these against
+            // its OWN root purely to read IsRequired, and that root correctly has no sign-in view --
+            // first run is the AccountCreate scene. A constructor that complains about a missing
+            // view therefore fires on every single launch, from the one caller for which it is not
+            // a problem. Measured on device 2026-08-30: it did exactly that, and said "this launch
+            // will proceed unsigned", which was false. The place a missing view is real is Open(),
+            // which is the only thing that needs one; it reports there.
+            //
+            // Not returning early either: every lookup above is null-safe and every handler below is
+            // registered with `?.`, so a partially-authored screen still wires up whatever it has.
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));
             _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
@@ -229,6 +230,9 @@ namespace Emberfall.Presentation
                 // MainMenu sends them again, four times a second, for ever. Latch it: the gate is
                 // unavailable for this process, so the answer to "is a gate outstanding" has to stop
                 // being yes, or nothing downstream can break the cycle.
+                Debug.LogError("[SignIn] signin-view is not in the UXML of the screen that opened " +
+                               "the gate, so it cannot be shown and this launch proceeds unsigned. " +
+                               "See #329.");
                 Skipped = true;
                 onSignedIn?.Invoke();
                 return;
