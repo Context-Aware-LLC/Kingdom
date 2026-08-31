@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Emberfall.Net.Server.Bots
     /// Bridges one bot seat's decisions into a real match's <see cref="SessionPump"/>, over the
     /// production <see cref="LoopbackTransport"/> — no socket, no second wire codec (design doc §The
     /// bot seat). A real <see cref="NetworkedMatchSession"/>, the SAME class a human client uses,
-    /// sits on the other end of the loopback and is driven by <see cref="GreedyAi"/>.
+    /// sits on the other end of the loopback and is driven by an <see cref="ISeatPolicy"/>.
     ///
     /// <para><b>Two-phase construction.</b> The <see cref="MatchSession"/>/<see cref="SessionPump"/>
     /// this seat will post into does not exist until AFTER <c>MatchGate.StartMatch</c> has already
@@ -29,8 +30,7 @@ namespace Emberfall.Net.Server.Bots
     {
         private readonly LoopbackTransport _transport = new LoopbackTransport();
         private readonly ClientOptions _clientOptions;
-        private readonly ICommandValidator _validator;
-        private readonly ICardDatabase _db;
+        private readonly ISeatPolicy _policy;
         private SessionPump? _pump;
         private volatile bool _closed;
         // Never disposed: Cancel() alone is documented thread-safe/idempotent (safe even if Close()
@@ -47,14 +47,20 @@ namespace Emberfall.Net.Server.Bots
         /// without disturbing the token above, which is the whole reason these are two parameters
         /// and not one (see <see cref="BotRosterEntry"/>).</param>
         public BotSeatRunner(string botUsername, string botDisplayName, ICommandValidator validator, ICardDatabase db)
+            : this(botUsername, botDisplayName, new GreedySeatPolicy(validator, db))
+        {
+        }
+
+        /// <param name="policy">The match-local policy for this seat. A checkpoint policy carries
+        /// player memory and seeded sampling state, so it must not be shared between seats.</param>
+        public BotSeatRunner(string botUsername, string botDisplayName, ISeatPolicy policy)
         {
             _clientOptions = new ClientOptions
             {
                 DeviceToken = "bot-internal-" + botUsername,
                 DisplayName = botDisplayName,
             };
-            _validator = validator;
-            _db = db;
+            _policy = policy ?? throw new ArgumentNullException(nameof(policy));
         }
 
         // ── IServerConnection: server → bot ──────────────────────────────────────
@@ -133,8 +139,26 @@ namespace Emberfall.Net.Server.Bots
 
             ulong lastActed = ulong.MaxValue;
             using var wake = new SemaphoreSlim(0);
-            void OnSnap(GameState _) => wake.Release();
+            IObservedSeatPolicy? observedPolicy = _policy as IObservedSeatPolicy;
+            GameState observedState = client.Current;
+            GameState transitionBefore = observedState;
+            void OnSnap(GameState current)
+            {
+                transitionBefore = observedState;
+                observedState = current;
+                if (observedPolicy is null) wake.Release();
+            }
+            void OnEvents(IReadOnlyList<GameEvent> events)
+            {
+                if (observedPolicy is null) return;
+                observedPolicy.ObserveTransition(
+                    transitionBefore, events, observedState, client.Player);
+                // For memory-bearing policies the event batch, not the preceding snapshot, makes
+                // the new decision ready. This prevents scoring from racing stale player memory.
+                wake.Release();
+            }
             client.OnSnapshot += OnSnap;
+            client.OnEvents += OnEvents;
             try
             {
                 while (!_closed)
@@ -148,7 +172,8 @@ namespace Emberfall.Net.Server.Bots
                         continue;
                     }
 
-                    PlayerIntent? intent = GreedyAi.Choose(state, client.Player, _validator, _db);
+                    PlayerIntent? intent = await _policy.ChooseAsync(state, client.Player, _cts.Token)
+                        .ConfigureAwait(false);
                     lastActed = state.StateVersion;
                     if (intent is null) continue;
 
@@ -167,9 +192,19 @@ namespace Emberfall.Net.Server.Bots
                     }
                 }
             }
+            catch (OperationCanceledException) when (_closed || _cts.IsCancellationRequested)
+            {
+                // Normal seat shutdown while a policy request or pacing delay is in flight.
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    "[bot] policy {0} failed: {1}", _policy.Identity, ex.Message);
+            }
             finally
             {
                 client.OnSnapshot -= OnSnap;
+                client.OnEvents -= OnEvents;
             }
         }
     }

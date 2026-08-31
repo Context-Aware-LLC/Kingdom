@@ -55,6 +55,7 @@ namespace Emberfall.Net.Server.Bots
     public sealed class BotPool : IBotPool, IBotAccountSink
     {
         private readonly ICardDatabase _db;
+        private readonly Func<SeatDeck, ISeatPolicy> _policyFactory;
         private readonly object _lock = new object();
         private readonly Dictionary<string, ResolvedBotAccount> _ready = new Dictionary<string, ResolvedBotAccount>(StringComparer.Ordinal);
         private readonly HashSet<string> _busy = new HashSet<string>(StringComparer.Ordinal);
@@ -64,7 +65,12 @@ namespace Emberfall.Net.Server.Bots
         /// question. Backs <see cref="IsBotAccount"/>.</summary>
         private readonly HashSet<AccountId> _botAccounts = new HashSet<AccountId>();
 
-        public BotPool(ICardDatabase db) => _db = db;
+        public BotPool(ICardDatabase db, Func<SeatDeck, ISeatPolicy>? policyFactory = null)
+        {
+            _db = db;
+            _policyFactory = policyFactory
+                ?? (_ => new GreedySeatPolicy(new CommandProcessor(_db), _db));
+        }
 
         public void MarkReady(ResolvedBotAccount account)
         {
@@ -113,7 +119,10 @@ namespace Emberfall.Net.Server.Bots
                 string username = idle[RandomNumberGenerator.GetInt32(idle.Count)];
                 _busy.Add(username);
                 ResolvedBotAccount resolved = _ready[username];
-                var seat = new BotSeatRunner(resolved.Username, resolved.DisplayName, new CommandProcessor(_db), _db);
+                var seat = new BotSeatRunner(
+                    resolved.Username,
+                    resolved.DisplayName,
+                    _policyFactory(resolved.Deck));
                 return new BotHandle(resolved.Account, resolved.DisplayName, resolved.Deck, seat, () =>
                 {
                     lock (_lock) _busy.Remove(username);
