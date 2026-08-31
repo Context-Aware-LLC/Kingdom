@@ -218,6 +218,14 @@ Invoke-Stage 'Stage 6d · Training trainer tests' {
     try {
         $env:EMBERFALL_REQUIRE_TORCH = '1'
         & $trainingPython tests/python/test_training_trainer.py -v
+        if ($LASTEXITCODE -ne 0) {
+            throw "Training trainer tests failed with exit code $LASTEXITCODE."
+        }
+
+        & $trainingPython tests/python/test_training_exporters.py -v -k checkpoint_scorer
+        if ($LASTEXITCODE -ne 0) {
+            throw "Live checkpoint scorer test failed with exit code $LASTEXITCODE."
+        }
     } finally {
         if ($null -eq $previousRequirement) {
             Remove-Item Env:EMBERFALL_REQUIRE_TORCH -ErrorAction SilentlyContinue

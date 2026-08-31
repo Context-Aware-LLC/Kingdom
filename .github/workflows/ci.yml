@@ -254,7 +254,9 @@ jobs:
       - name: "Stage 6d · Training trainer tests"
         env:
           EMBERFALL_REQUIRE_TORCH: "1"
-        run: python3 tests/python/test_training_trainer.py -v
+        run: |
+          python3 tests/python/test_training_trainer.py -v
+          python3 tests/python/test_training_exporters.py -v -k checkpoint_scorer
 
       # CardCi (Stage 6 above) warns on missing art — placeholder-art policy, M2 decision 18.
       # This step closes the gap for artIds that point at filenames that never existed: it fails
