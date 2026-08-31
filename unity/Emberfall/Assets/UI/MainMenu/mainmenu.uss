@@ -254,6 +254,21 @@
 .mm-modal--hidden {
     display: none;
 }
+/* A modal whose content is a LIST wants the height. `.emb-bleed` insets all four sides by
+ * --edge-safe (52), which spends 104 of a 411 landscape panel — a quarter of the screen — and the
+ * camera cutout it exists for is on a SIDE edge in landscape, never the top or bottom. Left and
+ * right therefore keep the full clearance and only the vertical is reduced.
+ *
+ * LONGHANDS, not the `padding` shorthand. The shorthand would replace the horizontal clearance
+ * too, and that is the exact defeat `tooling/scripts/audit_edge_safety.py` PASS 6 exists to fail —
+ * a rule on this element outranking .emb-bleed on the same property, silently.
+ *
+ * RETIREMENT TRIGGER: if this project ever ships in portrait, or --edge-safe stops meaning "cutout
+ * clearance", the top/bottom edges stop being free and this rule has to go. */
+.mm-modal--tall {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+}
 .mm-modal__panel {
     width: 520px;
     max-width: 90%;
@@ -362,60 +377,23 @@
     padding: var(--space-6);
     border-color: rgba(240, 166, 60, 0.55);
 }
+/* Title and close on ONE row, close hard right. The title takes the growth, so there is no wrapper
+ * element between it and the header — a `__heading` box existed only to stack a kicker above the
+ * title, and the kicker is gone. */
 .mm-leaderboard__header {
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: var(--space-4);
 }
-.mm-leaderboard__heading {
+.mm-leaderboard__title {
     flex-grow: 1;
     flex-shrink: 1;
-}
-.mm-leaderboard__kicker {
-    color: var(--accent);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-}
-.mm-leaderboard__title {
     color: var(--ink-1);
     font-size: var(--type-h1);
     -unity-font-style: bold;
 }
-.mm-leaderboard__help {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    white-space: normal;
-}
 .mm-leaderboard__close {
     margin-left: var(--space-6);
-}
-.mm-leaderboard__rules {
-    flex-direction: row;
-    background-color: rgba(240, 166, 60, 0.08);
-    border-top-width: 1px;
-    border-bottom-width: 1px;
-    border-color: rgba(240, 166, 60, 0.25);
-    margin-bottom: var(--space-4);
-}
-.mm-leaderboard__rule {
-    flex-grow: 1;
-    flex-basis: 0;
-    padding: var(--space-3) var(--space-4);
-    border-right-width: 1px;
-    border-color: rgba(240, 166, 60, 0.18);
-}
-.mm-leaderboard__rule--last {
-    border-right-width: 0;
-}
-.mm-leaderboard__rule-label {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-}
-.mm-leaderboard__rule-value {
-    color: var(--ink-1);
-    font-size: var(--type-label);
-    -unity-font-style: bold;
 }
 .mm-leaderboard__columns,
 .mm-leaderboard__row {
