@@ -8,7 +8,8 @@
     --space-12: 48px;
     --space-16: 64px;
 
-    /* How far anything anchored to a screen EDGE must sit from that edge.
+    /* How far anything anchored to a screen SIDE must sit from it. HORIZONTAL ONLY --
+       see the axis table below, which is the whole point of the number.
        Not part of the 4px spacing run above -- it is not a design rhythm, it is a
        hardware clearance, and it is deliberately blunt.
 
@@ -24,10 +25,34 @@
 
        136 device px / 2.625 px per dp = 51.8dp, so 52 clears it and 50 does not (50dp is
        131 device px, five short). Note the side FLIPS with rotation direction, which is why
-       this is spent on every edge rather than the one the API happens to name: Unity's
+       this is spent on BOTH sides rather than the one the API happens to name: Unity's
        Screen.safeArea reported the cutout on the LEFT while Android's mAppBounds and Sam's
        own eyes put it on the RIGHT (2026-08-21). Sit far enough in that the side stops
        mattering. A static margin right on every device beats a computed inset right on some.
+
+       IT IS SPENT ON THE HORIZONTAL AXIS ONLY, and that is measured, not tidied. Read off
+       the same Pixel 5a on 2026-08-30, in landscape (ROTATION_270), with the system bars
+       hidden as they now are:
+
+           mDisplayCutout insets = Rect(0, 0 - 136, 0)      left 0  top 0  RIGHT 136  bottom 0
+           boundingRect          = Rect(2264, 0 - 2400, 145)
+
+       So the top and bottom clearance requirement is ZERO -- there is no cutout on either,
+       and the 63 device px the display frame reserves at the bottom is the GESTURE BAR,
+       which 080966bc hides. Spending 52 there cost 104dp of a 411dp landscape panel, a
+       QUARTER OF THE SCREEN, for a hazard that does not exist on that axis. It is why the
+       main menu's build stamp floated three quarters of the way up the screen and why the
+       leaderboard needed its own modifier to reach full height.
+
+       A screen that wants a vertical gutter authors one; the classes below no longer
+       impose it. That is the same relation the horizontal axis already had -- margin
+       COMPOSES with the offset the screen authored, so `.mm-footer { bottom: 24 }` keeps
+       meaning 24 and this adds nothing to it any more.
+
+       RETIREMENT TRIGGER: if the game ever ships with the system bars VISIBLE
+       (PlayerSettings.Android.requestedVisibleInsets != 0, see 080966bc), the bottom
+       gesture bar is back and .emb-edge/.emb-bleed need their bottom clearance back at
+       24dp (63 device px). Nothing else re-derives this.
 
        These two classes were commented out on effect-model-merge and restored 2026-08-23.
        While they were dead, `character-create` -- which carries .emb-bleed -- ran edge to
@@ -101,9 +126,15 @@
 }
 
 /* ── Hardware edge clearance ──────────────────────────────────────────────────
-   --edge-safe above is the distance anything anchored to a screen EDGE keeps
+   --edge-safe above is the distance anything anchored to a screen SIDE keeps
    from it. It reaches a screen through these two classes and nowhere else — no
    screen restates the value, so retuning it is one line in one file.
+
+   BOTH SPEND IT AS `0 var(--edge-safe)` — LEFT AND RIGHT ONLY. The cutout is on
+   a side and the top and bottom measure zero; the derivation and the retirement
+   trigger are on the token above. The zero is written into the shorthand rather
+   than left to a longhand so the one property still owns all four sides, which
+   is what PASS 6 of audit_edge_safety.py reasons about.
 
    MARGIN, not padding, for chrome. A parent's padding does not reach a
    position:absolute child, and every piece of screen chrome is absolutely
@@ -118,14 +149,14 @@
    child in a column would take the clearance on its TOP and BOTTOM too, and
    three of those on a 1080-unit panel eats the screen. */
 .emb-edge {
-    margin: var(--edge-safe);
+    margin: 0 var(--edge-safe);
 }
 
 /* A layer that must PAINT to the panel edge — a scrim, a modal backdrop — spans
    the panel and insets its own CONTENT instead. This is why one class serves both
    the bare scrims and the modal containers: paint to the edge, keep content in. */
 .emb-bleed {
-    padding: var(--edge-safe);
+    padding: 0 var(--edge-safe);
 }
 
 .unity-base-dropdown__label {

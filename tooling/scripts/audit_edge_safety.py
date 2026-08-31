@@ -8,11 +8,18 @@ beneath a Pixel 5a's front camera and could not be seen or pressed.
 `theme.uss` holds the whole policy in three declarations:
 
     --edge-safe: <n>px;
-    .emb-edge  { margin:  var(--edge-safe); }   -- chrome anchored to a screen edge
-    .emb-bleed { padding: var(--edge-safe); }   -- a layer that PAINTS to the edge
+    .emb-edge  { margin:  0 var(--edge-safe); }  -- chrome anchored to a screen side
+    .emb-bleed { padding: 0 var(--edge-safe); }  -- a layer that PAINTS to the side
 
 The value is deliberately not repeated here -- PASS 5 prints the live one, and a
 number copied into a docstring is a number that goes stale silently.
+
+HORIZONTAL ONLY, and the leading zero is the policy, not a formatting choice. The
+cutout is on a SIDE: measured on a Pixel 5a 2026-08-30 in landscape, the display
+cutout insets are Rect(0, 0 - 136, 0) -- right 136, top 0, bottom 0. Spending the
+clearance on all four sides cost 104dp of a 411dp panel for a hazard that is not
+on that axis. A screen that wants a vertical gutter authors one; PASS 6 still
+reasons about a single shorthand because the zero is written into it.
 
 MARGIN for chrome, not padding, and that is not a style preference. Measured in
 Play Mode 2026-08-21: a parent padding of 136 moved the identity plate, the
@@ -213,7 +220,14 @@ def pass1_risk_surface():
             sel, body = m.group(1).strip(), m.group(2)
             if 'position: absolute' not in body:
                 continue
-            offs = dict(re.findall(r'\b(top|right|bottom|left)\s*:\s*([^;]+);', body))
+            # (?<![-\w]) and not \b. A leading \b matches INSIDE `padding-top:`,
+            # `margin-left:` and `border-top-width:`, because `-` ends a word, so
+            # any of those read as an EDGE OFFSET. That promoted .mm-modal -- a
+            # full-bleed backdrop whose only new declaration was a padding
+            # longhand -- into PASS 4's chrome verdict, which then demanded
+            # .emb-edge on two centred modal panels (2026-08-30). Only the four
+            # BARE offset properties anchor anything to an edge.
+            offs = dict(re.findall(r'(?<![-\w])(top|right|bottom|left)\s*:\s*([^;]+);', body))
             if not offs:
                 continue
             cls = sel.lstrip('.').split(':')[0].split('.')[0]

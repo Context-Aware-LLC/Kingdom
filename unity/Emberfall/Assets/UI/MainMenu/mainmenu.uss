@@ -250,24 +250,22 @@
     align-items: center;
     justify-content: center;
     background-color: rgba(11, 14, 19, 0.78);
+    /* The modal's own vertical gutter, and the ONLY thing holding a panel off the top and bottom
+     * edges: `.emb-bleed` on this element spends --edge-safe left and right only, because the
+     * camera cutout is on a SIDE in landscape and the top and bottom measure zero (the derivation
+     * is on --edge-safe in theme.uss). 16 rather than the 52 that used to arrive here by accident
+     * is worth 72dp of panel to `.mm-modal__panel`'s `max-height: 100%` — the leaderboard needed
+     * a modifier of its own to claw that back, and the sign-in name step overflowed its 307dp box
+     * by 51dp without it.
+     *
+     * LONGHANDS, not the `padding` shorthand. The shorthand would replace the horizontal clearance
+     * too, and that is the exact defeat `tooling/scripts/audit_edge_safety.py` PASS 6 exists to
+     * fail — a rule on this element outranking .emb-bleed on the same property, silently. */
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
 }
 .mm-modal--hidden {
     display: none;
-}
-/* A modal whose content is a LIST wants the height. `.emb-bleed` insets all four sides by
- * --edge-safe (52), which spends 104 of a 411 landscape panel — a quarter of the screen — and the
- * camera cutout it exists for is on a SIDE edge in landscape, never the top or bottom. Left and
- * right therefore keep the full clearance and only the vertical is reduced.
- *
- * LONGHANDS, not the `padding` shorthand. The shorthand would replace the horizontal clearance
- * too, and that is the exact defeat `tooling/scripts/audit_edge_safety.py` PASS 6 exists to fail —
- * a rule on this element outranking .emb-bleed on the same property, silently.
- *
- * RETIREMENT TRIGGER: if this project ever ships in portrait, or --edge-safe stops meaning "cutout
- * clearance", the top/bottom edges stop being free and this rule has to go. */
-.mm-modal--tall {
-    padding-top: var(--space-4);
-    padding-bottom: var(--space-4);
 }
 .mm-modal__panel {
     width: 520px;

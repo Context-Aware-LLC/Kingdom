@@ -24,7 +24,7 @@
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
             <ui:Label name="version-label" text="—" class="mm-version"/>
         </ui:VisualElement>
-        <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden mm-modal--tall emb-bleed">
+        <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:VisualElement class="mm-modal__panel mm-leaderboard">
                 <ui:VisualElement class="mm-leaderboard__header">
                     <ui:Label text="The Emberfall Crown" class="mm-leaderboard__title"/>
