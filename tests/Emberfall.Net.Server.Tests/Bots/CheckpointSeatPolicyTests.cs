@@ -83,6 +83,35 @@ namespace Emberfall.Net.Server.Tests.Bots
         }
 
         [Test]
+        public async Task Sampled_Decision_Exposes_Actor_Critic_Behavior_Provenance()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState state = ProjectOpeningState(db, setup);
+            string checkpointSha = new string('d', 64);
+            var policy = new CheckpointSeatPolicy(
+                new FakeScorer(count => new double[count]),
+                db,
+                new CommandProcessor(db),
+                setup.P0Deck,
+                CheckpointSelection.Sample(0.5, 19UL),
+                checkpointSha);
+
+            _ = await policy.ChooseAsync(state, P0);
+
+            CheckpointDecisionTrace trace = policy.LastDecision
+                ?? throw new AssertionException("sampled policy did not expose its decision trace");
+            Assert.That(trace.CheckpointSha256, Is.EqualTo(checkpointSha));
+            Assert.That(trace.Actor, Is.EqualTo(P0.Value));
+            Assert.That(trace.StateVersion, Is.EqualTo(state.StateVersion));
+            Assert.That(trace.Temperature, Is.EqualTo(0.5));
+            Assert.That(trace.PredictedValue, Is.EqualTo(0.25));
+            Assert.That(trace.SelectedActionIndex, Is.GreaterThanOrEqualTo(0));
+            Assert.That(trace.BehaviorLogProbability,
+                Is.EqualTo(-Math.Log(trace.LegalActionCount)).Within(1e-12));
+        }
+
+        [Test]
         public async Task Public_Opponent_Bounce_Is_Present_In_The_Next_Scoring_Memory()
         {
             FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());

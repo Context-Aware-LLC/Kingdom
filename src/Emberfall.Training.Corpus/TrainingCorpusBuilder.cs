@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
@@ -152,6 +153,12 @@ namespace Emberfall.Training.Corpus
 
                 string beforeHash = GameStateHasher.Hash(projectedBefore);
                 EpisodeDecisionHash expectedHashes = episode.DecisionHashes[index];
+                if (expectedHashes.BehaviorChosenActionIndex.HasValue
+                    && (expectedHashes.BehaviorChosenActionIndex.Value != chosenIndex
+                        || expectedHashes.BehaviorLegalActionCount != actions.Count))
+                    throw new InvalidDataException(
+                        $"Episode '{episode.MatchId}' intent {index} behavior action provenance "
+                        + "disagrees with the reconstructed legal set.");
                 if (!string.Equals(expectedHashes.Actor, intent.Player.Value, StringComparison.Ordinal)
                     || !string.Equals(expectedHashes.BeforeSha256, beforeHash, StringComparison.Ordinal))
                     throw new InvalidDataException(
@@ -208,7 +215,11 @@ namespace Emberfall.Training.Corpus
                     afterHash,
                     reward,
                     done,
-                    episodeReturn));
+                    episodeReturn,
+                    expectedHashes.BehaviorCheckpointSha256,
+                    expectedHashes.BehaviorLogProbability,
+                    expectedHashes.BehaviorPredictedValue,
+                    expectedHashes.BehaviorTemperature));
                 index++;
             }
 
@@ -414,7 +425,15 @@ namespace Emberfall.Training.Corpus
             string PostActionObservationHash,
             int Reward,
             bool Done,
-            int EpisodeReturn);
+            int EpisodeReturn,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            string? BehaviorCheckpointSha256,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            double? BehaviorLogProbability,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            double? BehaviorPredictedValue,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            double? BehaviorTemperature);
 
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,

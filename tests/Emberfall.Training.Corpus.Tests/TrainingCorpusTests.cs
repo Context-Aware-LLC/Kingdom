@@ -175,7 +175,9 @@ namespace Emberfall.Training.Corpus.Tests
                 var p1 = new PlayerId("p1");
                 const ulong seed = 0xDADAUL;
                 var replay = new JsonlReplayStore(replayDir);
-                var host = new LocalMatchHost(new CommandProcessor(db), db, setup);
+                var processor = new CommandProcessor(db);
+                var host = new LocalMatchHost(processor, db, setup);
+                var legal = new LegalActionEnumerator(db, processor);
                 host.BeginMatch(id, p0, p1, seed);
                 replay.Begin(id, seed, p0, p1);
                 var decisionHashes = new List<EpisodeDecisionHash>();
@@ -188,6 +190,14 @@ namespace Emberfall.Training.Corpus.Tests
                          })
                 {
                     string before = GameStateHasher.Hash(GameStateProjector.Project(host.State, intent.Player));
+                    IReadOnlyList<PlayerIntent> actions = legal.Enumerate(
+                        host.State, intent.Player, includeConcede: true);
+                    byte[] encodedIntent = ProtocolCodec.Encode(
+                        new IntentMsg(0UL, intent), id, 0UL);
+                    int chosenIndex = actions.ToList().FindIndex(action =>
+                        ProtocolCodec.Encode(new IntentMsg(0UL, action), id, 0UL)
+                            .SequenceEqual(encodedIntent));
+                    Assert.That(chosenIndex, Is.GreaterThanOrEqualTo(0));
                     CommandResult applied = host.Submit(intent);
                     Assert.That(applied.Accepted, Is.True);
                     replay.Append(id, intent);
@@ -195,7 +205,13 @@ namespace Emberfall.Training.Corpus.Tests
                         decisionHashes.Count,
                         intent.Player.Value,
                         before,
-                        GameStateHasher.Hash(GameStateProjector.Project(host.State, intent.Player))));
+                        GameStateHasher.Hash(GameStateProjector.Project(host.State, intent.Player)),
+                        new string('a', 64),
+                        -0.5,
+                        0.25,
+                        0.75,
+                        chosenIndex,
+                        actions.Count));
                 }
                 replay.Complete(id, host.State.Outcome);
 
@@ -272,6 +288,11 @@ namespace Emberfall.Training.Corpus.Tests
                     "p0's transition is not terminal while p1 still acts afterward");
                 Assert.That(row.GetProperty("reward").GetInt32(), Is.Zero);
                 Assert.That(row.GetProperty("episodeReturn").GetInt32(), Is.EqualTo(1));
+                Assert.That(row.GetProperty("behaviorCheckpointSha256").GetString(),
+                    Is.EqualTo(new string('a', 64)));
+                Assert.That(row.GetProperty("behaviorLogProbability").GetDouble(), Is.EqualTo(-0.5));
+                Assert.That(row.GetProperty("behaviorPredictedValue").GetDouble(), Is.EqualTo(0.25));
+                Assert.That(row.GetProperty("behaviorTemperature").GetDouble(), Is.EqualTo(0.75));
 
                 using JsonDocument last = JsonDocument.Parse(decisions[2]);
                 Assert.That(last.RootElement.GetProperty("done").GetBoolean(), Is.True);
