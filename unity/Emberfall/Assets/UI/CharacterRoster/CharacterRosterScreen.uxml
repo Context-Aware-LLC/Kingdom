@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="../Common/theme.uss" />
     <Style src="character-roster.uss" />
-    <ui:VisualElement name="root" class="emb-root character-roster">
+    <ui:VisualElement name="root" class="emb-root character-roster emb-bleed">
         <!--
           The create FORM is gone (NOR-278). The name field, class dropdowns, swap-order and
           starter-deck dropdown, and the Create button that used to fill a right-hand panel are

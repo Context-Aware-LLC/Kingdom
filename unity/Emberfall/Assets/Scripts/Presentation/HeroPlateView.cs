@@ -143,7 +143,8 @@ namespace Emberfall.Presentation
             go.transform.localPosition = Vector3.zero;
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
+            // Per-texture material: see SpriteMaterials.
+            SpriteMaterials.Set(sr, sprite);
             sr.sortingOrder = FrameOrder;
             if (sprite != null)
             {

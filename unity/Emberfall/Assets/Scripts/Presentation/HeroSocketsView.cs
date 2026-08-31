@@ -187,7 +187,10 @@ namespace Emberfall.Presentation
             go.transform.localPosition = Vector3.zero;
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = uiSprites?.Get(key);
+            // Per-texture material: see SpriteMaterials. These frames are several different
+            // textures on one shared material, which is exactly the case that draws them all
+            // as whichever one wins the texture bind.
+            SpriteMaterials.Set(sr, uiSprites?.Get(key));
             sr.sortingOrder = FrameOrder;
             if (sr.sprite != null)
             {

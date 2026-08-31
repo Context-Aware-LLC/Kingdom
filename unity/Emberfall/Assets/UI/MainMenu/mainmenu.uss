@@ -646,14 +646,45 @@
  * RETIREMENT TRIGGER: if the sign-in gate ever becomes skippable — it is unskippable by Sam's
  * 2026-08-08 ruling — this stops being a whole screen and the .mm-modal rules above come back
  * into play. Neither this block nor AccountCreateController survives that change unread. */
+/* TOP-JUSTIFIED, NOT CENTRED (Sam, 2026-08-30). Both views carry a text field, so the IME is open
+ * on this screen more often than not, and on the Pixel 5a its top edge sits at about 119dp of the
+ * 411dp panel -- centring spends the free height putting content UNDER the keyboard. Everything
+ * that has to be read while typing belongs in that top band.
+ *
+ * BOTH rules, and the inner one is the one that mattered: the views are flex-grow: 1 so they fill
+ * the root either way, which means the root's own justify-content had nothing left to distribute
+ * and changing it alone would have moved nothing. */
 .account-create-screen {
     flex-grow: 1;
     background-color: var(--surface-1);
     color: var(--ink-1);
-    justify-content: center;
+    justify-content: flex-start;
 }
 .account-create-screen #signin-view,
 .account-create-screen #name-view {
     flex-grow: 1;
-    justify-content: center;
+    justify-content: flex-start;
+}
+
+/* THE TWO ROWS. Row 1 is the question and the answer -- prompt, field, CTA. Row 2 is everything
+ * secondary, laid out horizontally rather than stacked, because the panel has ~119dp above the
+ * keyboard and width to spare. `.mm-modal__error` keeps a min-height, so it holds its line whether
+ * or not there is a message and the row above never shifts when one appears. */
+.account-create-screen .mm-row {
+    flex-direction: row;
+    align-items: flex-start;
+}
+.account-create-screen .mm-row--secondary {
+    align-items: center;
+    margin-top: var(--space-2);
+}
+/* These carry --space-6 of bottom margin from the shared modal rules, which is a desktop rhythm and
+ * pure cost here: the help sits BESIDE its field now, not above it, and this screen is fighting for
+ * every dp above the IME. */
+.account-create-screen .mm-modal__help,
+.account-create-screen .mm-modal__error {
+    margin-bottom: 0;
+}
+.account-create-screen .mm-row--secondary > * {
+    margin-right: var(--space-3);
 }

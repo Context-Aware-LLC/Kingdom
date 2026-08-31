@@ -170,7 +170,7 @@ namespace Emberfall.Presentation
             if (frameRenderer != null && _ui != null)
             {
                 Sprite back = _ui.Get("card_back");
-                if (back != null) SetSpritePreserveSize(frameRenderer, back);
+                if (back != null) SpriteMaterials.SetPreservingSize(frameRenderer, back);
             }
 
             if (cardBackground != null)
@@ -307,12 +307,10 @@ namespace Emberfall.Presentation
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
         // natural PPU dimensions — clobbering the world-space size BoardController set at build
         // time (a 1092px frame @ 100 PPU became a 10.9-unit-wide card). Preserve it across the swap.
-        private static void SetSpritePreserveSize(SpriteRenderer sr, Sprite sprite)
-        {
-            Vector2 size = sr.size;
-            sr.sprite = sprite;
-            sr.size = size;
-        }
+        // Sprite assignment goes through SpriteMaterials so each texture gets its own
+        // material. Read that class before touching any `.sprite =` on this card: sharing
+        // one material across the frame, the sockets and the gem made all six draw the
+        // FRAME, and nothing about the scene graph looks wrong when it happens.
 
         // Data-driven frame/rarity assembly (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md §3 ApplyFrame) — stat-plate
         // visibility keyed by type; the frame sprite is keyed by type+rarity but its sockets are
@@ -325,7 +323,7 @@ namespace Emberfall.Presentation
             if (frameRenderer != null && _ui != null)
             {
                 frameSprite = _ui.Get(FrameRarityCatalog.FrameSprite);
-                SetSpritePreserveSize(frameRenderer, frameSprite);
+                SpriteMaterials.SetPreservingSize(frameRenderer, frameSprite);
             }
             _hasPaintedFrame = frameSprite != null;
             if (_hasPaintedFrame) ApplySockets();
@@ -344,7 +342,7 @@ namespace Emberfall.Presentation
                 // an empty socket waiting for it the whole time.
                 Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
                 gemRenderer.gameObject.SetActive(true);
-                gemRenderer.sprite = gem;
+                SpriteMaterials.Set(gemRenderer, gem);
                 // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
                 gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
 
@@ -514,7 +512,7 @@ namespace Emberfall.Presentation
             sr.gameObject.SetActive(visible);
             if (!visible) return;
 
-            sr.sprite = sprite;
+            SpriteMaterials.Set(sr, sprite);
             sr.size   = size;
             sr.transform.localPosition = new Vector3(
                 (frac.x - 0.5f) * BoardController.CardW,
@@ -606,7 +604,7 @@ namespace Emberfall.Presentation
                         Debug.LogWarning($"[CardPresenter] keyword icon registered but missing from atlas: {addr}");
                         continue;
                     }
-                    SetSpritePreserveSize(keywordIcons[slot], icon);
+                    SpriteMaterials.SetPreservingSize(keywordIcons[slot], icon);
                     keywordIcons[slot].gameObject.SetActive(true);
                     slot++;
                 }

@@ -50,14 +50,26 @@ element owns it. The list is a set of DECLARATIONS, not suppressions: adding to 
 is a claim that the element is not at screen level, and the note says why.
 
 
-SHAPE: five passes, each consuming the one before it
-----------------------------------------------------
+WHY THE ROOTS NEED A PASS OF THEIR OWN. Everything above starts from PASS 1, and
+PASS 1 only sees `position: absolute`. A screen whose edge chrome sits in ORDINARY
+FLOW -- a header row inside a padded root -- produces no risk surface at all, so
+every later pass agrees there is nothing to classify and the script prints PASS.
+That is not a corner case: `.character-roster` was `padding: var(--space-6)` with
+"Main Menu" and "View Collection" in a flow header, which put both 24dp from the
+screen edge, inside the 52dp cutout, from #278 until 2026-08-30 -- with this audit
+green over it the whole time. PASS 7 asks the one question the other six cannot:
+for each screen ROOT, where does its horizontal clearance live?
+
+SHAPE: seven passes, each consuming the one before it
+-----------------------------------------------------
   PASS 1  USS   -> the RISK SURFACE   every rule that anchors to an edge
   PASS 2  UXML  -> the STRUCTURE      where each class is used, and how deep
   PASS 3  C#    -> the CODE-APPLIED   classes attached at runtime
   PASS 4  join  -> the VERDICT        1 classified by 2 and 3
   PASS 5  2+USS -> the POLICY         --edge-safe locality, .emb-edge placement
   PASS 6  2+USS -> the SPECIFICITY    rules that would outrank the theme classes
+  PASS 7  2+USS -> the ROOTS          every screen root clears the edge, or names
+                                      the element that does it instead
 
 Each pass prints what it found and hands a value to the next, so a failure names
 the stage that produced it and no stage's output has to be taken on trust. Run it
@@ -104,7 +116,43 @@ TOKEN_EXCEPTIONS = {
         'in both landscape rotations, which is the only orientation this game has',
 }
 
+# Screen ROOTS that deliberately run edge to edge, keyed by the root's own screen
+# class. A root not carrying .emb-bleed and not spending --edge-safe horizontally
+# itself has to appear here, and an entry is not free: `carriers` names the
+# elements that hold the clearance INSTEAD, and PASS 7 checks each one still
+# carries .emb-edge / .emb-bleed or is a declared TOKEN_EXCEPTIONS spender. Strip
+# the class off `.mm-footer` and the main menu's exception stops being true and
+# fails here -- which is the point. A reason with nothing checkable under it is
+# how `.character-roster` stayed 24dp from the cutout with this audit green.
+ROOT_EXCEPTIONS = {
+    'main-menu': (
+        'a full-bleed backdrop with no flow content at its edges; the rule says so itself '
+        '("Edge clearance is NOT this padding\'s job"). Every edge-anchored element is '
+        'absolute and tagged',
+        ['mm-shard-balance', 'mm-identity', 'mm-footer']),
+    'collection': (
+        'the card wall is the background layer and bleeds by ruling (the wall is headerless, '
+        '2026-08-18); the controls are an absolute overlay that spends the token itself',
+        ['col-query-toolbar', 'col-query', 'craft-modal']),
+    'pack-reveal-screen': (
+        'the root holds only a backdrop; every reveal is inside the overlay',
+        ['reveal-overlay']),
+    'shop-screen': (
+        'the root holds only a backdrop; all store content is inside the overlay. This is the '
+        'screen #shop-overlay\'s id selector kept flush to the edge until PASS 6 caught it',
+        ['shop-overlay']),
+    'ms-root': (
+        'a scrim host with no flow content of its own; the gear and the panel are absolute',
+        ['ms-gear']),
+}
+
 ELEMENT_INTERNAL = {
+    'emb-scroll-fade':
+        'the "there is more" fade over the bottom band of a scroll surface; its left/right/bottom '
+        'offsets are against the FRAME it is pinned inside (see .deck-chooser-frame in '
+        'collection.uss), never the screen, and it carries picking-mode="Ignore". It lives in '
+        'theme.uss because the ruling that creates it -- no visible scrollbars -- is game-wide, '
+        'not because the element is screen chrome',
     'col-button--filters':
         'ribbon positioned against the collection toolbar, not the screen; '
         'CollectionScreen.uxml parents it to .col-query-toolbar',
@@ -250,21 +298,32 @@ def pass2_structure():
     Returns (used, root_indent). `used` maps class -> [(file, line, classes,
     indent)]. `root_indent` maps file -> the indent of its .emb-root, derived per
     file rather than assumed: the screens do not all put the root at one depth.
+
+    EVERY class="..." ON THE LINE, not the first. This was re.search until
+    2026-08-30, and a UXML line carrying two elements -- a parent and a child
+    written inline, which is how the nine class tabs were authored -- hid the
+    SECOND one completely. PASS 4 then reported .class-tab-frame as "unused - no
+    UXML or C# applies it" while the UXML applied it nine times, which is a
+    verdict that reads like permission to delete a live class. Nothing about the
+    output said the class had been dropped rather than examined.
+
+    `indent` is per LINE, so co-authored elements share the parent's depth. That
+    is an approximation, and it is the right one: PASS 4 uses indent to ask
+    whether a rule sits at screen level or inside a panel, and an element written
+    inline with its parent is by construction inside it.
     """
     _head(2, 'STRUCTURE - class usage and depth in %s/**/*.uxml' % UI)
     used, root_indent, sites = {}, {}, 0
     for f in _files(UI, 'uxml'):
         for i, line in enumerate(_read(f).split('\n'), 1):
-            m = re.search(r'class="([^"]*)"', line)
-            if not m:
-                continue
-            classes = m.group(1).split()
             indent = len(line) - len(line.lstrip())
-            sites += 1
-            for c in classes:
-                used.setdefault(c, []).append((f, i, classes, indent))
-            if ROOT_CLASS in classes:
-                root_indent[f] = indent
+            for m in re.finditer(r'class="([^"]*)"', line):
+                classes = m.group(1).split()
+                sites += 1
+                for c in classes:
+                    used.setdefault(c, []).append((f, i, classes, indent))
+                if ROOT_CLASS in classes:
+                    root_indent[f] = indent
     for f in sorted(root_indent):
         print('   %-52s .%s at indent %d'
               % (_short(f, 'Assets/UI/'), ROOT_CLASS, root_indent[f]))
@@ -518,6 +577,118 @@ def pass6_specificity(used):
     return findings
 
 
+# ── PASS 7 ──────────────────────────────────────────────────────────────────
+def pass7_roots(used):
+    """Every `.emb-root` screen clears the horizontal edge, or names what does.
+
+    THE HOLE THIS FILLS. PASS 1 is the source of every later pass and it only
+    matches `position: absolute`, so a screen with edge chrome in ORDINARY FLOW
+    contributes nothing to classify and the audit passes over it in silence.
+    That is how `.character-roster` shipped a `padding: var(--space-6)` root with
+    "Main Menu" in a flow header: 24dp from a 52dp cutout, green here throughout.
+
+    Three ways a root can be clean, in the order they are checked:
+
+      BLEED    it carries .emb-bleed. The ordinary answer.
+      TOKEN    its own rule spends --edge-safe on padding-left/right or
+               margin-left/right (or a shorthand whose horizontal slot is the
+               token). For a root that needs a different vertical value.
+      NAMED    it appears in ROOT_EXCEPTIONS, and every carrier that entry names
+               still holds .emb-edge / .emb-bleed or is a TOKEN_EXCEPTIONS
+               spender. The reason is prose; the carriers are the check.
+
+    A shorthand is read POSITIONALLY -- `padding: a b` and `padding: a b c` put
+    the horizontal in slot 2, `padding: a b c d` in slots 2 and 4, `padding: a` in
+    all four. `.character-roster` deliberately writes its vertical as longhands so
+    no shorthand here can silently re-set what .emb-bleed supplies; this pass
+    would catch it if one did.
+    """
+    _head(7, 'ROOTS - where each screen root\'s horizontal clearance lives')
+    findings = []
+
+    tokened = {c for c in TOKEN_EXCEPTIONS}
+    carried = {c for c in used if any(
+        t in cl for _f, _l, cl, _i in used[c] for t in (EDGE_CLASS, BLEED_CLASS))}
+
+    roots = {}
+    for f, line, classes, _indent in used.get(ROOT_CLASS, []):
+        screen = [c for c in classes
+                  if c not in (ROOT_CLASS, EDGE_CLASS, BLEED_CLASS)
+                  and not c.endswith('--hidden')]
+        roots[(f, line)] = (screen[0] if screen else None, classes)
+
+    if not roots:
+        print('   (no .%s found -- PASS 2 saw no screens)' % ROOT_CLASS)
+        return findings
+
+    for (f, line), (screen, classes) in sorted(roots.items()):
+        label = '%s:%d' % (_short(f, 'Assets/UI/'), line)
+        if BLEED_CLASS in classes:
+            print('   %-52s bleed .%s' % (label[:52], BLEED_CLASS))
+            continue
+        if screen is None:
+            findings.append('%s  a .%s element carries no screen class, so PASS 7 cannot '
+                            'name it.\n      Give the root its screen class.'
+                            % (label, ROOT_CLASS))
+            print('   %-52s FAIL  no screen class' % label[:52])
+            continue
+
+        body = ''
+        for uss in _files(UI, 'uss'):
+            body = _rule_body(uss, screen)
+            if body:
+                break
+        bare = re.sub(r'/\*.*?\*/', '', body, flags=re.S)
+        horiz = False
+        for m in re.finditer(r'(?:^|;)\s*(padding|margin)(-left|-right)?\s*:([^;]*)', bare):
+            side, val = m.group(2), m.group(3).strip()
+            if side:
+                horiz = horiz or '--edge-safe' in val
+                continue
+            parts = val.split()
+            slots = {1: [0], 2: [1], 3: [1], 4: [1, 3]}.get(len(parts), [])
+            horiz = horiz or any('--edge-safe' in parts[i] for i in slots)
+        if horiz:
+            print('   %-52s token .%s spends --edge-safe horizontally' % (label[:52], screen))
+            continue
+
+        if screen not in ROOT_EXCEPTIONS:
+            findings.append(
+                '%s  `.%s` is a screen root with neither .%s nor --edge-safe of its own,\n'
+                '      so anything in its FLOW sits at whatever its padding happens to be -- the\n'
+                '      cutout is %s deep and no other pass looks at flow content. Add .%s, spend\n'
+                '      the token here, or declare it in ROOT_EXCEPTIONS naming what clears the\n'
+                '      edge instead.'
+                % (label, screen, BLEED_CLASS, _edge_safe_value() or '52px', BLEED_CLASS))
+            print('   %-52s FAIL  .%s clears nothing' % (label[:52], screen))
+            continue
+
+        reason, carriers = ROOT_EXCEPTIONS[screen]
+        dead = [c for c in carriers if c not in carried and c not in tokened]
+        if dead:
+            findings.append(
+                '%s  `.%s` is excused in ROOT_EXCEPTIONS because %s carr%s the clearance\n'
+                '      instead -- and %s no longer do%s. The exception is now the only thing\n'
+                '      holding this screen off the cutout, and it is prose. Re-tag the element or\n'
+                '      retire the entry.'
+                % (label, screen, ', '.join('.' + c for c in carriers),
+                   'y' if len(carriers) == 1 else 'y',
+                   ', '.join('.' + c for c in dead),
+                   'es' if len(dead) == 1 else ''))
+            print('   %-52s FAIL  carrier(s) %s untagged'
+                  % (label[:52], ', '.join(dead)[:24]))
+            continue
+        print('   %-52s named %s' % (label[:52], reason[:44]))
+    print('   => %d screen root(s); %d declared in ROOT_EXCEPTIONS'
+          % (len(roots), len(ROOT_EXCEPTIONS)))
+    return findings
+
+
+def _edge_safe_value():
+    m = re.search(r'--edge-safe\s*:\s*([^;]+);', _read(THEME))
+    return m.group(1).strip() if m else None
+
+
 def main():
     chrome, bleed = pass1_risk_surface()
     used, root_indent = pass2_structure()
@@ -525,11 +696,13 @@ def main():
     findings = pass4_verdict(chrome, used, code)
     findings += pass5_policy(used, root_indent)
     findings += pass6_specificity(used)
+    findings += pass7_roots(used)
 
     print('\n' + '=' * 104)
     print('%d edge-anchored chrome rule(s) | %d full-bleed layer(s) | '
-          '%d element-internal | %d token exception(s)'
-          % (len(chrome), len(bleed), len(ELEMENT_INTERNAL), len(TOKEN_EXCEPTIONS)))
+          '%d element-internal | %d token exception(s) | %d root exception(s)'
+          % (len(chrome), len(bleed), len(ELEMENT_INTERNAL),
+             len(TOKEN_EXCEPTIONS), len(ROOT_EXCEPTIONS)))
     if findings:
         print('\nFINDINGS (%d):\n' % len(findings))
         for x in findings:

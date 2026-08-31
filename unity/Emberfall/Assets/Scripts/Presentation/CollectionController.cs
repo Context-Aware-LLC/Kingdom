@@ -111,12 +111,16 @@ namespace Emberfall.Presentation
         private VisualElement _queryDrawer;
         private Button _queryToggleButton;
         private VisualElement _drawer;
-        private ScrollView _deckChooser;
+        // The FRAME, not the ScrollView. The chooser's recessed plate and its bottom scroll
+        // fade live on the frame, and hiding only the ScrollView would leave an empty plate
+        // beside the editor with both claiming flex-grow: 1.
+        private VisualElement _deckChooserFrame;
         private VisualElement _deckChooserList;
         private Label _deckChooserEmpty;
         private VisualElement _deckEditor;
         private Label _drawerTitle;
         private Label _drawerSubtitle;
+        private Button _manageDecksButton;
         private Label _deckCharacterName;
         private Label _deckName;
         private bool _queryDrawerOpen;
@@ -330,7 +334,7 @@ namespace Emberfall.Presentation
             _queryDrawer         = _root.Q<VisualElement>("query-bar");
             _queryToggleButton   = _root.Q<Button>("query-toggle");
             _drawer              = _root.Q<VisualElement>("deck-drawer");
-            _deckChooser         = _root.Q<ScrollView>("deck-chooser");
+            _deckChooserFrame    = _root.Q<VisualElement>("deck-chooser-frame");
             _deckChooserList     = _root.Q<VisualElement>("deck-chooser-list");
             _deckChooserEmpty    = _root.Q<Label>("deck-chooser-empty");
             _deckEditor          = _root.Q<VisualElement>("deck-editor");
@@ -338,6 +342,7 @@ namespace Emberfall.Presentation
             _drawerSubtitle      = _root.Q<Label>("deck-drawer-subtitle");
             _deckCharacterName   = _root.Q<Label>("deck-character-name");
             _deckName            = _root.Q<Label>("deck-name");
+            _manageDecksButton   = _root.Q<Button>("manage-decks-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -710,8 +715,14 @@ namespace Emberfall.Presentation
 
         private void ShowDrawerPane(bool editor)
         {
-            _deckChooser?.EnableInClassList("deck-chooser--hidden", editor);
+            _deckChooserFrame?.EnableInClassList("deck-chooser--hidden", editor);
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
+            // "Manage Characters & Decks" leaves the collection entirely, so it belongs to the
+            // CHOOSER pane, not to editing one deck's thirty. Editing already has two ways out
+            // ("<- All decks" and Close), and on a 411dp landscape panel this button plus its
+            // margin was 68dp -- most of the height the deck list itself was missing.
+            if (_manageDecksButton != null)
+                _manageDecksButton.style.display = editor ? DisplayStyle.None : DisplayStyle.Flex;
             if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";
             if (_drawerSubtitle != null)
                 _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";

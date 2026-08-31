@@ -1178,22 +1178,45 @@ namespace Emberfall.Presentation
         /// strip's padding, the plate's padding and border, and the gap to the next row. Must be
         /// kept in step with character-roster.uss.
         ///
-        /// <para>112f until 2026-08-30 (#324). This is subtracted from <c>viewport / rows</c>, so on
-        /// the real device — 411dp of landscape height, not the Editor Game View's ~1800dp — it was
-        /// consuming 55% of a two-row screen and leaving the deck picture the remainder. The band it
-        /// measures was tightened rather than the row count reduced, because one character row per
-        /// screen stops the list reading as a list. Current sum: header padding-top 8 + an h2 name
-        /// line ~27 + strip padding 8 top and 12 bottom + plate padding 16 and border 4 + row margin
-        /// 8 = 83, rounded up to 90 for the font's line box.</para></summary>
-        private const float RowChrome = 90f;
+        /// <para>112f until 2026-08-30 (#324), then 90f, now 70f. This is subtracted from
+        /// <c>viewport / rows</c>, so on the real device — 411dp of landscape height, not the Editor
+        /// Game View's ~1800dp — it was consuming 55% of a two-row screen and leaving the deck
+        /// picture the remainder. The band it measures is tightened rather than the row count
+        /// reduced, because one character row per screen stops the list reading as a list.</para>
+        ///
+        /// <para>Current sum: header padding-top 8 + an h2 name line ~27 + strip padding 4 top and
+        /// 8 bottom + plate padding 8 and border 4 + row margin 8 = 67, rounded up to 70 for the
+        /// font's line box. The strip's and the plate's vertical padding were halved in the same
+        /// change; both live in character-roster.uss and both carry a comment pointing back here.
+        /// </para>
+        ///
+        /// <para>WHY IT HAD TO COME DOWN AGAIN, and the arithmetic to redo if any of it moves. At
+        /// 90f the solver sat permanently on <see cref="MinPlate"/>: the roster viewport was
+        /// 411 − 48 root padding − 64 header − 32 panel padding − 32 for an EMPTY status label
+        /// = 235dp, so <c>235/2 − 90 = 27</c>, well under the 64 floor, and the rendered picture was
+        /// ~43dp. Two rows also came to exactly the viewport, which is why row 2 clipped instead of
+        /// scrolling. Collapsing the empty status band and halving the panel's vertical padding put
+        /// the viewport at 283dp; <c>283/2 − 70 = 71.5</c> clears the floor, and two rows at 138.5
+        /// leave 6dp spare. The root's vertical padding came down 24 -> 8 each on 2026-08-31, which
+        /// buys another 32: <c>315/2 − 70 = 87.5</c>.</para>
+        ///
+        /// <para>NONE OF THOSE SUBTRACTIONS IS AN INPUT. <c>viewport</c> is read off the ScrollView's
+        /// resolvedStyle, so this arithmetic is here to be checked against, not to be kept true by
+        /// editing it — only the terms of the SUM above (header, strip and plate padding, border,
+        /// row margin) have to move when the sheet does.</para></summary>
+        private const float RowChrome = 70f;
 
-        /// <summary>Must match .deck-plate's margin-right (--space-3). Every plate carries one,
-        /// including the last, so the width solve charges the strip for <c>plates</c> of them.</summary>
-        private const float PlateGutter = 12f;
+        /// <summary>Must match .deck-plate's margin-right (--space-2). Every plate carries one,
+        /// including the last, so the width solve charges the strip for <c>plates</c> of them.
+        /// <para>12f until 2026-08-31, when the strip's own horizontal padding came down with it.
+        /// Charged once per plate, so it is the term that grows fastest with deck count.</para></summary>
+        private const float PlateGutter = 8f;
 
-        /// <summary>.deck-plate padding (--space-2) plus its 2px border, both sides — the difference
-        /// between the plate's outer width and the square inside it.</summary>
-        private const float PlateChrome = 20f;
+        /// <summary>.deck-plate padding (--space-1) plus its 2px border, both sides — the difference
+        /// between the plate's outer width and the square inside it. The same 12dp is a term in
+        /// <see cref="RowChrome"/>, because the plate pays it on both axes; halving the padding
+        /// moves both constants.</summary>
+        private const float PlateChrome = 12f;
 
         /// <summary>A row solved to land exactly on the available width is a floating-point tie;
         /// see CardWall.Layout for the wrap-one-early failure this
@@ -1628,7 +1651,12 @@ namespace Emberfall.Presentation
         private void SetStatus(string message, bool isError = false)
         {
             if (_status == null) return;
-            _status.text = message ?? "";
+            string text = message ?? "";
+            _status.text = text;
+            // An empty status band is `display: none` and costs the plate solver nothing. See the
+            // note on .roster-status: this label sits beside the ScrollView, so any height it holds
+            // comes out of the viewport LayoutDeckStrip divides between rows.
+            _status.EnableInClassList("roster-status--on", text.Length > 0);
             _status.EnableInClassList("roster-status--error", isError);
         }
 

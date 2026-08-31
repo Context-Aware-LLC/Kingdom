@@ -84,8 +84,12 @@
 }
 
 /* ---------- Lists ---------- */
+/* THE ONE MEMBER OF THE DECK COLUMN THAT MAY YIELD, and the only one that can do it harmlessly:
+ * it is a ListView, so it scrolls what it cannot show. min-height: 0 is what lets it actually
+ * reach zero rather than floor on its content and push the deficit back onto its pinned siblings. */
 .db-list {
     flex-grow: 1;
+    min-height: 0;
     background-color: var(--surface-1);
     border-radius: var(--space-2);
 }
@@ -184,6 +188,9 @@
  * cannot change which deck, which deck is default, or whether it exists. */
 
 .db-curve {
+    /* See the note on .deck-drawer__back: unpinned, this collapsed under the deck name and drew
+     * its bars and its 0..7+ labels through the text above it. */
+    flex-shrink: 0;
     flex-direction: row;
     align-items: flex-end;
     height: 56px;
@@ -553,7 +560,12 @@
     -unity-slice-right: 64;
     -unity-slice-top: 64;
     -unity-slice-bottom: 64;
-    -unity-slice-scale: 0.18px;
+    /* A 9-slice whose two opposing borders exceed the element's short axis renders NOTHING -- the
+     * corners overlap and the centre band goes negative. These pieces are 18px on their short axis
+     * (__upper/__lower width, __shoulder height), so the scale must keep 64 * scale * 2 comfortably
+     * under 18: at 0.10 that is 6.4px a side and a 5.2px band. The prior 0.18 wanted 23px on 18 and
+     * painted only the amber border. Raise this only alongside the short axis. */
+    -unity-slice-scale: 0.10px;
     -unity-background-image-tint-color: rgb(205, 211, 220);
     border-width: 2px;
     border-color: rgba(240, 166, 60, 0.72);
@@ -757,8 +769,16 @@
        Only the RIGHT spends --edge-safe. The drawer's top and bottom are screen
        edges with nothing on them -- the cutout is on a side and the gesture bar
        is hidden (see the token in theme.uss) -- and this is a LIST, so 52 on each
-       cost it 104dp of a 411dp panel, about two deck rows, for nothing. */
-    padding: var(--space-4) var(--edge-safe) var(--space-4) var(--space-5);
+       cost it 104dp of a 411dp panel, about two deck rows, for nothing.
+
+       THIS DECLARATION WAS DEAD TWICE OVER until 2026-08-30 and the drawer was
+       simply running at a flat 24px. `--space-5` is not a token -- the scale is
+       1/2/3/4/6/8/12/16 -- and ONE unresolvable var() invalidates the WHOLE
+       shorthand, silently. On top of that `.deck-drawer.chrome-panel--outer`
+       below re-declared `padding: 24px` at higher specificity. So the right edge
+       never had its --edge-safe and the Close button sat under the hole-punch.
+       Both are fixed; if you add a padding rule for this element, put it HERE. */
+    padding: var(--space-4) var(--edge-safe) var(--space-4) var(--space-6);
     background-color: var(--surface-2);
     border-left-width: 2px;
     border-left-color: var(--accent);
@@ -787,8 +807,20 @@
     font-size: var(--type-label);
     color: var(--ink-2);
 }
+/* The recessed plate, and the coordinate space the bottom fade anchors to. The ScrollView
+ * inside it is bare. See the UXML comment for why the fade cannot be the ScrollView's own child. */
+.deck-chooser-frame {
+    flex-grow: 1;
+}
 .deck-chooser {
     flex-grow: 1;
+}
+/* THE TINT IS THE HALF THAT MATTERS. `.emb-scroll-fade` ships a WHITE ramp so one texture can
+ * serve every surface; the colour has to come from the use site, and it is the plate this fade
+ * sits on -- `.deck-chooser-frame.chrome-panel--recessed` below, opaque so the ramp's own alpha
+ * is the only thing varying. Drop this rule and the deck list fades to white. */
+.deck-chooser__fade {
+    -unity-background-image-tint-color: rgb(8, 12, 18);
 }
 .deck-chooser--hidden,
 .deck-editor--hidden {
@@ -808,7 +840,7 @@
     display: flex;
 }
 .deck-choice-group {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-6);
 }
 .deck-choice-character {
     font-size: var(--type-h2);
@@ -855,7 +887,14 @@
 .deck-editor {
     flex-grow: 1;
 }
+/* EVERY FIXED-SIZE MEMBER OF THIS COLUMN CARRIES flex-shrink: 0, and `.db-list` is the one
+ * element allowed to yield. A flex child shrinks by default, and a Label shrunk below its line
+ * box STILL DRAWS ITS TEXT -- which is why an over-subscribed drawer rendered "New Deck", the
+ * mana curve and "0 / 30" on top of one another instead of clipping or scrolling. Pinning some
+ * of the column and not the rest is worse than pinning none: `.deck-drawer__manage` was pinned
+ * alone, so the whole deficit landed on its unpinned siblings. Add a sibling here, pin it. */
 .deck-drawer__back {
+    flex-shrink: 0;
     height: var(--space-12);
     margin-bottom: var(--space-3);
     border-width: 0;
@@ -864,8 +903,20 @@
     color: var(--ink-2);
     -unity-text-align: middle-left;
 }
+/* A ROW, not a stack: the count is `-unity-text-align: middle-right` because it was authored for
+ * the header row it used to live in, and giving it its own line cost a --type-h1 line box (~33dp)
+ * of a column that had none to spare. */
 .deck-editor__identity {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: var(--space-3);
+}
+.deck-editor__naming {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
 }
 .deck-editor__character {
     font-size: var(--type-label);
@@ -955,36 +1006,22 @@
  * eight lit tabs, so the art is also tinted toward the surface it sits on; the neutral tab paints a
  * flat colour rather than an image and takes the opacity half only.
  *
- * --on answers "is this tab filtering the wall" with a frame drawn inside the portrait. It never
- * changes the tab's geometry or overlaps its neighbours. Once any class is selected, --muted quiets
- * the other available portraits; with no selection they all remain vivid because the wall is
- * unconstrained and every available class is included. */
+ * --on says "this tab is filtering the wall" by CONTRAST ONLY -- it draws nothing of its own; the
+ * gold frame it used to fade in was removed 2026-08-30 (see below). Once any class is selected,
+ * --muted quiets the other available portraits and the unmuted one is the answer; with no selection
+ * they all remain vivid because the wall is unconstrained and every available class is included.
+ * --on is still stamped by CollectionController and is still the hook to style selection from. */
 .class-tab_art {
     transition-property: opacity, -unity-background-image-tint-color;
     transition-duration: 0.16s;
     transition-timing-function: ease-out;
 }
-.class-tab-frame {
-    position: absolute;
-    left: 3px;
-    top: 3px;
-    right: 3px;
-    bottom: 3px;
-    border-left-width: 3px;
-    border-top-width: 3px;
-    border-right-width: 3px;
-    border-bottom-width: 3px;
-    border-color: var(--accent);
-    border-radius: 25px 0 0 25px;
-    background-color: rgba(240, 166, 60, 0.08);
-    opacity: 0;
-    transition-property: opacity;
-    transition-duration: 0.16s;
-    transition-timing-function: ease-out;
-}
-.class-tab_art--on > .class-tab-frame {
-    opacity: 1;
-}
+/* THE SELECTED TAB HAS NO GOLDEN FRAME (Sam, 2026-08-30). `.class-tab-frame` -- an absolutely
+ * positioned child inside every `.class-tab_art`, an accent border plus an 8% accent wash, faded
+ * in by `--on` -- is gone, rules AND the nine elements that carried it. Selection is said by
+ * `--muted` quieting the other eight, which is the whole of the answer now. Do not reintroduce a
+ * frame here without reintroducing its element: a class with no body is what
+ * audit_edge_safety.py PASS 5 exists to catch. */
 .class-tab_art--muted {
     opacity: 0.6;
     -unity-background-image-tint-color: rgb(158, 164, 177);
@@ -1045,12 +1082,20 @@
 .collection.emb-sw-expanded .col-scroll.chrome-panel--recessed {
     padding: 4px 20px;
 }
+/* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently
+ * replaces the whole edge-clearance shorthand that rule authors -- which is exactly what
+ * `padding: 24px` did from #228 until 2026-08-30. */
 .deck-drawer.chrome-panel--outer {
-    padding: 24px;
     border-left-width: 0;
     background-color: rgba(18, 23, 31, 0.98);
 }
-.deck-chooser.chrome-panel--recessed,
+/* The plate moved from the ScrollView to its frame when the bottom fade landed. The alpha is
+ * 1 on the chooser, not 0.92: the fade ramps to a FLAT rgb(8, 12, 18) and a translucent plate
+ * under it would show the drawer through the bottom band only, as a horizontal seam. */
+.deck-chooser-frame.chrome-panel--recessed {
+    padding: var(--space-4);
+    background-color: rgb(8, 12, 18);
+}
 .deck-editor.chrome-panel--recessed {
     padding: var(--space-4);
     background-color: rgba(8, 12, 18, 0.92);
