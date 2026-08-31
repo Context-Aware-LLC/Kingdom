@@ -21,6 +21,112 @@ namespace Emberfall.Training.Corpus.Tests
     public sealed class TrainingCorpusTests
     {
         [Test]
+        public void Known_opponent_hand_learns_a_public_bounce_for_both_viewer_directions()
+        {
+            for (int viewerSeat = 0; viewerSeat < 2; viewerSeat++)
+            {
+                var viewer = new PlayerId($"p{viewerSeat}");
+                var tracker = new KnownOpponentHandTracker(viewer);
+                GameState before = PublicTransitionState(viewerSeat, new[] { 41 }, opponentHand: 2);
+                GameState after = PublicTransitionState(viewerSeat, Array.Empty<int>(), opponentHand: 3);
+
+                tracker.Observe(before, new[]
+                {
+                    PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                }, after, Array.Empty<int>());
+
+                Assert.That(tracker.Snapshot(), Is.EqualTo(new[] { 41 }));
+                Assert.That(tracker.Snapshot(), Does.Not.Contain(101),
+                    "memory stores the public definition, never the retired board instance id");
+            }
+        }
+
+        [Test]
+        public void Known_opponent_hand_tracks_duplicate_mass_recall_as_a_sorted_multiset()
+        {
+            var tracker = new KnownOpponentHandTracker(new PlayerId("p0"));
+            GameState before = PublicTransitionState(0, new[] { 73, 19, 73 }, opponentHand: 1);
+            GameState after = PublicTransitionState(0, Array.Empty<int>(), opponentHand: 4);
+
+            tracker.Observe(before, new[]
+            {
+                PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+            }, after, Array.Empty<int>());
+
+            Assert.That(tracker.Snapshot(), Is.EqualTo(new[] { 19, 73, 73 }));
+        }
+
+        [Test]
+        public void Known_opponent_hand_forgets_one_public_play_and_never_learns_an_unknown_draw()
+        {
+            var tracker = new KnownOpponentHandTracker(new PlayerId("p0"));
+            GameState publicBoard = PublicTransitionState(0, new[] { 73, 73 }, opponentHand: 0);
+            tracker.Observe(publicBoard, new[]
+            {
+                PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+            }, PublicTransitionState(0, Array.Empty<int>(), opponentHand: 2), Array.Empty<int>());
+
+            GameState afterPlay = PublicTransitionState(0, new[] { 999 }, opponentHand: 1,
+                firstOpponentBoardId: 501);
+            tracker.Observe(
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 2),
+                new[] { PublicEvent(GameEventKind.CardPlayed, source: new InstanceId(501)) },
+                afterPlay,
+                new[] { 73 });
+            tracker.Observe(
+                afterPlay,
+                new[] { PublicEvent(GameEventKind.CardDrawn, source: GameStateProjector.Sentinel) },
+                PublicTransitionState(0, new[] { 999 }, opponentHand: 2,
+                    firstOpponentBoardId: 501),
+                Array.Empty<int>());
+
+            Assert.That(tracker.Snapshot(), Is.EqualTo(new[] { 73 }));
+        }
+
+        [Test]
+        public void Known_opponent_hand_fails_closed_when_a_hidden_bounce_has_no_public_definition()
+        {
+            var tracker = new KnownOpponentHandTracker(new PlayerId("p0"));
+
+            tracker.Observe(
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 1),
+                new[] { PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel) },
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 2),
+                Array.Empty<int>());
+
+            Assert.That(tracker.Snapshot(), Is.Empty,
+                "a hidden deck-to-hand transition must not invent a known definition");
+        }
+
+        [Test]
+        public void Known_opponent_hand_conservatively_reduces_an_unidentified_hand_departure()
+        {
+            var tracker = new KnownOpponentHandTracker(new PlayerId("p0"));
+            tracker.Observe(
+                PublicTransitionState(0, new[] { 19, 73, 73 }, opponentHand: 0),
+                new[]
+                {
+                    PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                    PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                    PublicEvent(GameEventKind.CardBounced, target: GameStateProjector.Sentinel),
+                },
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 3),
+                Array.Empty<int>());
+
+            tracker.Observe(
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 3),
+                new[] { PublicEvent(GameEventKind.WeaponEquipped, source: new InstanceId(2)) },
+                PublicTransitionState(0, Array.Empty<int>(), opponentHand: 2),
+                Array.Empty<int>());
+
+            Assert.That(tracker.Snapshot(), Is.EqualTo(new[] { 73 }),
+                "after one unidentified departure only one of two duplicate definitions is guaranteed");
+        }
+
+        [Test]
         public void Episode_manifest_writer_round_trips_and_rejects_duplicate_match_ids()
         {
             string root = TempDirectory();
@@ -161,6 +267,7 @@ namespace Emberfall.Training.Corpus.Tests
                     "player memory must not expose the opponent's unrevealed deck");
                 Assert.That(memory.GetProperty("selfGraveyard").GetArrayLength(), Is.Zero);
                 Assert.That(memory.GetProperty("opponentGraveyard").GetArrayLength(), Is.Zero);
+                Assert.That(memory.GetProperty("knownOpponentHand").GetArrayLength(), Is.Zero);
                 Assert.That(row.GetProperty("done").GetBoolean(), Is.False,
                     "p0's transition is not terminal while p1 still acts afterward");
                 Assert.That(row.GetProperty("reward").GetInt32(), Is.Zero);
@@ -170,6 +277,148 @@ namespace Emberfall.Training.Corpus.Tests
                 Assert.That(last.RootElement.GetProperty("done").GetBoolean(), Is.True);
                 Assert.That(last.RootElement.GetProperty("reward").GetInt32(), Is.EqualTo(-1));
                 Assert.That(last.RootElement.GetProperty("episodeReturn").GetInt32(), Is.EqualTo(-1));
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Test]
+        public void Builder_materializes_public_bounce_memory_and_later_removal_deterministically()
+        {
+            string root = TempDirectory();
+            try
+            {
+                string raw = Path.Combine(root, "raw");
+                string replayDir = Path.Combine(raw, "replays");
+                string built = Path.Combine(root, "built");
+                string rebuilt = Path.Combine(root, "rebuilt");
+                Directory.CreateDirectory(replayDir);
+
+                string cards = FindCardData();
+                FileCardDatabase db = FileCardDatabase.LoadDirectory(cards);
+                const int minionDefinition = 1001;
+                const int undertowDefinition = 156;
+                var setup = new MatchSetup(
+                    CardClass.EMBERWARD,
+                    Enumerable.Repeat(minionDefinition, 30).ToArray(),
+                    CardClass.TIDECALLER,
+                    Enumerable.Repeat(undertowDefinition, 30).ToArray());
+                var id = new MatchId("training-known-hand-test");
+                var p0 = new PlayerId("p0");
+                var p1 = new PlayerId("p1");
+                const ulong seed = 0xB0AACEUL;
+                var replay = new JsonlReplayStore(replayDir);
+                var host = new LocalMatchHost(new CommandProcessor(db), db, setup);
+                host.BeginMatch(id, p0, p1, seed);
+                replay.Begin(id, seed, p0, p1);
+                var decisionHashes = new List<EpisodeDecisionHash>();
+
+                void Apply(PlayerIntent intent)
+                {
+                    string before = GameStateHasher.Hash(
+                        GameStateProjector.Project(host.State, intent.Player));
+                    CommandResult applied = host.Submit(intent);
+                    Assert.That(applied.Accepted, Is.True, applied.Reason?.ToString());
+                    replay.Append(id, intent);
+                    decisionHashes.Add(new EpisodeDecisionHash(
+                        decisionHashes.Count,
+                        intent.Player.Value,
+                        before,
+                        GameStateHasher.Hash(GameStateProjector.Project(host.State, intent.Player))));
+                }
+
+                Apply(new MulliganIntent(p0, Array.Empty<InstanceId>()));
+                Apply(new MulliganIntent(p1, Array.Empty<InstanceId>()));
+                if (host.State.ActivePlayer == p1) Apply(new EndTurnIntent(p1));
+
+                CardInstance minion = host.State.PlayerOf(p0).Hand.First(
+                    card => card.DefinitionId == minionDefinition);
+                Apply(new PlayCardIntent(p0, minion.Id, 0, Array.Empty<TargetRef>()));
+                Apply(new EndTurnIntent(p0));
+
+                if (host.State.PlayerOf(p1).Mana.Available < 2)
+                {
+                    CardInstance spark = host.State.PlayerOf(p1).Hand.First(
+                        card => card.DefinitionId == setup.SparkTokenId);
+                    Apply(new PlayCardIntent(p1, spark.Id, 0, Array.Empty<TargetRef>()));
+                }
+                CardInstance undertow = host.State.PlayerOf(p1).Hand.First(
+                    card => card.DefinitionId == undertowDefinition);
+                CardInstance publicTarget = host.State.PlayerOf(p0).Board.Single();
+                InstanceId retiredPublicId = publicTarget.Id;
+                Apply(new PlayCardIntent(
+                    p1,
+                    undertow.Id,
+                    0,
+                    new[] { new TargetRef(publicTarget.Id) }));
+                int rememberedDecision = decisionHashes.Count;
+                Apply(new EndTurnIntent(p1));
+
+                CardInstance returned = host.State.PlayerOf(p0).Hand.First(
+                    card => card.DefinitionId == minionDefinition);
+                Assert.That(returned.Id, Is.Not.EqualTo(retiredPublicId));
+                Apply(new PlayCardIntent(p0, returned.Id, 0, Array.Empty<TargetRef>()));
+                Apply(new EndTurnIntent(p0));
+                int clearedDecision = decisionHashes.Count;
+                Apply(new ConcedeIntent(p1));
+                replay.Complete(id, host.State.Outcome);
+
+                string replayPath = replay.PathFor(id);
+                var manifest = new EpisodeManifest(
+                    EpisodeManifest.CurrentSchemaVersion,
+                    id.Value,
+                    seed,
+                    p0.Value,
+                    p1.Value,
+                    setup.P0Class,
+                    setup.P1Class,
+                    setup.P0Deck,
+                    setup.P1Deck,
+                    setup.HeroMaxHealth,
+                    setup.SparkTokenId,
+                    EpisodeManifest.CurrentEngineContractVersion,
+                    ProtocolContract.Version,
+                    "test-revision",
+                    CorpusFiles.Sha256CardData(cards),
+                    "test-policy",
+                    "test-policy",
+                    "replays/training-known-hand-test.jsonl",
+                    CorpusFiles.Sha256File(replayPath),
+                    GameStateHasher.Hash(GameStateProjector.Project(host.State, p0)),
+                    GameStateHasher.Hash(GameStateProjector.Project(host.State, p1)),
+                    decisionHashes,
+                    host.State.Outcome);
+                var writer = new JsonlEpisodeManifestWriter(raw);
+                writer.Append(manifest);
+
+                new TrainingCorpusBuilder(db).Build(writer.Path, manifest.CardDataSha256, built);
+                new TrainingCorpusBuilder(db).Build(writer.Path, manifest.CardDataSha256, rebuilt);
+                string decisionsPath = Path.Combine(built, TrainingCorpusBuilder.DecisionsFileName);
+                string[] decisions = File.ReadAllLines(decisionsPath);
+
+                using JsonDocument remembered = JsonDocument.Parse(decisions[rememberedDecision]);
+                Assert.That(remembered.RootElement.GetProperty("actor").GetString(), Is.EqualTo("p1"));
+                Assert.That(
+                    remembered.RootElement.GetProperty("playerMemory")
+                        .GetProperty("knownOpponentHand").EnumerateArray()
+                        .Select(value => value.GetInt32()),
+                    Is.EqualTo(new[] { minionDefinition }));
+                foreach (JsonElement card in remembered.RootElement.GetProperty("observation")
+                    .GetProperty("players")[0].GetProperty("hand").EnumerateArray())
+                {
+                    Assert.That(card.GetProperty("definitionId").GetInt32(), Is.Zero);
+                    Assert.That(card.GetProperty("id").GetString(), Is.EqualTo("i0"));
+                }
+
+                using JsonDocument cleared = JsonDocument.Parse(decisions[clearedDecision]);
+                Assert.That(cleared.RootElement.GetProperty("actor").GetString(), Is.EqualTo("p1"));
+                Assert.That(cleared.RootElement.GetProperty("playerMemory")
+                    .GetProperty("knownOpponentHand").GetArrayLength(), Is.Zero);
+                Assert.That(
+                    CorpusFiles.Sha256File(Path.Combine(rebuilt, TrainingCorpusBuilder.DecisionsFileName)),
+                    Is.EqualTo(CorpusFiles.Sha256File(decisionsPath)));
             }
             finally
             {
@@ -233,6 +482,46 @@ namespace Emberfall.Training.Corpus.Tests
                 new string('d', 64),
                 new[] { new EpisodeDecisionHash(0, "p0", new string('e', 64), new string('f', 64)) },
                 MatchOutcome.Player0Win);
+
+        private static GameState PublicTransitionState(
+            int viewerSeat,
+            IReadOnlyList<int> opponentBoardDefinitions,
+            int opponentHand,
+            int firstOpponentBoardId = 101)
+        {
+            var p0 = new PlayerId("p0");
+            var p1 = new PlayerId("p1");
+            var state = new GameState(
+                new MatchId("public-transition"),
+                new DeterministicRandom(0),
+                new PlayerState(p0, new HeroInstance(new InstanceId(1), p0, CardClass.EMBERWARD, 30)),
+                new PlayerState(p1, new HeroInstance(new InstanceId(2), p1, CardClass.TIDECALLER, 30)));
+            PlayerState opponent = state.Players[1 - viewerSeat];
+            for (int index = 0; index < opponentBoardDefinitions.Count; index++)
+                opponent.Board.Add(new CardInstance(
+                    new InstanceId(firstOpponentBoardId + index),
+                    opponentBoardDefinitions[index],
+                    opponent.Id)
+                {
+                    Zone = Zone.Board,
+                    Position = index,
+                });
+            for (int index = 0; index < opponentHand; index++)
+                opponent.Hand.Add(new CardInstance(
+                    GameStateProjector.Sentinel,
+                    0,
+                    opponent.Id)
+                {
+                    Zone = Zone.Hand,
+                });
+            return state;
+        }
+
+        private static GameEvent PublicEvent(
+            GameEventKind kind,
+            InstanceId? source = null,
+            InstanceId? target = null)
+            => new GameEvent(kind, 0, source, target, null, EventFlags.None);
 
         private static string TempDirectory()
         {

@@ -62,11 +62,14 @@ record counts and output checksums and is path-independent for reproducible buil
 Python tensor, analytics, and conversational exporters should consume these model-neutral rows.
 They must not reimplement game rules or reconstruct hidden authority state.
 
-Dataset schema v2 adds `playerMemory` to every decision. It contains three sorted card-definition
-multisets: the actor's known remaining deck, the actor's public graveyard, and the opponent's
-public graveyard. Sorting removes deck order, and no opponent hand or remaining-deck identity is
-included. The builder records this memory while replaying the authoritative state, before the
-action is applied, so downstream exporters never infer it from redacted deck placeholders.
+Dataset schema v3 adds `knownOpponentHand` to the `playerMemory` object introduced in v2. The four
+sorted card-definition multisets are the actor's known remaining deck, the actor's public
+graveyard, the opponent's public graveyard, and definitions the actor can still prove are in the
+opponent's hand. The last multiset is reconstructed only from per-viewer projected public
+transitions: a public card bounced into the opponent's redacted hand adds one occurrence, and a
+later public play removes one matching occurrence. Unknown draws never become known, and no hidden
+instance id is retained. Sorting removes deck order and hidden-zone identity; the opponent's
+unrevealed deck remains excluded.
 
 ## Export
 

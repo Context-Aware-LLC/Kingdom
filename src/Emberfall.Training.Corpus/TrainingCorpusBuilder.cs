@@ -127,13 +127,19 @@ namespace Emberfall.Training.Corpus
                                        episode.HeroMaxHealth, episode.SparkTokenId);
             var processor = new CommandProcessor(_db);
             var host = new LocalMatchHost(processor, _db, setup);
-            host.BeginMatch(new MatchId(episode.MatchId), new PlayerId(episode.P0), new PlayerId(episode.P1), episode.Seed);
+            var p0 = new PlayerId(episode.P0);
+            var p1 = new PlayerId(episode.P1);
+            host.BeginMatch(new MatchId(episode.MatchId), p0, p1, episode.Seed);
             var legal = new LegalActionEnumerator(_db, processor);
+            var p0Knowledge = new KnownOpponentHandTracker(p0);
+            var p1Knowledge = new KnownOpponentHandTracker(p1);
 
             int index = 0;
             foreach (PlayerIntent intent in replay.Intents)
             {
-                GameState projectedBefore = GameStateProjector.Project(host.State, intent.Player);
+                GameState projectedBeforeP0 = GameStateProjector.Project(host.State, p0);
+                GameState projectedBeforeP1 = GameStateProjector.Project(host.State, p1);
+                GameState projectedBefore = intent.Player == p0 ? projectedBeforeP0 : projectedBeforeP1;
                 IReadOnlyList<PlayerIntent> actions = legal.Enumerate(host.State, intent.Player,
                     includeConcede: true);
                 List<JsonElement> actionJson = EncodeActions(actions, new MatchId(episode.MatchId));
@@ -151,12 +157,35 @@ namespace Emberfall.Training.Corpus
                     throw new InvalidDataException(
                         $"Episode '{episode.MatchId}' intent {index} pre-action observation hash disagrees with capture.");
                 JsonElement observation = EncodeObservation(projectedBefore, new MatchId(episode.MatchId));
-                PlayerMemory playerMemory = EncodePlayerMemory(host.State, intent.Player);
+                PlayerMemory playerMemory = EncodePlayerMemory(
+                    host.State,
+                    intent.Player,
+                    intent.Player == p0 ? p0Knowledge.Snapshot() : p1Knowledge.Snapshot());
                 CommandResult result = host.Submit(intent);
                 if (!result.Accepted)
                     throw new InvalidDataException(
                         $"Episode '{episode.MatchId}' intent {index} was rejected during replay: {result.Reason}.");
-                GameState projectedAfter = GameStateProjector.Project(host.State, intent.Player);
+                GameState projectedAfterP0 = GameStateProjector.Project(host.State, p0);
+                GameState projectedAfterP1 = GameStateProjector.Project(host.State, p1);
+                IReadOnlyList<GameEvent> p0Events = GameStateProjector.ProjectEvents(
+                    result.Events, processor.LastEventVisibility, viewerSeat: 0);
+                IReadOnlyList<GameEvent> p1Events = GameStateProjector.ProjectEvents(
+                    result.Events, processor.LastEventVisibility, viewerSeat: 1);
+                IReadOnlyList<int> publiclyPlayedDefinitions = PubliclyPlayedDefinitions(
+                    projectedBefore,
+                    intent.Player == p0 ? p1Events : p0Events,
+                    intent.Player);
+                p0Knowledge.Observe(
+                    projectedBeforeP0,
+                    p0Events,
+                    projectedAfterP0,
+                    intent.Player == p0 ? Array.Empty<int>() : publiclyPlayedDefinitions);
+                p1Knowledge.Observe(
+                    projectedBeforeP1,
+                    p1Events,
+                    projectedAfterP1,
+                    intent.Player == p1 ? Array.Empty<int>() : publiclyPlayedDefinitions);
+                GameState projectedAfter = intent.Player == p0 ? projectedAfterP0 : projectedAfterP1;
                 string afterHash = GameStateHasher.Hash(projectedAfter);
                 if (!string.Equals(expectedHashes.AfterSha256, afterHash, StringComparison.Ordinal))
                     throw new InvalidDataException(
@@ -261,7 +290,10 @@ namespace Emberfall.Training.Corpus
             return document.RootElement.GetProperty("body").GetProperty("state").Clone();
         }
 
-        private static PlayerMemory EncodePlayerMemory(GameState state, PlayerId actor)
+        private static PlayerMemory EncodePlayerMemory(
+            GameState state,
+            PlayerId actor,
+            IReadOnlyList<int> knownOpponentHand)
         {
             int actorSeat = state.SeatOf(actor);
             PlayerState self = state.Players[actorSeat];
@@ -269,7 +301,8 @@ namespace Emberfall.Training.Corpus
             return new PlayerMemory(
                 SortedDefinitions(self.Deck),
                 SortedDefinitions(self.Graveyard),
-                SortedDefinitions(opponent.Graveyard));
+                SortedDefinitions(opponent.Graveyard),
+                knownOpponentHand);
         }
 
         private static IReadOnlyList<int> SortedDefinitions(IReadOnlyList<CardInstance> cards)
@@ -277,6 +310,27 @@ namespace Emberfall.Training.Corpus
             var definitions = new List<int>(cards.Count);
             foreach (CardInstance card in cards) definitions.Add(card.DefinitionId);
             definitions.Sort();
+            return definitions;
+        }
+
+        private static IReadOnlyList<int> PubliclyPlayedDefinitions(
+            GameState projectedActorBefore,
+            IReadOnlyList<GameEvent> publicEvents,
+            PlayerId actor)
+        {
+            PlayerState actingPlayer = projectedActorBefore.PlayerOf(actor);
+            var definitions = new List<int>();
+            foreach (GameEvent gameEvent in publicEvents)
+            {
+                if (gameEvent.Kind != GameEventKind.CardPlayed || !gameEvent.Source.HasValue)
+                    continue;
+                foreach (CardInstance card in actingPlayer.Hand)
+                    if (card.Id == gameEvent.Source.Value)
+                    {
+                        definitions.Add(card.DefinitionId);
+                        break;
+                    }
+            }
             return definitions;
         }
 
@@ -365,6 +419,7 @@ namespace Emberfall.Training.Corpus
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,
             IReadOnlyList<int> SelfGraveyard,
-            IReadOnlyList<int> OpponentGraveyard);
+            IReadOnlyList<int> OpponentGraveyard,
+            IReadOnlyList<int> KnownOpponentHand);
     }
 }
