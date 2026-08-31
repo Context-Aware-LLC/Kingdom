@@ -111,6 +111,22 @@ namespace Emberfall.Editor
         /// regardless of whatever the Editor's per-user overrides happen to be.  The keystore
         /// is the checked-in debug config at <c>keystore/debug.keystore</c>; never use it
         /// for Play Store submissions.</para>
+        ///
+        /// <para><b>ARM64 is not a preference and there is no x86_64 build to reach for.</b>
+        /// Unity 6000.5.1f1 ships no Android x86_64 runtime — <c>Variations/il2cpp/Release/Libs</c>
+        /// holds <c>arm64-v8a</c>, <c>armeabi-v7a</c> and <c>armv9</c> and nothing else — so
+        /// setting <c>AndroidArchitecture.X86_64</c> leaves the architecture set empty and the
+        /// build dies in <c>PrepareForBuild</c> with <i>"Target architecture not specified"</i>,
+        /// a message that names neither x86_64 nor the missing libs. The enum member still
+        /// exists, which is what makes this look available.</para>
+        ///
+        /// <para><b>The consequence: the Android emulator is not a test rig for this project.</b>
+        /// Every AVD on an x86_64 host is an x86_64 image, so no APK this repo can produce will
+        /// install on one. A layout question goes to <see cref="DeviceDpRig"/>, which reproduces
+        /// the phone's 411dp budget in the Editor; a renderer question needs the phone. Verified
+        /// 2026-08-31. RETIREMENT TRIGGER: if a Unity upgrade restores an x86_64 Android runtime
+        /// (check that Libs folder), this paragraph and the emulator note in project memory are
+        /// both wrong and change together.</para>
         /// </summary>
         [MenuItem("Emberfall/Build/Android APK (content + player, IL2CPP ARM64)")]
         public static void BuildAndroid()
