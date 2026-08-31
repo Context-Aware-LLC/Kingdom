@@ -315,10 +315,12 @@
     background-color: var(--accent);
     -unity-font-style: bold;
 }
+/* A tab hanging from the top-LEFT, because that is now the edge its drawer arrives from. It was
+ * centred (`left: 50%; translate: -50% 0`) while the drawer came down across the full width. */
 .col-button--filters {
     position: absolute;
     top: 0;
-    left: 50%;
+    left: 0;
     width: 132px;
     height: 56px;
     min-height: 56px;
@@ -328,7 +330,6 @@
     border-bottom-width: 2px;
     border-color: rgba(240, 166, 60, 0.82);
     border-radius: 0 0 var(--space-2) var(--space-2);
-    translate: -50% 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -382,18 +383,23 @@
     rotate: -40deg;
 }
 .col-button--filters.chrome-button:active {
-    translate: -50% 1px;
+    translate: 0 1px;
 }
 
-/* Query toolbar + top drawer
+/* Query toolbar + left drawer
  * The toolbar is an overlay declared after the wall in UXML: it paints above the cards but owns no
  * flow height. Its own picking is ignored so the transparent span does not swallow wall gestures;
  * the three Button children remain pickable. The query drawer follows it and therefore paints above
  * both toolbar and wall while open.
+ *
+ * `top` clears the class rail, which is IN FLOW above the wall as of 2026-08-31 — this overlay is
+ * positioned against the screen ROOT, so at top:0 it painted over the rail's nine tabs and ate
+ * their taps. It tucks under the rail's bottom edge; the 4dp of the rail's own margin-bottom is
+ * deliberately not added, so the tab reads as hanging FROM the strip rather than floating below it.
  */
 .col-query-toolbar {
     position: absolute;
-    top: 0;
+    top: var(--touch-min);
     left: var(--edge-safe);
     right: var(--edge-safe);
     height: 72px;
@@ -409,36 +415,49 @@
 .col-query-scrim--open {
     display: flex;
 }
+/* THE FILTER DRAWER IS A LEFT COLUMN (Sam, 2026-08-31), mirroring .deck-drawer on the right.
+ *
+ * It used to span left:0 to right:0 and slide DOWN, spending up to 332dp of a 411dp screen — the
+ * SCARCE axis — to show controls that stack perfectly happily in a column. As a left column it
+ * spends the abundant one, and the wall stays readable behind it instead of being buried.
+ *
+ * The width contract is deck-drawer's, deliberately: two drawers that arrive from opposite edges
+ * and land on different widths read as two unrelated mechanisms.
+ *
+ * --edge-safe ON THE LEFT ONLY, and the asymmetry is measured rather than assumed. The left IS a
+ * screen edge and the cutout is 52dp deep on a SIDE — it flips sides with rotation direction, which
+ * is why the token is spent wherever a panel meets a short edge rather than on the side some API
+ * happens to name. The drawer's right edge is interior and takes the ordinary gutter.
+ *
+ * TOP AND BOTTOM DO NOT PAY. The Pixel 5a's insets, read over USB 2026-08-21, are
+ * ROTATION_90 [136,0][0,63] and ROTATION_270 [0,0][136,63] — left/right flip, top is 0 in BOTH, and
+ * the 63 at the bottom is the gesture bar, which is hidden. The game is landscape-locked (NOR-283),
+ * so no rotation puts a cutout on this panel's top or bottom. This is a LIST, and 52 on each would
+ * cost it 104dp of a 411dp column for nothing — the same arithmetic .deck-drawer states.
+ *
+ * Painting to the edge is correct; putting CONTENT there is not — the .emb-bleed idea, just not all
+ * four sides of it. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS.
+ *
+ * THE OLD COMPACT HEIGHT BUDGET IS GONE, not merely stale: it read "the search row, optional scope
+ * row and three chip rows total at most 332dp of 411, and the 79dp remainder is the outside-tap
+ * target that closes this drawer". In a column the rows stack and exceed the panel height instead,
+ * which is why .col-query-scroll below exists and why the outside-tap target is now the wall to the
+ * RIGHT of the drawer. There is no height budget to keep in sync any more.
+ *
+ * translate, never width: animating width would emit a GeometryChangedEvent every frame and
+ * continuously relayout the fixed-size CardWall tiles. Same reason .deck-drawer gives. */
 .col-query {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    /* --edge-safe HORIZONTALLY ONLY, and the asymmetry is measured rather than assumed.
-       This panel spans left:0 to right:0, so at the old --space-6 its search field and chips
-       sat under the display cutout — 52dp deep, and it FLIPS SIDES with rotation direction,
-       which is why both sides pay rather than the one an API happens to name.
-
-       The TOP does not pay. The Pixel 5a's insets, read over USB 2026-08-21, are
-       ROTATION_90 [136,0][0,63] and ROTATION_270 [0,0][136,63] — left/right flip, top is 0
-       in BOTH, and the 63 at the bottom is the gesture bar. The game is landscape-locked
-       (NOR-283), so no rotation exists that puts a cutout on this panel's top edge. Spending
-       52 there cost 36dp of a 411dp screen for nothing, and this bar is already over budget
-       (see below).
-
-       Painting to the edge is correct; putting CONTENT there is not — which is the .emb-bleed
-       idea, just not all four sides of it. Declared in audit_edge_safety.py's
-       TOKEN_EXCEPTIONS.
-
-       COMPACT BUDGET: the Pixel 5a has 411.4dp of height. At compact sizing the search row,
-       optional scope row and three chip rows total at most 332dp including drawer padding and
-       row margins. The 79dp remainder is the outside-tap target that closes this drawer. Keep the
-       compact row widths and heights below in sync with the source-level contract. */
-    padding: var(--space-4) var(--edge-safe);
+    bottom: 0;
+    width: 34%;
+    min-width: 420px;
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--edge-safe);
     background-color: rgba(8, 12, 18, 0.98);
-    border-bottom-width: 2px;
-    border-bottom-color: var(--accent);
-    translate: 0 -105%;
+    border-right-width: 2px;
+    border-right-color: var(--accent);
+    translate: -110% 0;
     opacity: 0;
     transition-property: translate, opacity;
     transition-duration: 0.22s;
@@ -448,29 +467,33 @@
     translate: 0 0;
     opacity: 1;
 }
+/* The rows overflow a 411dp column — see the UXML comment for why the fade is the ScrollView's
+ * SIBLING and not its child. min-height:0 is what lets the ScrollView actually shrink to the
+ * drawer rather than flooring on its content and pushing the overflow out of the panel. */
+.col-query-scroll {
+    flex-grow: 1;
+    min-height: 0;
+}
+/* THE TINT IS THE HALF THAT MATTERS. `.emb-scroll-fade` ships a WHITE ramp so one texture can serve
+ * every surface; the colour has to come from the use site, and here that is this drawer's own
+ * rgba(8, 12, 18, 0.98). Drop this rule and the filter list fades to white. */
+.col-query__fade {
+    -unity-background-image-tint-color: rgb(8, 12, 18);
+}
+/* A COLUMN, not a row. Search + sort + sort-dir + reset shared one line across a full-width top
+ * drawer; in a ~420dp column they stack. The 56/106/156px side margins that used to centre this
+ * row inside the forged brackets' inner bay went with the brackets — there is no bay to centre in,
+ * and a fixed side margin here would eat a quarter of the drawer's width at compact. */
 .col-query-row {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    margin-left: 56px;
-    margin-right: 56px;
+    flex-direction: column;
+    align-items: stretch;
     margin-bottom: var(--space-2);
 }
 .col-query-utility-row {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    margin-left: 56px;
-    margin-right: 56px;
     margin-bottom: var(--space-2);
-}
-.collection.emb-sw-medium .col-query-utility-row {
-    margin-left: 106px;
-    margin-right: 106px;
-}
-.collection.emb-sw-expanded .col-query-utility-row {
-    margin-left: 156px;
-    margin-right: 156px;
 }
 .col-query-actions {
     position: absolute;
@@ -494,21 +517,22 @@
 .collection.emb-sw-expanded .col-query-actions {
     top: var(--space-3);
 }
+/* `max-width: 58%` is gone with the row: it kept the search field from swallowing a full-width
+ * drawer's line. In a column it would cap the field at 58% of ~370dp and leave the sort control
+ * beneath it visibly wider, which reads as a broken alignment rather than a deliberate one. */
 .col-search {
-    flex-grow: 1;
-    max-width: 58%;
-    margin-right: var(--space-3);
+    margin-bottom: var(--space-2);
 }
+/* Stacked, so each control takes the drawer's width and the gap is vertical. These carried
+ * width: 200/132/120 and margin-right while the four sat on one line. */
 .col-sort {
-    width: 200px;
-    margin-right: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 .col-sort-dir {
-    width: 132px;
-    margin-right: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 #query-reset {
-    width: 120px;
+    margin-bottom: var(--space-2);
 }
 /* Wrapping remains the fallback for split-screen and unusually narrow panels. At the measured
  * compact phone width, the wider bay and compact chip step below keep each known facet on one row. */
@@ -518,87 +542,15 @@
     flex-grow: 1;
     justify-content: center;
 }
+/* The 56/106/156px side margins here defined the narrower bay the forged brackets framed. Both the
+ * brackets and the bay are gone; in a ~370dp content column those margins left roughly one chip's
+ * width of usable row. */
 .col-chip-group {
     flex-direction: row;
     align-items: center;
-    margin-left: 56px;
-    margin-right: 56px;
     margin-bottom: var(--space-2);
 }
-.collection.emb-sw-medium .col-chip-group {
-    margin-left: 106px;
-    margin-right: 106px;
-}
-.collection.emb-sw-expanded .col-chip-group {
-    margin-left: 156px;
-    margin-right: 156px;
-}
 
-/* Matched forged brackets turn inward below the search row, then run to the drawer floor. Their
- * inner uprights define the narrower bay that centres the three filter families; the controls own
- * the corresponding margins above, so these remain decorative and never intercept input. */
-.col-query-bracket {
-    position: absolute;
-    top: var(--space-3);
-    bottom: 0;
-    width: 128px;
-}
-/* Decorative, non-pickable frame: let its upper legs paint to the panel edges while the inner
- * uprights at 102px define the widened compact bay. Interactive content still pays the query
- * panel's --edge-safe padding; this decoration deliberately does not. */
-.col-query-bracket--left {
-    left: 0;
-}
-.col-query-bracket--right {
-    right: 0;
-}
-.col-query-bracket__piece {
-    position: absolute;
-    background-color: rgba(18, 23, 31, 0.98);
-    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
-    -unity-slice-left: 64;
-    -unity-slice-right: 64;
-    -unity-slice-top: 64;
-    -unity-slice-bottom: 64;
-    /* A 9-slice whose two opposing borders exceed the element's short axis renders NOTHING -- the
-     * corners overlap and the centre band goes negative. These pieces are 18px on their short axis
-     * (__upper/__lower width, __shoulder height), so the scale must keep 64 * scale * 2 comfortably
-     * under 18: at 0.10 that is 6.4px a side and a 5.2px band. The prior 0.18 wanted 23px on 18 and
-     * painted only the amber border. Raise this only alongside the short axis. */
-    -unity-slice-scale: 0.10px;
-    -unity-background-image-tint-color: rgb(205, 211, 220);
-    border-width: 2px;
-    border-color: rgba(240, 166, 60, 0.72);
-}
-.col-query-bracket__upper {
-    top: 0;
-    width: 18px;
-    height: 76px;
-}
-.col-query-bracket__shoulder {
-    top: 60px;
-    width: 120px;
-    height: 18px;
-}
-.col-query-bracket__lower {
-    top: 60px;
-    bottom: 0;
-    width: 18px;
-}
-.col-query-bracket--left .col-query-bracket__upper,
-.col-query-bracket--left .col-query-bracket__shoulder {
-    left: 0;
-}
-.col-query-bracket--left .col-query-bracket__lower {
-    left: 102px;
-}
-.col-query-bracket--right .col-query-bracket__upper,
-.col-query-bracket--right .col-query-bracket__shoulder {
-    right: 0;
-}
-.col-query-bracket--right .col-query-bracket__lower {
-    right: 102px;
-}
 .collection .db-chip {
     min-height: 52px;
     height: 52px;
@@ -697,11 +649,13 @@
     -unity-text-align: middle-center;
 }
 
-/* Sit the pairing chips on the same line as search/sort, with a small gap after Reset and no second
- * row of their own (ruling 3). .db-filter-row carries a margin-bottom for its old stacked home. */
+/* Ruling 3 sat the pairing chips on the SAME LINE as search/sort, with a small gap after Reset —
+ * `margin-bottom: 0; margin-left: var(--space-3)`. That ruling was about a full-width top drawer
+ * where the four controls shared one line and a second row of chips was the thing being avoided.
+ * .col-query-row is a column now, so the chips are already on their own line and the horizontal gap
+ * would only indent them out of alignment with everything above. */
 .collection--editing .col-query-row .db-filter-row {
-    margin-bottom: 0;
-    margin-left: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 /* ---------- Wall ---------- */
@@ -939,29 +893,48 @@
     -unity-font-style: bold;
 }
 
-/* The class strip divides the body's height between its nine tabs, so it starts flush with the top
- * of the card wall and runs clean to the bottom with nothing left over.
+/* The class strip divides the ROOT's width between its nine tabs, so it starts flush with one edge
+ * of the wall and runs clean to the other with nothing left over.
  *
- * flex-grow on the tabs rather than a height: nine tabs at 10% each came to 90% and left a gap at
- * the bottom, and any change to the tab count reopens it at a different size. flex-basis:0 makes
- * the nine shares equal regardless of what the art measures, so the strip always lands exactly on
- * both edges no matter how tall the screen is.
+ * WHY IT IS A ROW ACROSS THE TOP (Sam, 2026-08-31). It was a 130px column on the left of `body`.
+ * Nine tabs sharing a 411dp panel HEIGHT via flex-grow came to 45.7dp each — under the 48dp
+ * --touch-min floor — and 9 x 48 = 432 does not fit 411 on that axis at all, so nothing could fix
+ * it there while the strip may not change shape. Across the width each tab gets ~84dp.
  *
- * What makes that resolvable: .db-body is a row and its align-items defaults to stretch, so this
- * bar already has the body's full height as a definite value to divide. A percentage height would
- * have needed the same thing and stayed brittle — see the percent-height-needs-a-definite-parent
- * trap this project has already paid for.
+ * flex-grow on the tabs rather than a width: nine tabs at 11% each leaves a remainder, and any
+ * change to the tab count reopens it at a different size. flex-basis:0 makes the nine shares equal
+ * regardless of what the art measures, so the strip always lands exactly on both edges no matter
+ * how wide the screen is.
  *
- * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip's 70px away when space is tight;
+ * What makes that resolvable: this bar is a child of the screen ROOT, which is a column, so its
+ * align-items defaults to stretch and the bar already has the full width as a definite value to
+ * divide. A percentage width would have needed the same thing and stayed brittle — see the
+ * percent-height-needs-a-definite-parent trap this project has already paid for.
+ *
+ * HEIGHT IS --touch-min AND NOT A DP MORE. The strip is IN FLOW — Sam declined the overlay variant
+ * on 2026-08-31 — so every dp here comes out of the wall's viewport, and CardWall's compact tier
+ * derives the tile FROM that height: tile = floor((viewport/2 - 8)/16)*16, two rows visible. This
+ * band already costs the wall one 16dp tier step. Making it taller costs another, and the ~130dp of
+ * width the strip handed back cannot buy it back — tile width is derived from tile height by
+ * aspect, so the abundant axis cannot pay for the scarce one.
+ *
+ * The horizontal margin is --edge-safe on top of the root's own --space-6, which over-pays the
+ * 52dp cutout on purpose: these are the only INTERACTIVE elements that reach the screen's short
+ * edges, and unlike the wall's forged frame (audit #11, decoration painting into the edge) a tab
+ * under the hole-punch is a dead touch target. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS.
+ *
+ * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip away when space is tight;
  * Yoga does not floor a flex item at its content size the way CSS min-width:auto does. */
 #class-tab-bar {
+    flex-direction: row;
+    height: var(--touch-min);
     flex-shrink: 0;
+    margin: 0 var(--edge-safe) var(--space-1);
 }
 .class-tab_art {
-    width: 130px;
     flex-grow: 1;
     flex-basis: 0;
-    border-radius: 28px 0 0 28px;
+    border-radius: 12px 12px 0 0;
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
