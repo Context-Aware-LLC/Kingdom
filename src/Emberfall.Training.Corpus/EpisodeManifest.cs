@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json.Serialization;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Training.Corpus
@@ -72,6 +73,45 @@ namespace Emberfall.Training.Corpus
                     $"{nameof(DecisionHashes)}[{i}].{nameof(decision.BeforeSha256)}");
                 RequireSha256(decision.AfterSha256,
                     $"{nameof(DecisionHashes)}[{i}].{nameof(decision.AfterSha256)}");
+                bool hasAnyBehavior = decision.BehaviorCheckpointSha256 is not null
+                                      || decision.BehaviorLogProbability.HasValue
+                                      || decision.BehaviorPredictedValue.HasValue
+                                      || decision.BehaviorTemperature.HasValue
+                                      || decision.BehaviorChosenActionIndex.HasValue
+                                      || decision.BehaviorLegalActionCount.HasValue;
+                bool hasAllBehavior = decision.BehaviorCheckpointSha256 is not null
+                                      && decision.BehaviorLogProbability.HasValue
+                                      && decision.BehaviorPredictedValue.HasValue
+                                      && decision.BehaviorTemperature.HasValue
+                                      && decision.BehaviorChosenActionIndex.HasValue
+                                      && decision.BehaviorLegalActionCount.HasValue;
+                if (hasAnyBehavior != hasAllBehavior)
+                    throw new ArgumentException(
+                        $"{nameof(DecisionHashes)}[{i}] must provide all on-policy behavior fields or none.");
+                if (hasAllBehavior)
+                {
+                    RequireSha256(decision.BehaviorCheckpointSha256!,
+                        $"{nameof(DecisionHashes)}[{i}].{nameof(decision.BehaviorCheckpointSha256)}");
+                    if (!double.IsFinite(decision.BehaviorLogProbability!.Value)
+                        || decision.BehaviorLogProbability.Value > 1e-12)
+                        throw new ArgumentException(
+                            $"{nameof(DecisionHashes)}[{i}].{nameof(decision.BehaviorLogProbability)} "
+                            + "must be a finite log probability no greater than zero.");
+                    if (!double.IsFinite(decision.BehaviorPredictedValue!.Value))
+                        throw new ArgumentException(
+                            $"{nameof(DecisionHashes)}[{i}].{nameof(decision.BehaviorPredictedValue)} must be finite.");
+                    if (!double.IsFinite(decision.BehaviorTemperature!.Value)
+                        || decision.BehaviorTemperature.Value <= 0.0)
+                        throw new ArgumentException(
+                            $"{nameof(DecisionHashes)}[{i}].{nameof(decision.BehaviorTemperature)} "
+                            + "must be finite and positive.");
+                    if (decision.BehaviorLegalActionCount!.Value <= 0
+                        || decision.BehaviorChosenActionIndex!.Value < 0
+                        || decision.BehaviorChosenActionIndex.Value
+                           >= decision.BehaviorLegalActionCount.Value)
+                        throw new ArgumentException(
+                            $"{nameof(DecisionHashes)}[{i}] has an invalid behavior action index.");
+                }
             }
             if (P0Deck is null || P0Deck.Count == 0) throw new ArgumentException("P0Deck must not be empty.");
             if (P1Deck is null || P1Deck.Count == 0) throw new ArgumentException("P1Deck must not be empty.");
@@ -101,5 +141,17 @@ namespace Emberfall.Training.Corpus
         int IntentIndex,
         string Actor,
         string BeforeSha256,
-        string AfterSha256);
+        string AfterSha256,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? BehaviorCheckpointSha256 = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        double? BehaviorLogProbability = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        double? BehaviorPredictedValue = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        double? BehaviorTemperature = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? BehaviorChosenActionIndex = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? BehaviorLegalActionCount = null);
 }
