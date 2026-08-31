@@ -81,10 +81,19 @@
                 </ui:VisualElement>
                 <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
-            <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser chrome-panel chrome-panel--recessed">
-                <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
-                <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
-            </ui:ScrollView>
+            <!-- THE FRAME EXISTS FOR THE FADE, and the fade cannot live without it: an absolutely
+                 positioned child of a ScrollView is a child of its CONTENT and scrolls away with
+                 it. So the recessed plate is this element and the ScrollView is bare inside it,
+                 with the fade as its sibling pinned to the frame's bottom. The mode toggle moved
+                 here too — hiding the ScrollView alone would leave an empty plate beside the
+                 editor, both claiming flex-grow: 1. -->
+            <ui:VisualElement name="deck-chooser-frame" class="deck-chooser-frame chrome-panel chrome-panel--recessed">
+                <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
+                    <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
+                    <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
+                </ui:ScrollView>
+                <ui:VisualElement picking-mode="Ignore" class="emb-scroll-fade deck-chooser__fade"/>
+            </ui:VisualElement>
             <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden chrome-panel chrome-panel--recessed">
                 <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
                 <!-- Identity is a ROW: the two names on the left, the count on the right. It was a

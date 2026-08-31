@@ -111,7 +111,10 @@ namespace Emberfall.Presentation
         private VisualElement _queryDrawer;
         private Button _queryToggleButton;
         private VisualElement _drawer;
-        private ScrollView _deckChooser;
+        // The FRAME, not the ScrollView. The chooser's recessed plate and its bottom scroll
+        // fade live on the frame, and hiding only the ScrollView would leave an empty plate
+        // beside the editor with both claiming flex-grow: 1.
+        private VisualElement _deckChooserFrame;
         private VisualElement _deckChooserList;
         private Label _deckChooserEmpty;
         private VisualElement _deckEditor;
@@ -331,7 +334,7 @@ namespace Emberfall.Presentation
             _queryDrawer         = _root.Q<VisualElement>("query-bar");
             _queryToggleButton   = _root.Q<Button>("query-toggle");
             _drawer              = _root.Q<VisualElement>("deck-drawer");
-            _deckChooser         = _root.Q<ScrollView>("deck-chooser");
+            _deckChooserFrame    = _root.Q<VisualElement>("deck-chooser-frame");
             _deckChooserList     = _root.Q<VisualElement>("deck-chooser-list");
             _deckChooserEmpty    = _root.Q<Label>("deck-chooser-empty");
             _deckEditor          = _root.Q<VisualElement>("deck-editor");
@@ -712,7 +715,7 @@ namespace Emberfall.Presentation
 
         private void ShowDrawerPane(bool editor)
         {
-            _deckChooser?.EnableInClassList("deck-chooser--hidden", editor);
+            _deckChooserFrame?.EnableInClassList("deck-chooser--hidden", editor);
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
             // "Manage Characters & Decks" leaves the collection entirely, so it belongs to the
             // CHOOSER pane, not to editing one deck's thirty. Editing already has two ways out

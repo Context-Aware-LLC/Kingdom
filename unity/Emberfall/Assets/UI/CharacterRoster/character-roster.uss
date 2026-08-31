@@ -1,7 +1,20 @@
+/* HORIZONTAL CLEARANCE COMES FROM `.emb-bleed` ON THE ROOT, and this rule must not take it back.
+ * Unlike the main menu, this screen has no absolutely-positioned chrome to hang `.emb-edge` on --
+ * "Main Menu" and "View Collection" sit in a FLOW header -- so the only thing that can inset them
+ * is the root. It was a `padding: var(--space-6)` shorthand until 2026-08-30, which put the two
+ * top-right buttons 24dp from the edge, inside the 52dp cutout. Same bug the deck drawer's Close
+ * had, arrived at a different way.
+ *
+ * LONGHANDS, NOT A SHORTHAND. A `padding:` here outranks nothing -- `.emb-bleed` and this rule are
+ * both one class -- but the LATER of two equal-specificity declarations wins, and a shorthand
+ * re-sets all four sides. Writing the vertical as longhands is what lets the horizontal survive
+ * regardless of sheet order. The vertical value is unchanged at 24dp each: RowChrome's arithmetic
+ * in CharacterRosterController subtracts a 48dp root from the viewport before it sizes a plate. */
 .character-roster {
     flex-grow: 1;
     background-color: var(--surface-1);
-    padding: var(--space-6);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
     color: var(--ink-1);
 }
 

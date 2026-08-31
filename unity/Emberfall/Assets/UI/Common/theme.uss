@@ -159,6 +159,36 @@
     padding: 0 var(--edge-safe);
 }
 
+/* THE "THERE IS MORE" SIGNAL FOR A LIST WITH NO SCROLLBAR.
+   Scrollbars are hidden game-wide by ruling, which leaves a half-visible last row as the only
+   thing telling a player the list continues — and a row cut through its own TEXT reads as
+   breakage, not as an affordance (Sam, visual audit #7: "veward" cut mid-word in the deck
+   chooser). A fade over the last band turns the same clip into a deliberate edge.
+
+   USS HAS NO GRADIENTS. Probed against the shipping module on 2026-08-30 —
+   `linear-gradient` and `radial-gradient` appear ZERO times in
+   6000.5.1f1/Editor/Data/Managed/UnityEngine/UnityEngine.UIElementsModule.dll (the same probe
+   returns 0 for `box-sizing`, which is independently known to be absent). So the ramp is a
+   64x64 texture, white with a smoothstep alpha, and each USE TINTS IT to whatever surface sits
+   behind that list — the tint multiplies, so white is the only authoring that works for all of
+   them. A use with no tint fades to white and is obviously wrong on sight.
+
+   IT IS NOT SELF-POSITIONING. `position: absolute` inside a ScrollView scrolls WITH the content,
+   so this element is a sibling of the ScrollView inside a `position: relative` frame, never a
+   child of it. `.deck-chooser-frame` in collection.uss is the worked example.
+
+   RETIREMENT TRIGGER: if the no-visible-scrollbars ruling is ever lifted, this class and
+   ui_scroll_fade.png go with it — the fade exists only because the scrollbar cannot. */
+.emb-scroll-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 28px;
+    background-image: url("/Assets/Art/UI/Chrome/ui_scroll_fade.png");
+    -unity-background-scale-mode: stretch-to-fill;
+}
+
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);
 }

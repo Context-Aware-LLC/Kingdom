@@ -807,8 +807,20 @@
     font-size: var(--type-label);
     color: var(--ink-2);
 }
+/* The recessed plate, and the coordinate space the bottom fade anchors to. The ScrollView
+ * inside it is bare. See the UXML comment for why the fade cannot be the ScrollView's own child. */
+.deck-chooser-frame {
+    flex-grow: 1;
+}
 .deck-chooser {
     flex-grow: 1;
+}
+/* THE TINT IS THE HALF THAT MATTERS. `.emb-scroll-fade` ships a WHITE ramp so one texture can
+ * serve every surface; the colour has to come from the use site, and it is the plate this fade
+ * sits on -- `.deck-chooser-frame.chrome-panel--recessed` below, opaque so the ramp's own alpha
+ * is the only thing varying. Drop this rule and the deck list fades to white. */
+.deck-chooser__fade {
+    -unity-background-image-tint-color: rgb(8, 12, 18);
 }
 .deck-chooser--hidden,
 .deck-editor--hidden {
@@ -1077,7 +1089,13 @@
     border-left-width: 0;
     background-color: rgba(18, 23, 31, 0.98);
 }
-.deck-chooser.chrome-panel--recessed,
+/* The plate moved from the ScrollView to its frame when the bottom fade landed. The alpha is
+ * 1 on the chooser, not 0.92: the fade ramps to a FLAT rgb(8, 12, 18) and a translucent plate
+ * under it would show the drawer through the bottom band only, as a horizontal seam. */
+.deck-chooser-frame.chrome-panel--recessed {
+    padding: var(--space-4);
+    background-color: rgb(8, 12, 18);
+}
 .deck-editor.chrome-panel--recessed {
     padding: var(--space-4);
     background-color: rgba(8, 12, 18, 0.92);
