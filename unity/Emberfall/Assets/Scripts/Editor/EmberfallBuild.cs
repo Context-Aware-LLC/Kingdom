@@ -129,34 +129,8 @@ namespace Emberfall.Editor
             bool profilerBuild = Environment.GetEnvironmentVariable(
                 "EMBERFALL_PROFILER_BUILD") == "1";
             string buildCommit = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_COMMIT");
-
-            // EMBERFALL_BUILD_ARCH=x86_64 builds a player the ANDROID EMULATOR can run. Every AVD
-            // on an x86_64 host is an x86_64 image (`abi.type` in the AVD's config.ini), and an
-            // ARM64-only APK does not install on one — `INSTALL_FAILED_NO_MATCHING_ABIS`, which is
-            // the whole reason the emulator went unused while the phone was the only rig. Accepts
-            // `x86_64`, `arm64` (the default) or `both`.
-            //
-            // THIS IS A TEST PLAYER, NOT A SHIPPABLE ONE. The emulator reproduces layout faithfully
-            // — same dp, same Yoga, same UI Toolkit — so it answers every sizing, clipping, contrast
-            // and chrome-overlap question. It does NOT reproduce the phone's GPU: it renders through
-            // the host GPU, not an Adreno, so a fault that is a RENDERER divergence on device may
-            // simply not appear here. Do not read an emulator pass as a device pass for those.
-            string archName = (Environment.GetEnvironmentVariable("EMBERFALL_BUILD_ARCH") ?? "arm64")
-                .Trim().ToLowerInvariant();
-            AndroidArchitecture arch;
-            switch (archName)
-            {
-                case "x86_64": arch = AndroidArchitecture.X86_64; break;
-                case "both":   arch = AndroidArchitecture.ARM64 | AndroidArchitecture.X86_64; break;
-                case "arm64":  arch = AndroidArchitecture.ARM64; break;
-                default:
-                    throw new ArgumentException(
-                        $"EMBERFALL_BUILD_ARCH='{archName}' is not one of x86_64, arm64, both.");
-            }
-
             string originalVersion = PlayerSettings.bundleVersion;
             bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
-            AndroidArchitecture originalArchitectures = PlayerSettings.Android.targetArchitectures;
 
             try
             {
@@ -177,11 +151,10 @@ namespace Emberfall.Editor
                               $"version {PlayerSettings.bundleVersion}");
                 }
 
-                // Force IL2CPP for this build regardless of editor overrides; the architecture is
-                // ARM64 unless EMBERFALL_BUILD_ARCH says otherwise (see the note where it is read).
+                // Force IL2CPP + ARM64 for this build regardless of editor overrides.
                 PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,
                     ScriptingImplementation.IL2CPP);
-                PlayerSettings.Android.targetArchitectures = arch;
+                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
                 // Debug signing config checked in as config, not secret.
                 PlayerSettings.Android.keystoreName   = KeystorePath;
@@ -233,14 +206,8 @@ namespace Emberfall.Editor
             {
                 // These values identify and enable the measurement build, but they are not
                 // project defaults. Restore them even when Addressables or IL2CPP fails.
-                //
-                // targetArchitectures is restored for the same reason and it matters more than the
-                // other two: it is a TRACKED field of ProjectSettings.asset, so a build left with
-                // x86_64 set hands the next person a dirty settings file they did not author, in
-                // the one file this repo will not tolerate an unreviewed diff in.
                 PlayerSettings.bundleVersion = originalVersion;
                 PlayerSettings.enableFrameTimingStats = originalFrameTimingStats;
-                PlayerSettings.Android.targetArchitectures = originalArchitectures;
                 AssetDatabase.SaveAssets();
             }
         }
