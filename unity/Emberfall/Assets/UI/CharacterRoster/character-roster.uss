@@ -1,7 +1,7 @@
 .character-roster {
     flex-grow: 1;
     background-color: var(--surface-1);
-    padding: var(--space-6);
+    padding: var(--space-2);
     color: var(--ink-1);
 }
 
@@ -9,7 +9,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-2);
 }
 
 .roster-header-left {
@@ -23,7 +23,7 @@
 }
 
 .roster-header-actions .roster-button {
-    margin-left: var(--space-3);
+    margin-left: var(--space-2);
 }
 
 /* The one door into creation, top-left (NOR-278). CTA-gold so it reads as the primary thing to
@@ -45,12 +45,12 @@
 .roster-panel {
     background-color: var(--surface-2);
     border-radius: var(--space-2);
-    padding: var(--space-4);
+    padding: var(--space-2);
 }
 
 .roster-panel--list {
     flex-grow: 7;
-    margin-right: var(--space-4);
+    margin-right: var(--space-2);
 }
 
 .roster-panel--create {
@@ -75,7 +75,7 @@
 }
 
 .roster-intro {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
 }
 
 .roster-scroll,
@@ -88,7 +88,7 @@
     font-size: var(--type-h2);
     color: var(--ink-2);
     white-space: normal;
-    padding: var(--space-8);
+    padding: var(--space-4);
     -unity-text-align: middle-center;
 }
 
@@ -197,17 +197,17 @@
     flex-grow: 1;
     flex-direction: row;
     flex-wrap: nowrap;
-    padding: var(--space-2) var(--space-4) var(--space-3) var(--space-4);
+    padding: var(--space-2);
     overflow: hidden;
 }
 
 /* width, and the art's square side, are written per row by LayoutDeckStrip. The value here is
  * only what a plate looks like for the frame before that pass runs. */
 .deck-plate {
-    width: 132px;
+    width: 80px;
     flex-shrink: 0;
     align-items: center;
-    margin: 0 var(--space-3) 0 0;
+    margin: 0 var(--space-2) 0 0;
     padding: var(--space-2);
     border-width: 2px;
     border-color: rgba(0, 0, 0, 0);
@@ -692,8 +692,7 @@
     flex-grow: 1;
     min-height: 0;
     flex-direction: row;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
 }
 
 .hero-choice-column {
@@ -701,7 +700,7 @@
     max-width: 420px;
     margin-left: var(--space-2);
     margin-right: var(--space-2);
-    justify-content: center;
+    justify-content: space-evenly;
 }
 
 /* The colours are HERE, not on a --ghost modifier, because these buttons carry `roster-button`
