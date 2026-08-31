@@ -1,5 +1,5 @@
----
 # Emberfall — code formatting conventions.
+#
 # EF-003: before this file, `dotnet format` (a blocking CI stage, ci.yml Stage 1) fell
 # back to the PLATFORM newline. On Windows (core.autocrlf=true) it expected CRLF and
 # rewrote LF source; the Linux CI runner expected LF and stayed green — a tool-written
@@ -8,8 +8,15 @@
 # local and CI agree. LF is already the canonical form: every tracked .cs is LF in the
 # index. The values below are the conventions already in the tree (Roslyn defaults),
 # recorded explicitly so a future SDK default change cannot silently move them.
----
+#
+# 2026-08-30: a stray `[*.uxml]` / `parser` pair had been pasted in above the C# style
+# rules, which silently reassigned every rule below it from *.cs to *.uxml — so Allman
+# braces and using-placement were being enforced on nothing. EditorConfig has no error
+# for an unknown key or an orphaned rule, so this was invisible to every tool that reads
+# it. A section header relocates EVERY rule under it: add new sections at the END.
+
 root = true
+
 [*]
 charset = utf-8
 end_of_line = lf
@@ -17,21 +24,26 @@ indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
 insert_final_newline = true
+
 [*.cs]
 indent_size = 4
-[*.{json,yml,yaml,asmdef}]
-indent_size = 2
-[*.md]
-trim_trailing_whitespace = false
-[*.uxml]
-parser
+
 # Braces on their own line (Allman) — the convention already in the tree.
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
+
 # using directives are placed outside the namespace (the tree's convention). Ordering is
 # left unenforced: the tree does not sort System.* first, and imposing it would rewrite
 # imports across the codebase — out of scope for a formatting-baseline change.
 csharp_using_directive_placement = outside_namespace:silent
----
+
+[*.{json,yml,yaml,asmdef}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{uxml,uss}]
+indent_size = 4
