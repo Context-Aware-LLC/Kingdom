@@ -170,24 +170,32 @@ namespace Emberfall.Presentation
         private float _loadingSince = -1f;
 
         /// <summary>
-        /// Loading art per CHARACTER PAIRING, because that is what the art is of — a plate named
-        /// TempestStonewarden is the Tempest/Stonewarden character, not a screen decoration, and it
-        /// ships with the orb authored to sit on it.
+        /// The collection's loading art, rotated one step per visit: entering the screen twice in
+        /// a row shows two different plates (Sam, 2026-09-01). Each row is a plate and the orb
+        /// authored to sit on it, so the two always travel together.
         ///
-        /// <para><b>The pair is unordered.</b> A character is dual-class and nothing guarantees
-        /// which of the two is Primary, so matching on Primary alone would silently miss half the
-        /// characters that have art — and miss them by falling back to a plate that still looks
-        /// deliberate, which is the kind of wrong nobody reports.</para>
+        /// <para><b>Not keyed to the character, deliberately.</b> An earlier pass picked by class
+        /// pairing, which reads well and is wrong for what this art is: a player who mains one
+        /// character would then see one plate forever, and the art would be least visible for the
+        /// people who use the screen most.</para>
         ///
-        /// <para><b>Most pairings have no art, and that is the normal case, not a gap to fill.</b>
-        /// Anything not listed gets the brand plate. Adding a pairing later is a row here plus two
-        /// .png files — no code path changes, and the folders decide the import settings.</para>
+        /// <para>Adding a plate is a row here plus two .png files under
+        /// <c>Assets/Art/Backgrounds/Loading/</c> and <c>Assets/Art/Orbs/</c> — no code path
+        /// changes, and the folder decides the import settings. An empty roster falls back to the
+        /// brand plate rather than showing nothing.</para>
         /// </summary>
-        private static readonly (CardClass A, CardClass B, string Plate, string Orb)[] PairingPlates =
+        private static readonly (string Plate, string Orb)[] PlateRotation =
         {
-            (CardClass.TEMPEST, CardClass.STONEWARDEN, "LoadingPlate_TempestStonewarden", "Orb_Stormstone"),
-            (CardClass.VERDANT, CardClass.GRAVEKEEP,   "LoadingPlate_VerdantGravekeep",   "Orb_Lifeblight"),
+            ("LoadingPlate_TempestStonewarden", "Orb_Stormstone"),
+            ("LoadingPlate_VerdantGravekeep",   "Orb_Lifeblight"),
         };
+
+        /// <summary>Where the rotation is up to. STATIC, so it survives the screen being closed and
+        /// reopened — a per-instance field would reset on every visit and pin the rotation to its
+        /// first entry forever, which is the exact opposite of the intent. Resets on app restart,
+        /// which is fine: the point is that consecutive visits differ, not that the sequence is
+        /// remembered across launches.</summary>
+        private static int _plateRotation;
 
         private void OnEnable()
         {
@@ -419,40 +427,24 @@ namespace Emberfall.Presentation
         /// </summary>
         private void ShowLoadingPlate()
         {
-            (string plate, string orb) = PlateForIncomingCharacter();
+            (string plate, string orb) = NextPlate();
             _loading = LoadingOverlay.Create(Camera.main, plate, orb);
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loadingSince = Time.realtimeSinceStartup;
         }
 
         /// <summary>
-        /// The plate and orb for the character this screen is being opened FOR, or the brand plate
-        /// when it is being opened for nobody — plain browsing, which has no character and should
-        /// not borrow one's art.
-        ///
-        /// <para><b>Reads <c>PendingCharacterId</c> without consuming it.</b> That handoff is
-        /// cleared by <see cref="OpenPendingDeckIfAny"/> at the END of OnEnable, and it has to stay
-        /// the only thing that clears it: consuming it here would run before the drawer is wired
-        /// and the screen would open on the wall with the deck silently dropped. Reading a value
-        /// somebody else owns the lifetime of is the whole risk in this method.</para>
+        /// The next plate in the rotation, advanced as a side effect — one step per call, and this
+        /// is called exactly once per visit from <see cref="ShowLoadingPlate"/>. Keep it that way:
+        /// a second caller would double-step and turn "different every time" into "every other one
+        /// every time".
         /// </summary>
-        private (string Plate, string Orb) PlateForIncomingCharacter()
+        private static (string Plate, string Orb) NextPlate()
         {
-            string pending = PendingCharacterId;
-            if (string.IsNullOrEmpty(pending)) return (LoadingOverlay.DefaultPlate, null);
-
-            foreach (Character c in _account.Roster())
-            {
-                if (c.Id != pending) continue;
-                foreach (var row in PairingPlates)
-                {
-                    if ((row.A == c.PrimaryClass && row.B == c.SecondaryClass)
-                        || (row.A == c.SecondaryClass && row.B == c.PrimaryClass))
-                        return (row.Plate, row.Orb);
-                }
-                break;   // found the character; it simply has no art yet
-            }
-            return (LoadingOverlay.DefaultPlate, null);
+            if (PlateRotation.Length == 0) return (LoadingOverlay.DefaultPlate, null);
+            var row = PlateRotation[_plateRotation % PlateRotation.Length];
+            _plateRotation = (_plateRotation + 1) % PlateRotation.Length;
+            return row;
         }
 
         private void OnFirstBakeCompleted()
