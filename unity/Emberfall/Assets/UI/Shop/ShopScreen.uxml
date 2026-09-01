@@ -26,7 +26,6 @@
                 </ui:VisualElement>
                 <ui:ScrollView name="shop-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="shop-scroll">
                     <ui:VisualElement name="shop-section-packs" class="shop-section">
-                        <ui:Label text="Each pack contains five cards from Core plus its expansion, with at least one Rare or better." class="shop-section__help"/>
                         <ui:VisualElement name="shop-pack-list" class="shop-pack-list"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="shop-section-gems" class="shop-section shop-section--hidden">

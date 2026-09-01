@@ -284,7 +284,7 @@
     padding-bottom: var(--space-4);
 }
 .collection.emb-sw-expanded {
-    padding-bottom: var(--space-6);
+    /* padding-bottom: var(--space-6); */
 }
 
 /* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
@@ -451,8 +451,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 34%;
-    min-width: 420px;
+    width: 20%;
     padding: var(--space-4) var(--space-6) var(--space-4) var(--edge-safe);
     background-color: rgba(8, 12, 18, 0.98);
     border-right-width: 2px;
@@ -712,8 +711,8 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 34%;
-    min-width: 420px;
+    width: 15%;
+    /* min-width: 420px; */
     /* Three of this drawer's four sides ARE screen edges (top, right, bottom);
        its left is interior, so it takes the ordinary gutter there. .emb-bleed
        would pad all four by --edge-safe and leave 120px of usable column at the
@@ -941,7 +940,10 @@
 .class-tab_art {
     flex-grow: 1;
     flex-basis: 0;
-    border-radius: 12px 12px 0 0;
+    border-radius: 18px 18px 0 0;
+    max-width: 11%;
+    margin-top: 10px;
+    margin-left: 6px;
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
