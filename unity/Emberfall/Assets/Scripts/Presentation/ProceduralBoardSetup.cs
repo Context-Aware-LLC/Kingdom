@@ -33,23 +33,30 @@ namespace Emberfall.Presentation
         // |y| of a board row.
         //
         // MOVED OUTWARD 1.30 -> 1.39 BY #234, then 1.39 -> 1.4633 by the 2026-08-29 readability
-        // pass. Each move follows half the card-height growth so the inner bulwark edge stays put.
-        // The row sits between two clearances and this is the value that balances them:
+        // pass — each following half the card-height growth so the inner bulwark edge stayed put.
         //
-        //   centreline lane   RowY - BulwarkRowOffset - CardH/2      = 0.073   (two opposed
+        // 1.4633 -> 1.41 on 2026-08-31 goes the OTHER WAY, and deliberately: the row moved BACK,
+        // toward the centreline (Sam's word for it). The card grew 1.08 again and there was no
+        // outward room left to follow it into — the hand is there. Stepping back hands the growth
+        // to the clearance that had none, and BulwarkRowOffset 0.40 -> 0.28 pays for what that
+        // costs at the centreline. The row sits between two clearances and this balances them:
+        //
+        //   centreline lane   RowY - BulwarkRowOffset - CardH/2      = 0.061   (two opposed
         //                                                                       bulwark rows meet)
-        //   hand clearance    |TopEdgeY| - RowY - 0.42 * CardH       = 0.077   (the fan draws IN
+        //   hand clearance    |TopEdgeY| - RowY - 0.42 * CardH       = 0.064   (the fan draws IN
         //                                                                       FRONT of the row,
         //                                                                       so what matters is
         //                                                                       that it does not
         //                                                                       cover the stat
         //                                                                       bosses at 0.42H)
         //
-        // Both are asserted in DeviceLayout.SelfCheck. Before #234 they were 0.075 and 0.319; the
-        // card spent the slack in the second, which is the one with room, and left the first alone.
+        // Both are asserted in DeviceLayout.SelfCheck against a 0.05 floor, so both are now inside
+        // 0.015 of failing. Before #234 they were 0.075 and 0.319. THIS AXIS IS SPENT: the next
+        // card growth has nothing left to take except the bulwark step or the hand's own size, and
+        // the hand is blocked on a stale guard (see BoardController.CardW).
         // Internal, not private: DeviceLayout.SelfCheck asserts both clearances above, the same
         // reason HeroX and DeckX below are internal.
-        internal const float RowY          = 1.4633f;
+        internal const float RowY          = 1.41f;
 
         // Bottom (P0) is positive side, top (P1) is negative (camera looks at board from front).
         private const float P0Sign = -1f;

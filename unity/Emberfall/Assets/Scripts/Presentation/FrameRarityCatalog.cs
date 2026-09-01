@@ -99,7 +99,25 @@ namespace Emberfall.Presentation
         public const float BodyCenterY = 0.771240f; // 1579   box y 1369..1790
         public const float BodyWidth   = 0.851648f; // 1240   in a 1262-wide parchment
         public const float BodyHeight  = 0.205566f; // 421
-        public const float BodyEm      = 100f / MasterH;
+        // 100 -> 118 on 2026-08-31 (Sam: "increase the size of the font on cards").
+        //
+        // RAISING THE CEILING IS FREE; RAISING THE FLOOR IS NOT. CardPresenter drives the label
+        // with TMP auto-sizing between BodyEmFloor and this, so this is the size a card gets when
+        // its text FITS at it — raise it and short text grows, while anything too long simply
+        // auto-shrinks as it always did. Nothing can overflow because of this number.
+        //
+        // The FLOOR is the opposite: it is the size long text stops shrinking AT, so raising it
+        // pushes the longest cards out of the parchment. Measured over all 275 shipped cards with
+        // the real GoogleSans-Regular SDF face at the real box, cards whose text no longer fits:
+        //
+        //      floor 72 -> 0      floor 84 -> 2      floor 100 -> 13
+        //      floor 78 -> 1      floor 92 -> 6      floor 112 -> 75
+        //
+        // So the floor is held at 72 and every card keeps its full text. The long cards still gain
+        // 8% from the board card growing under them (this is an em of CardH). Spending 78 or 84 is
+        // a real option, but it costs a specific card its parchment — Masterwork Constructor, 109
+        // chars, the corpus's longest — and that is a content decision, not a typography one.
+        public const float BodyEm      = 118f / MasterH;
         public const float BodyEmFloor = 72f / MasterH; // auto-shrink floor for long rules text
         public const int   KeywordLeadPct = 115;        // keyword lead, % of body
 

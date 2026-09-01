@@ -34,25 +34,37 @@ namespace Emberfall.Presentation
         // DeviceLayout's band-clearance assertion are all untouched by this — deliberately, because
         // that solve is the hand's whole legibility budget and re-opening it was not the ask.
         //
-        // The follow-up 1.08 growth spends the remaining vertical slack while preserving the
-        // centreline lane by moving each row outward with the card edge. The hand still clears the
-        // board stat row by 0.077 units, above DeviceLayout's 0.05 floor. Growing further means
-        // re-solving the fan/row budget rather than turning this into another blind multiplier.
+        // 2026-08-31, Sam: "improve readability of cards in play and in hand". A THIRD 1.08 growth
+        // of the board card, paid for by BulwarkRowOffset (0.40 -> 0.28) and RowY (1.4633 -> 1.41)
+        // rather than by the hand, which is held at 1.6848 x 2.3760 for the third pass running.
+        //
+        // WHY THE HAND DID NOT GROW, THOUGH IT WAS ASKED FOR. DeviceLayout.SelfCheck assertion 7
+        // bounds the hand's rules band against DesignHalfHeight 4.6 — the ORTHOGRAPHIC half-height.
+        // The shipping camera has been PERSPECTIVE since f121a591 (BoardCameraRig.Configure sets
+        // orthographic = false), so that assertion, and all of device_layout.py, model a camera
+        // that no longer runs. Measured against the real rig a larger hand is fine; measured
+        // against the guard it fails. The guard is the thing to fix, and re-deriving the vertical
+        // model for a perspective camera is not a change to bury inside a sizing tweak.
         //
         // RETIREMENT TRIGGER: these two and RestScale are one number in two places now. Moving
-        // either without the compensating move on the other resizes the card in hand and silently
-        // invalidates EF-062 §5/§6 — re-run `python tooling/scripts/device_layout.py` in the same
-        // commit and read §5, and re-solve HandFanLayout.CentreY if the hand card's height moved.
-        internal const float CardW = 1.404f;    // (1.17 / 0.9) * 1.08
-        internal const float CardH = 1.98f;     // (1.65 / 0.9) * 1.08; keeps the 1.17:1.65 aspect
+        // either without the compensating move on the other resizes the card in hand. `device_layout.py`
+        // is NOT the check to re-run — it reads `orthographic size` out of the scene YAML and
+        // reports a camera the game does not use. Measure against BoardCameraRig instead, and
+        // re-solve HandFanLayout.CentreY if the hand card's height moved.
+        internal const float CardW = 1.51632f;  // 1.404 * 1.08
+        internal const float CardH = 2.13840f;  // 1.98  * 1.08; keeps the 1.17:1.65 aspect
 
         // How far a bulwarked minion steps out of its row toward the centerline. NOT scaled with
-        // the card by #234: this is the whole of the Taunt front-row visual language, it is already
-        // only 22% of the card's height, and the centreline lane it steps into is the tightest
-        // clearance on the board. Held at 0.40 and the card grew around it.
+        // the card by #234, which held it at 0.40 and grew the card around it.
+        //
+        // 0.40 -> 0.28 on 2026-08-31: it is what PAID for the readability growth above. The card
+        // is the thing being read and the step is not, so when the two collided at the centreline
+        // the step gave way. It is still 13% of the card's height and still the whole of the Taunt
+        // front-row visual language — a smaller step, not an absent one. Below about 0.20 the two
+        // rows stop reading as two rows, so this is close to spent.
         // Internal, not private: DeviceLayout.SelfCheck asserts the lane this leaves at the
         // centreline, the same reason ProceduralBoardSetup.HeroX and DeckX are internal.
-        internal const float BulwarkRowOffset = 0.40f;
+        internal const float BulwarkRowOffset = 0.28f;
 
         // WHERE THE STAT ROW SITS, as a fraction of CardH below the card's centre. The lowest thing
         // a minion carries, so it is the line the hand fan must not cover — the fan draws in FRONT
