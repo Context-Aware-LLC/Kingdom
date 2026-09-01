@@ -4,10 +4,12 @@ using System.Security.Cryptography;
 using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
+using Emberfall.Core.Serialization;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Telemetry;
+using Emberfall.Net.Server.Training;
 
 namespace Emberfall.Net.Server
 {
@@ -66,7 +68,11 @@ namespace Emberfall.Net.Server
         private readonly ITelemetrySink _telemetry;
         private readonly MatchAttribution _attribution;
         private readonly IRankedMatchSink _rankedMatchSink;
+        private readonly ITrainingEpisodeStore? _trainingEpisodes;
+        private readonly string _p0Policy;
+        private readonly string _p1Policy;
         private readonly Seat[] _seats = new Seat[2];
+        private bool _trainingCaptureActive;
 
         /// <summary>
         /// Card definition ids each seat KEPT at mulligan (telemetry-spec §1 `mulliganKept`).
@@ -107,7 +113,10 @@ namespace Emberfall.Net.Server
             PlayerId p0, PlayerId p1,
             ITelemetrySink? telemetry = null, MatchAttribution? attribution = null,
             string? p0Name = null, string? p1Name = null,
-            IRankedMatchSink? rankedMatchSink = null)
+            IRankedMatchSink? rankedMatchSink = null,
+            ITrainingEpisodeStore? trainingEpisodes = null,
+            string p0Policy = "unspecified",
+            string p1Policy = "unspecified")
         {
             _id = id;
             _seed = seed;
@@ -118,6 +127,9 @@ namespace Emberfall.Net.Server
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
             _attribution = attribution ?? MatchAttribution.None;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
+            _trainingEpisodes = trainingEpisodes;
+            _p0Policy = p0Policy;
+            _p1Policy = p1Policy;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
             _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!);
@@ -150,6 +162,7 @@ namespace Emberfall.Net.Server
 
             _replay.Begin(_id, _seed, _seats[0].Player, _seats[1].Player);
             _host.BeginMatch(_id, _seats[0].Player, _seats[1].Player, _seed);
+            TryBeginTrainingCapture();
             _turnKey = TurnKey();
 
             // The `inDeck` denominator, and the opening hands — which are the only draws that
@@ -332,6 +345,8 @@ namespace Emberfall.Net.Server
 
         private CommandResult SubmitToCore(PlayerIntent intent, SubmitCause cause, int? originSeat)
         {
+            string? captureBefore = CaptureObservationHash(intent.Player);
+
             // Read the mulligan keeps BEFORE the core sees the intent — afterwards the hand has
             // already been rewritten and the answer is gone (telemetry-spec §1 `mulliganKept`).
             // Held aside rather than stored, so a REJECTED mulligan records nothing.
@@ -353,6 +368,7 @@ namespace Emberfall.Net.Server
             ObserveHands();
 
             _replay.Append(_id, intent);
+            TryRecordTrainingDecision(intent.Player, captureBefore);
 
             // Capture the emit-time visibility sidecar NOW — index-parallel to raw.Events and
             // clobbered by the next Execute (a4 §11 finding 1).
@@ -609,6 +625,7 @@ namespace Emberfall.Net.Server
             if (_seats[0].Conn is not null || _seats[1].Conn is not null) return;
 
             _replay.Abandon(_id);   // journal keeps the intents; the ladder gets nothing
+            AbandonTrainingCapture();
             Emit(() => _telemetry.MatchVoid(new MatchVoidEvent(
                 _id, NowUtc(), _host.State.TurnNumber, _attribution.Source,
                 _attribution.P0, _attribution.P1)));
@@ -628,6 +645,7 @@ namespace Emberfall.Net.Server
             };
             Broadcast(new MatchEndMsg(_host.State.Outcome, reason));
             _replay.Complete(_id, _host.State.Outcome);
+            CompleteTrainingCapture();
 
             // The balance sample (telemetry-spec §1). Emitted BEFORE the seats are torn down below,
             // because the per-seat block reads hero class out of live state — and after the wire
@@ -674,6 +692,105 @@ namespace Emberfall.Net.Server
         // ── Telemetry (C-G1-8 step 2) ────────────────────────────────────────────
 
         private DateTimeOffset NowUtc() => DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
+
+        // ── Optional training capture ────────────────────────────────────────────
+
+        private void TryBeginTrainingCapture()
+        {
+            if (_trainingEpisodes is null) return;
+            try
+            {
+                _trainingEpisodes.Begin(
+                    _id,
+                    _seed,
+                    _seats[0].Player,
+                    _seats[1].Player,
+                    _setup,
+                    _p0Policy,
+                    _p1Policy);
+                _trainingCaptureActive = true;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    "[training-capture] match {0} could not start capture: {1}",
+                    _id.Value,
+                    ex.Message);
+            }
+        }
+
+        private string? CaptureObservationHash(PlayerId actor)
+        {
+            if (!_trainingCaptureActive) return null;
+            try
+            {
+                return GameStateHasher.Hash(GameStateProjector.Project(_host.State, actor));
+            }
+            catch (Exception ex)
+            {
+                DisableTrainingCapture("could not project the before-state", ex);
+                return null;
+            }
+        }
+
+        private void TryRecordTrainingDecision(PlayerId actor, string? beforeHash)
+        {
+            if (!_trainingCaptureActive || beforeHash is null || _trainingEpisodes is null) return;
+            try
+            {
+                string afterHash = GameStateHasher.Hash(GameStateProjector.Project(_host.State, actor));
+                _trainingEpisodes.RecordAccepted(_id, actor, beforeHash, afterHash);
+            }
+            catch (Exception ex)
+            {
+                DisableTrainingCapture("could not record an accepted decision", ex);
+            }
+        }
+
+        private void CompleteTrainingCapture()
+        {
+            if (!_trainingCaptureActive || _trainingEpisodes is null) return;
+            try
+            {
+                string p0Hash = GameStateHasher.Hash(
+                    GameStateProjector.Project(_host.State, _seats[0].Player));
+                string p1Hash = GameStateHasher.Hash(
+                    GameStateProjector.Project(_host.State, _seats[1].Player));
+                _trainingEpisodes.Complete(_id, _host.State.Outcome, p0Hash, p1Hash);
+                _trainingCaptureActive = false;
+            }
+            catch (Exception ex)
+            {
+                DisableTrainingCapture("could not publish the completed episode", ex);
+            }
+        }
+
+        private void AbandonTrainingCapture()
+        {
+            if (!_trainingCaptureActive || _trainingEpisodes is null) return;
+            try
+            {
+                _trainingEpisodes.Abandon(_id);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(
+                    "[training-capture] match {0} could not abandon capture cleanly: {1}",
+                    _id.Value,
+                    ex.Message);
+            }
+            _trainingCaptureActive = false;
+        }
+
+        private void DisableTrainingCapture(string reason, Exception ex)
+        {
+            Console.Error.WriteLine(
+                "[training-capture] match {0} {1}: {2}",
+                _id.Value,
+                reason,
+                ex.Message);
+            AbandonTrainingCapture();
+        }
 
         /// <summary>
         /// Two guards around every emit, both load-bearing.

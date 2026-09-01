@@ -17,6 +17,7 @@ using Emberfall.Net.Server.Matchmaking;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
+using Emberfall.Net.Server.Training;
 
 namespace Emberfall.Net.Server.Transport
 {
@@ -52,6 +53,7 @@ namespace Emberfall.Net.Server.Transport
         private readonly IBotPool? _botPool;
         private readonly IRatingStore? _ratingStore;
         private readonly IRankedMatchSink _rankedMatchSink;
+        private readonly ITrainingEpisodeStore? _trainingEpisodes;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
@@ -71,7 +73,8 @@ namespace Emberfall.Net.Server.Transport
             IReplayStore replay, ITelemetrySink? telemetry = null,
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
-            IRankedMatchSink? rankedMatchSink = null)
+            IRankedMatchSink? rankedMatchSink = null,
+            ITrainingEpisodeStore? trainingEpisodes = null)
             : this(
                 opts,
                 time,
@@ -85,7 +88,8 @@ namespace Emberfall.Net.Server.Transport
                 accountStore,
                 botPool,
                 ratingStore,
-                rankedMatchSink)
+                rankedMatchSink,
+                trainingEpisodes)
         {
         }
 
@@ -95,7 +99,8 @@ namespace Emberfall.Net.Server.Transport
             Func<AccountId, int> ratingForAccount, ITelemetrySink? telemetry = null,
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
-            IRankedMatchSink? rankedMatchSink = null)
+            IRankedMatchSink? rankedMatchSink = null,
+            ITrainingEpisodeStore? trainingEpisodes = null)
         {
             _opts = opts;
             _time = time;
@@ -110,6 +115,7 @@ namespace Emberfall.Net.Server.Transport
             _botPool = botPool;
             _ratingStore = ratingStore;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
+            _trainingEpisodes = trainingEpisodes;
         }
 
         public int LiveSessions
@@ -135,6 +141,8 @@ namespace Emberfall.Net.Server.Transport
             /// <summary>The seat's own revalidated deck (EF-071), or null when it submitted none and
             /// is to be dealt the prebuilt fallback for its seat.</summary>
             SeatDeck? Deck,
+            /// <summary>Stable label for training provenance; never supplied by an untrusted client.</summary>
+            string PolicyIdentity,
             TaskCompletionSource<Seating?> Seated,
             /// <summary>Server clock ms at enqueue (<see cref="ITimeSource.NowMs"/>). Read by
             /// <see cref="TryBotFillTimedOutTickets"/> against <see cref="ServerOptions.BotFillDelayMs"/>
@@ -366,7 +374,8 @@ namespace Emberfall.Net.Server.Transport
                 Guid.NewGuid().ToString("N"),
                 rating);
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var waiter = new WaitingPlayer(ticket, conn, account, displayName, submitted, mySeating, _time.NowMs);
+            var waiter = new WaitingPlayer(
+                ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs);
 
             lock (_lock)
             {
@@ -480,7 +489,14 @@ namespace Emberfall.Net.Server.Transport
                 var botSeated = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
                 var botTicket = new MatchmakingTicket("bot-" + Guid.NewGuid().ToString("N"), oldest.Ticket.Rating);
                 var botWaiter = new WaitingPlayer(
-                    botTicket, bot.Seat, bot.Account, bot.DisplayName, bot.Deck, botSeated, _time.NowMs);
+                    botTicket,
+                    bot.Seat,
+                    bot.Account,
+                    bot.DisplayName,
+                    bot.Deck,
+                    bot.Seat.PolicyIdentity,
+                    botSeated,
+                    _time.NowMs);
 
                 try
                 {
@@ -567,7 +583,10 @@ namespace Emberfall.Net.Server.Transport
                     id, seed, _opts, _time, _db, setup, _replay, p0, p1,
                     _telemetry, attribution,
                     NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1),
-                    _rankedMatchSink);
+                    _rankedMatchSink,
+                    _trainingEpisodes,
+                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
+                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {

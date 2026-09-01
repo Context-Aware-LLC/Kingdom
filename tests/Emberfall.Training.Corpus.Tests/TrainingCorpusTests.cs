@@ -157,6 +157,30 @@ namespace Emberfall.Training.Corpus.Tests
         }
 
         [Test]
+        public void Episode_manifest_writer_discards_an_uncommitted_trailing_row_on_reopen()
+        {
+            string root = TempDirectory();
+            try
+            {
+                var writer = new JsonlEpisodeManifestWriter(root);
+                writer.Append(ExampleManifest("match-one", "replays/match-one.jsonl"));
+                long committedLength = new FileInfo(writer.Path).Length;
+                File.AppendAllText(writer.Path, "{\"schemaVersion\":1", new UTF8Encoding(false));
+
+                var recovered = new JsonlEpisodeManifestWriter(root);
+
+                Assert.That(new FileInfo(recovered.Path).Length, Is.EqualTo(committedLength));
+                Assert.That(JsonlEpisodeManifestWriter.ReadAll(recovered.Path), Has.Count.EqualTo(1));
+                recovered.Append(ExampleManifest("match-two", "replays/match-two.jsonl"));
+                Assert.That(JsonlEpisodeManifestWriter.ReadAll(recovered.Path), Has.Count.EqualTo(2));
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        [Test]
         public void Builder_replays_validates_and_emits_hidden_information_safe_decisions()
         {
             string root = TempDirectory();

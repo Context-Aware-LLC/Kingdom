@@ -10,6 +10,29 @@ Only clean terminal matches receive a manifest row. The manifest references its 
 relative to the manifest file and pins the replay, card data, build revision, every accepted
 intent's before/after projected-state hashes, and both players' terminal projected-state hashes.
 
+## Live human-game capture
+
+The deployed server enables `EMBERFALL_TRAINING_INBOX=/data/training-inbox`. Every clean terminal
+match publishes a self-contained replay under `replays/` and appends its manifest row last; voided,
+abandoned, or capture-failed matches never receive a row. The ordinary operational journal remains
+under `/data/replays`.
+
+From the repository root, start the local watcher before playing:
+
+```powershell
+python tooling/scripts/capture_my_games.py
+```
+
+It polls Fly, verifies each finalized replay checksum, and appends new rows idempotently to
+`F:\EmberfallData\human-inbox`. Stop it with Ctrl+C. Use `--once` to synchronize pending games and
+exit, `--out <directory>` to select another inbox, or `EMBERFALL_HUMAN_INBOX` to change the default.
+The directory is still raw input: materialize a new immutable corpus version with the normal
+`Emberfall.Tools.TrainingCorpus build` command before exporting it for training.
+
+Live capture currently labels ordinary connected seats `human`, roster bots with their policy
+identity, and synthetic soak seats `ai-soak`. Capturing all clean live matches is acceptable only
+while the deployment has no outside players; add account-scoped opt-in before public matchmaking.
+
 ## Capture
 
 The output directory may be anywhere, including an external drive:

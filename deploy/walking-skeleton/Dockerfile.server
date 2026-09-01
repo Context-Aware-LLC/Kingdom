@@ -16,12 +16,13 @@ COPY unity/Emberfall/Assets/CardData/ /app/cards/
 # AI-opponent bot roster (2026-08-09 matchmaking fallback) — a null/unset EMBERFALL_BOT_ROSTER
 # leaves bot-fill off, so both lines below must land together or the feature silently stays dark.
 COPY tooling/data/bot-roster.json /app/bot-roster.json
-# /data is the Fly volume (fly.toml [mounts], vol_rkgwj19p5yykeyo4). Both of these MUST point
+# /data is the Fly volume (fly.toml [mounts], vol_rkgwj19p5yykeyo4). All durable outputs MUST point
 # inside it: the container filesystem is replaced on every deploy, so a relative default would
 # collect telemetry that looks healthy right up until the next machine swap eats it (C-G1-8).
 ENV EMBERFALL_CARDS=/app/cards \
     EMBERFALL_BOT_ROSTER=/app/bot-roster.json \
     EMBERFALL_REPLAYS=/data/replays \
+    EMBERFALL_TRAINING_INBOX=/data/training-inbox \
     EMBERFALL_TELEMETRY=/data \
     ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080

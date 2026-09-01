@@ -151,6 +151,7 @@ Invoke-Stage 'Stage 6c · Training exporter tests' {
     & $exportPython tests/python/test_training_exporters.py -v
 }
 Invoke-Stage 'Stage 6c2 · C# graph resolver tests' {
+    python3 tests/python/test_capture_my_games.py -v
     python3 tests/python/test_csharp_resolver.py -v
 }
 Invoke-Stage 'Stage 6d · Training trainer tests' {

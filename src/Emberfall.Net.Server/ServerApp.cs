@@ -17,6 +17,8 @@ using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Transport;
+using Emberfall.Net.Server.Training;
+using Emberfall.Training.Corpus;
 
 namespace Emberfall.Net.Server
 {
@@ -28,6 +30,9 @@ namespace Emberfall.Net.Server
         /// <summary>Directory scanned for *.cards.json. Null → walk up to the repo's canonical dir (dev).</summary>
         public string? CardsDir { get; init; }
         public string ReplaysDir { get; init; } = "replays";
+        /// <summary>Null disables live training capture. A configured directory receives only
+        /// finalized replay/manifest pairs and may live on the same durable volume as replays.</summary>
+        public string? TrainingInboxDir { get; init; }
         public ServerOptions Options { get; init; } = new ServerOptions();
 
         /// <summary>
@@ -123,6 +128,7 @@ namespace Emberfall.Net.Server
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
                 CardsDir = Environment.GetEnvironmentVariable("EMBERFALL_CARDS"),
                 ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
+                TrainingInboxDir = Environment.GetEnvironmentVariable("EMBERFALL_TRAINING_INBOX"),
                 Telemetry = sink,
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
@@ -221,12 +227,22 @@ namespace Emberfall.Net.Server
                 }
             }
 
+            var replayStore = new JsonlReplayStore(cfg.ReplaysDir);
+            ITrainingEpisodeStore? trainingEpisodes = string.IsNullOrWhiteSpace(cfg.TrainingInboxDir)
+                ? null
+                : new JsonlTrainingEpisodeStore(
+                    cfg.TrainingInboxDir!,
+                    replayStore.PathFor,
+                    CorpusFiles.Sha256CardData(cardsDir),
+                    ResolveBuildRevision(),
+                    cfg.Options.WireContractVersion);
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
                 db,
                 new PrebuiltDeckProvider(),
-                new JsonlReplayStore(cfg.ReplaysDir),
+                replayStore,
                 matchmaking,
                 ratingForAccount,
                 cfg.Telemetry,
@@ -234,7 +250,8 @@ namespace Emberfall.Net.Server
                 cfg.AccountStore,
                 botPool,
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
-                ratingWorker);
+                ratingWorker,
+                trainingEpisodes);
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -248,6 +265,7 @@ namespace Emberfall.Net.Server
                 contract = cfg.Options.WireContractVersion,
                 corpus = corpusDigest,
                 cards = db.Count,
+                trainingCapture = trainingEpisodes is not null,
             }));
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
@@ -314,6 +332,17 @@ namespace Emberfall.Net.Server
             });
 
             return (app, gate);
+        }
+
+        private static string ResolveBuildRevision()
+        {
+            string? configured = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_REVISION");
+            if (!string.IsNullOrWhiteSpace(configured)) return configured.Trim();
+
+            string? image = Environment.GetEnvironmentVariable("FLY_IMAGE_REF");
+            if (!string.IsNullOrWhiteSpace(image)) return image.Trim();
+
+            return typeof(ServerApp).Assembly.GetName().Version?.ToString() ?? "unknown-build";
         }
 
         /// <summary>Dev convenience: locate unity/Emberfall/Assets/CardData by walking up from the

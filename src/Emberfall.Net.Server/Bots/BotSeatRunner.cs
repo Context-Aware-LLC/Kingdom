@@ -63,6 +63,9 @@ namespace Emberfall.Net.Server.Bots
             _policy = policy ?? throw new ArgumentNullException(nameof(policy));
         }
 
+        /// <summary>Stable provenance written beside captured training episodes.</summary>
+        public string PolicyIdentity => _policy.Identity;
+
         // ── IServerConnection: server → bot ──────────────────────────────────────
 
         public bool TryEnqueue(byte[] frame)
