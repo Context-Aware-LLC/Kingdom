@@ -414,9 +414,10 @@ namespace Emberfall.Core.Tests.Presentation
             {
                 Assert.That(CsConst("TileWidth"), Is.EqualTo(UssVar("--card-tile-width")),
                     "CardWall.TileWidth is the pre-style fallback and must be the compact size "
-                    + "authored in collection.uss. CollectionSwapVerify reports the wall's solved "
-                    + "tile by feeding it this pair, so a drift here silently mis-reports the "
-                    + "measurement that screen's layout decisions are made from.");
+                    + "authored in collection.uss. It is what the wall lays out with until the "
+                    + "first CustomStyleResolvedEvent arrives and what CardFaceBaker sizes its "
+                    + "first RenderTexture from, so a drift here is a wrong first paint and a "
+                    + "wasted bake pass, on the frame a player actually sees.");
                 Assert.That(CsConst("TileHeight"), Is.EqualTo(UssVar("--card-tile-height")),
                     "CardWall.TileHeight must be the compact --card-tile-height.");
             });

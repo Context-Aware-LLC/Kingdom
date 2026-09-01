@@ -549,12 +549,12 @@ namespace Emberfall.Presentation
         /// hands the remainder back as row PITCH and the rows fill the viewport exactly. The next
         /// row is still there and still scrolls to — it just does not peek.</para>
         /// </summary>
-        /// <remarks>Public because <c>CollectionSwapVerify</c> measures this screen offscreen and
-        /// must report the size the wall WOULD solve. It re-derived the arithmetic by hand until
-        /// 2026-09-01 and had drifted: it still divided by a fixed two rows and still took its
-        /// aspect from the deleted 340x477 tier. A second copy of a solve is a copy that is wrong
-        /// later, so there is one, and it is this.</remarks>
-        public static void ResolveTileSize(
+        /// <remarks>Private, and worth keeping that way. The offscreen verifier that briefly made
+        /// it public had spent months re-deriving this arithmetic by hand and had drifted on every
+        /// number it copied — a fixed two rows after the row count became derived, a stale legibility
+        /// floor, an aspect from a deleted tier. A caller that wants this answer calls this method;
+        /// there is no second copy, and widening the modifier is how a second copy starts.</remarks>
+        private static void ResolveTileSize(
             float authoredWidth,
             float authoredHeight,
             float viewportHeight,
