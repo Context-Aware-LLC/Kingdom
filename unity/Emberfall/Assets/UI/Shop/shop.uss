@@ -356,33 +356,24 @@
     margin-bottom: var(--space-2);
 }
 
+/* The slot has NO CHILDREN as of 2026-08-31 — the title plate that used to sit at its bottom edge
+ * is gone (Sam), so the alignment and padding that positioned it went with it. Padding in
+ * particular was working against the art: `scale-and-crop` fills the whole box, so the inset only
+ * ever shaved the crop. */
 .shop-pack__art-slot {
     flex-grow: 1;
     flex-basis: 0;
-    align-items: center;
-    justify-content: flex-end;
     background-color: var(--surface-2);
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-2);
     margin-right: var(--space-1);
-    padding: var(--space-1);
     -unity-background-scale-mode: scale-and-crop;
     overflow: hidden;
 }
 
 .shop-pack__art-slot--loaded {
     background-color: rgba(11, 14, 19, 0.35);
-}
-
-.shop-pack__art-slot-label {
-    color: var(--ink-1);
-    background-color: rgba(11, 14, 19, 0.78);
-    border-radius: var(--space-1);
-    padding: 2px var(--space-1);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
 }
 
 .shop-pack__name {

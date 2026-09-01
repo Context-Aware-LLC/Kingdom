@@ -30,6 +30,27 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class ShopPanelController
     {
+        /// <summary>
+        /// How many pack faces the tile shows: one per CHARACTER, four of them (Sam, 2026-08-31).
+        ///
+        /// <para>The rail is a fixed-ratio strip whose slots split its width evenly, so this is a
+        /// SIZE control: seven slots in a 326dp rail are 46dp each, which reads as a row of
+        /// thumbnails rather than as pack art. Four is the count REKINDLING already has, so both
+        /// packs render the same shape.</para>
+        ///
+        /// <para><b>Do not implement this as "take the first four" — it selects the wrong four.</b>
+        /// EMBERFALL declares seven pieces but only FOUR characters: <c>emberfall_pyra_1..4</c> are
+        /// alternate arts of ONE face, intended as holo/animated collectibles (Sam), and the
+        /// remaining three pieces are Maren, Sorrow and Thalen. Truncating the list would show
+        /// Cinderbound I–IV and drop three characters entirely. <see cref="FaceOf"/> collapses the
+        /// variants first, and the cap then applies to faces.</para>
+        ///
+        /// <para>Capped HERE and not in the manifest on purpose — the manifest is the record of
+        /// what art exists, and the variants are the point of it. Pieces are dropped from the
+        /// display, never from the set.</para>
+        /// </summary>
+        private const int ArtFacesShown = 4;
+
         private readonly VisualElement _overlay;
         private readonly VisualElement _packList;
         private readonly VisualElement _gemList;
@@ -199,8 +220,8 @@ namespace Emberfall.Presentation
                     if (pieces == null || pieces.Count == 0) return;
                     var artRail = new VisualElement();
                     artRail.AddToClassList("shop-pack__art-rail");
-                    for (int art = 0; art < pieces.Count; art++)
-                        artRail.Add(BuildArtSlot(pieces[art]));
+                    foreach (PackArtPiece piece in FirstPerFace(pieces, ArtFacesShown))
+                        artRail.Add(BuildArtSlot(piece));
                     tile.Insert(0, artRail);
                 });
 
@@ -222,6 +243,39 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>
+        /// The face an art piece belongs to: its id with a trailing <c>_&lt;n&gt;</c> variant
+        /// suffix removed, so <c>emberfall_pyra_1</c>…<c>_4</c> all answer <c>emberfall_pyra</c>.
+        /// That suffix is the manifest's documented convention for several pieces of one
+        /// character (see <see cref="PackArtManifest"/>), which is why matching on it is safe.
+        /// An id with no suffix is its own face.
+        /// </summary>
+        private static string FaceOf(string pieceId)
+        {
+            if (string.IsNullOrEmpty(pieceId)) return "";
+            int split = pieceId.LastIndexOf('_');
+            if (split <= 0 || split == pieceId.Length - 1) return pieceId;
+            for (int i = split + 1; i < pieceId.Length; i++)
+                if (!char.IsDigit(pieceId[i])) return pieceId;
+            return pieceId.Substring(0, split);
+        }
+
+        /// <summary>
+        /// The first piece of each distinct face, in manifest order, up to <paramref name="max"/>.
+        /// Manifest order is meaningful, so "first" is the set's own choice of default art.
+        /// </summary>
+        private static List<PackArtPiece> FirstPerFace(IReadOnlyList<PackArtPiece> pieces, int max)
+        {
+            var shown = new List<PackArtPiece>(max);
+            var seen = new HashSet<string>();
+            for (int i = 0; i < pieces.Count && shown.Count < max; i++)
+            {
+                if (!seen.Add(FaceOf(pieces[i].Id))) continue;
+                shown.Add(pieces[i]);
+            }
+            return shown;
+        }
+
         private static VisualElement BuildArtSlot(PackArtPiece piece)
         {
             // Named for the PIECE, not its file: this is the element name a later gallery or a
@@ -231,12 +285,13 @@ namespace Emberfall.Presentation
             slot.AddToClassList("shop-pack__art-slot--loaded");
             slot.style.backgroundImage = new StyleBackground(piece.Sprite);
 
-            // The title stays in the tree behind the art rather than being dropped once a sprite
-            // lands — it is what a screen reader and a tooltip have to work with, and the slot is
-            // otherwise a nameless rectangle.
-            var label = new Label(piece.Title);
-            label.AddToClassList("shop-pack__art-slot-label");
-            slot.Add(label);
+            // NO PAINTED CAPTION (Sam, 2026-08-31). The title used to render as a bold plate over
+            // the bottom of the art; it covered the part of the picture the crop is composed
+            // around and said nothing the player needed at the point of buying a pack. It stays as
+            // the tooltip so the slot is not a nameless rectangle — same reason the label existed,
+            // minus the paint. A surface that shows art on its own (a gallery) puts the title
+            // UNDER the picture rather than restoring this.
+            slot.tooltip = piece.Title;
             return slot;
         }
 
