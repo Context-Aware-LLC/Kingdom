@@ -93,9 +93,20 @@ namespace Emberfall.Core.Collection
             return store.Load() == null;
         }
 
-        /// <summary>The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards, boosted.</summary>
+        /// <summary>
+        /// The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards,
+        /// boosted odds — and its own <see cref="BoosterPack.StarterSku"/> entitlement item,
+        /// <c>pack.emberfall.starter</c>.
+        ///
+        /// <para><b>The sku is load-bearing, not cosmetic.</b> The ledger reserves and debits by
+        /// <see cref="BoosterPack.Id"/> while the opener takes the card count and odds from its caller,
+        /// so sharing an id with the retail pack would make a granted pack and a bought pack one
+        /// balance — and would let a retail entitlement be opened at these boosted odds. RETIREMENT
+        /// TRIGGER: if the starter pack is ever put on sale, it is this separation that has to be
+        /// reconsidered, not the odds.</para>
+        /// </summary>
         public static BoosterPack StarterPack()
-            => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds);
+            => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds, BoosterPack.StarterSku);
 
         /// <summary>
         /// Every card id the commons half grants one copy of — <b>sorted by id</b>, for the same

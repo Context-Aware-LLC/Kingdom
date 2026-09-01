@@ -126,5 +126,54 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(owned.CopiesOwned(plan.CommonCardIds[1]), Is.EqualTo(1),
                 "a card with no prior copies gets exactly one");
         }
+
+        /// <summary>
+        /// The granted starter pack and the saleable retail pack must not be the same entitlement.
+        ///
+        /// <para><b>Why this is a test and not a comment.</b> <see cref="BoosterPack.Id"/> is the
+        /// ledger's entitlement item, the pity key and the seed key all at once, and the server
+        /// reserves against it while taking the pack's SHAPE — card count and odds — from whoever
+        /// calls the opener. One shared id therefore makes a granted pack and a bought pack the same
+        /// balance, and lets a retail entitlement be paid out at these boosted odds. Nothing about
+        /// reading either type reveals that; only the collision does.</para>
+        /// </summary>
+        [Test]
+        public void TheStarterPackIsADifferentEntitlementFromTheRetailPack()
+        {
+            BoosterPack starter = OnboardingGrant.StarterPack();
+            var retail = new BoosterPack(OnboardingGrant.LaunchExpansion);
+
+            Assert.That(starter.Id, Is.Not.EqualTo(retail.Id),
+                "a granted starter pack must not be spendable as a retail open, or vice versa");
+            Assert.That(starter.Id, Is.EqualTo(retail.Id + "." + BoosterPack.StarterSku));
+        }
+
+        /// <summary>
+        /// <see cref="BoosterPack.All"/> enumerates what can be SOLD. The starter pack is granted
+        /// once and never sold, so it must not appear there — the odds-disclosure tool and the store
+        /// catalogue both read that list, and a boosted pack showing up in either would be a
+        /// disclosure error, not just a cosmetic one.
+        /// </summary>
+        [Test]
+        public void TheStarterPackIsNotOnTheSaleableList()
+        {
+            foreach (BoosterPack pack in BoosterPack.All())
+                Assert.That(pack.Id, Does.Not.Contain(BoosterPack.StarterSku),
+                    $"{pack.Id} is saleable; the starter pack is granted, never sold");
+        }
+
+        /// <summary>
+        /// The sku separates the ENTITLEMENT, not the contents. Both packs draw the same pairing, so
+        /// a card is not reachable from one and unreachable from the other — only the count and the
+        /// odds differ, which is what the starter grant was ruled to be.
+        /// </summary>
+        [Test]
+        public void TheStarterAndRetailPacksShareAPool()
+        {
+            BoosterPack starter = OnboardingGrant.StarterPack();
+            var retail = new BoosterPack(OnboardingGrant.LaunchExpansion);
+
+            Assert.That(starter.Pool(Db), Is.EqualTo(retail.Pool(Db)));
+        }
     }
 }

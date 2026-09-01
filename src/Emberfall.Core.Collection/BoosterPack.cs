@@ -175,7 +175,28 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public const int DefaultCardCount = 5;
 
-        /// <summary>Stable id — the store SKU and the pity-counter key. <c>pack.emberfall</c>-shaped.</summary>
+        /// <summary>
+        /// The sku suffix separating the GRANTED onboarding pack from the SALEABLE retail pack.
+        ///
+        /// <para><b>Why the id carries it and not just the odds.</b> <see cref="Id"/> is three keys at
+        /// once: the ledger's entitlement item, the pity-counter key and the pack-seed key. The server
+        /// reserves and debits against it while taking the pack's <i>shape</i> — <see cref="CardCount"/>
+        /// and <see cref="Odds"/> — from whoever calls the opener. So a shared id would make a granted
+        /// pack and a bought pack the same balance, and would let a retail entitlement be paid out at
+        /// the boosted starter odds. Two ids make both impossible by construction rather than by
+        /// discipline at the call site.</para>
+        ///
+        /// <para>Two ids also means two pity clocks, which is the right answer and not a side effect: a
+        /// one-time boosted grant should not spend down the rarity clock a player is accruing on the
+        /// packs they buy.</para>
+        /// </summary>
+        public const string StarterSku = "starter";
+
+        /// <summary>
+        /// Stable id — the store SKU, the ledger entitlement item, the pity-counter key and the
+        /// pack-seed key. <c>pack.emberfall</c> for a retail pack, <c>pack.emberfall.starter</c> for
+        /// the granted onboarding pack. See <see cref="StarterSku"/> for why the two must differ.
+        /// </summary>
         public string Id { get; }
 
         /// <summary>The expansion half of the pairing. Never <see cref="SetId.CORE"/>.</summary>
@@ -185,7 +206,13 @@ namespace Emberfall.Core.Collection
 
         public PackRarityOdds Odds { get; }
 
-        public BoosterPack(SetId expansion, int cardCount = DefaultCardCount, PackRarityOdds? odds = null)
+        /// <param name="sku">
+        /// Optional suffix distinguishing a non-retail product built from the same pairing — today only
+        /// <see cref="StarterSku"/>. Null or empty yields the plain retail id, so every existing call
+        /// site keeps the id it already had.
+        /// </param>
+        public BoosterPack(SetId expansion, int cardCount = DefaultCardCount, PackRarityOdds? odds = null,
+                           string? sku = null)
         {
             if (expansion == SetId.CORE)
                 throw new ArgumentException(
@@ -198,6 +225,7 @@ namespace Emberfall.Core.Collection
             CardCount = cardCount;
             Odds = odds ?? PackRarityOdds.Default;
             Id = "pack." + expansion.ToString().ToLowerInvariant();
+            if (!string.IsNullOrEmpty(sku)) Id += "." + sku;
         }
 
         /// <summary>Every pack that can be built from the declared sets, in <see cref="SetId"/> order.</summary>
