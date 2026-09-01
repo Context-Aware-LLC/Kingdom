@@ -28,33 +28,42 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class CardWall
     {
-        // Must match .card-tile in Collection/collection.uss. These are the baker's safe pre-layout defaults
-        // and the SMALLEST OF THE THREE FIXED TIERS. Layout promotes the wall to a larger tier when
-        // at least four columns and two complete rows fit. Discrete tiers matter: a continuous
-        // resize would invalidate and rebake ~90 RenderTextures on every window pixel.
+        // THE TILE SIZE IS AUTHORED IN USS, NOT HERE. These two are only the fallback used before
+        // any style has resolved, which is also what CardFaceBaker starts its RenderTextures at —
+        // hence public. The live size comes from the custom properties --card-tile-width and
+        // --card-tile-height on the grid element, declared per screen class in
+        // Collection/collection.uss and read here through CustomStyleResolvedEvent, so the card
+        // size lives beside every other size on the screen and a designer never opens this file to
+        // change it. Layout may only SHRINK the authored number to make whole rows fit
+        // (ResolveTileSize); it never grows it.
         //
-        // THIS IS NO LONGER THE FLOOR. It used to be — ResolveTileTier fell back to it
-        // unconditionally, with nothing below — and on a phone that was #177/#179's whole
-        // complaint. Measured at the device dp budget, 2026-08-25, before the compact tier below
-        // existed:
+        // THREE FIXED TIERS USED TO LIVE HERE — 340x477, 480x674 and 620x870 dp, promoted by a
+        // TierFits gate wanting four columns and two complete rows. Deleted 2026-09-01 (Sam),
+        // because that gate could not pass on any device that exists: the SMALLEST of the three
+        // demanded 970dp of scroll viewport, the middle 1364dp and the largest 1756dp, while a
+        // landscape phone panel is 411dp tall IN TOTAL and a 1080p desktop panel is 1080dp. The
+        // wall had therefore never once left the derived path below, on any hardware. The table was
+        // authored when an authored px was an arbitrary unit; since 99b179b1 it is one Android dp
+        // and it never moved with the unit — the same failure that made #177/#179 a one-card-per-row
+        // wall, measured at the device dp budget on 2026-08-25:
         //
         //     #collection-scroll   704.4 x 291.0      the viewport
         //     tile 0 :             340.2 x 477.0      TALLER than the viewport, half its width
         //     tiles per row: 1     #collection-grid resolved to 133480dp tall
         //
-        // One card per row and a grid 325 screens long, which is exactly Sam's report: "there's one
-        // row of cards and then it's just the background". The tier table was authored when an
-        // authored px was an arbitrary unit; since 99b179b1 it is one Android dp, so 340 means
-        // 340dp and a phone has 291dp of viewport to put it in. The table never moved with the
-        // unit.
-        public const float TileWidth = 340f;
-        public const float TileHeight = 477f;
+        // RETIREMENT TRIGGER: if the wall ever stops reading those two custom properties, these
+        // stop being a fallback and become the size again — say so here and in collection.uss,
+        // whose .card-tile block carries the matching note.
+        public const float TileWidth = 114f;
+        public const float TileHeight = 160f;
 
-        public const float MediumTileWidth = 480f;
-        public const float MediumTileHeight = 674f;
-
-        public const float DesktopTileWidth = 620f;
-        public const float DesktopTileHeight = 870f;
+        /// <summary>USS custom property names for the authored tile size. Declared on the grid in
+        /// Collection/collection.uss; unitless numbers, because a CustomStyleProperty&lt;float&gt;
+        /// reads a number and not a length.</summary>
+        private static readonly CustomStyleProperty<float> AuthoredWidthProp =
+            new CustomStyleProperty<float>("--card-tile-width");
+        private static readonly CustomStyleProperty<float> AuthoredHeightProp =
+            new CustomStyleProperty<float>("--card-tile-height");
 
         /// <summary>Floor == --space-4; never squeeze tighter than that token.</summary>
         private const float MinGutter = 16f;
@@ -65,29 +74,42 @@ namespace Emberfall.Presentation
         /// <summary>Art-first desktop target; extra width becomes breathing room, not tiny cards.</summary>
         private const int MaxColumns = 5;
 
-        /// <summary>A larger tier must still form a wall rather than a two-card detail view.</summary>
-        private const int MinColumnsForLargerTier = 4;
+        /// <summary>The FEWEST complete rows the wall will show. It is a floor, not a target: a
+        /// viewport tall enough for more rows at the authored size gets MORE ROWS, never a bigger
+        /// card. That inversion is the whole reason the tier table above could not be replaced by
+        /// simply deleting it — the old solve divided the viewport by exactly this number every
+        /// time, so a taller screen only ever grew the cards.</summary>
+        private const int MinVisibleRows = 2;
 
-        /// <summary>Keep two complete rows visible before promoting a viewport to a larger tier.</summary>
-        private const int TargetVisibleRows = 2;
-
-        /// <summary>The vertical space between two rows, and the FLOOR for the derived tier's
-        /// solved pitch. Must match <c>.card-tile</c>'s top+bottom margin in collection.uss (two
-        /// times --space-1), which is what a fixed tier still uses.</summary>
+        /// <summary>The vertical space between two rows, and the FLOOR for the solved pitch.
+        /// Must match <c>.card-tile</c>'s top+bottom margin in collection.uss (two times
+        /// --space-1).</summary>
         private const float VerticalTileMargin = 8f;
 
-        /// <summary>The COMPACT floor is derived from the viewport rather than tabulated, because a
-        /// fourth magic pair would have gone stale the same way the other three did. Height is
-        /// solved for <see cref="TargetVisibleRows"/> and then quantised to this step, which is what
-        /// keeps the bake count bounded — the whole reason the larger tiers are discrete. A phone
-        /// resizing between 128 and 144 rebakes once, not on every pixel.</summary>
+        /// <summary>When the authored height does not fit, the solved height is quantised to this
+        /// step. That is what keeps the bake count bounded: a continuous resize would otherwise
+        /// invalidate and re-bake every RenderTexture on every window pixel. A phone resizing
+        /// between 128 and 144 rebakes once, not on every pixel.</summary>
         private const float TileQuantum = 16f;
 
-        /// <summary>Legibility floor for the derived tier. At the phone's 2.625x scale a 96dp tile
-        /// is 252 device px, against the 265px collection tile EF-050's acuity margin was measured
-        /// on — so this is about where a card face stops being readable, and the wall would rather
-        /// show fewer rows than unreadable ones.</summary>
-        private const float MinTileHeight = 96f;
+        /// <summary>Legibility floor for the solved height: the point below which the wall shows
+        /// FEWER rows rather than unreadable ones.
+        ///
+        /// <para>Derived, not picked. EF-050 measured the collection tile's acuity margin at 265
+        /// device px; at the Pixel 5a's 2.625x that is 100.95dp, and the floor is the first
+        /// <see cref="TileQuantum"/> step at or above it — 112dp, which is 294 device px. Being a
+        /// quantum multiple matters: every other solved height is one, so a floor that is not lands
+        /// the clamp off the ladder every other value sits on.</para>
+        ///
+        /// <para>This was 96dp until 2026-09-01, which is 252 device px — BELOW the 265px margin the
+        /// comment here cited as its own justification. It never bit, and could not have: the floor
+        /// engages only under a 240dp wall viewport and a landscape phone gives ~351dp. Corrected
+        /// because the next person to solve for a smaller surface would have inherited it.</para>
+        ///
+        /// <para>There is deliberately no minimum WIDTH. Width is <c>height * authored aspect</c>,
+        /// so a height floor already floors it; a separate width constant could only ever be dead,
+        /// or disagree.</para></summary>
+        private const float MinTileHeight = 112f;
 
         // Pointer movement beyond this distance (in panel pixels) is treated as a scroll gesture,
         // not a tap. Keeps PointerUp from firing TileClicked after the player drags to scroll.
@@ -100,6 +122,24 @@ namespace Emberfall.Presentation
         // should've been last-in-row lands first-in-next-row with its trailing margin zeroed, flush
         // against its new neighbour. This margin keeps every row comfortably under budget.
         private const float RowSafetyMargin = 2f;
+
+        /// <summary>The same reserve, on the other axis, and it had no counterpart until
+        /// 2026-09-01.
+        ///
+        /// <para><see cref="ResolveTileSize"/> spends its quantiser remainder as pitch so the rows
+        /// fill the viewport TO THE PIXEL (#298) — which leaves the last row with nothing to round
+        /// into, while UI Toolkit snaps every margin to a DEVICE pixel and the phone's scale is
+        /// 2.625x. So the painted stack can exceed the viewport by a snap or two of accumulated
+        /// error and clip the bottom row, for the same reason a row wrapped one tile early before
+        /// <see cref="RowSafetyMargin"/> existed. Held out of the viewport in <see cref="Layout"/>
+        /// rather than inside the solve, so the solve's own contract — its rows come to its budget
+        /// exactly — is unchanged and still testable.</para>
+        ///
+        /// <para><b>This is NOT the row-2 clipping seen on device.</b> That is the Android-only
+        /// ScrollView paint fault (#283/#285/#307): content painting into ~304dp of a 350.9dp
+        /// viewport, ~47dp short, which no 2dp reserve addresses and which is not a geometry bug at
+        /// all. Do not read a fix for it here.</para></summary>
+        private const float LastRowSafetyMargin = 2f;
 
         private readonly VisualElement _grid;
         private readonly ScrollView _scroll;
@@ -116,6 +156,14 @@ namespace Emberfall.Presentation
         private float _activeTileHeight = -1f;
         private bool _tilesNeedBake;
 
+        private int _bakeGeneration;
+        private int _bakesOutstanding;
+
+        // The size authored in USS, or the fallback until the first CustomStyleResolvedEvent.
+        // Never -1: an unresolved value here would divide into the aspect solve.
+        private float _authoredTileWidth = TileWidth;
+        private float _authoredTileHeight = TileHeight;
+
         // Cache used by Layout() to break the GeometryChangedEvent feedback loop.
         // See Layout() for the full explanation.
         private float _lastLayoutAvailable = -1f;
@@ -127,6 +175,19 @@ namespace Emberfall.Presentation
 
         /// <summary>Raised when a tile is clicked. The wall itself never mutates anything.</summary>
         public event Action<CardDefinition> TileClicked;
+
+        /// <summary>
+        /// Raised when every card in the pool has been baked or has failed — the wall is as drawn
+        /// as it will get. Raised again after any subsequent pass, so a listener that only wants
+        /// the first one must unsubscribe itself.
+        ///
+        /// <para>Exists so <see cref="CollectionController"/> can hold the loading plate over the
+        /// screen until the wall is actually painted. That is not cosmetic: the bake queue is
+        /// strictly serial and each card blocks on its own art load, so the whole pool takes real
+        /// time to come in and the player would otherwise watch several hundred placeholder
+        /// rectangles fill in one at a time.</para>
+        /// </summary>
+        public event Action BakePassCompleted;
 
         /// <summary>
         /// Applied to every tile on <see cref="RefreshTiles"/>, for per-tile state the wall knows
@@ -144,9 +205,50 @@ namespace Emberfall.Presentation
             _grid = grid ?? throw new ArgumentNullException(nameof(grid));
             _baker = baker ?? throw new ArgumentNullException(nameof(baker));
             _grid.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
+            _grid.RegisterCallback<CustomStyleResolvedEvent>(OnCustomStyleResolved);
             _scroll = _grid.GetFirstAncestorOfType<ScrollView>();
             _viewport = _scroll?.contentViewport;
             _viewport?.RegisterCallback<GeometryChangedEvent>(_ => QueueLayout());
+        }
+
+        /// <summary>
+        /// Pick up the tile size authored in USS. This is the ONLY reason the wall knows a size at
+        /// all — see the fallback constants at the top of the class.
+        ///
+        /// <para><b>Why a custom property and not <c>resolvedStyle</c> of a tile.</b> Layout writes
+        /// the solved size onto every tile as an INLINE style, and an inline style is what
+        /// <c>resolvedStyle</c> then reports — so after the first pass the wall could no longer read
+        /// back what USS asked for, only what it had already decided. It would converge on its own
+        /// output. A custom property is never written by us, so it stays the author's number.</para>
+        ///
+        /// <para>Fires on load and again on any style change, including the screen-class swap
+        /// <see cref="ScreenClass"/> performs when a panel resizes across a breakpoint — which is
+        /// exactly when the authored size is meant to change. A missing property leaves the previous
+        /// value alone rather than resetting to the fallback, so a partial stylesheet cannot shrink
+        /// a wall that was already sized.</para>
+        /// </summary>
+        private void OnCustomStyleResolved(CustomStyleResolvedEvent evt)
+        {
+            bool moved = false;
+            if (evt.customStyle.TryGetValue(AuthoredWidthProp, out float w) && w > 0f
+                && !Mathf.Approximately(w, _authoredTileWidth))
+            {
+                _authoredTileWidth = w;
+                moved = true;
+            }
+            if (evt.customStyle.TryGetValue(AuthoredHeightProp, out float h) && h > 0f
+                && !Mathf.Approximately(h, _authoredTileHeight))
+            {
+                _authoredTileHeight = h;
+                moved = true;
+            }
+            if (!moved) return;
+
+            // Layout early-returns when its three inputs are unchanged, and the authored size is a
+            // FOURTH input it does not track. Clearing the cache is what makes a stylesheet change
+            // actually reach the tiles.
+            _lastLayoutAvailable = -1f;
+            QueueLayout();
         }
 
         /// <summary>
@@ -323,7 +425,7 @@ namespace Emberfall.Presentation
             LayoutCount++;
 
             float available = _grid.resolvedStyle.width - RowSafetyMargin;
-            float viewportHeight = _viewport?.resolvedStyle.height ?? 0f;
+            float viewportHeight = (_viewport?.resolvedStyle.height ?? 0f) - LastRowSafetyMargin;
             // `!(x > 0f)`, not `x <= 0f`: an unresolved resolvedStyle is NaN and every comparison
             // against NaN is false, so `<= 0f` passes it through to the solve. See the long note on
             // CharacterCreateController.LayoutHeroGrid's guard, where that cost a 1.3 GB OOM kill.
@@ -352,7 +454,7 @@ namespace Emberfall.Presentation
             _lastLayoutViewportHeight = viewportHeight;
             _lastLayoutVisibleCount = _visible.Count;
 
-            ResolveTileTier(available, viewportHeight,
+            ResolveTileSize(_authoredTileWidth, _authoredTileHeight, viewportHeight,
                 out float tileWidth, out float tileHeight, out float verticalMargin);
             bool tierChanged = !Mathf.Approximately(tileWidth, _activeTileWidth)
                 || !Mathf.Approximately(tileHeight, _activeTileHeight);
@@ -380,10 +482,10 @@ namespace Emberfall.Presentation
             // clipping on device and the only numbers available were from an offscreen harness that
             // measured a DIFFERENT viewport than the device had.
             //
-            // `rows` is the diagnostic that matters. TargetVisibleRows fill the viewport TO THE
-            // PIXEL by design (ResolveTileTier spends the quantiser's remainder as pitch), and there
-            // is no vertical equivalent of RowSafetyMargin, so a value at or a hair over
-            // TargetVisibleRows is the clipping case: the last row has nothing to round into.
+            // `rows` is the diagnostic that matters. The rows fill the viewport TO THE PIXEL by
+            // design (ResolveTileSize spends the remainder as pitch), and there is no vertical
+            // equivalent of RowSafetyMargin, so a whole number here is the clipping case: the last
+            // row has nothing to round into.
             if (tierChanged)
             {
                 float pitch = tileHeight + verticalMargin;
@@ -425,83 +527,111 @@ namespace Emberfall.Presentation
         /// <summary>
         /// The tile size for a viewport, and the vertical margin that spaces its rows.
         ///
-        /// <para><b>The margin is an output because the derived tier spends it (#322/#298).</b>
+        /// <para><b>The authored size is the input, and this may only shrink it.</b>
+        /// <paramref name="authoredWidth"/>/<paramref name="authoredHeight"/> come from USS (see
+        /// the fallback constants at the top of this class). When they fit they are used exactly;
+        /// when the viewport is too short for <see cref="MinVisibleRows"/> of them the height is
+        /// solved down and quantised, and the width follows the AUTHORED aspect so a card keeps its
+        /// proportions rather than drifting toward square.</para>
+        ///
+        /// <para><b>A tall viewport buys ROWS, not a bigger card.</b> The row count is derived from
+        /// the authored size rather than fixed at <see cref="MinVisibleRows"/>, which is what stops
+        /// a tablet spending 260dp of slack as row pitch and rendering two cards adrift in a field
+        /// of background — the vertical form of the "islands" outcome <see cref="MaxGutter"/> is
+        /// bounded to avoid horizontally.</para>
+        ///
+        /// <para><b>The margin is an output because the solve spends it (#322/#298).</b>
         /// Quantising the height leaves a remainder — up to <see cref="TileQuantum"/> per row — and
         /// left in the margin's default that remainder lands at the BOTTOM of the viewport, where
-        /// it shows as the top sliver of row three: a card cut through the middle with only its
+        /// it shows as the top sliver of the next row: a card cut through the middle with only its
         /// cost band visible. Sam's ruling, 2026-08-30, is that the sliver is not to be recovered
-        /// by shortening rows; the wall is to END CLEANLY after the two rows that read. So the
-        /// derived tier hands the remainder back as row PITCH, and two rows fill the viewport
-        /// exactly. Row three is still there and still scrolls to — it just does not peek.</para>
-        ///
-        /// <para>The fixed tiers keep the flat margin. Their slack is whatever a tabulated size
-        /// happens to leave over a desk-sized viewport, which can be hundreds of dp — spreading
-        /// THAT as pitch would push the rows apart into the "islands" outcome the gutter solve is
-        /// bounded to avoid.</para>
+        /// by shortening rows; the wall is to END CLEANLY after the rows that read. So the solve
+        /// hands the remainder back as row PITCH and the rows fill the viewport exactly. The next
+        /// row is still there and still scrolls to — it just does not peek.</para>
         /// </summary>
-        private static void ResolveTileTier(
-            float availableWidth,
+        /// <remarks>Public because <c>CollectionSwapVerify</c> measures this screen offscreen and
+        /// must report the size the wall WOULD solve. It re-derived the arithmetic by hand until
+        /// 2026-09-01 and had drifted: it still divided by a fixed two rows and still took its
+        /// aspect from the deleted 340x477 tier. A second copy of a solve is a copy that is wrong
+        /// later, so there is one, and it is this.</remarks>
+        public static void ResolveTileSize(
+            float authoredWidth,
+            float authoredHeight,
             float viewportHeight,
             out float tileWidth,
             out float tileHeight,
             out float verticalMargin)
         {
-            verticalMargin = VerticalTileMargin;
+            // How many complete rows of the AUTHORED tile the viewport holds, never fewer than the
+            // floor. FloorToInt of a viewport shorter than one row gives 0, which the Max absorbs.
+            int rows = Mathf.Max(
+                MinVisibleRows,
+                Mathf.FloorToInt(viewportHeight / (authoredHeight + VerticalTileMargin)));
+            float rowBudget = viewportHeight / rows;
 
-            if (TierFits(availableWidth, viewportHeight, DesktopTileWidth, DesktopTileHeight))
+            if (authoredHeight + VerticalTileMargin <= rowBudget)
             {
-                tileWidth = DesktopTileWidth;
-                tileHeight = DesktopTileHeight;
-                return;
+                // The authored size fits. Honour it to the pixel — this is the path every phone
+                // and every desktop takes, so the number in USS is the number on screen.
+                tileWidth = authoredWidth;
+                tileHeight = authoredHeight;
+            }
+            else
+            {
+                // Too tall for its share. Solve the height down and quantise it, which is what
+                // keeps the bake count bounded — a continuous resize would otherwise invalidate and
+                // re-bake every RenderTexture on every window pixel.
+                float solved = Mathf.Floor((rowBudget - VerticalTileMargin) / TileQuantum) * TileQuantum;
+                tileHeight = Mathf.Max(solved, MinTileHeight);
+                tileWidth = Mathf.Round(tileHeight * (authoredWidth / authoredHeight));
             }
 
-            if (TierFits(availableWidth, viewportHeight, MediumTileWidth, MediumTileHeight))
-            {
-                tileWidth = MediumTileWidth;
-                tileHeight = MediumTileHeight;
-                return;
-            }
-
-            if (TierFits(availableWidth, viewportHeight, TileWidth, TileHeight))
-            {
-                tileWidth = TileWidth;
-                tileHeight = TileHeight;
-                return;
-            }
-
-            // COMPACT: derived, not tabulated. Solve the height that puts TargetVisibleRows in the
-            // viewport, quantise it so the bake count stays bounded, and take the width from the
-            // fixed tiers' own aspect so a card keeps its proportions across every tier.
-            float solved = viewportHeight / TargetVisibleRows - VerticalTileMargin;
-            solved = Mathf.Floor(solved / TileQuantum) * TileQuantum;
-            tileHeight = Mathf.Max(solved, MinTileHeight);
-            tileWidth = Mathf.Round(tileHeight * (TileWidth / TileHeight));
-
-            // Spend the quantiser's remainder as pitch so TargetVisibleRows fill the viewport to
-            // the pixel. Clamped at the floor for the one case that cannot be paid: MinTileHeight
-            // above it, where the tile is already taller than its share and the wall would rather
-            // show fewer legible rows than more unreadable ones.
-            verticalMargin = Mathf.Max(
-                VerticalTileMargin,
-                viewportHeight / TargetVisibleRows - tileHeight);
+            // Spend whatever is left as pitch so the rows fill the viewport to the pixel. Clamped
+            // at the flat margin for the one case that cannot be paid: MinTileHeight above the
+            // solved height, where the tile is already taller than its share and the wall would
+            // rather show fewer legible rows than more unreadable ones.
+            verticalMargin = Mathf.Max(VerticalTileMargin, rowBudget - tileHeight);
         }
 
-        private static bool TierFits(float availableWidth, float viewportHeight, float width, float height)
-        {
-            float rowWidth = MinColumnsForLargerTier * width
-                + (MinColumnsForLargerTier - 1) * MinGutter;
-            float rowsHeight = TargetVisibleRows * (height + VerticalTileMargin);
-            return availableWidth >= rowWidth && viewportHeight >= rowsHeight;
-        }
-
+        /// <summary>
+        /// Enqueue every pool card and raise <see cref="BakePassCompleted"/> when the last one has
+        /// been answered — success or failure alike, since a wall that gave up on three cards is
+        /// still as finished as it is going to get.
+        ///
+        /// <para><b>Generation-counted, because a bake pass can be superseded mid-flight.</b> A
+        /// screen-class change or a resize across a row boundary calls this again while the
+        /// previous pass still has callbacks outstanding, and those callbacks still arrive — they
+        /// were captured before the size moved. Counting deliveries alone would then fire the
+        /// completion signal early, on the tail of a pass whose textures have already been released
+        /// by <c>SetFaceSize</c>. Each pass stamps its own generation and a stale callback is
+        /// counted for its tile but not toward the current pass.</para>
+        ///
+        /// <para>Note the callback may run SYNCHRONOUSLY, out of <c>_baker.Bake</c>, when the face
+        /// is already cached — so the outstanding count is seeded before the loop rather than
+        /// incremented inside it, or a cache-warm wall would complete on its first card.</para>
+        /// </summary>
         private void BakeTiles()
         {
+            _bakeGeneration++;
+            int generation = _bakeGeneration;
+            _bakesOutstanding = _pool.Count;
+            if (_bakesOutstanding == 0)
+            {
+                BakePassCompleted?.Invoke();
+                return;
+            }
+
             foreach (CardDefinition def in _pool)
             {
-                if (!_tiles.TryGetValue(def.Id, out VisualElement tile)) continue;
+                if (!_tiles.TryGetValue(def.Id, out VisualElement tile))
+                {
+                    CountBake(generation);
+                    continue;
+                }
                 CardDefinition captured = def;
                 _baker.Bake(captured, tex =>
                 {
+                    CountBake(generation);
                     if (tex == null)
                     {
                         // A blank tile that is still clickable is worse than no tile: the player
@@ -516,6 +646,13 @@ namespace Emberfall.Presentation
                         new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
                 });
             }
+        }
+
+        private void CountBake(int generation)
+        {
+            if (generation != _bakeGeneration) return;
+            if (--_bakesOutstanding > 0) return;
+            BakePassCompleted?.Invoke();
         }
     }
 }

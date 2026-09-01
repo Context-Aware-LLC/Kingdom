@@ -50,6 +50,7 @@ namespace Emberfall.Presentation
         private static readonly int UnderlayColorId = Shader.PropertyToID("_UnderlayColor");
 
         private SpriteRenderer _plate;
+        private string _plateName = DefaultPlate;
         private Material _orbMat;                 // instanced — _Fade/_Progress are per-overlay
         private TextMeshPro _wordmark;
         private Transform _wordmarkRoot;
@@ -69,8 +70,20 @@ namespace Emberfall.Presentation
         /// rather than racing it off NotifyReady/NotifyMatchReady alone.</summary>
         public event System.Action OnFadedOut;
 
-        /// <summary>Build the rig under <paramref name="cam"/>. Null camera → null (overlay skipped, boot unaffected).</summary>
-        public static LoadingOverlay Create(Camera cam)
+        /// <summary>The boot plate, and the default for every caller that does not ask for another.</summary>
+        public const string DefaultPlate = "LoadingPlate_Master";
+
+        /// <summary>
+        /// Build the rig under <paramref name="cam"/>. Null camera → null (overlay skipped, boot
+        /// unaffected).
+        /// </summary>
+        /// <param name="plateName">File name (no extension) of a plate under
+        /// <c>Assets/Art/Backgrounds/Loading/</c>, letting a screen show its own art rather than the
+        /// brand splash. The folder is what decides import settings and the address is the file
+        /// name, so a new plate needs no code change and no Addressables edit — drop the .png in
+        /// that folder, commit its generated .meta, and name it here. Anything missing falls back
+        /// to skipping the plate, not to a broken screen.</param>
+        public static LoadingOverlay Create(Camera cam, string plateName = DefaultPlate)
         {
             if (cam == null)
             {
@@ -82,6 +95,7 @@ namespace Emberfall.Presentation
             float dist = cam.nearClipPlane + 1f;
             go.transform.localPosition = new Vector3(0f, 0f, dist);
             var overlay = go.AddComponent<LoadingOverlay>();
+            overlay._plateName = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
             overlay.Build(cam, dist);
             return overlay;
         }
@@ -139,7 +153,7 @@ namespace Emberfall.Presentation
             // The Loading/ subfolder is organisational only: the background lane matches at any
             // depth, and AddressablesSetup addresses by file name, so the address is unchanged.
             var plateTex = LoadAsset<Texture2D>(
-                "Assets/Art/Backgrounds/Loading/LoadingPlate_Master.png", "backgrounds/LoadingPlate_Master");
+                $"Assets/Art/Backgrounds/Loading/{_plateName}.png", $"backgrounds/{_plateName}");
             if (plateTex != null)
             {
                 var go = new GameObject("Plate");

@@ -161,6 +161,14 @@ namespace Emberfall.Presentation
         /// </summary>
         private bool OwnedOnly => _owned != null && _ownedScope;
 
+        /// <summary>Seconds before the loading plate lifts whether or not the wall reports itself
+        /// done. Generous — it is a deadlock guard, not a pacing knob, and lifting early on a slow
+        /// device would show the exact fill-in the plate exists to hide.</summary>
+        private const float LoadingPlateTimeout = 20f;
+
+        private LoadingOverlay _loading;
+        private float _loadingSince = -1f;
+
         private void OnEnable()
         {
             _root = GetComponent<UIDocument>().rootVisualElement;
@@ -192,6 +200,7 @@ namespace Emberfall.Presentation
             BuildPool();
             InitFaceBaker();
             BuildCraftModal();   // before the wall: a tile click can open it, so it must exist first
+            ShowLoadingPlate();  // before the wall: SetPool can complete a warm bake pass inline
             BuildWall();
             WireQueryBar();
             WireClassTabs();
@@ -363,12 +372,69 @@ namespace Emberfall.Presentation
         {
             _wall = new CardWall(_grid, _faceBaker);
 
+            // Subscribed BEFORE SetPool, which is what starts the first bake pass. A cache-warm
+            // wall can complete that pass in the same frame it begins it.
+            _wall.BakePassCompleted += OnFirstBakeCompleted;
+
             // Both modes now, where browse used to have no handler at all: "a tap does nothing until
             // there is something for it to do" was true right up until crafting gave it something.
             _wall.TileClicked += OnTileClicked;
 
             _wall.TileDecorator = DecorateTile;
             _wall.SetPool(_pool);
+        }
+
+        /// <summary>
+        /// Hold the loading plate over the screen until the wall has actually painted.
+        ///
+        /// <para><b>Why this screen earns an overlay when the others do not.</b> The bake queue is
+        /// strictly serial and every card blocks on its own art load, so the whole pool arrives over
+        /// seconds rather than frames. Without the plate the player watches several hundred empty
+        /// rectangles fill in one at a time, which reads as a broken screen rather than a loading
+        /// one.</para>
+        ///
+        /// <para>Created here rather than in <c>Awake</c> so the early returns above — no root, no
+        /// account, no card database — leave the screen visible and its error on the console. An
+        /// overlay that outlives a failed load is a hang with no message.</para>
+        /// </summary>
+        private void ShowLoadingPlate()
+        {
+            _loading = LoadingOverlay.Create(Camera.main);
+            if (_loading == null) return;   // no camera: the wall just paints in as it bakes
+            _loadingSince = Time.realtimeSinceStartup;
+        }
+
+        private void OnFirstBakeCompleted()
+        {
+            if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
+            _loading?.NotifyReady();
+        }
+
+        /// <summary>
+        /// The plate covers the whole screen, so anything that can stop
+        /// <see cref="CardWall.BakePassCompleted"/> arriving is a hard lock with no message and no
+        /// way out. A bake that throws is already counted, but a baker that never gets a rig — no
+        /// board prefab, a stripped shader — delivers nothing at all. Lift on time regardless and
+        /// say why: a wall filling in visibly is a worse screen, not a broken one.
+        /// </summary>
+        private void Update()
+        {
+            if (_loading == null || _loadingSince < 0f) return;
+            if (Time.realtimeSinceStartup - _loadingSince < LoadingPlateTimeout) return;
+            _loadingSince = -1f;
+            Debug.LogWarning($"[Collection] wall did not finish baking within {LoadingPlateTimeout:F0}s — "
+                             + "lifting the loading plate anyway; tiles will fill in as they bake.");
+            _loading.NotifyReady();
+        }
+
+        private void OnDisable()
+        {
+            if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
+            // Parented to the camera, so leaving the scene takes it. Leaving only the SCREEN —
+            // the document disabled under a live camera — would otherwise strand it on top.
+            if (_loading != null) Destroy(_loading.gameObject);
+            _loading = null;
+            _loadingSince = -1f;
         }
 
         /// <summary>
@@ -478,7 +544,7 @@ namespace Emberfall.Presentation
                 };
         }
 
-        // ---- The class strip down the left edge -----------------------------------------------
+        // ---- The class strip across the top edge -----------------------------------------------
         //
         // Nine tabs, one per CardClass, and the strip never changes shape (Sam, 2026-08-18): every
         // tab is on screen in every state, and narrowing the screen deactivates the tabs it excludes
@@ -759,11 +825,9 @@ namespace Emberfall.Presentation
                     DeckList capturedDeck = summary.Deck;
                     Character capturedCharacter = character;
                     string defaultMark = summary.IsDefault ? " · Default" : "";
-                    string standing = summary.IsDraft ? "Draft" : "Ready";
                     var button = new Button(() => OpenDeckEditor(capturedCharacter, capturedDeck))
                     {
-                        text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}" +
-                               $"  ·  {standing}{defaultMark}"
+                        text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}"
                     };
                     button.AddToClassList("deck-choice");
                     button.AddToClassList(ClassEdgeClass(character.PrimaryClass));

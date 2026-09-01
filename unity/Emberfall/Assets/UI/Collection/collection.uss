@@ -6,7 +6,8 @@
  * collection, so collection's rules won every equal-specificity tie. Appending would have
  * silently inverted that on every selector the two sheets both touch.
  *
- * .card-tile's 276px width is a contract with CardWall.TileWidth. Nothing below restyles it.
+ * THE CARD SIZE LIVES IN THIS FILE — see the --card-tile-width/--card-tile-height block on
+ * .db-grid below. CardWall reads those two and may only shrink them to fit whole rows.
  * --------------------------------------------------------------------------------------------- */
 
 /*
@@ -103,18 +104,54 @@
  * compose into neither. `space-between` did exactly that -- it pushed a sparse row's cards apart
  * into islands and, with the outer margin landing only on the left, sat the row flush against the
  * right edge. */
+/* ---------------------------------------------------------------------------------------------
+ * THE CARD TILE SIZE. This is the authoring surface — change the card size here, not in C#.
+ *
+ * CardWall reads these two through CustomStyleResolvedEvent and may only SHRINK them, to make
+ * whole rows fit a short viewport; it never grows them. So the number below is the number on
+ * screen on every device tall enough for two rows of it, which is every phone and every desktop.
+ *
+ * UNITLESS ON PURPOSE, twice over. A CustomStyleProperty<float> reads a number, not a length, so
+ * `160px` would not resolve. And the unit is already unambiguous: this panel runs
+ * ConstantPhysicalSize at referenceDpi 160, so one authored px IS one Android dp — 160 here means
+ * 160dp, which is 420 device px on a Pixel 5a and a bit more on a denser phone of the same
+ * physical size. A landscape phone panel is about 411dp TALL IN TOTAL, so a phone tile is a
+ * ~100-200 number. If you find yourself typing 400 or 900 you are thinking in screen pixels; that
+ * exact confusion is what put a 477dp tile on a 291dp viewport in #177.
+ *
+ * Aspect is preserved from whatever pair is authored here, so keep width/height near 0.712 (the
+ * card frame's own proportions) unless the frame art changes too.
+ *
+ * The breakpoints are ScreenClass's, keyed on the panel's SHORT axis: compact < 600dp (phones),
+ * medium 600-840dp, expanded 840dp+. See the SCREEN CLASSES block in Common/theme.uss.
+ * ------------------------------------------------------------------------------------------- */
 .db-grid {
     flex-direction: row;
     flex-wrap: wrap;
     align-content: flex-start;
     justify-content: flex-start;
+
+    /* Phones. Solved from a Pixel 5a's measured 350.9dp wall viewport: two rows plus the 8dp
+     * flat margin. Every phone-sized panel lands here regardless of pixel count, because the
+     * panel is sized physically — a 1080p and a 1440p phone both resolve to ~411dp tall. */
+    --card-tile-width: 114;
+    --card-tile-height: 160;
+}
+.collection.emb-sw-medium .db-grid {
+    --card-tile-width: 182;
+    --card-tile-height: 256;
+}
+.collection.emb-sw-expanded .db-grid {
+    --card-tile-width: 274;
+    --card-tile-height: 384;
 }
 .card-tile {
-    width: 340px;
-    height: 477px;
-    /* margin-left/margin-right are runtime-computed per row by
-     * CardWall.Layout (responsive tile tier, bounded gutter, centred
-     * outer breathing room); only the top/bottom 4px here actually applies. */
+    /* width/height AND all four margins are written as inline styles by CardWall.Layout, from the
+     * --card-tile-* properties above. Nothing declared here would survive, so nothing is: this
+     * block once carried a 350x477 that no build had used since the solve landed, and it drifted
+     * from both the header comment (276) and the C# constant (340) without anyone noticing —
+     * three numbers for one tile, because none of them were read.
+     * RETIREMENT TRIGGER: if CardWall stops writing the size inline, the size belongs here. */
     margin: var(--space-1) var(--space-2);
     background-color: var(--surface-3);   /* shows through until the bake resolves */
     -unity-background-scale-mode: scale-to-fit;
@@ -711,7 +748,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 15%;
+    width: 20%;
     /* min-width: 420px; */
     /* Three of this drawer's four sides ARE screen edges (top, right, bottom);
        its left is interior, so it takes the ordinary gutter there. .emb-bleed
@@ -793,22 +830,22 @@
     display: flex;
 }
 .deck-choice-group {
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-2);
 }
 .deck-choice-character {
     font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-1);
 }
 .deck-choice-pairing {
-    font-size: var(--type-caption);
+    font-size: var(--type-body);
     color: var(--ink-2);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-1);
 }
 .deck-choice {
     min-height: 64px;
-    margin-bottom: var(--space-2);
+    /* margin-bottom: var(--space-2); */
     padding: var(--space-3) var(--space-4);
     border-width: 0;
     border-left-width: 6px;
@@ -847,9 +884,10 @@
  * of the column and not the rest is worse than pinning none: `.deck-drawer__manage` was pinned
  * alone, so the whole deficit landed on its unpinned siblings. Add a sibling here, pin it. */
 .deck-drawer__back {
+    font-size: var(--type-body);
     flex-shrink: 0;
     height: var(--space-12);
-    margin-bottom: var(--space-3);
+    /* margin-bottom: var(--space-3); */
     border-width: 0;
     border-radius: var(--space-2);
     background-color: var(--surface-3);
@@ -883,7 +921,6 @@
 .deck-drawer__manage {
     flex-shrink: 0;
     min-height: 52px;
-    margin-top: var(--space-4);
     border-width: 0;
     border-radius: var(--space-2);
     color: var(--ink-1);

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Linq;
 using System.Text;
+using Emberfall.Presentation;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -162,12 +163,25 @@ namespace Emberfall.Editor
 
             if (scroll != null)
             {
-                // CardWall.ResolveTileTier's compact branch, run on the viewport this layout leaves.
-                float solved = scroll.worldBound.height / 2f - 8f;
-                float tileH = Mathf.Max(Mathf.Floor(solved / 16f) * 16f, 96f);
-                float tileW = Mathf.Round(tileH * (340f / 477f));
+                // THE WALL'S OWN SOLVE, called rather than copied. This block re-derived it by hand
+                // until 2026-09-01 and had gone quietly wrong: it divided by a fixed two rows after
+                // the row count became derived, floored at a 96dp legibility floor that has since
+                // moved, and took its aspect from `340f / 477f` — a tier deleted the same day for
+                // being unreachable on any display. Every one of those numbers looked like a
+                // faithful copy and none of them were still true.
+                //
+                // The authored size comes from --card-tile-* in collection.uss. This panel is built
+                // at the Pixel 5a's dp budget, so it is the COMPACT declaration that applies, and
+                // CardWall's fallback pair is that same size — an equality a contract test pins, so
+                // reading it here cannot silently drift from the stylesheet either.
+                CardWall.ResolveTileSize(
+                    CardWall.TileWidth, CardWall.TileHeight, scroll.worldBound.height,
+                    out float tileW, out float tileH, out float verticalMargin);
+                float pitch = tileH + verticalMargin;
                 sb.AppendLine($"  => compact tile       {tileW.ToString("F0", CultureInfo.InvariantCulture)}"
-                              + $" x {tileH.ToString("F0", CultureInfo.InvariantCulture)}");
+                              + $" x {tileH.ToString("F0", CultureInfo.InvariantCulture)}"
+                              + $"  pitch {pitch.ToString("F2", CultureInfo.InvariantCulture)}"
+                              + $"  rows {(scroll.worldBound.height / pitch).ToString("F3", CultureInfo.InvariantCulture)}");
             }
 
             Debug.Log(sb.ToString());

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -319,44 +320,139 @@ namespace Emberfall.Core.Tests.Presentation
             });
         }
 
+        /// <summary>
+        /// The card size is authored in USS and C# may only shrink it (Sam, 2026-09-01).
+        ///
+        /// <para><b>What this replaced, and why that mattered.</b> The previous test here pinned
+        /// three fixed tile tiers — 340x477, 480x674, 620x870 — by asserting that a hypothetical
+        /// 3500x2200 panel would resolve the largest one to five columns and two rows. It did, and
+        /// the test was green for as long as it existed. But no device ever presented that
+        /// viewport: selecting even the SMALLEST tier required 970dp of scroll viewport against a
+        /// landscape phone's 411dp panel, so the ladder those constants formed had never once been
+        /// climbed. A test that computes over invented inputs cannot notice that, which is the
+        /// whole lesson — it verified the arithmetic of a feature instead of its reachability.</para>
+        ///
+        /// <para>So this asserts the wiring rather than any number: that the size is declared in
+        /// the stylesheet, that CardWall reads those declarations, and that the tier ladder has not
+        /// come back. The numbers themselves are now a design choice living in one file, and
+        /// pinning them here would only make changing them a two-file edit.</para>
+        /// </summary>
         [Test]
-        public void Collection_wall_uses_art_first_responsive_tiers_instead_of_screen_pixel_density()
+        public void Collection_wall_takes_its_tile_size_from_uss_not_from_a_tier_table()
         {
             string collectionStyles = Asset("UI", "Collection", "collection.uss");
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
 
-            const float desktopWidth = 620f;
-            const float desktopHeight = 870f;
-            const float minGutter = 16f;
+            Assert.Multiple(() =>
+            {
+                Assert.That(collectionStyles, Does.Match(@"(?s)\.db-grid\s*\{.*?--card-tile-width:\s*\d+;.*?--card-tile-height:\s*\d+;"),
+                    "The phone tile size must be declared on .db-grid — that is the authoring surface.");
+                Assert.That(collectionStyles, Does.Match(@"(?s)\.collection\.emb-sw-expanded \.db-grid\s*\{.*?--card-tile-height:\s*\d+;"),
+                    "A larger screen class must be able to author a larger card.");
+                Assert.That(collectionStyles, Does.Not.Match(@"(?s)\.card-tile\s*\{[^}]*?width:"),
+                    "A width on .card-tile is overwritten inline by Layout every pass. Declaring one "
+                    + "there is how this file came to carry three different tile widths, none read.");
 
-            // Sam's desktop observation was roughly 10 x 4.5 at the old compact size. The same
-            // physical-size panel therefore exposes about 3,500 x 2,200 panel units. The desktop
-            // tier must convert that real viewport into an art wall, irrespective of monitor DPI.
-            const float observedDesktopWidth = 3500f;
-            const float observedDesktopHeight = 2200f;
-            int desktopColumns = Math.Min(5, Math.Max(1,
-                (int)Math.Floor((observedDesktopWidth + minGutter) / (desktopWidth + minGutter))));
-            int desktopRows = (int)Math.Floor(observedDesktopHeight / (desktopHeight + 8f));
+                Assert.That(wall, Does.Contain("new CustomStyleProperty<float>(\"--card-tile-width\")"));
+                Assert.That(wall, Does.Contain("new CustomStyleProperty<float>(\"--card-tile-height\")"));
+                Assert.That(wall, Does.Match(@"RegisterCallback<CustomStyleResolvedEvent>"),
+                    "Declaring the properties is not reading them.");
+                Assert.That(wall, Does.Contain("ResolveTileSize(_authoredTileWidth, _authoredTileHeight, viewportHeight"),
+                    "Layout must solve from the AUTHORED size, not from a constant.");
+
+                Assert.That(wall, Does.Not.Match(@"const\s+float\s+(Medium|Desktop)Tile(Width|Height)"),
+                    "The fixed tier table was deleted because no viewport could select it.");
+                Assert.That(wall, Does.Not.Match(@"bool\s+TierFits"));
+
+                Assert.That(wall, Does.Contain("private const float MaxGutter = 32f;"));
+                Assert.That(wall, Does.Contain("private const int MaxColumns = 5;"));
+                Assert.That(wall, Does.Contain("_baker.SetFaceSize(Mathf.RoundToInt(tileWidth)"),
+                    "A larger tile must be freshly baked at its display resolution, not upscaled.");
+            });
+        }
+
+        /// <summary>
+        /// CardWall's fallback pair must equal the COMPACT declaration in collection.uss.
+        ///
+        /// <para>They are two copies of one number and nothing made them agree. The fallback is
+        /// real — it is what the wall uses before the first <c>CustomStyleResolvedEvent</c>, and
+        /// what <c>CardFaceBaker</c> seeds its RenderTexture with — so it cannot simply be deleted
+        /// in favour of the stylesheet. What it can be is pinned.</para>
+        ///
+        /// <para>This is the failure collection.uss's own header records, one copy shorter: that
+        /// file carried a 276 in a comment, a 350 on <c>.card-tile</c> and a 340 in C#, three
+        /// numbers for one tile, and they diverged unnoticed for weeks precisely BECAUSE nothing
+        /// read them. A number that nothing reads still has to be right the day something does —
+        /// and the offscreen verifier now reads this one.</para>
+        /// </summary>
+        [Test]
+        public void The_card_wall_fallback_size_matches_the_compact_size_authored_in_uss()
+        {
+            string collectionStyles = Asset("UI", "Collection", "collection.uss");
+            string wall = Asset("Scripts", "Presentation", "CardWall.cs");
+
+            // The bare .db-grid block, which is the compact declaration: the screen-class variants
+            // are `.collection.emb-sw-* .db-grid` and do not match this.
+            Match grid = Regex.Match(collectionStyles, @"(?m)^\.db-grid\s*\{(?<body>[^}]*)\}");
+            Assert.That(grid.Success, Is.True, "collection.uss must declare a bare .db-grid block.");
+
+            float UssVar(string name)
+            {
+                Match m = Regex.Match(grid.Groups["body"].Value, name + @":\s*(?<v>[0-9.]+)\s*;");
+                Assert.That(m.Success, Is.True, $"{name} must be declared on .db-grid.");
+                return float.Parse(m.Groups["v"].Value, CultureInfo.InvariantCulture);
+            }
+
+            float CsConst(string name)
+            {
+                Match m = Regex.Match(wall, @"const\s+float\s+" + name + @"\s*=\s*(?<v>[0-9.]+)f\s*;");
+                Assert.That(m.Success, Is.True, $"CardWall.cs must declare {name}.");
+                return float.Parse(m.Groups["v"].Value, CultureInfo.InvariantCulture);
+            }
 
             Assert.Multiple(() =>
             {
-                Assert.That(collectionStyles, Does.Match(@"(?s)\.card-tile\s*\{.*?width:\s*340px;.*?height:\s*477px;"));
-                Assert.That(collectionStyles, Does.Match(
-                    @"(?s)\.collection \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*0 12px;\s*\}"));
-                Assert.That(collectionStyles, Does.Match(
-                    @"(?s)\.collection\.emb-sw-expanded \.col-scroll\.chrome-panel--recessed\s*\{\s*padding:\s*4px 20px;\s*\}"));
-                Assert.That(wall, Does.Contain("public const float TileWidth = 340f;"));
-                Assert.That(wall, Does.Contain("public const float TileHeight = 477f;"));
-                Assert.That(wall, Does.Contain("public const float MediumTileWidth = 480f;"));
-                Assert.That(wall, Does.Contain("public const float DesktopTileWidth = 620f;"));
-                Assert.That(wall, Does.Contain("public const float DesktopTileHeight = 870f;"));
-                Assert.That(wall, Does.Contain("private const float MaxGutter = 32f;"));
-                Assert.That(wall, Does.Contain("private const int MaxColumns = 5;"));
-                Assert.That(wall, Does.Contain("ResolveTileTier(available, viewportHeight"));
-                Assert.That(wall, Does.Contain("_baker.SetFaceSize(Mathf.RoundToInt(tileWidth)"),
-                    "A larger tile must be freshly baked at its display resolution, not upscaled.");
-                Assert.That(desktopColumns, Is.EqualTo(5));
-                Assert.That(desktopRows, Is.EqualTo(2));
+                Assert.That(CsConst("TileWidth"), Is.EqualTo(UssVar("--card-tile-width")),
+                    "CardWall.TileWidth is the pre-style fallback and must be the compact size "
+                    + "authored in collection.uss. CollectionSwapVerify reports the wall's solved "
+                    + "tile by feeding it this pair, so a drift here silently mis-reports the "
+                    + "measurement that screen's layout decisions are made from.");
+                Assert.That(CsConst("TileHeight"), Is.EqualTo(UssVar("--card-tile-height")),
+                    "CardWall.TileHeight must be the compact --card-tile-height.");
+            });
+        }
+
+        /// <summary>
+        /// The wall reports when it has finished baking, and the Collection holds a loading plate
+        /// until it does (Sam, 2026-09-01). The bake queue is serial and art-gated, so the pool
+        /// arrives over seconds; uncovered, the screen reads as broken rather than loading.
+        ///
+        /// <para>The TIMEOUT is the part worth a guard. The plate covers the whole screen, so any
+        /// path that never delivers the completion signal is a hang with no message — and the
+        /// baker has one: a rig it cannot build delivers nothing at all.</para>
+        /// </summary>
+        [Test]
+        public void The_collection_holds_a_loading_plate_until_the_wall_has_baked()
+        {
+            string wall = Asset("Scripts", "Presentation", "CardWall.cs");
+            string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(wall, Does.Contain("public event Action BakePassCompleted;"));
+                Assert.That(wall, Does.Match(@"_bakesOutstanding\s*=\s*_pool\.Count;"),
+                    "The outstanding count must be seeded before the loop: a cached face delivers "
+                    + "synchronously, so counting up from zero completes on the first card.");
+                Assert.That(wall, Does.Match(@"if\s*\(generation\s*!=\s*_bakeGeneration\)\s*return;"),
+                    "A superseded pass's callbacks still arrive and must not complete the current one.");
+
+                Assert.That(controller, Does.Contain("_wall.BakePassCompleted += OnFirstBakeCompleted;"));
+                Assert.That(controller, Does.Contain("ShowLoadingPlate();  // before the wall"),
+                    "SetPool can complete a warm bake pass inline, before a later Create could run.");
+                Assert.That(controller, Does.Match(@"const\s+float\s+LoadingPlateTimeout"),
+                    "A full-screen plate with no timeout is a hang with no message.");
+                Assert.That(controller, Does.Contain("_wall.BakePassCompleted -= OnFirstBakeCompleted;"),
+                    "The wall outlives the first pass and raises this again on every resize.");
             });
         }
 

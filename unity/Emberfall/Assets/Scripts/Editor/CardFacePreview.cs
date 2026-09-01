@@ -31,11 +31,14 @@ namespace Emberfall.Editor
     /// </summary>
     public static class CardFacePreview
     {
-        // Desktop collection target: 2 complete rows, no more than 5 per row, 620 × 870.
-        // Two rows here rather than three — the sheet is judged on density and legibility, and a
-        // third identical row adds no information.
-        private const int FaceW  = (int)CardWall.DesktopTileWidth;
-        private const int FaceH  = (int)CardWall.DesktopTileHeight;
+        // A REVIEW RESOLUTION, not a layout size — this sheet is looked at on a desk, so it is
+        // rendered far larger than any device draws a tile. It used to read CardWall's largest
+        // fixed tier; those were deleted 2026-09-01 once it was shown no device could ever select
+        // one, and the number is inlined here rather than reintroducing a constant nothing else
+        // wants. 2 complete rows, no more than 5 per row — two rather than three because the sheet
+        // is judged on density and legibility and a third identical row adds no information.
+        private const int FaceW  = 620;
+        private const int FaceH  = 870;
         private const int Columns = 5;
         private const int Rows    = 2;
         private const int Cards   = Columns * Rows;
