@@ -169,6 +169,26 @@ namespace Emberfall.Presentation
         private LoadingOverlay _loading;
         private float _loadingSince = -1f;
 
+        /// <summary>
+        /// Loading art per CHARACTER PAIRING, because that is what the art is of — a plate named
+        /// TempestStonewarden is the Tempest/Stonewarden character, not a screen decoration, and it
+        /// ships with the orb authored to sit on it.
+        ///
+        /// <para><b>The pair is unordered.</b> A character is dual-class and nothing guarantees
+        /// which of the two is Primary, so matching on Primary alone would silently miss half the
+        /// characters that have art — and miss them by falling back to a plate that still looks
+        /// deliberate, which is the kind of wrong nobody reports.</para>
+        ///
+        /// <para><b>Most pairings have no art, and that is the normal case, not a gap to fill.</b>
+        /// Anything not listed gets the brand plate. Adding a pairing later is a row here plus two
+        /// .png files — no code path changes, and the folders decide the import settings.</para>
+        /// </summary>
+        private static readonly (CardClass A, CardClass B, string Plate, string Orb)[] PairingPlates =
+        {
+            (CardClass.TEMPEST, CardClass.STONEWARDEN, "LoadingPlate_TempestStonewarden", "Orb_Stormstone"),
+            (CardClass.VERDANT, CardClass.GRAVEKEEP,   "LoadingPlate_VerdantGravekeep",   "Orb_Lifeblight"),
+        };
+
         private void OnEnable()
         {
             _root = GetComponent<UIDocument>().rootVisualElement;
@@ -399,9 +419,40 @@ namespace Emberfall.Presentation
         /// </summary>
         private void ShowLoadingPlate()
         {
-            _loading = LoadingOverlay.Create(Camera.main);
+            (string plate, string orb) = PlateForIncomingCharacter();
+            _loading = LoadingOverlay.Create(Camera.main, plate, orb);
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loadingSince = Time.realtimeSinceStartup;
+        }
+
+        /// <summary>
+        /// The plate and orb for the character this screen is being opened FOR, or the brand plate
+        /// when it is being opened for nobody — plain browsing, which has no character and should
+        /// not borrow one's art.
+        ///
+        /// <para><b>Reads <c>PendingCharacterId</c> without consuming it.</b> That handoff is
+        /// cleared by <see cref="OpenPendingDeckIfAny"/> at the END of OnEnable, and it has to stay
+        /// the only thing that clears it: consuming it here would run before the drawer is wired
+        /// and the screen would open on the wall with the deck silently dropped. Reading a value
+        /// somebody else owns the lifetime of is the whole risk in this method.</para>
+        /// </summary>
+        private (string Plate, string Orb) PlateForIncomingCharacter()
+        {
+            string pending = PendingCharacterId;
+            if (string.IsNullOrEmpty(pending)) return (LoadingOverlay.DefaultPlate, null);
+
+            foreach (Character c in _account.Roster())
+            {
+                if (c.Id != pending) continue;
+                foreach (var row in PairingPlates)
+                {
+                    if ((row.A == c.PrimaryClass && row.B == c.SecondaryClass)
+                        || (row.A == c.SecondaryClass && row.B == c.PrimaryClass))
+                        return (row.Plate, row.Orb);
+                }
+                break;   // found the character; it simply has no art yet
+            }
+            return (LoadingOverlay.DefaultPlate, null);
         }
 
         private void OnFirstBakeCompleted()

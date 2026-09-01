@@ -48,9 +48,11 @@ namespace Emberfall.Presentation
         private static readonly int FaceColorId     = Shader.PropertyToID("_FaceColor");
         private static readonly int OutlineColorId  = Shader.PropertyToID("_OutlineColor");
         private static readonly int UnderlayColorId = Shader.PropertyToID("_UnderlayColor");
+        private static readonly int MainTexId       = Shader.PropertyToID("_MainTex");
 
         private SpriteRenderer _plate;
         private string _plateName = DefaultPlate;
+        private string _orbName;                  // null = keep M_LoadingOrb's own _MainTex
         private Material _orbMat;                 // instanced — _Fade/_Progress are per-overlay
         private TextMeshPro _wordmark;
         private Transform _wordmarkRoot;
@@ -83,7 +85,14 @@ namespace Emberfall.Presentation
         /// name, so a new plate needs no code change and no Addressables edit — drop the .png in
         /// that folder, commit its generated .meta, and name it here. Anything missing falls back
         /// to skipping the plate, not to a broken screen.</param>
-        public static LoadingOverlay Create(Camera cam, string plateName = DefaultPlate)
+        /// <param name="orbName">File name (no extension) of an orb under
+        /// <c>Assets/Art/Orbs/</c> to swap onto the orb material's <c>_MainTex</c>, so a plate can
+        /// be shown with the orb authored to go with it. <b>Null or empty keeps the orb the
+        /// material already carries</b> — which is what every existing caller gets, so the boot
+        /// overlay is byte-identical to before. <c>VersusOverlay</c> does the same swap for its
+        /// per-match variant; this is that mechanism, reached by name instead of by index.</param>
+        public static LoadingOverlay Create(Camera cam, string plateName = DefaultPlate,
+                                            string orbName = null)
         {
             if (cam == null)
             {
@@ -96,6 +105,7 @@ namespace Emberfall.Presentation
             go.transform.localPosition = new Vector3(0f, 0f, dist);
             var overlay = go.AddComponent<LoadingOverlay>();
             overlay._plateName = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
+            overlay._orbName = string.IsNullOrWhiteSpace(orbName) ? null : orbName;
             overlay.Build(cam, dist);
             return overlay;
         }
@@ -177,6 +187,20 @@ namespace Emberfall.Presentation
                 quad.transform.localScale = new Vector3(dia, dia, 1f);
                 var rend = quad.GetComponent<MeshRenderer>();
                 _orbMat = new Material(orbShared);
+
+                // Only when asked. Setting _MainTex unconditionally — even to the same texture the
+                // material already holds — would make every caller's orb depend on this lookup
+                // succeeding, and a missing file would then blank the boot orb rather than leave it
+                // alone. A null here means "the material is already right".
+                if (_orbName != null)
+                {
+                    var orbTex = LoadAsset<Texture2D>(
+                        $"Assets/Art/Orbs/{_orbName}.png", $"orbs/{_orbName}");
+                    if (orbTex != null) _orbMat.SetTexture(MainTexId, orbTex);
+                    else Debug.LogWarning($"[LoadingOverlay] orb '{_orbName}' did not load; "
+                                          + "showing the material's default orb.");
+                }
+
                 rend.sharedMaterial = _orbMat;
                 rend.sortingOrder = 310;
             }
