@@ -260,6 +260,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6444f22790c48b2ae717e6eb2aa444d
+    m_Address: ui/ui_scroll_fade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f8a5e05cc5fd825448ad3bccbc7fb7dd
     m_Address: ui/frame_rare
     m_ReadOnly: 0

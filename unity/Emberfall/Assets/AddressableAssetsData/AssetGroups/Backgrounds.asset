@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46ef259f579a7474c9f6b20c6d4bb3c7
+    m_Address: backgrounds/LoadingPlate_TempestStonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5da2ef8319e798049a984e5df953bc3c
     m_Address: backgrounds/MainMenu_Backdrop
     m_ReadOnly: 0
@@ -27,6 +32,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
     m_Address: backgrounds/BoardPlate_Master
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afd1abb4b9600f34e82e2660ec03ed1f
+    m_Address: backgrounds/LoadingPlate_VerdantGravekeep
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
