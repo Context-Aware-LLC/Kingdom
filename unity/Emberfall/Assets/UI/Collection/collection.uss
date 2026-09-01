@@ -929,58 +929,41 @@
     -unity-font-style: bold;
 }
 
-/* The class strip divides the ROOT's width between its nine tabs, so it starts flush with one edge
- * of the wall and runs clean to the other with nothing left over.
+/* The class strip is a centred row of nine compact portrait controls (Sam, 2026-09-01).
  *
- * WHY IT IS A ROW ACROSS THE TOP (Sam, 2026-08-31). It was a 130px column on the left of `body`.
- * Nine tabs sharing a 411dp panel HEIGHT via flex-grow came to 45.7dp each — under the 48dp
- * --touch-min floor — and 9 x 48 = 432 does not fit 411 on that axis at all, so nothing could fix
- * it there while the strip may not change shape. Across the width each tab gets ~84dp.
+ * WHY IT IS HORIZONTAL. It was a 130px column on the left of `body`; nine tabs sharing a 411dp
+ * panel came to 45.7dp each, below the 48dp touch floor, and 9 x 48 cannot fit that axis. Across
+ * the top, nine 56x60dp controls fit comfortably and remain close to square without becoming a
+ * second row of cards. The explicit size also stops a wide monitor stretching portraits into
+ * banners. A centred 600dp rail distributes its 96dp remainder between the eight internal gaps:
+ * 12dp apiece, with no artificial inset on the first or last tab. That spacing also leaves a clean
+ * seam for outer tab frames later; the frames themselves are deliberately not part of this change.
  *
- * flex-grow on the tabs rather than a width: nine tabs at 11% each leaves a remainder, and any
- * change to the tab count reopens it at a different size. flex-basis:0 makes the nine shares equal
- * regardless of what the art measures, so the strip always lands exactly on both edges no matter
- * how wide the screen is.
+ * HEIGHT AND CARD ROWS. The rail is 64dp: 60dp portraits after their 4dp top inset. It remains in
+ * flow, but its former 4dp bottom gap and the wall shell's decorative vertical padding are removed
+ * below. On compact screens that leaves CardWall above the 336dp threshold for two authored 160dp
+ * cards plus margins; medium and expanded reclaim still more height. CardWall's separate 8dp
+ * rounding reserve remains untouched so the last row cannot clip on device pixels.
  *
- * What makes that resolvable: this bar is a child of the screen ROOT, which is a column, so its
- * align-items defaults to stretch and the bar already has the full width as a definite value to
- * divide. A percentage width would have needed the same thing and stayed brittle — see the
- * percent-height-needs-a-definite-parent trap this project has already paid for.
- *
- * HEIGHT IS --touch-min AND NOT A DP MORE. The strip is IN FLOW — Sam declined the overlay variant
- * on 2026-08-31 — so every dp here comes out of the wall's viewport, and CardWall's compact tier
- * derives the tile FROM that height: tile = floor((viewport/2 - 8)/16)*16, two rows visible.
- *
- * MEASURED at 914.3x411.4dp, before and after, not estimated:
- *     before   rail 129.9 wide x full height   wall viewport 687.6 x 403.0   tile 137 x 192
- *     after    rail 761.9 x 48                 wall viewport 817.5 x 350.9   tile 114 x 160
- * So this band costs the wall TWO 16dp tier steps, not one — about 17% off each tile edge. Making
- * it taller costs more, and the 129.9dp of width the strip handed back cannot buy any of it back:
- * tile width is derived from tile height by aspect, so the abundant axis cannot pay for the scarce
- * one. What the width did buy is a column — 4 before, 5 after — so the wall shows 10 smaller cards
- * where it showed 8 larger ones. CardWall.MaxColumns (5) is now the binding constraint; 6 columns
- * fit the measured 817.5dp and are refused by that cap.
- *
- * The horizontal margin is --edge-safe on top of the root's own --space-6, which over-pays the
- * 52dp cutout on purpose: these are the only INTERACTIVE elements that reach the screen's short
- * edges, and unlike the wall's forged frame (audit #11, decoration painting into the edge) a tab
- * under the hole-punch is a dead touch target. Declared in audit_edge_safety.py's TOKEN_EXCEPTIONS.
- *
- * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip away when space is tight;
- * Yoga does not floor a flex item at its content size the way CSS min-width:auto does. */
+ * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip away when space is tight. */
 #class-tab-bar {
     flex-direction: row;
-    height: var(--touch-min);
+    justify-content: space-between;
+    align-self: center;
+    width: 600px;
+    max-width: 100%;
+    height: 64px;
     flex-shrink: 0;
-    margin: 0 var(--edge-safe) var(--space-1);
+    margin: 0;
 }
 .class-tab_art {
-    flex-grow: 1;
-    flex-basis: 0;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 56px;
+    width: 56px;
+    height: 60px;
     border-radius: 18px 18px 0 0;
-    max-width: 11%;
-    margin-top: 10px;
-    margin-left: 6px;
+    margin-top: var(--space-1);
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
@@ -1079,10 +1062,12 @@
 }
 
 /* The two nested panel sprites replace the former flat wall while keeping the responsive card
- * contract untouched. Compact collapses the lower ledge to 4dp; medium and expanded progressively
- * restore the framing as their short-axis budget grows. */
+ * contract untouched. Their horizontal inset still steps with screen class, but their vertical
+ * padding is deliberately zero (Sam, 2026-09-01): the class rail now spends that space, and an
+ * empty ledge below the final card row is not useful chrome. CardWall keeps its separate 8dp
+ * rounding reserve so the final row still cannot clip on device pixels. */
 .collection .db-collection.chrome-panel--outer {
-    padding: 4px 12px 4px;
+    padding: 0 12px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
@@ -1090,16 +1075,16 @@
     padding: 0 12px;
 }
 .collection.emb-sw-medium .db-collection.chrome-panel--outer {
-    padding: 4px 16px 12px;
+    padding: 0 16px;
 }
 .collection.emb-sw-medium .col-scroll.chrome-panel--recessed {
-    padding: 4px 20px;
+    padding: 0 20px;
 }
 .collection.emb-sw-expanded .db-collection.chrome-panel--outer {
-    padding-bottom: 20px;
+    padding: 0 20px;
 }
 .collection.emb-sw-expanded .col-scroll.chrome-panel--recessed {
-    padding: 4px 20px;
+    padding: 0 20px;
 }
 /* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently
  * replaces the whole edge-clearance shorthand that rule authors -- which is exactly what

@@ -2,16 +2,16 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
-        <ui:VisualElement name="class-tab-bar" style="margin-left: 12px; margin-right: 12px;">
-            <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward" style="max-width: 11%; width: auto;"/>
-            <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden" style="width: auto; max-width: 11%;"/>
-            <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest" style="width: auto; max-width: 11%;"/>
+        <ui:VisualElement name="class-tab-bar">
+            <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"/>
+            <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden"/>
+            <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest"/>
             <ui:VisualElement name="class-tab-nightveil" class="class-tab_art class-tab_art-nightveil"/>
             <ui:VisualElement name="class-tab-clockwright" class="class-tab_art class-tab_art-clockwright"/>
             <ui:VisualElement name="class-tab-verdant" class="class-tab_art class-tab_art-verdant"/>
             <ui:VisualElement name="class-tab-tidecaller" class="class-tab_art class-tab_art-tidecaller"/>
             <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"/>
-            <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral" style="width: auto; max-width: 11%;"/>
+            <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"/>
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
