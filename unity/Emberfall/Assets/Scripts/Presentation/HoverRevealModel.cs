@@ -39,8 +39,15 @@ namespace Emberfall.Presentation
         internal const float HoverDelaySeconds = 0.45f;
 
         /// <summary>Long enough to be unmistakably deliberate against a tap-to-select, short enough
-        /// that a player who wants to read a card does not think the gesture failed.</summary>
-        internal const float HoldSeconds = 0.35f;
+        /// that a player who wants to read a card does not think the gesture failed.
+        ///
+        /// <para>0.35 -> 0.55 on 2026-08-31 (Sam: the inspect view pops too eagerly). 0.35 s is
+        /// BELOW both platform long-press conventions — Android's ViewConfiguration is 0.5 s and
+        /// iOS's is 0.5 s — so a press that the player intended as the start of a drag-to-play was
+        /// crossing the threshold before the finger had travelled far enough to read as a drag.
+        /// Sitting above the platform figure rather than at it is deliberate: this gesture competes
+        /// with a drag, which the OS long-press does not.</para></summary>
+        internal const float HoldSeconds = 0.55f;
 
         internal enum PointerKind { Mouse, Touch }
         internal enum RevealSource { None, Hover, Hold, Sticky }

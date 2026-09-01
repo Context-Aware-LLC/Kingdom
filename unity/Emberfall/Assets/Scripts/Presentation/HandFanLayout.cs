@@ -57,22 +57,31 @@ namespace Emberfall.Presentation
         // size of a hand slot would be judging the animation against a made-up target.
         //
         // WHY 1.20 AND NOT 1.44 (#234 + 2026-08-29 readability pass). THIS IS NOT A REDUCTION IN
-        // THE SIZE OF A CARD IN HAND. The multiplicand moved twice: BoardController.CardW/CardH
-        // first grew by 1/0.9, then by another 1.08, so this fell by the inverse factors to hold
-        // the product where it was. HandCardW/H below remain 1.6848 x 2.3760 — every number in the
-        // block above still describes the card this produces. What changed is the board card.
+        // THE SIZE OF A CARD IN HAND. The multiplicand has now moved three times:
+        // BoardController.CardW/CardH grew by 1/0.9, then 1.08, then 1.08 again, and this fell by
+        // the inverse factor each time to hold the product where it was. HandCardW/H below remain
+        // 1.6848 x 2.3760 — every number in the block above still describes the card this
+        // produces. What changed is the board card.
         //
-        // So the hand:board RATIO is 1.20 now. The gap continues to close from the board end,
-        // because the hand end is pinned by an acuity solve.
+        // So the hand:board RATIO is 1.111 now, down from 1.44. The gap keeps closing from the
+        // board end because the hand end is pinned by an acuity solve.
+        //
+        // THE HAND WAS ASKED TO GROW ON 2026-08-31 AND COULD NOT. Not for want of room on screen —
+        // measured against the live perspective rig the worst-sag card still sits 93 px above the
+        // bottom edge at 1.15x. It is DeviceLayout.SelfCheck assertion 7 that refuses, and that
+        // assertion bounds the band against DesignHalfHeight 4.6, the ORTHOGRAPHIC half-height, on
+        // a camera that has been perspective since f121a591. Fix the guard first; see
+        // BoardController.CardW.
         //
         // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget, and since #234 it
         // is one number spread over two files. Moving it, BoardController.CardW/CardH, or
-        // FrameRarityCatalog.BodyEmFloor invalidates §5/§6 of device_layout.py,
-        // DeviceLayout.SelfCheck's band-clearance assertion, and CentreY's solve below — re-run the
-        // script and re-solve CentreY in the same commit. Moving THIS without the compensating move
-        // on CardW/CardH (or the reverse) resizes the card in hand, which is the one thing the #234
-        // change was built not to do.
-        public const float RestScale = 1.20f;    // 1.44 x 0.9 / 1.08; hand stays 1.6848 x 2.376
+        // FrameRarityCatalog.BodyEmFloor invalidates DeviceLayout.SelfCheck's band-clearance
+        // assertion and CentreY's solve below — re-solve CentreY in the same commit. NOT
+        // device_layout.py: it reads `orthographic size` from the scene YAML and reports a camera
+        // the game does not use. Moving THIS without the compensating move on CardW/CardH (or the
+        // reverse) resizes the card in hand, which is the one thing the #234 change was built not
+        // to do.
+        public const float RestScale = 1.111111f;  // 1.20 / 1.08; hand stays 1.6848 x 2.376
 
         // The card's DRAWN size in hand. Every card-relative number below derives from these and
         // NOT from BoardController.CardW/CardH — a fan solved against the board-size card would
