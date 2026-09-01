@@ -10,6 +10,7 @@
   <Project Path="Unity.Pipeline.CodeGen.csproj" />
   <Project Path="Emberfall.Data.csproj" />
   <Project Path="Emberfall.Core.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Emberfall.Core.Collection.csproj" />
   <Project Path="Unity.Pipeline.Tests.Runtime.csproj" />
   <Project Path="Emberfall.Net.Protocol.csproj" />

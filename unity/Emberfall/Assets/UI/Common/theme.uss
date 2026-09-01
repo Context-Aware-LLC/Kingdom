@@ -93,11 +93,11 @@
        or the run stops being a run. */
     --type-wordmark: 44px;
     --type-display: 36px;
-    --type-h1: 28px;
-    --type-h2: 22px;
-    --type-body: 18px;
-    --type-label: 16px;
-    --type-caption: 14px;
+    --type-h1: 30px;
+    --type-h2: 26px;
+    --type-body: 22px;
+    --type-label: 20px;
+    --type-caption: 18px;
     --surface-0: rgb(11, 14, 19);
     --surface-1: rgb(20, 25, 34);
     --surface-2: rgb(30, 37, 48);
