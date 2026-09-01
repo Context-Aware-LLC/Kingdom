@@ -78,6 +78,22 @@ namespace Emberfall.Net.Server
         public IAccountStore? AccountStore { get; init; }
 
         /// <summary>
+        /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
+        /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
+        /// keeps handing L6 the "do not constrain" null for standard accounts, which is a normal and
+        /// supported dev-box configuration. Populated from <c>EMBERFALL_ENTITLEMENTS_DB</c> in
+        /// production; injected directly in tests.
+        ///
+        /// <para><b>It shares the accounts database by default, and should.</b> <c>account</c> and
+        /// <c>entitlement_grant</c> are one canonical <c>schema.sql</c> and one
+        /// <see cref="AccountsSchema.Ddl"/>, and the ledger is keyed on <c>Account.PlayerId</c> —
+        /// pointing this at a different connection string than <see cref="AccountStore"/> separates an
+        /// identity from its own entitlements, so <c>FromEnvironment</c> falls back to the accounts
+        /// connection rather than silently leaving ownership unknown when only one variable is set.</para>
+        /// </summary>
+        public IEntitlementLedger? EntitlementLedger { get; init; }
+
+        /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
         /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
         /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
@@ -123,6 +139,18 @@ namespace Emberfall.Net.Server
                 ? null
                 : new PostgresRatingStore(accountsDb!);
 
+            // The entitlement ledger — the write path that makes an unowned card a real thing. It
+            // falls back to the accounts connection because the ledger is keyed on Account.PlayerId
+            // and both tables come from one schema.sql: a box that configured accounts and not this
+            // would otherwise run authenticated players with their ownership permanently unknown,
+            // which looks exactly like owning everything. The separate variable stays accepted so a
+            // deployment CAN split them deliberately.
+            string? entitlementsDb = Environment.GetEnvironmentVariable("EMBERFALL_ENTITLEMENTS_DB");
+            if (string.IsNullOrWhiteSpace(entitlementsDb)) entitlementsDb = accountsDb;
+            IEntitlementLedger? entitlementLedger = string.IsNullOrWhiteSpace(entitlementsDb)
+                ? null
+                : new PostgresEntitlementLedger(entitlementsDb!);
+
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
@@ -133,6 +161,7 @@ namespace Emberfall.Net.Server
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
+                EntitlementLedger = entitlementLedger,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
@@ -188,8 +217,20 @@ namespace Emberfall.Net.Server
 
             // NOR-254: the account store's schema is never applied on its own — mirror the drain's
             // startup-schema pattern so EMBERFALL_ACCOUNTS_DB is safe to set without a manual DDL step.
-            if (cfg.AccountStore is PostgresAccountStore postgresAccountStore)
-                builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(postgresAccountStore));
+            //
+            // ONE initializer, not one per store: both durable adapters run the identical
+            // AccountsSchema.Ddl, because `account` and `entitlement_grant` are a single canonical
+            // schema.sql. Registering both would execute the same idempotent DDL twice for nothing.
+            // Fully qualified: this file does not import System.Threading.Tasks and an unqualified
+            // `Task` binds to something else in scope here.
+            Func<CancellationToken, System.Threading.Tasks.Task>? ensureAccountsSchema =
+                cfg.AccountStore is PostgresAccountStore postgresAccountStore
+                    ? postgresAccountStore.EnsureSchemaAsync
+                    : cfg.EntitlementLedger is PostgresEntitlementLedger postgresLedger
+                        ? postgresLedger.EnsureSchemaAsync
+                        : null;
+            if (ensureAccountsSchema is not null)
+                builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(ensureAccountsSchema));
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
             var db = FileCardDatabase.LoadDirectory(cardsDir);

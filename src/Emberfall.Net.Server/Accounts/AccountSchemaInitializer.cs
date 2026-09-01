@@ -11,20 +11,28 @@ namespace Emberfall.Net.Server.Accounts
     /// schema-readiness loop). Registered only when <c>EMBERFALL_ACCOUNTS_DB</c> is configured — the
     /// in-memory store needs no schema, and nothing durable is lost by retrying: a socket that
     /// resolves an account before the schema lands simply fails that one connect (NOR-254).
+    ///
+    /// <para><b>Takes the DDL call as a delegate because two adapters need it and both run the
+    /// identical statement.</b> <c>PostgresAccountStore.EnsureSchemaAsync</c> and
+    /// <c>PostgresEntitlementLedger.EnsureSchemaAsync</c> each execute <see cref="AccountsSchema.Ddl"/>
+    /// — <c>account</c> and <c>entitlement_grant</c> are one canonical <c>schema.sql</c> — so the
+    /// composition root registers ONE of these whichever durable component is configured, rather than
+    /// duplicating this retry loop per store.</para>
     /// </summary>
     internal sealed class AccountSchemaInitializer : BackgroundService
     {
         private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
 
-        private readonly PostgresAccountStore _store;
+        private readonly Func<CancellationToken, Task> _ensureSchema;
 
-        public AccountSchemaInitializer(PostgresAccountStore store) => _store = store;
+        public AccountSchemaInitializer(Func<CancellationToken, Task> ensureSchema)
+            => _ensureSchema = ensureSchema ?? throw new ArgumentNullException(nameof(ensureSchema));
 
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
             while (!ct.IsCancellationRequested)
             {
-                try { await _store.EnsureSchemaAsync(ct); return; }
+                try { await _ensureSchema(ct); return; }
                 catch (OperationCanceledException) { return; }
                 catch (Exception) { await DelaySafe(ct); }
             }
