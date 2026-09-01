@@ -49,7 +49,8 @@ namespace Emberfall.Core.Collection
         /// launch-shaped answer. The commit that adds a third <see cref="SetId"/> member intended for
         /// sale must decide what a new account gets then — every common in every set, or only the
         /// current one — and update this constant, the XML above, and
-        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonInThePairing</c>. Leaving it pointing
+        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonInThePairing</c>
+        /// (<c>tests/Emberfall.Core.Tests/Collection/OnboardingGrantTests.cs</c>). Leaving it pointing
         /// at EMBERFALL is a decision, not a default, and should be a deliberate one.</para>
         /// </summary>
         public const SetId LaunchExpansion = SetId.EMBERFALL;
