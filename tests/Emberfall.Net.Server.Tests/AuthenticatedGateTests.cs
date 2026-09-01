@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Emberfall.Net.Server;
@@ -133,6 +134,83 @@ namespace Emberfall.Net.Server.Tests
             });
         }
 
+        // ── 4. The onboarding grant fires at the door ────────────────────────────
+
+        /// <summary>
+        /// An authenticated connect grants the account its onboarding collection. This is the moment
+        /// the whole ownership chain becomes real: before it, <c>OnboardingGrant</c> had no callers
+        /// anywhere and no account had ever been given a card.
+        /// </summary>
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Verified_Account_Is_Onboarded_On_Connect()
+        {
+            var verifier = new StubVerifier(TokenVerificationResult.Ok(
+                new VerifiedIdentity(Subject, Email, EmailVerified: true)));
+            var store = new InMemoryAccountStore(new FakeTime());
+            var ledger = new InMemoryEntitlementLedger();
+
+            await WithServerAsync(verifier, store, async (wsUri, gate) =>
+            {
+                using var c0 = new ClientWebSocket();
+                using var c1 = new ClientWebSocket();
+                await c0.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c0, DeviceToken, authToken: "valid.token.here");
+                await c1.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c1, DeviceToken, authToken: "valid.token.here");
+
+                await ExpectAsync<MatchStartMsg>(c0);
+                await ExpectAsync<MatchStartMsg>(c1);
+
+                var account = await store.ResolveOrCreateAsync("supabase", HashCredential(Subject));
+
+                var history = await ledger.HistoryAsync(account.PlayerId);
+                Assert.That(history, Is.Not.Empty,
+                    "an authenticated connect must grant the account its onboarding collection");
+                Assert.That(history.All(row => row.Source == OnboardingGrantService.GrantSource), Is.True,
+                    "every row from this path is a signup grant");
+
+                // Both sockets are the SAME account and both ran the grant. It must have landed once.
+                Assert.That(await ledger.BalanceAsync(account.PlayerId, OnboardingGrant.StarterPack().Id),
+                    Is.EqualTo(OnboardingGrant.StarterPackCount),
+                    "two connects from one account must not grant two collections");
+            }, ledger);
+        }
+
+        /// <summary>
+        /// A guest writes nothing. <c>EconomyAccountPolicy.RequireDurable</c> refuses inventory
+        /// movement before account linking, so the grant skips them rather than throwing — and a
+        /// throw here would have closed a socket that has every right to be open.
+        /// </summary>
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Guest_Connect_Writes_Nothing_To_The_Ledger()
+        {
+            var verifier = new StubVerifier(TokenVerificationResult.Fail(TokenVerificationFailure.Malformed));
+            var store = new InMemoryAccountStore(new FakeTime());
+            var ledger = new InMemoryEntitlementLedger();
+
+            await WithServerAsync(verifier, store, async (wsUri, gate) =>
+            {
+                const string tokenA = "device-token-onboard-guest-a";
+                const string tokenB = "device-token-onboard-guest-b";
+
+                using var c0 = new ClientWebSocket();
+                using var c1 = new ClientWebSocket();
+                await c0.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c0, tokenA);   // no authToken
+                await c1.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c1, tokenB);   // no authToken
+
+                await ExpectAsync<MatchStartMsg>(c0);
+                await ExpectAsync<MatchStartMsg>(c1);
+
+                foreach (string token in new[] { tokenA, tokenB })
+                    Assert.That(await ledger.HistoryAsync(AccountId.FromDeviceToken(token).Value), Is.Empty,
+                        "a guest seat never reaches the account store, so nothing can be granted to it");
+            }, ledger);
+        }
+
         // ── Helpers ──────────────────────────────────────────────────────────────
 
         private static string HashCredential(string value)
@@ -150,7 +228,8 @@ namespace Emberfall.Net.Server.Tests
 
         private static async Task WithServerAsync(
             IIdentityTokenVerifier verifier, IAccountStore store,
-            Func<Uri, Emberfall.Net.Server.Transport.MatchGate, Task> body)
+            Func<Uri, Emberfall.Net.Server.Transport.MatchGate, Task> body,
+            IEntitlementLedger? ledger = null)
         {
             string replays = Path.Combine(Path.GetTempPath(), "emberfall-auth-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
@@ -160,6 +239,7 @@ namespace Emberfall.Net.Server.Tests
                 ReplaysDir = replays,
                 TokenVerifier = verifier,
                 AccountStore = store,
+                EntitlementLedger = ledger,
             });
             await built.App.StartAsync();
             try

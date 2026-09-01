@@ -278,6 +278,12 @@ namespace Emberfall.Net.Server
                     ResolveBuildRevision(),
                     cfg.Options.WireContractVersion);
 
+            // The onboarding grant needs a ledger to write to; without one there is no economy on this
+            // box and nothing to grant into, so it stays null and every connect behaves as it did.
+            OnboardingGrantService? onboarding = cfg.EntitlementLedger is null
+                ? null
+                : new OnboardingGrantService(cfg.EntitlementLedger, db, time);
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
@@ -292,7 +298,8 @@ namespace Emberfall.Net.Server
                 botPool,
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
                 ratingWorker,
-                trainingEpisodes);
+                trainingEpisodes,
+                onboarding);
 
             var app = builder.Build();
             app.UseWebSockets();

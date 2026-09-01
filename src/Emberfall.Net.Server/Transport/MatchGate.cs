@@ -55,6 +55,13 @@ namespace Emberfall.Net.Server.Transport
         private readonly IRankedMatchSink _rankedMatchSink;
         private readonly ITrainingEpisodeStore? _trainingEpisodes;
 
+        /// <summary>
+        /// The onboarding grant, run once per authenticated account on connect. Null when no
+        /// entitlement ledger is configured — a dev box with no economy, where ownership stays
+        /// unknown and nothing is granted.
+        /// </summary>
+        private readonly OnboardingGrantService? _onboarding;
+
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
         private readonly Dictionary<string, WaitingPlayer> _waiting =
@@ -74,7 +81,8 @@ namespace Emberfall.Net.Server.Transport
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
-            ITrainingEpisodeStore? trainingEpisodes = null)
+            ITrainingEpisodeStore? trainingEpisodes = null,
+            OnboardingGrantService? onboarding = null)
             : this(
                 opts,
                 time,
@@ -89,7 +97,8 @@ namespace Emberfall.Net.Server.Transport
                 botPool,
                 ratingStore,
                 rankedMatchSink,
-                trainingEpisodes)
+                trainingEpisodes,
+                onboarding)
         {
         }
 
@@ -100,7 +109,8 @@ namespace Emberfall.Net.Server.Transport
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
-            ITrainingEpisodeStore? trainingEpisodes = null)
+            ITrainingEpisodeStore? trainingEpisodes = null,
+            OnboardingGrantService? onboarding = null)
         {
             _opts = opts;
             _time = time;
@@ -116,6 +126,7 @@ namespace Emberfall.Net.Server.Transport
             _ratingStore = ratingStore;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;
+            _onboarding = onboarding;
         }
 
         public int LiveSessions
@@ -240,6 +251,28 @@ namespace Emberfall.Net.Server.Transport
                         acct.PlayerId, HashCredential(identity.Email));
                     account = AccountId.FromAuthenticatedAccount(acct.PlayerId);
                     deckOwnerAccount = acct;
+
+                    // The onboarding grant. Idempotent on signup:{playerId}, so this runs on EVERY
+                    // authenticated connect and lands exactly once — there is no due-check here to
+                    // race with a second socket from the same account.
+                    //
+                    // A failure must NOT cost the player their match. An ungranted account still
+                    // connects, still plays with the prebuilt deck, and is granted on the next
+                    // connect; closing the socket over an economy write would turn a database blip
+                    // into "the game won't start". Logged rather than swallowed, because a grant
+                    // failing every time is invisible otherwise.
+                    if (_onboarding is not null)
+                    {
+                        try
+                        {
+                            await _onboarding.EnsureGrantedAsync(acct, ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine("[onboarding] grant failed for player_id={0}: {1}",
+                                acct.PlayerId, ex.Message);
+                        }
+                    }
                 }
                 else
                 {
