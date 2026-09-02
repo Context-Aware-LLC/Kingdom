@@ -115,9 +115,12 @@ namespace Emberfall.Presentation
         /// <summary>
         /// True once the player said they had been here before.
         ///
-        /// <para><b>It steers presentation, never authentication.</b> A returning player who signs in
-        /// with a mailed code takes byte for byte the same call a new one does, and the server cannot
-        /// tell them apart — nor should it, since "new" is a claim the client makes about a person and
+        /// <para><b>It steers one bit of authentication, and otherwise only presentation
+        /// (revised 2026-09-01).</b> The one bit is <c>create_user</c>: this branch asks Supabase NOT
+        /// to mint an account for an address it does not know, so a mistyped email is refused instead
+        /// of silently becoming a second, empty account. Everything else about the call is identical,
+        /// and the server still cannot tell a returning player from a new one — nor should it, since
+        /// "new" is a claim the client makes about a person and
         /// the only fact that exists is which identity the token carries. What it buys is that the
         /// wording, the credential asked for, and the display-name step all match what the player just
         /// told us about themselves.</para>
@@ -491,7 +494,12 @@ namespace Emberfall.Presentation
             SetBusy(true, "Sending…");
             try
             {
-                AuthResult result = await _auth.BeginEmailCodeAsync(email);
+                // createUser: false on the returning branch is the whole guard. With it true, a
+                // mistyped address is not an error — Supabase mints an account for the typo, mails it a
+                // working code, and the player signs in successfully to an empty collection while their
+                // real one sits under the address they meant. Every failure this branch can now produce
+                // is louder than that one.
+                AuthResult result = await _auth.BeginEmailCodeAsync(email, createUser: !_returning);
                 SetBusy(false, null);
 
                 if (result.Ok) { ToCodeStep(email); return; }
@@ -781,6 +789,11 @@ namespace Emberfall.Presentation
                     return "No connection. Emberfall needs the internet to sign you in.";
                 case AuthFailure.NotConfigured:
                     return "This build has no sign-in service configured.";
+                case AuthFailure.NoSuchAccount:
+                    // Supabase's own wording here is "Signups not allowed for otp", which is true and
+                    // useless — it describes the request we made, not the thing the player got wrong.
+                    return "We have no account for that email. Check the spelling, or go back and " +
+                           "choose \"I am new here\".";
                 default:
                     return string.IsNullOrEmpty(result.Detail) ? fallback : result.Detail;
             }

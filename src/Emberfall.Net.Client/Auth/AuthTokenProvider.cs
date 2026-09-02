@@ -171,8 +171,9 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>Mail the player a six-digit code. Nothing is stored — see
         /// <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> for why this flow keeps no local
         /// state, and what that buys.</summary>
-        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
-            => _backend.BeginEmailCodeAsync(email, cancellationToken);
+        public Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default)
+            => _backend.BeginEmailCodeAsync(email, createUser, cancellationToken);
 
         /// <summary>
         /// Finish a sign-in with the mailed six-digit code. On success the session is stored and

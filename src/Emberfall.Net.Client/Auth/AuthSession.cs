@@ -23,6 +23,27 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>A 2xx whose body we could not read as a session. Treated as a failed call, never
         /// as a partial sign-in.</summary>
         Malformed,
+
+        /// <summary>Supabase has never seen that email address, on a call that deliberately refused to
+        /// create one for it (<see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> with
+        /// <c>createUser: false</c>).
+        ///
+        /// <para><b>This is only ever produced by the RETURNING branch, and never by a refresh.</b>
+        /// It is a distinct member rather than a flavour of <see cref="Rejected"/> because the two
+        /// need opposite responses: Rejected means a credential is dead and the stored session must
+        /// go, while this means the player typed the wrong address and holds nothing at all yet.
+        /// <see cref="AuthTokenProvider"/>'s session-clearing check keys on Rejected alone, so this
+        /// member cannot cost anyone their session.</para>
+        ///
+        /// <para><b>It is an account-enumeration oracle, knowingly (Sam, 2026-09-01).</b> Anyone can
+        /// ask this form whether an address has an Emberfall account. That is the accepted price of
+        /// the alternative, which is worse: with <c>create_user: true</c> a returning player who
+        /// mistypes their address gets a real code mailed to the typo, redeems it, and lands in a
+        /// brand-new empty identity — losing their collection, silently, with the game reporting
+        /// success. Note that the PASSWORD path deliberately does NOT distinguish
+        /// (<see cref="SupabaseAuthBackend.SignInWithPasswordAsync"/>); that asymmetry is not an
+        /// oversight, it is that a password form has no equivalent failure to trade against.</para></summary>
+        NoSuchAccount,
     }
 
     /// <summary>

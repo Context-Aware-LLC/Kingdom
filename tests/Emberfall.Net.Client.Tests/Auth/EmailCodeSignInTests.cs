@@ -34,7 +34,7 @@ namespace Emberfall.Net.Client.Tests.Auth
         {
             var http = new FakeAuthHttp().Reply(200, "{}");
 
-            AuthResult result = await Backend(http).BeginEmailCodeAsync("player@example.com");
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("player@example.com", createUser: true);
 
             Assert.That(result.Ok, Is.True);
             // No redirect_to: a code the player types never comes back over a deep link, and asking
@@ -50,7 +50,7 @@ namespace Emberfall.Net.Client.Tests.Auth
         {
             var http = new FakeAuthHttp();
 
-            AuthResult result = await Backend(http).BeginEmailCodeAsync("   ");
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("   ", createUser: true);
 
             Assert.That(result.Ok, Is.False);
             Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
@@ -62,11 +62,73 @@ namespace Emberfall.Net.Client.Tests.Auth
         {
             var backend = new SupabaseAuthBackend(SupabaseAuthConfig.Unconfigured, new FakeAuthHttp());
 
-            AuthResult sent = await backend.BeginEmailCodeAsync("player@example.com");
+            AuthResult sent = await backend.BeginEmailCodeAsync("player@example.com", createUser: true);
             AuthResult verified = await backend.VerifyEmailCodeAsync("player@example.com", "123456");
 
             Assert.That(sent.Failure, Is.EqualTo(AuthFailure.NotConfigured));
             Assert.That(verified.Failure, Is.EqualTo(AuthFailure.NotConfigured));
+        }
+
+        // ── The returning branch refuses to mint (Sam, 2026-09-01) ──────────────────────
+        //
+        // These four are the guard on the thing a reinstalled player is actually asking for: sign me
+        // back into the SAME account. With create_user true a mistyped address is not an error at all
+        // — Supabase mints an account for the typo, mails it a working code, and the player signs in
+        // successfully to an empty collection. Nothing anywhere reports a problem, because from every
+        // component's point of view nothing went wrong.
+
+        [Test]
+        public async Task The_returning_branch_asks_supabase_not_to_mint_an_account()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{}");
+
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("player@example.com", createUser: false);
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(http.Requests[0].Body, Does.Contain("\"create_user\":false"));
+        }
+
+        [Test]
+        public async Task An_address_supabase_has_never_seen_is_reported_as_no_such_account()
+        {
+            var http = new FakeAuthHttp().Reply(
+                422, "{\"code\":422,\"error_code\":\"otp_disabled\",\"msg\":\"Signups not allowed for otp\"}");
+
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("typo@example.com", createUser: false);
+
+            Assert.That(result.Ok, Is.False);
+            // NOT Rejected: that member costs the holder their stored session, and this player has
+            // none to lose. The overlay routes on the difference to say "no account for that email"
+            // rather than rendering Supabase's own "Signups not allowed for otp", which describes the
+            // request rather than the mistake.
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.NoSuchAccount));
+        }
+
+        [Test]
+        public async Task An_older_gotrue_that_only_sends_the_message_is_still_understood()
+        {
+            // Pre-error_code builds said this and nothing else. Matching both spellings is what keeps
+            // the refusal legible across a Supabase upgrade in either direction.
+            var http = new FakeAuthHttp().Reply(422, "{\"msg\":\"Signups not allowed for otp\"}");
+
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("typo@example.com", createUser: false);
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.NoSuchAccount));
+        }
+
+        [Test]
+        public async Task A_rate_limit_is_never_mistaken_for_a_missing_account()
+        {
+            // The dangerous confusion, and the reason IsSignupRefusal matches a specific signal rather
+            // than any 4xx: telling a rate-limited player "we have no account for that email" sends
+            // them to create a duplicate of the account they already have — the same data loss
+            // create_user:false exists to prevent, arriving by the other door.
+            var http = new FakeAuthHttp().Reply(429, "{\"msg\":\"Email rate limit exceeded\"}");
+
+            AuthResult result = await Backend(http).BeginEmailCodeAsync("player@example.com", createUser: false);
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(result.Detail, Does.Contain("rate limit"));
         }
 
         // ── Redeeming the code ──────────────────────────────────────────────────────────

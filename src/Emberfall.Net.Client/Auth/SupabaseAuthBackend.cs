@@ -101,7 +101,9 @@ namespace Emberfall.Net.Client.Auth
 
         /// <summary>Mail the player a six-digit code. Succeeds when the mail is away; nothing is held
         /// on this device, so the code can be finished from a fresh launch.</summary>
-        Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default);
+        /// <summary><paramref name="createUser"/> has no default on purpose — see the implementation.</summary>
+        Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default);
 
         /// <summary>Trade a mailed six-digit code for a session.</summary>
         Task<AuthResult> VerifyEmailCodeAsync(string email, string code, CancellationToken cancellationToken = default);
@@ -207,20 +209,64 @@ namespace Emberfall.Net.Client.Auth
         /// link and a code, and which one the player sees is the project's email template, not this
         /// call.</para>
         /// </summary>
-        public async Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+        /// <para><b><paramref name="createUser"/> has no default, and that is the whole point of this
+        /// parameter (Sam, 2026-09-01).</b> It was an unconditional <c>create_user: true</c>, which is
+        /// right for a new player and silently destructive for a returning one: mistype your address
+        /// on the "I have been here before" branch and Supabase cheerfully mails a code to the typo,
+        /// redeems it into a brand-new empty identity, and reports success. The player is signed in,
+        /// to the wrong account, with their collection intact somewhere they can no longer reach.
+        /// Requiring the caller to say which case it is means a new sign-in path cannot inherit the
+        /// wrong answer by omission. See <see cref="AuthFailure.NoSuchAccount"/> for the enumeration
+        /// trade this accepts.</para>
+        public async Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default)
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrWhiteSpace(email))
                 return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.");
 
             string body = AuthJson.ObjectWithRaw(
-                "\"create_user\":true",
+                createUser ? "\"create_user\":true" : "\"create_user\":false",
                 AuthJson.Field("email", email.Trim()));
 
             var response = await _http.PostJsonAsync(Url("otp"), body, Headers(), cancellationToken)
                 .ConfigureAwait(false);
 
-            return response.IsSuccess ? AuthResult.Accepted() : Interpret(response);
+            if (response.IsSuccess) return AuthResult.Accepted();
+
+            return !createUser && IsSignupRefusal(response)
+                ? AuthResult.Failed(AuthFailure.NoSuchAccount, Describe(response.Body))
+                : Interpret(response);
+        }
+
+        /// <summary>
+        /// Is this 4xx Supabase saying "that address has no account", as opposed to any other refusal?
+        ///
+        /// <para><b>A rate limit shares the 4xx with it, and the two must not be confused.</b>
+        /// "Too many requests" rendered as "no such account" sends the player off to create a
+        /// duplicate of the account they already have — the exact damage <c>create_user: false</c>
+        /// exists to prevent, arriving by the other door. So this matches the specific signal and
+        /// leaves everything else to <see cref="Interpret"/>.</para>
+        ///
+        /// <para><b>Two spellings, because GoTrue added one and kept the other.</b> Newer builds
+        /// carry <c>error_code: "otp_disabled"</c>; older ones only ever said <c>Signups not allowed
+        /// for otp</c> in the message. Matching either is what lets this survive a Supabase upgrade —
+        /// and if both ever stop being sent this returns false, so the player sees Supabase's own
+        /// wording instead of a confident wrong claim. Failing towards "I do not know" is why this is
+        /// a check and not an assertion.</para>
+        /// </summary>
+        private static bool IsSignupRefusal(AuthHttpResponse response)
+        {
+            if (response.IsTransportFailure) return false;
+            if (response.StatusCode < 400 || response.StatusCode >= 500) return false;
+            if (!AuthJson.TryReadTopLevel(response.Body, out var fields)) return false;
+
+            if (AuthJson.TryString(fields, "error_code", out string code) &&
+                code.Equals("otp_disabled", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return Describe(response.Body)
+                .IndexOf("signups not allowed", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         /// <summary>

@@ -95,7 +95,8 @@ namespace Emberfall.Net.Client.Tests.Auth
         public Task<SignInStart> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default)
             => Task.FromResult(MagicLinkResult);
 
-        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+        public Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default)
             => Task.FromResult(EmailCodeSendResult);
 
         public Task<AuthResult> VerifyEmailCodeAsync(
