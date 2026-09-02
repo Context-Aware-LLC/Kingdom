@@ -350,7 +350,7 @@ namespace Emberfall.Presentation
         /// The status line, and it COLLAPSES when it has nothing to say.
         ///
         /// <para>An empty Label still reserves its box: measured on the Pixel 5a rig, this one held
-        /// 32dp of a 411dp panel permanently, taken straight off the scroll viewport the sections
+        /// 32dp of a 411dp panel permanently, taken straight off the content area the sections
         /// have to fit inside. That is the same band CharacterRoster collapsed in <c>32dfdb81</c>
         /// for the same reason, and the reason it matters more here is that the store's viewport is
         /// the tighter of the two.</para>
@@ -377,12 +377,11 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Puts exactly one of the two sections on screen and marks the tab that selected it.
         ///
-        /// <para>Both halves matter and they are one call on purpose. The store is two sections in
-        /// a ScrollView on a 411dp landscape panel whose viewport is ~280dp; stacked, the packs
-        /// section alone came to ~304 and Gem Bundles began below the fold. `flex-grow` cannot
-        /// share a scroller's height — <c>0237a00e</c> measured that a ScrollView's content
-        /// container is sized to its content and that Unity overwrites its flex properties — so
-        /// the section that is not selected has to cost NO height, which is what
+        /// <para>Both halves matter and they are one call on purpose. When the Store stacked both
+        /// sections on a 411dp landscape panel, the packs section alone came to ~304dp and Gem
+        /// Bundles began below the fold. Tabs replaced that layout, and the obsolete ScrollView was
+        /// later retired because it allowed empty-range overscroll. The section that is not selected
+        /// still has to cost NO height, which is what
         /// <c>.shop-section--hidden</c>'s `display: none` buys.</para>
         ///
         /// <para>Null-tolerant throughout, like the rest of this controller: it queries its

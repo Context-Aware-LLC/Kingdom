@@ -64,7 +64,7 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(pack, Does.Contain("flex-shrink: 0;"),
-                    "A pack must size itself from its content inside the vertical ScrollView.");
+                    "A pack must size itself from its content inside the card list.");
                 Assert.That(detail, Does.Contain("white-space: normal;"),
                     "The one-line description in audit-3 paints through the neighbouring pack.");
                 Assert.That(actions, Does.Contain("flex-shrink: 0;"),
@@ -74,6 +74,39 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(disabledBuy, Does.Contain("color: var(--ink-1);"),
                     "Disabled price labels need readable contrast against the dark Store surface.");
             });
+        }
+
+        [Test]
+        public void Shop_compact_tab_content_is_not_a_scroll_surface()
+        {
+            XDocument document = XDocument.Parse(Asset("UI", "Shop", "ShopScreen.uxml"));
+            XElement? content = document.Descendants().SingleOrDefault(element =>
+                ((string?)element.Attribute("class"))?.Split(' ').Contains("shop-content") == true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(document.Descendants().Any(element => element.Name.LocalName == "ScrollView"),
+                    Is.False,
+                    "One compact tab is visible at a time, so the Store must not accept empty-range scrolling.");
+                Assert.That(content, Is.Not.Null,
+                    "The tab sections still need a flex-growing content wrapper after retiring the ScrollView.");
+                Assert.That(content?.Name.LocalName, Is.EqualTo("VisualElement"));
+            });
+        }
+
+        [Test]
+        public void Collection_scroll_surfaces_clamp_to_their_real_content_range()
+        {
+            XDocument document = XDocument.Parse(Asset("UI", "Collection", "CollectionScreen.uxml"));
+            XElement[] scrollViews = document.Descendants()
+                .Where(element => element.Name.LocalName == "ScrollView")
+                .ToArray();
+
+            Assert.That(scrollViews, Is.Not.Empty,
+                "Collection has overflowing card and query surfaces that require real scrolling.");
+            Assert.That(scrollViews.Select(element => (string?)element.Attribute("touch-scroll-type")),
+                Is.All.EqualTo("Clamped"),
+                "Collection may scroll through content but must not pull past either end into empty space.");
         }
     }
 }

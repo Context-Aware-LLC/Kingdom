@@ -15,7 +15,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
-                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll chrome-panel chrome-panel--recessed">
+                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-scroll chrome-panel chrome-panel--recessed">
                     <ui:VisualElement name="collection-grid" class="db-grid"/>
                 </ui:ScrollView>
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
@@ -36,7 +36,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
-            <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-query-scroll">
+            <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">
                 <ui:VisualElement class="col-query-row">
                     <ui:TextField name="query-search" placeholder-text="Search cards" class="col-search chrome-input"/>
                     <ui:VisualElement name="filter-row" class="db-filter-row">
@@ -68,7 +68,7 @@
                 <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
             <ui:VisualElement name="deck-chooser-frame" class="deck-chooser-frame chrome-panel chrome-panel--recessed">
-                <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
+                <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="deck-chooser">
                     <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
                     <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
                 </ui:ScrollView>
