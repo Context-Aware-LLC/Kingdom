@@ -9,9 +9,11 @@ broken" outlives the fix, and because a stale page asserts a dead fact with exac
 the same authority as a live one, the cost is not clutter, it is being CONFIDENTLY
 WRONG. Sam, 2026-09-01: volume does not slow a search, it corrupts the answer.
 
-cap-memory-index.py already forces a trade at write time -- "adding a line means
-retiring one" -- but it cannot say WHICH line, so a session with no evidence
-retires the wrong one. This supplies the evidence.
+A session with no evidence retires the wrong line, so this supplies the evidence.
+It reports at the START of a session (via memory-retire-session.py) rather than at
+a write, because a page goes stale the day its bug is fixed -- which is usually a
+day nobody is adding a memory at all. The 2026-09-01 sweep found five stale lines
+out of 22 with the index nowhere near any size limit.
 
 WHAT A PAGE DECLARES. Two optional flat keys in the frontmatter:
 
@@ -31,17 +33,19 @@ carry a check -- a page recording what turned out to be TRUE is not a retirement
 candidate, and treating "description mentions FIXED" as a verdict deletes exactly
 the pages whose resolution is the live fact.
 
-THE CACHE. Checks shell out and some touch the network (`git ls-remote`), so the
-PreToolUse hook must never run them inline. This writes .agent/memory-retire.json
-and cap-memory-index.py reads that, reporting what was dead as of the last sweep.
+THE CACHE. Checks shell out and some touch the network (`gh`, `git ls-remote`), so
+no hook may run them inline. This writes .agent/memory-retire.json;
+memory-retire-session.py reads that cache at session start, prints only when a page
+is actually dead, and respawns this sweep detached when the cache is over a day old.
 
 USAGE
     python .claude/hooks/memory_retire.py            # sweep, print, write cache
     python .claude/hooks/memory_retire.py --quiet    # cache only, no output
 
 RETIREMENT TRIGGER: if memory pages stop carrying `retire_check:` -- the convention
-abandoned, or the store itself retired -- delete this file, drop the DEAD block from
-cap-memory-index.py, and drop the convention from the memory doctrine in MEMORY.md.
+abandoned, or the store itself retired -- delete this file and memory-retire-session.py,
+drop that SessionStart registration from .claude/settings.json, and drop the convention
+from the memory doctrine in MEMORY.md.
 """
 import json
 import os
