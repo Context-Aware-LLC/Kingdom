@@ -475,12 +475,17 @@ namespace Emberfall.Presentation
             Action done = _onSignedIn;
             _onSignedIn = null;   // the continuation runs once, never on a later re-open
 
-            // Then pull the collection down, still behind the modal. This is the half that makes a
-            // reinstall recoverable: binding finds the folder, this is what puts anything back in it.
-            // It cannot fail the sign-in — CollectionGateway swallows every outcome into a status and
-            // leaves the local record alone on all of them but one — so there is no branch here.
+            // Then pull the player's data down, still behind the modal. This is the half that makes a
+            // reinstall recoverable: binding finds the folder, these are what put anything back in it.
+            // Neither can fail the sign-in — both gateways swallow every outcome into a status and
+            // leave the local files alone on all of them but one — so there is no branch here.
+            //
+            // The collection first and the roster second, because a deck restored before the cards it
+            // names would render as a draft for as long as the second call takes.
             SetBusy(true, "Restoring your collection…");
             await CollectionGateway.SyncAsync(_auth.Current.AccessToken);
+            SetBusy(true, "Restoring your characters…");
+            await RosterGateway.SyncAsync(_auth.Current.AccessToken);
             SetBusy(false, null);
 
             _modal?.AddToClassList("mm-modal--hidden");

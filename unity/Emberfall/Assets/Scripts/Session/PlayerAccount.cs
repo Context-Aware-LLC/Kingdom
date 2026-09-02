@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
+using Emberfall.Net.Client.Collection;
 using UnityEngine;
 
 namespace Emberfall.Session
@@ -262,8 +264,24 @@ namespace Emberfall.Session
             // the one unreproducible input into the one place it is avoidable.
             var rng = new DeterministicRandom(SeedFrom(characterId));
 
-            return CharacterCreation.Create(_characters, _decks, db, rng,
-                                            characterId, name, primary, secondary, deckId, starter);
+            Character created = CharacterCreation.Create(_characters, _decks, db, rng,
+                                                         characterId, name, primary, secondary,
+                                                         deckId, starter);
+
+            // One chained push rather than two independent ones, so the character reaches the server
+            // before the deck that names it. Nothing on the server enforces that — deck.character_id
+            // carries no foreign key — but a roster read between the two arrivals would otherwise
+            // show a deck bound to a character that is not there yet.
+            var starterDecks = CharacterDeletion.DecksOf(characterId, _decks.LoadAll());
+            Push(async t =>
+            {
+                RosterWriteStatus status = await RosterGateway.PushCharacterCreatedAsync(t, created);
+                foreach (DeckList deck in starterDecks)
+                    status = await RosterGateway.PushDeckSavedAsync(t, deck);
+                return status;
+            });
+
+            return created;
         }
 
         /// <summary>
@@ -279,7 +297,12 @@ namespace Emberfall.Session
         /// </summary>
         /// <exception cref="ArgumentException">The pairing is invalid.</exception>
         public Character CreateCharacterWithoutDeck(string name, CardClass primary, CardClass secondary)
-            => CharacterCreation.CreateWithoutDeck(_characters, NewId(), name, primary, secondary);
+        {
+            Character created = CharacterCreation.CreateWithoutDeck(
+                _characters, NewId(), name, primary, secondary);
+            Push(t => RosterGateway.PushCharacterCreatedAsync(t, created));
+            return created;
+        }
 
         /// <summary>
         /// Add a deck to an existing character and persist it, generated or blank.
@@ -310,6 +333,7 @@ namespace Emberfall.Session
             deck.CharacterId = character.Id;
 
             _decks.Save(deck);
+            Push(t => RosterGateway.PushDeckSavedAsync(t, deck));
             return deck;
         }
 
@@ -326,15 +350,117 @@ namespace Emberfall.Session
         /// roster row and would leave the decks orphaned.
         /// </summary>
         public int DeleteCharacter(string characterId)
-            => CharacterDeletion.Delete(_characters, _decks, characterId);
+        {
+            int destroyed = CharacterDeletion.Delete(_characters, _decks, characterId);
 
-        /// <summary>Persist a character (rename, or "Set as default" writing <c>DefaultDeckId</c>).</summary>
+            // ONE call. The server cascades to that character's decks inside a single transaction,
+            // so pushing a delete per deck as well would be N redundant round trips racing the
+            // cascade — and each would answer 404 on the row it had already removed.
+            Push(t => RosterGateway.PushCharacterDeletedAsync(t, characterId));
+            return destroyed;
+        }
+
+        /// <summary>
+        /// Persist a character (rename, or "Set as default" writing <c>DefaultDeckId</c>).
+        ///
+        /// <para><b>The server has no character UPDATE route</b>, so this one does not push. The
+        /// pairing is permanent and the name is set at creation, which leaves <c>DefaultDeckId</c> as
+        /// the only field a re-save moves — and it is the one piece of roster state that therefore
+        /// does not survive a reinstall. Tracked as issue #343; the fix is a route, not a call
+        /// here.</para>
+        /// </summary>
         public void Save(Character character) => _characters.Save(character);
 
         /// <summary>Persist a deck. Never legality-gated — a draft is a savable deck (§1).</summary>
-        public void Save(DeckList deck) => _decks.Save(deck);
+        public void Save(DeckList deck)
+        {
+            _decks.Save(deck);
+            Push(t => RosterGateway.PushDeckSavedAsync(t, deck));
+        }
 
-        public void DeleteDeck(string deckId) => _decks.Delete(deckId);
+        public void DeleteDeck(string deckId)
+        {
+            _decks.Delete(deckId);
+            Push(t => RosterGateway.PushDeckDeletedAsync(t, deckId));
+        }
+
+        // ── Mirroring to the server ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// True for the one account the player is actually playing — <see cref="Local"/>.
+        ///
+        /// <para><b>This is what keeps an editor tool off the wire.</b> The constructor stays public
+        /// so a tool or a test scene can point at a scratch directory, and every one of those would
+        /// otherwise mirror its throwaway characters into the signed-in player's real server roster —
+        /// a self-check that quietly adds "Ashen Vow" to somebody's account and then deletes it
+        /// again. Reference equality against the static rather than a flag, so it cannot be set
+        /// wrongly.</para>
+        /// </summary>
+        private bool IsLocal => ReferenceEquals(this, _local);
+
+        /// <summary>
+        /// Mirror a local write to the server, if this is the real account and somebody is signed in.
+        ///
+        /// <para><b>Fire and forget, deliberately.</b> The local write has already happened and is
+        /// what the player sees; the push is a best-effort mirror whose every failure is a log line
+        /// inside <see cref="RosterGateway"/>. Awaiting it would make a save wait on the network, and
+        /// returning its status would invite a caller to undo a save the player already watched
+        /// succeed.</para>
+        ///
+        /// <para><b>The push lives here rather than at the call sites</b> for the reason
+        /// <c>SignInGateController.Succeed</c> is one method: there are seven screens that save a
+        /// deck or a character, and a screen that forgot to push would silently stop backing up the
+        /// player's work with nothing to catch it.</para>
+        /// </summary>
+        private void Push(Func<string, Task<RosterWriteStatus>> call)
+        {
+            if (!IsLocal) return;
+
+            string token = RosterGateway.AccessToken;
+            if (string.IsNullOrEmpty(token)) return;
+
+            _ = call(token);
+        }
+
+        /// <summary>
+        /// Replace this account's whole roster with what the server just said it is.
+        ///
+        /// <para><b>Only <see cref="RosterGateway"/> may call this, and only on a Known answer</b> —
+        /// the same rule, for the same reason, as <see cref="SaveOwnedCards"/>. Since the login
+        /// handshake landed, <c>characters.json</c> and <c>decks.json</c> are a CACHE of the
+        /// server-side player data store, not the record. There is no offline mode, so there is no
+        /// merge and no last-write-wins: a Known answer replaces, and every other answer leaves the
+        /// files exactly as they are.</para>
+        ///
+        /// <para><b>An empty roster here is a real answer and DOES empty the device.</b> A player who
+        /// deleted their last character must not have it restored by the next sign-in. That is only
+        /// safe because <c>RosterSnapshot.ShouldReplaceLocal</c> is false for every outcome that is
+        /// not an answer — a failed read never reaches this method.</para>
+        ///
+        /// <para>Deletes before it saves, and computes the deletions against what is on disk right
+        /// now rather than against a cached list: a character the server no longer has must go, and
+        /// leaving it would resurrect it on every subsequent read.</para>
+        /// </summary>
+        public void ReplaceRoster(IReadOnlyList<Character> characters, IReadOnlyList<DeckList> decks)
+        {
+            if (characters == null) throw new ArgumentNullException(nameof(characters));
+            if (decks == null) throw new ArgumentNullException(nameof(decks));
+
+            var keepCharacters = new HashSet<string>(StringComparer.Ordinal);
+            foreach (Character c in characters) keepCharacters.Add(c.Id);
+            var keepDecks = new HashSet<string>(StringComparer.Ordinal);
+            foreach (DeckList d in decks) keepDecks.Add(d.Id);
+
+            // Decks first, then characters — the mirror of creation's order (deck, then character),
+            // and for the same reason: a deck with no character is the survivable half.
+            foreach (DeckList existing in _decks.LoadAll())
+                if (!keepDecks.Contains(existing.Id)) _decks.Delete(existing.Id);
+            foreach (Character existing in _characters.LoadAll())
+                if (!keepCharacters.Contains(existing.Id)) _characters.Delete(existing.Id);
+
+            foreach (DeckList deck in decks) _decks.Save(deck);
+            foreach (Character character in characters) _characters.Save(character);
+        }
 
         // ── Identity minting ────────────────────────────────────────────────────────────
 

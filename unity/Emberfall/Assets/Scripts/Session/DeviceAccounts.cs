@@ -175,6 +175,8 @@ namespace Emberfall.Session
             // The sync writes into PlayerAccount.Local, which is scoped to the signed-in account — a
             // gateway that outlived a switch would write one player's collection into another's folder.
             CollectionGateway.Invalidate();
+            // Same hazard, worse consequence: the roster gateway REPLACES characters and decks.
+            RosterGateway.Invalidate();
         }
 
         /// <summary>
