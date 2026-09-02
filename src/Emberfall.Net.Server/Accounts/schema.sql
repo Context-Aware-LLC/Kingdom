@@ -46,6 +46,23 @@ alter table account add column if not exists email text;
 -- new row to 'standard', same idempotent-alter posture as email above.
 alter table account add column if not exists kind text not null default 'standard';
 
+-- Has this player ever completed onboarding? (Sam, 2026-09-01.) ONE-WAY: false → true, never back.
+--
+-- It exists to kill an ambiguity the client cannot otherwise resolve. A returning player's roster is
+-- read from the server, and an empty answer means either "brand new, send them to character
+-- creation" or "the read failed" — indistinguishable, and guessing wrong walks a player with an
+-- existing collection through creation a second time. With this flag the client has three states
+-- instead of two, and only one of them creates anything.
+--
+-- **The flag only works if ABSENT cannot decode to false.** A missing field defaulting to false
+-- reproduces the exact bug it was added to remove, because a failed read then reads as a new player.
+-- Whatever carries this to the client keeps "no answer" as its own value — the same rule
+-- CollectionSnapshot.ShouldReplaceCache enforces for ownership, and for the same reason.
+--
+-- Server-side deliberately: a client-local "seen it" bit dies with the app, so a reinstall would
+-- replay onboarding for a player who already owns cards.
+alter table account add column if not exists onboarded boolean not null default false;
+
 -- The append-only grant log. external_txn_id is the idempotency anchor (primary key ⇒ UNIQUE); qty is
 -- signed so a refund is simply a negative grant carrying its OWN transaction id (a refund's id differs
 -- from the purchase's, so it does not conflict with it and nets the balance correctly).

@@ -46,6 +46,20 @@ namespace Emberfall.Net.Server.Accounts
         /// <paramref name="playerId"/> names no account.
         /// </summary>
         Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default);
+
+        /// <summary>
+        /// Records that this player has completed onboarding. <b>One-way and idempotent</b> — there is
+        /// deliberately no un-set: clearing it would replay character creation for a player who
+        /// already has characters, which is the exact failure the flag exists to prevent. Returns null
+        /// if <paramref name="playerId"/> names no account.
+        ///
+        /// <para><b>Nothing calls this yet.</b> The transition belongs to whatever first persists a
+        /// character server-side — that is what "onboarded" means, and setting it anywhere earlier
+        /// (at signup, or when the onboarding grant is written) makes it true before it is true.
+        /// RETIREMENT TRIGGER: the commit that lands the character-create route calls this and
+        /// deletes this paragraph.</para>
+        /// </summary>
+        Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default);
     }
 
     /// <summary>
@@ -123,6 +137,20 @@ namespace Emberfall.Net.Server.Accounts
                     return Task.FromResult((Account?)null);
 
                 var updated = existing with { Kind = kind };
+                _byPlayerId[playerId] = updated;
+                _byCredential[updated.CredentialKind + "\n" + updated.CredentialHash] = updated;
+                return Task.FromResult((Account?)updated);
+            }
+        }
+
+        public Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                if (!_byPlayerId.TryGetValue(playerId, out var existing))
+                    return Task.FromResult((Account?)null);
+
+                var updated = existing with { Onboarded = true };
                 _byPlayerId[playerId] = updated;
                 _byCredential[updated.CredentialKind + "\n" + updated.CredentialHash] = updated;
                 return Task.FromResult((Account?)updated);
