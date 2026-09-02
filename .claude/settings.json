@@ -37,6 +37,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/cap-memory-index.py\"; [ -f \"$f\" ] || exit 0; command -v python >/dev/null 2>&1 || exit 0; PYTHONIOENCODING=utf-8 python \"$f\"",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }
