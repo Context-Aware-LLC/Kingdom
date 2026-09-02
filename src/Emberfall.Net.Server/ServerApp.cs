@@ -340,6 +340,36 @@ namespace Emberfall.Net.Server
                 });
             });
 
+            // GET /session — the login handshake the client boot blocks on. Turns a locally-stored
+            // token into a verified account identity plus the onboarded flag. See SessionEndpoint
+            // for why the login gate's own name does not already guarantee this.
+            //
+            // Cache-Control: no-store. A session is per-identity and its onboarded flag changes
+            // underneath it; a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/session", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                SessionResult result = await SessionEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                return Results.Json(new
+                {
+                    // "ready" | "unauthenticated" | "unavailable". The client branches on this
+                    // string and on nothing else — onboarded is only meaningful under "ready".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    email = result.Email,
+                    onboarded = result.Onboarded,
+                }, statusCode: result.HttpStatus);
+            });
+
             // GET /collection — what the signed-in player owns, read down from the entitlement
             // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
             // authority since 2026-09-01 and the client had no way to read it, so a player who signed
