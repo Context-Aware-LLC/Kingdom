@@ -103,5 +103,53 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 "onboarded flips at the END of the flow, after the grant — never at creation. " +
                 "Flipping here strands a player who drops before the grant lands.");
         }
+
+        // ── TryParseClass — the route-level wire parse, tested where the route cannot be ────────
+
+        [Test]
+        public void TryParseClass_Accepts_A_Valid_Name_Case_Insensitively()
+        {
+            bool ok = CharacterCreateEndpoint.TryParseClass("emberward", out CardClass value);
+
+            Assert.That(ok, Is.True);
+            Assert.That(value, Is.EqualTo(CardClass.EMBERWARD));
+        }
+
+        [Test]
+        public void TryParseClass_Rejects_An_Unrecognised_Name()
+        {
+            bool ok = CharacterCreateEndpoint.TryParseClass("not-a-class", out _);
+
+            Assert.That(ok, Is.False);
+        }
+
+        [Test]
+        public void TryParseClass_Rejects_A_Numeric_String_With_No_Backing_Member()
+        {
+            // Enum.TryParse<CardClass>("99", true, out _) alone returns true with an undefined
+            // value — this is exactly the gap Enum.IsDefined has to close.
+            bool ok = CharacterCreateEndpoint.TryParseClass("99", out CardClass value);
+
+            Assert.That(ok, Is.False,
+                "a numeric string that doesn't back a real enum member must not parse as valid");
+            Assert.That(value, Is.EqualTo(default(CardClass)),
+                "out value on failure is the default, never the undefined parsed value");
+        }
+
+        [Test]
+        public void TryParseClass_Rejects_The_Empty_String()
+        {
+            bool ok = CharacterCreateEndpoint.TryParseClass("", out _);
+
+            Assert.That(ok, Is.False);
+        }
+
+        [Test]
+        public void TryParseClass_Rejects_Null()
+        {
+            bool ok = CharacterCreateEndpoint.TryParseClass(null, out _);
+
+            Assert.That(ok, Is.False);
+        }
     }
 }

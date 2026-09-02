@@ -67,6 +67,30 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public static class CharacterCreateEndpoint
     {
+        /// <summary>
+        /// The one place a wire class name becomes a <see cref="CardClass"/>. Rejects null/empty,
+        /// an unrecognised name, AND a name that parses to a numeric value with no enum member
+        /// backing it (<c>Enum.TryParse&lt;CardClass&gt;("999", true, out _)</c> returns true with
+        /// an undefined value — <see cref="System.Enum.IsDefined"/> is the only thing that catches
+        /// that). Lives here, not in the route, so the dotnet suite can reach it: a guard inside
+        /// <c>ServerApp.cs</c> is a guard nothing in this repo's test tree can call.
+        /// </summary>
+        public static bool TryParseClass(string? raw, out CardClass value)
+        {
+            value = default;
+            if (string.IsNullOrEmpty(raw))
+                return false;
+
+            if (!System.Enum.TryParse(raw, ignoreCase: true, out CardClass parsed))
+                return false;
+
+            if (!System.Enum.IsDefined(typeof(CardClass), parsed))
+                return false;
+
+            value = parsed;
+            return true;
+        }
+
         public static async Task<CharacterCreateResult> CreateAsync(
             string? bearerToken,
             string characterId,

@@ -436,8 +436,8 @@ namespace Emberfall.Net.Server
                     var root = body.RootElement;
                     characterId = root.GetProperty("characterId").GetString() ?? "";
                     name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "";
-                    if (!Enum.TryParse(root.GetProperty("primaryClass").GetString(), ignoreCase: true, out primary) ||
-                        !Enum.TryParse(root.GetProperty("secondaryClass").GetString(), ignoreCase: true, out secondary))
+                    if (!CharacterCreateEndpoint.TryParseClass(root.GetProperty("primaryClass").GetString(), out primary) ||
+                        !CharacterCreateEndpoint.TryParseClass(root.GetProperty("secondaryClass").GetString(), out secondary))
                     {
                         return Results.Json(new { error = "invalid class" }, statusCode: StatusCodes.Status400BadRequest);
                     }
