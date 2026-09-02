@@ -1004,6 +1004,12 @@ namespace Emberfall.Presentation
             go.transform.localRotation = Quaternion.identity;
 
             var tmp = go.AddComponent<TextMeshPro>();
+            // TMP Settings globally enables autoSizeTextContainer, which rewrites a label's
+            // RectTransform from its text. Card labels have authored card-relative rectangles;
+            // only the FONT may auto-fit inside them. Leaving both systems active made ellipsis
+            // operate on TMP's rewritten width and back up to a word boundary, visibly discarding
+            // usable title-band space (Sam's collection-wall audit, 2026-09-01).
+            tmp.autoSizeTextContainer = false;
             // Labels draw after the frame sprite EXPLICITLY. Inside the card's SortingGroup
             // everything shares order 0 and the tie-break is hierarchy order, which the Visual
             // reparenting loop reverses — the painted frames are opaque at the bosses/plaque,

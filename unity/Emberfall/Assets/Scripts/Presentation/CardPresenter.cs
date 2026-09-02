@@ -383,12 +383,15 @@ namespace Emberfall.Presentation
 
             if (nameLabel != null)
             {
-                // Fixed size, no auto-fit. Sam moved the title into its own band below the art
-                // (2026-08-09) specifically to get it clear of the cost socket, so it no longer
-                // needs a left clamp.
-                nameLabel.enableAutoSizing = false;
-                nameLabel.fontSize = FrameRarityCatalog.NameEm * H * 10f;
-                nameLabel.color    = FrameRarityCatalog.NameParchment;
+                // The title owns this whole band, so consume it before truncating. Fixed sizing
+                // sent every over-wide name straight to Ellipsis even though a small reduction
+                // would keep the complete title legible (Sam's mobile audit, 2026-09-01).
+                nameLabel.enableAutoSizing = true;
+                nameLabel.fontSizeMax = FrameRarityCatalog.NameEm * H * 10f;
+                nameLabel.fontSizeMin = FrameRarityCatalog.NameEmFloor * H * 10f;
+                nameLabel.fontSize     = nameLabel.fontSizeMax;
+                nameLabel.overflowMode = TextOverflowModes.Ellipsis;
+                nameLabel.color        = FrameRarityCatalog.NameParchment;
                 nameLabel.rectTransform.localPosition = new Vector3(
                     (FrameRarityCatalog.NameCenterX - 0.5f) * W,
                     (0.5f - FrameRarityCatalog.NameCenterY) * H, z);

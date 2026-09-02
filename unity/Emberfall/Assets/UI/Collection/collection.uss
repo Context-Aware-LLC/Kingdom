@@ -1358,18 +1358,21 @@
     margin-top: var(--space-3);
 }
 
-/* The two directions, stacked. Equal flex so neither reads as the primary one: Render and Reduce
- * are opposite moves of the same standing, not an action and its footnote. */
+/* The two opposite actions share the body's full height. Stacking them forced each panel below its
+ * content height; UI Toolkit shrank the panel boxes while their labels and buttons painted through
+ * one another. Equal widths keep Render and Reduce peers without sacrificing vertical room. */
 .craft-halves {
+    flex-direction: row;
     flex-grow: 1;
     justify-content: space-between;
 }
 .craft-half {
+    width: 49%;
     flex-grow: 1;
     background-color: var(--surface-2);
     border-radius: var(--space-2);
     padding: var(--space-6);
-    margin-bottom: var(--space-4);
+    margin-bottom: 0;
     justify-content: center;
 }
 .craft-half-title {

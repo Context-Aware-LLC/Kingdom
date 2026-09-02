@@ -345,9 +345,8 @@
  * 236x73.75, 61% more picture -- because the width grew faster than the ratio took back.
  *
  * KEEP THE 7dp. It is not slack to spend: the help label above wraps at this width, and a third
- * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it, and the only
- * way to know where it lands is to measure -- `Emberfall/Debug/Device DP Rig/Apply`, then read
- * contentViewport against contentContainer on `#shop-scroll`. */
+ * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it; verify the
+ * scroll viewport against the content container on `#shop-scroll` at the target resolution. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
