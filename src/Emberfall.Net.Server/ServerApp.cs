@@ -458,6 +458,52 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS
+            // ARE STORED, NEVER REFUSED here: the only rejection is a body that will not parse —
+            // see DeckWriteEndpoint for why an illegal deck is still saved.
+            app.MapPut("/decks/{id}", async (HttpContext context, string id) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                using var reader = new StreamReader(context.Request.Body);
+                string body = await reader.ReadToEndAsync();
+
+                DeckWriteResult result = await DeckWriteEndpoint.SaveAsync(
+                    bearer, id, body, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
+                    context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "saved" | "unauthenticated" | "unavailable" | "malformed".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // DELETE /decks/{id} — remove a deck. Same auth pairing as /session and /roster. One
+            // record, so delete means delete — see PlayerRoster and DeckWriteEndpoint.
+            app.MapDelete("/decks/{id}", async (HttpContext context, string id) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                DeckWriteResult result = await DeckWriteEndpoint.DeleteAsync(
+                    bearer, id, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
+                    context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "deleted" | "notfound" | "unauthenticated" | "unavailable".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
             // GET /collection — what the signed-in player owns, read down from the entitlement
             // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
             // authority since 2026-09-01 and the client had no way to read it, so a player who signed
