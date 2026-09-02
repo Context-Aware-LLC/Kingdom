@@ -310,6 +310,7 @@
  * width does. Read the arithmetic there before changing either. */
 .shop-pack {
     width: 49%;
+    flex-shrink: 0;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -384,11 +385,13 @@
 .shop-pack__detail {
     color: var(--ink-2);
     font-size: var(--type-caption);
+    white-space: normal;
     margin-bottom: var(--space-2);
 }
 
 .shop-pack__actions {
     flex-direction: row;
+    flex-shrink: 0;
 }
 
 .shop-pack__buy {
