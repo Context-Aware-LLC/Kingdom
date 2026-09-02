@@ -34,6 +34,13 @@ namespace Emberfall.Presentation
         private VisualElement _viewMenu;
         private VisualElement _viewConfirm;
 
+        // The shared confirm view's contents, filled per use. Two things confirm now (concede and
+        // sign out) and a second copy of the panel would drift from the first.
+        private Label _confirmTitle;
+        private Label _confirmSubtitle;
+        private Button _confirmButton;
+        private Action _onConfirm;
+
         private VisualElement _accountModal;
         private VisualElement _accountList;
         private Label _accountError;
@@ -55,7 +62,9 @@ namespace Emberfall.Presentation
         /// does nothing when clicked is worse than no button at all.</param>
         /// <param name="allowAccountSwitch">False in-match (Sam, 2026-08-09): switching accounts
         /// mid-match reloads the scene and ejects the player, so the affordance is hidden entirely
-        /// rather than offered and then eating the match.</param>
+        /// rather than offered and then eating the match. <b>Sign out rides on this same flag</b>
+        /// (2026-09-02) — it reloads the scene for the identical reason, so the parameter now means
+        /// "this mount may reload the scene" rather than anything about accounts specifically.</param>
         public void Init(Action onConcede, bool showConcede = true, bool allowAccountSwitch = true)
         {
             _onConcede = onConcede;
@@ -71,6 +80,10 @@ namespace Emberfall.Presentation
             _overlay     = root.Q<VisualElement>("overlay");
             _viewMenu    = root.Q<VisualElement>("view-menu");
             _viewConfirm = root.Q<VisualElement>("view-confirm");
+
+            _confirmTitle    = root.Q<Label>("confirm-title");
+            _confirmSubtitle = root.Q<Label>("confirm-subtitle");
+            _confirmButton   = root.Q<Button>("btn-confirm");
 
             var gear = root.Q<Button>("btn-settings");
             if (gear != null)
@@ -89,11 +102,13 @@ namespace Emberfall.Presentation
             var concede = root.Q<Button>("btn-concede");
             if (concede != null) concede.style.display = showConcede ? DisplayStyle.Flex : DisplayStyle.None;
 
-            Wire(root, "btn-concede", ShowConfirm);
+            Wire(root, "btn-concede", ConfirmConcede);
             Wire(root, "btn-close", Close);
-            Wire(root, "btn-confirm-concede", () => { _onConcede?.Invoke(); Close(); });
+            Wire(root, "btn-confirm", () => { _onConfirm?.Invoke(); });
             Wire(root, "btn-cancel", ShowMenu);
             Wire(root, "btn-quit", OnQuit);
+
+            BindSignOut(root);
 
             // Click-out closes the overlay. It never concedes — closing is always safe.
             var scrim = root.Q<VisualElement>("scrim");
@@ -130,10 +145,127 @@ namespace Emberfall.Presentation
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
         }
 
-        private void ShowConfirm()
+        /// <summary>
+        /// Fill the shared confirm view and show it. <paramref name="danger"/> is the red treatment —
+        /// passed rather than assumed, because the first user of this panel was Concede and the
+        /// styling followed it into the UXML: a sign-out rendered in the concede red would read as
+        /// destructive when it is entirely recoverable.
+        /// </summary>
+        private void ShowConfirm(string title, string subtitle, string confirmLabel, bool danger,
+                                 Action onConfirm)
         {
+            _onConfirm = onConfirm;
+
+            if (_confirmTitle != null)    _confirmTitle.text    = title;
+            if (_confirmSubtitle != null) _confirmSubtitle.text = subtitle;
+            if (_confirmButton != null)
+            {
+                _confirmButton.text = confirmLabel;
+                _confirmButton.EnableInClassList("ms-item--danger", danger);
+            }
+
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.Flex;
+        }
+
+        private void ConfirmConcede()
+            => ShowConfirm("Concede this match?", "This counts as a loss.", "Concede", danger: true,
+                           onConfirm: () => { _onConcede?.Invoke(); Close(); });
+
+        // ── Sign out ────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Show the sign-out row only when there is a session to leave.
+        ///
+        /// <para><b>Not gated on a development build, unlike Switch account.</b> That one is a
+        /// testing affordance for a device-local concept players never see; this is the ordinary
+        /// player-facing way to leave an identity, and a game that can only be signed out of by
+        /// uninstalling is one where the only way to change accounts destroys the device's
+        /// data.</para>
+        ///
+        /// <para>Read once at Init rather than watched: the panel is rebuilt on every scene load,
+        /// and signing IN happens behind the gate before the menu exists.</para>
+        ///
+        /// <para><b>Hidden in-match, on the same flag as Switch account</b> — that parameter is
+        /// really "this mount can reload the scene", and signing out reloads it exactly as switching
+        /// does. Offering it mid-match would eject the player and forfeit the match without ever
+        /// saying the word concede.</para>
+        /// </summary>
+        private void BindSignOut(VisualElement root)
+        {
+            var entry = root.Q<Button>("btn-sign-out");
+            if (entry == null) return;
+
+            if (!_allowAccountSwitch) { entry.style.display = DisplayStyle.None; return; }
+
+            bool signedIn;
+            try { signedIn = AuthGateway.IsSignedIn; }
+            catch (Exception ex)
+            {
+                // Composing the provider touches a settings asset and player prefs. A throw here
+                // must not take the settings panel down with it — no row is the honest answer.
+                Debug.LogWarning($"[MatchSettings] could not read the sign-in state ({ex.GetType().Name}); " +
+                                 "hiding Sign out.");
+                signedIn = false;
+            }
+
+            if (!signedIn) { entry.style.display = DisplayStyle.None; return; }
+
+            entry.style.display = DisplayStyle.Flex;
+            Wire(root, "btn-sign-out", ConfirmSignOut);
+        }
+
+        private void ConfirmSignOut()
+        {
+            string email = "";
+            try { email = AuthGateway.SignedInEmail ?? ""; } catch { /* named below, or not */ }
+
+            ShowConfirm(
+                email.Length > 0 ? $"Sign out of {email}?" : "Sign out?",
+                // Says what survives, because the whole point of the roster work is that the answer
+                // changed: signing out is no longer anything like losing the account.
+                "Your cards, characters and decks stay on your account. You will need to sign in " +
+                "again to play.",
+                "Sign out",
+                danger: false,
+                onConfirm: SignOut);
+        }
+
+        /// <summary>
+        /// Clear the stored session and rebuild the scene against a signed-out device.
+        ///
+        /// <para><b>Local files are deliberately NOT deleted.</b> The scope folder is bound to the
+        /// identity by pointer, so signing back in finds the same folder — and if a different
+        /// identity signs in, <c>DeviceAccounts.BindToIdentity</c> mints or switches to that
+        /// identity's own account rather than handing over this one's. Deleting the roster here
+        /// would destroy the only local copy of anything the server has not accepted yet.</para>
+        ///
+        /// <para><b>Then <see cref="DeviceAccounts.Invalidate"/> and a scene reload</b> — the same
+        /// blunt approach as switching accounts, and for the identical reason: every cached piece
+        /// of per-account state (the auth provider, PlayerAccount.Local, both gateways) has to be
+        /// dropped, and re-resolving them one by one is a list that will be incomplete the first
+        /// time somebody adds to it. The reload puts the sign-in gate back up, because
+        /// <c>SignInGateController.IsRequired</c> is now true again.</para>
+        /// </summary>
+        private void SignOut()
+        {
+            try
+            {
+                AuthGateway.Provider.SignOut();
+                DeviceAccounts.Invalidate();
+                Debug.Log("[MatchSettings] signed out; reloading the scene.");
+            }
+            catch (Exception ex)
+            {
+                // A failure here leaves the session in place, which is the safe direction: the
+                // player stays signed in rather than landing in a half-signed-out state.
+                Debug.LogError($"[MatchSettings] could not sign out: {ex.Message}");
+                ShowMenu();
+                return;
+            }
+
+            Close();
+            ReloadThisScene();
         }
 
         // Application.Quit() is a no-op in the Editor (there is no player process to close), so
