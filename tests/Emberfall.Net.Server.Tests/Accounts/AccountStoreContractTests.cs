@@ -73,6 +73,61 @@ namespace Emberfall.Net.Server.Tests.Accounts
         [Test]
         public async Task SetKind_On_Unknown_Player_Is_Null()
             => Assert.That(await Store.SetKindAsync("no-such-player", AccountKind.Superuser), Is.Null);
+
+        // ── onboarded (Sam, 2026-09-01) ──────────────────────────────────────────────────
+        // The flag exists so a client can tell "brand new player" from "the read failed" when a
+        // roster comes back empty. These pin the two properties that make it usable for that: it
+        // starts false, and once true it stays true across a re-read.
+
+        [Test]
+        public async Task New_Accounts_Are_Not_Onboarded()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-onboard-default");
+            Assert.That(a.Onboarded, Is.False, "a brand-new account has not been through onboarding");
+        }
+
+        [Test]
+        public async Task MarkOnboarded_Persists()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-onboard-mark");
+
+            Account? marked = await Store.MarkOnboardedAsync(a.PlayerId);
+            Assert.That(marked, Is.Not.Null);
+            Assert.That(marked!.Onboarded, Is.True);
+
+            Account? reread = await Store.FindByPlayerIdAsync(a.PlayerId);
+            Assert.That(reread!.Onboarded, Is.True,
+                "onboarding must survive a re-read — a reinstall re-reads, and that is the whole point");
+        }
+
+        [Test]
+        public async Task MarkOnboarded_Is_Idempotent()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-onboard-twice");
+            await Store.MarkOnboardedAsync(a.PlayerId);
+
+            Account? again = await Store.MarkOnboardedAsync(a.PlayerId);
+            Assert.That(again, Is.Not.Null,
+                "a second call must not read as 'no such account' — the caller cannot distinguish that " +
+                "from a genuinely missing player, and would report the wrong failure");
+            Assert.That(again!.Onboarded, Is.True);
+        }
+
+        [Test]
+        public async Task ResolveOrCreate_Does_Not_Reset_Onboarded()
+        {
+            Account a = await Store.ResolveOrCreateAsync("google", "sub-onboard-return");
+            await Store.MarkOnboardedAsync(a.PlayerId);
+
+            // The returning-player path: the same credential resolves again on the next sign-in.
+            Account again = await Store.ResolveOrCreateAsync("google", "sub-onboard-return");
+            Assert.That(again.Onboarded, Is.True,
+                "signing in again must not look like a new player — that is the reinstall case");
+        }
+
+        [Test]
+        public async Task MarkOnboarded_On_Unknown_Player_Is_Null()
+            => Assert.That(await Store.MarkOnboardedAsync("no-such-player"), Is.Null);
     }
 
     /// <summary>The in-memory implementation against the shared contract. Always runs.</summary>

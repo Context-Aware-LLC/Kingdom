@@ -20,15 +20,24 @@ namespace Emberfall.Core.Collection
     /// server resolves the opens (ADR-0004: the client never speculates one), and both sides get the
     /// same answer from the same card database.</para>
     ///
-    /// <para><b>Account-level and once only, keyed on the absence of an ownership record.</b> There
-    /// is no first-run flag and deliberately no new facet file: <see cref="IOwnedCardStore.Load"/>
-    /// returning null already means <i>ownership unknown</i>, which is precisely "nothing has ever
-    /// granted this account cards". Writing the record is what discharges the grant. A player who
-    /// reduces their entire collection to shards holds an <i>empty but present</i> record and is not
-    /// re-granted, which is the same distinction L6 already turns on. A crash between opening the
-    /// packs and writing the record leaves the account un-granted and it simply happens again — the
-    /// one ordering that has no half-granted state, and the reason <see cref="Resolve"/> returns
-    /// everything at once instead of a grant per step.</para>
+    /// <para><b>Account-level and once only, keyed on the ledger transaction id
+    /// <c>signup:{playerId}</c></b> (2026-09-01; spec <c>docs/dev-docs/specs/card-ownership.md</c>,
+    /// slice 1). <c>OnboardingGrantService</c> writes the whole grant as one atomic entitlement batch
+    /// under that id, so a replay conflicts on the derived row keys and writes nothing — the grant is
+    /// attempted on every account resolve and there is deliberately no due-check for two resolves to
+    /// race. A player who reduces their entire collection to shards is still never re-granted, because
+    /// the ledger keeps the original grant rows forever: a zero balance is not an absent grant.</para>
+    ///
+    /// <para><b>This key used to be the absence of an ownership record</b>, back when the client's
+    /// <c>owned-cards.json</c> was the authority — see <see cref="IOwnedCardStore"/>, whose null still
+    /// means "ownership unknown" and still governs what an unsynced client shows.
+    /// A client-side <c>IsDue</c> answered that question until slice 3 gave the client a real
+    /// projection to mirror; it was deleted then, per its own retirement trigger, rather than left in
+    /// this assembly looking like a grant check.
+    /// The crash argument is unchanged in substance and now rests on the batch rather than on
+    /// write ordering: an entitlement batch is all-or-nothing, so a crash mid-grant leaves the account
+    /// un-granted and the next resolve simply lands it. That is still why <see cref="Resolve"/>
+    /// returns everything at once instead of a grant per step.</para>
     ///
     /// <para><b>Why the packs are not seeded to the character's classes.</b> Sam weighed both and
     /// ruled unseeded on 2026-08-12. The grant fires once per <i>account</i>, while a class pairing
@@ -49,7 +58,8 @@ namespace Emberfall.Core.Collection
         /// launch-shaped answer. The commit that adds a third <see cref="SetId"/> member intended for
         /// sale must decide what a new account gets then — every common in every set, or only the
         /// current one — and update this constant, the XML above, and
-        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonInThePairing</c>. Leaving it pointing
+        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonInThePairing</c>
+        /// (<c>tests/Emberfall.Core.Tests/Collection/OnboardingGrantTests.cs</c>). Leaving it pointing
         /// at EMBERFALL is a decision, not a default, and should be a deliberate one.</para>
         /// </summary>
         public const SetId LaunchExpansion = SetId.EMBERFALL;
@@ -83,18 +93,19 @@ namespace Emberfall.Core.Collection
         public static readonly PackRarityOdds StarterOdds = new PackRarityOdds(550, 340, 85, 25);
 
         /// <summary>
-        /// Is this account owed the grant? True exactly when it has no ownership record at all.
-        /// See the type remarks: absent means never granted, empty means granted then spent.
+        /// The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards,
+        /// boosted odds — and its own <see cref="BoosterPack.StarterSku"/> entitlement item,
+        /// <c>pack.emberfall.starter</c>.
+        ///
+        /// <para><b>The sku is load-bearing, not cosmetic.</b> The ledger reserves and debits by
+        /// <see cref="BoosterPack.Id"/> while the opener takes the card count and odds from its caller,
+        /// so sharing an id with the retail pack would make a granted pack and a bought pack one
+        /// balance — and would let a retail entitlement be opened at these boosted odds. RETIREMENT
+        /// TRIGGER: if the starter pack is ever put on sale, it is this separation that has to be
+        /// reconsidered, not the odds.</para>
         /// </summary>
-        public static bool IsDue(IOwnedCardStore store)
-        {
-            if (store == null) throw new ArgumentNullException(nameof(store));
-            return store.Load() == null;
-        }
-
-        /// <summary>The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards, boosted.</summary>
         public static BoosterPack StarterPack()
-            => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds);
+            => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds, BoosterPack.StarterSku);
 
         /// <summary>
         /// Every card id the commons half grants one copy of — <b>sorted by id</b>, for the same

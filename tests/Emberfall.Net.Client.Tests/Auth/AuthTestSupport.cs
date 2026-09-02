@@ -27,7 +27,11 @@ namespace Emberfall.Net.Client.Tests.Auth
     {
         private readonly Queue<AuthHttpResponse> _replies = new Queue<AuthHttpResponse>();
 
-        public List<(string Url, string Body)> Requests { get; } = new List<(string, string)>();
+        /// <summary>Headers ride along because for <c>GET /collection</c> the bearer IS the request —
+        /// a call that reached the right URL without it would look identical here and be a different
+        /// call entirely.</summary>
+        public List<(string Url, string? Body, IReadOnlyList<KeyValuePair<string, string>> Headers)>
+            Requests { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>)>();
 
         public FakeAuthHttp Reply(int status, string body)
         {
@@ -46,18 +50,26 @@ namespace Emberfall.Net.Client.Tests.Auth
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody);
+            => Send(url, jsonBody, headers);
+
+        /// <summary>Recorded with a null body, which is what tells a test the GET went out as a GET.</summary>
+        public Task<AuthHttpResponse> GetAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => Send(url, null, headers);
 
         public Task<AuthHttpResponse> PutJsonAsync(
             string url,
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody);
+            => Send(url, jsonBody, headers);
 
-        private Task<AuthHttpResponse> Send(string url, string jsonBody)
+        private Task<AuthHttpResponse> Send(
+            string url, string? jsonBody, IReadOnlyList<KeyValuePair<string, string>>? headers)
         {
-            Requests.Add((url, jsonBody));
+            Requests.Add((url, jsonBody, headers ?? new List<KeyValuePair<string, string>>()));
             if (_replies.Count == 0)
                 throw new InvalidOperationException("FakeAuthHttp ran out of scripted replies for " + url);
             return Task.FromResult(_replies.Dequeue());
@@ -95,7 +107,8 @@ namespace Emberfall.Net.Client.Tests.Auth
         public Task<SignInStart> BeginMagicLinkAsync(string email, CancellationToken cancellationToken = default)
             => Task.FromResult(MagicLinkResult);
 
-        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
+        public Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default)
             => Task.FromResult(EmailCodeSendResult);
 
         public Task<AuthResult> VerifyEmailCodeAsync(
@@ -133,6 +146,30 @@ namespace Emberfall.Net.Client.Tests.Auth
             LastPassword = password;
             return Task.FromResult(SetPasswordResult);
         }
+
+        public AuthResult PasswordSignInResult { get; set; } = AuthResult.Failed(AuthFailure.Rejected, "Invalid login credentials");
+        public int PasswordSignInCalls { get; private set; }
+        public string? LastPasswordSignInEmail { get; private set; }
+        public string? LastPasswordSignInPassword { get; private set; }
+
+        public Task<AuthResult> SignInWithPasswordAsync(string email, string password, CancellationToken cancellationToken = default)
+        {
+            PasswordSignInCalls++;
+            LastPasswordSignInEmail = email;
+            LastPasswordSignInPassword = password;
+            return Task.FromResult(PasswordSignInResult);
+        }
+
+        public AuthResult SetDisplayNameResult { get; set; } = AuthResult.Accepted();
+        public string? LastDisplayNameAccessToken { get; private set; }
+        public string? LastDisplayName { get; private set; }
+
+        public Task<AuthResult> SetDisplayNameAsync(string accessToken, string displayName, CancellationToken cancellationToken = default)
+        {
+            LastDisplayNameAccessToken = accessToken;
+            LastDisplayName = displayName;
+            return Task.FromResult(SetDisplayNameResult);
+        }
     }
 
     internal static class Jwt
@@ -145,6 +182,15 @@ namespace Emberfall.Net.Client.Tests.Auth
 
         public static string ForUser(string sub, string email)
             => WithPayload("{\"sub\":\"" + sub + "\",\"email\":\"" + email + "\",\"aud\":\"authenticated\"}");
+
+        /// <summary>A token carrying the shape a real Supabase JWT has: <c>user_metadata</c> is a
+        /// nested object sitting between the scalar claims, so a reader that only walks the top level
+        /// has to step over it and a reader that wants the name has to descend into it.</summary>
+        public static string ForUserNamed(string sub, string email, string displayName)
+            => WithPayload("{\"sub\":\"" + sub + "\",\"email\":\"" + email + "\"," +
+                           "\"app_metadata\":{\"provider\":\"email\"}," +
+                           "\"user_metadata\":{\"email_verified\":true,\"display_name\":\"" + displayName + "\"}," +
+                           "\"aud\":\"authenticated\"}");
 
         private static string Base64Url(string text)
             => Convert.ToBase64String(Encoding.UTF8.GetBytes(text))

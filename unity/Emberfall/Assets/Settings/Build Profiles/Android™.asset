@@ -103,7 +103,7 @@ MonoBehaviour:
     - line: '|   androidUseSwappy: 1'
     - line: '|   androidRequestedVisibleInsets: 3'
     - line: '|   androidSystemBarsBehavior: 2'
-    - line: '|   androidDisplayOptions: 1'
+    - line: '|   androidDisplayOptions: 0'
     - line: '|   androidBlitType: 0'
     - line: '|   androidResizeableActivity: 1'
     - line: '|   androidDefaultWindowWidth: 1920'
@@ -192,7 +192,7 @@ MonoBehaviour:
     - line: '|   hdrBitDepth: 0'
     - line: '|   m_ColorGamuts: 00000000'
     - line: '|   targetPixelDensity: 30'
-    - line: '|   resolutionScalingMode: 1'
+    - line: '|   resolutionScalingMode: 0'
     - line: '|   resetResolutionOnWindowResize: 0'
     - line: '|   androidSupportedAspectRatio: 1'
     - line: '|   androidMaxAspectRatio: 2.4'
@@ -290,7 +290,7 @@ MonoBehaviour:
     - line: '|   clonedFromGUID: 00000000000000000000000000000000'
     - line: '|   templatePackageId: '
     - line: '|   templateDefaultScene: '
-    - line: '|   useCustomMainManifest: 1'
+    - line: '|   useCustomMainManifest: 0'
     - line: '|   useCustomLauncherManifest: 0'
     - line: '|   useCustomMainGradleTemplate: 0'
     - line: '|   useCustomLauncherGradleManifest: 0'
@@ -913,14 +913,14 @@ MonoBehaviour:
         m_CompressionType: 2
         m_InstallInBuildFolder: 0
         m_InsightsSettingsContainer:
-          m_BuildProfileEngineDiagnosticsState: 2
+          m_BuildProfileEngineDiagnosticsState: 1
         m_AdaptivePerformanceEnabled: 0
         m_BuildSubtarget: 6
         m_BuildSystem: 1
         m_ExportAsGoogleAndroidProject: 0
         m_DebugSymbolLevel: 1
         m_DebugSymbolFormat: 5
-        m_CurrentDeploymentTargetId: 17121JECB02670
+        m_CurrentDeploymentTargetId: __builtin__target_all
         m_BuildType: 1
         m_LinkTimeOptimization: 0
         m_BuildAppBundle: 0

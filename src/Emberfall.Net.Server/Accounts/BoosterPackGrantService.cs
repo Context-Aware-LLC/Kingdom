@@ -93,7 +93,11 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public sealed class BoosterPackGrantService
     {
-        /// <summary>Ledger item prefix for a card entitlement: <c>card:emberward_ember_acolyte</c>.</summary>
+        /// <summary>
+        /// Ledger item prefix for a card entitlement: <c>card:1159</c> — the NUMERIC card id, which is
+        /// the only key a card has. (The handle-shaped example this comment used to give predates the
+        /// numeric-id migration; nothing has ever written one.)
+        /// </summary>
         public const string CardItemPrefix = "card:";
 
         /// <summary>Ledger <c>source</c> for every row this service writes.</summary>

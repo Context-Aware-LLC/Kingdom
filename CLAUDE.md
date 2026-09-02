@@ -5,6 +5,28 @@ A digital, turn-based **1v1 collectible trading card game**
 **Engine/stack:** Unity (LTS) + C#. Server-authoritative, deterministic rules engine that runs headless on the server. 
 **There is no client-side prediction** (ADR-0004): the client mirrors server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
 
+**THE GAME REQUIRES A CONNECTION. THERE IS NO OFFLINE MODE, and no code will tell you so.**
+Every bot lives in `src/Emberfall.Net.Server/Bots/` and runs server-side; the one client-side AI
+(`PlayingAi`) is constructed at a single site inside `NetworkedGameBootstrap`, in a networked match.
+So there is no local match path and **nothing a player can do without a server** — the screens that
+still render offline (roster, collection, deck builder) exist only to prepare a match they cannot
+start. Read this before choosing between server-authoritative and a local mirror for ANY player
+data: the usual argument for a mirror is offline usability, and here that argument does not exist.
+
+**The login gate does NOT establish that a server is reachable, and its name says it does.**
+`SignInGateController.IsRequired` is `IsConfigured && !IsSignedIn && !Skipped`, and `IsSignedIn`
+reads a **stored session off local disk** — its own summary is *"True when a session is stored. Says
+nothing about the server accepting it."* So the gate blocks a first launch and **nothing after it**:
+a returning player with a stored token boots into the menu with no network at all. Do not reason
+"the menu is behind a login, therefore the code below it has a server."
+
+**A graceful degrade is not free — it displaces the error.** That returning player's collection sync
+fails, an absent `owned-cards.json` means "do not constrain", the deck builder shows the full pool,
+they build from cards they do not own, and `MatchGate.cs:353` closes the socket when they queue. A
+legible failure becomes an illegible one, later, in a different screen. Distinguish *never synced*
+from *synced, then lost*; only the second is a transient worth absorbing silently.
+(Sam, 2026-09-01, correcting a spec written the same day.)
+
 ## What this file is
 
 Constraints you **cannot infer by looking**.

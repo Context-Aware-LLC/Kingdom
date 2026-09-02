@@ -23,6 +23,27 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>A 2xx whose body we could not read as a session. Treated as a failed call, never
         /// as a partial sign-in.</summary>
         Malformed,
+
+        /// <summary>Supabase has never seen that email address, on a call that deliberately refused to
+        /// create one for it (<see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> with
+        /// <c>createUser: false</c>).
+        ///
+        /// <para><b>This is only ever produced by the RETURNING branch, and never by a refresh.</b>
+        /// It is a distinct member rather than a flavour of <see cref="Rejected"/> because the two
+        /// need opposite responses: Rejected means a credential is dead and the stored session must
+        /// go, while this means the player typed the wrong address and holds nothing at all yet.
+        /// <see cref="AuthTokenProvider"/>'s session-clearing check keys on Rejected alone, so this
+        /// member cannot cost anyone their session.</para>
+        ///
+        /// <para><b>It is an account-enumeration oracle, knowingly (Sam, 2026-09-01).</b> Anyone can
+        /// ask this form whether an address has an Emberfall account. That is the accepted price of
+        /// the alternative, which is worse: with <c>create_user: true</c> a returning player who
+        /// mistypes their address gets a real code mailed to the typo, redeems it, and lands in a
+        /// brand-new empty identity — losing their collection, silently, with the game reporting
+        /// success. Note that the PASSWORD path deliberately does NOT distinguish
+        /// (<see cref="SupabaseAuthBackend.SignInWithPasswordAsync"/>); that asymmetry is not an
+        /// oversight, it is that a password form has no equivalent failure to trade against.</para></summary>
+        NoSuchAccount,
     }
 
     /// <summary>
@@ -63,6 +84,29 @@ namespace Emberfall.Net.Client.Auth
 
         /// <summary>The address the player signed in with. Display only — see the type remarks.</summary>
         public string Email { get; init; } = "";
+
+        /// <summary>
+        /// The display name Supabase holds for this user (<c>user_metadata.display_name</c>), or empty
+        /// when it holds none.
+        ///
+        /// <para><b>This is the only piece of the player that survives a reinstall today.</b> The
+        /// roster, the decks and the profile are files under
+        /// <c>persistentDataPath</c> and go with the app; the entitlement ledger is server-side and
+        /// keyed on the authenticated subject. The name sat in neither camp — which is why a returning
+        /// player was asked to choose one again, on a screen that calls it permanent. Carrying it in
+        /// the token puts it on the same side of the line as the ledger, at the cost of one nested
+        /// read and no extra request.</para>
+        ///
+        /// <para><b>Display only, like <see cref="UserId"/> and <see cref="Email"/> — and here it
+        /// matters more.</b> The claim is unverified client-side, and the name a player presents in a
+        /// match is re-checked server-side on arrival regardless (VULN-002, <c>MatchGate</c>). Nothing
+        /// downstream may trust this string; it is a better default than an empty field, and that is
+        /// all it is.</para>
+        ///
+        /// <para>Empty is ordinary, not a failure: every account created before this was written has
+        /// no metadata name, and the caller's answer is to ask for one exactly as it always did.</para>
+        /// </summary>
+        public string DisplayName { get; init; } = "";
 
         /// <summary>True when this device believes it is signed in. Says nothing about whether the
         /// server will accept the token.</summary>

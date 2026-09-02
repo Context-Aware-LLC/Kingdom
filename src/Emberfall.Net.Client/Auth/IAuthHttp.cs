@@ -16,7 +16,13 @@ namespace Emberfall.Net.Client.Auth
     /// The one exception is <c>PUT /auth/v1/user</c> (NOR-246, setting a password on an already
     /// signed-in session), which is the one GoTrue endpoint that is update semantics rather than
     /// create — hence <see cref="PutJsonAsync"/>. The OAuth authorize step is a URL the player's
-    /// browser opens, not a request we issue, so there is deliberately no GET here.</para>
+    /// browser opens, not a request we issue, so no Supabase call needs a GET.</para>
+
+    /// <para><b><see cref="GetAsync"/> is not for Supabase at all</b> (2026-09-01, card-ownership
+    /// slice 3). It reads <c>GET /collection</c> off Emberfall's own match server, which is bearer-
+    /// authed with the same Supabase JWT and therefore wants the same transport — one implementation
+    /// per platform, not two. The seam is named for its first caller rather than its only one; the
+    /// contract below ("never throw") is what actually defines it.</para>
     ///
     /// <para><b>Never throw.</b> Report a failure to reach the server as
     /// <see cref="AuthHttpResponse.TransportFailure"/>. A thrown exception on the connect path would
@@ -33,6 +39,12 @@ namespace Emberfall.Net.Client.Auth
         Task<AuthHttpResponse> PutJsonAsync(
             string url,
             string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>A GET with headers and no body. Same never-throw contract as the others.</summary>
+        Task<AuthHttpResponse> GetAsync(
+            string url,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default);
     }

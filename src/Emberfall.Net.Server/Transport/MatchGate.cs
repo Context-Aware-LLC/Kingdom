@@ -55,6 +55,20 @@ namespace Emberfall.Net.Server.Transport
         private readonly IRankedMatchSink _rankedMatchSink;
         private readonly ITrainingEpisodeStore? _trainingEpisodes;
 
+        /// <summary>
+        /// The onboarding grant, run once per authenticated account on connect. Null when no
+        /// entitlement ledger is configured — a dev box with no economy, where ownership stays
+        /// unknown and nothing is granted.
+        /// </summary>
+        private readonly OnboardingGrantService? _onboarding;
+
+        /// <summary>
+        /// The ownership authority for L6 on a submitted deck. Null when no economy is configured,
+        /// which <see cref="AccountOwnedCounts.ForAsync"/> reads as "ownership unknown, do not
+        /// constrain" — the behaviour every box had before the ledger existed.
+        /// </summary>
+        private readonly IEntitlementLedger? _entitlementLedger;
+
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
         private readonly Dictionary<string, WaitingPlayer> _waiting =
@@ -74,7 +88,9 @@ namespace Emberfall.Net.Server.Transport
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
-            ITrainingEpisodeStore? trainingEpisodes = null)
+            ITrainingEpisodeStore? trainingEpisodes = null,
+            OnboardingGrantService? onboarding = null,
+            IEntitlementLedger? entitlementLedger = null)
             : this(
                 opts,
                 time,
@@ -89,7 +105,9 @@ namespace Emberfall.Net.Server.Transport
                 botPool,
                 ratingStore,
                 rankedMatchSink,
-                trainingEpisodes)
+                trainingEpisodes,
+                onboarding,
+                entitlementLedger)
         {
         }
 
@@ -100,7 +118,9 @@ namespace Emberfall.Net.Server.Transport
             IIdentityTokenVerifier? tokenVerifier = null, IAccountStore? accountStore = null,
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
-            ITrainingEpisodeStore? trainingEpisodes = null)
+            ITrainingEpisodeStore? trainingEpisodes = null,
+            OnboardingGrantService? onboarding = null,
+            IEntitlementLedger? entitlementLedger = null)
         {
             _opts = opts;
             _time = time;
@@ -116,6 +136,8 @@ namespace Emberfall.Net.Server.Transport
             _ratingStore = ratingStore;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;
+            _onboarding = onboarding;
+            _entitlementLedger = entitlementLedger;
         }
 
         public int LiveSessions
@@ -211,9 +233,9 @@ namespace Emberfall.Net.Server.Transport
             //    attaching to an account, and this ticket attaches none. See security.md §Latent.
             AccountId account;
             // The durable Account behind this seat, when one was resolved through the store. It carries
-            // the AccountKind that AccountOwnedCounts.For reads to gate L6 on a submitted deck (NOR-313);
-            // null on every path that never touches the store (guest, or authenticated with no store),
-            // which is the "ownership unknown, do not constrain" case DeckValidator L6 already ships.
+            // the AccountKind and the player_id that AccountOwnedCounts.ForAsync reads to gate L6 on a
+            // submitted deck (NOR-313); null on every path that never touches the store (guest, or
+            // authenticated with no store), which is the "ownership unknown, do not constrain" case.
             Account? deckOwnerAccount = null;
             if (!string.IsNullOrEmpty(hello.AuthToken))
             {
@@ -240,6 +262,28 @@ namespace Emberfall.Net.Server.Transport
                         acct.PlayerId, HashCredential(identity.Email));
                     account = AccountId.FromAuthenticatedAccount(acct.PlayerId);
                     deckOwnerAccount = acct;
+
+                    // The onboarding grant. Idempotent on signup:{playerId}, so this runs on EVERY
+                    // authenticated connect and lands exactly once — there is no due-check here to
+                    // race with a second socket from the same account.
+                    //
+                    // A failure must NOT cost the player their match. An ungranted account still
+                    // connects, still plays with the prebuilt deck, and is granted on the next
+                    // connect; closing the socket over an economy write would turn a database blip
+                    // into "the game won't start". Logged rather than swallowed, because a grant
+                    // failing every time is invisible otherwise.
+                    if (_onboarding is not null)
+                    {
+                        try
+                        {
+                            await _onboarding.EnsureGrantedAsync(acct, ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine("[onboarding] grant failed for player_id={0}: {1}",
+                                acct.PlayerId, ex.Message);
+                        }
+                    }
                 }
                 else
                 {
@@ -306,7 +350,8 @@ namespace Emberfall.Net.Server.Transport
                     await conn.PumpTask;
                     return;
                 }
-                var outcome = DeckSubmission.Validate(deckMsg, _db, AccountOwnedCounts.For(deckOwnerAccount));
+                var outcome = DeckSubmission.Validate(
+                    deckMsg, _db, await AccountOwnedCounts.ForAsync(deckOwnerAccount, _entitlementLedger, ct));
                 if (!outcome.Accepted)
                 {
                     Console.Error.WriteLine("[gate] refused player_id={0}: deck rejected: {1}",
@@ -637,15 +682,14 @@ namespace Emberfall.Net.Server.Transport
         }
 
         /// <summary>16 hex bytes (128 bits) of SHA-256. Same shape as <see cref="AccountId"/>'s value.
-        /// Used to hash the Supabase subject and email before they touch a log line (§4.5).</summary>
-        private static string HashCredential(string value)
-        {
-            Span<byte> digest = stackalloc byte[32];
-            SHA256.HashData(Encoding.UTF8.GetBytes(value), digest);
-            var sb = new StringBuilder(32);
-            for (int i = 0; i < 16; i++) sb.Append(digest[i].ToString("x2"));
-            return sb.ToString();
-        }
+        /// Used to hash the Supabase subject and email before they touch a log line (§4.5).
+        ///
+        /// <para><b>Moved to <see cref="CredentialHash"/> and delegated here (2026-09-01), not
+        /// copied.</b> <c>GET /collection</c> authenticates the same player through the same
+        /// <c>IAccountStore</c> lookup, and the subject hash IS the lookup key — so a second
+        /// implementation that ever drifted from this one would resolve one human to two accounts,
+        /// one holding their collection and one empty, silently.</para></summary>
+        private static string HashCredential(string value) => CredentialHash.Of(value);
 
         /// <summary>A WebSocket close reason is capped at 123 UTF-8 bytes (RFC 6455). A validator reason
         /// naming a card can approach that, so it is truncated defensively — the close still carries the

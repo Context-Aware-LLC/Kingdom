@@ -24,7 +24,7 @@
                     <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
                     <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
                 </ui:VisualElement>
-                <ui:ScrollView name="shop-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="shop-scroll">
+                <ui:VisualElement name="shop-content" class="shop-content">
                     <ui:VisualElement name="shop-section-packs" class="shop-section">
                         <ui:VisualElement name="shop-pack-list" class="shop-pack-list"/>
                     </ui:VisualElement>
@@ -32,7 +32,7 @@
                         <ui:Label text="Gem purchases are coming soon." class="shop-section__help"/>
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
-                </ui:ScrollView>
+                </ui:VisualElement>
                 <ui:Label name="shop-status" text="" class="shop-status shop-status--empty"/>
             </ui:VisualElement>
         </ui:VisualElement>

@@ -172,6 +172,9 @@ namespace Emberfall.Session
             // The Supabase session is stored per local account (EF-074e), so a switch that left the
             // provider cached would hand seat two seat one's sign-in.
             AuthGateway.Invalidate();
+            // The sync writes into PlayerAccount.Local, which is scoped to the signed-in account — a
+            // gateway that outlived a switch would write one player's collection into another's folder.
+            CollectionGateway.Invalidate();
         }
 
         /// <summary>
@@ -270,6 +273,90 @@ namespace Emberfall.Session
             PlayerPrefs.SetString(ActivePrefsKey, accountId);
             PlayerPrefs.Save();
             Invalidate();
+        }
+
+        /// <summary>
+        /// Point this device's registry at the identity that just signed in, and make that account
+        /// the active one. Returns the account now in force.
+        ///
+        /// <para><b>This is the wire that was missing, and its absence is what made a reinstall look
+        /// like data loss.</b> The server has always been portable — <c>MatchGate</c> verifies the
+        /// Supabase JWT, hashes the subject and resolves a stable <c>player_id</c> that the entitlement
+        /// ledger is keyed on, so what a player OWNS already survives anything. The collection did not:
+        /// <see cref="Active"/> resolved to an id minted on the device, with nothing anywhere
+        /// connecting it to the signed-in identity. Same email, same server account, different folder.
+        /// Measured on device 2026-08-29 — <c>ad7278eb…</c> before an uninstall and <c>44f5749f…</c>
+        /// after, with the name and roster stranded in the first.</para>
+        ///
+        /// <para><b>It binds by POINTER, never by rename</b> — see <see cref="LocalAccount.AuthUserId"/>.
+        /// Scoping the folder by the authenticated id would be tidier and would relocate a collection
+        /// that is the only copy in existence, which is the same class of damage a changed
+        /// <c>productName</c> does.</para>
+        ///
+        /// <para><b>What it cannot do.</b> Binding makes the folder findable again; it does not put
+        /// files back into one the OS deleted with the app. On a reinstalled device this lands on an
+        /// empty scope, and the player's roster and decks are genuinely gone — only the ledger and
+        /// (via <c>AuthSession.DisplayName</c>) their name come back. Cloud save is a separate thing
+        /// and this is not a substitute for it.</para>
+        ///
+        /// <para>Safe to call on every sign-in: the ordinary case is an account that already carries
+        /// this identity, which writes nothing.</para>
+        /// </summary>
+        /// <param name="authUserId">The signed-in Supabase user id. An empty one is a no-op.</param>
+        public static LocalAccount BindToIdentity(string authUserId)
+        {
+            if (string.IsNullOrEmpty(authUserId)) return Active;
+
+            // A pinned process shares the prefs store with the other seat, so writing the active
+            // pointer here would move THEIR account, not this one — the same trap SwitchTo refuses
+            // for. Binding the row is still correct and still useful, so do that half and skip the
+            // switch rather than refusing outright: a two-seat test rig must not be unable to sign in.
+            bool canSwitch = !IsPinnedByArgument;
+
+            var all = All();
+            var plan = LocalAccountRoster.PlanBinding(all, Active.Id, authUserId, out var target);
+
+            switch (plan)
+            {
+                case LocalAccountRoster.BindingPlan.SwitchToExisting:
+                    if (target!.Id == Active.Id) return Active;
+                    Debug.Log($"[DeviceAccounts] this identity owns account '{target.Id}'; switching to it.");
+                    if (canSwitch) SwitchTo(target.Id);
+                    return canSwitch ? Active : target;
+
+                case LocalAccountRoster.BindingPlan.AdoptCurrent:
+                    Debug.Log($"[DeviceAccounts] binding account '{target!.Id}' to the signed-in identity.");
+                    Store().Save(target.ClaimedBy(authUserId));
+                    Invalidate();
+                    return Active;
+
+                default:
+                    // Every account here belongs to somebody else. Minting is the caller's job in the
+                    // core assembly and this one's here, because only Unity has a GUID to spend.
+                    var minted = Create().ClaimedBy(authUserId);
+                    Store().Save(minted);
+                    Debug.Log($"[DeviceAccounts] no account on this device belongs to the signed-in " +
+                              $"identity; minted '{minted.Id}'.");
+                    if (canSwitch) SwitchTo(minted.Id);
+                    return canSwitch ? Active : minted;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="BindToIdentity"/>, guaranteed not to throw. A corrupt registry, or a claim race
+        /// with the other seat, must not be able to turn a successful sign-in into a failed launch —
+        /// the honest degradation is the unbound account the device was already playing, which is
+        /// precisely today's behaviour.
+        /// </summary>
+        public static void TryBindToIdentity(string authUserId)
+        {
+            try { BindToIdentity(authUserId); }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[DeviceAccounts] could not bind this device to the signed-in " +
+                                 $"identity ({ex.GetType().Name}: {ex.Message}); staying on the " +
+                                 "current account.");
+            }
         }
 
         /// <summary>

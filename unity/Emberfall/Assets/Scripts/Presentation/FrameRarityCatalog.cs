@@ -90,6 +90,11 @@ namespace Emberfall.Presentation
         public const float NameCenterX = 0.5f;
         public const float NameCenterY = 0.612305f; // 1254
         public const float NameEm      = 107f / MasterH;
+        // Auto-fit floor for the four shipped names that exceed the title band at NameEm. The
+        // widest, "Cogsworth, The Grand Rebuilder", needs 78.3px in the shipping Alfa Slab face;
+        // 72px leaves room for TMP's SDF padding while staying at the same readable floor as body
+        // copy. Ellipsis is only eligible after this floor is exhausted.
+        public const float NameEmFloor = 72f / MasterH;
 
         // Rules text box. NOTE this is NOT the parchment's centre — the parchment runs y 1369..1905
         // (centre 1637) but the two stat sockets bite its bottom corners from y 1790 up, so the

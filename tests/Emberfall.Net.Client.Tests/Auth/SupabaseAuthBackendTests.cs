@@ -172,5 +172,109 @@ namespace Emberfall.Net.Client.Tests.Auth
             Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
             Assert.That(http.Requests, Is.Empty);
         }
+
+        // ---- the returning player ------------------------------------------------------
+
+        [Test]
+        public async Task A_password_is_traded_for_a_session_at_the_password_grant()
+        {
+            // The half that was missing: SetPasswordAsync has existed since NOR-246 and nothing
+            // could ever spend what it set.
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "a-password");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(result.Session.UserId, Is.EqualTo("user-1"));
+            Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/token?grant_type=password"));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"email\":\"player@example.com\""));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"password\":\"a-password\""));
+        }
+
+        [Test]
+        public async Task A_wrong_password_is_rejected_in_Supabase_own_words()
+        {
+            // Deliberately NOT sharpened into "wrong password" or "no such account": a form that can
+            // tell those apart is an account-enumeration oracle.
+            var http = new FakeAuthHttp().Reply(400,
+                "{\"error\":\"invalid_grant\",\"error_description\":\"Invalid login credentials\"}");
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "wrong");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(result.Detail, Is.EqualTo("Invalid login credentials"));
+        }
+
+        [Test]
+        public async Task An_empty_password_makes_no_request()
+        {
+            var http = new FakeAuthHttp();
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(http.Requests, Is.Empty);
+        }
+
+        // ---- the display name, on the identity rather than the install -----------------
+
+        [Test]
+        public async Task A_display_name_is_written_into_user_metadata()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{\"id\":\"user-1\"}");
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SetDisplayNameAsync("user-access-token", "MrSoNord");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/user"));
+            // GoTrue writes user_metadata from the "data" member, not from a "user_metadata" one.
+            Assert.That(http.Requests[0].Body, Is.EqualTo("{\"data\":{\"display_name\":\"MrSoNord\"}}"));
+        }
+
+        [Test]
+        public async Task A_signed_in_session_carries_the_name_the_identity_holds()
+        {
+            // The whole point: this is what a returning player gets back on a device that has
+            // nothing left on disk.
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUserNamed("user-1", "player@example.com", "MrSoNord"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "a-password");
+
+            Assert.That(result.Session.DisplayName, Is.EqualTo("MrSoNord"));
+        }
+
+        [Test]
+        public async Task A_token_with_no_metadata_name_signs_in_with_an_empty_one()
+        {
+            // Every account made before names were written here. It must degrade to "ask", never to
+            // a failed sign-in.
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "a-password");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(result.Session.DisplayName, Is.Empty);
+        }
+
+        [Test]
+        public async Task Setting_a_display_name_with_no_session_makes_no_request()
+        {
+            var http = new FakeAuthHttp();
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SetDisplayNameAsync("", "MrSoNord");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(http.Requests, Is.Empty);
+        }
     }
 }

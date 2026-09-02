@@ -113,7 +113,7 @@ namespace Emberfall.Net.Server.Accounts
 
                 // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
                 await using var sel = new NpgsqlCommand(
-                    "select player_id, credential_kind, credential_hash, email, created_at, kind from account " +
+                    "select player_id, credential_kind, credential_hash, email, created_at, kind, onboarded from account " +
                     "where credential_kind=$1 and credential_hash=$2", conn);
                 sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
                 sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
@@ -128,7 +128,7 @@ namespace Emberfall.Net.Server.Accounts
             => WithConnectionAsync(async conn =>
             {
                 await using var cmd = new NpgsqlCommand(
-                    "select player_id, credential_kind, credential_hash, email, created_at, kind from account where player_id=$1", conn);
+                    "select player_id, credential_kind, credential_hash, email, created_at, kind, onboarded from account where player_id=$1", conn);
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
                 await using var r = await cmd.ExecuteReaderAsync(ct);
                 if (!await r.ReadAsync(ct)) return (Account?)null;
@@ -150,11 +150,29 @@ namespace Emberfall.Net.Server.Accounts
             return await FindByPlayerIdAsync(playerId, ct);
         }
 
+        public async Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default)
+        {
+            // No `and onboarded = false` guard: the update is already one-way (nothing sets it back)
+            // and idempotent, and adding the guard would make a second call report "no such account"
+            // for a player who is simply already onboarded — the caller cannot tell those apart.
+            bool found = await WithConnectionAsync(async conn =>
+            {
+                await using var upd = new NpgsqlCommand(
+                    "update account set onboarded=true where player_id=$1", conn);
+                upd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                return await upd.ExecuteNonQueryAsync(ct) != 0;
+            }, ct);
+
+            if (!found) return null;
+            return await FindByPlayerIdAsync(playerId, ct);
+        }
+
         private static Account ReadAccount(NpgsqlDataReader r)
             => new Account(r.GetString(0), r.GetString(1), r.GetString(2),
                 new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(4), DateTimeKind.Utc)),
                 r.IsDBNull(3) ? null : r.GetString(3),
-                KindFromDb(r.IsDBNull(5) ? "standard" : r.GetString(5)));
+                KindFromDb(r.IsDBNull(5) ? "standard" : r.GetString(5)),
+                !r.IsDBNull(6) && r.GetBoolean(6));
 
         private static string KindToDb(AccountKind kind) => kind switch
         {

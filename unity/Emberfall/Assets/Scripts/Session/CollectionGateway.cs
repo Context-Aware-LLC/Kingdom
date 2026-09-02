@@ -1,0 +1,102 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Emberfall.Core.Collection;
+using Emberfall.Net.Client.Collection;
+using UnityEngine;
+
+namespace Emberfall.Session
+{
+    /// <summary>
+    /// The game's one <see cref="HttpCollectionGateway"/>, and the only place a server answer is
+    /// allowed to overwrite this device's ownership record.
+    ///
+    /// <para><b>What this makes true.</b> The entitlement ledger has been the authority on what a
+    /// player owns since 2026-09-01, keyed on the authenticated <c>player_id</c>, and nothing on the
+    /// client could read it — <c>CollectionController</c> and <c>CharacterRosterController</c> both go
+    /// to local disk. So a player who uninstalled, reinstalled and signed back into the right identity
+    /// landed on an empty local scope, which renders as <i>owns everything</i>. Their cards were never
+    /// lost; there was no wire from the ledger to the screen. This is the client end of that wire
+    /// (spec <c>docs/dev-docs/specs/card-ownership.md</c>, slice 3).</para>
+    ///
+    /// <para><b><c>owned-cards.json</c> is a CACHE now, not the record.</b> The record is the ledger.
+    /// The three states the file can be in are unchanged and still mean what they always did —
+    /// absent is "unknown, do not constrain", present-and-empty is "owns nothing" — which is why
+    /// <see cref="SyncAsync"/> writes on exactly one outcome and leaves the file untouched on every
+    /// other. Writing an empty record because the network was down is the one bug in this file worth
+    /// guarding: it turns every deck on the device into a draft and looks like a server decision.</para>
+    ///
+    /// <para><b>Composed on first touch, like <see cref="AuthGateway"/>, and invalidated with it.</b>
+    /// The write lands in <c>PlayerAccount.Local</c>, which is scoped to the signed-in local account,
+    /// so a stale gateway after an account switch would write one player's collection into another's
+    /// folder.</para>
+    /// </summary>
+    public static class CollectionGateway
+    {
+        /// <summary>
+        /// The match server's origin. Same host as <c>MainMenuController.leaderboardUrl</c>,
+        /// <c>NetworkedGameBootstrap.serverUrl</c> and <c>B3TransportVerify.Live</c> — a fourth copy
+        /// rather than a shared constant because those three are scene-serialized defaults and this
+        /// one is not, so unifying them is a change to what a built scene contains, not a refactor.
+        ///
+        /// <para>Settable so an editor tool or a test can point at a local server; there is
+        /// deliberately no UI for it.</para>
+        /// </summary>
+        public static string BaseUrl { get; set; } = "https://emberfall.fly.dev";
+
+        /// <summary>How long a sign-in will wait for the collection before going on without it. The
+        /// player is already authenticated at this point, so the cost of giving up is a stale cache
+        /// and one more sync later — never a failed sign-in.</summary>
+        private const int TimeoutSeconds = 15;
+
+        private static HttpCollectionGateway _gateway;
+
+        private static HttpCollectionGateway Gateway =>
+            _gateway ??= new HttpCollectionGateway(BaseUrl, new UnityWebRequestAuthHttp(TimeoutSeconds));
+
+        /// <summary>Drop the cached gateway. Called from <see cref="DeviceAccounts.Invalidate"/>
+        /// alongside <see cref="AuthGateway.Invalidate"/>.</summary>
+        public static void Invalidate() => _gateway = null;
+
+        /// <summary>
+        /// Pull this identity's collection down and cache it. Returns what happened, for a log line;
+        /// callers do not need to branch on it.
+        ///
+        /// <para><b>Never throws, and never leaves a half-written record.</b> A sign-in must not fail
+        /// because a collection did not arrive — the player is authenticated either way, and the
+        /// screens degrade to whatever the device already had, which is the state they were in before
+        /// this existed.</para>
+        /// </summary>
+        public static async Task<CollectionSyncStatus> SyncAsync(
+            string accessToken, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                CollectionSnapshot snapshot = await Gateway.FetchAsync(accessToken, cancellationToken);
+
+                if (!snapshot.ShouldReplaceCache)
+                {
+                    // Deliberately not a warning for Unconstrained: a superuser having no cached list
+                    // is the correct outcome, not a degraded one.
+                    if (snapshot.Status != CollectionSyncStatus.Unconstrained)
+                        Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
+                                         "Keeping whatever this device already had.");
+                    return snapshot.Status;
+                }
+
+                PlayerAccount.Local.SaveOwnedCards(snapshot.Cards);
+                Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
+                          $"for the signed-in account.");
+                return snapshot.Status;
+            }
+            catch (Exception ex)
+            {
+                // The gateway is written not to throw, and the sign-in path must not be the place that
+                // finds out it was wrong about that.
+                Debug.LogWarning($"[Collection] sync threw ({ex.GetType().Name}: {ex.Message}); " +
+                                 "keeping the local record.");
+                return CollectionSyncStatus.Offline;
+            }
+        }
+    }
+}

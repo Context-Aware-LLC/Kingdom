@@ -46,13 +46,37 @@ alter table account add column if not exists email text;
 -- new row to 'standard', same idempotent-alter posture as email above.
 alter table account add column if not exists kind text not null default 'standard';
 
+-- Has this player ever completed onboarding? (Sam, 2026-09-01.) ONE-WAY: false → true, never back.
+--
+-- It exists to kill an ambiguity the client cannot otherwise resolve. A returning player's roster is
+-- read from the server, and an empty answer means either "brand new, send them to character
+-- creation" or "the read failed" — indistinguishable, and guessing wrong walks a player with an
+-- existing collection through creation a second time. With this flag the client has three states
+-- instead of two, and only one of them creates anything.
+--
+-- **The flag only works if ABSENT cannot decode to false.** A missing field defaulting to false
+-- reproduces the exact bug it was added to remove, because a failed read then reads as a new player.
+-- Whatever carries this to the client keeps "no answer" as its own value — the same rule
+-- CollectionSnapshot.ShouldReplaceCache enforces for ownership, and for the same reason.
+--
+-- Server-side deliberately: a client-local "seen it" bit dies with the app, so a reinstall would
+-- replay onboarding for a player who already owns cards.
+alter table account add column if not exists onboarded boolean not null default false;
+
 -- The append-only grant log. external_txn_id is the idempotency anchor (primary key ⇒ UNIQUE); qty is
 -- signed so a refund is simply a negative grant carrying its OWN transaction id (a refund's id differs
 -- from the purchase's, so it does not conflict with it and nets the balance correctly).
 create table if not exists entitlement_grant (
   external_txn_id  text        primary key,  -- globally-unique; a replayed receipt conflicts here
   player_id        text        not null,
-  item             text        not null,     -- pack_core | gold | dust | card_<id> | ...
+  -- Item ids are OWNED BY THE CODE, not by this comment; the constants are canonical and this line
+  -- has drifted from them once already (it said card_<id> while the code wrote card:). Shapes today:
+  --   card:<numeric card id>        BoosterPackGrantService.CardItemPrefix
+  --   pack.<expansion>              BoosterPack.Id — retail, saleable
+  --   pack.<expansion>.starter      BoosterPack.Id with StarterSku — granted at signup, never sold
+  --   pack_opened:<pack id>         completion marker; pack_seed:<pack id> the replayable roll seed
+  --   gold | gems | shards          EconomyItems
+  item             text        not null,
   qty              bigint      not null,      -- signed: > 0 grant, < 0 refund/clawback
   source           text        not null,      -- play_billing | apple | web | promo | signup | refund | ...
   created_at       timestamptz not null
@@ -105,3 +129,44 @@ create index if not exists ladder_match_p1_idx on ladder_match (p1_player_id, en
 -- no rows; the game reads the deliberately narrow Kestrel projection instead.
 alter table ladder_player enable row level security;
 alter table ladder_match enable row level security;
+
+-- A player's characters. One row per character; player_id is the account's stable id.
+--
+-- The pairing is a PERMANENT identity decision with no legal repair (Sam, 2026-07-26), so nothing
+-- updates primary_class or secondary_class — only default_deck_id and name are ever rewritten.
+-- No foreign key to account, same reasoning as entitlement_grant: insert ORDER must not be a
+-- correctness condition.
+create table if not exists character (
+  character_id     text        primary key,
+  player_id        text        not null,
+  name             text        not null,
+  primary_class    text        not null,
+  secondary_class  text        not null,
+  default_deck_id  text        not null default '',
+  created_at       timestamptz not null,
+  updated_at       timestamptz not null
+);
+
+create index if not exists character_player_idx on character (player_id);
+
+-- A player's decks. body is the deck as canonical JSON (CollectionJson.WriteDecks' element shape),
+-- NOT a row per card.
+--
+-- WHY A BLOB. Nothing server-side ever queries inside a decklist: balance is measured in house by
+-- ML bot self-play, not by mining player decks (Sam, 2026-09-01). Rows would be structure with no
+-- consumer, and CollectionJson already round-trips this shape on both sides of the wire. If a
+-- metagame projection is ever wanted, add it beside this — do not shred the blob.
+--
+-- AN ILLEGAL DECK IS STORED. Drafts are a legitimate named state; validation happens on QUEUE.
+-- Refusing a write would delete a player's work-in-progress the moment a balance patch or a spent
+-- card made it illegal.
+create table if not exists deck (
+  deck_id      text        primary key,
+  player_id    text        not null,
+  character_id text        not null,
+  body         text        not null,
+  created_at   timestamptz not null,
+  updated_at   timestamptz not null
+);
+
+create index if not exists deck_player_idx on deck (player_id);

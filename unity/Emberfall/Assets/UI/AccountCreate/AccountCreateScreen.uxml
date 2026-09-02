@@ -49,7 +49,20 @@
                     <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
+                    <!-- THE FORK, and it is the first thing a launch with no session sees. Both
+                         branches end at the same Supabase identity, so this is not two auth systems;
+                         what it changes is what happens AFTER. A returning player is asked for a
+                         password rather than sent to their inbox, is never asked to choose a
+                         "permanent" display name a second time, and has this device's collection
+                         scope bound to the account they just proved they own. Before it existed
+                         there was no way to say "I have been here before", so every launch was
+                         treated as a first one. -->
+                    <ui:VisualElement name="signin-choice" class="mm-modal__actions">
+                        <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button mm-modal__button--cta"/>
+                        <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button"/>
+                    </ui:VisualElement>
                     <ui:TextField name="signin-email" class="mm-modal__field"/>
+                    <ui:TextField name="signin-password" password="true" class="mm-modal__field" style="display: none;"/>
                     <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
                     <ui:VisualElement class="mm-modal__actions">
                         <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
@@ -60,6 +73,10 @@
             <ui:VisualElement class="mm-row mm-row--secondary">
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
                 <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
+                <!-- The password was always OPTIONAL (NOR-246), so a returning player may well not
+                     have one. This is their way through and it must never be hidden on the password
+                     step, or that step is a dead end for exactly the players it was built for. -->
+                <ui:Button name="btn-signin-code-instead" text="Email me a code instead" class="mm-signin__resend" style="display: none;"/>
                 <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
                 <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
             </ui:VisualElement>

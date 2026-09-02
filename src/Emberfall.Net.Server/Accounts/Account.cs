@@ -36,5 +36,15 @@ namespace Emberfall.Net.Server.Accounts
         /// Supabase can send a magic link if the device is lost. Null for pre-EF-074c accounts and
         /// for guest accounts that never presented an auth token.</summary>
         string? Email = null,
-        AccountKind Kind = AccountKind.Standard);
+        AccountKind Kind = AccountKind.Standard,
+        /// <summary>Has this player ever completed onboarding? One-way — see
+        /// <c>IAccountStore.MarkOnboardedAsync</c>. It exists so a client can tell "brand new player"
+        /// from "the read failed" when a roster comes back empty; those are the same absence
+        /// otherwise, and creating a second time is the damaging reading.
+        ///
+        /// <para><b>A default of false is correct HERE and dangerous ON THE WIRE.</b> Server-side a
+        /// new account genuinely has not onboarded. But whatever projects this to a client must keep
+        /// "no answer" distinct from false, or a failed read reads as a new player and reproduces the
+        /// bug the flag removes.</para></summary>
+        bool Onboarded = false);
 }

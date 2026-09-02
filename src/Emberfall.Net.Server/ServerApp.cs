@@ -1,12 +1,17 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Emberfall.Core.Collection;
+using Emberfall.Core.Contracts;
 using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Data;
@@ -78,6 +83,32 @@ namespace Emberfall.Net.Server
         public IAccountStore? AccountStore { get; init; }
 
         /// <summary>
+        /// The characters-and-decks store (Task 2) that <c>GET /roster</c> reads. Null → the route
+        /// answers <see cref="Accounts.RosterResultStatus.Unavailable"/> rather than an empty roster,
+        /// same absence-is-visible posture as <see cref="AccountStore"/>. Populated from
+        /// <c>EMBERFALL_ACCOUNTS_DB</c> in production — the same connection string as
+        /// <see cref="AccountStore"/>, since <c>character</c> and <c>deck</c> are rows in that same
+        /// database; injected directly in tests.
+        /// </summary>
+        public IPlayerDataStore? PlayerDataStore { get; init; }
+
+        /// <summary>
+        /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
+        /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
+        /// keeps handing L6 the "do not constrain" null for standard accounts, which is a normal and
+        /// supported dev-box configuration. Populated from <c>EMBERFALL_ENTITLEMENTS_DB</c> in
+        /// production; injected directly in tests.
+        ///
+        /// <para><b>It shares the accounts database by default, and should.</b> <c>account</c> and
+        /// <c>entitlement_grant</c> are one canonical <c>schema.sql</c> and one
+        /// <see cref="AccountsSchema.Ddl"/>, and the ledger is keyed on <c>Account.PlayerId</c> —
+        /// pointing this at a different connection string than <see cref="AccountStore"/> separates an
+        /// identity from its own entitlements, so <c>FromEnvironment</c> falls back to the accounts
+        /// connection rather than silently leaving ownership unknown when only one variable is set.</para>
+        /// </summary>
+        public IEntitlementLedger? EntitlementLedger { get; init; }
+
+        /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
         /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
         /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
@@ -119,9 +150,26 @@ namespace Emberfall.Net.Server
             IAccountStore? accountStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAccountStore(accountsDb!, new SystemTimeSource());
+            // GET /roster's store — same connection as accounts, since character/deck are rows in
+            // that same database. Null-when-unconfigured mirrors accountStore exactly.
+            IPlayerDataStore? playerDataStore = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresPlayerDataStore(accountsDb!);
             IRatingStore? ratingStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresRatingStore(accountsDb!);
+
+            // The entitlement ledger — the write path that makes an unowned card a real thing. It
+            // falls back to the accounts connection because the ledger is keyed on Account.PlayerId
+            // and both tables come from one schema.sql: a box that configured accounts and not this
+            // would otherwise run authenticated players with their ownership permanently unknown,
+            // which looks exactly like owning everything. The separate variable stays accepted so a
+            // deployment CAN split them deliberately.
+            string? entitlementsDb = Environment.GetEnvironmentVariable("EMBERFALL_ENTITLEMENTS_DB");
+            if (string.IsNullOrWhiteSpace(entitlementsDb)) entitlementsDb = accountsDb;
+            IEntitlementLedger? entitlementLedger = string.IsNullOrWhiteSpace(entitlementsDb)
+                ? null
+                : new PostgresEntitlementLedger(entitlementsDb!);
 
             return new ServerConfig
             {
@@ -133,6 +181,8 @@ namespace Emberfall.Net.Server
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
+                PlayerDataStore = playerDataStore,
+                EntitlementLedger = entitlementLedger,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
@@ -188,8 +238,20 @@ namespace Emberfall.Net.Server
 
             // NOR-254: the account store's schema is never applied on its own — mirror the drain's
             // startup-schema pattern so EMBERFALL_ACCOUNTS_DB is safe to set without a manual DDL step.
-            if (cfg.AccountStore is PostgresAccountStore postgresAccountStore)
-                builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(postgresAccountStore));
+            //
+            // ONE initializer, not one per store: both durable adapters run the identical
+            // AccountsSchema.Ddl, because `account` and `entitlement_grant` are a single canonical
+            // schema.sql. Registering both would execute the same idempotent DDL twice for nothing.
+            // Fully qualified: this file does not import System.Threading.Tasks and an unqualified
+            // `Task` binds to something else in scope here.
+            Func<CancellationToken, System.Threading.Tasks.Task>? ensureAccountsSchema =
+                cfg.AccountStore is PostgresAccountStore postgresAccountStore
+                    ? postgresAccountStore.EnsureSchemaAsync
+                    : cfg.EntitlementLedger is PostgresEntitlementLedger postgresLedger
+                        ? postgresLedger.EnsureSchemaAsync
+                        : null;
+            if (ensureAccountsSchema is not null)
+                builder.Services.AddSingleton<IHostedService>(new AccountSchemaInitializer(ensureAccountsSchema));
 
             string cardsDir = cfg.CardsDir ?? FindRepoCardData();
             var db = FileCardDatabase.LoadDirectory(cardsDir);
@@ -237,6 +299,19 @@ namespace Emberfall.Net.Server
                     ResolveBuildRevision(),
                     cfg.Options.WireContractVersion);
 
+            // The onboarding grant needs a ledger to write to; without one there is no economy on this
+            // box and nothing to grant into, so it stays null and every connect behaves as it did.
+            OnboardingGrantService? onboarding = cfg.EntitlementLedger is null
+                ? null
+                : new OnboardingGrantService(cfg.EntitlementLedger, db, time);
+
+            // Only GET /collection reads this today, and only for the wallet half of its reply. It is
+            // constructed here rather than inside the route so that slice 5's purchase endpoints get
+            // the same instance rather than minting a second one over the same ledger.
+            EconomyService? economy = cfg.EntitlementLedger is null
+                ? null
+                : new EconomyService(cfg.EntitlementLedger, time);
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
@@ -251,7 +326,9 @@ namespace Emberfall.Net.Server
                 botPool,
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
                 ratingWorker,
-                trainingEpisodes);
+                trainingEpisodes,
+                onboarding,
+                cfg.EntitlementLedger);
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -280,6 +357,257 @@ namespace Emberfall.Net.Server
                     ratingSystem = "elo",
                     entries,
                 });
+            });
+
+            // GET /session — the login handshake the client boot blocks on. Turns a locally-stored
+            // token into a verified account identity plus the onboarded flag. See SessionEndpoint
+            // for why the login gate's own name does not already guarantee this.
+            //
+            // Cache-Control: no-store. A session is per-identity and its onboarded flag changes
+            // underneath it; a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/session", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                SessionResult result = await SessionEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                return Results.Json(new
+                {
+                    // "ready" | "unauthenticated" | "unavailable". The client branches on this
+                    // string and on nothing else — onboarded is only meaningful under "ready".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    email = result.Email,
+                    onboarded = result.Onboarded,
+                }, statusCode: result.HttpStatus);
+            });
+
+            // GET /roster — the characters and decks read down after the handshake. Same auth
+            // pairing as /session; does NOT fire the onboarding grant, which /session already owns.
+            //
+            // Cache-Control: no-store. A roster is per-identity and changes on every character or
+            // deck save; a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/roster", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                RosterResult result = await RosterEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // "known" | "unauthenticated" | "unavailable". The client branches on this string,
+                // never on the character/deck count — see RosterResultStatus.Known.
+                string status = result.Status.ToString().ToLowerInvariant();
+
+                // characters and decks are OMITTED on anything but "known". RosterResult falls back
+                // to PlayerRoster.Empty as a placeholder, and serialising that placeholder would ship
+                // a well-formed empty roster alongside a 401 or a 503 — "I could not find out" made
+                // readable as "this player has nothing", which is the exact confusion this whole
+                // handshake exists to prevent. An absent field cannot be misread as an empty one.
+                if (result.Status != RosterResultStatus.Known)
+                    return Results.Json(new { status }, statusCode: result.HttpStatus);
+
+                return Results.Json(new
+                {
+                    status,
+                    characters = CollectionJson.WriteCharacters(result.Roster.Characters),
+                    decks = CollectionJson.WriteDecks(result.Roster.Decks),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /characters — creates a character. Same auth pairing as /session and /roster;
+            // does NOT fire the onboarding grant and does NOT set onboarded — see
+            // CharacterCreateEndpoint for why that would strand a player who drops before the grant.
+            app.MapPost("/characters", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                // AUTH BEFORE PARSE. This route is the only one that has to read a body before it
+                // can call its endpoint, and parsing first meant an unauthenticated caller with a bad
+                // body got 400 where every other route gives 401 — and that JsonDocument.ParseAsync
+                // ran over an unbounded body for a caller nobody had authenticated yet.
+                if (!await CharacterCreateEndpoint.IsAuthenticatedAsync(
+                        bearer, cfg.TokenVerifier, context.RequestAborted))
+                {
+                    return Results.Json(
+                        new { status = CharacterCreateStatus.Unauthenticated.ToString().ToLowerInvariant() },
+                        statusCode: new CharacterCreateResult(CharacterCreateStatus.Unauthenticated).HttpStatus);
+                }
+
+                string characterId, name;
+                CardClass primary, secondary;
+                try
+                {
+                    using var body = await JsonDocument.ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted);
+                    var root = body.RootElement;
+                    characterId = root.GetProperty("characterId").GetString() ?? "";
+                    name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "";
+                    if (!CharacterCreateEndpoint.TryParseClass(root.GetProperty("primaryClass").GetString(), out primary) ||
+                        !CharacterCreateEndpoint.TryParseClass(root.GetProperty("secondaryClass").GetString(), out secondary))
+                    {
+                        return Results.Json(new { error = "invalid class" }, statusCode: StatusCodes.Status400BadRequest);
+                    }
+                }
+                catch (Exception ex) when (ex is JsonException || ex is KeyNotFoundException || ex is InvalidOperationException)
+                {
+                    return Results.Json(new { error = "malformed body" }, statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                CharacterCreateResult result = await CharacterCreateEndpoint.CreateAsync(
+                    bearer, characterId, name, primary, secondary,
+                    cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "created" | "unauthenticated" | "unavailable" | "invalidpairing" |
+                    // "invalidid" | "duplicateid".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS ARE
+            // STORED, NEVER REFUSED for their CONTENTS — see DeckWriteEndpoint for why an illegal
+            // deck is still saved. What IS refused is a write that cannot be ATTRIBUTED: a body that
+            // will not parse (400, Malformed), an empty/whitespace deck id (400, InvalidId), or an
+            // id another player already owns (409, DuplicateId).
+            app.MapPut("/decks/{id}", async (HttpContext context, string id) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                // AUTH BEFORE READ. Same defect, same fix as POST /characters (see
+                // CharacterCreateEndpoint.IsAuthenticatedAsync): reading the whole body before
+                // authenticating lets an unauthenticated caller make the server buffer an unbounded
+                // body for free.
+                if (!await DeckWriteEndpoint.IsAuthenticatedAsync(
+                        bearer, cfg.TokenVerifier, context.RequestAborted))
+                {
+                    return Results.Json(
+                        new { status = DeckWriteStatus.Unauthenticated.ToString().ToLowerInvariant() },
+                        statusCode: new DeckWriteResult(DeckWriteStatus.Unauthenticated).HttpStatus);
+                }
+
+                using var reader = new StreamReader(context.Request.Body);
+                string body = await reader.ReadToEndAsync();
+
+                DeckWriteResult result = await DeckWriteEndpoint.SaveAsync(
+                    bearer, id, body, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
+                    context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "saved" | "unauthenticated" | "unavailable" | "malformed" | "invalidid" |
+                    // "duplicateid".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // DELETE /decks/{id} — remove a deck. Same auth pairing as /session and /roster. One
+            // record, so delete means delete — see PlayerRoster and DeckWriteEndpoint.
+            app.MapDelete("/decks/{id}", async (HttpContext context, string id) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                DeckWriteResult result = await DeckWriteEndpoint.DeleteAsync(
+                    bearer, id, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
+                    context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "deleted" | "notfound" | "unauthenticated" | "unavailable" | "invalidid".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /onboarding/complete — the terminal write of the onboarding flow. The ONLY route
+            // that sets onboarded; runs at the end, after the entitlement grant has landed. Same
+            // auth pairing as /session and /roster. Idempotent — a retried call after a dropped
+            // response still answers 200, never an error.
+            app.MapPost("/onboarding/complete", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                OnboardingCompleteResult result = await OnboardingCompleteEndpoint.CompleteAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "completed" | "unauthenticated" | "unavailable".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // GET /collection — what the signed-in player owns, read down from the entitlement
+            // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
+            // authority since 2026-09-01 and the client had no way to read it, so a player who signed
+            // back into the right identity still landed on an empty local scope. See
+            // CollectionEndpoint for the auth pairing and why it fires the onboarding grant.
+            //
+            // Cache-Control: no-store. A collection is per-identity and changes on every pack open;
+            // a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/collection", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                CollectionResult result = await CollectionEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.EntitlementLedger,
+                    economy, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // The card list is an OBJECT keyed by card id, not an array of pairs: the client's
+                // reader (AuthJson.TryReadNestedObject) reads a flat object of scalars and skips
+                // nested structure whole, so an array of {id, copies} would decode to nothing.
+                var cards = new Dictionary<string, long>(result.Cards.Count);
+                foreach (var row in result.Cards)
+                    cards[row.Key.ToString(CultureInfo.InvariantCulture)] = row.Value;
+
+                return Results.Json(new
+                {
+                    // "known" | "unconstrained" | "unauthenticated" | "unavailable" — the client
+                    // branches on this string, never on the card count, because an empty collection
+                    // and an unknown one are different answers that would otherwise look identical.
+                    ownership = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    cards,
+                    wallet = new
+                    {
+                        gold = result.Wallet.Gold,
+                        gems = result.Wallet.Gems,
+                        shards = result.Wallet.Shards,
+                    },
+                }, statusCode: result.HttpStatus);
             });
 
             app.Map("/ws", async context =>

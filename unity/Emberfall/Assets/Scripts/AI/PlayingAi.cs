@@ -24,8 +24,13 @@ namespace Emberfall.AI
     /// weapon is ember_cinder_lance, while TIDECALLER's frost_ripple auto-resolves and deep_bargain
     /// just draws. Six of EMBERWARD's twenty cards were unplayable and none of TIDECALLER's were —
     /// found when the soak reported a 72.5/27.5 split that turned out to be this bug, not the cards.
-    /// In the shipped single-player game it meant the AI played EMBERWARD with a third of its deck
-    /// dead.</para>
+    /// It meant the AI played EMBERWARD with a third of its deck dead.</para>
+    ///
+    /// <para><b>This is not a single-player opponent, and there is no offline mode.</b> It fills OUR
+    /// OWN seat, from the one site that constructs it — <c>NetworkedGameBootstrap</c>, when no input
+    /// router is present — inside a live networked match. Every opponent bot lives server-side in
+    /// <c>Emberfall.Net.Server/Bots/</c>. An earlier version of this remark said "the shipped
+    /// single-player game", which is why more than one session read offline play as supported.</para>
     ///
     /// Replace with a search-based AI in M2.
     /// </summary>

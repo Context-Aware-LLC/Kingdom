@@ -119,16 +119,13 @@
  *
  * WHY, in dp. The Pixel 5a's panel is 914.3 x 411.4. The header cost ~96 of that (a --type-h1
  * line, a caption under it, 12dp of padding each side and a 16dp margin) and each section spent
- * another ~30 on a title it did not need, against a scroll viewport of ~280 that the two sections
+ * another ~30 on a title it did not need, against a content area of ~280 that the two sections
  * had to share between them. They never did: the packs section alone came to ~304dp, so Gem
  * Bundles began below the fold and could only be reached by scrolling.
  *
- * TABS, NOT A TALLER SCROLLER, and the reason is measured rather than chosen. `0237a00e` proved
- * on 2026-08-30 that a ScrollView's content container is sized to its CONTENT and that Unity owns
- * its flex properties — a live eval setting `flexShrink = 1` was overwritten back to 0 on the next
- * layout pass. So `flex-grow` on the sections cannot make them share a viewport; there is no
- * surplus inside a scroller to grow into. The only way both sections fit is for one of them to be
- * the only one there. */
+ * TABS, NOT A TALLER SCROLLER. The sections no longer share the screen: exactly one compact tab is
+ * visible, so the old ScrollView was retired after empty-range overscroll could move a complete
+ * pack row offscreen and make its purchase buttons appear clipped. */
 .shop-bar {
     flex-direction: row;
     align-items: center;
@@ -254,7 +251,7 @@
     background-color: var(--surface-3);
 }
 
-.shop-scroll {
+.shop-content {
     flex-grow: 1;
 }
 
@@ -263,7 +260,7 @@
 }
 
 /* NO BOTTOM MARGIN. It separated the two sections while they were stacked; with the tabs there is
- * never anything below the visible one, so it was 16dp of the scroll viewport spent on a gap to
+ * never anything below the visible one, so it was 16dp of the content area spent on a gap to
  * nothing. Measured on the Pixel 5a rig: the packs tab came to 320.4dp of content in a 289.5dp
  * viewport, and this was half of the 31 it was over by. */
 #shop-overlay .shop-section {
@@ -275,7 +272,7 @@
 
 /* EXACTLY ONE SECTION IS EVER DISPLAYED, and `display: none` rather than an opacity or a translate
  * because a hidden section must cost NO height -- the whole point of the tabs is that the visible
- * one gets the entire scroll viewport. ShopPanelController owns which; the two are never both on
+ * one gets the entire content area. ShopPanelController owns which; the two are never both on
  * and never both off. */
 .shop-section--hidden {
     display: none;
@@ -310,6 +307,7 @@
  * width does. Read the arithmetic there before changing either. */
 .shop-pack {
     width: 49%;
+    flex-shrink: 0;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -345,9 +343,8 @@
  * 236x73.75, 61% more picture -- because the width grew faster than the ratio took back.
  *
  * KEEP THE 7dp. It is not slack to spend: the help label above wraps at this width, and a third
- * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it, and the only
- * way to know where it lands is to measure -- `Emberfall/Debug/Device DP Rig/Apply`, then read
- * contentViewport against contentContainer on `#shop-scroll`. */
+ * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it; verify the
+ * Store content area at the target resolution. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
@@ -385,11 +382,13 @@
 .shop-pack__detail {
     color: var(--ink-2);
     font-size: var(--type-caption);
+    white-space: normal;
     margin-bottom: var(--space-2);
 }
 
 .shop-pack__actions {
     flex-direction: row;
+    flex-shrink: 0;
 }
 
 .shop-pack__buy {
@@ -418,7 +417,8 @@
 }
 
 .shop-pack__buy:disabled {
-    color: var(--ink-2);
+    opacity: 1;
+    color: var(--ink-1);
     background-color: var(--surface-2);
     border-color: var(--surface-3);
 }
@@ -470,7 +470,7 @@
 }
 
 /* AN EMPTY STATUS LINE COSTS NOTHING. A Label with no text still reserves its box -- measured at
- * 32dp of a 411dp panel here, taken straight off the scroll viewport, and the store is empty of
+ * 32dp of a 411dp panel here, taken straight off the content area, and the store is empty of
  * status most of the time it is open. ShopPanelController.SetStatus stamps and clears this; the
  * UXML ships it on, because the label starts empty. Same band, same fix, as the roster's in
  * 32dfdb81. */

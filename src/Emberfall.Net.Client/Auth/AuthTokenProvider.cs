@@ -171,8 +171,9 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>Mail the player a six-digit code. Nothing is stored — see
         /// <see cref="SupabaseAuthBackend.BeginEmailCodeAsync"/> for why this flow keeps no local
         /// state, and what that buys.</summary>
-        public Task<AuthResult> BeginEmailCodeAsync(string email, CancellationToken cancellationToken = default)
-            => _backend.BeginEmailCodeAsync(email, cancellationToken);
+        public Task<AuthResult> BeginEmailCodeAsync(
+            string email, bool createUser, CancellationToken cancellationToken = default)
+            => _backend.BeginEmailCodeAsync(email, createUser, cancellationToken);
 
         /// <summary>
         /// Finish a sign-in with the mailed six-digit code. On success the session is stored and
@@ -241,6 +242,43 @@ namespace Emberfall.Net.Client.Auth
             if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
 
             return await _backend.SetPasswordAsync(session.AccessToken, password, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Sign in with an email and password — the returning player's path. On success the session is
+        /// stored and <see cref="SessionChanged"/> fires, exactly as for a mailed code.
+        ///
+        /// <para>A refusal leaves any stored session alone: this is a sign-in attempt, not a refresh,
+        /// and a mistyped password must not sign the player out of the account they are already in.</para>
+        /// </summary>
+        public async Task<AuthResult> SignInWithPasswordAsync(
+            string email, string password, CancellationToken cancellationToken = default)
+        {
+            // No ConfigureAwait(false): Adopt writes PlayerPrefs and needs this continuation on the
+            // calling thread — see the note on Adopt.
+            AuthResult result = await _backend.SignInWithPasswordAsync(email, password, cancellationToken);
+            if (result.Ok) Adopt(result.Session);
+            return result;
+        }
+
+        /// <summary>
+        /// Store the display name against the identity, so a returning player on a wiped device gets
+        /// it back instead of being asked to choose a "permanent" name a second time.
+        ///
+        /// <para><b>The stored session is deliberately NOT updated.</b> Supabase stamps
+        /// <c>user_metadata</c> into a JWT at mint time, so the token this device is holding still
+        /// carries the old name (or none) until it next refreshes. Writing the new name into
+        /// <see cref="Current"/> here would make this device's session disagree with its own token
+        /// about what the server said — and the device that just set the name has it on disk anyway.
+        /// It arrives where it is actually needed: the next sign-in, on the next install.</para>
+        /// </summary>
+        public async Task<AuthResult> SetDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
+        {
+            AuthSession session = Current;
+            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+
+            return await _backend.SetDisplayNameAsync(session.AccessToken, displayName, cancellationToken)
                 .ConfigureAwait(false);
         }
 

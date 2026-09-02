@@ -431,6 +431,30 @@ namespace Emberfall.Presentation
             _loading = LoadingOverlay.Create(Camera.main, plate, orb);
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loadingSince = Time.realtimeSinceStartup;
+
+            // THE PLATE IS BEHIND THIS UI, ALWAYS. LoadingOverlay is world-space geometry parented
+            // to the camera, and this screen's panel is ScreenSpaceOverlay — which draws on top of
+            // whatever the camera rendered, unconditionally. So the plate cannot cover the screen;
+            // the screen has to stop painting instead. Measured 2026-09-01: with the panel's
+            // clearColor still on, the plate was ERASED before the UI drew and never appeared at
+            // all; with it off, the plate appears only for the frames after the UIDocument disables
+            // on the way OUT of the screen, which is exactly what "it works when I leave" looks
+            // like. Both had to change, and neither alone does anything visible.
+            //
+            // VISIBILITY, NOT DISPLAY. `display: none` takes the subtree out of layout, and the
+            // wall solves its tile size from the live scroll viewport — a viewport that resolves to
+            // NaN while hidden would feed the solve and bake the whole pool at the wrong size, or
+            // not at all. `visibility: hidden` keeps every box resolving and only skips the paint,
+            // which is the entire point: the wall must lay out and bake while it cannot be seen.
+            _root.style.visibility = Visibility.Hidden;
+        }
+
+        /// <summary>Paint this screen again. Idempotent, and safe when the plate was never shown —
+        /// every exit from the loading state routes through here rather than setting the style at
+        /// each call site, so a new exit path cannot forget it and leave the screen invisible.</summary>
+        private void RevealScreen()
+        {
+            if (_root != null) _root.style.visibility = Visibility.Visible;
         }
 
         /// <summary>
@@ -450,6 +474,10 @@ namespace Emberfall.Presentation
         private void OnFirstBakeCompleted()
         {
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
+            // Revealed as the plate BEGINS its fade, not after it: the wall is finished underneath,
+            // and waiting for OnFadedOut would show a fully faded plate over a blank screen for the
+            // length of the fade.
+            RevealScreen();
             _loading?.NotifyReady();
         }
 
@@ -467,6 +495,7 @@ namespace Emberfall.Presentation
             _loadingSince = -1f;
             Debug.LogWarning($"[Collection] wall did not finish baking within {LoadingPlateTimeout:F0}s — "
                              + "lifting the loading plate anyway; tiles will fill in as they bake.");
+            RevealScreen();
             _loading.NotifyReady();
         }
 
@@ -478,6 +507,10 @@ namespace Emberfall.Presentation
             if (_loading != null) Destroy(_loading.gameObject);
             _loading = null;
             _loadingSince = -1f;
+            // The document is reused across visits, so an invisible root would persist into the
+            // next one — and the next visit's plate cannot be what reveals it, because a visit with
+            // no camera never creates one.
+            RevealScreen();
         }
 
         /// <summary>

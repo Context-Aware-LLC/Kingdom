@@ -2,20 +2,20 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
-        <ui:VisualElement name="class-tab-bar" style="margin-left: 12px; margin-right: 12px;">
-            <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward" style="max-width: 11%; width: auto;"/>
-            <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden" style="width: auto; max-width: 11%;"/>
-            <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest" style="width: auto; max-width: 11%;"/>
+        <ui:VisualElement name="class-tab-bar">
+            <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"/>
+            <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden"/>
+            <ui:VisualElement name="class-tab-tempest" class="class-tab_art class-tab_art-tempest"/>
             <ui:VisualElement name="class-tab-nightveil" class="class-tab_art class-tab_art-nightveil"/>
             <ui:VisualElement name="class-tab-clockwright" class="class-tab_art class-tab_art-clockwright"/>
             <ui:VisualElement name="class-tab-verdant" class="class-tab_art class-tab_art-verdant"/>
             <ui:VisualElement name="class-tab-tidecaller" class="class-tab_art class-tab_art-tidecaller"/>
             <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"/>
-            <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral" style="width: auto; max-width: 11%;"/>
+            <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"/>
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
-                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-scroll chrome-panel chrome-panel--recessed">
+                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-scroll chrome-panel chrome-panel--recessed">
                     <ui:VisualElement name="collection-grid" class="db-grid"/>
                 </ui:ScrollView>
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
@@ -36,7 +36,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
-            <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Elastic" class="col-query-scroll">
+            <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">
                 <ui:VisualElement class="col-query-row">
                     <ui:TextField name="query-search" placeholder-text="Search cards" class="col-search chrome-input"/>
                     <ui:VisualElement name="filter-row" class="db-filter-row">
@@ -68,7 +68,7 @@
                 <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
             <ui:VisualElement name="deck-chooser-frame" class="deck-chooser-frame chrome-panel chrome-panel--recessed">
-                <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="deck-chooser">
+                <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="deck-chooser">
                     <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
                     <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
                 </ui:ScrollView>
@@ -89,7 +89,7 @@
             <ui:Button name="manage-decks-button" text="Manage Characters &amp; Decks" class="deck-drawer__manage chrome-button chrome-button--primary"/>
         </ui:VisualElement>
         <ui:VisualElement name="craft-scrim" class="craft-scrim emb-bleed" style="display: flex; visibility: hidden;"/>
-        <ui:VisualElement name="craft-modal" class="craft-modal chrome-panel chrome-panel--outer" style="top: 48px; bottom: -15px; right: 71px; left: 34px; visibility: visible;">
+        <ui:VisualElement name="craft-modal" class="craft-modal chrome-panel chrome-panel--outer" style="visibility: visible;">
             <ui:VisualElement picking-mode="Ignore" class="craft-illustration"/>
             <ui:VisualElement picking-mode="Ignore" class="craft-illustration-scrim"/>
             <ui:VisualElement class="craft-head">

@@ -18,7 +18,7 @@ MonoBehaviour:
   m_RenderMode: 0
   m_ColliderUpdateMode: 0
   m_ColliderIsTrigger: 1
-  m_ScaleMode: 1
+  m_ScaleMode: 2
   m_ReferenceSpritePixelsPerUnit: 100
   m_PixelsPerUnit: 100
   m_Scale: 1
@@ -31,7 +31,7 @@ MonoBehaviour:
   m_TargetDisplay: 0
   m_BindingLogLevel: 0
   m_ClearDepthStencil: 1
-  m_ClearColor: 1
+  m_ClearColor: 0
   m_ColorClearValue: {r: 0.078431375, g: 0.09803922, b: 0.13333334, a: 1}
   m_VertexBudget: 0
   m_TextureSlotCount: 8
