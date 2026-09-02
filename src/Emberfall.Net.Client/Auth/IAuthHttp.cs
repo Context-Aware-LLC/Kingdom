@@ -18,11 +18,12 @@ namespace Emberfall.Net.Client.Auth
     /// create — hence <see cref="PutJsonAsync"/>. The OAuth authorize step is a URL the player's
     /// browser opens, not a request we issue, so no Supabase call needs a GET.</para>
 
-    /// <para><b><see cref="GetAsync"/> is not for Supabase at all</b> (2026-09-01, card-ownership
-    /// slice 3). It reads <c>GET /collection</c> off Emberfall's own match server, which is bearer-
-    /// authed with the same Supabase JWT and therefore wants the same transport — one implementation
-    /// per platform, not two. The seam is named for its first caller rather than its only one; the
-    /// contract below ("never throw") is what actually defines it.</para>
+    /// <para><b><see cref="GetAsync"/> and <see cref="DeleteAsync"/> are not for Supabase at all</b>
+    /// (2026-09-01, card-ownership slice 3; the delete 2026-09-02, roster persistence). They reach
+    /// Emberfall's own match server — <c>GET /collection</c>, <c>GET /roster</c>, and the two delete
+    /// routes — which is bearer-authed with the same Supabase JWT and therefore wants the same
+    /// transport: one implementation per platform, not two. The seam is named for its first caller
+    /// rather than its only one; the contract below ("never throw") is what actually defines it.</para>
     ///
     /// <para><b>Never throw.</b> Report a failure to reach the server as
     /// <see cref="AuthHttpResponse.TransportFailure"/>. A thrown exception on the connect path would
@@ -44,6 +45,18 @@ namespace Emberfall.Net.Client.Auth
 
         /// <summary>A GET with headers and no body. Same never-throw contract as the others.</summary>
         Task<AuthHttpResponse> GetAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// A DELETE with headers and no body, for <c>DELETE /decks/{id}</c> and
+        /// <c>DELETE /characters/{id}</c>. Same never-throw contract as the others.
+        ///
+        /// <para>Also not a Supabase call — see <see cref="GetAsync"/>. The id being deleted lives
+        /// in the URL, never in a body, so there is nothing to serialise.</para>
+        /// </summary>
+        Task<AuthHttpResponse> DeleteAsync(
             string url,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default);

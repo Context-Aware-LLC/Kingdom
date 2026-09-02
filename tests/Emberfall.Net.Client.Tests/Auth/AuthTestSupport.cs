@@ -29,9 +29,13 @@ namespace Emberfall.Net.Client.Tests.Auth
 
         /// <summary>Headers ride along because for <c>GET /collection</c> the bearer IS the request —
         /// a call that reached the right URL without it would look identical here and be a different
-        /// call entirely.</summary>
-        public List<(string Url, string? Body, IReadOnlyList<KeyValuePair<string, string>> Headers)>
-            Requests { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>)>();
+        /// call entirely.
+        ///
+        /// <para><c>Verb</c> is recorded because GET and DELETE are otherwise indistinguishable here:
+        /// both carry a null body, so a roster gateway that deleted a deck when it meant to read one
+        /// would record exactly the same tuple.</para></summary>
+        public List<(string Url, string? Body, IReadOnlyList<KeyValuePair<string, string>> Headers, string Verb)>
+            Requests { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>, string)>();
 
         public FakeAuthHttp Reply(int status, string body)
         {
@@ -50,26 +54,33 @@ namespace Emberfall.Net.Client.Tests.Auth
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody, headers);
+            => Send(url, jsonBody, headers, "POST");
 
         /// <summary>Recorded with a null body, which is what tells a test the GET went out as a GET.</summary>
         public Task<AuthHttpResponse> GetAsync(
             string url,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, null, headers);
+            => Send(url, null, headers, "GET");
 
         public Task<AuthHttpResponse> PutJsonAsync(
             string url,
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody, headers);
+            => Send(url, jsonBody, headers, "PUT");
+
+        public Task<AuthHttpResponse> DeleteAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => Send(url, null, headers, "DELETE");
 
         private Task<AuthHttpResponse> Send(
-            string url, string? jsonBody, IReadOnlyList<KeyValuePair<string, string>>? headers)
+            string url, string? jsonBody, IReadOnlyList<KeyValuePair<string, string>>? headers,
+            string verb)
         {
-            Requests.Add((url, jsonBody, headers ?? new List<KeyValuePair<string, string>>()));
+            Requests.Add((url, jsonBody, headers ?? new List<KeyValuePair<string, string>>(), verb));
             if (_replies.Count == 0)
                 throw new InvalidOperationException("FakeAuthHttp ran out of scripted replies for " + url);
             return Task.FromResult(_replies.Dequeue());

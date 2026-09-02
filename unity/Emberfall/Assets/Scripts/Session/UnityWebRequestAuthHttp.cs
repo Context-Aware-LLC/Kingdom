@@ -47,14 +47,22 @@ namespace Emberfall.Session
             CancellationToken cancellationToken = default)
             => SendJsonAsync(UnityWebRequest.kHttpVerbPUT, url, jsonBody, headers, cancellationToken);
 
-        /// <summary>The one non-Supabase call on this transport: <c>GET /collection</c> off Emberfall's
-        /// own server. A null body is what distinguishes it — <c>UnityWebRequest</c> will happily
-        /// attach an upload handler to a GET, and some proxies drop the request when it does.</summary>
+        /// <summary>Non-Supabase: <c>GET /collection</c> and <c>GET /roster</c> off Emberfall's own
+        /// server. A null body is what distinguishes it — <c>UnityWebRequest</c> will happily attach
+        /// an upload handler to a GET, and some proxies drop the request when it does.</summary>
         public Task<AuthHttpResponse> GetAsync(
             string url,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
             => SendJsonAsync(UnityWebRequest.kHttpVerbGET, url, null, headers, cancellationToken);
+
+        /// <summary>Non-Supabase: <c>DELETE /decks/{id}</c> and <c>DELETE /characters/{id}</c>. Body
+        /// is null for the same reason as <see cref="GetAsync"/> — the id is in the URL.</summary>
+        public Task<AuthHttpResponse> DeleteAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => SendJsonAsync(UnityWebRequest.kHttpVerbDELETE, url, null, headers, cancellationToken);
 
         private Task<AuthHttpResponse> SendJsonAsync(
             string verb,
