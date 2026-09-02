@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Presents the collection as virtualized rows of four baked card faces. The host supplies one
-    /// <see cref="ListView"/> and a four-slot row template; this class owns row batching, recycled
+    /// Presents the collection as virtualized rows of five baked card faces. The host supplies one
+    /// <see cref="ListView"/> and a five-slot row template; this class owns row batching, recycled
     /// slot state, responsive sizing, card-face baking, and tile gestures.
     ///
     /// <para>Element identity is deliberately not card identity. A ListView reuses a small set of
@@ -24,7 +24,7 @@ namespace Emberfall.Presentation
         // authored size again — update this note and collection.uss together.
         public const float TileWidth = 114f;
         public const float TileHeight = 160f;
-        public const int CardsPerRow = 4;
+        public const int CardsPerRow = 5;
 
         private static readonly CustomStyleProperty<float> AuthoredWidthProp =
             new CustomStyleProperty<float>("--card-tile-width");

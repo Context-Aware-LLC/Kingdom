@@ -156,7 +156,7 @@
     width: 100%;
 }
 /* ListView still paints its item :hover state when selectionType is None. One item is one
- * four-card row here, so that default reads as a fifth interaction surface spanning unrelated
+ * five-card row here, so that default reads as a sixth interaction surface spanning unrelated
  * cards. CardWall owns the individual tile gestures; the recycling wrapper stays invisible.
  * The ID is deliberate: Unity's theme uses a compound selector and beat the former class-scoped
  * override. Both item class names cover the BaseVerticalCollectionView and ListView generations. */

@@ -146,7 +146,10 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(() => XDocument.Parse(rowTemplate), Throws.Nothing);
                 Assert.That(row.Elements().Count(element =>
                     ((string?)element.Attribute("class"))?.Split(' ').Contains("card-tile") == true),
-                    Is.EqualTo(4), "The reusable row template must expose exactly four card slots.");
+                    Is.EqualTo(5), "The reusable row template must expose exactly five card slots.");
+                Assert.That(row.Elements().Select(element => (string?)element.Attribute("name")),
+                    Is.EquivalentTo(new[] { "card-0", "card-1", "card-2", "card-3", "card-4" }),
+                    "CardWall binds each slot by its zero-based name; the fifth column must be bindable.");
 
                 Assert.That(styles, Does.Contain(".col-scope {"));
                 Assert.That(styles, Does.Contain(".col-button {"));
@@ -389,7 +392,7 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(wall, Does.Not.Match(@"\bbool\s+TierFits\b"));
 
                 Assert.That(wall, Does.Contain("private const float MaxGutter = 32f;"));
-                Assert.That(wall, Does.Contain("public const int CardsPerRow = 4;"));
+                Assert.That(wall, Does.Contain("public const int CardsPerRow = 5;"));
                 Assert.That(wall, Does.Contain(
                     "_list.virtualizationMethod = CollectionVirtualizationMethod.FixedHeight;"));
                 Assert.That(wall, Does.Contain("_list.makeItem = MakeRow;"));
@@ -502,7 +505,7 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(styles, Does.Match(
                     @"(?s)#collection-list\s+\.unity-collection-view__item:hover\s*,\s*#collection-list\s+\.unity-list-view__item:hover\s*\{.*?background-color:\s*rgba\(0,\s*0,\s*0,\s*0\);"),
                     "ListView's built-in item hover paints one highlight behind the complete "
-                    + "four-card row. The named-list selector must cover both UI Toolkit item "
+                    + "five-card row. The named-list selector must cover both UI Toolkit item "
                     + "class generations and outrank Unity's built-in theme.");
                 Assert.That(controller, Does.Match(
                     @"(?s)private void OnEnable\(\)\s*\{.*?_ownedScope\s*=\s*true;.*?LoadOwnership\(\);"),

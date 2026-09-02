@@ -4,5 +4,6 @@
         <ui:VisualElement name="card-1" class="card-tile"/>
         <ui:VisualElement name="card-2" class="card-tile"/>
         <ui:VisualElement name="card-3" class="card-tile"/>
+        <ui:VisualElement name="card-4" class="card-tile"/>
     </ui:VisualElement>
 </ui:UXML>
