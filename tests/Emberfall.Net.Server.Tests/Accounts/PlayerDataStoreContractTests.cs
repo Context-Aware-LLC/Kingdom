@@ -50,6 +50,39 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task Re_Saving_A_Character_Changes_Its_Name_And_Never_Its_Classes()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter());
+
+            // A client that re-sends the whole character with different classes must not be able to
+            // re-pair it. Postgres gets this from its upsert's `do update set`, which touches only
+            // name/default_deck_id/updated_at; the in-memory store has to preserve them by hand.
+            var repaired = new Character("c1", "Renamed", CardClass.VERDANT, CardClass.NIGHTVEIL);
+            bool saved = await Store.SaveCharacterAsync("p1", repaired);
+
+            Assert.That(saved, Is.True, "the player's own row — an upsert, not a refusal");
+            Character stored = (await Store.ReadAsync("p1")).Characters[0];
+            Assert.That(stored.Name, Is.EqualTo("Renamed"), "name is mutable");
+            Assert.That(stored.PrimaryClass, Is.EqualTo(CardClass.EMBERWARD),
+                "the pairing is a permanent identity decision — a re-save is not a repair");
+            Assert.That(stored.SecondaryClass, Is.EqualTo(CardClass.TIDECALLER));
+        }
+
+        [Test]
+        public async Task A_Character_Save_Under_Another_Players_Id_Reports_False()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter());
+
+            bool saved = await Store.SaveCharacterAsync("p2", new Character(
+                "c1", "Not p1's character", CardClass.VERDANT, CardClass.NIGHTVEIL));
+
+            Assert.That(saved, Is.False,
+                "the row was not written, and a write that did not happen must not report success");
+            Assert.That((await Store.ReadAsync("p2")).Characters, Is.Empty);
+            Assert.That((await Store.ReadAsync("p1")).Characters[0].Name, Is.EqualTo("Ashe"));
+        }
+
+        [Test]
         public async Task A_Saved_Deck_Round_Trips_Its_Entries()
         {
             await Store.SaveDeckAsync("p1", NewDeck());
@@ -114,13 +147,12 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That((await Store.ReadAsync("p1")).Decks.Count, Is.EqualTo(1));
         }
 
-        // Deck ids are client-minted GUIDs, so an honest collision across two different players'
-        // ids cannot occur — but IF one ever did, the two implementations resolve it differently:
-        // Postgres's `where deck.player_id = excluded.player_id` guard makes p2's write a silent
-        // no-op, while InMemoryPlayerDataStore's (playerId, id) keying stores it as p2's own,
-        // separate entry (see that class's doc comment). That difference is allowed. What must NOT
-        // differ is p1's row, so this test asserts ONLY that — nothing about what became of p2's
-        // save, because that is exactly where the two stores legitimately diverge.
+        // Deck ids are client-minted GUIDs, so an honest collision across two different players' ids
+        // cannot occur — but IF one ever did, both implementations must answer the same way, because
+        // the endpoint maps the answer to a status code. Postgres's
+        // `where deck.player_id = excluded.player_id` guard matches zero rows; InMemoryPlayerDataStore
+        // consults its id-to-owner index. Both leave p1's row alone and both report the write as not
+        // done — see DeckWriteStatus.DuplicateId for why reporting 200 here would be the real damage.
         [Test]
         public async Task A_Players_Deck_Is_Unchanged_By_Another_Players_Save_Under_The_Same_Id()
         {
@@ -130,7 +162,11 @@ namespace Emberfall.Net.Server.Tests.Accounts
             collision.Name = "Not p1's deck";
             collision.Entries.Clear();
             collision.Entries.Add(new DeckEntry(2002, 3));
-            await Store.SaveDeckAsync("p2", collision);
+            bool saved = await Store.SaveDeckAsync("p2", collision);
+
+            Assert.That(saved, Is.False,
+                "the row was not written, and a write that did not happen must not report success");
+            Assert.That((await Store.ReadAsync("p2")).Decks, Is.Empty);
 
             DeckList p1Deck = (await Store.ReadAsync("p1")).Decks[0];
             Assert.That(p1Deck.Name, Is.EqualTo("Aggro"));

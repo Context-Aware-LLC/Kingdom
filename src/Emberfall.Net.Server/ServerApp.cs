@@ -407,11 +407,21 @@ namespace Emberfall.Net.Server
 
                 context.Response.Headers["Cache-Control"] = "no-store";
 
+                // "known" | "unauthenticated" | "unavailable". The client branches on this string,
+                // never on the character/deck count — see RosterResultStatus.Known.
+                string status = result.Status.ToString().ToLowerInvariant();
+
+                // characters and decks are OMITTED on anything but "known". RosterResult falls back
+                // to PlayerRoster.Empty as a placeholder, and serialising that placeholder would ship
+                // a well-formed empty roster alongside a 401 or a 503 — "I could not find out" made
+                // readable as "this player has nothing", which is the exact confusion this whole
+                // handshake exists to prevent. An absent field cannot be misread as an empty one.
+                if (result.Status != RosterResultStatus.Known)
+                    return Results.Json(new { status }, statusCode: result.HttpStatus);
+
                 return Results.Json(new
                 {
-                    // "known" | "unauthenticated" | "unavailable". The client branches on this
-                    // string, never on the character/deck count — see RosterResultStatus.Known.
-                    status = result.Status.ToString().ToLowerInvariant(),
+                    status,
                     characters = CollectionJson.WriteCharacters(result.Roster.Characters),
                     decks = CollectionJson.WriteDecks(result.Roster.Decks),
                 }, statusCode: result.HttpStatus);
@@ -427,6 +437,18 @@ namespace Emberfall.Net.Server
                 if (!string.IsNullOrEmpty(header) &&
                     header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                     bearer = header.Substring("Bearer ".Length).Trim();
+
+                // AUTH BEFORE PARSE. This route is the only one that has to read a body before it
+                // can call its endpoint, and parsing first meant an unauthenticated caller with a bad
+                // body got 400 where every other route gives 401 — and that JsonDocument.ParseAsync
+                // ran over an unbounded body for a caller nobody had authenticated yet.
+                if (!await CharacterCreateEndpoint.IsAuthenticatedAsync(
+                        bearer, cfg.TokenVerifier, context.RequestAborted))
+                {
+                    return Results.Json(
+                        new { status = CharacterCreateStatus.Unauthenticated.ToString().ToLowerInvariant() },
+                        statusCode: new CharacterCreateResult(CharacterCreateStatus.Unauthenticated).HttpStatus);
+                }
 
                 string characterId, name;
                 CardClass primary, secondary;
@@ -453,7 +475,8 @@ namespace Emberfall.Net.Server
 
                 return Results.Json(new
                 {
-                    // "created" | "unauthenticated" | "unavailable" | "invalidpairing" | "duplicateid".
+                    // "created" | "unauthenticated" | "unavailable" | "invalidpairing" |
+                    // "invalidid" | "duplicateid".
                     status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
             });
@@ -478,7 +501,8 @@ namespace Emberfall.Net.Server
 
                 return Results.Json(new
                 {
-                    // "saved" | "unauthenticated" | "unavailable" | "malformed".
+                    // "saved" | "unauthenticated" | "unavailable" | "malformed" | "invalidid" |
+                    // "duplicateid".
                     status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
             });
@@ -499,7 +523,7 @@ namespace Emberfall.Net.Server
 
                 return Results.Json(new
                 {
-                    // "deleted" | "notfound" | "unauthenticated" | "unavailable".
+                    // "deleted" | "notfound" | "unauthenticated" | "unavailable" | "invalidid".
                     status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
             });

@@ -65,8 +65,16 @@ namespace Emberfall.Net.Server.Accounts
             return false;
         }
 
-        /// <summary>Apply the canonical DDL idempotently. Call once before use (mirrors the account
-        /// store) — the character and deck tables ship in the same embedded resource.</summary>
+        /// <summary>Apply the canonical DDL idempotently. Mirrors the account store's method of the
+        /// same name — the character and deck tables ship in the same embedded resource.
+        ///
+        /// <para><b>Nothing in production calls this.</b> <c>AccountSchemaInitializer</c> in
+        /// <c>ServerApp.cs</c> runs the identical <see cref="AccountsSchema.Ddl"/> once at startup and
+        /// covers these tables already; the only live caller is the (Postgres-gated, otherwise
+        /// skipped) contract fixture, which needs the schema before the server has booted. It exists
+        /// so a test can stand this store up alone — do not read its presence as a second
+        /// migration path.</para>
+        /// </summary>
         public Task EnsureSchemaAsync(CancellationToken ct = default)
             => WithConnectionAsync<object?>(async conn =>
             {
@@ -108,10 +116,13 @@ namespace Emberfall.Net.Server.Accounts
                 return new PlayerRoster(characters, decks);
             }, ct);
 
-        public Task SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default)
+        /// <summary>Upsert, guarded by <c>where character.player_id = excluded.player_id</c>. When
+        /// that guard fails the statement matches zero rows and reports <c>INSERT 0 0</c> — the write
+        /// did not happen, so this returns false rather than letting a refusal read as a save.</summary>
+        public Task<bool> SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default)
         {
             var now = DateTimeOffset.UtcNow;
-            return WithConnectionAsync<object?>(async conn =>
+            return WithConnectionAsync(async conn =>
             {
                 await using var cmd = new NpgsqlCommand(
                     "insert into character (character_id, player_id, name, primary_class, secondary_class, default_deck_id, created_at, updated_at) " +
@@ -126,16 +137,18 @@ namespace Emberfall.Net.Server.Accounts
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, character.SecondaryClass.ToString()));
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, character.DefaultDeckId));
                 cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
-                await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-                return null;
+                return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
             }, ct);
         }
 
-        public Task SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
+        /// <summary>Upsert, guarded by <c>where deck.player_id = excluded.player_id</c>. Same
+        /// zero-rows-means-not-written rule as <see cref="SaveCharacterAsync"/>; the refusal is about
+        /// ATTRIBUTION, never about the deck being legal.</summary>
+        public Task<bool> SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
         {
             string body = CollectionJson.WriteDecks(new[] { deck });
             var now = DateTimeOffset.UtcNow;
-            return WithConnectionAsync<object?>(async conn =>
+            return WithConnectionAsync(async conn =>
             {
                 await using var cmd = new NpgsqlCommand(
                     "insert into deck (deck_id, player_id, character_id, body, created_at, updated_at) " +
@@ -148,8 +161,7 @@ namespace Emberfall.Net.Server.Accounts
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.CharacterId));
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, body));
                 cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
-                await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-                return null;
+                return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
             }, ct);
         }
 

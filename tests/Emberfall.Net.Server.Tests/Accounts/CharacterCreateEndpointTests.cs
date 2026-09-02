@@ -37,6 +37,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
             => new StubVerifier(TokenVerificationResult.Ok(
                 new VerifiedIdentity(Subject, "player@example.com", EmailVerified: true)));
 
+        /// <summary>A DIFFERENT signed-in identity, so the account store mints a second PlayerId.</summary>
+        private static IIdentityTokenVerifier AcceptsOther()
+            => new StubVerifier(TokenVerificationResult.Ok(
+                new VerifiedIdentity("supabase-subject-0002", "other@example.com", EmailVerified: true)));
+
+        private static IIdentityTokenVerifier Refuses()
+            => new StubVerifier(TokenVerificationResult.Fail(TokenVerificationFailure.Expired));
+
         [Test]
         public async Task It_Creates_A_Character()
         {
@@ -90,6 +98,66 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(again.Status, Is.EqualTo(CharacterCreateStatus.DuplicateId),
                 "the pairing is permanent and has no legal repair — an overwrite would BE a repair");
         }
+
+        [Test]
+        public async Task An_Id_Another_Player_Owns_Is_409_Not_A_Reported_Save()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+            await CharacterCreateEndpoint.CreateAsync(Token, "c1", "Ashe",
+                CardClass.EMBERWARD, CardClass.TIDECALLER, Accepts(), accounts, data);
+
+            // The second player's roster read cannot see p1's row, so the endpoint's own duplicate
+            // check passes and only the STORE can refuse. Before SaveCharacterAsync returned a bool
+            // this answered 201 for a row that was never written.
+            CharacterCreateResult r = await CharacterCreateEndpoint.CreateAsync(
+                Token, "c1", "Stolen", CardClass.VERDANT, CardClass.NIGHTVEIL,
+                AcceptsOther(), accounts, data);
+
+            Assert.That(r.Status, Is.EqualTo(CharacterCreateStatus.DuplicateId));
+            Assert.That(r.HttpStatus, Is.EqualTo(409));
+
+            Account other = await accounts.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of("supabase-subject-0002"));
+            Assert.That((await data.ReadAsync(other.PlayerId)).Characters, Is.Empty,
+                "nothing was written, which is exactly why 201 would have been a lie");
+        }
+
+        [Test]
+        public async Task An_Empty_Id_Is_Refused_Before_The_Store()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+
+            CharacterCreateResult r = await CharacterCreateEndpoint.CreateAsync(
+                Token, "   ", "Ashe", CardClass.EMBERWARD, CardClass.TIDECALLER,
+                Accepts(), accounts, data);
+
+            Assert.That(r.Status, Is.EqualTo(CharacterCreateStatus.InvalidId),
+                "a row keyed on whitespace is a row nothing can address again");
+            Assert.That(r.HttpStatus, Is.EqualTo(400));
+
+            Account a = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            Assert.That((await data.ReadAsync(a.PlayerId)).Characters, Is.Empty);
+        }
+
+        // ── IsAuthenticatedAsync — the route's auth-before-parse gate ───────────────────────────
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_False_For_A_Refused_Token()
+            => Assert.That(await CharacterCreateEndpoint.IsAuthenticatedAsync(Token, Refuses()), Is.False,
+                "the route must refuse before it parses a body, or a bad body outranks a bad token");
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_False_With_No_Token_And_No_Verifier()
+        {
+            Assert.That(await CharacterCreateEndpoint.IsAuthenticatedAsync(null, Accepts()), Is.False);
+            Assert.That(await CharacterCreateEndpoint.IsAuthenticatedAsync(Token, null), Is.False);
+        }
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_True_For_An_Accepted_Token()
+            => Assert.That(await CharacterCreateEndpoint.IsAuthenticatedAsync(Token, Accepts()), Is.True);
 
         [Test]
         public async Task It_Does_Not_Set_Onboarded()

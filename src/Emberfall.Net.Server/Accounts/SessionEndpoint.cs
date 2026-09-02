@@ -78,7 +78,7 @@ namespace Emberfall.Net.Server.Accounts
             if (string.IsNullOrWhiteSpace(bearerToken) || verifier is null)
                 return new SessionResult(SessionResultStatus.Unauthenticated);
 
-            var verified = await verifier.VerifyAsync(bearerToken!, ct);
+            var verified = await verifier.VerifyAsync(bearerToken!, ct).ConfigureAwait(false);
             if (!verified.IsSuccess)
                 return new SessionResult(SessionResultStatus.Unauthenticated);
 
@@ -87,13 +87,13 @@ namespace Emberfall.Net.Server.Accounts
 
             var identity = verified.Identity!;
             Account account = await accountStore.ResolveOrCreateAsync(
-                "supabase", CredentialHash.Of(identity.Subject), identity.Email, ct);
+                "supabase", CredentialHash.Of(identity.Subject), identity.Email, ct).ConfigureAwait(false);
 
             if (onboarding is not null)
             {
                 try
                 {
-                    await onboarding.EnsureGrantedAsync(account, ct);
+                    await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
                 }
                 catch (System.Exception ex)
                 {

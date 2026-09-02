@@ -22,9 +22,15 @@ namespace Emberfall.Net.Server.Accounts
         /// class twice. 400.</summary>
         InvalidPairing,
 
-        /// <summary>This player already has a character with this id. Refused, never silently
-        /// overwritten — the pairing is a permanent identity decision with no legal repair, and an
-        /// overwrite would BE a repair. 409.</summary>
+        /// <summary>The character id was null, empty or whitespace. A row keyed on "" is a row
+        /// nothing can address again, and the store would have reported it saved. 400.</summary>
+        InvalidId,
+
+        /// <summary>The id is already taken. Either this player already has a character with it —
+        /// refused, never silently overwritten, because the pairing is a permanent identity decision
+        /// with no legal repair and an overwrite would BE a repair — or it belongs to a DIFFERENT
+        /// player, in which case the store refused the write and the endpoint must not report a save
+        /// that did not happen. 409.</summary>
         DuplicateId,
     }
 
@@ -44,6 +50,7 @@ namespace Emberfall.Net.Server.Accounts
             CharacterCreateStatus.Unauthenticated => 401,
             CharacterCreateStatus.Unavailable => 503,
             CharacterCreateStatus.InvalidPairing => 400,
+            CharacterCreateStatus.InvalidId => 400,
             CharacterCreateStatus.DuplicateId => 409,
             _ => 500,
         };
@@ -57,8 +64,9 @@ namespace Emberfall.Net.Server.Accounts
     /// then <c>ResolveOrCreateAsync</c>. Refuses an invalid pairing via the ONLY pairing check,
     /// <see cref="Character.IsValidPairing"/>, before touching any store. Refuses a duplicate id by
     /// reading the roster first and checking for it — <see cref="IPlayerDataStore.SaveCharacterAsync"/>
-    /// is an upsert with no duplicate detection of its own, so refusing one is this endpoint's job.
-    /// </para>
+    /// is an upsert and would silently overwrite THIS player's own row, so refusing that one is this
+    /// endpoint's job. The store catches only the case the roster read cannot see, an id owned by a
+    /// different player, and reports it by returning false.</para>
     ///
     /// <para><c>DefaultDeckId</c> is <c>""</c> at creation; the client sets it once it has generated
     /// and saved a deck. Does NOT fire the onboarding grant (Task 1's <see cref="SessionEndpoint"/>
@@ -91,6 +99,26 @@ namespace Emberfall.Net.Server.Accounts
             return true;
         }
 
+        /// <summary>
+        /// Route-level pre-auth. <c>POST /characters</c> is the one account route whose body has to
+        /// be parsed before <see cref="CreateAsync"/> can be called at all, and a route that parses
+        /// first answers 400 to an unauthenticated caller with a bad body where every other route
+        /// answers 401 — and runs <c>JsonDocument.ParseAsync</c> over an unbounded body for a caller
+        /// it has not authenticated. So the route asks this first.
+        ///
+        /// <para><see cref="CreateAsync"/> still verifies for itself: it is callable without a route,
+        /// and its refusal is the one that decides the answer. This is a gate, not the check.</para>
+        /// </summary>
+        public static async Task<bool> IsAuthenticatedAsync(
+            string? bearerToken, IIdentityTokenVerifier? verifier, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(bearerToken) || verifier is null)
+                return false;
+
+            var verified = await verifier.VerifyAsync(bearerToken!, ct).ConfigureAwait(false);
+            return verified.IsSuccess;
+        }
+
         public static async Task<CharacterCreateResult> CreateAsync(
             string? bearerToken,
             string characterId,
@@ -108,6 +136,12 @@ namespace Emberfall.Net.Server.Accounts
             var verified = await verifier.VerifyAsync(bearerToken!, ct).ConfigureAwait(false);
             if (!verified.IsSuccess)
                 return new CharacterCreateResult(CharacterCreateStatus.Unauthenticated);
+
+            // An id is what every later write is attributed by, so an unusable one is refused here
+            // rather than stored. Nothing downstream checks it: the store would key a row on "" and
+            // report it saved.
+            if (string.IsNullOrWhiteSpace(characterId))
+                return new CharacterCreateResult(CharacterCreateStatus.InvalidId);
 
             if (!Character.IsValidPairing(primary, secondary))
                 return new CharacterCreateResult(CharacterCreateStatus.InvalidPairing);
@@ -130,7 +164,12 @@ namespace Emberfall.Net.Server.Accounts
             }
 
             var character = new Character(characterId, name, primary, secondary);
-            await playerDataStore.SaveCharacterAsync(account.PlayerId, character, ct).ConfigureAwait(false);
+            bool saved = await playerDataStore.SaveCharacterAsync(account.PlayerId, character, ct).ConfigureAwait(false);
+
+            // The roster check above cannot see an id another PLAYER owns. The store can, and
+            // refuses; reporting 201 for a row that was never written is the failure this returns.
+            if (!saved)
+                return new CharacterCreateResult(CharacterCreateStatus.DuplicateId);
 
             return new CharacterCreateResult(CharacterCreateStatus.Created);
         }

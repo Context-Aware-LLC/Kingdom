@@ -37,6 +37,18 @@ namespace Emberfall.Net.Server.Tests.Accounts
             => new StubVerifier(TokenVerificationResult.Ok(
                 new VerifiedIdentity(Subject, "player@example.com", EmailVerified: true)));
 
+        /// <summary>A DIFFERENT signed-in identity, so the account store mints a second PlayerId.</summary>
+        private static IIdentityTokenVerifier AcceptsOther()
+            => new StubVerifier(TokenVerificationResult.Ok(
+                new VerifiedIdentity("supabase-subject-0002", "other@example.com", EmailVerified: true)));
+
+        private static string BodyFor(string id)
+        {
+            var deck = new DeckList { Id = id, CharacterId = "c1", Name = "D" };
+            deck.Entries.Add(new DeckEntry(1001, 2));
+            return CollectionJson.WriteDecks(new[] { deck });
+        }
+
         [Test]
         public async Task A_Deck_That_Fails_L6_Is_Still_Saved()
         {
@@ -68,6 +80,72 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Account a = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
             Assert.That((await data.ReadAsync(a.PlayerId)).Decks, Is.Empty,
                 "the name claims the store was not touched — assert it, not just the status");
+        }
+
+        [Test]
+        public async Task A_Well_Formed_Document_With_No_Decks_Is_Malformed()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+
+            // Parses cleanly and throws nothing — ReadDecks just returns zero rows. That is the
+            // branch the catch cannot reach, and there is no deck to attribute the write to.
+            DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
+                Token, "d1", "{\"decks\":[]}", Accepts(), accounts, data);
+
+            Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.Malformed));
+            Assert.That(r.HttpStatus, Is.EqualTo(400));
+
+            Account a = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            Assert.That((await data.ReadAsync(a.PlayerId)).Decks, Is.Empty);
+        }
+
+        [Test]
+        public async Task A_Deck_Id_Another_Player_Owns_Is_409_Not_A_Reported_Save()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+            await DeckWriteEndpoint.SaveAsync(Token, "d1", BodyFor("d1"), Accepts(), accounts, data);
+
+            DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
+                Token, "d1", BodyFor("d1"), AcceptsOther(), accounts, data);
+
+            Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.DuplicateId),
+                "refusing a write it cannot ATTRIBUTE — nothing here judged the deck's legality");
+            Assert.That(r.HttpStatus, Is.EqualTo(409));
+
+            Account other = await accounts.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of("supabase-subject-0002"));
+            Assert.That((await data.ReadAsync(other.PlayerId)).Decks, Is.Empty,
+                "nothing was written, which is exactly why 200 would have been a lie");
+        }
+
+        [Test]
+        public async Task An_Empty_Deck_Id_Is_Refused_On_Save()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+
+            DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
+                Token, "  ", BodyFor("d1"), Accepts(), accounts, data);
+
+            Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.InvalidId));
+            Assert.That(r.HttpStatus, Is.EqualTo(400));
+
+            Account a = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            Assert.That((await data.ReadAsync(a.PlayerId)).Decks, Is.Empty,
+                "a row keyed on whitespace is a row nothing can address again");
+        }
+
+        [Test]
+        public async Task An_Empty_Deck_Id_Is_Refused_On_Delete()
+        {
+            DeckWriteResult r = await DeckWriteEndpoint.DeleteAsync(
+                Token, "", Accepts(), new InMemoryAccountStore(new FixedTime()), new InMemoryPlayerDataStore());
+
+            Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.InvalidId),
+                "400, not the 404 an unusable id would otherwise be reported as");
+            Assert.That(r.HttpStatus, Is.EqualTo(400));
         }
 
         [Test]

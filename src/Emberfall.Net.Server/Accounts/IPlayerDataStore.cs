@@ -40,11 +40,21 @@ namespace Emberfall.Net.Server.Accounts
         Task<PlayerRoster> ReadAsync(string playerId, CancellationToken ct = default);
 
         /// <summary>Upsert. The pairing is immutable, so a re-save may change name and
-        /// default deck and must not change either class.</summary>
-        Task SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default);
+        /// default deck and must not change either class.
+        ///
+        /// <para><b>Returns false when the row was NOT written</b> because the id already belongs to
+        /// a different player. A write that did not happen must never report success — the caller
+        /// maps false to 409. True on both a fresh insert and a re-save of this player's own row.</para>
+        /// </summary>
+        Task<bool> SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default);
 
-        /// <summary>Upsert. <b>Stores an illegal deck.</b> Validation is a QUEUE-time concern.</summary>
-        Task SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default);
+        /// <summary>Upsert. <b>Stores an illegal deck.</b> Validation is a QUEUE-time concern.
+        ///
+        /// <para><b>Returns false when the row was NOT written</b> because the id already belongs to
+        /// a different player — the same "could not attribute the write" refusal as
+        /// <see cref="SaveCharacterAsync"/>, and nothing to do with the deck being legal.</para>
+        /// </summary>
+        Task<bool> SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default);
 
         /// <summary>True if a deck was removed; false if this player has no such deck.</summary>
         Task<bool> DeleteDeckAsync(string playerId, string deckId, CancellationToken ct = default);
@@ -54,13 +64,12 @@ namespace Emberfall.Net.Server.Accounts
     /// same contract suite as Postgres, and identical on the property that suite exists to pin: no
     /// player can read, overwrite or delete another player's rows.
     ///
-    /// <para><b>One case differs, and it is not a security gap.</b> Deck and character ids are
-    /// client-minted GUIDs, so an honest collision across two different players' ids cannot occur —
-    /// but if it ever did, the two stores resolve it differently. This store keys each save on
-    /// <c>(playerId, id)</c>, so a second player's write with an id the first player already owns is
-    /// stored as its own, separate entry. Postgres keys on a global primary key plus
-    /// <c>where ... = excluded.player_id</c> on the upsert, so the same write silently no-ops. Either
-    /// way, player one's row is untouched — see
+    /// <para><b>Ids are globally unique here too, and that is deliberate.</b> Deck and character ids
+    /// are client-minted GUIDs, so an honest collision across two players cannot occur — but the
+    /// stores must not DISAGREE about what happens if one did. Postgres keys on a global primary key
+    /// plus <c>where ... = excluded.player_id</c> on the upsert, which matches zero rows and reports
+    /// the write as not done; this store keeps an id-to-owner index for the same answer. Both refuse
+    /// and both leave the first player's row untouched — see
     /// <c>PlayerDataStoreContractTests.A_Players_Deck_Is_Unchanged_By_Another_Players_Save_Under_The_Same_Id</c>.
     /// Thread-safe under a single lock.</para>
     /// </summary>
@@ -71,6 +80,13 @@ namespace Emberfall.Net.Server.Accounts
             new Dictionary<string, Dictionary<string, Character>>(StringComparer.Ordinal);
         private readonly Dictionary<string, Dictionary<string, DeckList>> _decks =
             new Dictionary<string, Dictionary<string, DeckList>>(StringComparer.Ordinal);
+
+        // id -> owning playerId. Postgres gets this from the tables' primary keys; here it is the
+        // only way to answer "does another player already own this id" without a scan.
+        private readonly Dictionary<string, string> _characterOwner =
+            new Dictionary<string, string>(StringComparer.Ordinal);
+        private readonly Dictionary<string, string> _deckOwner =
+            new Dictionary<string, string>(StringComparer.Ordinal);
 
         public Task<PlayerRoster> ReadAsync(string playerId, CancellationToken ct = default)
         {
@@ -86,25 +102,45 @@ namespace Emberfall.Net.Server.Accounts
             }
         }
 
-        public Task SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default)
+        public Task<bool> SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default)
         {
             lock (_lock)
             {
+                if (_characterOwner.TryGetValue(character.Id, out var owner) &&
+                    !string.Equals(owner, playerId, StringComparison.Ordinal))
+                    return Task.FromResult(false);
+
                 if (!_characters.TryGetValue(playerId, out var bag))
                     _characters[playerId] = bag = new Dictionary<string, Character>(StringComparer.Ordinal);
+
+                // The pairing is immutable: a re-save may move the name and the default deck and
+                // must move NEITHER class. Postgres gets this from its upsert's `do update set`,
+                // which touches only name/default_deck_id/updated_at; here it is by hand, because a
+                // plain `bag[id] = character` replaces all four fields.
+                if (bag.TryGetValue(character.Id, out var stored))
+                    character = new Character(stored.Id, character.Name,
+                                              stored.PrimaryClass, stored.SecondaryClass,
+                                              character.DefaultDeckId);
+
                 bag[character.Id] = character;
-                return Task.CompletedTask;
+                _characterOwner[character.Id] = playerId;
+                return Task.FromResult(true);
             }
         }
 
-        public Task SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
+        public Task<bool> SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
         {
             lock (_lock)
             {
+                if (_deckOwner.TryGetValue(deck.Id, out var owner) &&
+                    !string.Equals(owner, playerId, StringComparison.Ordinal))
+                    return Task.FromResult(false);
+
                 if (!_decks.TryGetValue(playerId, out var bag))
                     _decks[playerId] = bag = new Dictionary<string, DeckList>(StringComparer.Ordinal);
                 bag[deck.Id] = deck;
-                return Task.CompletedTask;
+                _deckOwner[deck.Id] = playerId;
+                return Task.FromResult(true);
             }
         }
 
@@ -112,8 +148,10 @@ namespace Emberfall.Net.Server.Accounts
         {
             lock (_lock)
             {
-                return Task.FromResult(
-                    _decks.TryGetValue(playerId, out var bag) && bag.Remove(deckId));
+                bool removed = _decks.TryGetValue(playerId, out var bag) && bag.Remove(deckId);
+                if (removed)
+                    _deckOwner.Remove(deckId);
+                return Task.FromResult(removed);
             }
         }
     }
