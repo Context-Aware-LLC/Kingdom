@@ -481,9 +481,11 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
-            // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS
-            // ARE STORED, NEVER REFUSED here: the only rejection is a body that will not parse —
-            // see DeckWriteEndpoint for why an illegal deck is still saved.
+            // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS ARE
+            // STORED, NEVER REFUSED for their CONTENTS — see DeckWriteEndpoint for why an illegal
+            // deck is still saved. What IS refused is a write that cannot be ATTRIBUTED: a body that
+            // will not parse (400, Malformed), an empty/whitespace deck id (400, InvalidId), or an
+            // id another player already owns (409, DuplicateId).
             app.MapPut("/decks/{id}", async (HttpContext context, string id) =>
             {
                 string? bearer = null;
@@ -491,6 +493,18 @@ namespace Emberfall.Net.Server
                 if (!string.IsNullOrEmpty(header) &&
                     header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                     bearer = header.Substring("Bearer ".Length).Trim();
+
+                // AUTH BEFORE READ. Same defect, same fix as POST /characters (see
+                // CharacterCreateEndpoint.IsAuthenticatedAsync): reading the whole body before
+                // authenticating lets an unauthenticated caller make the server buffer an unbounded
+                // body for free.
+                if (!await DeckWriteEndpoint.IsAuthenticatedAsync(
+                        bearer, cfg.TokenVerifier, context.RequestAborted))
+                {
+                    return Results.Json(
+                        new { status = DeckWriteStatus.Unauthenticated.ToString().ToLowerInvariant() },
+                        statusCode: new DeckWriteResult(DeckWriteStatus.Unauthenticated).HttpStatus);
+                }
 
                 using var reader = new StreamReader(context.Request.Body);
                 string body = await reader.ReadToEndAsync();

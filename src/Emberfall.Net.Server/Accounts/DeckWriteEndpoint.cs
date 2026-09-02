@@ -82,6 +82,26 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public static class DeckWriteEndpoint
     {
+        /// <summary>
+        /// Route-level pre-auth for <c>PUT /decks/{id}</c>, mirroring
+        /// <see cref="CharacterCreateEndpoint.IsAuthenticatedAsync"/>. That route is the other one
+        /// whose body has to be read before <see cref="SaveAsync"/> can be called at all — an
+        /// unbounded <c>ReadToEndAsync</c> over a body from a caller nobody has authenticated yet.
+        /// So the route asks this first and answers 401 before touching the body.
+        ///
+        /// <para><see cref="SaveAsync"/> still verifies for itself: it is callable without a route,
+        /// and its refusal is the one that decides the answer. This is a gate, not the check.</para>
+        /// </summary>
+        public static async Task<bool> IsAuthenticatedAsync(
+            string? bearerToken, IIdentityTokenVerifier? verifier, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(bearerToken) || verifier is null)
+                return false;
+
+            var verified = await verifier.VerifyAsync(bearerToken!, ct).ConfigureAwait(false);
+            return verified.IsSuccess;
+        }
+
         public static async Task<DeckWriteResult> SaveAsync(
             string? bearerToken,
             string deckId,

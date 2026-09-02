@@ -42,6 +42,9 @@ namespace Emberfall.Net.Server.Tests.Accounts
             => new StubVerifier(TokenVerificationResult.Ok(
                 new VerifiedIdentity("supabase-subject-0002", "other@example.com", EmailVerified: true)));
 
+        private static IIdentityTokenVerifier Refuses()
+            => new StubVerifier(TokenVerificationResult.Fail(TokenVerificationFailure.Expired));
+
         private static string BodyFor(string id)
         {
             var deck = new DeckList { Id = id, CharacterId = "c1", Name = "D" };
@@ -191,5 +194,23 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.NotFound));
             Assert.That(r.HttpStatus, Is.EqualTo(404));
         }
+
+        // ── IsAuthenticatedAsync — PUT /decks/{id}'s auth-before-read gate ──────────────────────
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_False_For_A_Refused_Token()
+            => Assert.That(await DeckWriteEndpoint.IsAuthenticatedAsync(Token, Refuses()), Is.False,
+                "the route must refuse before it reads a body, or an unbounded body outranks a bad token");
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_False_With_No_Token_And_No_Verifier()
+        {
+            Assert.That(await DeckWriteEndpoint.IsAuthenticatedAsync(null, Accepts()), Is.False);
+            Assert.That(await DeckWriteEndpoint.IsAuthenticatedAsync(Token, null), Is.False);
+        }
+
+        [Test]
+        public async Task IsAuthenticatedAsync_Is_True_For_An_Accepted_Token()
+            => Assert.That(await DeckWriteEndpoint.IsAuthenticatedAsync(Token, Accepts()), Is.True);
     }
 }
