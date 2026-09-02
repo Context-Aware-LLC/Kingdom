@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Emberfall.Core.Collection;
+using Emberfall.Core.Contracts;
 using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Data;
@@ -412,6 +414,47 @@ namespace Emberfall.Net.Server
                     status = result.Status.ToString().ToLowerInvariant(),
                     characters = CollectionJson.WriteCharacters(result.Roster.Characters),
                     decks = CollectionJson.WriteDecks(result.Roster.Decks),
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /characters — creates a character. Same auth pairing as /session and /roster;
+            // does NOT fire the onboarding grant and does NOT set onboarded — see
+            // CharacterCreateEndpoint for why that would strand a player who drops before the grant.
+            app.MapPost("/characters", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                string characterId, name;
+                CardClass primary, secondary;
+                try
+                {
+                    using var body = await JsonDocument.ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted);
+                    var root = body.RootElement;
+                    characterId = root.GetProperty("characterId").GetString() ?? "";
+                    name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "";
+                    if (!Enum.TryParse(root.GetProperty("primaryClass").GetString(), ignoreCase: true, out primary) ||
+                        !Enum.TryParse(root.GetProperty("secondaryClass").GetString(), ignoreCase: true, out secondary))
+                    {
+                        return Results.Json(new { error = "invalid class" }, statusCode: StatusCodes.Status400BadRequest);
+                    }
+                }
+                catch (Exception ex) when (ex is JsonException || ex is KeyNotFoundException || ex is InvalidOperationException)
+                {
+                    return Results.Json(new { error = "malformed body" }, statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                CharacterCreateResult result = await CharacterCreateEndpoint.CreateAsync(
+                    bearer, characterId, name, primary, secondary,
+                    cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "created" | "unauthenticated" | "unavailable" | "invalidpairing" | "duplicateid".
+                    status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
             });
 
