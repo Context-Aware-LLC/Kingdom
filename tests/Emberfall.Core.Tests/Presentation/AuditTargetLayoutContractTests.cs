@@ -59,6 +59,7 @@ namespace Emberfall.Core.Tests.Presentation
             string pack = Rule(styles, ".shop-pack");
             string detail = Rule(styles, ".shop-pack__detail");
             string actions = Rule(styles, ".shop-pack__actions");
+            string disabledBuy = Rule(styles, ".shop-pack__buy:disabled");
 
             Assert.Multiple(() =>
             {
@@ -68,6 +69,10 @@ namespace Emberfall.Core.Tests.Presentation
                     "The one-line description in audit-3 paints through the neighbouring pack.");
                 Assert.That(actions, Does.Contain("flex-shrink: 0;"),
                     "Purchase buttons must remain part of the card's measured height instead of collapsing below it.");
+                Assert.That(disabledBuy, Does.Contain("opacity: 1;"),
+                    "Unavailable purchase buttons must remain visible while the wallet connection is pending.");
+                Assert.That(disabledBuy, Does.Contain("color: var(--ink-1);"),
+                    "Disabled price labels need readable contrast against the dark Store surface.");
             });
         }
     }

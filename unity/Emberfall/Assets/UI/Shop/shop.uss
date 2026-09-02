@@ -420,7 +420,8 @@
 }
 
 .shop-pack__buy:disabled {
-    color: var(--ink-2);
+    opacity: 1;
+    color: var(--ink-1);
     background-color: var(--surface-2);
     border-color: var(--surface-3);
 }
