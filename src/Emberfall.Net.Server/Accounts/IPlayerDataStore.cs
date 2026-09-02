@@ -50,8 +50,20 @@ namespace Emberfall.Net.Server.Accounts
         Task<bool> DeleteDeckAsync(string playerId, string deckId, CancellationToken ct = default);
     }
 
-    /// <summary>In-memory implementation — the default for tests and single-box dev. Same semantics
-    /// as Postgres, held to the same contract suite. Thread-safe under a single lock.</summary>
+    /// <summary>In-memory implementation — the default for tests and single-box dev. Held to the
+    /// same contract suite as Postgres, and identical on the property that suite exists to pin: no
+    /// player can read, overwrite or delete another player's rows.
+    ///
+    /// <para><b>One case differs, and it is not a security gap.</b> Deck and character ids are
+    /// client-minted GUIDs, so an honest collision across two different players' ids cannot occur —
+    /// but if it ever did, the two stores resolve it differently. This store keys each save on
+    /// <c>(playerId, id)</c>, so a second player's write with an id the first player already owns is
+    /// stored as its own, separate entry. Postgres keys on a global primary key plus
+    /// <c>where ... = excluded.player_id</c> on the upsert, so the same write silently no-ops. Either
+    /// way, player one's row is untouched — see
+    /// <c>PlayerDataStoreContractTests.A_Players_Deck_Is_Unchanged_By_Another_Players_Save_Under_The_Same_Id</c>.
+    /// Thread-safe under a single lock.</para>
+    /// </summary>
     public sealed class InMemoryPlayerDataStore : IPlayerDataStore
     {
         private readonly object _lock = new object();

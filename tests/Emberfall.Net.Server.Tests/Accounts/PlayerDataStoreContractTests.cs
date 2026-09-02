@@ -113,6 +113,29 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 "deck_id is globally unique, so every write path must ALSO match on player_id");
             Assert.That((await Store.ReadAsync("p1")).Decks.Count, Is.EqualTo(1));
         }
+
+        // Deck ids are client-minted GUIDs, so an honest collision across two different players'
+        // ids cannot occur — but IF one ever did, the two implementations resolve it differently:
+        // Postgres's `where deck.player_id = excluded.player_id` guard makes p2's write a silent
+        // no-op, while InMemoryPlayerDataStore's (playerId, id) keying stores it as p2's own,
+        // separate entry (see that class's doc comment). That difference is allowed. What must NOT
+        // differ is p1's row, so this test asserts ONLY that — nothing about what became of p2's
+        // save, because that is exactly where the two stores legitimately diverge.
+        [Test]
+        public async Task A_Players_Deck_Is_Unchanged_By_Another_Players_Save_Under_The_Same_Id()
+        {
+            await Store.SaveDeckAsync("p1", NewDeck());
+
+            var collision = NewDeck();
+            collision.Name = "Not p1's deck";
+            collision.Entries.Clear();
+            collision.Entries.Add(new DeckEntry(2002, 3));
+            await Store.SaveDeckAsync("p2", collision);
+
+            DeckList p1Deck = (await Store.ReadAsync("p1")).Decks[0];
+            Assert.That(p1Deck.Name, Is.EqualTo("Aggro"));
+            Assert.That(p1Deck.CountOf(1001), Is.EqualTo(2));
+        }
     }
 
     /// <summary>The in-memory implementation against the shared contract. Always runs.</summary>
